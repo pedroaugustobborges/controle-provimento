@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,28 +23,34 @@ import { toast } from 'sonner';
 
 export default function FilaEditaisPage() {
   const { vagas, updateVaga } = useVagasStore();
+  const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const pendingVagas = vagas.filter(v => {
-    // Show only vacancies that need process or notice number, or recently imported
-    const status = v.status || v.status_geral;
-    const isPending = !v.numero_processo || !v.numero_edital || v.status_edital !== 'Encerrada';
-    
-    const matchSearch = !search || 
-      v.cargo.toLowerCase().includes(search.toLowerCase()) || 
-      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase());
-    
-    const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
-    const matchStatus = filterStatus === 'all' || v.status_edital === filterStatus;
+  const pendingVagas = useMemo(() => {
+    return vagas.filter(v => {
+      // Unit access restriction
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
+        return false;
+      }
 
-    return isPending && matchSearch && matchUnidade && matchStatus;
-  });
+      // Show only vacancies that need process or notice number, or recently imported
+      const isPending = !v.numero_processo || !v.numero_edital || v.status_edital !== 'Encerrada';
+      
+      const matchSearch = !search || 
+        v.cargo.toLowerCase().includes(search.toLowerCase()) || 
+        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase());
+      
+      const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
+      const matchStatus = filterStatus === 'all' || v.status_edital === filterStatus;
 
+      return isPending && matchSearch && matchUnidade && matchStatus;
+    });
+  }, [vagas, currentUser, search, filterUnidade, filterStatus]);
 
-  const unidades = Array.from(new Set(vagas.map(v => v.unidade)));
+  const unidades = useMemo(() => Array.from(new Set(vagas.map(v => v.unidade))), [vagas]);
   const statusOptions: StatusEdital[] = [
     'Nova vaga', 'Aguardando processo', 'Aguardando edital', 
     'Aguardando processo e edital', 'Em andamento', 'Encerrada'
@@ -238,7 +245,7 @@ export default function FilaEditaisPage() {
                           {v.status_edital}
                         </Badge>
                       ) : (
-                        <StatusBadge status={v.status_geral} />
+                        <StatusBadge status={v.status_geral || 'aberta'} />
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -259,7 +266,7 @@ export default function FilaEditaisPage() {
                             <DropdownMenuItem className="gap-2">
                               <Edit className="h-4 w-4" /> Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                               <Users className="h-4 w-4" /> Abrir Detalhe
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

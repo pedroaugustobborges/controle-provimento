@@ -703,12 +703,35 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                           <TableHead>Cargo</TableHead>
                           <TableHead>Unidade</TableHead>
                           <TableHead>Abertura</TableHead>
+                          <TableHead>Responsáveis</TableHead>
                           <TableHead>Vagas</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {previewData.map((row, idx) => (
-                          <TableRow key={idx}>
+                        {previewData.map((row, idx) => {
+                          const { analista, assistentes } = getResponsavelPorUnidade(row.unidade || '', row.tipo_vaga);
+                          return (
+                            <TableRow key={idx}>
+                              <TableCell className="font-mono text-xs">{row.requisicao}</TableCell>
+                              <TableCell className="text-xs font-medium">{row.cargo}</TableCell>
+                              <TableCell className="text-xs">{row.unidade}</TableCell>
+                              <TableCell className="text-xs">
+                                <span className={row.__errors?.data_abertura ? "text-destructive font-bold" : ""}>
+                                  {row.data_abertura ? format(new Date(row.data_abertura), 'dd/MM/yyyy') : '-'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-[10px] text-primary">{analista}</span>
+                                  {assistentes.length > 0 && (
+                                    <span className="text-[9px] text-muted-foreground">{assistentes.join(', ')}</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs text-center">{row.numero_vagas}</TableCell>
+                            </TableRow>
+                          );
+                        })}
                             <TableCell className="font-mono text-xs">{row.numero_requisicao || row.requisicao || '—'}</TableCell>
                             <TableCell className="text-xs font-medium">{row.cargo || '—'}</TableCell>
                             <TableCell className="text-xs">{row.unidade || '—'}</TableCell>

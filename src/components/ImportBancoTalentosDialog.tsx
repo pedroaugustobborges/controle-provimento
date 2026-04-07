@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, ArrowRight, 
-  Search, Info, Check, X, FileWarning, Database, Layers
+  Search, Info, Check, X, FileWarning, Database, Layers, Calendar
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
 import { BancoTalentos } from '@/types/vaga';
@@ -31,19 +31,19 @@ const DATE_FORMATS = [
   { label: 'dd/mm/aaaa', value: 'dd/MM/yyyy' },
   { label: 'mm/dd/aaaa', value: 'MM/dd/yyyy' },
   { label: 'aaaa-mm-dd', value: 'yyyy-MM-dd' },
-  { label: 'Excel (número)', value: 'excel_serial' },
+  { label: 'Excel (número serial)', value: 'excel_serial' },
   { label: 'Auto-detectar', value: 'auto' },
 ];
 
-const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade'];
+const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao'];
 
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
   { key: 'cargo', label: 'Cargo' },
   { key: 'secao', label: 'Seção' },
   { key: 'numero_edital', label: 'Nº Edital' },
-  { key: 'data_abertura_edital', label: 'Data Abertura' },
-  { key: 'data_validade', label: 'Data Validade' },
+  { key: 'data_abertura_edital', label: 'Data Publicação' },
+  { key: 'data_validade', label: 'Validade' },
 ];
 
 const OPTIONAL_FIELDS = [
@@ -52,6 +52,7 @@ const OPTIONAL_FIELDS = [
   { key: 'classificacao', label: 'Classificação' },
   { key: 'is_prorrogado', label: 'Prorrogado (Sim/Não)' },
   { key: 'nova_data_validade', label: 'Nova Data Final' },
+  { key: 'data_convocacao', label: 'Data de Convocação' },
   { key: 'observacoes', label: 'Observações' },
 ];
 
@@ -63,10 +64,11 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   numero_processo: ['processo', 'nº processo', 'número processo'],
   nome: ['nome', 'candidato'],
   classificacao: ['classificação', 'posicao', 'ranking'],
-  data_abertura_edital: ['abertura', 'data abertura', 'dt abertura'],
-  data_validade: ['validade', 'data validade', 'dt validade'],
+  data_abertura_edital: ['abertura', 'data abertura', 'dt abertura', 'publicação', 'publicacao', 'data publicação', 'data publicacao'],
+  data_validade: ['validade', 'data validade', 'dt validade', 'vencimento'],
   is_prorrogado: ['prorrogado', 'prorrogação'],
   nova_data_validade: ['nova data', 'data final', 'prorrogado até'],
+  data_convocacao: ['convocação', 'data convocação', 'convocacao', 'dt convocacao', 'convocado em'],
   observacoes: ['observações', 'obs'],
 };
 
@@ -92,21 +94,39 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   return synonyms.some(syn => h.includes(syn) || syn.includes(h));
 }
 
-const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string } => {
-  if (!value) return { date: null, isValid: true, formatted: '' };
+const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string, isExcelSerial?: boolean } => {
+  if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '' };
+  
   let d: Date | null = null;
-  if (targetFormat === 'excel_serial' || (typeof value === 'number' && targetFormat === 'auto')) {
-    d = addDays(new Date(1899, 11, 30), Number(value));
+  let isExcelSerial = false;
+
+  // Se for número ou parecer número e o formato for auto ou excel_serial
+  const numValue = Number(value);
+  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 30000 && numValue < 60000;
+
+  if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial)) {
+    d = addDays(new Date(1899, 11, 30), numValue);
+    isExcelSerial = true;
   } else if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed) return { date: null, isValid: true, formatted: '' };
-    const formats = targetFormat === 'auto' ? ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy'] : [targetFormat];
+    const formats = targetFormat === 'auto' ? ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'd/M/yyyy'] : [targetFormat];
     for (const f of formats) {
       const parsed = parse(trimmed, f, new Date());
       if (isValid(parsed)) { d = parsed; break; }
     }
-  } else if (value instanceof Date) { d = value; }
-  if (d && isValid(d)) return { date: d, isValid: true, formatted: format(d, 'yyyy-MM-dd') };
+  } else if (value instanceof Date) {
+    d = value;
+  }
+
+  if (d && isValid(d)) {
+    return { 
+      date: d, 
+      isValid: true, 
+      formatted: format(d, 'yyyy-MM-dd'),
+      isExcelSerial
+    };
+  }
   return { date: null, isValid: false, formatted: String(value) };
 };
 
@@ -172,7 +192,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     const headers = rawPreview[headerRow]?.map((c, i) => c ? String(c) : `Coluna ${i + 1}`) || [];
     const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
       const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
-      return { excel: matchedHeader || '', system: field.key, format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, isDate: DATE_FIELDS.includes(field.key) };
+      return { 
+        excel: matchedHeader || '', 
+        system: field.key, 
+        format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
+        isDate: DATE_FIELDS.includes(field.key) 
+      };
     });
     setMappings(initialMappings);
     setStep('mapping');
@@ -187,13 +212,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     const mappedData = allData.map(row => {
       const result: any = { __errors: {} };
       mappings.forEach(m => {
-        if (m.excel) {
+        if (m.excel && m.excel !== 'no_mapping') {
           const val = row[m.excel];
           if (m.isDate) {
             const { isValid, formatted } = parseDateValue(val, m.format || 'auto');
             result[m.system] = formatted;
             if (!isValid && val) result.__errors[m.system] = true;
-          } else { result[m.system] = val; }
+          } else { 
+            result[m.system] = val; 
+          }
         }
       });
       return result;
@@ -214,7 +241,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     const newBancos: BancoTalentos[] = allData.map((row, i) => {
       const mapped: any = {};
       mappings.forEach(m => {
-        if (m.excel) {
+        if (m.excel && m.excel !== 'no_mapping') {
           if (m.isDate) {
             mapped[m.system] = parseDateValue(row[m.excel], m.format || 'auto').formatted;
           } else if (m.system === 'is_prorrogado') {
@@ -242,6 +269,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         data_validade: mapped.data_validade || '',
         is_prorrogado: !!mapped.is_prorrogado,
         nova_data_validade: mapped.nova_data_validade || undefined,
+        data_convocacao: mapped.data_convocacao || undefined,
         status: status as any,
         observacoes: mapped.observacoes || '',
       };
@@ -428,23 +456,64 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                             </div>
                           </TableCell>
                           <TableCell className="py-3">
-                            <Select value={mapping?.excel || ''} onValueChange={(val) => setMappings(prev => prev.map(m => m.system === field.key ? { ...m, excel: val } : m))}>
-                              <SelectTrigger className={`h-9 ${!mapping?.excel && isRequired ? 'border-destructive/50 bg-destructive/5' : 'bg-background'}`}>
-                                <SelectValue placeholder="Selecione a coluna..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="no_mapping" className="text-muted-foreground italic">Não mapear</SelectItem>
-                                {rawPreview[headerRow]?.map((h, i) => h ? <SelectItem key={i} value={String(h)}>{String(h)}</SelectItem> : null)}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex flex-col gap-2">
+                              <Select value={mapping?.excel || ''} onValueChange={(val) => setMappings(prev => prev.map(m => m.system === field.key ? { ...m, excel: val } : m))}>
+                                <SelectTrigger className={`h-9 ${!mapping?.excel && isRequired ? 'border-destructive/50 bg-destructive/5' : 'bg-background'}`}>
+                                  <SelectValue placeholder="Selecione a coluna..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="no_mapping" className="text-muted-foreground italic">Não mapear</SelectItem>
+                                  {rawPreview[headerRow]?.map((h, i) => h ? <SelectItem key={i} value={String(h)}>{String(h)}</SelectItem> : null)}
+                                </SelectContent>
+                              </Select>
+
+                              {mapping?.excel && mapping.excel !== 'no_mapping' && mapping.isDate && (
+                                <div className="flex flex-col gap-1.5 p-2 bg-muted/30 rounded-lg border border-border/50">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" /> Formato de origem
+                                    </label>
+                                    {(() => {
+                                      const colIdx = rawPreview[headerRow].indexOf(mapping.excel);
+                                      const sampleVal = rawPreview.find((r, i) => i > headerRow && r[colIdx])?.[colIdx];
+                                      if (sampleVal && !isNaN(Number(sampleVal)) && Number(sampleVal) > 30000 && mapping.format !== 'excel_serial') {
+                                        return (
+                                          <div className="flex items-center gap-1 text-[9px] text-amber-600 font-bold bg-amber-50 px-1 rounded border border-amber-100 animate-pulse">
+                                            Excel Serial?
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+                                  </div>
+                                  <Select 
+                                    value={mapping.format || 'auto'} 
+                                    onValueChange={(val) => setMappings(prev => prev.map(m => m.system === field.key ? { ...m, format: val } : m))}
+                                  >
+                                    <SelectTrigger className="h-7 text-xs bg-background border-muted-foreground/20">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {DATE_FORMATS.map(f => (
+                                        <SelectItem key={f.value} value={f.value} className="text-xs">{f.label}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
-                          <TableCell className="py-3 text-center">
+                          <TableCell className="py-3 text-center align-top">
                             {mapping?.excel && mapping.excel !== 'no_mapping' ? (
-                              <div className="bg-green-100 text-green-700 p-1.5 rounded-full inline-flex items-center justify-center"><Check className="h-3.5 w-3.5" /></div>
+                              <div className="bg-green-100 text-green-700 p-1.5 rounded-full inline-flex items-center justify-center mt-1"><Check className="h-3.5 w-3.5" /></div>
                             ) : isRequired ? (
-                              <Badge variant="outline" className="text-[10px] bg-red-50 text-red-600 border-red-200">Obrigatório</Badge>
+                              <div className="mt-1 flex justify-center">
+                                <Badge variant="outline" className="text-[10px] bg-red-50 text-red-600 border-red-200 uppercase font-bold tracking-tight">Obrigatório</Badge>
+                              </div>
                             ) : (
-                              <Badge variant="outline" className="text-[10px] bg-muted/50 text-muted-foreground border-border">Opcional</Badge>
+                              <div className="mt-1 flex justify-center">
+                                <Badge variant="outline" className="text-[10px] bg-muted/50 text-muted-foreground border-border uppercase font-medium">Opcional</Badge>
+                              </div>
                             )}
                           </TableCell>
                         </TableRow>
@@ -475,46 +544,68 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                         <TableHead>Cargo / Candidato</TableHead>
                         <TableHead>Unidade / Seção</TableHead>
                         <TableHead>Edital / Processo</TableHead>
-                        <TableHead>Validade</TableHead>
+                        <TableHead>Datas (Pub / Val / Conv)</TableHead>
                         <TableHead className="w-[80px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {previewData.map((row, idx) => (
-                        <TableRow key={idx} className="hover:bg-muted/30 transition-colors">
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-sm">{row.nome || 'Não informado'}</span>
-                              <span className="text-xs text-muted-foreground">{row.cargo}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col text-xs">
-                              <span>{row.unidade}</span>
-                              <span className="text-muted-foreground">{row.secao}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col text-xs">
-                              <span>Edital: {row.numero_edital}</span>
-                              {row.numero_processo && <span className="text-muted-foreground">Proc: {row.numero_processo}</span>}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col text-xs">
-                              <span className="font-semibold">{row.data_validade}</span>
-                              {row.is_prorrogado && <Badge variant="outline" className="text-[9px] h-4 bg-blue-50 text-blue-700 border-blue-200 w-fit">Prorrogado</Badge>}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {row.__errors && Object.keys(row.__errors).length > 0 ? (
-                              <AlertTriangle className="h-4 w-4 text-destructive" />
-                            ) : (
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {previewData.map((row, idx) => {
+                        const hasErrors = row.__errors && Object.keys(row.__errors).length > 0;
+                        return (
+                          <TableRow key={idx} className="hover:bg-muted/30 transition-colors">
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-sm">{row.nome || 'Não informado'}</span>
+                                <span className="text-xs text-muted-foreground">{row.cargo}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col text-xs">
+                                <span>{row.unidade}</span>
+                                <span className="text-muted-foreground">{row.secao}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col text-xs">
+                                <span>Edital: {row.numero_edital}</span>
+                                {row.numero_processo && <span className="text-muted-foreground">Proc: {row.numero_processo}</span>}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col text-xs gap-1">
+                                <div className="flex items-center justify-between gap-4">
+                                  <span className="text-muted-foreground">Pub:</span>
+                                  <span className={`font-medium ${row.__errors?.data_abertura_edital ? 'text-destructive font-bold' : ''}`}>
+                                    {row.data_abertura_edital || '-'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                  <span className="text-muted-foreground">Val:</span>
+                                  <span className={`font-medium ${row.__errors?.data_validade ? 'text-destructive font-bold' : ''}`}>
+                                    {row.data_validade || '-'}
+                                  </span>
+                                </div>
+                                {row.data_convocacao && (
+                                  <div className="flex items-center justify-between gap-4">
+                                    <span className="text-muted-foreground">Conv:</span>
+                                    <span className={`font-medium ${row.__errors?.data_convocacao ? 'text-destructive font-bold' : ''}`}>
+                                      {row.data_convocacao}
+                                    </span>
+                                  </div>
+                                )}
+                                {row.is_prorrogado && <Badge variant="outline" className="text-[9px] h-4 bg-blue-50 text-blue-700 border-blue-200 w-fit">Prorrogado</Badge>}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {hasErrors ? (
+                                <AlertTriangle className="h-4 w-4 text-destructive" />
+                              ) : (
+                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </ScrollArea>

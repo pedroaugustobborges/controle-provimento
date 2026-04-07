@@ -582,7 +582,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   };
 
   const reset = () => {
-    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]);
+    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]); setTotalDetectedRows(0);
   };
 
   const STEPS = [
@@ -1025,15 +1025,21 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                 <h2 className="text-3xl font-bold">Importação Concluída!</h2>
                 <p className="text-muted-foreground max-w-sm">A base do banco de talentos foi atualizada com sucesso no sistema.</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-                <div className="bg-muted/30 p-4 rounded-2xl border text-center">
-                  <span className="text-xs font-medium text-muted-foreground uppercase">Total Processado</span>
-                  <p className="text-2xl font-bold text-primary">{importSummary.total_lidos}</p>
+              <div className={`grid ${importSummary.total_erros > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-4 w-full max-w-2xl px-4`}>
+                <div className="bg-muted/30 p-4 rounded-2xl border text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Lidos</span>
+                  <p className="text-2xl font-bold text-slate-900">{importSummary.total_lidos}</p>
                 </div>
-                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center">
-                  <span className="text-xs font-medium text-green-600 uppercase">Novos Registros</span>
+                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Novos Registros</span>
                   <p className="text-2xl font-bold text-green-700">{importSummary.total_novos}</p>
                 </div>
+                {importSummary.total_erros > 0 && (
+                  <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100 text-center flex flex-col justify-center">
+                    <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-1">Com Erro</span>
+                    <p className="text-2xl font-bold text-red-700">{importSummary.total_erros}</p>
+                  </div>
+                )}
               </div>
               <Button size="lg" className="px-12 rounded-full mt-4 shadow-lg hover:shadow-xl transition-all" onClick={() => onOpenChange(false)}>Concluir e Fechar</Button>
             </div>

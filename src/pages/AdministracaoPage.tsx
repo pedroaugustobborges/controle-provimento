@@ -20,9 +20,10 @@ import {
   Edit2
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EQUIPE_POR_UNIDADE, RESPONSAVEL_LIDERANCA } from '@/data/equipe';
 
 export default function AdministracaoPage() {
-  const [activeTab, setActiveTab] = useState('unidades');
+  const [activeTab, setActiveTab] = useState('equipe');
 
   const unidades = [
     { id: '1', nome: 'Hospital Central (GO)', estado: 'GO', status: 'ativo', analistas: 5 },

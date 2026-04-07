@@ -16,7 +16,7 @@ import {
   Search, Info, Check, X, FileWarning, Database, Layers
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
-import { Vaga, StatusEdital, TipoVaga } from '@/types/vaga';
+import { Vaga, StatusEdital, TipoVaga, StatusVaga } from '@/types/vaga';
 import { toast } from 'sonner';
 
 type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summary';

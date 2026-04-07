@@ -34,6 +34,7 @@ export default function VagaDetalhePage() {
   const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isConvocacaoDialogOpen, setIsConvocacaoDialogOpen] = useState(false);
 
   const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
   const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';
@@ -282,11 +283,11 @@ export default function VagaDetalhePage() {
         </TabsContent>
         
         <TabsContent value="banco">
-          <BancoTab vaga={vaga} />
+          <BancoTab vaga={vaga} onStartConvocacao={() => setIsConvocacaoDialogOpen(true)} />
         </TabsContent>
 
         <TabsContent value="convocacoes">
-          <ConvocacoesTab vagaId={vaga.id} />
+          <ConvocacoesTab vagaId={vaga.id} onNewConvocacao={() => setIsConvocacaoDialogOpen(true)} />
         </TabsContent>
 
         <TabsContent value="validacao">
@@ -318,6 +319,12 @@ export default function VagaDetalhePage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ConvocacaoDialog 
+        open={isConvocacaoDialogOpen} 
+        onOpenChange={setIsConvocacaoDialogOpen} 
+        vaga={vaga} 
+      />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -488,7 +495,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   );
 }
 
-function BancoTab({ vaga }: { vaga: any }) {
+function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: () => void }) {
   const { getBancoByVaga } = useVagasStore();
   const banco = getBancoByVaga(vaga.id);
 
@@ -549,14 +556,14 @@ function BancoTab({ vaga }: { vaga: any }) {
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="outline" className="text-xs font-bold uppercase tracking-wider">Ver Edital Completo</Button>
-          <Button className="text-xs font-bold uppercase tracking-wider bg-primary">Realizar Convocação</Button>
+          <Button onClick={onStartConvocacao} className="text-xs font-bold uppercase tracking-wider bg-primary">Realizar Convocação</Button>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function ConvocacoesTab({ vagaId }: { vagaId: string }) {
+function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConvocacao: () => void }) {
   const { getConvocacoesByVaga } = useVagasStore();
   const convocacoes = getConvocacoesByVaga(vagaId);
 
@@ -564,7 +571,7 @@ function ConvocacoesTab({ vagaId }: { vagaId: string }) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Histórico de Convocações</h3>
-        <Button size="sm" className="gap-2 bg-primary">
+        <Button onClick={onNewConvocacao} size="sm" className="gap-2 bg-primary">
           <Plus className="h-4 w-4" /> Nova Convocação
         </Button>
       </div>
@@ -626,5 +633,3 @@ function ConvocacoesTab({ vagaId }: { vagaId: string }) {
 
 // Re-using Building2 if needed or removing if duplicated
 // Manual table components removed
-
-

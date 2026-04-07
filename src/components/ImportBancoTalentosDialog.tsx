@@ -1066,7 +1066,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                   <div className="flex items-center justify-between">
                                     <span className="text-muted-foreground uppercase font-bold text-[9px]">Publicação:</span>
                                     <span className={`font-bold ${row.__errors?.data_abertura_edital ? 'text-destructive' : 'text-slate-700'}`}>
-                                      {row.data_abertura_edital || '-'}
+                                      {row.__display?.data_abertura_edital || row.data_abertura_edital || '-'}
                                     </span>
                                   </div>
                                   {row.__info?.data_abertura_edital && !row.__errors?.data_abertura_edital && (
@@ -1081,7 +1081,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                   <div className="flex items-center justify-between">
                                     <span className="text-muted-foreground uppercase font-bold text-[9px]">Validade:</span>
                                     <span className={`font-bold ${row.__errors?.data_validade ? 'text-destructive' : 'text-slate-700'}`}>
-                                      {row.data_validade || '-'}
+                                      {row.__display?.data_validade || row.data_validade || '-'}
                                     </span>
                                   </div>
                                   {row.__info?.data_validade && !row.__errors?.data_validade && (
@@ -1097,7 +1097,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                     <div className="flex items-center justify-between">
                                       <span className="text-muted-foreground uppercase font-bold text-[9px]">Convocação:</span>
                                       <span className={`font-bold ${row.__errors?.data_convocacao ? 'text-destructive' : 'text-slate-700'}`}>
-                                        {row.data_convocacao}
+                                        {row.__display?.data_convocacao || row.data_convocacao}
                                       </span>
                                     </div>
                                     {row.__info?.data_convocacao && !row.__errors?.data_convocacao && (

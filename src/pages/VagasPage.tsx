@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
@@ -11,10 +12,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
-  Filter, FileSpreadsheet, ListFilter 
+  Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function VagasPage() {
   const { vagas } = useVagasStore();

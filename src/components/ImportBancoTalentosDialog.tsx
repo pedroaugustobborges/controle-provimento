@@ -306,7 +306,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             email_usuario: 'ana.oliveira@agir.org.br',
             modulo_origem: 'banco_talentos',
             status: 'enviado',
-            content: data as any
+            // content: data as any // Removido para evitar estourar quota do localStorage e excesso de memória
           });
           setWorkbook(wb);
           setSelectedSheets([wb.SheetNames[0]]);
@@ -649,7 +649,11 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     } catch (error: any) {
       console.error("Erro ao processar importação:", error);
       setIsProcessing(false);
-      toast.error(`Falha ao persistir dados: ${error.message || "Ocorreu um erro ao salvar os dados importados."}`);
+      let errorMsg = error.message || "Ocorreu um erro ao salvar os dados importados.";
+      if (errorMsg.includes('quota') || errorMsg.includes('Storage')) {
+        errorMsg = "O volume de dados desta importação é grande demais para o armazenamento leve do navegador. Os dados foram processados em memória mas a persistência local falhou.";
+      }
+      toast.error(`Falha na persistência: ${errorMsg}`);
     }
   };
 

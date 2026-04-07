@@ -158,31 +158,44 @@ const parseDateValue = (value: any, targetFormat: string): {
   
   let d: Date | null = null;
   let isExcelSerial = false;
-  let formatUsed = targetFormat;
+  let formatUsed = '';
 
-  // 1. Verificar se é número serial do Excel
-  const numValue = Number(value);
-  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 30000 && numValue < 60000;
+  // 1. PRIORIDADE: Verificar se é número serial do Excel
+  // O Excel trata datas como números seriais (ex: 46080 = 2026-03-27)
+  const numValue = typeof value === 'number' ? value : Number(value);
+  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 20000 && numValue < 60000;
 
-  if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial)) {
-    d = addDays(new Date(1899, 11, 30), numValue);
-    isExcelSerial = true;
-    formatUsed = 'Excel (numérico)';
-  } 
-  // 2. Se já for um objeto Date
-  else if (value instanceof Date) {
-    d = value;
-    formatUsed = 'Objeto Date';
+  if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial) || looksLikeExcelSerial) {
+    // Lógica correta para data serial do Excel (sistema 1900)
+    // Excel considera 1900-01-01 como 1. 1899-12-30 é a base correta para o addDays.
+    try {
+      d = addDays(new Date(1899, 11, 30), numValue);
+      if (isValid(d)) {
+        isExcelSerial = true;
+        formatUsed = 'Convertido de serial Excel';
+      } else {
+        d = null;
+      }
+    } catch (e) {
+      d = null;
+    }
   }
-  // 3. Se for string (ou algo que possa ser convertido em string)
-  else {
+
+  // 2. Se já for um objeto Date (processado pelo XLSX com cellDates: true)
+  if (!d && value instanceof Date) {
+    d = value;
+    formatUsed = 'Objeto Date Nativo';
+  }
+
+  // 3. Se for string ou falhou no serial
+  if (!d) {
     const trimmed = String(value).trim();
     if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '' };
 
     // Limpar delimitadores comuns para facilitar o parser
     const cleaned = trimmed.replace(/[\.-]/g, '/');
     
-    // Lista de formatos para tentar, priorizando dd/mm/aaaa como solicitado
+    // Lista de formatos para tentar, priorizando dd/mm/aaaa
     const formatsToTry = targetFormat === 'auto' 
       ? ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'yyyy/MM/dd'] 
       : [targetFormat.replace(/[\.-]/g, '/')];
@@ -195,7 +208,8 @@ const parseDateValue = (value: any, targetFormat: string): {
           const year = parsed.getFullYear();
           if (year > 1900 && year < 2100) {
             d = parsed;
-            formatUsed = f === 'dd/MM/yyyy' ? 'Brasileiro (dd/mm/aaaa)' : f;
+            formatUsed = `Formato ${f} detectado`;
+            if (f === 'dd/MM/yyyy') formatUsed = 'Convertido de dd/mm/aaaa';
             break;
           }
         }
@@ -204,12 +218,12 @@ const parseDateValue = (value: any, targetFormat: string): {
       }
     }
     
-    // Fallback para o parser nativo se tudo falhar
-    if (!d) {
+    // Fallback para o parser nativo se NÃO parecer um número serial (evita tratar 46080 como ano)
+    if (!d && isNaN(Number(trimmed))) {
       const native = new Date(trimmed);
       if (isValid(native)) {
         d = native;
-        formatUsed = 'Parser nativo';
+        formatUsed = 'Detectado automaticamente';
       }
     }
   }
@@ -218,7 +232,8 @@ const parseDateValue = (value: any, targetFormat: string): {
     return { 
       date: d, 
       isValid: true, 
-      formatted: format(d, 'yyyy-MM-dd'),
+      // Retornamos no padrão brasileiro para exibição e armazenamento conforme solicitado
+      formatted: format(d, 'dd/MM/yyyy'),
       isExcelSerial,
       formatUsed
     };

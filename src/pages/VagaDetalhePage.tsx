@@ -52,6 +52,22 @@ export default function VagaDetalhePage() {
 
     });
     toast.success('Status atualizado');
+  const handleDelete = () => {
+    if (vaga && canDelete) {
+      deleteVaga(vaga.id);
+      addAuditLog({
+        usuario_nome: currentUser?.nome_completo || 'Sistema',
+        usuario_email: currentUser?.email || 'sistema@sistema.com',
+        perfil: currentUser?.perfil || 'Sistema',
+        data: new Date().toISOString().split('T')[0],
+        hora: new Date().toLocaleTimeString(),
+        acao: 'Excluir Requisição',
+        modulo: 'Vagas',
+        registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+      });
+      toast.success('Requisição excluída com sucesso.');
+      navigate('/vagas');
+    }
   };
 
   return (

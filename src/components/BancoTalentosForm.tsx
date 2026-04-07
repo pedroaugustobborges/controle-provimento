@@ -16,12 +16,22 @@ import { BancoTalentos } from '@/types/vaga';
 const formSchema = z.object({
   unidade: z.string().min(1, 'Unidade é obrigatória'),
   cargo: z.string().min(1, 'Cargo é obrigatório'),
-  secao: z.string().min(1, 'Seção é obrigatória'),
+  secao: z.string().optional(),
   numero_edital: z.string().min(1, 'Número do edital é obrigatório'),
+  numero_processo: z.string().optional(),
+  nome: z.string().optional(),
+  classificacao: z.string().optional(),
+  quantidade_banco: z.string().optional(),
+  status_import: z.string().optional(),
   data_abertura_edital: z.string().min(1, 'Data de abertura é obrigatória'),
   data_validade: z.string().min(1, 'Data de validade é obrigatória'),
   is_prorrogado: z.boolean().default(false),
   nova_data_validade: z.string().optional(),
+  data_convocacao: z.string().optional(),
+  unidade_convocacao: z.string().optional(),
+  numero_chamada: z.string().optional(),
+  numero_processo_seletivo: z.string().optional(),
+  numero_vaga_aproveitamento: z.string().optional(),
   observacoes: z.string().optional(),
 });
 

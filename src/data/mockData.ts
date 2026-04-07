@@ -5,7 +5,8 @@ export const mockVagas: Vaga[] = [
     id: '1', numero_requisicao: 'REQ-2025-001', data_abertura: '2025-01-15', cargo: 'Enfermeiro(a) - UTI',
     tipo_vaga: 'quadro', quantidade: 3, secao: 'Enfermagem', unidade: 'Hospital Central',
     analista_responsavel: 'Maria Silva', status_geral: 'em_edital', origem_importacao: 'Planilha RM',
-    observacoes: 'Urgente - cobertura de escala noturna', historico: [
+    observacoes: 'Urgente - cobertura de escala noturna', pcd: false, estado: 'Goiás', selecao: 'Pública',
+    historico: [
       { id: 'h1', data: '2025-01-15', descricao: 'Vaga cadastrada via importação', usuario: 'Sistema' },
       { id: 'h2', data: '2025-02-01', descricao: 'Enviada para publicação de edital', usuario: 'Maria Silva' },
     ],
@@ -14,7 +15,8 @@ export const mockVagas: Vaga[] = [
     id: '2', numero_requisicao: 'REQ-2025-002', data_abertura: '2025-02-03', cargo: 'Técnico de Enfermagem',
     tipo_vaga: 'substituicao', quantidade: 2, secao: 'Enfermagem', unidade: 'Unidade Barra',
     analista_responsavel: 'João Santos', status_geral: 'aberta', origem_importacao: 'Planilha Controle',
-    observacoes: '', historico: [
+    observacoes: '', pcd: true, estado: 'Goiás', selecao: 'Interna',
+    historico: [
       { id: 'h3', data: '2025-02-03', descricao: 'Vaga cadastrada via importação', usuario: 'Sistema' },
     ],
   },
@@ -22,7 +24,8 @@ export const mockVagas: Vaga[] = [
     id: '3', numero_requisicao: 'REQ-2025-003', data_abertura: '2025-01-20', cargo: 'Médico Plantonista - Emergência',
     tipo_vaga: 'quadro', quantidade: 1, secao: 'Corpo Clínico', unidade: 'Hospital Central',
     analista_responsavel: 'Maria Silva', status_geral: 'entrevista', origem_importacao: 'Planilha RM',
-    observacoes: 'Candidatos em fase final', historico: [
+    observacoes: 'Candidatos em fase final', pcd: false, estado: 'Goiás', selecao: 'Pública',
+    historico: [
       { id: 'h4', data: '2025-01-20', descricao: 'Vaga cadastrada', usuario: 'Maria Silva' },
       { id: 'h5', data: '2025-02-10', descricao: 'Edital publicado', usuario: 'Ana Costa' },
       { id: 'h6', data: '2025-03-01', descricao: 'Triagem concluída - 15 aprovados', usuario: 'Maria Silva' },
@@ -33,7 +36,8 @@ export const mockVagas: Vaga[] = [
     id: '4', numero_requisicao: 'REQ-2025-004', data_abertura: '2024-11-10', cargo: 'Fisioterapeuta Respiratório',
     tipo_vaga: 'lideranca', quantidade: 1, secao: 'Reabilitação', unidade: 'Unidade Norte',
     analista_responsavel: 'Ana Costa', status_geral: 'encerrada', origem_importacao: 'Planilha RM',
-    observacoes: 'Processo concluído com sucesso', data_encerramento: '2025-02-28', historico: [
+    observacoes: 'Processo concluído com sucesso', data_encerramento: '2025-02-28', pcd: false, estado: 'Goiás', selecao: 'Mista',
+    historico: [
       { id: 'h8', data: '2024-11-10', descricao: 'Vaga cadastrada', usuario: 'Ana Costa' },
       { id: 'h9', data: '2025-02-28', descricao: 'Vaga encerrada - candidato aprovado', usuario: 'Ana Costa' },
     ],
@@ -42,7 +46,8 @@ export const mockVagas: Vaga[] = [
     id: '5', numero_requisicao: 'REQ-2025-005', data_abertura: '2025-03-01', cargo: 'Farmacêutico Clínico',
     tipo_vaga: 'edital', quantidade: 2, secao: 'Farmácia', unidade: 'Hospital Central',
     analista_responsavel: 'João Santos', status_geral: 'em_edital', origem_importacao: 'Planilha Controle',
-    observacoes: 'Aguardando validação do edital', historico: [
+    observacoes: 'Aguardando validação do edital', pcd: false, estado: 'Goiás', selecao: 'Pública',
+    historico: [
       { id: 'h10', data: '2025-03-01', descricao: 'Vaga cadastrada', usuario: 'João Santos' },
       { id: 'h11', data: '2025-03-10', descricao: 'Enviada para edital', usuario: 'João Santos' },
     ],
@@ -51,7 +56,8 @@ export const mockVagas: Vaga[] = [
     id: '6', numero_requisicao: 'REQ-2025-006', data_abertura: '2025-02-20', cargo: 'Nutricionista',
     tipo_vaga: 'banco_talentos', quantidade: 5, secao: 'Nutrição', unidade: 'Unidade Barra',
     analista_responsavel: 'Maria Silva', status_geral: 'em_triagem', origem_importacao: 'Planilha RM',
-    observacoes: 'Banco de talentos para futuras contratações', historico: [
+    observacoes: 'Banco de talentos para futuras contratações', pcd: true, estado: 'Goiás', selecao: 'Pública',
+    historico: [
       { id: 'h12', data: '2025-02-20', descricao: 'Vaga cadastrada', usuario: 'Maria Silva' },
     ],
   },
@@ -59,7 +65,8 @@ export const mockVagas: Vaga[] = [
     id: '7', numero_requisicao: 'REQ-2025-007', data_abertura: '2025-03-05', cargo: 'Auxiliar Administrativo',
     tipo_vaga: 'movimentacao_interna', quantidade: 1, secao: 'Administrativo', unidade: 'Unidade Norte',
     analista_responsavel: 'Ana Costa', status_geral: 'aberta', origem_importacao: 'Manual',
-    observacoes: 'Movimentação interna - setor financeiro', historico: [
+    observacoes: 'Movimentação interna - setor financeiro', pcd: false, estado: 'Goiás', selecao: 'Interna',
+    historico: [
       { id: 'h13', data: '2025-03-05', descricao: 'Vaga cadastrada manualmente', usuario: 'Ana Costa' },
     ],
   },
@@ -67,7 +74,8 @@ export const mockVagas: Vaga[] = [
     id: '8', numero_requisicao: 'REQ-2025-008', data_abertura: '2025-01-05', cargo: 'Psicólogo Hospitalar',
     tipo_vaga: 'quadro', quantidade: 1, secao: 'Saúde Mental', unidade: 'Hospital Central',
     analista_responsavel: 'João Santos', status_geral: 'finalizada', origem_importacao: 'Planilha RM',
-    observacoes: 'Aprovado candidato interno', data_encerramento: '2025-03-20', historico: [
+    observacoes: 'Aprovado candidato interno', data_encerramento: '2025-03-20', pcd: false, estado: 'Goiás', selecao: 'Mista',
+    historico: [
       { id: 'h14', data: '2025-01-05', descricao: 'Vaga cadastrada', usuario: 'João Santos' },
       { id: 'h15', data: '2025-03-20', descricao: 'Vaga finalizada', usuario: 'João Santos' },
     ],
@@ -96,20 +104,18 @@ export const mockEditais: Edital[] = [
 
 export const mockValidacoes: ValidacaoEdital[] = [
   {
-    id: 'v1', vaga_id: '1', salario_confere: true, requisitos_confere: true, atribuicoes_confere: true,
-    site_confere: true, datas_conferem: true, vaga_correta_para_edital: true, planilha_correta: true,
-    observacoes_validacao: 'Tudo confere, liberado para publicação.', validado_por: 'Carlos Mendes',
-    data_validacao: '2025-02-04', status_validacao: 'aprovado',
+    id: 'v1', vaga_id: '1', precisa_validacao: true, responsavel_validacao: 'Carlos Mendes',
+    tipo_validacao: 'Completa', observacao: 'Tudo confere, liberado para publicação.',
+    etapa_finalizada: true, status_validacao: 'aprovado',
   },
   {
-    id: 'v2', vaga_id: '5', salario_confere: null, requisitos_confere: null, atribuicoes_confere: null,
-    site_confere: null, datas_conferem: null, vaga_correta_para_edital: null, planilha_correta: null,
-    observacoes_validacao: '', validado_por: '', status_validacao: 'pendente',
+    id: 'v2', vaga_id: '5', precisa_validacao: true, responsavel_validacao: '',
+    tipo_validacao: '', observacao: '',
+    etapa_finalizada: false, status_validacao: 'pendente',
   },
   {
-    id: 'v3', vaga_id: '3', salario_confere: true, requisitos_confere: true, atribuicoes_confere: false,
-    site_confere: true, datas_conferem: true, vaga_correta_para_edital: true, planilha_correta: true,
-    observacoes_validacao: 'Atribuições do cargo estão desatualizadas na descrição.', validado_por: 'Carlos Mendes',
-    data_validacao: '2025-02-09', status_validacao: 'reprovado',
+    id: 'v3', vaga_id: '3', precisa_validacao: true, responsavel_validacao: 'Carlos Mendes',
+    tipo_validacao: 'Técnica', observacao: 'Atribuições do cargo estão desatualizadas na descrição.',
+    etapa_finalizada: false, status_validacao: 'reprovado',
   },
 ];

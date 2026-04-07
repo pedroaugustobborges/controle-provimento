@@ -72,33 +72,108 @@ export default function VagaDetalhePage() {
 
         <TabsContent value="dados">
           <Card>
-            <CardContent className="pt-5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <CardContent className="pt-5 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
-                  <label className="text-xs text-muted-foreground">Tipo de Vaga</label>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Unidade</label>
+                  <p className="text-sm font-medium">{vaga.unidade}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Seção</label>
+                  <p className="text-sm font-medium">{vaga.secao}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Estado</label>
+                  <p className="text-sm font-medium">{vaga.estado}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Tipo de Provimento</label>
                   <p className="text-sm font-medium">{TIPO_VAGA_LABELS[vaga.tipo_vaga]}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">Quantidade</label>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Tipo de Seleção</label>
+                  <p className="text-sm font-medium">{vaga.selecao}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">PCD</label>
+                  <p className="text-sm font-medium">{vaga.pcd ? 'Sim' : 'Não'}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Nº Edital</label>
+                  <p className="text-sm font-medium">{vaga.numero_edital || '—'}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Nº Processo</label>
+                  <p className="text-sm font-medium">{vaga.numero_processo || '—'}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Nº Requisição</label>
+                  <p className="text-sm font-medium">{vaga.numero_requisicao}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Quantidade de Vagas</label>
                   <p className="text-sm font-medium">{vaga.quantidade}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">Origem</label>
-                  <p className="text-sm font-medium">{vaga.origem_importacao}</p>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Etapa Atual</label>
+                  <p className="text-sm font-medium">{vaga.etapa_atual_vaga || 'Não iniciada'}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">Status</label>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status do Processo</label>
                   <Select value={vaga.status_geral} onValueChange={handleStatusChange}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="mt-1 h-8"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Observações</label>
-                <p className="text-sm mt-1">{vaga.observacoes || 'Nenhuma observação registrada.'}</p>
+
+              <div className="border-t pt-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total de Inscritos</label>
+                  <p className="text-sm font-medium">{vaga.total_inscritos || 0}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Aprovados Triagem</label>
+                  <p className="text-sm font-medium">{vaga.aprovados_triagem || 0}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Aprovados Avaliação</label>
+                  <p className="text-sm font-medium">{vaga.aprovados_avaliacao || 0}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Convocados Entrevista</label>
+                  <p className="text-sm font-medium">{vaga.convocados_entrevista || 0}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Aprovados Finais</label>
+                  <p className="text-sm font-medium">{vaga.aprovados_finais || 0}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Candidatos em Banco</label>
+                  <p className="text-sm font-medium">{vaga.banco || 0}</p>
+                </div>
+              </div>
+
+              <div className="border-t pt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Data Abertura</label>
+                  <p className="text-sm font-medium">{formatDate(vaga.data_abertura)}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Data Encerramento</label>
+                  <p className="text-sm font-medium">{vaga.data_encerramento ? formatDate(vaga.data_encerramento) : '—'}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Tempo em Aberto</label>
+                  <p className="text-sm font-medium">{calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias corridos / {vaga.dias_uteis || 0} dias úteis</p>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Observações</label>
+                <p className="text-sm mt-1 whitespace-pre-wrap">{vaga.observacoes || 'Nenhuma observação registrada.'}</p>
               </div>
             </CardContent>
           </Card>
@@ -214,19 +289,17 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   const { updateValidacao, addValidacao } = useVagasStore();
   const [form, setForm] = useState(validacao || {
     id: `v-${Date.now()}`, vaga_id: vagaId,
-    salario_confere: null, requisitos_confere: null, atribuicoes_confere: null,
-    site_confere: null, datas_conferem: null, vaga_correta_para_edital: null, planilha_correta: null,
-    observacoes_validacao: '', validado_por: '', status_validacao: 'pendente',
+    precisa_validacao: true,
+    responsavel_validacao: '',
+    tipo_validacao: '',
+    observacao: '',
+    etapa_finalizada: false,
+    status_validacao: 'pendente',
   });
 
   const items = [
-    { key: 'salario_confere', label: 'Salário confere' },
-    { key: 'requisitos_confere', label: 'Requisitos conferem' },
-    { key: 'atribuicoes_confere', label: 'Atribuições conferem' },
-    { key: 'site_confere', label: 'Site confere' },
-    { key: 'datas_conferem', label: 'Datas conferem' },
-    { key: 'vaga_correta_para_edital', label: 'Vaga correta para edital' },
-    { key: 'planilha_correta', label: 'Planilha correta' },
+    { key: 'precisa_validacao', label: 'Precisa validação?' },
+    { key: 'etapa_finalizada', label: 'Etapa finalizada?' },
   ];
 
   const cycle = (current: boolean | null) => {
@@ -236,17 +309,10 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   };
 
   const save = () => {
-    const allChecked = items.every((i) => form[i.key as keyof typeof form] !== null);
-    const allOk = items.every((i) => form[i.key as keyof typeof form] === true);
-    const updated = {
-      ...form,
-      status_validacao: allChecked ? (allOk ? 'aprovado' : 'reprovado') : 'pendente',
-      data_validacao: allChecked ? new Date().toISOString().split('T')[0] : undefined,
-    };
     if (validacao) {
-      updateValidacao(validacao.id, updated);
+      updateValidacao(validacao.id, form);
     } else {
-      addValidacao(updated);
+      addValidacao(form);
     }
     toast.success('Validação salva!');
   };
@@ -265,7 +331,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
             <div
               key={item.key}
               className="flex items-center justify-between p-3 rounded-md bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => setForm({ ...form, [item.key]: cycle(form[item.key as keyof typeof form] as boolean | null) })}
+              onClick={() => setForm({ ...form, [item.key]: !form[item.key as keyof typeof form] })}
             >
               <span className="text-sm">{item.label}</span>
               {getIcon(form[item.key as keyof typeof form] as boolean | null)}
@@ -273,12 +339,16 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
           ))}
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Validado por</label>
-          <Input value={form.validado_por} onChange={(e) => setForm({ ...form, validado_por: e.target.value })} className="mt-1" />
+          <label className="text-xs text-muted-foreground">Responsável pela validação</label>
+          <Input value={form.responsavel_validacao} onChange={(e) => setForm({ ...form, responsavel_validacao: e.target.value })} className="mt-1" />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Observações</label>
-          <Textarea value={form.observacoes_validacao} onChange={(e) => setForm({ ...form, observacoes_validacao: e.target.value })} className="mt-1" rows={3} />
+          <label className="text-xs text-muted-foreground">Tipo de validação</label>
+          <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="mt-1" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">Observação</label>
+          <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="mt-1" rows={3} />
         </div>
         <Button onClick={save}>Salvar Validação</Button>
       </CardContent>

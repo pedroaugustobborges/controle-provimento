@@ -11,7 +11,7 @@ export default function ConvocacoesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Convocações</h1>
-          <p className="text-muted-foreground">Gerenciamento do fluxo de admissão de candidatos aprovados.</p>
+          <p className="text-muted-foreground">Consulta rápida e acompanhamento do fluxo de admissão.</p>
         </div>
         <div className="flex items-center gap-2">
            <div className="flex bg-muted p-1 rounded-lg">
@@ -43,7 +43,7 @@ export default function ConvocacoesPage() {
            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
            <input 
               type="text" 
-              placeholder="Buscar por candidato, cargo ou unidade..." 
+              placeholder="Consulta rápida: candidato, cargo ou unidade..." 
               className="w-full pl-10 pr-4 h-9 text-sm rounded-lg bg-background border border-slate-200/60 focus:ring-1 focus:ring-primary/20 focus:border-primary/40 transition-all outline-none"
            />
         </div>

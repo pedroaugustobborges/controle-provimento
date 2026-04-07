@@ -65,6 +65,9 @@ export default function VagasPage() {
             status_geral: 'aberta' as const,
             origem_importacao: file.name,
             observacoes: '',
+            pcd: false,
+            estado: 'Goiás',
+            selecao: 'Pública',
             historico: [{ id: `h-${Date.now()}-${i}`, data: new Date().toISOString().split('T')[0], descricao: `Importado de ${file.name}`, usuario: 'Sistema' }],
           };
         });
@@ -91,7 +94,7 @@ export default function VagasPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Processos de Recrutamento</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Controle de Provimento</h1>
         <div className="flex gap-2">
           <input type="file" ref={fileRef} accept=".csv,.txt" className="hidden" onChange={handleFile} />
           <Button variant="outline" size="sm" onClick={handleImport}>
@@ -149,15 +152,17 @@ export default function VagasPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/30">
+                <tr className="border-b bg-muted/30 whitespace-nowrap">
                   <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Requisição</th>
                   <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Cargo</th>
                   <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Unidade</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Seção</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Edital</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">PCD</th>
                   <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Tipo</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider text-center">Qtd</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Analista</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Seleção</th>
                   <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider text-center">Vagas</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Inscritos</th>
                   <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Abertura</th>
                   <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Dias</th>
                 </tr>
@@ -166,17 +171,19 @@ export default function VagasPage() {
                 {filtered.map((v) => (
                   <tr
                     key={v.id}
-                    className="border-b last:border-0 hover:bg-muted/20 cursor-pointer transition-colors"
+                    className="border-b last:border-0 hover:bg-muted/20 cursor-pointer transition-colors whitespace-nowrap"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
                     <td className="p-3 font-mono text-xs">{v.numero_requisicao}</td>
                     <td className="p-3 font-medium">{v.cargo}</td>
                     <td className="p-3 text-muted-foreground">{v.unidade}</td>
-                    <td className="p-3 text-muted-foreground">{v.secao}</td>
+                    <td className="p-3 text-xs">{v.numero_edital || '—'}</td>
+                    <td className="p-3 text-xs">{v.pcd ? 'Sim' : 'Não'}</td>
                     <td className="p-3 text-xs">{TIPO_VAGA_LABELS[v.tipo_vaga]}</td>
-                    <td className="p-3 text-center">{v.quantidade}</td>
-                    <td className="p-3 text-muted-foreground text-xs">{v.analista_responsavel}</td>
+                    <td className="p-3 text-xs">{v.selecao}</td>
                     <td className="p-3"><StatusBadge status={v.status_geral} /></td>
+                    <td className="p-3 text-center">{v.quantidade}</td>
+                    <td className="p-3 text-center">{v.total_inscritos || 0}</td>
                     <td className="p-3 text-xs">{formatDate(v.data_abertura)}</td>
                     <td className="p-3 text-xs font-medium">{calcDiasAberto(v.data_abertura, v.data_encerramento)}</td>
                   </tr>

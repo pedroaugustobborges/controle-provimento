@@ -18,7 +18,7 @@ import {
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
-  { title: 'Processos Seletivos', url: '/vagas', icon: Briefcase },
+  { title: 'Controle de Provimento', url: '/vagas', icon: Briefcase },
   { title: 'Editais e Etapas', url: '/editais', icon: FileText },
   { title: 'Convocações', url: '/convocacoes', icon: Users },
 ];
@@ -50,7 +50,7 @@ export function AppSidebar() {
 
       <SidebarContent className="py-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Módulos Principais</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Fluxo de Provimento</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
@@ -73,7 +73,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup className="mt-4">
-          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Operacional</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Apoio Administrativo</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {secondaryItems.map((item) => (

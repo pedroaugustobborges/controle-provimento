@@ -48,6 +48,9 @@ export default function AdministracaoPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
+          <TabsTrigger value="equipe" className="gap-2 font-bold px-6">
+            <Users className="h-4 w-4" /> Equipe por Unidade
+          </TabsTrigger>
           <TabsTrigger value="unidades" className="gap-2 font-bold px-6">
             <Building2 className="h-4 w-4" /> Unidades
           </TabsTrigger>

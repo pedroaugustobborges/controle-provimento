@@ -812,15 +812,21 @@ export function ImportExcelDialog({
                                     const colIndex = headers.indexOf(mapping.excel);
                                     const sampleValue = colIndex !== -1 ? firstRow?.[colIndex] : null;
                                     if (sampleValue) {
-                                      const { isValid, formatted } = parseDateValue(sampleValue, mapping.format || 'auto');
+                                      const { isValid, display, formatUsed } = convertDateValue(sampleValue, mapping.format || 'auto');
                                       return (
-                                        <div className="flex items-center gap-1 text-[10px]">
-                                          <span className="text-muted-foreground">Exemplo:</span>
-                                          <span className="font-mono bg-muted px-1 rounded">{String(sampleValue)}</span>
-                                          <ArrowRight className="h-2 w-2 text-muted-foreground" />
-                                          <span className={isValid ? "text-green-600 font-medium" : "text-destructive font-medium"}>
-                                            {isValid ? formatted : "Erro de conversão"}
-                                          </span>
+                                        <div className="flex flex-col gap-1">
+                                          <div className="flex items-center gap-1 text-[10px]">
+                                            <span className="text-muted-foreground">Exemplo:</span>
+                                            <span className="font-mono bg-muted px-1 rounded">{String(sampleValue)}</span>
+                                            <ArrowRight className="h-2 w-2 text-muted-foreground" />
+                                            <span className={isValid ? "text-green-600 font-medium" : "text-destructive font-medium"}>
+                                              {display}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                                            <CheckCircle2 className="h-2.5 w-2.5 text-green-500" />
+                                            <span>{formatUsed}</span>
+                                          </div>
                                         </div>
                                       );
                                     }

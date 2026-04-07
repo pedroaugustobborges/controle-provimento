@@ -392,7 +392,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           if (m.excel && m.excel !== 'no_mapping') {
             const val = row[m.excel];
             if (m.isDate) {
-              const { isValid, formatted, formatUsed, display } = parseDateValue(val, m.format || 'dd/MM/yyyy');
+              const { isValid, formatted, formatUsed, display } = convertDateValue(val, m.format || 'auto');
               result[m.system] = formatted;
               if (formatUsed) result.__info[m.system] = formatUsed;
               result.__display[m.system] = display;
@@ -458,7 +458,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           if (m.excel && m.excel !== 'no_mapping') {
             const rawVal = row[m.excel];
             if (m.isDate) {
-              const dateResult = parseDateValue(rawVal, m.format || 'dd/MM/yyyy');
+              const dateResult = convertDateValue(rawVal, m.format || 'auto');
               mapped[m.system] = dateResult.formatted;
               if (!dateResult.isValid && rawVal) {
                 hasErrorInRow = true;
@@ -901,7 +901,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                   </div>
                                   <Select 
                                     value={mapping.format || 'auto'} 
-                                    onValueChange={(val) => setMappings(prev => prev.map(m => m.system === field.key ? { ...m, format: val } : m))}
+                                    onValueChange={(val) => setMappings(prev => prev.map(m => m.system === field.key ? { ...m, format: val as DateFormat } : m))}
                                   >
                                     <SelectTrigger className="h-7 text-xs bg-background border-muted-foreground/20">
                                       <SelectValue />

@@ -186,7 +186,7 @@ export default function VagaDetalhePage() {
               <div className="space-y-2">
                 <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Observações Internas</label>
                 <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 min-h-[100px] text-sm text-slate-600 whitespace-pre-wrap">
-                  {vaga.observacoes || 'Nenhuma observação registrada.'}
+                  {vaga.observacoes_internas || vaga.observacoes || 'Nenhuma observação registrada.'}
                 </div>
               </div>
             </CardContent>

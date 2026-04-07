@@ -207,8 +207,9 @@ export default function FilaEditaisPage() {
                       {formatDate(v.data_abertura)}
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-primary font-bold">
-                      {v.numero_requisicao}
+                      {v.requisicao || v.numero_requisicao}
                     </td>
+
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-800">{v.cargo}</div>
                       {v.reabertura_suspeita && (

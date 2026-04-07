@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
-  Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle
+  Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle,
+  Database, CheckCircle2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
@@ -75,13 +76,26 @@ export default function VagasPage() {
     }
   };
 
-  const unidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
+  const allUnidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
+  
+  // Restriction by unit
+  const visibleUnidades = currentUser?.visualiza_todas_unidades 
+    ? allUnidades 
+    : (currentUser?.unidades_vinculadas || []);
+
+  const unidades = allUnidades.filter(u => visibleUnidades.includes(u));
   const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort();
   const assistentes = [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort();
 
   const filtered = vagas.filter((v) => {
+    // Unit access restriction
+    if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
+      return false;
+    }
+
     const matchSearch = !search || v.cargo.toLowerCase().includes(search.toLowerCase()) ||
-      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase());
+      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase()) ||
+      v.unidade.toLowerCase().includes(search.toLowerCase());
     const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
@@ -90,7 +104,6 @@ export default function VagasPage() {
     const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
     return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
   });
-
 
   const clearFilters = () => {
     setSearch('');
@@ -313,6 +326,8 @@ export default function VagasPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

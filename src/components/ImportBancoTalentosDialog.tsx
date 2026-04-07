@@ -47,6 +47,9 @@ const REQUIRED_FIELDS = [
 ];
 
 const OPTIONAL_FIELDS = [
+  { key: 'numero_processo', label: 'Nº Processo' },
+  { key: 'nome', label: 'Nome' },
+  { key: 'classificacao', label: 'Classificação' },
   { key: 'is_prorrogado', label: 'Prorrogado (Sim/Não)' },
   { key: 'nova_data_validade', label: 'Nova Data Final' },
   { key: 'observacoes', label: 'Observações' },
@@ -57,6 +60,9 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   cargo: ['cargo', 'função', 'vaga'],
   secao: ['seção', 'secao', 'setor', 'departamento'],
   numero_edital: ['edital', 'nº edital', 'número edital'],
+  numero_processo: ['processo', 'nº processo', 'número processo'],
+  nome: ['nome', 'candidato'],
+  classificacao: ['classificação', 'posicao', 'ranking'],
   data_abertura_edital: ['abertura', 'data abertura', 'dt abertura'],
   data_validade: ['validade', 'data validade', 'dt validade'],
   is_prorrogado: ['prorrogado', 'prorrogação'],

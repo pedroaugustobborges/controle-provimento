@@ -7,8 +7,11 @@ import {
   CheckCircle, 
   TrendingUp,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Calendar,
+  FileSpreadsheet
 } from 'lucide-react';
+
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {

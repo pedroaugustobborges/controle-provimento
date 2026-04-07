@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Clock, CheckCircle, XCircle, AlertCircle, MoreHorizontal, MessageSquare, Paperclip } from 'lucide-react';
+import { User, Clock, CheckCircle, XCircle, AlertCircle, MoreHorizontal, MessageSquare, Paperclip, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface KanbanColumnProps {

@@ -13,6 +13,7 @@ interface VagasState {
   setVagas: (vagas: Vaga[]) => void;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
+  deleteVaga: (id: string) => void;
   updateEdital: (id: string, data: Partial<Edital>) => void;
   updateValidacao: (id: string, data: Partial<ValidacaoEdital>) => void;
   addEdital: (edital: Edital) => void;

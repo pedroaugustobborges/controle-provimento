@@ -54,6 +54,16 @@ export default function AdministracaoPage() {
   
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
+
+  const handleDeleteUser = () => {
+    if (usuarioParaExcluir) {
+      toast.success('Usuário removido com sucesso.');
+      setIsDeleteDialogOpen(false);
+      setUsuarioParaExcluir(null);
+    }
+  };
 
   const handleTestEmail = (id: string) => {
     setTestEmailLoading(id);

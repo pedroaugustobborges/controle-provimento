@@ -1116,31 +1116,62 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           )}
 
           {step === 'summary' && importSummary && (
-            <div className="space-y-8 flex flex-col items-center py-12">
+            <div className="space-y-8 flex flex-col items-center py-8">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
                 <CheckCircle2 className="h-12 w-12 text-green-600" />
               </div>
               <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold">Importação Concluída!</h2>
+                <h2 className="text-3xl font-bold text-slate-900">Importação Concluída!</h2>
                 <p className="text-muted-foreground max-w-sm">A base do banco de talentos foi atualizada com sucesso no sistema.</p>
               </div>
-              <div className={`grid ${importSummary.total_erros > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-4 w-full max-w-2xl px-4`}>
-                <div className="bg-muted/30 p-4 rounded-2xl border text-center flex flex-col justify-center">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Lidos</span>
-                  <p className="text-2xl font-bold text-slate-900">{importSummary.total_lidos}</p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl px-4">
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total na Planilha</span>
+                  <p className="text-2xl font-black text-slate-900">{importSummary.total_planilha}</p>
+                  <p className="text-[9px] text-slate-400 mt-1">{importSummary.total_vazios} linhas vazias ignoradas</p>
                 </div>
-                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center flex flex-col justify-center">
-                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Novos Registros</span>
-                  <p className="text-2xl font-bold text-green-700">{importSummary.total_novos}</p>
+                
+                <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Registros Lidos</span>
+                  <p className="text-2xl font-black text-blue-700">{importSummary.total_lidos}</p>
+                  <p className="text-[9px] text-blue-400 mt-1">Válidos para processamento</p>
                 </div>
-                {importSummary.total_erros > 0 && (
-                  <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100 text-center flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-1">Com Erro</span>
-                    <p className="text-2xl font-bold text-red-700">{importSummary.total_erros}</p>
-                  </div>
-                )}
+
+                <div className="bg-green-50/50 p-5 rounded-2xl border border-green-100 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Importados</span>
+                  <p className="text-2xl font-black text-green-700">{importSummary.total_novos}</p>
+                  <p className="text-[9px] text-green-400 mt-1">Salvos no sistema</p>
+                </div>
+
+                <div className={`p-5 rounded-2xl border text-center flex flex-col justify-center ${importSummary.total_erros > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${importSummary.total_erros > 0 ? 'text-red-600' : 'text-slate-400'}`}>Falhas</span>
+                  <p className={`text-2xl font-black ${importSummary.total_erros > 0 ? 'text-red-700' : 'text-slate-500'}`}>{importSummary.total_erros}</p>
+                  <p className={`text-[9px] mt-1 ${importSummary.total_erros > 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                    {importSummary.total_erros > 0 ? 'Campos obrigatórios ausentes' : 'Nenhuma falha crítica'}
+                  </p>
+                </div>
               </div>
-              <Button size="lg" className="px-12 rounded-full mt-4 shadow-lg hover:shadow-xl transition-all" onClick={() => onOpenChange(false)}>Concluir e Fechar</Button>
+
+              {importSummary.total_alertas_data > 0 && (
+                <div className="w-full max-w-4xl px-4">
+                  <Alert className="bg-amber-50 border-amber-200">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertTitle className="text-amber-800 font-bold">Aviso de Datas</AlertTitle>
+                    <AlertDescription className="text-amber-700 text-xs">
+                      {importSummary.total_alertas_data} registros possuem datas que não puderam ser convertidas automaticamente. 
+                      Estes registros <strong>foram importados</strong> com o valor original para evitar perda de dados, mas podem precisar de revisão manual no sistema.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+
+              <div className="flex flex-col items-center gap-4 mt-4">
+                <Button size="lg" className="px-16 rounded-full shadow-lg hover:shadow-xl transition-all h-12 text-base font-bold" onClick={() => onOpenChange(false)}>
+                  Concluir e Ir para o Banco
+                </Button>
+                <p className="text-xs text-muted-foreground italic">Dica: Você pode filtrar por "data de importação" para conferir os novos registros.</p>
+              </div>
             </div>
           )}
         </div>

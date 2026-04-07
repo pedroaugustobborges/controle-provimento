@@ -259,10 +259,8 @@ export default function BancoTalentosPage() {
                               size="icon" 
                               className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                               onClick={() => {
-                                if (window.confirm('Tem certeza que deseja excluir este banco de talentos?')) {
-                                  deleteBanco(b.id);
-                                  toast.success('Banco de talentos excluído com sucesso.');
-                                }
+                                setBancoParaExcluir(b.id);
+                                setIsDeleteDialogOpen(true);
                               }}
                             >
                               <Trash2 className="h-4 w-4" />

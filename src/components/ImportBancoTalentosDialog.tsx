@@ -602,7 +602,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   };
 
   const reset = () => {
-    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]); setTotalDetectedRows(0);
+    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setImportErrors([]); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]); setTotalDetectedRows(0);
   };
 
   const STEPS = [

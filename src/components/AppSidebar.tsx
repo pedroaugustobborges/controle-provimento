@@ -1,51 +1,91 @@
-import { Building2, ClipboardList, LayoutDashboard, FileCheck, FileText, Eye } from 'lucide-react';
+import { 
+  Building2, 
+  LayoutDashboard, 
+  Briefcase, 
+  FileText, 
+  Users, 
+  CheckCircle, 
+  TrendingUp,
+  Settings,
+  HelpCircle
+} from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 
-const items = [
+const mainItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Controle de Vagas', url: '/vagas', icon: ClipboardList },
+  { title: 'Processos', url: '/vagas', icon: Briefcase },
   { title: 'Editais', url: '/editais', icon: FileText },
-  { title: 'Validação', url: '/validacao', icon: FileCheck },
-  { title: 'Visão Gestor', url: '/gestor', icon: Eye },
+  { title: 'Convocações', url: '/convocacoes', icon: Users },
+];
+
+const secondaryItems = [
+  { title: 'Validações', url: '/validacao', icon: CheckCircle },
+  { title: 'Visão Gestor', url: '/gestor', icon: TrendingUp },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const location = useLocation();
-
+  
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
-        <div className="p-4 flex items-center gap-3">
-          <Building2 className="h-7 w-7 text-sidebar-primary shrink-0" />
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border/50 py-4">
+        <div className="flex items-center gap-3 px-2">
+          <div className="bg-primary/10 p-1.5 rounded-lg">
+            <Building2 className="h-6 w-6 text-primary shrink-0" />
+          </div>
           {!collapsed && (
-            <div>
-              <h1 className="font-semibold text-sm text-sidebar-foreground leading-tight">Gestão de Vagas</h1>
-              <p className="text-[10px] text-sidebar-foreground/60">Sistema Hospitalar</p>
+            <div className="flex flex-col overflow-hidden">
+              <span className="font-bold text-sm text-foreground truncate leading-tight">TalentHub</span>
+              <span className="text-[10px] text-muted-foreground truncate uppercase tracking-wider font-medium">Gestão Hospitalar</span>
             </div>
           )}
         </div>
+      </SidebarHeader>
+
+      <SidebarContent className="py-2">
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-2">Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
                       end={item.url === '/'}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group"
+                      activeClassName="bg-sidebar-accent text-primary font-semibold shadow-sm"
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-primary" />
+                      {!collapsed && <span className="text-sm">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-2">
+          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-2">Operacional</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {secondaryItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <NavLink
+                      to={item.url}
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group"
+                      activeClassName="bg-sidebar-accent text-primary font-semibold shadow-sm"
+                    >
+                      <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-primary" />
+                      {!collapsed && <span className="text-sm">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -54,6 +94,27 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border/50 p-2 mt-auto">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Configurações">
+              <button className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-sidebar-accent text-muted-foreground transition-all">
+                <Settings className="h-4.5 w-4.5" />
+                {!collapsed && <span className="text-sm">Configurações</span>}
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Ajuda">
+              <button className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-sidebar-accent text-muted-foreground transition-all">
+                <HelpCircle className="h-4.5 w-4.5" />
+                {!collapsed && <span className="text-sm">Central de Ajuda</span>}
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -91,7 +91,7 @@ export default function VagasPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Controle de Vagas</h2>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Processos de Recrutamento</h1>
         <div className="flex gap-2">
           <input type="file" ref={fileRef} accept=".csv,.txt" className="hidden" onChange={handleFile} />
           <Button variant="outline" size="sm" onClick={handleImport}>
@@ -150,16 +150,16 @@ export default function VagasPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Requisição</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Cargo</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Unidade</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Seção</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Tipo</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Qtd</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Analista</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Abertura</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Dias</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Requisição</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Cargo</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Unidade</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Seção</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Tipo</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider text-center">Qtd</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Analista</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Abertura</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Dias</th>
                 </tr>
               </thead>
               <tbody>

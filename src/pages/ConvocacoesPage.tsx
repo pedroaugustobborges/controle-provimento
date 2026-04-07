@@ -16,17 +16,17 @@ export default function ConvocacoesPage() {
         <div className="flex items-center gap-2">
            <div className="flex bg-muted p-1 rounded-lg">
               <Button 
-                variant={view === 'kanban' ? 'white' : 'ghost'} 
+                variant={view === 'kanban' ? 'ghost' : 'ghost'} 
                 size="sm" 
-                className={`h-8 px-3 text-xs font-bold gap-1 ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white' : 'text-muted-foreground'}`}
+                className={`h-8 px-3 text-xs font-bold gap-1 ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-muted-foreground'}`}
                 onClick={() => setView('kanban')}
               >
                 <LayoutGrid className="h-3.5 w-3.5" /> Quadro
               </Button>
               <Button 
-                variant={view === 'list' ? 'white' : 'ghost'} 
+                variant={view === 'list' ? 'ghost' : 'ghost'} 
                 size="sm" 
-                className={`h-8 px-3 text-xs font-bold gap-1 ${view === 'list' ? 'bg-white shadow-sm hover:bg-white' : 'text-muted-foreground'}`}
+                className={`h-8 px-3 text-xs font-bold gap-1 ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-muted-foreground'}`}
                 onClick={() => setView('list')}
               >
                 <List className="h-3.5 w-3.5" /> Lista

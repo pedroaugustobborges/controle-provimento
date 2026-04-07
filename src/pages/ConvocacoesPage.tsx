@@ -4,7 +4,7 @@ import {
   Plus, Search, Filter, Download, LayoutGrid, List, 
   Calendar, MapPin, Building2, User, CheckCircle2, 
   AlertCircle, ArrowRight, Database, MoreVertical,
-  History, Eye, Edit, Trash2
+  History, Eye, Edit, Trash2, X
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';

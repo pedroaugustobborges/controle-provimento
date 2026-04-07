@@ -74,6 +74,42 @@ export default function GestorPage() {
             <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-primary uppercase tracking-wider">Em Andamento</p><p className="text-3xl font-bold text-slate-800">{filtered.filter((v) => !['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)).length}</p></CardContent></Card>
             <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Tempo Médio (dias)</p><p className="text-3xl font-bold text-slate-800">{tempoMedio}</p></CardContent></Card>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Por Unidade</CardTitle></CardHeader>
+              <CardContent className="pt-4 space-y-2">
+                {unidades.map(u => (
+                  <div key={u} className="flex justify-between items-center text-xs">
+                    <span className="text-slate-600 font-medium">{u}</span>
+                    <Badge variant="secondary" className="font-bold">{vagas.filter(v => v.unidade === u).length}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Por Analista</CardTitle></CardHeader>
+              <CardContent className="pt-4 space-y-2">
+                {[...new Set(vagas.map(v => v.analista_responsavel))].map(a => (
+                  <div key={a} className="flex justify-between items-center text-xs">
+                    <span className="text-slate-600 font-medium">{a}</span>
+                    <Badge variant="secondary" className="font-bold bg-blue-50 text-blue-700">{vagas.filter(v => v.analista_responsavel === a).length}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Por Assistente</CardTitle></CardHeader>
+              <CardContent className="pt-4 space-y-2">
+                {[...new Set(vagas.flatMap(v => v.assistentes || []))].map(a => (
+                  <div key={a} className="flex justify-between items-center text-xs">
+                    <span className="text-slate-600 font-medium">{a}</span>
+                    <Badge variant="secondary" className="font-bold bg-purple-50 text-purple-700">{vagas.filter(v => (v.assistentes || []).includes(a)).length}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-slate-200 shadow-sm">

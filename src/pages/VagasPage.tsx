@@ -24,10 +24,13 @@ export default function VagasPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
+  const [filterAssistente, setFilterAssistente] = useState('all');
+  const [filterLideranca, setFilterLideranca] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const unidades = [...new Set(vagas.map((v) => v.unidade))];
-  const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))];
+  const unidades = [...new Set(vagas.map((v) => v.unidade))].sort();
+  const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].sort();
+  const assistentes = [...new Set(vagas.flatMap((v) => v.assistentes || []))].sort();
 
   const filtered = vagas.filter((v) => {
     const matchSearch = !search || v.cargo.toLowerCase().includes(search.toLowerCase()) ||

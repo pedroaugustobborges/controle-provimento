@@ -225,7 +225,7 @@ export default function DashboardPage() {
                     className="hover:bg-slate-50/50 cursor-pointer transition-all duration-150"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-6 py-4 font-mono text-[11px] font-bold text-primary">{v.numero_requisicao}</td>
+                    <td className="px-6 py-4 font-mono text-[11px] font-bold text-primary">{v.requisicao || v.numero_requisicao}</td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-700 text-sm">{v.cargo}</span>
@@ -238,8 +238,9 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge status={v.status_geral} />
+                      <StatusBadge status={v.status || v.status_geral || 'aberta'} />
                     </td>
+
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-xs font-semibold text-slate-600">

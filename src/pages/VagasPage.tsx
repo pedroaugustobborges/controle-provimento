@@ -125,7 +125,7 @@ export default function VagasPage() {
                     className="border-b last:border-0 hover:bg-slate-50/50 cursor-pointer transition-colors whitespace-nowrap group"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.numero_requisicao}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.requisicao || v.numero_requisicao}</td>
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-800">{v.cargo}</div>
                       <div className="flex gap-1 mt-1">
@@ -140,21 +140,22 @@ export default function VagasPage() {
                         <span className="text-[10px] text-slate-400 font-mono">{v.numero_processo || '—'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4"><StatusBadge status={v.status_geral} /></td>
+                    <td className="px-6 py-4"><StatusBadge status={v.status || v.status_geral || 'aberta'} /></td>
                     <td className="px-6 py-4">
                       {v.status_edital && (
-                        <Badge className={`${STATUS_EDITAL_COLORS[v.status_edital]} font-bold text-[10px] py-0.5 whitespace-nowrap`}>
+                        <Badge className={`${STATUS_EDITAL_COLORS[v.status_edital as any]} font-bold text-[10px] py-0.5 whitespace-nowrap`}>
                           {v.status_edital}
                         </Badge>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.quantidade}</td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</td>
                     <td className="px-6 py-4 text-slate-500 text-xs">{formatDate(v.data_abertura)}</td>
                     <td className="px-6 py-4 text-center">
                       <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 font-bold text-[10px]">
                         {calcDiasAberto(v.data_abertura, v.data_encerramento)}
                       </span>
                     </td>
+
                   </tr>
                 ))}
                 {filtered.length === 0 && (

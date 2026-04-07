@@ -31,11 +31,13 @@ const App = () => (
             <Route path="/" element={<DashboardPage />} />
             <Route path="/vagas" element={<VagasPage />} />
             <Route path="/vagas/:id" element={<VagaDetalhePage />} />
+            <Route path="/banco-talentos" element={<BancoTalentosPage />} />
             <Route path="/fila-editais" element={<FilaEditaisPage />} />
-            <Route path="/editais" element={<EditaisPage />} />
             <Route path="/convocacoes" element={<ConvocacoesPage />} />
             <Route path="/validacao" element={<ValidacaoPage />} />
-            <Route path="/gestor" element={<GestorPage />} />
+            <Route path="/importacoes" element={<ImportacoesPage />} />
+            <Route path="/gestor" element={<AdministracaoPage />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>

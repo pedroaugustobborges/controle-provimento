@@ -83,6 +83,9 @@ export interface BancoTalentos {
   nova_data_validade?: string;
   observacoes: string;
   status: 'valido' | 'vencido' | 'prorrogado' | 'nenhum';
+  numero_processo?: string;
+  nome?: string;
+  classificacao?: string | number;
 }
 
 export interface Convocacao {

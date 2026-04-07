@@ -75,18 +75,24 @@ export interface BancoTalentos {
   id: string;
   unidade: string;
   cargo: string;
-  secao: string;
+  secao?: string;
   numero_edital: string;
   data_abertura_edital: string;
   data_validade: string;
   is_prorrogado: boolean;
   nova_data_validade?: string;
   data_convocacao?: string;
+  unidade_convocacao?: string;
   observacoes: string;
   status: 'valido' | 'vencido' | 'prorrogado' | 'nenhum';
+  status_import?: string;
   numero_processo?: string;
   nome?: string;
   classificacao?: string | number;
+  quantidade_banco?: string | number;
+  numero_chamada?: string;
+  numero_processo_seletivo?: string;
+  numero_vaga_aproveitamento?: string;
 }
 
 export interface Convocacao {

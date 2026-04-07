@@ -85,7 +85,7 @@ export function AppSidebar() {
                       activeClassName="bg-white/10 text-white font-bold shadow-md"
                     >
                       <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-primary" />
-                      {!collapsed && <span className="text-sm">{item.title}</span>}
+                      {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -95,21 +95,21 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border/50 p-2 mt-auto">
+      <SidebarFooter className="border-t border-white/10 p-4 mt-auto">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Configurações">
-              <button className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-sidebar-accent text-muted-foreground transition-all">
-                <Settings className="h-4.5 w-4.5" />
+              <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 text-white/60 transition-all group">
+                <Settings className="h-4.5 w-4.5 group-hover:text-white" />
                 {!collapsed && <span className="text-sm">Configurações</span>}
               </button>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Ajuda">
-              <button className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-sidebar-accent text-muted-foreground transition-all">
-                <HelpCircle className="h-4.5 w-4.5" />
-                {!collapsed && <span className="text-sm">Central de Ajuda</span>}
+              <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 text-white/60 transition-all group">
+                <HelpCircle className="h-4.5 w-4.5 group-hover:text-white" />
+                {!collapsed && <span className="text-sm">Suporte Interno</span>}
               </button>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -147,29 +147,71 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   });
 }
 
-const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string, isExcelSerial?: boolean } => {
+const parseDateValue = (value: any, targetFormat: string): { 
+  date: Date | null, 
+  isValid: boolean, 
+  formatted: string, 
+  isExcelSerial?: boolean,
+  formatUsed?: string 
+} => {
   if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '' };
   
   let d: Date | null = null;
   let isExcelSerial = false;
+  let formatUsed = targetFormat;
 
-  // Se for número ou parecer número e o formato for auto ou excel_serial
+  // 1. Verificar se é número serial do Excel
   const numValue = Number(value);
   const looksLikeExcelSerial = !isNaN(numValue) && numValue > 30000 && numValue < 60000;
 
   if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial)) {
     d = addDays(new Date(1899, 11, 30), numValue);
     isExcelSerial = true;
-  } else if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed) return { date: null, isValid: true, formatted: '' };
-    const formats = targetFormat === 'auto' ? ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'd/M/yyyy'] : [targetFormat];
-    for (const f of formats) {
-      const parsed = parse(trimmed, f, new Date());
-      if (isValid(parsed)) { d = parsed; break; }
-    }
-  } else if (value instanceof Date) {
+    formatUsed = 'Excel (numérico)';
+  } 
+  // 2. Se já for um objeto Date
+  else if (value instanceof Date) {
     d = value;
+    formatUsed = 'Objeto Date';
+  }
+  // 3. Se for string (ou algo que possa ser convertido em string)
+  else {
+    const trimmed = String(value).trim();
+    if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '' };
+
+    // Limpar delimitadores comuns para facilitar o parser
+    const cleaned = trimmed.replace(/[\.-]/g, '/');
+    
+    // Lista de formatos para tentar, priorizando dd/mm/aaaa como solicitado
+    const formatsToTry = targetFormat === 'auto' 
+      ? ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'yyyy/MM/dd'] 
+      : [targetFormat.replace(/[\.-]/g, '/')];
+
+    for (const f of formatsToTry) {
+      try {
+        const parsed = parse(cleaned, f, new Date());
+        if (isValid(parsed)) {
+          // Validar se o ano é razoável (evitar interpretações absurdas)
+          const year = parsed.getFullYear();
+          if (year > 1900 && year < 2100) {
+            d = parsed;
+            formatUsed = f === 'dd/MM/yyyy' ? 'Brasileiro (dd/mm/aaaa)' : f;
+            break;
+          }
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    // Fallback para o parser nativo se tudo falhar
+    if (!d) {
+      const native = new Date(trimmed);
+      if (isValid(native)) {
+        d = native;
+        formatUsed = 'Parser nativo';
+      }
+    }
   }
 
   if (d && isValid(d)) {
@@ -177,9 +219,12 @@ const parseDateValue = (value: any, targetFormat: string): { date: Date | null, 
       date: d, 
       isValid: true, 
       formatted: format(d, 'yyyy-MM-dd'),
-      isExcelSerial
+      isExcelSerial,
+      formatUsed
     };
   }
+  
+  // Se não for possível converter, retornamos o valor original para o usuário decidir
   return { date: null, isValid: false, formatted: String(value) };
 };
 

@@ -76,6 +76,10 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   observacoes_internas: ['observações', 'observacoes', 'obs', 'notas', 'comentários', 'comentarios'],
   numero_edital: ['nº edital', 'numero edital', 'edital', 'n edital', 'nº do edital', 'número do edital'],
   numero_processo: ['nº processo', 'numero processo', 'processo', 'n processo', 'nº do processo', 'número do processo'],
+  publicacao: ['publicação', 'publicacao', 'data publicação', 'dt publicação'],
+  admissao: ['admissão', 'admissao', 'data admissão', 'dt admissão'],
+  admissao_enviada: ['admissão enviada', 'admissao enviada', 'dt admissão enviada'],
+  admissao_efetivada: ['admissão efetivada', 'admissao efetivada', 'dt admissão efetivada'],
 };
 
 function detectHeaderRow(rawRows: any[][]): number {

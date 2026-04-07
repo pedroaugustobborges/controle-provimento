@@ -117,6 +117,12 @@ export default function VagaDetalhePage() {
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> Analista Resp.</label>
                   <p className="text-sm font-semibold text-slate-700">{vaga.analista_responsavel}</p>
                 </div>
+                {vaga.assistentes && vaga.assistentes.length > 0 && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> Assistentes</label>
+                    <p className="text-sm font-semibold text-slate-700">{vaga.assistentes.join(', ')}</p>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Info className="h-3 w-3" /> Banco Válido?</label>
                   <p className="text-sm font-semibold text-slate-700">{vaga.tem_banco_valido ? 'Sim' : 'Não'}</p>

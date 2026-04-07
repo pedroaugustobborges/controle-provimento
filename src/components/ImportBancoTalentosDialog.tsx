@@ -446,15 +446,23 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
       setTotalDetectedRows(allData.length);
 
-      const mappedData = allData.map(row => {
-        const result: any = { __errors: {} };
+      const filteredData = allData.filter(row => {
+        // Ignora linhas que estão completamente vazias nos campos mapeados
+        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
+      });
+
+      setTotalDetectedRows(filteredData.length);
+
+      const mappedData = filteredData.map(row => {
+        const result: any = { __errors: {}, __info: {} };
         mappings.forEach(m => {
           if (m.excel && m.excel !== 'no_mapping') {
             const val = row[m.excel];
             if (m.isDate) {
-              const { isValid, formatted } = parseDateValue(val, m.format || 'auto');
+              const { isValid, formatted, formatUsed } = parseDateValue(val, m.format || 'dd/MM/yyyy');
               result[m.system] = formatted;
-              if (!isValid && val) result.__errors[m.system] = true;
+              if (formatUsed) result.__info[m.system] = formatUsed;
+              if (!isValid && val) result.__errors[m.system] = "Formato de data não reconhecido";
             } else { 
               result[m.system] = val; 
             }
@@ -464,7 +472,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         // Validação de campos obrigatórios
         REQUIRED_FIELDS.forEach(field => {
           if (!result[field.key] || result[field.key] === '') {
-            result.__errors[field.key] = true;
+            result.__errors[field.key] = "Campo obrigatório ausente";
           }
         });
 

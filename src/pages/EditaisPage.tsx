@@ -1,7 +1,8 @@
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatusBadge } from '@/components/StatusBadge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ETAPA_LABELS } from '@/types/vaga';
 import { getEtapaColor, getPublicacaoColor, formatDate } from '@/lib/vagaUtils';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +19,7 @@ export default function EditaisPage() {
       vaga: vagas.find((v) => v.id === e.vaga_id),
     })).filter(e => {
       // Unit access restriction
-      if (!e.vaga) return false; // Filter out editais without a linked vaga
+      if (!e.vaga) return false;
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(e.vaga.unidade)) {
         return false;
       }

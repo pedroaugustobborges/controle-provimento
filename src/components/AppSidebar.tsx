@@ -50,7 +50,7 @@ export function AppSidebar() {
 
       <SidebarContent className="py-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-2">Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Módulos Principais</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
@@ -59,11 +59,11 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === '/'}
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group"
-                      activeClassName="bg-sidebar-accent text-primary font-semibold shadow-sm"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
+                      activeClassName="bg-white/10 text-white font-bold shadow-md"
                     >
-                      <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-primary" />
-                      {!collapsed && <span className="text-sm">{item.title}</span>}
+                      <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
+                      {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -72,8 +72,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-2">
-          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-2">Operacional</SidebarGroupLabel>
+        <SidebarGroup className="mt-4">
+          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Operacional</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {secondaryItems.map((item) => (
@@ -81,8 +81,8 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 hover:bg-sidebar-accent group"
-                      activeClassName="bg-sidebar-accent text-primary font-semibold shadow-sm"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
+                      activeClassName="bg-white/10 text-white font-bold shadow-md"
                     >
                       <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-primary" />
                       {!collapsed && <span className="text-sm">{item.title}</span>}

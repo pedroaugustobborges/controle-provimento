@@ -157,6 +157,10 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     }
   }, [workbook, selectedSheets]);
 
+  useEffect(() => {
+    console.log("Current Step:", step);
+  }, [step]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {

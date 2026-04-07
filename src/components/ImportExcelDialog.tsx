@@ -155,8 +155,16 @@ const parseDateValue = (value: any, targetFormat: string): { date: Date | null, 
   return { date: null, isValid: false, formatted: String(value) };
 };
 
-export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { addVagas, vagas, addImportHistory } = useVagasStore();
+export function ImportExcelDialog({ 
+  open, 
+  onOpenChange,
+  reprocessFile = null
+}: { 
+  open: boolean, 
+  onOpenChange: (open: boolean) => void,
+  reprocessFile?: any
+}) {
+  const { addVagas, vagas, addImportHistory, addImportedFile, updateImportedFile } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
@@ -168,6 +176,7 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
   const [isProcessing, setIsProcessing] = useState(false);
   const [headerRow, setHeaderRow] = useState<number>(0);
   const [rawPreview, setRawPreview] = useState<any[][]>([]);
+  const [fileId, setFileId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -185,14 +194,48 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
     }
   }, [workbook, selectedSheets]);
 
+  // Handle reprocess
+  useEffect(() => {
+    if (reprocessFile && open) {
+      setFile({ name: reprocessFile.nome_original } as any);
+      setFileId(reprocessFile.id);
+      if (reprocessFile.content) {
+        const wb = XLSX.read(reprocessFile.content, { type: 'binary' });
+        setWorkbook(wb);
+        setSelectedSheets([wb.SheetNames[0]]);
+        setStep('sheets');
+      }
+    }
+  }, [reprocessFile, open]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      const now = new Date().toISOString();
+      const id = `FILE-${Date.now()}`;
+      setFileId(id);
+
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const bstr = evt.target?.result;
+        const bstr = evt.target?.result as string;
         const wb = XLSX.read(bstr, { type: 'binary' });
+        
+        // Save file to store
+        addImportedFile({
+          id,
+          nome_original: selectedFile.name,
+          nome_interno: id,
+          tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          tamanho: selectedFile.size,
+          data_upload: now,
+          usuario: 'Ana Paula Oliveira', // User name from admin context
+          email_usuario: 'ana.oliveira@agir.org.br',
+          modulo_origem: 'vagas',
+          status: 'enviado',
+          content: bstr // Persisting content for reprocess
+        });
+
         setWorkbook(wb);
         setSelectedSheets([wb.SheetNames[0]]);
         setStep('sheets');
@@ -351,17 +394,29 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
       total_ignorados: 0,
       total_erros: 0,
       repeticoes_tratadas: duplicates.length,
-      total_datas_convertidas: dataToImport.length, // Simplificado
     };
     
     addImportHistory({
       id: loteId,
       data_hora: now,
       usuario: 'Ana Paula Oliveira',
+      email_usuario: 'ana.oliveira@agir.org.br',
       arquivo: file?.name || 'excel_import.xlsx',
+      tipo_importacao: 'vagas',
+      planilha_aba: selectedSheets.join(', '),
+      linha_cabecalho: headerRow,
       ...summary,
-      status: 'concluido'
+      status: 'concluido',
+      referencia_arquivo: fileId || undefined,
+      mapeamento_aplicado: mappings
     });
+
+    if (fileId) {
+      updateImportedFile(fileId, {
+        status: 'processado',
+        vaga_importacao_id: loteId
+      });
+    }
 
     setImportSummary(summary);
     setStep('summary');

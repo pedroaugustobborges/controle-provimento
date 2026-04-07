@@ -578,6 +578,24 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
           {step === 'sheets' && workbook && (
             <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <FileSpreadsheet className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-primary uppercase tracking-widest">Arquivo carregado</p>
+                    <p className="text-base font-bold text-foreground">{file?.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`} • {workbook?.SheetNames.length || 0} abas encontradas
+                    </p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setStep('select')} className="text-xs h-9 text-muted-foreground hover:text-destructive hover:bg-destructive/5 hover:border-destructive/30 transition-all font-bold uppercase tracking-wider">
+                  Remover e trocar
+                </Button>
+              </div>
+
               <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
                 <Info className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div className="text-sm text-blue-800">

@@ -38,6 +38,8 @@ export default function BancoTalentosPage() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
+  const [selectedBanco, setSelectedBanco] = useState<BancoTalentos | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const handleDelete = () => {
     if (bancoParaExcluir) {

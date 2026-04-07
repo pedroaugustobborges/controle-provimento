@@ -462,26 +462,22 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
       setTotalDetectedRows(filteredData.length);
 
-        const filteredData = allData.filter(row => {
-          return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
-        });
-
-        const mappedData = filteredData.map(row => {
-          const result: any = { __errors: {}, __info: {}, __display: {} };
-          mappings.forEach(m => {
-            if (m.excel && m.excel !== 'no_mapping') {
-              const val = row[m.excel];
-              if (m.isDate) {
-                const { isValid, formatted, formatUsed, display } = parseDateValue(val, m.format || 'dd/MM/yyyy');
-                result[m.system] = formatted;
-                if (formatUsed) result.__info[m.system] = formatUsed;
-                result.__display[m.system] = display;
-                if (!isValid && val) result.__errors[m.system] = formatUsed || "Erro de conversão";
-              } else { 
-                result[m.system] = val; 
-              }
+      const mappedData = filteredData.map(row => {
+        const result: any = { __errors: {}, __info: {}, __display: {} };
+        mappings.forEach(m => {
+          if (m.excel && m.excel !== 'no_mapping') {
+            const val = row[m.excel];
+            if (m.isDate) {
+              const { isValid, formatted, formatUsed, display } = parseDateValue(val, m.format || 'dd/MM/yyyy');
+              result[m.system] = formatted;
+              if (formatUsed) result.__info[m.system] = formatUsed;
+              result.__display[m.system] = display;
+              if (!isValid && val) result.__errors[m.system] = formatUsed || "Erro de conversão";
+            } else { 
+              result[m.system] = val; 
             }
-          });
+          }
+        });
 
         // Validação de campos obrigatórios
         REQUIRED_FIELDS.forEach(field => {

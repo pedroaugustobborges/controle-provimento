@@ -31,13 +31,14 @@ export default function VagasPage() {
 
   const filtered = vagas.filter((v) => {
     const matchSearch = !search || v.cargo.toLowerCase().includes(search.toLowerCase()) ||
-      v.numero_requisicao.toLowerCase().includes(search.toLowerCase());
+      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase());
     const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
-    const matchStatus = filterStatus === 'all' || v.status_geral === filterStatus;
+    const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
     const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
     return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista;
   });
+
 
   const clearFilters = () => {
     setSearch('');

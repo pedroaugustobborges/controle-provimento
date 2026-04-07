@@ -86,17 +86,39 @@ export default function VagasPage() {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[140px] bg-white"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-[140px] bg-white text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos Status</SelectItem>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterTipo} onValueChange={setFilterTipo}>
-              <SelectTrigger className="w-[160px] bg-white"><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos Tipos</SelectItem>
-                {Object.entries(TIPO_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                {Object.entries(TIPO_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterAnalista} onValueChange={setFilterAnalista}>
+              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Analista" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Analistas</SelectItem>
+                {analistas.map((a) => <SelectItem key={a} value={a} className="text-xs">{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterAssistente} onValueChange={setFilterAssistente}>
+              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Assistente" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Assistentes</SelectItem>
+                {assistentes.map((a) => <SelectItem key={a} value={a} className="text-xs">{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterLideranca} onValueChange={setFilterLideranca}>
+              <SelectTrigger className="w-[140px] bg-white text-xs"><SelectValue placeholder="Liderança" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Liderança? Todos</SelectItem>
+                <SelectItem value="yes" className="text-xs">Sim</SelectItem>
+                <SelectItem value="no" className="text-xs">Não</SelectItem>
               </SelectContent>
             </Select>
             {hasFilters && (

@@ -51,6 +51,10 @@ const REQUIRED_FIELDS = [
 
 const OPTIONAL_FIELDS = [
   { key: 'data_recebimento', label: 'Data Recebimento' },
+  { key: 'publicacao', label: 'Data Publicação' },
+  { key: 'admissao', label: 'Data Admissão' },
+  { key: 'admissao_enviada', label: 'Admissão Enviada' },
+  { key: 'admissao_efetivada', label: 'Admissão Efetivada' },
   { key: 'numero_edital', label: 'Nº Edital' },
   { key: 'numero_processo', label: 'Nº Processo' },
   { key: 'secao', label: 'Seção' },

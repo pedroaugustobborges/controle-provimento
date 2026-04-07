@@ -41,19 +41,19 @@ const DATE_FORMATS = Object.entries(DATE_FORMAT_LABELS).map(([value, label]) => 
 const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao', 'is_prorrogado'];
 
 const REQUIRED_FIELDS = [
-  { key: 'unidade', label: 'Unidade' },
-  { key: 'cargo', label: 'Cargo' },
-  { key: 'numero_edital', label: 'Número do edital' },
-  { key: 'numero_processo', label: 'Número do processo' },
   { key: 'nome', label: 'Nome' },
+  { key: 'cargo', label: 'Cargo' },
+  { key: 'unidade', label: 'Unidade' },
+  { key: 'numero_edital', label: 'Número do edital' },
+];
+
+const OPTIONAL_FIELDS = [
+  { key: 'numero_processo', label: 'Número do processo' },
   { key: 'classificacao', label: 'Classificação' },
   { key: 'quantidade_banco', label: 'Quantidade do banco' },
   { key: 'status_import', label: 'Status' },
   { key: 'data_abertura_edital', label: 'Data de Publicação' },
   { key: 'data_validade', label: 'Validade' },
-];
-
-const OPTIONAL_FIELDS = [
   { key: 'is_prorrogado', label: 'Prorrogação' },
   { key: 'numero_chamada', label: 'Número da chamada' },
   { key: 'numero_processo_seletivo', label: 'Número do processo seletivo' },

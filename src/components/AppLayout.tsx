@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link } from 'react-router-dom';
 import { Bell, Search, Clock } from 'lucide-react';
+import { AIAssistant } from './AIAssistant';
+
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -99,6 +101,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-auto p-8 max-w-[1600px] mx-auto w-full">
             {children}
           </main>
+          <AIAssistant />
         </div>
       </div>
     </SidebarProvider>

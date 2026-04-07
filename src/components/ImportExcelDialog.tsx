@@ -841,7 +841,7 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                   <p className="text-muted-foreground">Os dados foram processados e já estão disponíveis no sistema.</p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
                   <div className="p-4 bg-background border rounded-xl text-center">
                     <div className="text-2xl font-bold text-foreground">{importSummary.total_lidos}</div>
                     <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Lidos</div>
@@ -849,6 +849,10 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                   <div className="p-4 bg-green-50 border border-green-100 rounded-xl text-center">
                     <div className="text-2xl font-bold text-green-700">{importSummary.total_novos}</div>
                     <div className="text-[10px] text-green-600 uppercase font-bold tracking-wider">Novas Vagas</div>
+                  </div>
+                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-center">
+                    <div className="text-2xl font-bold text-blue-700">{importSummary.total_datas_convertidas}</div>
+                    <div className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">Datas OK</div>
                   </div>
                   <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-center">
                     <div className="text-2xl font-bold text-amber-700">{importSummary.repeticoes_tratadas}</div>

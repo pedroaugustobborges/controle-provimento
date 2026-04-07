@@ -166,8 +166,6 @@ const parseDateValue = (value: any, targetFormat: string): {
   const looksLikeExcelSerial = !isNaN(numValue) && numValue > 20000 && numValue < 60000;
 
   if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial) || looksLikeExcelSerial) {
-    // Lógica correta para data serial do Excel (sistema 1900)
-    // Excel considera 1900-01-01 como 1. 1899-12-30 é a base correta para o addDays.
     try {
       d = addDays(new Date(1899, 11, 30), numValue);
       if (isValid(d)) {
@@ -184,7 +182,7 @@ const parseDateValue = (value: any, targetFormat: string): {
   // 2. Se já for um objeto Date (processado pelo XLSX com cellDates: true)
   if (!d && value instanceof Date) {
     d = value;
-    formatUsed = 'Objeto Date Nativo';
+    formatUsed = 'Formato detectado automaticamente';
   }
 
   // 3. Se for string ou falhou no serial
@@ -204,12 +202,10 @@ const parseDateValue = (value: any, targetFormat: string): {
       try {
         const parsed = parse(cleaned, f, new Date());
         if (isValid(parsed)) {
-          // Validar se o ano é razoável (evitar interpretações absurdas)
           const year = parsed.getFullYear();
           if (year > 1900 && year < 2100) {
             d = parsed;
-            formatUsed = `Formato ${f} detectado`;
-            if (f === 'dd/MM/yyyy') formatUsed = 'Convertido de dd/mm/aaaa';
+            formatUsed = f === 'dd/MM/yyyy' ? 'Convertido de dd/mm/aaaa' : `Convertido de ${f}`;
             break;
           }
         }
@@ -223,7 +219,7 @@ const parseDateValue = (value: any, targetFormat: string): {
       const native = new Date(trimmed);
       if (isValid(native)) {
         d = native;
-        formatUsed = 'Detectado automaticamente';
+        formatUsed = 'Formato detectado automaticamente';
       }
     }
   }
@@ -232,15 +228,13 @@ const parseDateValue = (value: any, targetFormat: string): {
     return { 
       date: d, 
       isValid: true, 
-      // Retornamos no padrão brasileiro para exibição e armazenamento conforme solicitado
       formatted: format(d, 'dd/MM/yyyy'),
       isExcelSerial,
       formatUsed
     };
   }
   
-  // Se não for possível converter, retornamos o valor original para o usuário decidir
-  return { date: null, isValid: false, formatted: String(value) };
+  return { date: null, isValid: false, formatted: String(value), formatUsed: 'Erro de conversão' };
 };
 
 export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {

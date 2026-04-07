@@ -409,12 +409,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {workbook.SheetNames.map(name => (
-                  <button key={name} onClick={() => setSelectedSheets([name])} className={`p-4 border rounded-xl flex flex-col items-start gap-2 transition-all hover:shadow-sm ${selectedSheets.includes(name) ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-sm' : 'border-border bg-card'}`}>
+                  <button key={name} onClick={() => {
+                    console.log("Aba selecionada:", name);
+                    setSelectedSheets([name]);
+                  }} className={`p-4 border-2 rounded-xl flex flex-col items-start gap-2 transition-all hover:shadow-md ${selectedSheets.includes(name) ? 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-lg' : 'border-border bg-card'}`}>
                     <div className="flex items-center justify-between w-full">
-                      <Layers className={`h-5 w-5 ${selectedSheets.includes(name) ? 'text-primary' : 'text-muted-foreground'}`} />
-                      {selectedSheets.includes(name) && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                      <Layers className={`h-6 w-6 ${selectedSheets.includes(name) ? 'text-primary' : 'text-muted-foreground'}`} />
+                      {selectedSheets.includes(name) && <CheckCircle2 className="h-5 w-5 text-primary animate-in zoom-in" />}
                     </div>
-                    <span className="font-semibold text-sm truncate w-full text-left">{name}</span>
+                    <span className={`font-bold text-sm truncate w-full text-left ${selectedSheets.includes(name) ? 'text-primary' : ''}`}>{name}</span>
                   </button>
                 ))}
               </div>

@@ -151,38 +151,48 @@ const parseDateValue = (value: any, targetFormat: string): {
   date: Date | null, 
   isValid: boolean, 
   formatted: string, 
+  display?: string,
   isExcelSerial?: boolean,
   formatUsed?: string 
 } => {
-  if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '' };
+  if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '', display: '' };
   
   let d: Date | null = null;
   let isExcelSerial = false;
-  let formatUsed = targetFormat;
+  let formatUsed = '';
 
-  // 1. Verificar se é número serial do Excel
-  const numValue = Number(value);
-  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 30000 && numValue < 60000;
+  // 1. PRIORIDADE: Verificar se é número serial do Excel
+  // O Excel trata datas como números seriais (ex: 46080 = 2026-03-27)
+  const numValue = typeof value === 'number' ? value : Number(value);
+  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 20000 && numValue < 60000;
 
-  if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial)) {
-    d = addDays(new Date(1899, 11, 30), numValue);
-    isExcelSerial = true;
-    formatUsed = 'Excel (numérico)';
-  } 
-  // 2. Se já for um objeto Date
-  else if (value instanceof Date) {
-    d = value;
-    formatUsed = 'Objeto Date';
+  if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial) || looksLikeExcelSerial) {
+    try {
+      // Lógica correta para data serial do Excel (sistema 1900)
+      d = addDays(new Date(1899, 11, 30), numValue);
+      if (isValid(d)) {
+        isExcelSerial = true;
+        formatUsed = 'Convertido de serial Excel';
+      } else {
+        d = null;
+      }
+    } catch (e) {
+      d = null;
+    }
   }
-  // 3. Se for string (ou algo que possa ser convertido em string)
-  else {
-    const trimmed = String(value).trim();
-    if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '' };
 
-    // Limpar delimitadores comuns para facilitar o parser
+  // 2. Se já for um objeto Date
+  if (!d && value instanceof Date) {
+    d = value;
+    formatUsed = 'Formato detectado automaticamente';
+  }
+
+  // 3. Se for string ou falhou no serial
+  if (!d) {
+    const trimmed = String(value).trim();
+    if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '', display: '' };
+
     const cleaned = trimmed.replace(/[\.-]/g, '/');
-    
-    // Lista de formatos para tentar, priorizando dd/mm/aaaa como solicitado
     const formatsToTry = targetFormat === 'auto' 
       ? ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'yyyy/MM/dd'] 
       : [targetFormat.replace(/[\.-]/g, '/')];
@@ -191,11 +201,10 @@ const parseDateValue = (value: any, targetFormat: string): {
       try {
         const parsed = parse(cleaned, f, new Date());
         if (isValid(parsed)) {
-          // Validar se o ano é razoável (evitar interpretações absurdas)
           const year = parsed.getFullYear();
           if (year > 1900 && year < 2100) {
             d = parsed;
-            formatUsed = f === 'dd/MM/yyyy' ? 'Brasileiro (dd/mm/aaaa)' : f;
+            formatUsed = f === 'dd/MM/yyyy' ? 'Convertido de dd/mm/aaaa' : `Convertido de ${f}`;
             break;
           }
         }
@@ -204,12 +213,12 @@ const parseDateValue = (value: any, targetFormat: string): {
       }
     }
     
-    // Fallback para o parser nativo se tudo falhar
-    if (!d) {
+    // Fallback para o parser nativo apenas se não for um número serial puro
+    if (!d && isNaN(Number(trimmed))) {
       const native = new Date(trimmed);
       if (isValid(native)) {
         d = native;
-        formatUsed = 'Parser nativo';
+        formatUsed = 'Formato detectado automaticamente';
       }
     }
   }
@@ -219,13 +228,13 @@ const parseDateValue = (value: any, targetFormat: string): {
       date: d, 
       isValid: true, 
       formatted: format(d, 'yyyy-MM-dd'),
+      display: format(d, 'dd/MM/yyyy'),
       isExcelSerial,
       formatUsed
     };
   }
   
-  // Se não for possível converter, retornamos o valor original para o usuário decidir
-  return { date: null, isValid: false, formatted: String(value) };
+  return { date: null, isValid: false, formatted: String(value), display: String(value), formatUsed: 'Erro de conversão' };
 };
 
 export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
@@ -454,15 +463,16 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       setTotalDetectedRows(filteredData.length);
 
       const mappedData = filteredData.map(row => {
-        const result: any = { __errors: {}, __info: {} };
+        const result: any = { __errors: {}, __info: {}, __display: {} };
         mappings.forEach(m => {
           if (m.excel && m.excel !== 'no_mapping') {
             const val = row[m.excel];
             if (m.isDate) {
-              const { isValid, formatted, formatUsed } = parseDateValue(val, m.format || 'dd/MM/yyyy');
+              const { isValid, formatted, formatUsed, display } = parseDateValue(val, m.format || 'dd/MM/yyyy');
               result[m.system] = formatted;
               if (formatUsed) result.__info[m.system] = formatUsed;
-              if (!isValid && val) result.__errors[m.system] = "Formato de data não reconhecido";
+              result.__display[m.system] = display;
+              if (!isValid && val) result.__errors[m.system] = formatUsed || "Erro de conversão";
             } else { 
               result[m.system] = val; 
             }
@@ -1056,7 +1066,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                   <div className="flex items-center justify-between">
                                     <span className="text-muted-foreground uppercase font-bold text-[9px]">Publicação:</span>
                                     <span className={`font-bold ${row.__errors?.data_abertura_edital ? 'text-destructive' : 'text-slate-700'}`}>
-                                      {row.data_abertura_edital || '-'}
+                                      {row.__display?.data_abertura_edital || row.data_abertura_edital || '-'}
                                     </span>
                                   </div>
                                   {row.__info?.data_abertura_edital && !row.__errors?.data_abertura_edital && (
@@ -1071,7 +1081,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                   <div className="flex items-center justify-between">
                                     <span className="text-muted-foreground uppercase font-bold text-[9px]">Validade:</span>
                                     <span className={`font-bold ${row.__errors?.data_validade ? 'text-destructive' : 'text-slate-700'}`}>
-                                      {row.data_validade || '-'}
+                                      {row.__display?.data_validade || row.data_validade || '-'}
                                     </span>
                                   </div>
                                   {row.__info?.data_validade && !row.__errors?.data_validade && (
@@ -1087,7 +1097,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                     <div className="flex items-center justify-between">
                                       <span className="text-muted-foreground uppercase font-bold text-[9px]">Convocação:</span>
                                       <span className={`font-bold ${row.__errors?.data_convocacao ? 'text-destructive' : 'text-slate-700'}`}>
-                                        {row.data_convocacao}
+                                        {row.__display?.data_convocacao || row.data_convocacao}
                                       </span>
                                     </div>
                                     {row.__info?.data_convocacao && !row.__errors?.data_convocacao && (

@@ -523,30 +523,6 @@ function ConvocacoesTab({ vagaId }: { vagaId: string }) {
 }
 
 // Re-using Building2 if needed or removing if duplicated
-function Plus(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
-}
+// Manual table components removed
 
-function Table({ children }: { children: React.ReactNode }) { return <table className="w-full text-sm">{children}</table>; }
-function TableHeader({ children, className }: { children: React.ReactNode, className?: string }) { return <thead className={className}>{children}</thead>; }
-function TableRow({ children, className, onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) { return <tr className={className} onClick={onClick}>{children}</tr>; }
-function TableHead({ children, className }: { children: React.ReactNode, className?: string }) { return <th className={`px-6 py-3 text-left ${className}`}>{children}</th>; }
-function TableBody({ children }: { children: React.ReactNode }) { return <tbody>{children}</tbody>; }
-function TableCell({ children, className }: { children: React.ReactNode, className?: string }) { return <td className={`px-6 py-4 ${className}`}>{children}</td>; }
 

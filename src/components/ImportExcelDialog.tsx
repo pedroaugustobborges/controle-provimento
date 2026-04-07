@@ -239,10 +239,19 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
     });
 
     const mappedData = allData.map(row => {
-      const result: any = { __original: row };
+      const result: any = { __original: row, __errors: {} };
       mappings.forEach(m => {
         if (m.excel) {
-          result[m.system] = row[m.excel];
+          const rawValue = row[m.excel];
+          if (m.isDate) {
+            const { isValid, formatted } = parseDateValue(rawValue, m.format || 'auto');
+            result[m.system] = formatted;
+            if (!isValid && rawValue) {
+              result.__errors[m.system] = true;
+            }
+          } else {
+            result[m.system] = rawValue;
+          }
         }
       });
       return result;

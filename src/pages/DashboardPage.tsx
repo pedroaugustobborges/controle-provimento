@@ -166,7 +166,7 @@ export default function DashboardPage() {
               {alerts.slice(0, 5).map((v) => (
                 <div key={v.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-mono font-bold text-slate-400">#{v.numero_requisicao}</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400">#{v.requisicao || v.numero_requisicao}</span>
                     <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1 uppercase">
                       <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias
                     </span>

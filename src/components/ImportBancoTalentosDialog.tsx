@@ -630,9 +630,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       if (fileId) updateImportedFile(fileId, { status: 'processado' });
       
       setImportSummary({ 
+        total_planilha: allRowsRaw.length,
         total_lidos: allData.length, 
         total_novos: newBancos.length,
-        total_erros: totalErros 
+        total_erros: totalErros,
+        total_vazios: emptyRowsCount,
+        total_alertas_data: dateErrorRows
       });
       
       setStep('summary');

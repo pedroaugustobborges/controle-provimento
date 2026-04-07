@@ -384,7 +384,144 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   );
 }
 
-function Building2(props: any) {
+function BancoTab({ vaga }: { vaga: any }) {
+  const { getBancoByVaga } = useVagasStore();
+  const banco = getBancoByVaga(vaga.id);
+
+  if (!banco) {
+    return (
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+          <div className="bg-slate-50 p-4 rounded-full mb-4">
+            <XCircle className="h-10 w-10 text-slate-300" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-700">Sem Banco de Talentos</h3>
+          <p className="text-sm text-slate-500 max-w-xs mt-1">Não foi encontrado um banco de talentos válido para este cargo e unidade.</p>
+          <Button variant="outline" className="mt-6 gap-2">Consultar Outros Bancos</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const isValido = banco.status === 'valido' || banco.status === 'prorrogado';
+
+  return (
+    <Card className="border-slate-200 shadow-sm">
+      <CardContent className="pt-6 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${isValido ? 'bg-green-50' : 'bg-red-50'}`}>
+              <CheckCircle2 className={`h-6 w-6 ${isValido ? 'text-green-600' : 'text-red-600'}`} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800">{banco.numero_edital}</h3>
+              <p className="text-xs text-slate-500 font-medium">Validade: {formatDate(banco.nova_data_validade || banco.data_validade)}</p>
+            </div>
+          </div>
+          <Badge className={`${isValido ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-bold`}>
+            {banco.status.toUpperCase()}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Data de Abertura</label>
+            <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_abertura_edital)}</p>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Validade Original</label>
+            <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_validade)}</p>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Prorrogado?</label>
+            <p className="text-sm font-semibold text-slate-700">{banco.is_prorrogado ? 'Sim' : 'Não'}</p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+          <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 block">Observações do Banco</label>
+          <p className="text-sm text-slate-600">{banco.observacoes || 'Sem observações.'}</p>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" className="text-xs font-bold uppercase tracking-wider">Ver Edital Completo</Button>
+          <Button className="text-xs font-bold uppercase tracking-wider bg-primary">Realizar Convocação</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ConvocacoesTab({ vagaId }: { vagaId: string }) {
+  const { getConvocacoesByVaga } = useVagasStore();
+  const convocacoes = getConvocacoesByVaga(vagaId);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Histórico de Convocações</h3>
+        <Button size="sm" className="gap-2 bg-primary">
+          <Plus className="h-4 w-4" /> Nova Convocação
+        </Button>
+      </div>
+
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow>
+                <TableHead className="text-[10px] font-bold uppercase">Data/Hora</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase">Candidato</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-center">Class.</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase">E-doc</TableHead>
+                <TableHead className="text-right"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {convocacoes.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">{c.horario}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700">{c.nome_candidato}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">{c.tipo_convocacao}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center font-bold text-slate-600">{c.classificacao}º</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[10px] font-bold">
+                      {c.status.toUpperCase()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs font-mono text-primary font-bold">{c.edoc || '—'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm">Ver Detalhes</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {convocacoes.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
+                    Nenhuma convocação realizada para esta vaga.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Re-using Building2 if needed or removing if duplicated
+function Plus(props: any) {
   return (
     <svg
       {...props}
@@ -398,13 +535,16 @@ function Building2(props: any) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18" />
-      <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
-      <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
-      <path d="M10 6h4" />
-      <path d="M10 10h4" />
-      <path d="M10 14h4" />
-      <path d="M10 18h4" />
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
     </svg>
   );
 }
+
+function Table({ children }: { children: React.ReactNode }) { return <table className="w-full text-sm">{children}</table>; }
+function TableHeader({ children, className }: { children: React.ReactNode, className?: string }) { return <thead className={className}>{children}</thead>; }
+function TableRow({ children, className, onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) { return <tr className={className} onClick={onClick}>{children}</tr>; }
+function TableHead({ children, className }: { children: React.ReactNode, className?: string }) { return <th className={`px-6 py-3 text-left ${className}`}>{children}</th>; }
+function TableBody({ children }: { children: React.ReactNode }) { return <tbody>{children}</tbody>; }
+function TableCell({ children, className }: { children: React.ReactNode, className?: string }) { return <td className={`px-6 py-4 ${className}`}>{children}</td>; }
+

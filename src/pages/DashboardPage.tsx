@@ -61,7 +61,8 @@ export default function DashboardPage() {
   ];
 
   const alerts = vagas.filter((v) => {
-    if (['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)) return false;
+    const status = v.status || v.status_geral;
+    if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
     const lastHist = v.historico[v.historico.length - 1];
     return !lastHist || calcDiasAberto(lastHist.data) > 10;
   });
@@ -70,8 +71,9 @@ export default function DashboardPage() {
   const chartData = unidades.map((u) => ({
     name: u.replace('Hospital ', '').replace('Unidade ', ''),
     total: vagas.filter((v) => v.unidade === u).length,
-    abertas: vagas.filter((v) => v.unidade === u && v.status_geral === 'aberta').length,
+    abertas: vagas.filter((v) => v.unidade === u && (v.status === 'aberta' || v.status_geral === 'aberta')).length,
   })).sort((a, b) => b.total - a.total);
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

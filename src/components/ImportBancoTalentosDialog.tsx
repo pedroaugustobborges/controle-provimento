@@ -56,7 +56,7 @@ const OPTIONAL_FIELDS = [
   { key: 'numero_processo_seletivo', label: 'Número do processo seletivo' },
   { key: 'numero_vaga_aproveitamento', label: 'Número da vaga aproveitamento' },
   { key: 'data_convocacao', label: 'Data de Convocação' },
-  { key: 'unidade_convocacao', label: 'Unidade Convocação' },
+  { key: 'unidade_convocacao', label: 'Unidade da convocação' },
   { key: 'secao', label: 'Seção' },
   { key: 'observacoes', label: 'Observações' },
 ];
@@ -473,7 +473,6 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         numero_vaga_aproveitamento: mapped.numero_vaga_aproveitamento || '',
         observacoes: mapped.observacoes || '',
         status: status as any,
-        observacoes: mapped.observacoes || '',
       };
     });
 

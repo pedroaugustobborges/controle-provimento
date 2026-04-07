@@ -28,9 +28,9 @@ interface ColumnMapping {
 }
 
 const DATE_FORMATS = [
-  { label: 'dd/mm/aaaa', value: 'dd/MM/yyyy' },
-  { label: 'mm/dd/aaaa', value: 'MM/dd/yyyy' },
-  { label: 'aaaa-mm-dd', value: 'yyyy-MM-dd' },
+  { label: 'Brasileiro (dd/mm/aaaa)', value: 'dd/MM/yyyy' },
+  { label: 'Americano (mm/dd/aaaa)', value: 'MM/dd/yyyy' },
+  { label: 'ISO (aaaa-mm-dd)', value: 'yyyy-MM-dd' },
   { label: 'Excel (número serial)', value: 'excel_serial' },
   { label: 'Auto-detectar', value: 'auto' },
 ];
@@ -147,29 +147,71 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   });
 }
 
-const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string, isExcelSerial?: boolean } => {
+const parseDateValue = (value: any, targetFormat: string): { 
+  date: Date | null, 
+  isValid: boolean, 
+  formatted: string, 
+  isExcelSerial?: boolean,
+  formatUsed?: string 
+} => {
   if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '' };
   
   let d: Date | null = null;
   let isExcelSerial = false;
+  let formatUsed = targetFormat;
 
-  // Se for número ou parecer número e o formato for auto ou excel_serial
+  // 1. Verificar se é número serial do Excel
   const numValue = Number(value);
   const looksLikeExcelSerial = !isNaN(numValue) && numValue > 30000 && numValue < 60000;
 
   if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial)) {
     d = addDays(new Date(1899, 11, 30), numValue);
     isExcelSerial = true;
-  } else if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed) return { date: null, isValid: true, formatted: '' };
-    const formats = targetFormat === 'auto' ? ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'd/M/yyyy'] : [targetFormat];
-    for (const f of formats) {
-      const parsed = parse(trimmed, f, new Date());
-      if (isValid(parsed)) { d = parsed; break; }
-    }
-  } else if (value instanceof Date) {
+    formatUsed = 'Excel (numérico)';
+  } 
+  // 2. Se já for um objeto Date
+  else if (value instanceof Date) {
     d = value;
+    formatUsed = 'Objeto Date';
+  }
+  // 3. Se for string (ou algo que possa ser convertido em string)
+  else {
+    const trimmed = String(value).trim();
+    if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '' };
+
+    // Limpar delimitadores comuns para facilitar o parser
+    const cleaned = trimmed.replace(/[\.-]/g, '/');
+    
+    // Lista de formatos para tentar, priorizando dd/mm/aaaa como solicitado
+    const formatsToTry = targetFormat === 'auto' 
+      ? ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'yyyy/MM/dd'] 
+      : [targetFormat.replace(/[\.-]/g, '/')];
+
+    for (const f of formatsToTry) {
+      try {
+        const parsed = parse(cleaned, f, new Date());
+        if (isValid(parsed)) {
+          // Validar se o ano é razoável (evitar interpretações absurdas)
+          const year = parsed.getFullYear();
+          if (year > 1900 && year < 2100) {
+            d = parsed;
+            formatUsed = f === 'dd/MM/yyyy' ? 'Brasileiro (dd/mm/aaaa)' : f;
+            break;
+          }
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    // Fallback para o parser nativo se tudo falhar
+    if (!d) {
+      const native = new Date(trimmed);
+      if (isValid(native)) {
+        d = native;
+        formatUsed = 'Parser nativo';
+      }
+    }
   }
 
   if (d && isValid(d)) {
@@ -177,9 +219,12 @@ const parseDateValue = (value: any, targetFormat: string): { date: Date | null, 
       date: d, 
       isValid: true, 
       formatted: format(d, 'yyyy-MM-dd'),
-      isExcelSerial
+      isExcelSerial,
+      formatUsed
     };
   }
+  
+  // Se não for possível converter, retornamos o valor original para o usuário decidir
   return { date: null, isValid: false, formatted: String(value) };
 };
 
@@ -355,7 +400,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         return { 
           excel: matchedHeader || '', 
           system: field.key, 
-          format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
+          format: DATE_FIELDS.includes(field.key) ? 'dd/MM/yyyy' : undefined, 
           isDate: DATE_FIELDS.includes(field.key) 
         };
       });
@@ -401,15 +446,23 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
       setTotalDetectedRows(allData.length);
 
-      const mappedData = allData.map(row => {
-        const result: any = { __errors: {} };
+      const filteredData = allData.filter(row => {
+        // Ignora linhas que estão completamente vazias nos campos mapeados
+        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
+      });
+
+      setTotalDetectedRows(filteredData.length);
+
+      const mappedData = filteredData.map(row => {
+        const result: any = { __errors: {}, __info: {} };
         mappings.forEach(m => {
           if (m.excel && m.excel !== 'no_mapping') {
             const val = row[m.excel];
             if (m.isDate) {
-              const { isValid, formatted } = parseDateValue(val, m.format || 'auto');
+              const { isValid, formatted, formatUsed } = parseDateValue(val, m.format || 'dd/MM/yyyy');
               result[m.system] = formatted;
-              if (!isValid && val) result.__errors[m.system] = true;
+              if (formatUsed) result.__info[m.system] = formatUsed;
+              if (!isValid && val) result.__errors[m.system] = "Formato de data não reconhecido";
             } else { 
               result[m.system] = val; 
             }
@@ -419,7 +472,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         // Validação de campos obrigatórios
         REQUIRED_FIELDS.forEach(field => {
           if (!result[field.key] || result[field.key] === '') {
-            result.__errors[field.key] = true;
+            result.__errors[field.key] = "Campo obrigatório ausente";
           }
         });
 
@@ -437,23 +490,32 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const processImport = () => {
     setIsProcessing(true);
     try {
-      const allData: any[] = [];
+      const allRowsRaw = [];
       selectedSheets.forEach(sheetName => {
         const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { 
           header: detectedHeaders, 
           range: headerRow + 1,
           defval: '' 
         });
-        allData.push(...data);
+        allRowsRaw.push(...data);
       });
 
+      const allData = allRowsRaw.filter(row => {
+        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
+      });
+
+      const emptyRowsCount = allRowsRaw.length - allData.length;
       const now = new Date();
       const newBancos: BancoTalentos[] = [];
       let totalErros = 0;
       let missingFieldsRows = 0;
       let dateErrorRows = 0;
 
-      allData.forEach((row, i) => {
+      const filteredData = allData.filter(row => {
+        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
+      });
+
+      filteredData.forEach((row, i) => {
         const mapped: any = {};
         let hasErrorInRow = false;
         let hasMissingRequired = false;
@@ -462,7 +524,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           if (m.excel && m.excel !== 'no_mapping') {
             const rawVal = row[m.excel];
             if (m.isDate) {
-              const dateResult = parseDateValue(rawVal, m.format || 'auto');
+              const dateResult = parseDateValue(rawVal, m.format || 'dd/MM/yyyy');
               mapped[m.system] = dateResult.formatted;
               if (!dateResult.isValid && rawVal) {
                 hasErrorInRow = true;
@@ -494,8 +556,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         let status: 'valido' | 'vencido' | 'prorrogado' = 'valido';
         const dateStr = mapped.nova_data_validade || mapped.data_validade;
         
-        if (dateStr) {
-          const expiryDate = new Date(dateStr);
+        // Se a data estiver em formato brasileiro dd/mm/aaaa, vamos converter para aaaa-mm-dd para o objeto Date
+        let dateToParse = dateStr;
+        if (dateStr && dateStr.includes('/') && dateStr.split('/')[0].length === 2) {
+          const parts = dateStr.split('/');
+          dateToParse = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        if (dateToParse) {
+          const expiryDate = new Date(dateToParse);
           if (isValid(expiryDate)) {
             status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
           }
@@ -561,9 +630,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       if (fileId) updateImportedFile(fileId, { status: 'processado' });
       
       setImportSummary({ 
+        total_planilha: allRowsRaw.length,
         total_lidos: allData.length, 
         total_novos: newBancos.length,
-        total_erros: totalErros 
+        total_erros: totalErros,
+        total_vazios: emptyRowsCount,
+        total_alertas_data: dateErrorRows
       });
       
       setStep('summary');
@@ -975,28 +1047,55 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-col text-xs gap-1">
-                                <div className="flex items-center justify-between gap-4">
-                                  <span className="text-muted-foreground">Pub:</span>
-                                  <span className={`font-medium ${row.__errors?.data_abertura_edital ? 'text-destructive font-bold' : ''}`}>
-                                    {row.data_abertura_edital || '-'}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                  <span className="text-muted-foreground">Val:</span>
-                                  <span className={`font-medium ${row.__errors?.data_validade ? 'text-destructive font-bold' : ''}`}>
-                                    {row.data_validade || '-'}
-                                  </span>
-                                </div>
-                                {row.data_convocacao && (
-                                  <div className="flex items-center justify-between gap-4">
-                                    <span className="text-muted-foreground">Conv:</span>
-                                    <span className={`font-medium ${row.__errors?.data_convocacao ? 'text-destructive font-bold' : ''}`}>
-                                      {row.data_convocacao}
+                              <div className="flex flex-col text-[10px] gap-1 max-w-[180px]">
+                                <div className="flex flex-col gap-0.5 border-b border-muted pb-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground uppercase font-bold text-[9px]">Publicação:</span>
+                                    <span className={`font-bold ${row.__errors?.data_abertura_edital ? 'text-destructive' : 'text-slate-700'}`}>
+                                      {row.data_abertura_edital || '-'}
                                     </span>
                                   </div>
+                                  {row.__info?.data_abertura_edital && !row.__errors?.data_abertura_edital && (
+                                    <span className="text-[9px] text-green-600 font-medium leading-tight">✓ {row.__info.data_abertura_edital}</span>
+                                  )}
+                                  {row.__errors?.data_abertura_edital && (
+                                    <span className="text-[9px] text-destructive font-bold leading-tight">⚠ {row.__errors.data_abertura_edital}</span>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col gap-0.5 border-b border-muted pb-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground uppercase font-bold text-[9px]">Validade:</span>
+                                    <span className={`font-bold ${row.__errors?.data_validade ? 'text-destructive' : 'text-slate-700'}`}>
+                                      {row.data_validade || '-'}
+                                    </span>
+                                  </div>
+                                  {row.__info?.data_validade && !row.__errors?.data_validade && (
+                                    <span className="text-[9px] text-green-600 font-medium leading-tight">✓ {row.__info.data_validade}</span>
+                                  )}
+                                  {row.__errors?.data_validade && (
+                                    <span className="text-[9px] text-destructive font-bold leading-tight">⚠ {row.__errors.data_validade}</span>
+                                  )}
+                                </div>
+
+                                {row.data_convocacao && (
+                                  <div className="flex flex-col gap-0.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-muted-foreground uppercase font-bold text-[9px]">Convocação:</span>
+                                      <span className={`font-bold ${row.__errors?.data_convocacao ? 'text-destructive' : 'text-slate-700'}`}>
+                                        {row.data_convocacao}
+                                      </span>
+                                    </div>
+                                    {row.__info?.data_convocacao && !row.__errors?.data_convocacao && (
+                                      <span className="text-[9px] text-green-600 font-medium leading-tight">✓ {row.__info.data_convocacao}</span>
+                                    )}
+                                    {row.__errors?.data_convocacao && (
+                                      <span className="text-[9px] text-destructive font-bold leading-tight">⚠ {row.__errors.data_convocacao}</span>
+                                    )}
+                                  </div>
                                 )}
-                                {row.is_prorrogado && <Badge variant="outline" className="text-[9px] h-4 bg-blue-50 text-blue-700 border-blue-200 w-fit">Prorrogado</Badge>}
+                                
+                                {row.is_prorrogado && <Badge variant="outline" className="text-[8px] h-3.5 bg-blue-50 text-blue-700 border-blue-200 w-fit px-1">Prorrogado</Badge>}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
@@ -1017,31 +1116,62 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           )}
 
           {step === 'summary' && importSummary && (
-            <div className="space-y-8 flex flex-col items-center py-12">
+            <div className="space-y-8 flex flex-col items-center py-8">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
                 <CheckCircle2 className="h-12 w-12 text-green-600" />
               </div>
               <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold">Importação Concluída!</h2>
+                <h2 className="text-3xl font-bold text-slate-900">Importação Concluída!</h2>
                 <p className="text-muted-foreground max-w-sm">A base do banco de talentos foi atualizada com sucesso no sistema.</p>
               </div>
-              <div className={`grid ${importSummary.total_erros > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-4 w-full max-w-2xl px-4`}>
-                <div className="bg-muted/30 p-4 rounded-2xl border text-center flex flex-col justify-center">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Lidos</span>
-                  <p className="text-2xl font-bold text-slate-900">{importSummary.total_lidos}</p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl px-4">
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total na Planilha</span>
+                  <p className="text-2xl font-black text-slate-900">{importSummary.total_planilha}</p>
+                  <p className="text-[9px] text-slate-400 mt-1">{importSummary.total_vazios} linhas vazias ignoradas</p>
                 </div>
-                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center flex flex-col justify-center">
-                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Novos Registros</span>
-                  <p className="text-2xl font-bold text-green-700">{importSummary.total_novos}</p>
+                
+                <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Registros Lidos</span>
+                  <p className="text-2xl font-black text-blue-700">{importSummary.total_lidos}</p>
+                  <p className="text-[9px] text-blue-400 mt-1">Válidos para processamento</p>
                 </div>
-                {importSummary.total_erros > 0 && (
-                  <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100 text-center flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-1">Com Erro</span>
-                    <p className="text-2xl font-bold text-red-700">{importSummary.total_erros}</p>
-                  </div>
-                )}
+
+                <div className="bg-green-50/50 p-5 rounded-2xl border border-green-100 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Importados</span>
+                  <p className="text-2xl font-black text-green-700">{importSummary.total_novos}</p>
+                  <p className="text-[9px] text-green-400 mt-1">Salvos no sistema</p>
+                </div>
+
+                <div className={`p-5 rounded-2xl border text-center flex flex-col justify-center ${importSummary.total_erros > 0 ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100 opacity-50'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${importSummary.total_erros > 0 ? 'text-red-600' : 'text-slate-400'}`}>Falhas</span>
+                  <p className={`text-2xl font-black ${importSummary.total_erros > 0 ? 'text-red-700' : 'text-slate-500'}`}>{importSummary.total_erros}</p>
+                  <p className={`text-[9px] mt-1 ${importSummary.total_erros > 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                    {importSummary.total_erros > 0 ? 'Campos obrigatórios ausentes' : 'Nenhuma falha crítica'}
+                  </p>
+                </div>
               </div>
-              <Button size="lg" className="px-12 rounded-full mt-4 shadow-lg hover:shadow-xl transition-all" onClick={() => onOpenChange(false)}>Concluir e Fechar</Button>
+
+              {importSummary.total_alertas_data > 0 && (
+                <div className="w-full max-w-4xl px-4">
+                  <Alert className="bg-amber-50 border-amber-200">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertTitle className="text-amber-800 font-bold">Aviso de Datas</AlertTitle>
+                    <AlertDescription className="text-amber-700 text-xs">
+                      {importSummary.total_alertas_data} registros possuem datas que não puderam ser convertidas automaticamente. 
+                      Estes registros <strong>foram importados</strong> com o valor original para evitar perda de dados, mas podem precisar de revisão manual no sistema.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+
+              <div className="flex flex-col items-center gap-4 mt-4">
+                <Button size="lg" className="px-16 rounded-full shadow-lg hover:shadow-xl transition-all h-12 text-base font-bold" onClick={() => onOpenChange(false)}>
+                  Concluir e Ir para o Banco
+                </Button>
+                <p className="text-xs text-muted-foreground italic">Dica: Você pode filtrar por "data de importação" para conferir os novos registros.</p>
+              </div>
             </div>
           )}
         </div>

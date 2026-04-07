@@ -84,7 +84,7 @@ export interface BancoTalentos {
   data_convocacao?: string;
   unidade_convocacao?: string;
   observacoes: string;
-  status: 'valido' | 'vencido' | 'prorrogado' | 'nenhum';
+  status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' | 'nenhum';
   status_import?: string;
   numero_processo?: string;
   nome?: string;

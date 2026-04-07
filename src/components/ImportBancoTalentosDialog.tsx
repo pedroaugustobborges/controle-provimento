@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
 import { BancoTalentos } from '@/types/vaga';
-import { format, parse, isValid, addDays } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { toast } from 'sonner';
 import { 
   detectColumnFormat, 

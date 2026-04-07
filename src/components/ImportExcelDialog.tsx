@@ -18,7 +18,7 @@ import {
 import { useVagasStore } from '@/store/vagasStore';
 import { Vaga, StatusEdital, TipoVaga, StatusVaga } from '@/types/vaga';
 import { getResponsavelPorUnidade } from '@/data/equipe';
-import { format, parse, isValid, addDays } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { toast } from 'sonner';
 import { 
   detectColumnFormat, 

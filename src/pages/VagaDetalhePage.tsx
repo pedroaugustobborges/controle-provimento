@@ -130,7 +130,7 @@ export default function VagaDetalhePage() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Requisição</label>
-                  <p className="text-sm font-bold text-slate-700 font-mono">{vaga.numero_requisicao}</p>
+                  <p className="text-sm font-bold text-slate-700 font-mono">{vaga.requisicao || vaga.numero_requisicao}</p>
                 </div>
               </div>
 

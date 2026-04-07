@@ -41,6 +41,16 @@ export default function ConvocacoesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
   const [search, setSearch] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (registroParaExcluir) {
+      toast.success('Convocação removida com sucesso.');
+      setIsDeleteDialogOpen(false);
+      setRegistroParaExcluir(null);
+    }
+  };
 
   // Unit filtering
   const filteredVagas = useMemo(() => {

@@ -116,18 +116,40 @@ export interface HistoricoItem {
 export interface ImportHistory {
   id: string;
   data_hora?: string;
-  data?: string; // Compatibilidade
+  data?: string;
   usuario: string;
+  email_usuario?: string;
   arquivo?: string;
-  nome_arquivo?: string; // Compatibilidade
+  nome_arquivo?: string;
   tipo_importacao?: 'vagas' | 'banco' | 'convocacoes';
+  planilha_aba?: string;
+  linha_cabecalho?: number;
   total_lidos: number;
   total_novos: number;
   total_atualizados: number;
   total_ignorados: number;
   total_erros: number;
-  repeticoes_tratadas?: number; // Compatibilidade
-  status: 'concluido' | 'erro' | 'em_processamento';
+  repeticoes_tratadas?: number;
+  status: 'concluido' | 'concluido_alertas' | 'erro' | 'em_processamento' | 'cancelado' | 'reprocessado';
+  observacoes?: string;
+  referencia_arquivo?: string;
+  relatorio_erros?: string;
+  mapeamento_aplicado?: any;
+}
+
+export interface ImportedFile {
+  id: string;
+  nome_original: string;
+  nome_interno: string;
+  tipo: string;
+  tamanho: number;
+  data_upload: string;
+  usuario: string;
+  email_usuario?: string;
+  modulo_origem: string;
+  status: 'enviado' | 'processando' | 'processado' | 'erro' | 'arquivado';
+  vaga_importacao_id?: string;
+  content?: string; // Armazenar o conteúdo base64 ou similar para reprocessamento
 }
 
 export interface Edital {

@@ -17,7 +17,8 @@ import {
   Calendar,
   MoreVertical,
   Activity,
-  Bell
+  Bell,
+  Building2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 

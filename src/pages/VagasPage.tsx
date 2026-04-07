@@ -36,7 +36,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function VagasPage() {
-  const { vagas } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga } = useVagasStore();
+  const { currentUser, addAuditLog } = useAdminStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
@@ -46,6 +47,33 @@ export default function VagasPage() {
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
+  const canInclude = currentUser?.perfil === 'Admin' || currentUser?.pode_incluir_registros;
+
+  const handleDelete = () => {
+    if (vagaParaExcluir && canDelete) {
+      const vaga = vagas.find(v => v.id === vagaParaExcluir);
+      if (vaga) {
+        deleteVaga(vagaParaExcluir);
+        addAuditLog({
+          usuario_nome: currentUser?.nome_completo || 'Sistema',
+          usuario_email: currentUser?.email || 'sistema@sistema.com',
+          perfil: currentUser?.perfil || 'Sistema',
+          data: new Date().toISOString().split('T')[0],
+          hora: new Date().toLocaleTimeString(),
+          acao: 'Excluir Requisição',
+          modulo: 'Vagas',
+          registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+        });
+        toast.success('Requisição excluída com sucesso.');
+      }
+      setIsDeleteDialogOpen(false);
+      setVagaParaExcluir(null);
+    }
+  };
 
   const unidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
   const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort();

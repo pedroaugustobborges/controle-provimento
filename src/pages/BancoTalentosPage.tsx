@@ -257,7 +257,17 @@ export default function BancoTalentosPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="sm" className="font-bold text-xs text-primary hover:bg-primary/5 h-8">Detalhes</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                            onClick={() => {
+                              setSelectedBanco(b);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            Detalhes
+                          </Button>
                           {currentUser?.perfil === 'Admin' && (
                             <Button 
                               variant="ghost" 

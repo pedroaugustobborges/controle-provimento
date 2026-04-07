@@ -219,7 +219,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             mapped[m.system] = parseDateValue(row[m.excel], m.format || 'auto').formatted;
           } else if (m.system === 'is_prorrogado') {
             const val = String(row[m.excel]).toLowerCase();
-            mapped[m.system] = val === 'sim' || val === 's' || val === 'true' || val === '1';
+            mapped[m.system] = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
           } else {
             mapped[m.system] = String(row[m.excel]);
           }
@@ -235,6 +235,9 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         cargo: mapped.cargo || 'Não informado',
         secao: mapped.secao || '',
         numero_edital: mapped.numero_edital || '000/0000',
+        numero_processo: mapped.numero_processo || '',
+        nome: mapped.nome || '',
+        classificacao: mapped.classificacao || '',
         data_abertura_edital: mapped.data_abertura_edital || '',
         data_validade: mapped.data_validade || '',
         is_prorrogado: !!mapped.is_prorrogado,

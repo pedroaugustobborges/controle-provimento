@@ -223,8 +223,8 @@ export function ImportExcelDialog({
       const reader = new FileReader();
       reader.onload = (evt) => {
         try {
-          const bstr = evt.target?.result as string;
-          const wb = XLSX.read(bstr, { type: 'binary' });
+          const data = evt.target?.result;
+          const wb = XLSX.read(data, { type: 'array' });
           
           if (!wb.SheetNames || wb.SheetNames.length === 0) {
             throw new Error('O arquivo selecionado não possui planilhas válidas.');
@@ -235,23 +235,35 @@ export function ImportExcelDialog({
             id,
             nome_original: selectedFile.name,
             nome_interno: id,
-            tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            tipo: selectedFile.type || 'application/vnd.ms-excel.sheet.macroEnabled.12',
             tamanho: selectedFile.size,
             data_upload: now,
             usuario: 'Ana Paula Oliveira', 
             email_usuario: 'ana.oliveira@agir.org.br',
             modulo_origem: 'vagas',
             status: 'enviado',
-            content: bstr
+            content: data as any
           });
 
           setWorkbook(wb);
           setSelectedSheets([wb.SheetNames[0]]);
-          setStep('sheets');
+          // For XLSM or larger files, we don't automatically jump to sheets step 
+          // to allow the user to see the file info first as requested
+          // setStep('sheets'); 
           toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Erro ao ler arquivo:', error);
-          toast.error('Erro ao ler arquivo. Verifique se o formato é válido.');
+          let errorMsg = 'Não foi possível processar este arquivo Excel.';
+          
+          if (error?.message?.includes('password')) {
+            errorMsg = 'Este arquivo está protegido por senha e não pode ser lido.';
+          } else if (selectedFile.name.toLowerCase().endsWith('.xlsm')) {
+            errorMsg = 'Ocorreu um problema ao ler o arquivo .xlsm. Verifique se o arquivo não está corrompido.';
+          } else if (error?.message) {
+            errorMsg = `Erro: ${error.message}`;
+          }
+          
+          toast.error(errorMsg);
           setFile(null);
         } finally {
           setIsLoadingFile(false);
@@ -262,10 +274,10 @@ export function ImportExcelDialog({
       
       reader.onerror = () => {
         setIsLoadingFile(false);
-        toast.error('Ocorreu um erro ao carregar o arquivo.');
+        toast.error('Ocorreu um erro técnico ao carregar o arquivo do disco.');
       };
       
-      reader.readAsBinaryString(selectedFile);
+      reader.readAsArrayBuffer(selectedFile);
     }
   };
 
@@ -533,40 +545,101 @@ export function ImportExcelDialog({
 
           <div className="flex-1 overflow-auto p-6">
             {step === 'select' && (
-              <div 
-                className={`flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl border-border hover:border-primary/50 transition-all bg-muted/30 cursor-pointer ${isLoadingFile ? 'opacity-70 pointer-events-none' : ''}`} 
-                onClick={() => !isLoadingFile && fileInputRef.current?.click()}
-              >
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept=".xlsx, .xls, .xlsm, .csv" 
-                  onChange={handleFileChange} 
-                />
-                
-                {isLoadingFile ? (
-                  <div className="flex flex-col items-center">
-                    <div className="h-12 w-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
-                    <h3 className="text-lg font-semibold text-foreground">Lendo arquivo...</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {file?.name} ({(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`})
-                    </p>
+              <div className="space-y-6">
+                {!file || isLoadingFile ? (
+                  <div 
+                    className={`flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl border-border hover:border-primary/50 transition-all bg-muted/30 cursor-pointer ${isLoadingFile ? 'opacity-70 pointer-events-none' : ''}`} 
+                    onClick={() => !isLoadingFile && fileInputRef.current?.click()}
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept=".xlsx, .xls, .xlsm, .csv" 
+                      onChange={handleFileChange} 
+                    />
+                    
+                    {isLoadingFile ? (
+                      <div className="flex flex-col items-center">
+                        <div className="h-12 w-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
+                        <h3 className="text-lg font-semibold text-foreground">Lendo arquivo...</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {file?.name} ({(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`})
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-background p-4 rounded-full shadow-sm mb-4">
+                          <Upload className="h-8 w-8 text-primary" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground">Selecione o arquivo</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Arraste e solte ou clique para navegar</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase font-bold tracking-wider">Formatos suportados: .xlsx, .xlsm, .xls, .csv</p>
+                        <div className="mt-6 flex gap-4">
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Info className="h-4 w-4" /> Baixar Modelo
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
-                  <>
-                    <div className="bg-background p-4 rounded-full shadow-sm mb-4">
-                      <Upload className="h-8 w-8 text-primary" />
+                  <div className="space-y-6">
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-8 flex flex-col items-center text-center">
+                      <div className="bg-green-100 p-4 rounded-full mb-4">
+                        <CheckCircle2 className="h-10 w-10 text-green-600" />
+                      </div>
+                      <h3 className="text-xl font-bold text-green-900 mb-2">Arquivo carregado com sucesso!</h3>
+                      <p className="text-sm text-green-700 mb-6 max-w-md">
+                        O arquivo foi processado e está pronto para a próxima etapa de importação.
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg bg-white p-6 rounded-lg border border-green-100 shadow-sm">
+                        <div className="text-left">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Nome do Arquivo</p>
+                          <p className="text-sm font-semibold truncate">{file.name}</p>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Extensão</p>
+                          <Badge variant="outline" className="font-mono text-[10px] bg-slate-50 uppercase">
+                            {file.name.split('.').pop()}
+                          </Badge>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Tamanho</p>
+                          <p className="text-sm font-semibold">
+                            {file.size / 1024 > 1024 ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : `${(file.size / 1024).toFixed(2)} KB`}
+                          </p>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
+                            <Check className="h-3 w-3" /> Pronto para importar
+                          </div>
+                        </div>
+                        <div className="text-left col-span-2 pt-2 border-t">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Abas Detectadas</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {workbook?.SheetNames.map((name, i) => (
+                              <Badge key={i} variant="secondary" className="text-[10px] bg-slate-100">{name}</Badge>
+                            ))}
+                            {workbook?.SheetNames && workbook.SheetNames.length > 3 && (
+                              <span className="text-[10px] text-muted-foreground font-medium self-center">+{workbook.SheetNames.length - 3} outras</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-8 flex gap-4 w-full justify-center">
+                        <Button variant="outline" onClick={() => reset()} className="gap-2">
+                          <X className="h-4 w-4" /> Trocar arquivo
+                        </Button>
+                        <Button onClick={() => setStep('sheets')} className="gap-2 px-8">
+                          Continuar para Abas <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">Selecione o arquivo</h3>
-                    <p className="text-sm text-muted-foreground mt-1">Arraste e solte ou clique para navegar</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase font-bold tracking-wider">Formatos suportados: .xlsx, .xlsm, .xls, .csv</p>
-                    <div className="mt-6 flex gap-4">
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Info className="h-4 w-4" /> Baixar Modelo
-                      </Button>
-                    </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}

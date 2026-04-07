@@ -236,13 +236,16 @@ export default function VagaDetalhePage() {
                   <div className="space-y-1">
                     <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Status Atual</label>
                     <div className="mt-1">
-                      <Select value={(vaga.status || vaga.status_geral) as string} onValueChange={handleStatusChange}>
+                      <Select 
+                        value={(vaga.status || vaga.status_geral) as string} 
+                        onValueChange={handleStatusChange}
+                        disabled={!canEdit && !isAssistente} // Ambos podem mudar status conforme regras
+                      >
                         <SelectTrigger className="h-9 bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {Object.entries(STATUS_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                         </SelectContent>
                       </Select>
-
                     </div>
                   </div>
                 </div>

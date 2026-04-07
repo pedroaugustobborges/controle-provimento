@@ -393,9 +393,9 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                                   <SelectValue placeholder="Selecione a coluna..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {workbook && XLSX.utils.sheet_to_json(workbook.Sheets[selectedSheets[0]], { header: 1 })[0]?.map((h: any) => (
+                                  {(workbook && (XLSX.utils.sheet_to_json(workbook.Sheets[selectedSheets[0]], { header: 1 }) as any[][])[0]?.map((h: any) => (
                                     <SelectItem key={h} value={String(h)}>{String(h)}</SelectItem>
-                                  ))}
+                                  )))}
                                 </SelectContent>
                               </Select>
                             </TableCell>

@@ -26,7 +26,20 @@ type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summar
 interface ColumnMapping {
   excel: string;
   system: string;
+  format?: string;
+  isDate?: boolean;
 }
+
+const DATE_FORMATS = [
+  { label: 'dd/mm/aaaa', value: 'dd/MM/yyyy' },
+  { label: 'mm/dd/aaaa', value: 'MM/dd/yyyy' },
+  { label: 'aaaa-mm-dd', value: 'yyyy-MM-dd' },
+  { label: 'dd-mm-aaaa', value: 'dd-MM-yyyy' },
+  { label: 'Excel (número)', value: 'excel_serial' },
+  { label: 'Auto-detectar', value: 'auto' },
+];
+
+const DATE_FIELDS = ['data_abertura', 'data_recebimento', 'publicacao', 'admissao', 'admissao_enviada', 'admissao_efetivada'];
 
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },

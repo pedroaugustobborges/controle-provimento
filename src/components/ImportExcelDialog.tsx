@@ -303,20 +303,25 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
       const statusVaga: StatusVaga = 'aberta';
+      const unidade = String(row.unidade || '');
+      const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       
+      const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
+
       return {
         id: `imp-${Date.now()}-${i}`,
-        unidade: String(row.unidade || ''),
-        data_abertura: String(row.data_abertura || now.split('T')[0]),
-        data_recebimento: String(row.data_recebimento || now.split('T')[0]),
+        unidade,
+        data_abertura: parseDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted || now.split('T')[0],
+        data_recebimento: parseDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted || now.split('T')[0],
         requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
         numero_requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
         cargo: String(row.cargo || 'Não informado'),
         numero_vagas: Number(row.numero_vagas || row.quantidade) || 1,
         quantidade: Number(row.numero_vagas || row.quantidade) || 1,
         secao: String(row.secao || ''),
-        tipo_vaga: (row.tipo_vaga as TipoVaga) || 'substituicao',
-        analista_responsavel: String(row.analista_responsavel || 'Sistema'),
+        tipo_vaga: tipoVaga,
+        analista_responsavel: analista,
+        assistentes: assistentes,
         status: statusVaga,
         status_geral: statusVaga,
         tem_banco_valido: false,
@@ -341,7 +346,8 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
       total_atualizados: 0,
       total_ignorados: 0,
       total_erros: 0,
-      repeticoes_tratadas: duplicates.length
+      repeticoes_tratadas: duplicates.length,
+      total_datas_convertidas: dataToImport.length, // Simplificado
     };
     
     addImportHistory({

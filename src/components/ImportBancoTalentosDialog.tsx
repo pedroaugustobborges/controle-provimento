@@ -328,7 +328,9 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           const sheet = workbook?.Sheets[selectedSheets[0]];
           const rows = XLSX.utils.sheet_to_json<any[]>(sheet!, { header: processedHeaders, range: headerRow + 1 });
           const sampleValues = rows.slice(0, 50).map(r => r[matchedHeader!]);
-          detectedFormat = detectColumnFormat(sampleValues);
+          const detected = detectColumnFormat(sampleValues);
+          // Prioritize Brazilian dd/mm/aaaa for Banco de Talentos
+          detectedFormat = (detected === 'excel_serial' || detected === 'yyyy-MM-dd') ? detected : 'dd/MM/yyyy';
         }
 
         return { 

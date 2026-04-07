@@ -102,9 +102,9 @@ export function convertDateValue(value: any, targetFormat: DateFormat = 'auto'):
   let formatUsed = '';
 
   const numValue = typeof value === 'number' ? value : Number(value);
-  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 20000 && numValue < 60000;
+  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 10000 && numValue < 100000;
 
-  // 1. Try Excel Serial if target is auto or specifically serial
+  // 1. Try Excel Serial if specifically target serial or looks like one and format is auto
   if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial)) {
     d = excelSerialToDate(numValue);
     if (isValid(d)) {
@@ -126,20 +126,32 @@ export function convertDateValue(value: any, targetFormat: DateFormat = 'auto'):
     const str = String(value).trim();
     if (!str) return { date: null, isValid: true, formatted: '', display: '', formatUsed: 'Vazio' };
 
+    // Regex para identificar se parece com dd/mm/aaaa
+    const isBrazilianFormat = /^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/.test(str);
+    
+    // Lista de formatos para tentar, priorizando dd/MM/yyyy se houver indicação
+    let formatsToTry: string[] = [];
+    if (targetFormat === 'auto') {
+      if (isBrazilianFormat) {
+        formatsToTry = ['dd/MM/yyyy', 'dd/MM/yy', 'dd-MM-yyyy', 'yyyy-MM-dd', 'MM/dd/yyyy'];
+      } else {
+        formatsToTry = ['dd/MM/yyyy', 'yyyy-MM-dd', 'MM/dd/yyyy', 'dd-MM-yyyy'];
+      }
+    } else {
+      formatsToTry = [targetFormat];
+    }
+
     const cleaned = str.replace(/[\.-]/g, '/');
     
-    const formatsToTry = targetFormat === 'auto'
-      ? ['dd/MM/yyyy', 'yyyy-MM-dd', 'MM/dd/yyyy', 'dd-MM-yyyy']
-      : [targetFormat];
-
     for (const f of formatsToTry) {
       try {
-        // Normalize format for parse
         const normalizedF = f.replace(/[\.-]/g, '/');
+        // Usamos parse da date-fns, mas precisamos normalizar o valor se tiver - ou .
         const parsed = parse(cleaned, normalizedF, new Date());
         if (isValid(parsed)) {
           const year = parsed.getFullYear();
-          if (year > 1800 && year < 2200) {
+          // Aceitamos anos entre 1900 e 2100 para ser razoável
+          if (year > 1900 && year < 2100) {
             d = parsed;
             formatUsed = f;
             break;
@@ -150,7 +162,7 @@ export function convertDateValue(value: any, targetFormat: DateFormat = 'auto'):
       }
     }
 
-    // Native Date parser fallback
+    // Fallback nativo (menos confiável para dd/mm/aaaa mas bom para ISO)
     if (!d && isNaN(Number(str))) {
       const native = new Date(str);
       if (isValid(native)) {
@@ -180,7 +192,7 @@ export function convertDateValue(value: any, targetFormat: DateFormat = 'auto'):
     isValid: false, 
     formatted: String(value), 
     display: String(value), 
-    formatUsed: 'Erro de conversão' 
+    formatUsed: 'Inválido' 
   };
 }
 

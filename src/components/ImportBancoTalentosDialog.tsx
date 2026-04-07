@@ -1101,16 +1101,35 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                 </div>
               </div>
 
-              {importSummary.total_alertas_data > 0 && (
-                <div className="w-full max-w-4xl px-4">
-                  <Alert className="bg-amber-50 border-amber-200">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <AlertTitle className="text-amber-800 font-bold">Aviso de Datas</AlertTitle>
-                    <AlertDescription className="text-amber-700 text-xs">
-                      {importSummary.total_alertas_data} registros possuem datas que não puderam ser convertidas automaticamente. 
-                      Estes registros <strong>foram importados</strong> com o valor original para evitar perda de dados, mas podem precisar de revisão manual no sistema.
-                    </AlertDescription>
-                  </Alert>
+              {importErrors.length > 0 && (
+                <div className="w-full max-w-4xl px-4 mt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileWarning className="h-5 w-5 text-destructive" />
+                    <h3 className="font-bold text-slate-800">Log de Inconsistências</h3>
+                  </div>
+                  <div className="border rounded-xl overflow-hidden bg-white max-h-[250px] overflow-y-auto shadow-sm">
+                    <Table>
+                      <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                        <TableRow>
+                          <TableHead className="w-[80px]">Linha</TableHead>
+                          <TableHead>Campo</TableHead>
+                          <TableHead>Valor Recebido</TableHead>
+                          <TableHead>Motivo</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {importErrors.map((err, idx) => (
+                          <TableRow key={idx} className="text-xs">
+                            <TableCell className="font-mono text-muted-foreground">{err.linha}</TableCell>
+                            <TableCell className="font-bold">{err.campo}</TableCell>
+                            <TableCell className="text-destructive font-mono">{err.valor}</TableCell>
+                            <TableCell className="italic text-muted-foreground">{err.motivo}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 italic">* Linhas com campos obrigatórios ausentes foram ignoradas. Erros de data não impediram a importação.</p>
                 </div>
               )}
 

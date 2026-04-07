@@ -161,6 +161,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const [mappings, setMappings] = useState<ColumnMapping[]>([]);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [importSummary, setImportSummary] = useState<any>(null);
+  const [importErrors, setImportErrors] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [headerRow, setHeaderRow] = useState<number>(0);

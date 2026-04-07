@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
 import { Vaga, StatusEdital, TipoVaga, StatusVaga } from '@/types/vaga';
+import { getResponsavelPorUnidade } from '@/data/equipe';
+import { format, parse, isValid, addDays } from 'date-fns';
 import { toast } from 'sonner';
 
 type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summary';
@@ -24,7 +26,20 @@ type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summar
 interface ColumnMapping {
   excel: string;
   system: string;
+  format?: string;
+  isDate?: boolean;
 }
+
+const DATE_FORMATS = [
+  { label: 'dd/mm/aaaa', value: 'dd/MM/yyyy' },
+  { label: 'mm/dd/aaaa', value: 'MM/dd/yyyy' },
+  { label: 'aaaa-mm-dd', value: 'yyyy-MM-dd' },
+  { label: 'dd-mm-aaaa', value: 'dd-MM-yyyy' },
+  { label: 'Excel (número)', value: 'excel_serial' },
+  { label: 'Auto-detectar', value: 'auto' },
+];
+
+const DATE_FIELDS = ['data_abertura', 'data_recebimento', 'publicacao', 'admissao', 'admissao_enviada', 'admissao_efetivada'];
 
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
@@ -36,6 +51,10 @@ const REQUIRED_FIELDS = [
 
 const OPTIONAL_FIELDS = [
   { key: 'data_recebimento', label: 'Data Recebimento' },
+  { key: 'publicacao', label: 'Data Publicação' },
+  { key: 'admissao', label: 'Data Admissão' },
+  { key: 'admissao_enviada', label: 'Admissão Enviada' },
+  { key: 'admissao_efetivada', label: 'Admissão Efetivada' },
   { key: 'numero_edital', label: 'Nº Edital' },
   { key: 'numero_processo', label: 'Nº Processo' },
   { key: 'secao', label: 'Seção' },
@@ -57,6 +76,10 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   observacoes_internas: ['observações', 'observacoes', 'obs', 'notas', 'comentários', 'comentarios'],
   numero_edital: ['nº edital', 'numero edital', 'edital', 'n edital', 'nº do edital', 'número do edital'],
   numero_processo: ['nº processo', 'numero processo', 'processo', 'n processo', 'nº do processo', 'número do processo'],
+  publicacao: ['publicação', 'publicacao', 'data publicação', 'dt publicação'],
+  admissao: ['admissão', 'admissao', 'data admissão', 'dt admissão'],
+  admissao_enviada: ['admissão enviada', 'admissao enviada', 'dt admissão enviada'],
+  admissao_efetivada: ['admissão efetivada', 'admissao efetivada', 'dt admissão efetivada'],
 };
 
 function detectHeaderRow(rawRows: any[][]): number {
@@ -87,6 +110,50 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   if (!synonyms) return false;
   return synonyms.some(syn => h.includes(syn) || syn.includes(h));
 }
+
+const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string } => {
+  if (!value) return { date: null, isValid: true, formatted: '' };
+
+  let d: Date | null = null;
+  
+  // Excel serial number
+  if (targetFormat === 'excel_serial' || (typeof value === 'number' && targetFormat === 'auto')) {
+    const serialValue = Number(value);
+    if (!isNaN(serialValue)) {
+      // Excel serial 1 is 1900-01-01, JS Date starts 1970-01-01
+      // 25569 is the number of days between 1900 and 1970
+      d = addDays(new Date(1899, 11, 30), serialValue);
+    }
+  } else if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return { date: null, isValid: true, formatted: '' };
+    
+    if (targetFormat === 'auto' || !targetFormat) {
+      // Try common formats
+      const formats = ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy'];
+      for (const f of formats) {
+        const parsed = parse(trimmed, f, new Date());
+        if (isValid(parsed)) {
+          d = parsed;
+          break;
+        }
+      }
+    } else {
+      const parsed = parse(trimmed, targetFormat, new Date());
+      if (isValid(parsed)) {
+        d = parsed;
+      }
+    }
+  } else if (value instanceof Date) {
+    d = value;
+  }
+
+  if (d && isValid(d)) {
+    return { date: d, isValid: true, formatted: format(d, 'yyyy-MM-dd') };
+  }
+
+  return { date: null, isValid: false, formatted: String(value) };
+};
 
 export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { addVagas, vagas, addImportHistory } = useVagasStore();
@@ -154,7 +221,13 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
 
     const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
       const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
-      return { excel: matchedHeader || '', system: field.key };
+      const isDate = DATE_FIELDS.includes(field.key);
+      return { 
+        excel: matchedHeader || '', 
+        system: field.key, 
+        format: isDate ? 'auto' : undefined,
+        isDate
+      };
     });
 
     setMappings(initialMappings);
@@ -170,10 +243,19 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
     });
 
     const mappedData = allData.map(row => {
-      const result: any = { __original: row };
+      const result: any = { __original: row, __errors: {} };
       mappings.forEach(m => {
         if (m.excel) {
-          result[m.system] = row[m.excel];
+          const rawValue = row[m.excel];
+          if (m.isDate) {
+            const { isValid, formatted } = parseDateValue(rawValue, m.format || 'auto');
+            result[m.system] = formatted;
+            if (!isValid && rawValue) {
+              result.__errors[m.system] = true;
+            }
+          } else {
+            result[m.system] = rawValue;
+          }
         }
       });
       return result;
@@ -225,20 +307,25 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
       const statusVaga: StatusVaga = 'aberta';
+      const unidade = String(row.unidade || '');
+      const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       
+      const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
+
       return {
         id: `imp-${Date.now()}-${i}`,
-        unidade: String(row.unidade || ''),
-        data_abertura: String(row.data_abertura || now.split('T')[0]),
-        data_recebimento: String(row.data_recebimento || now.split('T')[0]),
+        unidade,
+        data_abertura: parseDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted || now.split('T')[0],
+        data_recebimento: parseDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted || now.split('T')[0],
         requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
         numero_requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
         cargo: String(row.cargo || 'Não informado'),
         numero_vagas: Number(row.numero_vagas || row.quantidade) || 1,
         quantidade: Number(row.numero_vagas || row.quantidade) || 1,
         secao: String(row.secao || ''),
-        tipo_vaga: (row.tipo_vaga as TipoVaga) || 'substituicao',
-        analista_responsavel: String(row.analista_responsavel || 'Sistema'),
+        tipo_vaga: tipoVaga,
+        analista_responsavel: analista,
+        assistentes: assistentes,
         status: statusVaga,
         status_geral: statusVaga,
         tem_banco_valido: false,
@@ -263,7 +350,8 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
       total_atualizados: 0,
       total_ignorados: 0,
       total_erros: 0,
-      repeticoes_tratadas: duplicates.length
+      repeticoes_tratadas: duplicates.length,
+      total_datas_convertidas: dataToImport.length, // Simplificado
     };
     
     addImportHistory({
@@ -492,9 +580,10 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                   <Table>
                     <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[250px]">Campo do Sistema</TableHead>
-                        <TableHead>Coluna no Excel</TableHead>
-                        <TableHead className="w-[100px]"></TableHead>
+                        <TableHead className="w-[200px]">Campo do Sistema</TableHead>
+                        <TableHead className="w-[250px]">Coluna no Excel</TableHead>
+                        <TableHead>Formato / Detalhes</TableHead>
+                        <TableHead className="w-[100px] text-right">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -502,6 +591,8 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                         const mapping = mappings.find(m => m.system === field.key);
                         const isRequired = REQUIRED_FIELDS.some(f => f.key === field.key);
                         const headers = getHeadersFromRow();
+                        const isDateField = DATE_FIELDS.includes(field.key);
+
                         return (
                           <TableRow key={field.key}>
                             <TableCell className="font-medium">
@@ -528,11 +619,69 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                               </Select>
                             </TableCell>
                             <TableCell>
+                              {isDateField && mapping?.excel && (
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Formato de Origem:</span>
+                                    <Select 
+                                      value={mapping?.format || 'auto'} 
+                                      onValueChange={(val) => {
+                                        setMappings(prev => prev.map(m => m.system === field.key ? { ...m, format: val } : m));
+                                      }}
+                                    >
+                                      <SelectTrigger className="h-7 text-[11px] w-[140px] bg-background">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {DATE_FORMATS.map(f => (
+                                          <SelectItem key={f.value} value={f.value} className="text-[11px]">{f.label}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  {/* Exemplo detectado */}
+                                  {(() => {
+                                    const firstRow = rawPreview[headerRow + 1];
+                                    const colIndex = headers.indexOf(mapping.excel);
+                                    const sampleValue = colIndex !== -1 ? firstRow?.[colIndex] : null;
+                                    if (sampleValue) {
+                                      const { isValid, formatted } = parseDateValue(sampleValue, mapping.format || 'auto');
+                                      return (
+                                        <div className="flex items-center gap-1 text-[10px]">
+                                          <span className="text-muted-foreground">Exemplo:</span>
+                                          <span className="font-mono bg-muted px-1 rounded">{String(sampleValue)}</span>
+                                          <ArrowRight className="h-2 w-2 text-muted-foreground" />
+                                          <span className={isValid ? "text-green-600 font-medium" : "text-destructive font-medium"}>
+                                            {isValid ? formatted : "Erro de conversão"}
+                                          </span>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              )}
+                              {!isDateField && mapping?.excel && field.key === 'unidade' && (
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  <Info className="h-3 w-3" />
+                                  <span>Analista e assistentes serão atribuídos automaticamente.</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
                               {mapping?.excel ? (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Mapeado</Badge>
+                                <div className="flex justify-end">
+                                  <div className="h-5 w-5 bg-green-100 rounded-full flex items-center justify-center">
+                                    <Check className="h-3 w-3 text-green-600" />
+                                  </div>
+                                </div>
                               ) : isRequired ? (
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Obrigatório</Badge>
-                              ) : null}
+                                <div className="flex justify-end">
+                                  <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 border-red-200">Requerido</Badge>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground">Opcional</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
@@ -558,19 +707,35 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                           <TableHead>Cargo</TableHead>
                           <TableHead>Unidade</TableHead>
                           <TableHead>Abertura</TableHead>
+                          <TableHead>Responsáveis</TableHead>
                           <TableHead>Vagas</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {previewData.map((row, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell className="font-mono text-xs">{row.numero_requisicao || row.requisicao || '—'}</TableCell>
-                            <TableCell className="text-xs font-medium">{row.cargo || '—'}</TableCell>
-                            <TableCell className="text-xs">{row.unidade || '—'}</TableCell>
-                            <TableCell className="text-xs">{row.data_abertura || '—'}</TableCell>
-                            <TableCell className="text-xs text-center">{row.numero_vagas || row.quantidade || '—'}</TableCell>
-                          </TableRow>
-                        ))}
+                        {previewData.map((row, idx) => {
+                          const { analista, assistentes } = getResponsavelPorUnidade(row.unidade || '', row.tipo_vaga);
+                          return (
+                            <TableRow key={idx}>
+                              <TableCell className="font-mono text-xs">{row.requisicao}</TableCell>
+                              <TableCell className="text-xs font-medium">{row.cargo}</TableCell>
+                              <TableCell className="text-xs">{row.unidade}</TableCell>
+                              <TableCell className="text-xs">
+                                <span className={row.__errors?.data_abertura ? "text-destructive font-bold" : ""}>
+                                  {row.data_abertura ? format(new Date(row.data_abertura), 'dd/MM/yyyy') : '-'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-[10px] text-primary">{analista}</span>
+                                  {assistentes.length > 0 && (
+                                    <span className="text-[9px] text-muted-foreground">{assistentes.join(', ')}</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs text-center">{row.numero_vagas}</TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </ScrollArea>
@@ -680,7 +845,7 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                   <p className="text-muted-foreground">Os dados foram processados e já estão disponíveis no sistema.</p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
                   <div className="p-4 bg-background border rounded-xl text-center">
                     <div className="text-2xl font-bold text-foreground">{importSummary.total_lidos}</div>
                     <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Lidos</div>
@@ -688,6 +853,10 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                   <div className="p-4 bg-green-50 border border-green-100 rounded-xl text-center">
                     <div className="text-2xl font-bold text-green-700">{importSummary.total_novos}</div>
                     <div className="text-[10px] text-green-600 uppercase font-bold tracking-wider">Novas Vagas</div>
+                  </div>
+                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-center">
+                    <div className="text-2xl font-bold text-blue-700">{importSummary.total_datas_convertidas}</div>
+                    <div className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">Datas OK</div>
                   </div>
                   <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-center">
                     <div className="text-2xl font-bold text-amber-700">{importSummary.repeticoes_tratadas}</div>

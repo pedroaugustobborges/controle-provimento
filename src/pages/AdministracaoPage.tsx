@@ -20,9 +20,10 @@ import {
   Edit2
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EQUIPE_POR_UNIDADE, RESPONSAVEL_LIDERANCA } from '@/data/equipe';
 
 export default function AdministracaoPage() {
-  const [activeTab, setActiveTab] = useState('unidades');
+  const [activeTab, setActiveTab] = useState('equipe');
 
   const unidades = [
     { id: '1', nome: 'Hospital Central (GO)', estado: 'GO', status: 'ativo', analistas: 5 },
@@ -47,6 +48,9 @@ export default function AdministracaoPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
+          <TabsTrigger value="equipe" className="gap-2 font-bold px-6">
+            <Users className="h-4 w-4" /> Equipe por Unidade
+          </TabsTrigger>
           <TabsTrigger value="unidades" className="gap-2 font-bold px-6">
             <Building2 className="h-4 w-4" /> Unidades
           </TabsTrigger>
@@ -60,6 +64,86 @@ export default function AdministracaoPage() {
             <Settings className="h-4 w-4" /> Parâmetros
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="equipe">
+          <div className="space-y-4">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
+                <div>
+                  <CardTitle className="text-lg font-bold">Distribuição de Carteira por Unidade</CardTitle>
+                  <CardDescription>Defina os analistas e assistentes responsáveis por cada unidade.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-bold">
+                    Liderança: {RESPONSAVEL_LIDERANCA}
+                  </Badge>
+                  <Button size="sm" className="gap-2 bg-primary">
+                    <Plus className="h-4 w-4" /> Nova Regra
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow>
+                      <TableHead className="text-[10px] font-bold uppercase">Unidade</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Analista Responsável</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Assistentes Vinculados</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {EQUIPE_POR_UNIDADE.map((e, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-bold text-slate-700 text-sm">{e.unidade}</TableCell>
+                        <TableCell className="font-medium text-slate-600">
+                          <div className="flex items-center gap-2">
+                            <div className="h-7 w-7 bg-primary/10 rounded-full flex items-center justify-center text-primary text-[10px] font-bold">
+                              {e.analista.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            {e.analista}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {e.assistentes.map((a, i) => (
+                              <Badge key={i} variant="secondary" className="text-[10px] font-medium bg-slate-100">{a}</Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary"><Edit2 className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold text-slate-500 uppercase">Regra Especial</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-amber-50 p-2 rounded-lg">
+                      <ShieldCheck className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-700">Vagas de Liderança</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Priorizar Ellen Leticia como analista independente da unidade.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
 
         <TabsContent value="unidades">
           <Card className="border-slate-200 shadow-sm">

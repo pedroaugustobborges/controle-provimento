@@ -24,10 +24,13 @@ export default function VagasPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
+  const [filterAssistente, setFilterAssistente] = useState('all');
+  const [filterLideranca, setFilterLideranca] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const unidades = [...new Set(vagas.map((v) => v.unidade))];
-  const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))];
+  const unidades = [...new Set(vagas.map((v) => v.unidade))].sort();
+  const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].sort();
+  const assistentes = [...new Set(vagas.flatMap((v) => v.assistentes || []))].sort();
 
   const filtered = vagas.filter((v) => {
     const matchSearch = !search || v.cargo.toLowerCase().includes(search.toLowerCase()) ||
@@ -36,7 +39,9 @@ export default function VagasPage() {
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
     const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
-    return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista;
+    const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
+    const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
+    return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
   });
 
 
@@ -46,9 +51,11 @@ export default function VagasPage() {
     setFilterStatus('all');
     setFilterTipo('all');
     setFilterAnalista('all');
+    setFilterAssistente('all');
+    setFilterLideranca('all');
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all';
+  const hasFilters = search || filterUnidade !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all';
 
   return (
     <div className="space-y-4">
@@ -81,17 +88,39 @@ export default function VagasPage() {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[140px] bg-white"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-[140px] bg-white text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos Status</SelectItem>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterTipo} onValueChange={setFilterTipo}>
-              <SelectTrigger className="w-[160px] bg-white"><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos Tipos</SelectItem>
-                {Object.entries(TIPO_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                {Object.entries(TIPO_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterAnalista} onValueChange={setFilterAnalista}>
+              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Analista" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Analistas</SelectItem>
+                {analistas.map((a) => <SelectItem key={a} value={a} className="text-xs">{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterAssistente} onValueChange={setFilterAssistente}>
+              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Assistente" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Assistentes</SelectItem>
+                {assistentes.map((a) => <SelectItem key={a} value={a} className="text-xs">{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterLideranca} onValueChange={setFilterLideranca}>
+              <SelectTrigger className="w-[140px] bg-white text-xs"><SelectValue placeholder="Liderança" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Liderança? Todos</SelectItem>
+                <SelectItem value="yes" className="text-xs">Sim</SelectItem>
+                <SelectItem value="no" className="text-xs">Não</SelectItem>
               </SelectContent>
             </Select>
             {hasFilters && (

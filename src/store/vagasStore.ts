@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { Vaga, Edital, ValidacaoEdital, ImportHistory } from '@/types/vaga';
-import { mockVagas, mockEditais, mockValidacoes } from '@/data/mockData';
+import { mockVagas, mockBancos, mockConvocacoes, mockEditais, mockValidacoes } from '@/data/mockData';
+import { BancoTalentos, Convocacao } from '@/types/vaga';
 
 interface VagasState {
   vagas: Vaga[];
+  bancos: BancoTalentos[];
+  convocacoes: Convocacao[];
   editais: Edital[];
   validacoes: ValidacaoEdital[];
   importHistory: ImportHistory[];
@@ -18,7 +21,10 @@ interface VagasState {
   getVaga: (id: string) => Vaga | undefined;
   getEditalByVaga: (vagaId: string) => Edital | undefined;
   getValidacaoByVaga: (vagaId: string) => ValidacaoEdital | undefined;
+  getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
+  getConvocacoesByVaga: (vagaId: string) => Convocacao[];
 }
+
 
 export const useVagasStore = create<VagasState>((set, get) => ({
   vagas: mockVagas,

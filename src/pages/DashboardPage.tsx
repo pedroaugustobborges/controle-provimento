@@ -42,7 +42,7 @@ export default function DashboardPage() {
 
   // Stats calculation
   const abertas = vagas.filter((v) => v.status_geral === 'aberta').length;
-  const emAndamento = vagas.filter((v) => v.status_geral === 'em_andamento').length;
+  const emAndamento = vagas.filter((v) => ['em_triagem', 'entrevista'].includes(v.status_geral)).length;
   const emEdital = vagas.filter((v) => v.status_geral === 'em_edital').length;
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const encerradas = vagas.filter((v) => ['encerrada', 'finalizada'].includes(v.status_geral)).length;

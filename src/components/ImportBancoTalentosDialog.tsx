@@ -198,6 +198,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const [rawPreview, setRawPreview] = useState<any[][]>([]);
   const [fileId, setFileId] = useState<string | null>(null);
   const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
+  const [totalDetectedRows, setTotalDetectedRows] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -310,6 +311,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         return;
       }
 
+      // 0. Contar registros totais
+      const sheet = workbook!.Sheets[selectedSheets[0]];
+      const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      const count = Math.max(0, allRows.length - (headerRow + 1));
+      setTotalDetectedRows(count);
+
       // 1. Extrair e tratar cabeçalhos
       const rawHeaders = rawPreview[headerRow] || [];
       const processedHeaders: string[] = [];
@@ -384,14 +391,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     try {
       const allData: any[] = [];
       selectedSheets.forEach(sheetName => {
-        // Usamos as detectedHeaders como chaves para garantir consistência
         const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { 
           header: detectedHeaders, 
-          range: headerRow + 1, // Começa da linha após o cabeçalho
+          range: headerRow + 1,
           defval: '' 
         });
         allData.push(...data);
       });
+
+      setTotalDetectedRows(allData.length);
 
       const mappedData = allData.map(row => {
         const result: any = { __errors: {} };
@@ -407,6 +415,14 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             }
           }
         });
+
+        // Validação de campos obrigatórios
+        REQUIRED_FIELDS.forEach(field => {
+          if (!result[field.key] || result[field.key] === '') {
+            result.__errors[field.key] = true;
+          }
+        });
+
         return result;
       });
 
@@ -432,13 +448,26 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       });
 
       const now = new Date();
-      const newBancos: BancoTalentos[] = allData.map((row, i) => {
+      const newBancos: BancoTalentos[] = [];
+      let totalErros = 0;
+      let missingFieldsRows = 0;
+      let dateErrorRows = 0;
+
+      allData.forEach((row, i) => {
         const mapped: any = {};
+        let hasErrorInRow = false;
+        let hasMissingRequired = false;
+
         mappings.forEach(m => {
           if (m.excel && m.excel !== 'no_mapping') {
             const rawVal = row[m.excel];
             if (m.isDate) {
-              mapped[m.system] = parseDateValue(rawVal, m.format || 'auto').formatted;
+              const dateResult = parseDateValue(rawVal, m.format || 'auto');
+              mapped[m.system] = dateResult.formatted;
+              if (!dateResult.isValid && rawVal) {
+                hasErrorInRow = true;
+                dateErrorRows++;
+              }
             } else if (m.system === 'is_prorrogado') {
               const val = String(rawVal || '').toLowerCase();
               mapped[m.system] = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
@@ -448,63 +477,112 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           }
         });
 
-      const expiryDate = new Date(mapped.nova_data_validade || mapped.data_validade);
-      const status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
+        // Validar campos obrigatórios
+        REQUIRED_FIELDS.forEach(field => {
+          if (!mapped[field.key] || mapped[field.key] === '') {
+            hasMissingRequired = true;
+          }
+        });
 
-      return {
-        id: `imp-bt-${Date.now()}-${i}`,
-        unidade: mapped.unidade || 'HGG',
-        cargo: mapped.cargo || 'Não informado',
-        secao: mapped.secao || '',
-        numero_edital: mapped.numero_edital || '000/0000',
-        numero_processo: mapped.numero_processo || '',
-        nome: mapped.nome || '',
-        classificacao: mapped.classificacao || '',
-        quantidade_banco: mapped.quantidade_banco || '',
-        status_import: mapped.status_import || '',
-        data_abertura_edital: mapped.data_abertura_edital || '',
-        data_validade: mapped.data_validade || '',
-        is_prorrogado: !!mapped.is_prorrogado,
-        nova_data_validade: mapped.nova_data_validade || undefined,
-        data_convocacao: mapped.data_convocacao || undefined,
-        unidade_convocacao: mapped.unidade_convocacao || '',
-        numero_chamada: mapped.numero_chamada || '',
-        numero_processo_seletivo: mapped.numero_processo_seletivo || '',
-        numero_vaga_aproveitamento: mapped.numero_vaga_aproveitamento || '',
-        observacoes: mapped.observacoes || '',
-        status: status as any,
-      };
-    });
+        if (hasMissingRequired) {
+          missingFieldsRows++;
+          totalErros++;
+          return; // Pula este registro se faltar campo obrigatório
+        }
 
-    addBancos(newBancos);
-    const loteId = `LOTE-BT-${Date.now()}`;
-    addImportHistory({
-      id: loteId,
-      data_hora: new Date().toISOString(),
-      usuario: 'Ana Paula Oliveira',
-      email_usuario: 'ana.oliveira@agir.org.br',
-      arquivo: file?.name || 'banco_import.xlsx',
-      tipo_importacao: 'banco',
-      total_lidos: allData.length,
-      total_novos: newBancos.length,
-      total_atualizados: 0, total_ignorados: 0, total_erros: 0,
-      status: 'concluido',
-      referencia_arquivo: fileId || undefined
-    });
-    if (fileId) updateImportedFile(fileId, { status: 'processado' });
-    setImportSummary({ total_lidos: allData.length, total_novos: newBancos.length });
-    setStep('summary');
-    setIsProcessing(false);
-    toast.success('Banco de talentos importado com sucesso!');
-    } catch (error) {
+        // Determinar status baseado em validade
+        let status: 'valido' | 'vencido' | 'prorrogado' = 'valido';
+        const dateStr = mapped.nova_data_validade || mapped.data_validade;
+        
+        if (dateStr) {
+          const expiryDate = new Date(dateStr);
+          if (isValid(expiryDate)) {
+            status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
+          }
+        }
+
+        newBancos.push({
+          id: `imp-bt-${Date.now()}-${i}`,
+          unidade: mapped.unidade || 'HGG',
+          cargo: mapped.cargo || 'Não informado',
+          secao: mapped.secao || '',
+          numero_edital: mapped.numero_edital || '000/0000',
+          numero_processo: mapped.numero_processo || '',
+          nome: mapped.nome || '',
+          classificacao: mapped.classificacao || '',
+          quantidade_banco: mapped.quantidade_banco || '',
+          status_import: mapped.status_import || '',
+          data_abertura_edital: mapped.data_abertura_edital || '',
+          data_validade: mapped.data_validade || '',
+          is_prorrogado: !!mapped.is_prorrogado,
+          nova_data_validade: mapped.nova_data_validade || undefined,
+          data_convocacao: mapped.data_convocacao || undefined,
+          unidade_convocacao: mapped.unidade_convocacao || '',
+          numero_chamada: mapped.numero_chamada || '',
+          numero_processo_seletivo: mapped.numero_processo_seletivo || '',
+          numero_vaga_aproveitamento: mapped.numero_vaga_aproveitamento || '',
+          observacoes: mapped.observacoes || '',
+          status: status,
+        });
+      });
+
+      if (newBancos.length === 0) {
+        setIsProcessing(false);
+        if (missingFieldsRows > 0) {
+          toast.error(`Não foi possível importar. Há campos obrigatórios ausentes em todas as ${allData.length} linhas.`);
+        } else {
+          toast.error("Nenhum dado válido encontrado para importação.");
+        }
+        return;
+      }
+
+      addBancos(newBancos);
+      
+      const loteId = `LOTE-BT-${Date.now()}`;
+      addImportHistory({
+        id: loteId,
+        data_hora: new Date().toISOString(),
+        usuario: 'Ana Paula Oliveira',
+        email_usuario: 'ana.oliveira@agir.org.br',
+        arquivo: file?.name || 'banco_import.xlsx',
+        tipo_importacao: 'banco',
+        total_lidos: allData.length,
+        total_novos: newBancos.length,
+        total_atualizados: 0, 
+        total_ignorados: totalErros, 
+        total_erros: totalErros,
+        status: totalErros > 0 ? 'concluido_alertas' : 'concluido',
+        referencia_arquivo: fileId || undefined,
+        observacoes: totalErros > 0 
+          ? `Importação concluída com ${totalErros} falhas. ${missingFieldsRows} linhas ignoradas por falta de campos obrigatórios.` 
+          : 'Importação realizada com sucesso.'
+      });
+
+      if (fileId) updateImportedFile(fileId, { status: 'processado' });
+      
+      setImportSummary({ 
+        total_lidos: allData.length, 
+        total_novos: newBancos.length,
+        total_erros: totalErros 
+      });
+      
+      setStep('summary');
+      setIsProcessing(false);
+      
+      if (totalErros > 0) {
+        toast.warning(`Importação concluída: ${newBancos.length} salvos, ${totalErros} ignorados por erros.`);
+      } else {
+        toast.success('Banco de talentos importado com sucesso!');
+      }
+    } catch (error: any) {
       console.error("Erro ao processar importação:", error);
       setIsProcessing(false);
-      toast.error("Ocorreu um erro ao salvar os dados importados.");
+      toast.error(`Falha ao persistir dados: ${error.message || "Ocorreu um erro ao salvar os dados importados."}`);
     }
   };
 
   const reset = () => {
-    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]);
+    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]); setTotalDetectedRows(0);
   };
 
   const STEPS = [
@@ -858,7 +936,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                   <p className="text-sm text-muted-foreground">Revise como os dados serão importados para o sistema.</p>
                 </div>
                 <Badge variant="secondary" className="px-3 py-1 font-semibold">
-                  {previewData.length} registros para importar
+                  {totalDetectedRows} registros detectados ({previewData.length} na prévia)
                 </Badge>
               </div>
               <div className="border rounded-xl overflow-hidden bg-card">
@@ -947,15 +1025,21 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                 <h2 className="text-3xl font-bold">Importação Concluída!</h2>
                 <p className="text-muted-foreground max-w-sm">A base do banco de talentos foi atualizada com sucesso no sistema.</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-                <div className="bg-muted/30 p-4 rounded-2xl border text-center">
-                  <span className="text-xs font-medium text-muted-foreground uppercase">Total Processado</span>
-                  <p className="text-2xl font-bold text-primary">{importSummary.total_lidos}</p>
+              <div className={`grid ${importSummary.total_erros > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-4 w-full max-w-2xl px-4`}>
+                <div className="bg-muted/30 p-4 rounded-2xl border text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Lidos</span>
+                  <p className="text-2xl font-bold text-slate-900">{importSummary.total_lidos}</p>
                 </div>
-                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center">
-                  <span className="text-xs font-medium text-green-600 uppercase">Novos Registros</span>
+                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center flex flex-col justify-center">
+                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Novos Registros</span>
                   <p className="text-2xl font-bold text-green-700">{importSummary.total_novos}</p>
                 </div>
+                {importSummary.total_erros > 0 && (
+                  <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100 text-center flex flex-col justify-center">
+                    <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-1">Com Erro</span>
+                    <p className="text-2xl font-bold text-red-700">{importSummary.total_erros}</p>
+                  </div>
+                )}
               </div>
               <Button size="lg" className="px-12 rounded-full mt-4 shadow-lg hover:shadow-xl transition-all" onClick={() => onOpenChange(false)}>Concluir e Fechar</Button>
             </div>
@@ -1020,7 +1104,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           <span className="text-slate-700">|</span>
           <span>Etapa: <span className="text-primary font-bold uppercase">{step}</span></span>
           <div className="flex-1" />
-          <span>Registros Detectados: <span className="text-white font-mono">{rawPreview.length}</span></span>
+          <span>Registros Detectados: <span className="text-white font-mono">{totalDetectedRows}</span></span>
         </div>
       </DialogContent>
     </Dialog>

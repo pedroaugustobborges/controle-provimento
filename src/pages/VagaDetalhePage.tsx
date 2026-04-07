@@ -49,11 +49,12 @@ export default function VagaDetalhePage() {
         </div>
         <div className="flex items-center gap-3">
           {vaga.status_edital && (
-            <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital]} font-bold text-xs px-3 py-1`}>
+            <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital as any]} font-bold text-xs px-3 py-1`}>
               {vaga.status_edital}
             </Badge>
           )}
-          <StatusBadge status={vaga.status_geral} />
+          <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
+
         </div>
       </div>
 

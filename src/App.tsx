@@ -10,6 +10,7 @@ import VagaDetalhePage from "@/pages/VagaDetalhePage";
 import EditaisPage from "@/pages/EditaisPage";
 import ValidacaoPage from "@/pages/ValidacaoPage";
 import GestorPage from "@/pages/GestorPage";
+import ConvocacoesPage from "@/pages/ConvocacoesPage";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();

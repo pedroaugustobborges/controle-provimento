@@ -223,8 +223,8 @@ export function ImportExcelDialog({
       const reader = new FileReader();
       reader.onload = (evt) => {
         try {
-          const bstr = evt.target?.result as string;
-          const wb = XLSX.read(bstr, { type: 'binary' });
+          const data = evt.target?.result;
+          const wb = XLSX.read(data, { type: 'array' });
           
           if (!wb.SheetNames || wb.SheetNames.length === 0) {
             throw new Error('O arquivo selecionado não possui planilhas válidas.');
@@ -235,23 +235,35 @@ export function ImportExcelDialog({
             id,
             nome_original: selectedFile.name,
             nome_interno: id,
-            tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            tipo: selectedFile.type || 'application/vnd.ms-excel.sheet.macroEnabled.12',
             tamanho: selectedFile.size,
             data_upload: now,
             usuario: 'Ana Paula Oliveira', 
             email_usuario: 'ana.oliveira@agir.org.br',
             modulo_origem: 'vagas',
             status: 'enviado',
-            content: bstr
+            content: data as any
           });
 
           setWorkbook(wb);
           setSelectedSheets([wb.SheetNames[0]]);
-          setStep('sheets');
+          // For XLSM or larger files, we don't automatically jump to sheets step 
+          // to allow the user to see the file info first as requested
+          // setStep('sheets'); 
           toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Erro ao ler arquivo:', error);
-          toast.error('Erro ao ler arquivo. Verifique se o formato é válido.');
+          let errorMsg = 'Não foi possível processar este arquivo Excel.';
+          
+          if (error?.message?.includes('password')) {
+            errorMsg = 'Este arquivo está protegido por senha e não pode ser lido.';
+          } else if (selectedFile.name.toLowerCase().endsWith('.xlsm')) {
+            errorMsg = 'Ocorreu um problema ao ler o arquivo .xlsm. Verifique se o arquivo não está corrompido.';
+          } else if (error?.message) {
+            errorMsg = `Erro: ${error.message}`;
+          }
+          
+          toast.error(errorMsg);
           setFile(null);
         } finally {
           setIsLoadingFile(false);
@@ -262,10 +274,10 @@ export function ImportExcelDialog({
       
       reader.onerror = () => {
         setIsLoadingFile(false);
-        toast.error('Ocorreu um erro ao carregar o arquivo.');
+        toast.error('Ocorreu um erro técnico ao carregar o arquivo do disco.');
       };
       
-      reader.readAsBinaryString(selectedFile);
+      reader.readAsArrayBuffer(selectedFile);
     }
   };
 

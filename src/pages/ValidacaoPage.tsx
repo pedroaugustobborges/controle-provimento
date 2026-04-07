@@ -14,18 +14,12 @@ export default function ValidacaoPage() {
   }));
 
   const checklistKeys = [
-    { key: 'salario_confere', label: 'Salário' },
-    { key: 'requisitos_confere', label: 'Requisitos' },
-    { key: 'atribuicoes_confere', label: 'Atribuições' },
-    { key: 'site_confere', label: 'Site' },
-    { key: 'datas_conferem', label: 'Datas' },
-    { key: 'vaga_correta_para_edital', label: 'Vaga/Edital' },
-    { key: 'planilha_correta', label: 'Planilha' },
+    { key: 'precisa_validacao', label: 'Precisa validação?' },
+    { key: 'etapa_finalizada', label: 'Etapa finalizada?' },
   ];
 
   const getIcon = (val: boolean | null) => {
     if (val === true) return <CheckCircle2 className="h-4 w-4 text-success" />;
-    if (val === false) return <XCircle className="h-4 w-4 text-destructive" />;
     return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
@@ -53,11 +47,11 @@ export default function ValidacaoPage() {
                   </div>
                 ))}
               </div>
-              {v.observacoes_validacao && (
-                <p className="text-xs text-muted-foreground mt-2 italic">"{v.observacoes_validacao}"</p>
+              {v.observacao && (
+                <p className="text-xs text-muted-foreground mt-2 italic">"{v.observacao}"</p>
               )}
-              {v.validado_por && (
-                <p className="text-[10px] text-muted-foreground mt-1">Validado por {v.validado_por} em {formatDate(v.data_validacao || '')}</p>
+              {v.responsavel_validacao && (
+                <p className="text-[10px] text-muted-foreground mt-1">Validado por {v.responsavel_validacao} · {v.tipo_validacao}</p>
               )}
             </CardContent>
           </Card>

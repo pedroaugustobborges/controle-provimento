@@ -41,17 +41,17 @@ const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
   { key: 'cargo', label: 'Cargo' },
   { key: 'secao', label: 'Seção' },
-  { key: 'numero_edital', label: 'Nº Edital' },
-  { key: 'data_abertura_edital', label: 'Data Publicação' },
+  { key: 'numero_edital', label: 'Número do edital' },
+  { key: 'data_abertura_edital', label: 'Data de Publicação' },
   { key: 'data_validade', label: 'Validade' },
 ];
 
 const OPTIONAL_FIELDS = [
-  { key: 'numero_processo', label: 'Nº Processo' },
+  { key: 'numero_processo', label: 'Número do processo' },
   { key: 'nome', label: 'Nome' },
   { key: 'classificacao', label: 'Classificação' },
-  { key: 'is_prorrogado', label: 'Prorrogado (Sim/Não)' },
-  { key: 'nova_data_validade', label: 'Nova Data Final' },
+  { key: 'is_prorrogado', label: 'Banco prorrogado' },
+  { key: 'nova_data_validade', label: 'Nova data final' },
   { key: 'data_convocacao', label: 'Data de Convocação' },
   { key: 'observacoes', label: 'Observações' },
 ];
@@ -157,6 +157,10 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     }
   }, [workbook, selectedSheets]);
 
+  useEffect(() => {
+    console.log("Current Step:", step);
+  }, [step]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -189,18 +193,44 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   };
 
   const startMapping = () => {
-    const headers = rawPreview[headerRow]?.map((c, i) => c ? String(c) : `Coluna ${i + 1}`) || [];
-    const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
-      const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
-      return { 
-        excel: matchedHeader || '', 
-        system: field.key, 
-        format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
-        isDate: DATE_FIELDS.includes(field.key) 
-      };
-    });
-    setMappings(initialMappings);
-    setStep('mapping');
+    console.log("Iniciando mapeamento...", { headerRow, selectedSheets, rawPreviewLength: rawPreview.length });
+    
+    try {
+      if (selectedSheets.length === 0) {
+        toast.error("Selecione uma aba para continuar");
+        return;
+      }
+
+      if (!rawPreview || rawPreview.length === 0) {
+        toast.error("Não foi possível identificar as colunas da aba selecionada. Tente outra aba ou verifique o arquivo.");
+        return;
+      }
+
+      const headers = (rawPreview[headerRow] || []).map((c, i) => {
+        if (c === null || c === undefined || String(c).trim() === '') return `Coluna ${i + 1}`;
+        return String(c).trim();
+      });
+
+      console.log("Colunas detectadas:", headers);
+
+      const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
+        const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
+        return { 
+          excel: (matchedHeader && headers.includes(matchedHeader)) ? matchedHeader : '', 
+          system: field.key, 
+          format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
+          isDate: DATE_FIELDS.includes(field.key) 
+        };
+      });
+
+      setMappings(initialMappings);
+      setStep('mapping');
+      toast.success("Abas configuradas! Agora faça o mapeamento das colunas.");
+      console.log("Etapa alterada para 'mapping' com sucesso");
+    } catch (error) {
+      console.error("Erro ao iniciar mapeamento:", error);
+      toast.error("Erro crítico ao processar colunas. Verifique o console.");
+    }
   };
 
   const generatePreview = () => {
@@ -383,12 +413,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {workbook.SheetNames.map(name => (
-                  <button key={name} onClick={() => setSelectedSheets([name])} className={`p-4 border rounded-xl flex flex-col items-start gap-2 transition-all hover:shadow-sm ${selectedSheets.includes(name) ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-sm' : 'border-border bg-card'}`}>
+                  <button key={name} onClick={() => {
+                    console.log("Aba selecionada:", name);
+                    setSelectedSheets([name]);
+                  }} className={`p-4 border-2 rounded-xl flex flex-col items-start gap-2 transition-all hover:shadow-md ${selectedSheets.includes(name) ? 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-lg' : 'border-border bg-card'}`}>
                     <div className="flex items-center justify-between w-full">
-                      <Layers className={`h-5 w-5 ${selectedSheets.includes(name) ? 'text-primary' : 'text-muted-foreground'}`} />
-                      {selectedSheets.includes(name) && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                      <Layers className={`h-6 w-6 ${selectedSheets.includes(name) ? 'text-primary' : 'text-muted-foreground'}`} />
+                      {selectedSheets.includes(name) && <CheckCircle2 className="h-5 w-5 text-primary animate-in zoom-in" />}
                     </div>
-                    <span className="font-semibold text-sm truncate w-full text-left">{name}</span>
+                    <span className={`font-bold text-sm truncate w-full text-left ${selectedSheets.includes(name) ? 'text-primary' : ''}`}>{name}</span>
                   </button>
                 ))}
               </div>
@@ -638,7 +671,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         </div>
 
         {step !== 'summary' && (
-          <DialogFooter className="p-6 border-t bg-muted/20 flex items-center justify-between sm:justify-between">
+          <DialogFooter className="p-6 border-t bg-muted/20 flex flex-col gap-4 sm:flex-row items-center justify-between sm:justify-between">
             <Button variant="ghost" onClick={() => { 
               if (step === 'select') onOpenChange(false); 
               else if (step === 'sheets') setStep('select');
@@ -650,30 +683,32 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             
             <div className="flex gap-3">
               {step === 'sheets' && (
-                <Button onClick={() => {
-                  if (selectedSheets.length === 0) {
-                    toast.error("Selecione uma aba para continuar");
-                    return;
-                  }
-                  startMapping();
-                }} className="rounded-xl px-8 shadow-sm">
+                <Button 
+                  onClick={() => {
+                    console.log("Clicou no botão Próximo: Mapear colunas");
+                    startMapping();
+                  }} 
+                  disabled={selectedSheets.length === 0}
+                  className="rounded-xl px-8 shadow-sm font-bold"
+                >
                   Próximo: Mapear colunas <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {step === 'mapping' && (
                 <Button onClick={() => {
-                  const missingRequired = REQUIRED_FIELDS.filter(f => !mappings.find(m => m.system === f.key)?.excel);
+                  console.log("Clicou no botão Visualizar Prévia");
+                  const missingRequired = REQUIRED_FIELDS.filter(f => !mappings.find(m => m.system === f.key)?.excel || mappings.find(m => m.system === f.key)?.excel === 'no_mapping');
                   if (missingRequired.length > 0) {
                     toast.error(`Mapeie os campos obrigatórios: ${missingRequired.map(f => f.label).join(', ')}`);
                     return;
                   }
                   generatePreview();
-                }} className="rounded-xl px-8 shadow-sm">
+                }} className="rounded-xl px-8 shadow-sm font-bold">
                   Visualizar Prévia <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {step === 'preview' && (
-                <Button onClick={processImport} disabled={isProcessing} className="rounded-xl px-10 shadow-md bg-green-600 hover:bg-green-700 text-white border-none">
+                <Button onClick={processImport} disabled={isProcessing} className="rounded-xl px-10 shadow-md bg-green-600 hover:bg-green-700 text-white border-none font-bold">
                   {isProcessing ? (
                     <>Processando... <div className="ml-2 h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>
                   ) : (
@@ -684,6 +719,17 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             </div>
           </DialogFooter>
         )}
+
+        {/* Visual Debug Bar */}
+        <div className="px-6 py-2 bg-slate-900 text-[10px] text-slate-400 flex items-center gap-4 border-t border-slate-800">
+          <span>Aba: <span className="text-white font-mono">{selectedSheets[0] || 'Nenhuma'}</span></span>
+          <span className="text-slate-700">|</span>
+          <span>Header: <span className="text-white font-mono">Linha {headerRow + 1}</span></span>
+          <span className="text-slate-700">|</span>
+          <span>Etapa: <span className="text-primary font-bold uppercase">{step}</span></span>
+          <div className="flex-1" />
+          <span>Registros Detectados: <span className="text-white font-mono">{rawPreview.length}</span></span>
+        </div>
       </DialogContent>
     </Dialog>
   );

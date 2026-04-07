@@ -573,6 +573,21 @@ export function ImportExcelDialog({
 
             {step === 'sheets' && workbook && (
               <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-md">
+                      <FileSpreadsheet className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wider">Arquivo selecionado</p>
+                      <p className="text-sm font-medium text-foreground">{file?.name}</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="text-xs h-8 text-muted-foreground hover:text-destructive">
+                    Remover e trocar
+                  </Button>
+                </div>
+                
                 <Alert>
                   <Database className="h-4 w-4" />
                   <AlertTitle>Base Unificada</AlertTitle>

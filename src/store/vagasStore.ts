@@ -110,6 +110,23 @@ export const useVagasStore = create<VagasState>()(
     {
       name: 'hospital-recruitment-store',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        // Persistir apenas dados essenciais e leves
+        vagas: state.vagas.length > 500 ? state.vagas.slice(0, 500) : state.vagas,
+        editais: state.editais,
+        validacoes: state.validacoes,
+        // Não persistimos 'bancos' (Banco de Talentos) se for muito grande
+        // Não persistimos o histórico completo ou arquivos brutos
+        importHistory: state.importHistory.map(h => ({
+          ...h,
+          relatorio_erros: undefined, // Remove relatórios pesados
+          mapeamento_aplicado: undefined // Remove metadados de mapeamento
+        })).slice(0, 20), // Apenas os últimos 20 registros de histórico
+        importedFiles: state.importedFiles.map(f => ({
+          ...f,
+          content: undefined // NUNCA persistir o conteúdo do arquivo
+        })).slice(0, 10),
+      }),
     }
   )
 );

@@ -189,18 +189,44 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   };
 
   const startMapping = () => {
-    const headers = rawPreview[headerRow]?.map((c, i) => c ? String(c) : `Coluna ${i + 1}`) || [];
-    const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
-      const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
-      return { 
-        excel: matchedHeader || '', 
-        system: field.key, 
-        format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
-        isDate: DATE_FIELDS.includes(field.key) 
-      };
-    });
-    setMappings(initialMappings);
-    setStep('mapping');
+    console.log("Iniciando mapeamento...", { headerRow, selectedSheets, rawPreviewLength: rawPreview.length });
+    
+    try {
+      if (selectedSheets.length === 0) {
+        toast.error("Selecione uma aba para continuar");
+        return;
+      }
+
+      if (!rawPreview || rawPreview.length === 0) {
+        toast.error("Não foi possível identificar as colunas da aba selecionada. Tente outra aba ou verifique o arquivo.");
+        return;
+      }
+
+      const headers = (rawPreview[headerRow] || []).map((c, i) => {
+        if (c === null || c === undefined || String(c).trim() === '') return `Coluna ${i + 1}`;
+        return String(c).trim();
+      });
+
+      console.log("Colunas detectadas:", headers);
+
+      const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
+        const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
+        return { 
+          excel: (matchedHeader && headers.includes(matchedHeader)) ? matchedHeader : '', 
+          system: field.key, 
+          format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
+          isDate: DATE_FIELDS.includes(field.key) 
+        };
+      });
+
+      setMappings(initialMappings);
+      setStep('mapping');
+      toast.success("Abas configuradas! Agora faça o mapeamento das colunas.");
+      console.log("Etapa alterada para 'mapping' com sucesso");
+    } catch (error) {
+      console.error("Erro ao iniciar mapeamento:", error);
+      toast.error("Erro crítico ao processar colunas. Verifique o console.");
+    }
   };
 
   const generatePreview = () => {

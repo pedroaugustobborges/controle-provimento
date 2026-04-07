@@ -35,15 +35,15 @@ const DATE_FORMATS = [
   { label: 'Auto-detectar', value: 'auto' },
 ];
 
-const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade'];
+const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao'];
 
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
   { key: 'cargo', label: 'Cargo' },
   { key: 'secao', label: 'Seção' },
   { key: 'numero_edital', label: 'Nº Edital' },
-  { key: 'data_abertura_edital', label: 'Data Abertura' },
-  { key: 'data_validade', label: 'Data Validade' },
+  { key: 'data_abertura_edital', label: 'Data Publicação' },
+  { key: 'data_validade', label: 'Validade' },
 ];
 
 const OPTIONAL_FIELDS = [
@@ -52,6 +52,7 @@ const OPTIONAL_FIELDS = [
   { key: 'classificacao', label: 'Classificação' },
   { key: 'is_prorrogado', label: 'Prorrogado (Sim/Não)' },
   { key: 'nova_data_validade', label: 'Nova Data Final' },
+  { key: 'data_convocacao', label: 'Data de Convocação' },
   { key: 'observacoes', label: 'Observações' },
 ];
 
@@ -63,10 +64,11 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   numero_processo: ['processo', 'nº processo', 'número processo'],
   nome: ['nome', 'candidato'],
   classificacao: ['classificação', 'posicao', 'ranking'],
-  data_abertura_edital: ['abertura', 'data abertura', 'dt abertura'],
-  data_validade: ['validade', 'data validade', 'dt validade'],
+  data_abertura_edital: ['abertura', 'data abertura', 'dt abertura', 'publicação', 'publicacao', 'data publicação', 'data publicacao'],
+  data_validade: ['validade', 'data validade', 'dt validade', 'vencimento'],
   is_prorrogado: ['prorrogado', 'prorrogação'],
   nova_data_validade: ['nova data', 'data final', 'prorrogado até'],
+  data_convocacao: ['convocação', 'data convocação', 'convocacao', 'dt convocacao', 'convocado em'],
   observacoes: ['observações', 'obs'],
 };
 

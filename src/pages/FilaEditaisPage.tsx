@@ -29,17 +29,19 @@ export default function FilaEditaisPage() {
 
   const pendingVagas = vagas.filter(v => {
     // Show only vacancies that need process or notice number, or recently imported
+    const status = v.status || v.status_geral;
     const isPending = !v.numero_processo || !v.numero_edital || v.status_edital !== 'Encerrada';
     
     const matchSearch = !search || 
       v.cargo.toLowerCase().includes(search.toLowerCase()) || 
-      v.numero_requisicao.toLowerCase().includes(search.toLowerCase());
+      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase());
     
     const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
     const matchStatus = filterStatus === 'all' || v.status_edital === filterStatus;
 
     return isPending && matchSearch && matchUnidade && matchStatus;
   });
+
 
   const unidades = Array.from(new Set(vagas.map(v => v.unidade)));
   const statusOptions: StatusEdital[] = [

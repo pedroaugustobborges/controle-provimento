@@ -269,6 +269,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         data_validade: mapped.data_validade || '',
         is_prorrogado: !!mapped.is_prorrogado,
         nova_data_validade: mapped.nova_data_validade || undefined,
+        data_convocacao: mapped.data_convocacao || undefined,
         status: status as any,
         observacoes: mapped.observacoes || '',
       };

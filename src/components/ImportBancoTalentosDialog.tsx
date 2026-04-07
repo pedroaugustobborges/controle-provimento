@@ -671,7 +671,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         </div>
 
         {step !== 'summary' && (
-          <DialogFooter className="p-6 border-t bg-muted/20 flex items-center justify-between sm:justify-between">
+          <DialogFooter className="p-6 border-t bg-muted/20 flex flex-col gap-4 sm:flex-row items-center justify-between sm:justify-between">
             <Button variant="ghost" onClick={() => { 
               if (step === 'select') onOpenChange(false); 
               else if (step === 'sheets') setStep('select');
@@ -683,30 +683,32 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             
             <div className="flex gap-3">
               {step === 'sheets' && (
-                <Button onClick={() => {
-                  if (selectedSheets.length === 0) {
-                    toast.error("Selecione uma aba para continuar");
-                    return;
-                  }
-                  startMapping();
-                }} className="rounded-xl px-8 shadow-sm">
+                <Button 
+                  onClick={() => {
+                    console.log("Clicou no botão Próximo: Mapear colunas");
+                    startMapping();
+                  }} 
+                  disabled={selectedSheets.length === 0}
+                  className="rounded-xl px-8 shadow-sm font-bold"
+                >
                   Próximo: Mapear colunas <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {step === 'mapping' && (
                 <Button onClick={() => {
-                  const missingRequired = REQUIRED_FIELDS.filter(f => !mappings.find(m => m.system === f.key)?.excel);
+                  console.log("Clicou no botão Visualizar Prévia");
+                  const missingRequired = REQUIRED_FIELDS.filter(f => !mappings.find(m => m.system === f.key)?.excel || mappings.find(m => m.system === f.key)?.excel === 'no_mapping');
                   if (missingRequired.length > 0) {
                     toast.error(`Mapeie os campos obrigatórios: ${missingRequired.map(f => f.label).join(', ')}`);
                     return;
                   }
                   generatePreview();
-                }} className="rounded-xl px-8 shadow-sm">
+                }} className="rounded-xl px-8 shadow-sm font-bold">
                   Visualizar Prévia <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               {step === 'preview' && (
-                <Button onClick={processImport} disabled={isProcessing} className="rounded-xl px-10 shadow-md bg-green-600 hover:bg-green-700 text-white border-none">
+                <Button onClick={processImport} disabled={isProcessing} className="rounded-xl px-10 shadow-md bg-green-600 hover:bg-green-700 text-white border-none font-bold">
                   {isProcessing ? (
                     <>Processando... <div className="ml-2 h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>
                   ) : (
@@ -717,6 +719,17 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             </div>
           </DialogFooter>
         )}
+
+        {/* Visual Debug Bar */}
+        <div className="px-6 py-2 bg-slate-900 text-[10px] text-slate-400 flex items-center gap-4 border-t border-slate-800">
+          <span>Aba: <span className="text-white font-mono">{selectedSheets[0] || 'Nenhuma'}</span></span>
+          <span className="text-slate-700">|</span>
+          <span>Header: <span className="text-white font-mono">Linha {headerRow + 1}</span></span>
+          <span className="text-slate-700">|</span>
+          <span>Etapa: <span className="text-primary font-bold uppercase">{step}</span></span>
+          <div className="flex-1" />
+          <span>Registros Detectados: <span className="text-white font-mono">{rawPreview.length}</span></span>
+        </div>
       </DialogContent>
     </Dialog>
   );

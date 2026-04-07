@@ -552,37 +552,106 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
         <div className="flex-1 overflow-auto p-6 bg-background/50">
           {step === 'select' && (
-            <div 
-              className={`flex flex-col items-center justify-center h-80 border-2 border-dashed rounded-2xl border-border hover:border-primary/50 transition-all bg-muted/20 cursor-pointer group ${isLoadingFile ? 'opacity-70 pointer-events-none' : ''}`} 
-              onClick={() => !isLoadingFile && fileInputRef.current?.click()}
-            >
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept=".xlsx, .xls, .xlsm, .csv" 
-                onChange={handleFileChange} 
-              />
-              
-              {isLoadingFile ? (
-                <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                  <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-6" />
-                  <h3 className="text-xl font-bold text-foreground">Lendo arquivo...</h3>
-                  <p className="text-sm text-muted-foreground mt-2 text-center px-6">
-                    {file?.name} ({(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`})
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-4 uppercase font-bold tracking-widest">Aguarde o processamento</p>
+            <div className="space-y-6">
+              {!file || isLoadingFile ? (
+                <div 
+                  className={`flex flex-col items-center justify-center h-80 border-2 border-dashed rounded-2xl border-border hover:border-primary/50 transition-all bg-muted/20 cursor-pointer group ${isLoadingFile ? 'opacity-70 pointer-events-none' : ''}`} 
+                  onClick={() => !isLoadingFile && fileInputRef.current?.click()}
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept=".xlsx, .xls, .xlsm, .csv" 
+                    onChange={handleFileChange} 
+                  />
+                  
+                  {isLoadingFile ? (
+                    <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                      <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-6" />
+                      <h3 className="text-xl font-bold text-foreground">Lendo arquivo...</h3>
+                      <p className="text-sm text-muted-foreground mt-2 text-center px-6">
+                        {file?.name} ({(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`})
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-4 uppercase font-bold tracking-widest">Aguarde o processamento</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-background p-6 rounded-full shadow-md mb-6 group-hover:scale-110 transition-transform">
+                        <Upload className="h-10 w-10 text-primary" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground">Selecione o arquivo do Banco</h3>
+                      <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs px-4">Arraste e solte o arquivo aqui ou clique para navegar no seu dispositivo</p>
+                      <div className="mt-8 flex flex-col items-center gap-2">
+                        <p className="text-[10px] text-muted-foreground/60 uppercase font-bold tracking-widest">Formatos Aceitos</p>
+                        <div className="flex gap-2">
+                          <Badge variant="secondary" className="text-[10px] bg-background">.XLSX</Badge>
+                          <Badge variant="secondary" className="text-[10px] bg-background">.XLSM</Badge>
+                          <Badge variant="secondary" className="text-[10px] bg-background">.XLS</Badge>
+                          <Badge variant="secondary" className="text-[10px] bg-background">.CSV</Badge>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
-                <>
-                  <div className="bg-background p-6 rounded-full shadow-md mb-6 group-hover:scale-110 transition-transform">
-                    <Upload className="h-10 w-10 text-primary" />
+                <div className="animate-in fade-in zoom-in duration-300">
+                  <div className="bg-green-50 border border-green-200 rounded-2xl p-8 flex flex-col items-center text-center">
+                    <div className="bg-green-100 p-5 rounded-full mb-6">
+                      <CheckCircle2 className="h-12 w-12 text-green-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-green-900 mb-2">Arquivo carregado!</h3>
+                    <p className="text-sm text-green-700 mb-8 max-w-md">
+                      Detectamos as abas e o conteúdo do arquivo. Clique em continuar para selecionar a aba de importação.
+                    </p>
+                    
+                    <div className="grid grid-cols-2 gap-6 w-full max-w-xl bg-white p-8 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-2">
+                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Pronto</Badge>
+                      </div>
+                      
+                      <div className="text-left space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Arquivo</p>
+                        <p className="text-sm font-bold truncate text-foreground">{file.name}</p>
+                      </div>
+                      <div className="text-left space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Formato</p>
+                        <p className="text-sm font-bold text-foreground uppercase">{file.name.split('.').pop()}</p>
+                      </div>
+                      <div className="text-left space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tamanho</p>
+                        <p className="text-sm font-bold text-foreground">
+                          {file.size / 1024 > 1024 ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : `${(file.size / 1024).toFixed(2)} KB`}
+                        </p>
+                      </div>
+                      <div className="text-left space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total de Abas</p>
+                        <p className="text-sm font-bold text-foreground">{workbook?.SheetNames.length || 0} abas encontradas</p>
+                      </div>
+                      
+                      <div className="text-left col-span-2 pt-4 border-t">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Lista de Abas</p>
+                        <div className="flex flex-wrap gap-2">
+                          {workbook?.SheetNames.slice(0, 5).map((name, i) => (
+                            <Badge key={i} variant="secondary" className="text-[10px] py-0.5">{name}</Badge>
+                          ))}
+                          {workbook?.SheetNames && workbook.SheetNames.length > 5 && (
+                            <span className="text-[10px] text-muted-foreground font-medium self-center">+{workbook.SheetNames.length - 5} mais...</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-10 flex gap-4 w-full justify-center">
+                      <Button variant="outline" onClick={() => reset()} className="gap-2 px-6">
+                        <X className="h-4 w-4" /> Trocar arquivo
+                      </Button>
+                      <Button onClick={() => setStep('sheets')} className="gap-2 px-10 bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200">
+                        Continuar para Abas <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold">Selecione o arquivo Excel</h3>
-                  <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">Arraste e solte o arquivo ou clique aqui para selecionar do seu computador</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-4 uppercase font-bold tracking-wider">Formatos suportados: .xlsx, .xlsm, .xls, .csv</p>
-                  <Button variant="outline" className="mt-8 pointer-events-none">Procurar Arquivo</Button>
-                </>
+                </div>
               )}
             </div>
           )}

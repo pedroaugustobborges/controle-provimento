@@ -58,7 +58,14 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
 
     const newBanco: BancoTalentos = {
       id: `banco-${Date.now()}`,
-      ...values,
+      unidade: values.unidade,
+      cargo: values.cargo,
+      secao: values.secao,
+      numero_edital: values.numero_edital,
+      data_abertura_edital: values.data_abertura_edital,
+      data_validade: values.data_validade,
+      is_prorrogado: values.is_prorrogado,
+      nova_data_validade: values.nova_data_validade,
       status: status as any,
       observacoes: values.observacoes || '',
     };

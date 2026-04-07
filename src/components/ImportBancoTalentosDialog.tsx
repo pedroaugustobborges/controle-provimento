@@ -506,7 +506,11 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       let missingFieldsRows = 0;
       let dateErrorRows = 0;
 
-      allData.forEach((row, i) => {
+      const filteredData = allData.filter(row => {
+        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
+      });
+
+      filteredData.forEach((row, i) => {
         const mapped: any = {};
         let hasErrorInRow = false;
         let hasMissingRequired = false;
@@ -515,7 +519,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           if (m.excel && m.excel !== 'no_mapping') {
             const rawVal = row[m.excel];
             if (m.isDate) {
-              const dateResult = parseDateValue(rawVal, m.format || 'auto');
+              const dateResult = parseDateValue(rawVal, m.format || 'dd/MM/yyyy');
               mapped[m.system] = dateResult.formatted;
               if (!dateResult.isValid && rawVal) {
                 hasErrorInRow = true;
@@ -547,8 +551,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         let status: 'valido' | 'vencido' | 'prorrogado' = 'valido';
         const dateStr = mapped.nova_data_validade || mapped.data_validade;
         
-        if (dateStr) {
-          const expiryDate = new Date(dateStr);
+        // Se a data estiver em formato brasileiro dd/mm/aaaa, vamos converter para aaaa-mm-dd para o objeto Date
+        let dateToParse = dateStr;
+        if (dateStr && dateStr.includes('/') && dateStr.split('/')[0].length === 2) {
+          const parts = dateStr.split('/');
+          dateToParse = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        if (dateToParse) {
+          const expiryDate = new Date(dateToParse);
           if (isValid(expiryDate)) {
             status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
           }

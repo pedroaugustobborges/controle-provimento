@@ -90,8 +90,20 @@ export const useVagasStore = create<VagasState>()(
       getValidacaoByVaga: (vagaId) => get().validacoes.find((v) => v.vaga_id === vagaId),
       getBancoByVaga: (vagaId) => {
         const vaga = get().vagas.find(v => v.id === vagaId);
-        if (!vaga?.banco_id) return undefined;
-        return get().bancos.find(b => b.id === vaga.banco_id);
+        if (!vaga) return undefined;
+        
+        // Try by ID first
+        if (vaga.banco_id) {
+          const banco = get().bancos.find(b => b.id === vaga.banco_id);
+          if (banco) return banco;
+        }
+        
+        // Fallback: match by cargo and unit
+        return get().bancos.find(b => 
+          b.cargo.toLowerCase() === vaga.cargo.toLowerCase() && 
+          b.unidade === vaga.unidade &&
+          b.status !== 'vencido'
+        );
       },
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),
     }),

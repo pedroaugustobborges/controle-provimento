@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,15 +12,32 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS } from '@/types/vaga';
-import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus } from 'lucide-react';
+import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga } = useVagasStore();
+  const { currentUser, addAuditLog } = useAdminStore();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
+  const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';
+  const isAssistente = currentUser?.perfil === 'Assistente';
+
 
   const vaga = getVaga(id!);
   if (!vaga) return <div className="p-8 text-center text-muted-foreground">Vaga não encontrada.</div>;
@@ -28,12 +46,43 @@ export default function VagaDetalhePage() {
   const validacao = getValidacaoByVaga(vaga.id);
 
   const handleStatusChange = (newStatus: string) => {
+    const oldStatus = vaga.status || vaga.status_geral;
     updateVaga(vaga.id, {
       status: newStatus as StatusVaga,
-      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, usuario: 'Analista' }],
-
+      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, usuario: currentUser?.nome_completo || 'Analista' }],
     });
+    
+    addAuditLog({
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || 'sistema@sistema.com',
+      perfil: currentUser?.perfil || 'Sistema',
+      data: new Date().toISOString().split('T')[0],
+      hora: new Date().toLocaleTimeString(),
+      acao: 'Alteração de Status',
+      modulo: 'Vagas',
+      registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+      valor_anterior: oldStatus,
+      valor_novo: newStatus
+    });
+
     toast.success('Status atualizado');
+  };
+  const handleDelete = () => {
+    if (vaga && canDelete) {
+      deleteVaga(vaga.id);
+      addAuditLog({
+        usuario_nome: currentUser?.nome_completo || 'Sistema',
+        usuario_email: currentUser?.email || 'sistema@sistema.com',
+        perfil: currentUser?.perfil || 'Sistema',
+        data: new Date().toISOString().split('T')[0],
+        hora: new Date().toLocaleTimeString(),
+        acao: 'Excluir Requisição',
+        modulo: 'Vagas',
+        registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+      });
+      toast.success('Requisição excluída com sucesso.');
+      navigate('/vagas');
+    }
   };
 
   return (
@@ -56,7 +105,15 @@ export default function VagaDetalhePage() {
             </Badge>
           )}
           <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
-
+          {canDelete && (
+            <Button 
+              variant="outline" 
+              className="text-destructive border-destructive/20 hover:bg-destructive/5 gap-2"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Excluir
+            </Button>
+          )}
         </div>
       </div>
 
@@ -179,13 +236,16 @@ export default function VagaDetalhePage() {
                   <div className="space-y-1">
                     <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Status Atual</label>
                     <div className="mt-1">
-                      <Select value={(vaga.status || vaga.status_geral) as string} onValueChange={handleStatusChange}>
+                      <Select 
+                        value={(vaga.status || vaga.status_geral) as string} 
+                        onValueChange={handleStatusChange}
+                        disabled={!canEdit && !isAssistente} // Ambos podem mudar status conforme regras
+                      >
                         <SelectTrigger className="h-9 bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {Object.entries(STATUS_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                         </SelectContent>
                       </Select>
-
                     </div>
                   </div>
                 </div>
@@ -195,6 +255,21 @@ export default function VagaDetalhePage() {
                 <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Observações Internas</label>
                 <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 min-h-[100px] text-sm text-slate-600 whitespace-pre-wrap">
                   {vaga.observacoes_internas || vaga.observacoes || 'Nenhuma observação registrada.'}
+                </div>
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-x-8 gap-y-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                <div className="flex items-center gap-1.5">
+                  <User className="h-3 w-3" /> Criado por: <span className="text-slate-500">Sistema</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" /> Data Criação: <span className="text-slate-500">{formatDate(vaga.data_abertura)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <User className="h-3 w-3" /> Última alteração por: <span className="text-slate-500">{vaga.historico[vaga.historico.length - 1]?.usuario || 'Sistema'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" /> Última atualização: <span className="text-slate-500">{formatDate(vaga.historico[vaga.historico.length - 1]?.data || vaga.data_abertura)}</span>
                 </div>
               </div>
             </CardContent>
@@ -242,6 +317,26 @@ export default function VagaDetalhePage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Excluir requisição?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. O registro será removido permanentemente do sistema e esta ação será auditada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -13,6 +13,7 @@ interface VagasState {
   setVagas: (vagas: Vaga[]) => void;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
+  deleteVaga: (id: string) => void;
   updateEdital: (id: string, data: Partial<Edital>) => void;
   updateValidacao: (id: string, data: Partial<ValidacaoEdital>) => void;
   addEdital: (edital: Edital) => void;
@@ -37,6 +38,9 @@ export const useVagasStore = create<VagasState>((set, get) => ({
   addVagas: (newVagas) => set((s) => ({ vagas: [...s.vagas, ...newVagas] })),
   updateVaga: (id, data) => set((s) => ({
     vagas: s.vagas.map((v) => v.id === id ? { ...v, ...data } : v),
+  })),
+  deleteVaga: (id) => set((s) => ({
+    vagas: s.vagas.filter((v) => v.id !== id),
   })),
   updateEdital: (id, data) => set((s) => ({
     editais: s.editais.map((e) => e.id === id ? { ...e, ...data } : e),

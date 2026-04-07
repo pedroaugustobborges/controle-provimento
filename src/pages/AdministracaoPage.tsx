@@ -1,250 +1,622 @@
 import { useState } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useAdminStore } from '@/store/adminStore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { 
-  Settings, 
-  Users, 
-  Building2, 
-  Clock, 
-  ShieldCheck, 
-  Bell, 
-  Database,
-  Lock,
-  Plus,
-  Trash2,
-  Edit2
+  Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
+  Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
+  HardDrive, Info, Shield, Check, X
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EQUIPE_POR_UNIDADE, RESPONSAVEL_LIDERANCA } from '@/data/equipe';
+import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { UserProfile } from '@/types/auth';
 
 export default function AdministracaoPage() {
-  const [activeTab, setActiveTab] = useState('equipe');
+  const [activeTab, setActiveTab] = useState('usuarios');
+  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, generateBackup } = useAdminStore();
+  const { vagas } = useVagasStore();
+  
+  const [isNewUserOpen, setIsNewUserOpen] = useState(false);
+  const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
 
-  const unidades = [
-    { id: '1', nome: 'Hospital Central (GO)', estado: 'GO', status: 'ativo', analistas: 5 },
-    { id: '2', nome: 'Hospital das Clínicas', estado: 'ES', status: 'ativo', analistas: 3 },
-    { id: '3', nome: 'Hospital do Norte (GO)', estado: 'GO', status: 'ativo', analistas: 4 },
-  ];
+  const handleTestEmail = (id: string) => {
+    setTestEmailLoading(id);
+    setTimeout(() => {
+      setTestEmailLoading(null);
+      toast.success('E-mail de teste enviado com sucesso!');
+    }, 1500);
+  };
 
-  const horarios = [
-    { id: '1', hora: '08:30', capacidade: 5, status: 'ativo' },
-    { id: '2', hora: '09:30', capacidade: 5, status: 'ativo' },
-    { id: '3', hora: '10:30', capacidade: 5, status: 'ativo' },
-    { id: '4', hora: '11:30', capacidade: 5, status: 'ativo' },
-    { id: '5', hora: '12:30', capacidade: 5, status: 'ativo' },
-  ];
+  const unidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Administração</h1>
-        <p className="text-slate-500 mt-1">Configurações globais do sistema e parâmetros operacionais.</p>
+    <div className="space-y-6 pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Administração</h1>
+          <p className="text-slate-500 mt-1">Gestão de usuários, permissões, auditoria e configurações do sistema.</p>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-slate-100 p-1">
-          <TabsTrigger value="equipe" className="gap-2 font-bold px-6">
-            <Users className="h-4 w-4" /> Equipe por Unidade
+        <TabsList className="bg-slate-100 p-1 flex-wrap h-auto">
+          <TabsTrigger value="usuarios" className="gap-2 font-bold px-4 py-2">
+            <Users className="h-4 w-4" /> Usuários
           </TabsTrigger>
-          <TabsTrigger value="unidades" className="gap-2 font-bold px-6">
-            <Building2 className="h-4 w-4" /> Unidades
+          <TabsTrigger value="permissoes" className="gap-2 font-bold px-4 py-2">
+            <Shield className="h-4 w-4" /> Unidades e Permissões
           </TabsTrigger>
-          <TabsTrigger value="horarios" className="gap-2 font-bold px-6">
-            <Clock className="h-4 w-4" /> Horários
+          <TabsTrigger value="suporte" className="gap-2 font-bold px-4 py-2">
+            <Bell className="h-4 w-4" /> Suporte
           </TabsTrigger>
-          <TabsTrigger value="usuarios" className="gap-2 font-bold px-6">
-            <Users className="h-4 w-4" /> Usuários e Perfis
+          <TabsTrigger value="auditoria" className="gap-2 font-bold px-4 py-2">
+            <History className="h-4 w-4" /> Auditoria
           </TabsTrigger>
-          <TabsTrigger value="parametros" className="gap-2 font-bold px-6">
-            <Settings className="h-4 w-4" /> Parâmetros
+          <TabsTrigger value="backup" className="gap-2 font-bold px-4 py-2">
+            <HardDrive className="h-4 w-4" /> Backup
+          </TabsTrigger>
+          <TabsTrigger value="parametros" className="gap-2 font-bold px-4 py-2">
+            <Settings className="h-4 w-4" /> Configurações Gerais
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="equipe">
-          <div className="space-y-4">
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-                <div>
-                  <CardTitle className="text-lg font-bold">Distribuição de Carteira por Unidade</CardTitle>
-                  <CardDescription>Defina os analistas e assistentes responsáveis por cada unidade.</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-bold">
-                    Liderança: {RESPONSAVEL_LIDERANCA}
-                  </Badge>
-                  <Button size="sm" className="gap-2 bg-primary">
-                    <Plus className="h-4 w-4" /> Nova Regra
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
+        {/* USUÁRIOS */}
+        <TabsContent value="usuarios">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0">
+              <div>
+                <CardTitle className="text-lg font-bold">Usuários Cadastrados</CardTitle>
+                <CardDescription>Gerencie quem tem acesso ao sistema e seus perfis básicos.</CardDescription>
+              </div>
+              <Button onClick={() => setIsNewUserOpen(true)} className="gap-2 bg-primary">
+                <UserPlus className="h-4 w-4" /> Incluir novo usuário
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader className="bg-slate-50/50">
                     <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase">Unidade</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Analista Responsável</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Assistentes Vinculados</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Ações</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Nome / E-mail</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Perfil / Cargo</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Acesso Global</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Pode Excluir</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Último Acesso</TableHead>
+                      <TableHead className="text-right pr-6"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {EQUIPE_POR_UNIDADE.map((e, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-bold text-slate-700 text-sm">{e.unidade}</TableCell>
-                        <TableCell className="font-medium text-slate-600">
-                          <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 bg-primary/10 rounded-full flex items-center justify-center text-primary text-[10px] font-bold">
-                              {e.analista.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            {e.analista}
+                    {users.map((user) => (
+                      <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-700">{user.nome_completo}</span>
+                            <span className="text-xs text-slate-400 font-medium">{user.email}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {e.assistentes.map((a, i) => (
-                              <Badge key={i} variant="secondary" className="text-[10px] font-medium bg-slate-100">{a}</Badge>
-                            ))}
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className="w-fit text-[10px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100">{user.perfil}</Badge>
+                            <span className="text-[10px] text-slate-500 font-medium">{user.cargo}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex justify-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary"><Edit2 className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></Button>
-                          </div>
+                          <Badge className={`${user.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'} font-bold text-[10px] uppercase border-0`}>
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {user.visualiza_todas_unidades ? 
+                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px]">Sim</Badge> : 
+                            <span className="text-[10px] text-slate-400 font-bold">Não</span>
+                          }
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {user.pode_excluir_requisicoes ? 
+                            <Check className="h-4 w-4 text-green-500 mx-auto" /> : 
+                            <X className="h-4 w-4 text-slate-300 mx-auto" />
+                          }
+                        </TableCell>
+                        <TableCell className="text-xs text-slate-500 font-medium">
+                          {user.ultimo_acesso || 'Nunca'}
+                        </TableCell>
+                        <TableCell className="text-right pr-6">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4 text-slate-400" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                              <DropdownMenuItem><Edit2 className="mr-2 h-4 w-4" /> Editar dados básicos</DropdownMenuItem>
+                              <DropdownMenuItem><Shield className="mr-2 h-4 w-4" /> Alterar unidades e permissões</DropdownMenuItem>
+                              <DropdownMenuItem><Lock className="mr-2 h-4 w-4" /> Definir senha</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}>
+                                {user.status === 'ativo' ? 'Inativar usuário' : 'Ativar usuário'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir usuário</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-500 uppercase">Regra Especial</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-amber-50 p-2 rounded-lg">
-                      <ShieldCheck className="h-5 w-5 text-amber-600" />
-                    </div>
+        {/* UNIDADES E PERMISSÕES */}
+        <TabsContent value="permissoes">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="border-b">
+              <CardTitle className="text-lg font-bold">Gerenciar Unidades e Permissões</CardTitle>
+              <CardDescription>Defina a quais unidades cada usuário tem acesso e o que ele pode fazer em cada uma.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow>
+                    <TableHead className="text-[10px] font-bold uppercase pl-6">Usuário</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase">Unidades com Acesso</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase text-center">Ações Permitidas</TableHead>
+                    <TableHead className="text-right pr-6"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="pl-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700">{user.nome_completo}</span>
+                          <Badge variant="outline" className="w-fit text-[9px] h-4 mt-1">{user.perfil}</Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.visualiza_todas_unidades ? (
+                          <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px]">Todas as Unidades</Badge>
+                        ) : (
+                          <div className="flex flex-wrap gap-1 max-w-[400px]">
+                            {user.unidades_vinculadas.length > 0 ? 
+                              user.unidades_vinculadas.map(u => (
+                                <Badge key={u} variant="secondary" className="text-[10px] bg-slate-100">{u}</Badge>
+                              )) : 
+                              <span className="text-[10px] text-slate-400 italic">Nenhuma unidade vinculada</span>
+                            }
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center gap-2">
+                          {user.pode_incluir_registros && <Badge className="bg-green-50 text-green-700 border-green-100 text-[9px]">Incluir</Badge>}
+                          {user.pode_excluir_requisicoes && <Badge className="bg-red-50 text-red-700 border-red-100 text-[9px]">Excluir</Badge>}
+                          {user.pode_editar_configuracoes && <Badge className="bg-amber-50 text-amber-700 border-amber-100 text-[9px]">Config</Badge>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <Button variant="ghost" size="sm" className="gap-2 text-primary font-bold"><Settings className="h-3.5 w-3.5" /> Ajustar</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* SUPORTE */}
+        <TabsContent value="suporte">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b space-y-0">
+              <div>
+                <CardTitle className="text-lg font-bold">Configuração de Suporte</CardTitle>
+                <CardDescription>Defina os contatos de suporte fixos para cada região ou grupo de unidades.</CardDescription>
+              </div>
+              <Button className="gap-2 bg-primary"><Plus className="h-4 w-4" /> Novo Suporte</Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow>
+                    <TableHead className="text-[10px] font-bold uppercase pl-6">Região / Unidades</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase">Responsável</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase">Contato</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
+                    <TableHead className="text-right pr-6">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {supportConfigs.map((config) => (
+                    <TableRow key={config.id}>
+                      <TableCell className="pl-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700">{config.regiao}</span>
+                          <span className="text-[10px] text-slate-400 mt-1">{config.unidades.join(', ')}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-600">{config.responsavel}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col text-xs">
+                          <span className="flex items-center gap-1.5"><Mail className="h-3 w-3 text-slate-400" /> {config.email}</span>
+                          <span className="flex items-center gap-1.5 mt-1 text-blue-600"><Users className="h-3 w-3" /> @{config.teams_user}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge className="bg-green-100 text-green-700 font-bold text-[10px]">Ativo</Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 gap-1.5 text-[10px] font-bold"
+                            onClick={() => handleTestEmail(config.id)}
+                            disabled={testEmailLoading === config.id}
+                          >
+                            {testEmailLoading === config.id ? 'Enviando...' : <><Play className="h-3 w-3" /> Testar E-mail</>}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8"><Edit2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* AUDITORIA */}
+        <TabsContent value="auditoria">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="border-b">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg font-bold">Histórico / Auditoria</CardTitle>
+                  <CardDescription>Rastreabilidade completa de todas as ações executadas no sistema.</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Filtrar por usuário ou e-mail..." className="pl-9 h-9 w-[250px]" />
+                  </div>
+                  <Button variant="outline" size="sm" className="h-9 gap-2"><Download className="h-4 w-4" /> Exportar</Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[500px]">
+                <Table>
+                  <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
+                    <TableRow>
+                      <TableHead className="text-[10px] font-bold uppercase pl-6">Data / Hora</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Usuário</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Ação / Módulo</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Registro</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Alteração (De → Para)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {auditLogs.map((log) => (
+                      <TableRow key={log.id} className="text-xs">
+                        <TableCell className="pl-6 font-mono text-slate-500">
+                          {log.data} <br/> {log.hora}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-700">{log.usuario_nome}</span>
+                            <span className="text-[10px] text-slate-400">{log.perfil}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-primary">{log.acao}</span>
+                            <span className="text-[10px] text-slate-400 uppercase font-bold">{log.modulo}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium text-slate-600">{log.registro_afetado}</TableCell>
+                        <TableCell>
+                          {log.valor_anterior || log.valor_novo ? (
+                            <div className="flex items-center gap-2">
+                              <span className="line-through text-slate-400">{log.valor_anterior || '-'}</span>
+                              <MoreVertical className="h-3 w-3 rotate-90 text-slate-300" />
+                              <span className="text-green-600 font-bold">{log.valor_novo || '-'}</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-300 italic">N/A</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* BACKUP */}
+        <TabsContent value="backup">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1 space-y-6">
+              <Card className="border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-primary/5 p-4 border-b border-primary/10">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 p-2 rounded-lg"><HardDrive className="h-5 w-5 text-primary" /></div>
                     <div>
-                      <p className="text-xs font-bold text-slate-700">Vagas de Liderança</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Priorizar Ellen Leticia como analista independente da unidade.</p>
+                      <h3 className="font-bold text-slate-800">Status do Backup</h3>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Automático (30 em 30 min)</p>
                     </div>
                   </div>
+                </div>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span className="text-xs font-medium text-slate-500">Último Backup</span>
+                    <span className="text-xs font-bold text-slate-800">{backups[0]?.data_hora || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span className="text-xs font-medium text-slate-500">Próximo Backup</span>
+                    <span className="text-xs font-bold text-blue-600">Em 12 minutos</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                    <span className="text-xs font-medium text-slate-500">Registros Copiados</span>
+                    <span className="text-xs font-bold text-slate-800">{backups[0]?.quantidade_registros || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-xs font-medium text-slate-500">Status Sistema</span>
+                    <Badge className="bg-green-100 text-green-700 font-bold text-[9px]">Protegido</Badge>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-slate-50/50 pt-4">
+                  <Button onClick={() => {
+                    generateBackup();
+                    toast.success('Backup manual iniciado!');
+                  }} className="w-full gap-2 bg-primary">
+                    <Play className="h-4 w-4" /> Gerar backup agora
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              <Card className="border-slate-200 shadow-sm bg-amber-50/30 border-amber-100">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2 text-amber-700">
+                    <Info className="h-4 w-4" /> Política de Retenção
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-amber-800/70 leading-relaxed">
+                    Os backups são realizados a cada 30 minutos e armazenados em servidor redundante. Mantemos os últimos 30 dias de histórico para restauração imediata.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="md:col-span-2">
+              <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="border-b">
+                  <CardTitle className="text-lg font-bold">Histórico de Backups</CardTitle>
+                  <CardDescription>Lista dos últimos snapshots realizados pelo sistema.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-slate-50/50">
+                      <TableRow>
+                        <TableHead className="pl-6 text-[10px] font-bold uppercase">Data / Hora</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase text-center">Registros</TableHead>
+                        <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
+                        <TableHead className="text-right pr-6">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {backups.map((b) => (
+                        <TableRow key={b.id}>
+                          <TableCell className="pl-6 font-mono text-xs">{b.data_hora}</TableCell>
+                          <TableCell className="text-center font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[10px]">
+                              <CheckCircle className="h-3 w-3" /> Sucesso
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <Button variant="ghost" size="sm" className="h-8 gap-2 text-blue-600 font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="unidades">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-              <div>
-                <CardTitle className="text-lg font-bold">Gestão de Unidades (GO-ES)</CardTitle>
-                <CardDescription>Cadastre e gerencie os complexos hospitalares participantes.</CardDescription>
-              </div>
-              <Button size="sm" className="gap-2 bg-primary">
-                <Plus className="h-4 w-4" /> Nova Unidade
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase">Nome da Unidade</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Estado</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Analistas</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
-                    <TableHead className="text-right"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {unidades.map((u) => (
-                    <TableRow key={u.id}>
-                      <TableCell className="font-bold text-slate-700 text-sm">{u.nome}</TableCell>
-                      <TableCell className="text-center font-bold text-slate-500">{u.estado}</TableCell>
-                      <TableCell className="text-center font-bold text-slate-500">{u.analistas}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Ativo</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary"><Edit2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="horarios">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-              <div>
-                <CardTitle className="text-lg font-bold">Grade de Horários</CardTitle>
-                <CardDescription>Defina os horários padrão e capacidade máxima para convocações em Goiânia.</CardDescription>
-              </div>
-              <Button size="sm" className="gap-2 bg-primary">
-                <Plus className="h-4 w-4" /> Novo Horário
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Horário</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Capacidade Máxima</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
-                    <TableHead className="text-right"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {horarios.map((h) => (
-                    <TableRow key={h.id}>
-                      <TableCell className="text-center font-bold text-slate-800 text-lg">{h.hora}</TableCell>
-                      <TableCell className="text-center font-bold text-slate-700">{h.capacidade} candidatos</TableCell>
-                      <TableCell className="text-center">
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Ativo</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary"><Edit2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600"><Lock className="h-4 w-4" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="usuarios">
-          <Card className="border-slate-200 shadow-sm p-12 text-center text-slate-400 font-medium italic">
-            Configurações de usuários e perfis de acesso em desenvolvimento.
-          </Card>
-        </TabsContent>
-
+        {/* PARÂMETROS GERAIS */}
         <TabsContent value="parametros">
-          <Card className="border-slate-200 shadow-sm p-12 text-center text-slate-400 font-medium italic">
-            Parâmetros do sistema em desenvolvimento.
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="border-b">
+                <CardTitle className="text-lg font-bold">Configurações do Fluxo</CardTitle>
+                <CardDescription>Ajuste as regras de negócio aplicadas ao controle de provimento.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold">Validação Obrigatória</Label>
+                    <p className="text-xs text-slate-500">Exigir validação da unidade para toda convocação.</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold">Bloqueio de Vagas Suspensas</Label>
+                    <p className="text-xs text-slate-500">Impedir qualquer ação em vagas com status "Suspensa".</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold">Alerta de Banco Vencendo</Label>
+                    <p className="text-xs text-slate-500">Notificar analistas 30 dias antes do vencimento do banco.</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+              <CardFooter className="border-t bg-slate-50/50">
+                <Button className="ml-auto gap-2"><Save className="h-4 w-4" /> Salvar Configurações</Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="border-b">
+                <CardTitle className="text-lg font-bold">Segurança e Acesso</CardTitle>
+                <CardDescription>Configurações globais de segurança.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Tempo de Sessão (minutos)</Label>
+                  <Input type="number" defaultValue="120" className="w-[100px]" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold">Log de Auditoria Estendido</Label>
+                    <p className="text-xs text-slate-500">Registrar IP e dados de navegador em todos os logs.</p>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold">Forçar Troca de Senha</Label>
+                    <p className="text-xs text-slate-500">Exigir nova senha no primeiro acesso de novos usuários.</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
+
+      {/* DIALOG: NOVO USUÁRIO */}
+      <Dialog open={isNewUserOpen} onOpenChange={setIsNewUserOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" /> Incluir novo usuário
+            </DialogTitle>
+            <DialogDescription>Preencha os dados básicos e defina as permissões iniciais.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-xs font-bold uppercase text-slate-500">Nome Completo</Label>
+                <Input id="name" placeholder="Ex: João da Silva" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs font-bold uppercase text-slate-500">E-mail</Label>
+                <Input id="email" type="email" placeholder="joao@hospital.com" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="perfil" className="text-xs font-bold uppercase text-slate-500">Perfil de Acesso</Label>
+                <Select defaultValue="Assistente">
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Assistente">Assistente</SelectItem>
+                    <SelectItem value="Analista">Analista</SelectItem>
+                    <SelectItem value="Supervisão">Supervisão</SelectItem>
+                    <SelectItem value="Coordenação">Coordenação</SelectItem>
+                    <SelectItem value="Gerência">Gerência</SelectItem>
+                    <SelectItem value="Admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cargo" className="text-xs font-bold uppercase text-slate-500">Cargo Hierárquico</Label>
+                <Input id="cargo" placeholder="Ex: Analista Pleno" />
+              </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões e Acesso</h4>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold">Visualizar todas as unidades</Label>
+                  <p className="text-[10px] text-slate-500">O usuário terá acesso a todos os registros do sistema.</p>
+                </div>
+                <Switch />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-slate-500">Vincular Unidades Específicas</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {unidades.map(u => (
+                    <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-slate-50 transition-colors">
+                      <input type="checkbox" id={`unit-${u}`} className="h-3 w-3 rounded border-slate-300" />
+                      <label htmlFor={`unit-${u}`} className="text-[10px] font-bold text-slate-600 cursor-pointer">{u}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="flex items-center gap-2">
+                  <Switch id="pode-incluir" />
+                  <Label htmlFor="pode-incluir" className="text-xs font-bold">Pode incluir registros</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch id="pode-excluir" />
+                  <Label htmlFor="pode-excluir" className="text-xs font-bold">Pode excluir requisições</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch id="pode-config" />
+                  <Label htmlFor="pode-config" className="text-xs font-bold">Pode editar configurações</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch id="pode-usuarios" />
+                  <Label htmlFor="pode-usuarios" className="text-xs font-bold">Pode gerenciar usuários</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewUserOpen(false)}>Cancelar</Button>
+            <Button onClick={() => {
+              setIsNewUserOpen(false);
+              toast.success('Usuário criado com sucesso!');
+            }} className="bg-primary">Criar Usuário</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

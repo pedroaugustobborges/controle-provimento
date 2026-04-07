@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
@@ -11,13 +12,32 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
-  Filter, FileSpreadsheet, ListFilter 
+  Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function VagasPage() {
-  const { vagas } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga } = useVagasStore();
+  const { currentUser, addAuditLog } = useAdminStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
@@ -27,6 +47,33 @@ export default function VagasPage() {
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
+  const canInclude = currentUser?.perfil === 'Admin' || currentUser?.pode_incluir_registros;
+
+  const handleDelete = () => {
+    if (vagaParaExcluir && canDelete) {
+      const vaga = vagas.find(v => v.id === vagaParaExcluir);
+      if (vaga) {
+        deleteVaga(vagaParaExcluir);
+        addAuditLog({
+          usuario_nome: currentUser?.nome_completo || 'Sistema',
+          usuario_email: currentUser?.email || 'sistema@sistema.com',
+          perfil: currentUser?.perfil || 'Sistema',
+          data: new Date().toISOString().split('T')[0],
+          hora: new Date().toLocaleTimeString(),
+          acao: 'Excluir Requisição',
+          modulo: 'Vagas',
+          registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+        });
+        toast.success('Requisição excluída com sucesso.');
+      }
+      setIsDeleteDialogOpen(false);
+      setVagaParaExcluir(null);
+    }
+  };
 
   const unidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
   const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort();
@@ -145,13 +192,14 @@ export default function VagasPage() {
                   <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Vagas</th>
                   <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Data Abertura</th>
                   <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Dias</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((v) => (
                   <tr
                     key={v.id}
-                    className="border-b last:border-0 hover:bg-slate-50/50 cursor-pointer transition-colors whitespace-nowrap group"
+                    className="border-b last:border-0 hover:bg-slate-50/50 transition-colors whitespace-nowrap group"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
                     <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.requisicao || v.numero_requisicao}</td>
@@ -184,7 +232,42 @@ export default function VagasPage() {
                         {calcDiasAberto(v.data_abertura, v.data_encerramento)}
                       </span>
                     </td>
-
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)}>
+                            <FileText className="mr-2 h-4 w-4" /> Ver Detalhes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <History className="mr-2 h-4 w-4" /> Ver Histórico
+                          </DropdownMenuItem>
+                          {canDelete && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  setVagaParaExcluir(v.id);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir Requisição
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
@@ -200,6 +283,26 @@ export default function VagasPage() {
       </Card>
 
       <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Excluir requisição?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. O registro será removido permanentemente do sistema e esta ação será auditada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setVagaParaExcluir(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

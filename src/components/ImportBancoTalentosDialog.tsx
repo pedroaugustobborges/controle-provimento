@@ -151,10 +151,11 @@ const parseDateValue = (value: any, targetFormat: string): {
   date: Date | null, 
   isValid: boolean, 
   formatted: string, 
+  display?: string,
   isExcelSerial?: boolean,
   formatUsed?: string 
 } => {
-  if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '' };
+  if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '', display: '' };
   
   let d: Date | null = null;
   let isExcelSerial = false;
@@ -167,6 +168,7 @@ const parseDateValue = (value: any, targetFormat: string): {
 
   if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial) || looksLikeExcelSerial) {
     try {
+      // Lógica correta para data serial do Excel (sistema 1900)
       d = addDays(new Date(1899, 11, 30), numValue);
       if (isValid(d)) {
         isExcelSerial = true;
@@ -179,7 +181,7 @@ const parseDateValue = (value: any, targetFormat: string): {
     }
   }
 
-  // 2. Se já for um objeto Date (processado pelo XLSX com cellDates: true)
+  // 2. Se já for um objeto Date
   if (!d && value instanceof Date) {
     d = value;
     formatUsed = 'Formato detectado automaticamente';
@@ -188,12 +190,9 @@ const parseDateValue = (value: any, targetFormat: string): {
   // 3. Se for string ou falhou no serial
   if (!d) {
     const trimmed = String(value).trim();
-    if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '' };
+    if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '', display: '' };
 
-    // Limpar delimitadores comuns para facilitar o parser
     const cleaned = trimmed.replace(/[\.-]/g, '/');
-    
-    // Lista de formatos para tentar, priorizando dd/mm/aaaa
     const formatsToTry = targetFormat === 'auto' 
       ? ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'yyyy/MM/dd'] 
       : [targetFormat.replace(/[\.-]/g, '/')];
@@ -214,7 +213,7 @@ const parseDateValue = (value: any, targetFormat: string): {
       }
     }
     
-    // Fallback para o parser nativo se NÃO parecer um número serial (evita tratar 46080 como ano)
+    // Fallback para o parser nativo apenas se não for um número serial puro
     if (!d && isNaN(Number(trimmed))) {
       const native = new Date(trimmed);
       if (isValid(native)) {
@@ -228,13 +227,14 @@ const parseDateValue = (value: any, targetFormat: string): {
     return { 
       date: d, 
       isValid: true, 
-      formatted: format(d, 'dd/MM/yyyy'),
+      formatted: format(d, 'yyyy-MM-dd'),
+      display: format(d, 'dd/MM/yyyy'),
       isExcelSerial,
       formatUsed
     };
   }
   
-  return { date: null, isValid: false, formatted: String(value), formatUsed: 'Erro de conversão' };
+  return { date: null, isValid: false, formatted: String(value), display: String(value), formatUsed: 'Erro de conversão' };
 };
 
 export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {

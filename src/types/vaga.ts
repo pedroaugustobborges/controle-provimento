@@ -6,18 +6,30 @@ export type EtapaEdital = 'inscricoes' | 'triagem' | 'prova' | 'entrevista' | 'r
 
 export interface Vaga {
   id: string;
-  numero_requisicao: string;
-  data_abertura: string;
-  cargo: string;
-  tipo_vaga: TipoVaga;
-  quantidade: number;
-  secao: string;
   unidade: string;
+  data_abertura: string;
+  numero_edital?: string;
+  pcd: boolean;
+  estado: string;
+  numero_processo?: string;
+  numero_requisicao: string;
+  tipo_vaga: TipoVaga;
+  selecao: string;
+  cargo: string;
+  secao: string;
+  quantidade: number;
+  etapa_atual_vaga?: string;
+  total_inscritos?: number;
+  aprovados_triagem?: number;
+  aprovados_avaliacao?: number;
+  convocados_entrevista?: number;
+  aprovados_finais?: number;
+  banco?: number;
+  data_encerramento?: string;
+  observacoes: string;
   analista_responsavel: string;
   status_geral: StatusGeral;
   origem_importacao: string;
-  observacoes: string;
-  data_encerramento?: string;
   historico: HistoricoItem[];
 }
 
@@ -42,16 +54,11 @@ export interface Edital {
 export interface ValidacaoEdital {
   id: string;
   vaga_id: string;
-  salario_confere: boolean | null;
-  requisitos_confere: boolean | null;
-  atribuicoes_confere: boolean | null;
-  site_confere: boolean | null;
-  datas_conferem: boolean | null;
-  vaga_correta_para_edital: boolean | null;
-  planilha_correta: boolean | null;
-  observacoes_validacao: string;
-  validado_por: string;
-  data_validacao?: string;
+  precisa_validacao: boolean;
+  responsavel_validacao: string;
+  tipo_validacao: string;
+  observacao: string;
+  etapa_finalizada: boolean;
   status_validacao: StatusValidacao;
 }
 

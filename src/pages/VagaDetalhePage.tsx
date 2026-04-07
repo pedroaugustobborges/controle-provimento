@@ -240,6 +240,21 @@ export default function VagaDetalhePage() {
                   {vaga.observacoes_internas || vaga.observacoes || 'Nenhuma observação registrada.'}
                 </div>
               </div>
+
+              <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-x-8 gap-y-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                <div className="flex items-center gap-1.5">
+                  <User className="h-3 w-3" /> Criado por: <span className="text-slate-500">Sistema</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" /> Data Criação: <span className="text-slate-500">{formatDate(vaga.data_abertura)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <User className="h-3 w-3" /> Última alteração por: <span className="text-slate-500">{vaga.historico[vaga.historico.length - 1]?.usuario || 'Sistema'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" /> Última atualização: <span className="text-slate-500">{formatDate(vaga.historico[vaga.historico.length - 1]?.data || vaga.data_abertura)}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -33,16 +33,16 @@ export function AppSidebar() {
   const collapsed = state === 'collapsed';
   
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border/50 py-4">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+      <SidebarHeader className="border-b border-sidebar-border/30 py-6">
         <div className="flex items-center gap-3 px-2">
-          <div className="bg-primary/10 p-1.5 rounded-lg">
-            <Building2 className="h-6 w-6 text-primary shrink-0" />
+          <div className="bg-white/10 p-2 rounded-lg">
+            <Building2 className="h-6 w-6 text-white shrink-0" />
           </div>
           {!collapsed && (
             <div className="flex flex-col overflow-hidden">
-              <span className="font-bold text-sm text-foreground truncate leading-tight">TalentHub</span>
-              <span className="text-[10px] text-muted-foreground truncate uppercase tracking-wider font-medium">Gestão Hospitalar</span>
+              <span className="font-bold text-base text-white truncate leading-tight tracking-tight">AGIR</span>
+              <span className="text-[10px] text-white/70 truncate uppercase tracking-widest font-semibold">Sistema de Provimento</span>
             </div>
           )}
         </div>

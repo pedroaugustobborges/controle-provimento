@@ -20,24 +20,26 @@ import { Vaga, StatusEdital, TipoVaga, StatusVaga } from '@/types/vaga';
 import { getResponsavelPorUnidade } from '@/data/equipe';
 import { format, parse, isValid, addDays } from 'date-fns';
 import { toast } from 'sonner';
+import { 
+  detectColumnFormat, 
+  convertDateValue, 
+  DATE_FORMAT_LABELS, 
+  DateFormat 
+} from '@/lib/dateImportUtils';
 
 type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summary';
 
 interface ColumnMapping {
   excel: string;
   system: string;
-  format?: string;
+  format?: DateFormat;
   isDate?: boolean;
 }
 
-const DATE_FORMATS = [
-  { label: 'dd/mm/aaaa', value: 'dd/MM/yyyy' },
-  { label: 'mm/dd/aaaa', value: 'MM/dd/yyyy' },
-  { label: 'aaaa-mm-dd', value: 'yyyy-MM-dd' },
-  { label: 'dd-mm-aaaa', value: 'dd-MM-yyyy' },
-  { label: 'Excel (número)', value: 'excel_serial' },
-  { label: 'Auto-detectar', value: 'auto' },
-];
+const DATE_FORMATS = Object.entries(DATE_FORMAT_LABELS).map(([value, label]) => ({
+  label,
+  value: value as DateFormat
+}));
 
 const DATE_FIELDS = ['data_abertura', 'data_recebimento', 'publicacao', 'admissao', 'admissao_enviada', 'admissao_efetivada'];
 
@@ -113,49 +115,7 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   return synonyms.some(syn => h.includes(syn) || syn.includes(h));
 }
 
-const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string } => {
-  if (!value) return { date: null, isValid: true, formatted: '' };
-
-  let d: Date | null = null;
-  
-  // Excel serial number
-  if (targetFormat === 'excel_serial' || (typeof value === 'number' && targetFormat === 'auto')) {
-    const serialValue = Number(value);
-    if (!isNaN(serialValue)) {
-      // Excel serial 1 is 1900-01-01, JS Date starts 1970-01-01
-      // 25569 is the number of days between 1900 and 1970
-      d = addDays(new Date(1899, 11, 30), serialValue);
-    }
-  } else if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed) return { date: null, isValid: true, formatted: '' };
-    
-    if (targetFormat === 'auto' || !targetFormat) {
-      // Try common formats
-      const formats = ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy'];
-      for (const f of formats) {
-        const parsed = parse(trimmed, f, new Date());
-        if (isValid(parsed)) {
-          d = parsed;
-          break;
-        }
-      }
-    } else {
-      const parsed = parse(trimmed, targetFormat, new Date());
-      if (isValid(parsed)) {
-        d = parsed;
-      }
-    }
-  } else if (value instanceof Date) {
-    d = value;
-  }
-
-  if (d && isValid(d)) {
-    return { date: d, isValid: true, formatted: format(d, 'yyyy-MM-dd') };
-  }
-
-  return { date: null, isValid: false, formatted: String(value) };
-};
+// parseDateValue was removed in favor of convertDateValue from dateImportUtils
 
 export function ImportExcelDialog({ 
   open, 
@@ -302,10 +262,21 @@ export function ImportExcelDialog({
     const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
       const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
       const isDate = DATE_FIELDS.includes(field.key);
+      
+      let detectedFormat: DateFormat = 'auto';
+      if (isDate && matchedHeader) {
+        // Detect format from sample values
+        const sheet = workbook?.Sheets[selectedSheets[0]];
+        const rows = XLSX.utils.sheet_to_json<any[]>(sheet!, { header: 1, range: headerRow + 1 });
+        const colIndex = headers.indexOf(matchedHeader);
+        const sampleValues = rows.slice(0, 50).map(r => r[colIndex]);
+        detectedFormat = detectColumnFormat(sampleValues);
+      }
+
       return { 
         excel: matchedHeader || '', 
         system: field.key, 
-        format: isDate ? 'auto' : undefined,
+        format: isDate ? detectedFormat : undefined,
         isDate
       };
     });
@@ -328,7 +299,7 @@ export function ImportExcelDialog({
         if (m.excel) {
           const rawValue = row[m.excel];
           if (m.isDate) {
-            const { isValid, formatted } = parseDateValue(rawValue, m.format || 'auto');
+            const { isValid, formatted } = convertDateValue(rawValue, m.format || 'auto');
             result[m.system] = formatted;
             if (!isValid && rawValue) {
               result.__errors[m.system] = true;
@@ -400,8 +371,8 @@ export function ImportExcelDialog({
       return {
         id: `imp-${Date.now()}-${i}`,
         unidade,
-        data_abertura: parseDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted || now.split('T')[0],
-        data_recebimento: parseDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted || now.split('T')[0],
+        data_abertura: convertDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted || now.split('T')[0],
+        data_recebimento: convertDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted || now.split('T')[0],
         requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
         numero_requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
         cargo: String(row.cargo || 'Não informado'),
@@ -822,10 +793,10 @@ export function ImportExcelDialog({
                                     <Select 
                                       value={mapping?.format || 'auto'} 
                                       onValueChange={(val) => {
-                                        setMappings(prev => prev.map(m => m.system === field.key ? { ...m, format: val } : m));
+                                        setMappings(prev => prev.map(m => m.system === field.key ? { ...m, format: val as DateFormat } : m));
                                       }}
                                     >
-                                      <SelectTrigger className="h-7 text-[11px] w-[140px] bg-background">
+                                      <SelectTrigger className="h-7 text-[11px] w-[180px] bg-background">
                                         <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>

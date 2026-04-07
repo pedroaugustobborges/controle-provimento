@@ -17,23 +17,26 @@ import { useVagasStore } from '@/store/vagasStore';
 import { BancoTalentos } from '@/types/vaga';
 import { format, parse, isValid, addDays } from 'date-fns';
 import { toast } from 'sonner';
+import { 
+  detectColumnFormat, 
+  convertDateValue, 
+  DATE_FORMAT_LABELS, 
+  DateFormat 
+} from '@/lib/dateImportUtils';
 
 type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'summary';
 
 interface ColumnMapping {
   excel: string;
   system: string;
-  format?: string;
+  format?: DateFormat;
   isDate?: boolean;
 }
 
-const DATE_FORMATS = [
-  { label: 'Brasileiro (dd/mm/aaaa)', value: 'dd/MM/yyyy' },
-  { label: 'Americano (mm/dd/aaaa)', value: 'MM/dd/yyyy' },
-  { label: 'ISO (aaaa-mm-dd)', value: 'yyyy-MM-dd' },
-  { label: 'Excel (número serial)', value: 'excel_serial' },
-  { label: 'Auto-detectar', value: 'auto' },
-];
+const DATE_FORMATS = Object.entries(DATE_FORMAT_LABELS).map(([value, label]) => ({
+  label,
+  value: value as DateFormat
+}));
 
 const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao'];
 
@@ -147,95 +150,7 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   });
 }
 
-const parseDateValue = (value: any, targetFormat: string): { 
-  date: Date | null, 
-  isValid: boolean, 
-  formatted: string, 
-  display?: string,
-  isExcelSerial?: boolean,
-  formatUsed?: string 
-} => {
-  if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '', display: '' };
-  
-  let d: Date | null = null;
-  let isExcelSerial = false;
-  let formatUsed = '';
-
-  // 1. PRIORIDADE: Verificar se é número serial do Excel
-  // O Excel trata datas como números seriais (ex: 46080 = 2026-03-27)
-  const numValue = typeof value === 'number' ? value : Number(value);
-  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 20000 && numValue < 60000;
-
-  if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial) || looksLikeExcelSerial) {
-    try {
-      // Lógica correta para data serial do Excel (sistema 1900)
-      d = addDays(new Date(1899, 11, 30), numValue);
-      if (isValid(d)) {
-        isExcelSerial = true;
-        formatUsed = 'Convertido de serial Excel';
-      } else {
-        d = null;
-      }
-    } catch (e) {
-      d = null;
-    }
-  }
-
-  // 2. Se já for um objeto Date
-  if (!d && value instanceof Date) {
-    d = value;
-    formatUsed = 'Formato detectado automaticamente';
-  }
-
-  // 3. Se for string ou falhou no serial
-  if (!d) {
-    const trimmed = String(value).trim();
-    if (!trimmed || trimmed === '') return { date: null, isValid: true, formatted: '', display: '' };
-
-    const cleaned = trimmed.replace(/[\.-]/g, '/');
-    const formatsToTry = targetFormat === 'auto' 
-      ? ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'yyyy/MM/dd'] 
-      : [targetFormat.replace(/[\.-]/g, '/')];
-
-    for (const f of formatsToTry) {
-      try {
-        const parsed = parse(cleaned, f, new Date());
-        if (isValid(parsed)) {
-          const year = parsed.getFullYear();
-          if (year > 1900 && year < 2100) {
-            d = parsed;
-            formatUsed = f === 'dd/MM/yyyy' ? 'Convertido de dd/mm/aaaa' : `Convertido de ${f}`;
-            break;
-          }
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-    
-    // Fallback para o parser nativo apenas se não for um número serial puro
-    if (!d && isNaN(Number(trimmed))) {
-      const native = new Date(trimmed);
-      if (isValid(native)) {
-        d = native;
-        formatUsed = 'Formato detectado automaticamente';
-      }
-    }
-  }
-
-  if (d && isValid(d)) {
-    return { 
-      date: d, 
-      isValid: true, 
-      formatted: format(d, 'yyyy-MM-dd'),
-      display: format(d, 'dd/MM/yyyy'),
-      isExcelSerial,
-      formatUsed
-    };
-  }
-  
-  return { date: null, isValid: false, formatted: String(value), display: String(value), formatUsed: 'Erro de conversão' };
-};
+// parseDateValue was removed in favor of convertDateValue from dateImportUtils
 
 export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { addBancos, addImportHistory, addImportedFile, updateImportedFile } = useVagasStore();
@@ -406,10 +321,19 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           matchedHeader = processedHeaders.find(h => fuzzyMatch(h, field.key));
         }
 
+        let detectedFormat: DateFormat = 'auto';
+        if (DATE_FIELDS.includes(field.key) && matchedHeader) {
+          // Detect format from sample values
+          const sheet = workbook?.Sheets[selectedSheets[0]];
+          const rows = XLSX.utils.sheet_to_json<any[]>(sheet!, { header: processedHeaders, range: headerRow + 1 });
+          const sampleValues = rows.slice(0, 50).map(r => r[matchedHeader!]);
+          detectedFormat = detectColumnFormat(sampleValues);
+        }
+
         return { 
           excel: matchedHeader || '', 
           system: field.key, 
-          format: DATE_FIELDS.includes(field.key) ? 'dd/MM/yyyy' : undefined, 
+          format: DATE_FIELDS.includes(field.key) ? detectedFormat : undefined, 
           isDate: DATE_FIELDS.includes(field.key) 
         };
       });

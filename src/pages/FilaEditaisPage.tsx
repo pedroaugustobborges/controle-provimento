@@ -20,8 +20,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export default function FilaEditaisPage() {
+  const navigate = useNavigate();
   const { vagas, updateVaga } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
@@ -93,7 +95,7 @@ export default function FilaEditaisPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-blue-50/50 border-blue-100">
+        <Card className="bg-blue-50/50 border-blue-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="bg-blue-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-blue-600" /></div>
@@ -104,7 +106,7 @@ export default function FilaEditaisPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-amber-50/50 border-amber-100">
+        <Card className="bg-amber-50/50 border-amber-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="bg-amber-100 p-2 rounded-lg"><FileText className="h-5 w-5 text-amber-600" /></div>
@@ -115,7 +117,7 @@ export default function FilaEditaisPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-green-50/50 border-green-100">
+        <Card className="bg-green-50/50 border-green-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="bg-green-100 p-2 rounded-lg"><CheckCircle2 className="h-5 w-5 text-green-600" /></div>
@@ -126,7 +128,7 @@ export default function FilaEditaisPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-50 border-slate-200">
+        <Card className="bg-slate-50 border-slate-200 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="bg-slate-200 p-2 rounded-lg"><ListFilter className="h-5 w-5 text-slate-600" /></div>
@@ -139,7 +141,7 @@ export default function FilaEditaisPage() {
         </Card>
       </div>
 
-      <Card className="shadow-sm border-slate-200">
+      <Card className="shadow-sm border-slate-200 overflow-hidden">
         <CardHeader className="pb-3 border-b bg-slate-50/50">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -224,7 +226,7 @@ export default function FilaEditaisPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-slate-500">{v.secao || '—'}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.quantidade}</td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</td>
                     <td className="px-6 py-4">
                       {v.numero_processo ? (
                         <code className="bg-slate-100 px-2 py-0.5 rounded text-xs text-slate-700">{v.numero_processo}</code>
@@ -263,11 +265,8 @@ export default function FilaEditaisPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
-                              <Edit className="h-4 w-4" /> Editar
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
-                              <Users className="h-4 w-4" /> Abrir Detalhe
+                              <Users className="h-4 w-4" /> Ver Detalhes
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="gap-2 text-green-600">

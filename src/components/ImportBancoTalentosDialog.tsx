@@ -399,69 +399,200 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
           {step === 'mapping' && (
             <div className="space-y-4">
-              <Table>
-                <TableHeader><TableRow><TableHead>Campo do Sistema</TableHead><TableHead>Coluna no Excel</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {[...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
-                    const mapping = mappings.find(m => m.system === field.key);
-                    const isRequired = REQUIRED_FIELDS.some(f => f.key === field.key);
-                    return (
-                      <TableRow key={field.key}>
-                        <TableCell className="font-medium">{field.label}{isRequired && <span className="text-destructive">*</span>}</TableCell>
-                        <TableCell>
-                          <Select value={mapping?.excel || ''} onValueChange={(val) => setMappings(prev => prev.map(m => m.system === field.key ? { ...m, excel: val } : m))}>
-                            <SelectTrigger className={!mapping?.excel && isRequired ? 'border-destructive' : ''}><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                            <SelectContent>{rawPreview[headerRow]?.map((h, i) => h ? <SelectItem key={i} value={String(h)}>{String(h)}</SelectItem> : null)}</SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>{mapping?.excel ? <Check className="h-4 w-4 text-green-500" /> : isRequired ? <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700">Requerido</Badge> : <span className="text-[10px] text-muted-foreground">Opcional</span>}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {step === 'preview' && (
-            <div className="space-y-4 overflow-auto flex-1">
-              <h3 className="text-sm font-semibold">Prévia dos Dados</h3>
-              <div className="border rounded-lg overflow-hidden flex-1">
+              <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 flex items-start gap-3 mb-4">
+                <Database className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-semibold">Mapeamento de Colunas:</p>
+                  <p>Relacione as colunas da sua planilha com os campos do sistema. Campos marcados com <span className="text-destructive font-bold">*</span> são obrigatórios.</p>
+                </div>
+              </div>
+              <div className="border rounded-xl overflow-hidden bg-card">
                 <Table>
-                  <TableHeader><TableRow><TableHead>Cargo</TableHead><TableHead>Unidade</TableHead><TableHead>Edital</TableHead><TableHead>Validade</TableHead></TableRow></TableHeader>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow>
+                      <TableHead className="w-[300px]">Campo do Sistema</TableHead>
+                      <TableHead>Coluna no Excel</TableHead>
+                      <TableHead className="w-[120px] text-center">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
                   <TableBody>
-                    {previewData.map((row, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="text-xs">{row.cargo}</TableCell>
-                        <TableCell className="text-xs">{row.unidade}</TableCell>
-                        <TableCell className="text-xs">{row.numero_edital}</TableCell>
-                        <TableCell className="text-xs">{row.data_validade}</TableCell>
-                      </TableRow>
-                    ))}
+                    {[...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
+                      const mapping = mappings.find(m => m.system === field.key);
+                      const isRequired = REQUIRED_FIELDS.some(f => f.key === field.key);
+                      return (
+                        <TableRow key={field.key} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="py-3">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-sm">{field.label}{isRequired && <span className="text-destructive ml-1">*</span>}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase">{field.key.replace(/_/g, ' ')}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <Select value={mapping?.excel || ''} onValueChange={(val) => setMappings(prev => prev.map(m => m.system === field.key ? { ...m, excel: val } : m))}>
+                              <SelectTrigger className={`h-9 ${!mapping?.excel && isRequired ? 'border-destructive/50 bg-destructive/5' : 'bg-background'}`}>
+                                <SelectValue placeholder="Selecione a coluna..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="no_mapping" className="text-muted-foreground italic">Não mapear</SelectItem>
+                                {rawPreview[headerRow]?.map((h, i) => h ? <SelectItem key={i} value={String(h)}>{String(h)}</SelectItem> : null)}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="py-3 text-center">
+                            {mapping?.excel && mapping.excel !== 'no_mapping' ? (
+                              <div className="bg-green-100 text-green-700 p-1.5 rounded-full inline-flex items-center justify-center"><Check className="h-3.5 w-3.5" /></div>
+                            ) : isRequired ? (
+                              <Badge variant="outline" className="text-[10px] bg-red-50 text-red-600 border-red-200">Obrigatório</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] bg-muted/50 text-muted-foreground border-border">Opcional</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
             </div>
           )}
 
-          {step === 'summary' && importSummary && (
-            <div className="space-y-6 flex flex-col items-center py-10">
-              <CheckCircle2 className="h-16 w-16 text-green-600" />
-              <div className="text-center">
-                <h2 className="text-2xl font-bold">Importação Concluída</h2>
-                <p className="text-muted-foreground">Foram importados {importSummary.total_novos} registros para o banco de talentos.</p>
+          {step === 'preview' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h3 className="text-lg font-bold">Prévia dos Dados Validada</h3>
+                  <p className="text-sm text-muted-foreground">Revise como os dados serão importados para o sistema.</p>
+                </div>
+                <Badge variant="secondary" className="px-3 py-1 font-semibold">
+                  {previewData.length} registros para importar
+                </Badge>
               </div>
-              <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+              <div className="border rounded-xl overflow-hidden bg-card">
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                      <TableRow>
+                        <TableHead>Cargo / Candidato</TableHead>
+                        <TableHead>Unidade / Seção</TableHead>
+                        <TableHead>Edital / Processo</TableHead>
+                        <TableHead>Validade</TableHead>
+                        <TableHead className="w-[80px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {previewData.map((row, idx) => (
+                        <TableRow key={idx} className="hover:bg-muted/30 transition-colors">
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm">{row.nome || 'Não informado'}</span>
+                              <span className="text-xs text-muted-foreground">{row.cargo}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col text-xs">
+                              <span>{row.unidade}</span>
+                              <span className="text-muted-foreground">{row.secao}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col text-xs">
+                              <span>Edital: {row.numero_edital}</span>
+                              {row.numero_processo && <span className="text-muted-foreground">Proc: {row.numero_processo}</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col text-xs">
+                              <span className="font-semibold">{row.data_validade}</span>
+                              {row.is_prorrogado && <Badge variant="outline" className="text-[9px] h-4 bg-blue-50 text-blue-700 border-blue-200 w-fit">Prorrogado</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {row.__errors && Object.keys(row.__errors).length > 0 ? (
+                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                            ) : (
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </div>
+            </div>
+          )}
+
+          {step === 'summary' && importSummary && (
+            <div className="space-y-8 flex flex-col items-center py-12">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
+                <CheckCircle2 className="h-12 w-12 text-green-600" />
+              </div>
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-bold">Importação Concluída!</h2>
+                <p className="text-muted-foreground max-w-sm">A base do banco de talentos foi atualizada com sucesso no sistema.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+                <div className="bg-muted/30 p-4 rounded-2xl border text-center">
+                  <span className="text-xs font-medium text-muted-foreground uppercase">Total Processado</span>
+                  <p className="text-2xl font-bold text-primary">{importSummary.total_lidos}</p>
+                </div>
+                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center">
+                  <span className="text-xs font-medium text-green-600 uppercase">Novos Registros</span>
+                  <p className="text-2xl font-bold text-green-700">{importSummary.total_novos}</p>
+                </div>
+              </div>
+              <Button size="lg" className="px-12 rounded-full mt-4 shadow-lg hover:shadow-xl transition-all" onClick={() => onOpenChange(false)}>Concluir e Fechar</Button>
             </div>
           )}
         </div>
 
-        <DialogFooter className="p-6 border-t bg-muted/30 flex justify-between">
-          <Button variant="ghost" onClick={() => { if (step === 'select') onOpenChange(false); else setStep(step === 'sheets' ? 'select' : step === 'mapping' ? 'sheets' : 'mapping'); }}>Voltar</Button>
-          {step === 'sheets' && <Button onClick={startMapping}>Próximo</Button>}
-          {step === 'mapping' && <Button onClick={generatePreview}>Ver Prévia</Button>}
-          {step === 'preview' && <Button onClick={processImport} disabled={isProcessing}>{isProcessing ? 'Processando...' : 'Confirmar Importação'}</Button>}
-        </DialogFooter>
+        {step !== 'summary' && (
+          <DialogFooter className="p-6 border-t bg-muted/20 flex items-center justify-between sm:justify-between">
+            <Button variant="ghost" onClick={() => { 
+              if (step === 'select') onOpenChange(false); 
+              else if (step === 'sheets') setStep('select');
+              else if (step === 'mapping') setStep('sheets');
+              else if (step === 'preview') setStep('mapping');
+            }} className="rounded-xl px-6">
+              {step === 'select' ? 'Cancelar' : 'Voltar'}
+            </Button>
+            
+            <div className="flex gap-3">
+              {step === 'sheets' && (
+                <Button onClick={() => {
+                  if (selectedSheets.length === 0) {
+                    toast.error("Selecione uma aba para continuar");
+                    return;
+                  }
+                  startMapping();
+                }} className="rounded-xl px-8 shadow-sm">
+                  Próximo: Mapear colunas <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              {step === 'mapping' && (
+                <Button onClick={() => {
+                  const missingRequired = REQUIRED_FIELDS.filter(f => !mappings.find(m => m.system === f.key)?.excel);
+                  if (missingRequired.length > 0) {
+                    toast.error(`Mapeie os campos obrigatórios: ${missingRequired.map(f => f.label).join(', ')}`);
+                    return;
+                  }
+                  generatePreview();
+                }} className="rounded-xl px-8 shadow-sm">
+                  Visualizar Prévia <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              {step === 'preview' && (
+                <Button onClick={processImport} disabled={isProcessing} className="rounded-xl px-10 shadow-md bg-green-600 hover:bg-green-700 text-white border-none">
+                  {isProcessing ? (
+                    <>Processando... <div className="ml-2 h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>
+                  ) : (
+                    <>Confirmar Importação <Check className="ml-2 h-4 w-4" /></>
+                  )}
+                </Button>
+              )}
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

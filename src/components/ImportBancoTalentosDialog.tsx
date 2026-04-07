@@ -541,12 +541,38 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
         <div className="flex-1 overflow-auto p-6 bg-background/50">
           {step === 'select' && (
-            <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed rounded-2xl border-border hover:border-primary/50 transition-all bg-muted/20 cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
-              <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleFileChange} />
-              <div className="bg-background p-6 rounded-full shadow-md mb-6 group-hover:scale-110 transition-transform"><Upload className="h-10 w-10 text-primary" /></div>
-              <h3 className="text-xl font-bold">Selecione o arquivo Excel</h3>
-              <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">Arraste e solte o arquivo ou clique aqui para selecionar do seu computador</p>
-              <Button variant="outline" className="mt-8">Procurar Arquivo</Button>
+            <div 
+              className={`flex flex-col items-center justify-center h-80 border-2 border-dashed rounded-2xl border-border hover:border-primary/50 transition-all bg-muted/20 cursor-pointer group ${isLoadingFile ? 'opacity-70 pointer-events-none' : ''}`} 
+              onClick={() => !isLoadingFile && fileInputRef.current?.click()}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept=".xlsx, .xls, .xlsm, .csv" 
+                onChange={handleFileChange} 
+              />
+              
+              {isLoadingFile ? (
+                <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                  <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-6" />
+                  <h3 className="text-xl font-bold text-foreground">Lendo arquivo...</h3>
+                  <p className="text-sm text-muted-foreground mt-2 text-center px-6">
+                    {file?.name} ({(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`})
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-4 uppercase font-bold tracking-widest">Aguarde o processamento</p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-background p-6 rounded-full shadow-md mb-6 group-hover:scale-110 transition-transform">
+                    <Upload className="h-10 w-10 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold">Selecione o arquivo Excel</h3>
+                  <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">Arraste e solte o arquivo ou clique aqui para selecionar do seu computador</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-4 uppercase font-bold tracking-wider">Formatos suportados: .xlsx, .xlsm, .xls, .csv</p>
+                  <Button variant="outline" className="mt-8 pointer-events-none">Procurar Arquivo</Button>
+                </>
+              )}
             </div>
           )}
 

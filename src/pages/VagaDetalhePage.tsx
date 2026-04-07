@@ -30,7 +30,14 @@ import {
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga } = useVagasStore();
+  const { currentUser, addAuditLog } = useAdminStore();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
+  const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';
+  const isAssistente = currentUser?.perfil === 'Assistente';
+
 
   const vaga = getVaga(id!);
   if (!vaga) return <div className="p-8 text-center text-muted-foreground">Vaga não encontrada.</div>;

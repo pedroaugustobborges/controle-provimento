@@ -113,13 +113,16 @@ function detectHeaderRow(rawRows: any[][]): number {
 }
 
 function normalizeString(str: string): string {
+  if (!str) return '';
   return str
     .toLowerCase()
     .trim()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/[^a-z0-9\s]/g, ' ')    // substitui caracteres especiais por espaço
     .replace(/[\r\n]+/g, ' ')       // remove quebras de linha
-    .replace(/\s+/g, ' ');          // normaliza espaços
+    .replace(/\s+/g, ' ')           // normaliza espaços
+    .trim();
 }
 
 function fuzzyMatch(header: string, fieldKey: string): boolean {

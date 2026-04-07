@@ -576,9 +576,10 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                   <Table>
                     <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[250px]">Campo do Sistema</TableHead>
-                        <TableHead>Coluna no Excel</TableHead>
-                        <TableHead className="w-[100px]"></TableHead>
+                        <TableHead className="w-[200px]">Campo do Sistema</TableHead>
+                        <TableHead className="w-[250px]">Coluna no Excel</TableHead>
+                        <TableHead>Formato / Detalhes</TableHead>
+                        <TableHead className="w-[100px] text-right">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -586,6 +587,8 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                         const mapping = mappings.find(m => m.system === field.key);
                         const isRequired = REQUIRED_FIELDS.some(f => f.key === field.key);
                         const headers = getHeadersFromRow();
+                        const isDateField = DATE_FIELDS.includes(field.key);
+
                         return (
                           <TableRow key={field.key}>
                             <TableCell className="font-medium">
@@ -612,11 +615,69 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                               </Select>
                             </TableCell>
                             <TableCell>
+                              {isDateField && mapping?.excel && (
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Formato de Origem:</span>
+                                    <Select 
+                                      value={mapping?.format || 'auto'} 
+                                      onValueChange={(val) => {
+                                        setMappings(prev => prev.map(m => m.system === field.key ? { ...m, format: val } : m));
+                                      }}
+                                    >
+                                      <SelectTrigger className="h-7 text-[11px] w-[140px] bg-background">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {DATE_FORMATS.map(f => (
+                                          <SelectItem key={f.value} value={f.value} className="text-[11px]">{f.label}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  {/* Exemplo detectado */}
+                                  {(() => {
+                                    const firstRow = rawPreview[headerRow + 1];
+                                    const colIndex = headers.indexOf(mapping.excel);
+                                    const sampleValue = colIndex !== -1 ? firstRow?.[colIndex] : null;
+                                    if (sampleValue) {
+                                      const { isValid, formatted } = parseDateValue(sampleValue, mapping.format || 'auto');
+                                      return (
+                                        <div className="flex items-center gap-1 text-[10px]">
+                                          <span className="text-muted-foreground">Exemplo:</span>
+                                          <span className="font-mono bg-muted px-1 rounded">{String(sampleValue)}</span>
+                                          <ArrowRight className="h-2 w-2 text-muted-foreground" />
+                                          <span className={isValid ? "text-green-600 font-medium" : "text-destructive font-medium"}>
+                                            {isValid ? formatted : "Erro de conversão"}
+                                          </span>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              )}
+                              {!isDateField && mapping?.excel && field.key === 'unidade' && (
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  <Info className="h-3 w-3" />
+                                  <span>Analista e assistentes serão atribuídos automaticamente.</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
                               {mapping?.excel ? (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Mapeado</Badge>
+                                <div className="flex justify-end">
+                                  <div className="h-5 w-5 bg-green-100 rounded-full flex items-center justify-center">
+                                    <Check className="h-3 w-3 text-green-600" />
+                                  </div>
+                                </div>
                               ) : isRequired ? (
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Obrigatório</Badge>
-                              ) : null}
+                                <div className="flex justify-end">
+                                  <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 border-red-200">Requerido</Badge>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground">Opcional</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );

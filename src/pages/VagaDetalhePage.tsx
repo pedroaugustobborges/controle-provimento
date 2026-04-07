@@ -46,11 +46,25 @@ export default function VagaDetalhePage() {
   const validacao = getValidacaoByVaga(vaga.id);
 
   const handleStatusChange = (newStatus: string) => {
+    const oldStatus = vaga.status || vaga.status_geral;
     updateVaga(vaga.id, {
       status: newStatus as StatusVaga,
-      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, usuario: 'Analista' }],
-
+      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, usuario: currentUser?.nome_completo || 'Analista' }],
     });
+    
+    addAuditLog({
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || 'sistema@sistema.com',
+      perfil: currentUser?.perfil || 'Sistema',
+      data: new Date().toISOString().split('T')[0],
+      hora: new Date().toLocaleTimeString(),
+      acao: 'Alteração de Status',
+      modulo: 'Vagas',
+      registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+      valor_anterior: oldStatus,
+      valor_novo: newStatus
+    });
+
     toast.success('Status atualizado');
   };
   const handleDelete = () => {

@@ -31,6 +31,17 @@ import { ImportExcelDialog } from '@/components/ImportExcelDialog';
 import { useState } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertCircle } from 'lucide-react';
 
 export default function ImportacoesPage() {
   const { importHistory, importedFiles, deleteImportedFile } = useVagasStore();

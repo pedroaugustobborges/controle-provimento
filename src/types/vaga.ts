@@ -26,6 +26,8 @@ export interface Vaga {
   aprovados_finais?: number;
   banco?: number;
   data_encerramento?: string;
+  dias_corridos?: number;
+  dias_uteis?: number;
   observacoes: string;
   analista_responsavel: string;
   status_geral: StatusGeral;

@@ -28,9 +28,9 @@ interface ColumnMapping {
 }
 
 const DATE_FORMATS = [
-  { label: 'dd/mm/aaaa', value: 'dd/MM/yyyy' },
-  { label: 'mm/dd/aaaa', value: 'MM/dd/yyyy' },
-  { label: 'aaaa-mm-dd', value: 'yyyy-MM-dd' },
+  { label: 'Brasileiro (dd/mm/aaaa)', value: 'dd/MM/yyyy' },
+  { label: 'Americano (mm/dd/aaaa)', value: 'MM/dd/yyyy' },
+  { label: 'ISO (aaaa-mm-dd)', value: 'yyyy-MM-dd' },
   { label: 'Excel (número serial)', value: 'excel_serial' },
   { label: 'Auto-detectar', value: 'auto' },
 ];

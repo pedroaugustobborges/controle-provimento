@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,9 +13,10 @@ import { BancoTalentosForm } from '@/components/BancoTalentosForm';
 import { ImportBancoTalentosDialog } from '@/components/ImportBancoTalentosDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 export default function BancoTalentosPage() {
-  const { bancos, importHistory, importedFiles } = useVagasStore();
+  const { bancos, importHistory, importedFiles, deleteBanco } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
   const [unidadeFilter, setUnidadeFilter] = useState('todas');
@@ -229,7 +230,24 @@ export default function BancoTalentosPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="font-bold text-xs text-primary hover:bg-primary/5">Detalhes</Button>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" className="font-bold text-xs text-primary hover:bg-primary/5 h-8">Detalhes</Button>
+                          {currentUser?.perfil === 'Admin' && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                if (window.confirm('Tem certeza que deseja excluir este banco de talentos?')) {
+                                  deleteBanco(b.id);
+                                  toast.success('Banco de talentos excluído com sucesso.');
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -183,6 +183,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const [headerRow, setHeaderRow] = useState<number>(0);
   const [rawPreview, setRawPreview] = useState<any[][]>([]);
   const [fileId, setFileId] = useState<string | null>(null);
+  const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -268,16 +269,16 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       const usedNames = new Map<string, number>();
 
       rawHeaders.forEach((c, i) => {
-        // Fallback para nomes vazios
+        // Fallback para nomes vazios e remoção de quebras de linha/espaços extras
         let name = (c !== null && c !== undefined && String(c).trim() !== '') 
-          ? String(c).trim().replace(/[\r\n]+/g, ' ') 
+          ? String(c).trim().replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ')
           : `Coluna ${i + 1}`;
         
-        // Tratar duplicados
+        // Tratar duplicados adicionando sufixo
         if (usedNames.has(name)) {
           const count = usedNames.get(name)! + 1;
           usedNames.set(name, count);
-          name = `${name}_${count}`;
+          name = `${name} (${count})`; // Formato amigável: Nome (2)
         } else {
           usedNames.set(name, 1);
         }
@@ -286,6 +287,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       });
 
       console.log("Colunas processadas:", processedHeaders);
+      setDetectedHeaders(processedHeaders);
 
       // 2. Mapeamento inicial inteligente
       const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
@@ -319,6 +321,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     } catch (error) {
       console.error("Erro ao iniciar mapeamento:", error);
       // Fallback seguro: avançar mesmo com erro, limpando mapeamentos problemáticos
+      setDetectedHeaders([]);
       setMappings([...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(f => ({
         excel: '',
         system: f.key,
@@ -331,54 +334,72 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   };
 
   const generatePreview = () => {
-    const allData: any[] = [];
-    selectedSheets.forEach(sheetName => {
-      const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { range: headerRow });
-      allData.push(...data);
-    });
-    const mappedData = allData.map(row => {
-      const result: any = { __errors: {} };
-      mappings.forEach(m => {
-        if (m.excel && m.excel !== 'no_mapping') {
-          const val = row[m.excel];
-          if (m.isDate) {
-            const { isValid, formatted } = parseDateValue(val, m.format || 'auto');
-            result[m.system] = formatted;
-            if (!isValid && val) result.__errors[m.system] = true;
-          } else { 
-            result[m.system] = val; 
-          }
-        }
+    try {
+      const allData: any[] = [];
+      selectedSheets.forEach(sheetName => {
+        // Usamos as detectedHeaders como chaves para garantir consistência
+        const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { 
+          header: detectedHeaders, 
+          range: headerRow + 1, // Começa da linha após o cabeçalho
+          defval: '' 
+        });
+        allData.push(...data);
       });
-      return result;
-    });
-    setPreviewData(mappedData.slice(0, 50));
-    setStep('preview');
+
+      const mappedData = allData.map(row => {
+        const result: any = { __errors: {} };
+        mappings.forEach(m => {
+          if (m.excel && m.excel !== 'no_mapping') {
+            const val = row[m.excel];
+            if (m.isDate) {
+              const { isValid, formatted } = parseDateValue(val, m.format || 'auto');
+              result[m.system] = formatted;
+              if (!isValid && val) result.__errors[m.system] = true;
+            } else { 
+              result[m.system] = val; 
+            }
+          }
+        });
+        return result;
+      });
+
+      setPreviewData(mappedData.slice(0, 50));
+      setStep('preview');
+    } catch (error) {
+      console.error("Erro ao gerar prévia:", error);
+      toast.error("Erro ao processar prévia dos dados. Verifique o mapeamento.");
+    }
   };
 
   const processImport = () => {
     setIsProcessing(true);
-    const allData: any[] = [];
-    selectedSheets.forEach(sheetName => {
-      const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { range: headerRow });
-      allData.push(...data);
-    });
-
-    const now = new Date();
-    const newBancos: BancoTalentos[] = allData.map((row, i) => {
-      const mapped: any = {};
-      mappings.forEach(m => {
-        if (m.excel && m.excel !== 'no_mapping') {
-          if (m.isDate) {
-            mapped[m.system] = parseDateValue(row[m.excel], m.format || 'auto').formatted;
-          } else if (m.system === 'is_prorrogado') {
-            const val = String(row[m.excel]).toLowerCase();
-            mapped[m.system] = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
-          } else {
-            mapped[m.system] = String(row[m.excel]);
-          }
-        }
+    try {
+      const allData: any[] = [];
+      selectedSheets.forEach(sheetName => {
+        const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { 
+          header: detectedHeaders, 
+          range: headerRow + 1,
+          defval: '' 
+        });
+        allData.push(...data);
       });
+
+      const now = new Date();
+      const newBancos: BancoTalentos[] = allData.map((row, i) => {
+        const mapped: any = {};
+        mappings.forEach(m => {
+          if (m.excel && m.excel !== 'no_mapping') {
+            const rawVal = row[m.excel];
+            if (m.isDate) {
+              mapped[m.system] = parseDateValue(rawVal, m.format || 'auto').formatted;
+            } else if (m.system === 'is_prorrogado') {
+              const val = String(rawVal || '').toLowerCase();
+              mapped[m.system] = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
+            } else {
+              mapped[m.system] = String(rawVal || '').trim();
+            }
+          }
+        });
 
       const expiryDate = new Date(mapped.nova_data_validade || mapped.data_validade);
       const status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
@@ -422,10 +443,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     setStep('summary');
     setIsProcessing(false);
     toast.success('Banco de talentos importado com sucesso!');
+    } catch (error) {
+      console.error("Erro ao processar importação:", error);
+      setIsProcessing(false);
+      toast.error("Ocorreu um erro ao salvar os dados importados.");
+    }
   };
 
   const reset = () => {
-    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]);
+    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]);
   };
 
   const STEPS = [
@@ -593,13 +619,9 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="no_mapping" className="text-muted-foreground italic">Não mapear</SelectItem>
-                                  {(rawPreview[headerRow] || []).map((h, i) => {
-                                    const label = (h !== null && h !== undefined && String(h).trim() !== '') ? String(h).trim() : `Coluna ${i + 1}`;
-                                    // Verificamos se há duplicados e mostramos o índice se necessário para diferenciar no dropdown
-                                    const isDuplicate = (rawPreview[headerRow] || []).filter(x => String(x).trim() === String(h).trim()).length > 1;
-                                    const displayLabel = isDuplicate ? `${label} (Posição ${i + 1})` : label;
-                                    return <SelectItem key={i} value={label}>{displayLabel}</SelectItem>;
-                                  })}
+                                  {detectedHeaders.map((h, i) => (
+                                    <SelectItem key={i} value={h}>{h}</SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
 
@@ -610,7 +632,8 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                       <Calendar className="h-3 w-3" /> Formato de origem
                                     </label>
                                     {(() => {
-                                      const colIdx = rawPreview[headerRow].indexOf(mapping.excel);
+                                      const colIdx = detectedHeaders.indexOf(mapping.excel);
+                                      if (colIdx === -1) return null;
                                       const sampleVal = rawPreview.find((r, i) => i > headerRow && r[colIdx])?.[colIdx];
                                       if (sampleVal && !isNaN(Number(sampleVal)) && Number(sampleVal) > 30000 && mapping.format !== 'excel_serial') {
                                         return (

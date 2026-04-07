@@ -5,15 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Briefcase, Building, FileText, ClipboardList } from 'lucide-react';
 import { formatDate } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 import { BancoTalentosForm } from '@/components/BancoTalentosForm';
 import { ImportBancoTalentosDialog } from '@/components/ImportBancoTalentosDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { BancoTalentos } from '@/types/vaga';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +38,8 @@ export default function BancoTalentosPage() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
+  const [selectedBanco, setSelectedBanco] = useState<BancoTalentos | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const handleDelete = () => {
     if (bancoParaExcluir) {
@@ -116,6 +121,165 @@ export default function BancoTalentosPage() {
         open={isImportOpen} 
         onOpenChange={setIsImportOpen} 
       />
+
+      <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <SheetTitle className="text-xl font-bold">{selectedBanco?.nome || "Detalhes do Candidato"}</SheetTitle>
+                <SheetDescription>Informações detalhadas do banco de talentos.</SheetDescription>
+              </div>
+            </div>
+            {selectedBanco && (
+              <div className="flex gap-2 mt-2">
+                {getStatusBadge(selectedBanco.status)}
+                {selectedBanco.is_prorrogado && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Prorrogado</Badge>}
+              </div>
+            )}
+          </SheetHeader>
+
+          {selectedBanco && (
+            <div className="space-y-6">
+              {/* Identificação */}
+              <section>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <User className="h-3 w-3" /> Identificação
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Candidato</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.nome || "Não informado"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.unidade}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Cargo</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.cargo}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Seção</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.secao || "Não informado"}</p>
+                  </div>
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Edital */}
+              <section>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <FileText className="h-3 w-3" /> Edital e Processo
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Número Edital</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_edital}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Número Processo</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_processo || "Não informado"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Classificação</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.classificacao || "Não informado"}</p>
+                  </div>
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Datas */}
+              <section>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Calendar className="h-3 w-3" /> Datas Importantes
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Publicação</p>
+                    <p className="text-sm font-semibold text-slate-800">{formatDate(selectedBanco.data_abertura_edital)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Validade Original</p>
+                    <p className="text-sm font-semibold text-slate-800">{formatDate(selectedBanco.data_validade)}</p>
+                  </div>
+                  {selectedBanco.nova_data_validade && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Validade Prorrogada</p>
+                      <p className="text-sm font-semibold text-blue-600 font-bold">{formatDate(selectedBanco.nova_data_validade)}</p>
+                    </div>
+                  )}
+                  {selectedBanco.data_convocacao && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
+                      <p className="text-sm font-semibold text-green-600 font-bold">{formatDate(selectedBanco.data_convocacao)}</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Convocação */}
+              {(selectedBanco.unidade_convocacao || selectedBanco.numero_chamada || selectedBanco.numero_processo_seletivo || selectedBanco.numero_vaga_aproveitamento) && (
+                <>
+                  <section>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <ClipboardList className="h-3 w-3" /> Detalhes da Convocação
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedBanco.unidade_convocacao && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade de Convocação</p>
+                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.unidade_convocacao}</p>
+                        </div>
+                      )}
+                      {selectedBanco.numero_chamada && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Número da Chamada</p>
+                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_chamada}</p>
+                        </div>
+                      )}
+                      {selectedBanco.numero_processo_seletivo && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Proc. Seletivo</p>
+                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_processo_seletivo}</p>
+                        </div>
+                      )}
+                      {selectedBanco.numero_vaga_aproveitamento && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Vaga Aproveitamento</p>
+                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_vaga_aproveitamento}</p>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                  <Separator />
+                </>
+              )}
+
+              {/* Observações */}
+              {selectedBanco.observacoes && (
+                <section>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <Info className="h-3 w-3" /> Observações
+                  </h3>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <p className="text-sm text-slate-600 leading-relaxed italic">
+                      "{selectedBanco.observacoes}"
+                    </p>
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* ... Stats cards stay the same ... */}
@@ -252,7 +416,17 @@ export default function BancoTalentosPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="sm" className="font-bold text-xs text-primary hover:bg-primary/5 h-8">Detalhes</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                            onClick={() => {
+                              setSelectedBanco(b);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            Detalhes
+                          </Button>
                           {currentUser?.perfil === 'Admin' && (
                             <Button 
                               variant="ghost" 

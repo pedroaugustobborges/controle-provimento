@@ -167,7 +167,7 @@ export default function VagaDetalhePage() {
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Tempo em Aberto</label>
-                  <p className="text-sm font-medium">{calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias corridos</p>
+                  <p className="text-sm font-medium">{calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias corridos / {vaga.dias_uteis || 0} dias úteis</p>
                 </div>
               </div>
 

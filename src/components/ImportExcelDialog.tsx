@@ -217,7 +217,13 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
 
     const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
       const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
-      return { excel: matchedHeader || '', system: field.key };
+      const isDate = DATE_FIELDS.includes(field.key);
+      return { 
+        excel: matchedHeader || '', 
+        system: field.key, 
+        format: isDate ? 'auto' : undefined,
+        isDate
+      };
     });
 
     setMappings(initialMappings);

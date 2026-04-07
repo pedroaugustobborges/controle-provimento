@@ -732,13 +732,6 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                             </TableRow>
                           );
                         })}
-                            <TableCell className="font-mono text-xs">{row.numero_requisicao || row.requisicao || '—'}</TableCell>
-                            <TableCell className="text-xs font-medium">{row.cargo || '—'}</TableCell>
-                            <TableCell className="text-xs">{row.unidade || '—'}</TableCell>
-                            <TableCell className="text-xs">{row.data_abertura || '—'}</TableCell>
-                            <TableCell className="text-xs text-center">{row.numero_vagas || row.quantidade || '—'}</TableCell>
-                          </TableRow>
-                        ))}
                       </TableBody>
                     </Table>
                   </ScrollArea>

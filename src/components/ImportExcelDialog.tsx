@@ -155,8 +155,16 @@ const parseDateValue = (value: any, targetFormat: string): { date: Date | null, 
   return { date: null, isValid: false, formatted: String(value) };
 };
 
-export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { addVagas, vagas, addImportHistory } = useVagasStore();
+export function ImportExcelDialog({ 
+  open, 
+  onOpenChange,
+  reprocessFile = null
+}: { 
+  open: boolean, 
+  onOpenChange: (open: boolean) => void,
+  reprocessFile?: any
+}) {
+  const { addVagas, vagas, addImportHistory, addImportedFile, updateImportedFile } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
@@ -168,6 +176,7 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
   const [isProcessing, setIsProcessing] = useState(false);
   const [headerRow, setHeaderRow] = useState<number>(0);
   const [rawPreview, setRawPreview] = useState<any[][]>([]);
+  const [fileId, setFileId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

@@ -28,9 +28,9 @@ export default function VagasPage() {
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const unidades = [...new Set(vagas.map((v) => v.unidade))].sort();
-  const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].sort();
-  const assistentes = [...new Set(vagas.flatMap((v) => v.assistentes || []))].sort();
+  const unidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
+  const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort();
+  const assistentes = [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort();
 
   const filtered = vagas.filter((v) => {
     const matchSearch = !search || v.cargo.toLowerCase().includes(search.toLowerCase()) ||

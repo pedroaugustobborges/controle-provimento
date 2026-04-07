@@ -471,7 +471,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               const { isValid, formatted, formatUsed } = parseDateValue(val, m.format || 'dd/MM/yyyy');
               result[m.system] = formatted;
               if (formatUsed) result.__info[m.system] = formatUsed;
-              if (!isValid && val) result.__errors[m.system] = "Formato de data não reconhecido";
+              if (!isValid && val) result.__errors[m.system] = formatUsed || "Erro de conversão";
             } else { 
               result[m.system] = val; 
             }

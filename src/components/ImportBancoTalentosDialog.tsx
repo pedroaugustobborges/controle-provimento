@@ -400,7 +400,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         return { 
           excel: matchedHeader || '', 
           system: field.key, 
-          format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
+          format: DATE_FIELDS.includes(field.key) ? 'dd/MM/yyyy' : undefined, 
           isDate: DATE_FIELDS.includes(field.key) 
         };
       });

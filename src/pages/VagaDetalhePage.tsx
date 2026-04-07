@@ -52,6 +52,7 @@ export default function VagaDetalhePage() {
 
     });
     toast.success('Status atualizado');
+  };
   const handleDelete = () => {
     if (vaga && canDelete) {
       deleteVaga(vaga.id);

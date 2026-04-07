@@ -45,6 +45,7 @@ export interface Vaga {
   numero_vagas: number;
   quantidade?: number; // Compatibilidade
   analista_responsavel: string;
+  assistentes?: string[];
   observacoes_internas: string;
   observacoes?: string; // Compatibilidade
   status: StatusVaga;

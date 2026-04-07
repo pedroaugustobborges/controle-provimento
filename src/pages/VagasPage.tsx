@@ -65,6 +65,9 @@ export default function VagasPage() {
             status_geral: 'aberta' as const,
             origem_importacao: file.name,
             observacoes: '',
+            pcd: false,
+            estado: 'Goiás',
+            selecao: 'Pública',
             historico: [{ id: `h-${Date.now()}-${i}`, data: new Date().toISOString().split('T')[0], descricao: `Importado de ${file.name}`, usuario: 'Sistema' }],
           };
         });

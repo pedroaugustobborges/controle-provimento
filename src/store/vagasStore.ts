@@ -17,6 +17,10 @@ interface VagasState {
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
   deleteVaga: (id: string) => void;
+  addBanco: (banco: BancoTalentos) => void;
+  addBancos: (bancos: BancoTalentos[]) => void;
+  updateBanco: (id: string, data: Partial<BancoTalentos>) => void;
+  deleteBanco: (id: string) => void;
   addConvocacao: (convocacao: Convocacao) => void;
   updateConvocacao: (id: string, data: Partial<Convocacao>) => void;
   updateEdital: (id: string, data: Partial<Edital>) => void;
@@ -52,6 +56,14 @@ export const useVagasStore = create<VagasState>()(
       })),
       deleteVaga: (id) => set((s) => ({
         vagas: s.vagas.filter((v) => v.id !== id),
+      })),
+      addBanco: (banco) => set((s) => ({ bancos: [banco, ...s.bancos] })),
+      addBancos: (newBancos) => set((s) => ({ bancos: [...newBancos, ...s.bancos] })),
+      updateBanco: (id, data) => set((s) => ({
+        bancos: s.bancos.map((b) => b.id === id ? { ...b, ...data } : b),
+      })),
+      deleteBanco: (id) => set((s) => ({
+        bancos: s.bancos.filter((b) => b.id !== id),
       })),
       addConvocacao: (convocacao) => set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] })),
       updateConvocacao: (id, data) => set((s) => ({

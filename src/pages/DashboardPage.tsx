@@ -41,11 +41,14 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   // Stats calculation
-  const abertas = vagas.filter((v) => v.status_geral === 'aberta').length;
-  const emAndamento = vagas.filter((v) => ['em_triagem', 'entrevista'].includes(v.status_geral)).length;
-  const emEdital = vagas.filter((v) => v.status_geral === 'em_edital').length;
+  const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
+  
+  const abertas = getStatusCount('aberta');
+  const emAndamento = vagas.filter((v) => ['em_triagem', 'entrevista', 'documentacao', 'realizar_convocacao'].includes((v.status || v.status_geral) as string)).length;
+  const emEdital = getStatusCount('em_edital') + getStatusCount('publicado_edital');
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
-  const encerradas = vagas.filter((v) => ['encerrada', 'finalizada'].includes(v.status_geral)).length;
+  const encerradas = vagas.filter((v) => ['encerrada', 'finalizada', 'admissao_efetivada'].includes((v.status || v.status_geral) as string)).length;
+
   const convocacoesHoje = 12; // Mock data for now
 
   const stats = [

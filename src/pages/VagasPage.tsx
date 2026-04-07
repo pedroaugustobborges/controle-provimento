@@ -51,9 +51,11 @@ export default function VagasPage() {
     setFilterStatus('all');
     setFilterTipo('all');
     setFilterAnalista('all');
+    setFilterAssistente('all');
+    setFilterLideranca('all');
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all';
+  const hasFilters = search || filterUnidade !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all';
 
   return (
     <div className="space-y-4">

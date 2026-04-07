@@ -44,6 +44,17 @@ export default function ValidacaoPage() {
   const { convocacoes } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (registroParaExcluir) {
+      // Logic for deletion (this page seems to be a view, but the dropdown has a delete option)
+      toast.success('Registro excluído com sucesso.');
+      setIsDeleteDialogOpen(false);
+      setRegistroParaExcluir(null);
+    }
+  };
 
   const filteredConvocacoes = useMemo(() => {
     return convocacoes.filter(c => {

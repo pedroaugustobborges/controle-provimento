@@ -242,7 +242,7 @@ export function ImportExcelDialog({
             email_usuario: 'ana.oliveira@agir.org.br',
             modulo_origem: 'vagas',
             status: 'enviado',
-            content: data as any
+            // content: data as any // Removido para evitar estourar quota do localStorage e excesso de memória
           });
 
           setWorkbook(wb);

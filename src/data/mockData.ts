@@ -1,18 +1,21 @@
-import { Vaga, BancoTalentos, Convocacao } from '@/types/vaga';
+import { Vaga, BancoTalentos, Convocacao, Edital, ValidacaoEdital } from '@/types/vaga';
 
 export const mockVagas: Vaga[] = [
   {
     id: '1', 
     requisicao: 'REQ-2025-001', 
+    numero_requisicao: 'REQ-2025-001',
     data_abertura: '2025-01-15', 
     data_recebimento: '2025-01-14',
     cargo: 'Enfermeiro(a) - UTI',
     tipo_vaga: 'substituicao', 
     numero_vagas: 3, 
+    quantidade: 3,
     secao: 'Enfermagem', 
     unidade: 'Hospital Central (GO)',
     analista_responsavel: 'Maria Silva', 
     status: 'em_edital',
+    status_geral: 'em_edital',
     observacoes_internas: 'Urgente - cobertura de escala noturna',
     tem_banco_valido: true,
     banco_id: 'b1',
@@ -24,15 +27,18 @@ export const mockVagas: Vaga[] = [
   {
     id: '2', 
     requisicao: 'REQ-2025-002', 
+    numero_requisicao: 'REQ-2025-002',
     data_abertura: '2025-02-03', 
     data_recebimento: '2025-02-01',
     cargo: 'Técnico de Enfermagem',
     tipo_vaga: 'substituicao', 
     numero_vagas: 2, 
+    quantidade: 2,
     secao: 'Enfermagem', 
     unidade: 'Unidade Barra (ES)',
     analista_responsavel: 'João Santos', 
     status: 'realizar_convocacao',
+    status_geral: 'realizar_convocacao',
     observacoes_internas: '',
     tem_banco_valido: true,
     banco_id: 'b2',
@@ -43,15 +49,18 @@ export const mockVagas: Vaga[] = [
   {
     id: '3', 
     requisicao: 'REQ-2025-003', 
+    numero_requisicao: 'REQ-2025-003',
     data_abertura: '2025-01-20', 
     data_recebimento: '2025-01-18',
     cargo: 'Médico Plantonista - Emergência',
     tipo_vaga: 'aumento', 
     numero_vagas: 1, 
+    quantidade: 1,
     secao: 'Corpo Clínico', 
     unidade: 'Hospital Central (GO)',
     analista_responsavel: 'Maria Silva', 
     status: 'documentacao',
+    status_geral: 'documentacao',
     observacoes_internas: 'Candidatos em fase final',
     tem_banco_valido: false,
     historico: [
@@ -106,3 +115,6 @@ export const mockConvocacoes: Convocacao[] = [
     status: 'pendente'
   }
 ];
+
+export const mockEditais: Edital[] = [];
+export const mockValidacoes: ValidacaoEdital[] = [];

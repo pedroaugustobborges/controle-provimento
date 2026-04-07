@@ -38,22 +38,22 @@ const DATE_FORMATS = Object.entries(DATE_FORMAT_LABELS).map(([value, label]) => 
   value: value as DateFormat
 }));
 
-const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao'];
+const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao', 'is_prorrogado'];
 
 const REQUIRED_FIELDS = [
-  { key: 'unidade', label: 'Unidade' },
-  { key: 'cargo', label: 'Cargo' },
-  { key: 'numero_edital', label: 'Número do edital' },
-  { key: 'numero_processo', label: 'Número do processo' },
   { key: 'nome', label: 'Nome' },
+  { key: 'cargo', label: 'Cargo' },
+  { key: 'unidade', label: 'Unidade' },
+  { key: 'numero_edital', label: 'Número do edital' },
+];
+
+const OPTIONAL_FIELDS = [
+  { key: 'numero_processo', label: 'Número do processo' },
   { key: 'classificacao', label: 'Classificação' },
   { key: 'quantidade_banco', label: 'Quantidade do banco' },
   { key: 'status_import', label: 'Status' },
   { key: 'data_abertura_edital', label: 'Data de Publicação' },
   { key: 'data_validade', label: 'Validade' },
-];
-
-const OPTIONAL_FIELDS = [
   { key: 'is_prorrogado', label: 'Prorrogação' },
   { key: 'numero_chamada', label: 'Número da chamada' },
   { key: 'numero_processo_seletivo', label: 'Número do processo seletivo' },
@@ -161,6 +161,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const [mappings, setMappings] = useState<ColumnMapping[]>([]);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [importSummary, setImportSummary] = useState<any>(null);
+  const [importErrors, setImportErrors] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [headerRow, setHeaderRow] = useState<number>(0);
@@ -327,7 +328,9 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           const sheet = workbook?.Sheets[selectedSheets[0]];
           const rows = XLSX.utils.sheet_to_json<any[]>(sheet!, { header: processedHeaders, range: headerRow + 1 });
           const sampleValues = rows.slice(0, 50).map(r => r[matchedHeader!]);
-          detectedFormat = detectColumnFormat(sampleValues);
+          const detected = detectColumnFormat(sampleValues);
+          // Prioritize Brazilian dd/mm/aaaa for Banco de Talentos
+          detectedFormat = (detected === 'excel_serial' || detected === 'yyyy-MM-dd') ? detected : 'dd/MM/yyyy';
         }
 
         return { 
@@ -444,15 +447,13 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       let totalErros = 0;
       let missingFieldsRows = 0;
       let dateErrorRows = 0;
+      const detailedErrors: any[] = [];
 
-      const filteredData = allData.filter(row => {
-        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
-      });
-
-      filteredData.forEach((row, i) => {
+      allData.forEach((row, i) => {
         const mapped: any = {};
         let hasErrorInRow = false;
         let hasMissingRequired = false;
+        const currentLine = headerRow + 2 + i;
 
         mappings.forEach(m => {
           if (m.excel && m.excel !== 'no_mapping') {
@@ -461,12 +462,36 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               const dateResult = convertDateValue(rawVal, m.format || 'auto');
               mapped[m.system] = dateResult.formatted;
               if (!dateResult.isValid && rawVal) {
-                hasErrorInRow = true;
-                dateErrorRows++;
+                // If the date is invalid, we don't necessarily fail the row if the field is optional
+                // but we track it. For now, we only log it if it's fundamentally unparseable.
+                if (dateResult.formatUsed === 'Inválido') {
+                  detailedErrors.push({
+                    linha: currentLine,
+                    campo: m.excel,
+                    valor: String(rawVal),
+                    motivo: "Formato de data não reconhecido"
+                  });
+                }
               }
             } else if (m.system === 'is_prorrogado') {
               const val = String(rawVal || '').toLowerCase();
-              mapped[m.system] = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
+              const isSim = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
+              
+              // Se não for "sim/não" óbvio, tenta ver se é uma data
+              if (!isSim && rawVal) {
+                const dateResult = convertDateValue(rawVal, 'auto');
+                if (dateResult.isValid && dateResult.date) {
+                  mapped[m.system] = true;
+                  // Se a nova data de validade ainda não foi preenchida, usamos esta
+                  if (!mapped.nova_data_validade) {
+                    mapped.nova_data_validade = dateResult.formatted;
+                  }
+                } else {
+                  mapped[m.system] = false;
+                }
+              } else {
+                mapped[m.system] = isSim;
+              }
             } else {
               mapped[m.system] = String(rawVal || '').trim();
             }
@@ -477,6 +502,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         REQUIRED_FIELDS.forEach(field => {
           if (!mapped[field.key] || mapped[field.key] === '') {
             hasMissingRequired = true;
+            detailedErrors.push({
+              linha: currentLine,
+              campo: field.label,
+              valor: 'Vazio',
+              motivo: "Campo obrigatório ausente"
+            });
           }
         });
 
@@ -488,17 +519,10 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
         // Determinar status baseado em validade
         let status: 'valido' | 'vencido' | 'prorrogado' = 'valido';
-        const dateStr = mapped.nova_data_validade || mapped.data_validade;
+        const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
         
-        // Se a data estiver em formato brasileiro dd/mm/aaaa, vamos converter para aaaa-mm-dd para o objeto Date
-        let dateToParse = dateStr;
-        if (dateStr && dateStr.includes('/') && dateStr.split('/')[0].length === 2) {
-          const parts = dateStr.split('/');
-          dateToParse = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-
-        if (dateToParse) {
-          const expiryDate = new Date(dateToParse);
+        if (expiryDateStr) {
+          const expiryDate = new Date(expiryDateStr);
           if (isValid(expiryDate)) {
             status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
           }
@@ -528,6 +552,8 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           status: status,
         });
       });
+
+      setImportErrors(detailedErrors);
 
       if (newBancos.length === 0) {
         setIsProcessing(false);
@@ -592,7 +618,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   };
 
   const reset = () => {
-    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]); setTotalDetectedRows(0);
+    setStep('select'); setFile(null); setWorkbook(null); setSelectedSheets([]); setMappings([]); setPreviewData([]); setImportSummary(null); setImportErrors([]); setHeaderRow(0); setRawPreview([]); setDetectedHeaders([]); setTotalDetectedRows(0);
   };
 
   const STEPS = [
@@ -1091,16 +1117,35 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                 </div>
               </div>
 
-              {importSummary.total_alertas_data > 0 && (
-                <div className="w-full max-w-4xl px-4">
-                  <Alert className="bg-amber-50 border-amber-200">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <AlertTitle className="text-amber-800 font-bold">Aviso de Datas</AlertTitle>
-                    <AlertDescription className="text-amber-700 text-xs">
-                      {importSummary.total_alertas_data} registros possuem datas que não puderam ser convertidas automaticamente. 
-                      Estes registros <strong>foram importados</strong> com o valor original para evitar perda de dados, mas podem precisar de revisão manual no sistema.
-                    </AlertDescription>
-                  </Alert>
+              {importErrors.length > 0 && (
+                <div className="w-full max-w-4xl px-4 mt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileWarning className="h-5 w-5 text-destructive" />
+                    <h3 className="font-bold text-slate-800">Log de Inconsistências</h3>
+                  </div>
+                  <div className="border rounded-xl overflow-hidden bg-white max-h-[250px] overflow-y-auto shadow-sm">
+                    <Table>
+                      <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                        <TableRow>
+                          <TableHead className="w-[80px]">Linha</TableHead>
+                          <TableHead>Campo</TableHead>
+                          <TableHead>Valor Recebido</TableHead>
+                          <TableHead>Motivo</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {importErrors.map((err, idx) => (
+                          <TableRow key={idx} className="text-xs">
+                            <TableCell className="font-mono text-muted-foreground">{err.linha}</TableCell>
+                            <TableCell className="font-bold">{err.campo}</TableCell>
+                            <TableCell className="text-destructive font-mono">{err.valor}</TableCell>
+                            <TableCell className="italic text-muted-foreground">{err.motivo}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 italic">* Linhas com campos obrigatórios ausentes foram ignoradas. Erros de data não impediram a importação.</p>
                 </div>
               )}
 

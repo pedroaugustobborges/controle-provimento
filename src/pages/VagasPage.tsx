@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga, getBancoByVaga } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -235,24 +235,46 @@ export default function VagasPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-semibold text-slate-800 truncate max-w-[200px]" title={v.cargo}>{v.cargo}</div>
-                      <div className="flex gap-1 mt-0.5">
+                      <div className="flex flex-wrap gap-1 mt-0.5">
                         <Badge variant="secondary" className="text-[9px] font-bold py-0 h-3.5 bg-slate-100 text-slate-600 border-none">{TIPO_VAGA_LABELS[v.tipo_vaga]}</Badge>
                         {v.pcd && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>}
+                        {v.tem_banco_valido && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-green-50 text-green-600 border-green-100">Tem Banco</Badge>}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
                     <td className="px-4 py-3">
-                      {v.tem_banco_valido ? (
-                        <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 w-fit">
-                          <Database className="h-3 w-3" />
-                          <span className="text-[10px] font-bold">Válido</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 w-fit">
-                          <X className="h-3 w-3" />
-                          <span className="text-[10px] font-bold">Sem Banco</span>
-                        </div>
-                      )}
+                      {(() => {
+                        const banco = getBancoByVaga(v.id);
+                        if (!banco) {
+                          return (
+                            <div className="flex items-center gap-1.5 text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 w-fit">
+                              <X className="h-3 w-3" />
+                              <span className="text-[10px] font-bold">Não tem banco</span>
+                            </div>
+                          );
+                        }
+                        
+                        const statusColors = {
+                          valido: 'text-green-600 bg-green-50 border-green-100',
+                          prorrogado: 'text-blue-600 bg-blue-50 border-blue-100',
+                          vencido: 'text-red-600 bg-red-50 border-red-100',
+                          nenhum: 'text-slate-400 bg-slate-50 border-slate-100'
+                        };
+                        
+                        const statusLabels = {
+                          valido: 'Tem banco válido',
+                          prorrogado: 'Banco prorrogado',
+                          vencido: 'Banco vencido',
+                          nenhum: 'Não tem banco'
+                        };
+                        
+                        return (
+                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border w-fit ${statusColors[banco.status] || statusColors.nenhum}`}>
+                            <Database className="h-3 w-3" />
+                            <span className="text-[10px] font-bold">{statusLabels[banco.status] || statusLabels.nenhum}</span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={v.status || v.status_geral || 'aberta'} />

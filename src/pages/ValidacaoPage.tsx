@@ -211,7 +211,13 @@ export default function ValidacaoPage() {
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Dados
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="gap-2 text-destructive">
+                          <DropdownMenuItem 
+                            className="gap-2 text-destructive"
+                            onClick={() => {
+                              setRegistroParaExcluir(c.id);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
                             <Trash2 className="h-4 w-4" /> Excluir Registro
                           </DropdownMenuItem>
                         </DropdownMenuContent>

@@ -1039,28 +1039,55 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-col text-xs gap-1">
-                                <div className="flex items-center justify-between gap-4">
-                                  <span className="text-muted-foreground">Pub:</span>
-                                  <span className={`font-medium ${row.__errors?.data_abertura_edital ? 'text-destructive font-bold' : ''}`}>
-                                    {row.data_abertura_edital || '-'}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                  <span className="text-muted-foreground">Val:</span>
-                                  <span className={`font-medium ${row.__errors?.data_validade ? 'text-destructive font-bold' : ''}`}>
-                                    {row.data_validade || '-'}
-                                  </span>
-                                </div>
-                                {row.data_convocacao && (
-                                  <div className="flex items-center justify-between gap-4">
-                                    <span className="text-muted-foreground">Conv:</span>
-                                    <span className={`font-medium ${row.__errors?.data_convocacao ? 'text-destructive font-bold' : ''}`}>
-                                      {row.data_convocacao}
+                              <div className="flex flex-col text-[10px] gap-1 max-w-[180px]">
+                                <div className="flex flex-col gap-0.5 border-b border-muted pb-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground uppercase font-bold text-[9px]">Publicação:</span>
+                                    <span className={`font-bold ${row.__errors?.data_abertura_edital ? 'text-destructive' : 'text-slate-700'}`}>
+                                      {row.data_abertura_edital || '-'}
                                     </span>
                                   </div>
+                                  {row.__info?.data_abertura_edital && !row.__errors?.data_abertura_edital && (
+                                    <span className="text-[9px] text-green-600 font-medium leading-tight">✓ {row.__info.data_abertura_edital}</span>
+                                  )}
+                                  {row.__errors?.data_abertura_edital && (
+                                    <span className="text-[9px] text-destructive font-bold leading-tight">⚠ {row.__errors.data_abertura_edital}</span>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col gap-0.5 border-b border-muted pb-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground uppercase font-bold text-[9px]">Validade:</span>
+                                    <span className={`font-bold ${row.__errors?.data_validade ? 'text-destructive' : 'text-slate-700'}`}>
+                                      {row.data_validade || '-'}
+                                    </span>
+                                  </div>
+                                  {row.__info?.data_validade && !row.__errors?.data_validade && (
+                                    <span className="text-[9px] text-green-600 font-medium leading-tight">✓ {row.__info.data_validade}</span>
+                                  )}
+                                  {row.__errors?.data_validade && (
+                                    <span className="text-[9px] text-destructive font-bold leading-tight">⚠ {row.__errors.data_validade}</span>
+                                  )}
+                                </div>
+
+                                {row.data_convocacao && (
+                                  <div className="flex flex-col gap-0.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-muted-foreground uppercase font-bold text-[9px]">Convocação:</span>
+                                      <span className={`font-bold ${row.__errors?.data_convocacao ? 'text-destructive' : 'text-slate-700'}`}>
+                                        {row.data_convocacao}
+                                      </span>
+                                    </div>
+                                    {row.__info?.data_convocacao && !row.__errors?.data_convocacao && (
+                                      <span className="text-[9px] text-green-600 font-medium leading-tight">✓ {row.__info.data_convocacao}</span>
+                                    )}
+                                    {row.__errors?.data_convocacao && (
+                                      <span className="text-[9px] text-destructive font-bold leading-tight">⚠ {row.__errors.data_convocacao}</span>
+                                    )}
+                                  </div>
                                 )}
-                                {row.is_prorrogado && <Badge variant="outline" className="text-[9px] h-4 bg-blue-50 text-blue-700 border-blue-200 w-fit">Prorrogado</Badge>}
+                                
+                                {row.is_prorrogado && <Badge variant="outline" className="text-[8px] h-3.5 bg-blue-50 text-blue-700 border-blue-200 w-fit px-1">Prorrogado</Badge>}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">

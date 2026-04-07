@@ -196,10 +196,19 @@ export default function VagaDetalhePage() {
         <TabsContent value="edital">
           <EditalTab vagaId={vaga.id} edital={edital} />
         </TabsContent>
+        
+        <TabsContent value="banco">
+          <BancoTab vaga={vaga} />
+        </TabsContent>
+
+        <TabsContent value="convocacoes">
+          <ConvocacoesTab vagaId={vaga.id} />
+        </TabsContent>
 
         <TabsContent value="validacao">
           <ValidacaoTab vagaId={vaga.id} validacao={validacao} />
         </TabsContent>
+
 
         <TabsContent value="historico">
           <Card className="border-slate-200 shadow-sm">

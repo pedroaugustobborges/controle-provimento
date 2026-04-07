@@ -7,43 +7,43 @@
 @layer base {
   :root {
     --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 213 70% 45%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 215 45% 25%; /* Petroleum Blue / Institutional Blue */
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 15% 93%;
-    --secondary-foreground: 215 25% 25%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 215 12% 55%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 20% 90%;
-    --accent-foreground: 215 25% 20%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11.2%;
 
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 213 70% 45%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 25% 15%;
-    --sidebar-primary: 213 70% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 213 70% 45%;
-    --sidebar-border: 214 20% 92%;
-    --sidebar-ring: 213 70% 45%;
+    --sidebar-background: 215 45% 25%; /* Blue sidebar for executive feel */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 215 45% 25%;
+    --sidebar-accent: 215 45% 30%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 45% 20%;
+    --sidebar-ring: 210 40% 98%;
 
     --success: 142 60% 42%;
     --success-foreground: 0 0% 100%;
@@ -52,11 +52,12 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    --status-open: 213 70% 45%;
+    /* Status colors refined */
+    --status-open: 215 45% 25%;
     --status-edital: 38 92% 50%;
     --status-closed: 142 60% 42%;
-    --status-pending: 280 50% 55%;
-    --status-alert: 0 65% 55%;
+    --status-pending: 215 25% 45%;
+    --status-alert: 0 84% 60%;
   }
 }
 

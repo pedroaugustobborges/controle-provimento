@@ -475,7 +475,23 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               }
             } else if (m.system === 'is_prorrogado') {
               const val = String(rawVal || '').toLowerCase();
-              mapped[m.system] = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
+              const isSim = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
+              
+              // Se não for "sim/não" óbvio, tenta ver se é uma data
+              if (!isSim && rawVal) {
+                const dateResult = convertDateValue(rawVal, 'auto');
+                if (dateResult.isValid && dateResult.date) {
+                  mapped[m.system] = true;
+                  // Se a nova data de validade ainda não foi preenchida, usamos esta
+                  if (!mapped.nova_data_validade) {
+                    mapped.nova_data_validade = dateResult.formatted;
+                  }
+                } else {
+                  mapped[m.system] = false;
+                }
+              } else {
+                mapped[m.system] = isSim;
+              }
             } else {
               mapped[m.system] = String(rawVal || '').trim();
             }

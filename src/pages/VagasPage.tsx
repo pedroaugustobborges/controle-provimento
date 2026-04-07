@@ -39,7 +39,9 @@ export default function VagasPage() {
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
     const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
-    return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista;
+    const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
+    const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
+    return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
   });
 
 

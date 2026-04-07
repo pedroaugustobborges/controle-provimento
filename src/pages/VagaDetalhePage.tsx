@@ -214,19 +214,17 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   const { updateValidacao, addValidacao } = useVagasStore();
   const [form, setForm] = useState(validacao || {
     id: `v-${Date.now()}`, vaga_id: vagaId,
-    salario_confere: null, requisitos_confere: null, atribuicoes_confere: null,
-    site_confere: null, datas_conferem: null, vaga_correta_para_edital: null, planilha_correta: null,
-    observacoes_validacao: '', validado_por: '', status_validacao: 'pendente',
+    precisa_validacao: true,
+    responsavel_validacao: '',
+    tipo_validacao: '',
+    observacao: '',
+    etapa_finalizada: false,
+    status_validacao: 'pendente',
   });
 
   const items = [
-    { key: 'salario_confere', label: 'Salário confere' },
-    { key: 'requisitos_confere', label: 'Requisitos conferem' },
-    { key: 'atribuicoes_confere', label: 'Atribuições conferem' },
-    { key: 'site_confere', label: 'Site confere' },
-    { key: 'datas_conferem', label: 'Datas conferem' },
-    { key: 'vaga_correta_para_edital', label: 'Vaga correta para edital' },
-    { key: 'planilha_correta', label: 'Planilha correta' },
+    { key: 'precisa_validacao', label: 'Precisa validação?' },
+    { key: 'etapa_finalizada', label: 'Etapa finalizada?' },
   ];
 
   const cycle = (current: boolean | null) => {
@@ -236,17 +234,10 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   };
 
   const save = () => {
-    const allChecked = items.every((i) => form[i.key as keyof typeof form] !== null);
-    const allOk = items.every((i) => form[i.key as keyof typeof form] === true);
-    const updated = {
-      ...form,
-      status_validacao: allChecked ? (allOk ? 'aprovado' : 'reprovado') : 'pendente',
-      data_validacao: allChecked ? new Date().toISOString().split('T')[0] : undefined,
-    };
     if (validacao) {
-      updateValidacao(validacao.id, updated);
+      updateValidacao(validacao.id, form);
     } else {
-      addValidacao(updated);
+      addValidacao(form);
     }
     toast.success('Validação salva!');
   };
@@ -265,7 +256,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
             <div
               key={item.key}
               className="flex items-center justify-between p-3 rounded-md bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => setForm({ ...form, [item.key]: cycle(form[item.key as keyof typeof form] as boolean | null) })}
+              onClick={() => setForm({ ...form, [item.key]: !form[item.key as keyof typeof form] })}
             >
               <span className="text-sm">{item.label}</span>
               {getIcon(form[item.key as keyof typeof form] as boolean | null)}
@@ -273,12 +264,16 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
           ))}
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Validado por</label>
-          <Input value={form.validado_por} onChange={(e) => setForm({ ...form, validado_por: e.target.value })} className="mt-1" />
+          <label className="text-xs text-muted-foreground">Responsável pela validação</label>
+          <Input value={form.responsavel_validacao} onChange={(e) => setForm({ ...form, responsavel_validacao: e.target.value })} className="mt-1" />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Observações</label>
-          <Textarea value={form.observacoes_validacao} onChange={(e) => setForm({ ...form, observacoes_validacao: e.target.value })} className="mt-1" rows={3} />
+          <label className="text-xs text-muted-foreground">Tipo de validação</label>
+          <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="mt-1" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">Observação</label>
+          <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="mt-1" rows={3} />
         </div>
         <Button onClick={save}>Salvar Validação</Button>
       </CardContent>

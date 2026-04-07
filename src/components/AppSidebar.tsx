@@ -18,7 +18,7 @@ import {
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
-  { title: 'Processos Seletivos', url: '/vagas', icon: Briefcase },
+  { title: 'Controle de Provimento', url: '/vagas', icon: Briefcase },
   { title: 'Editais e Etapas', url: '/editais', icon: FileText },
   { title: 'Convocações', url: '/convocacoes', icon: Users },
 ];

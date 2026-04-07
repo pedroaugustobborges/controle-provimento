@@ -91,7 +91,7 @@ export default function VagasPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Processos de Recrutamento</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Controle de Provimento</h1>
         <div className="flex gap-2">
           <input type="file" ref={fileRef} accept=".csv,.txt" className="hidden" onChange={handleFile} />
           <Button variant="outline" size="sm" onClick={handleImport}>

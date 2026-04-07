@@ -31,7 +31,7 @@ export default function ValidacaoPage() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Validação de Editais</h2>
+      <h2 className="text-2xl font-semibold">Validações</h2>
       <div className="space-y-3">
         {validacoesComVaga.map((v) => (
           <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/vagas/${v.vaga_id}`)}>

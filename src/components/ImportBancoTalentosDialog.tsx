@@ -445,15 +445,13 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       let totalErros = 0;
       let missingFieldsRows = 0;
       let dateErrorRows = 0;
+      const detailedErrors: any[] = [];
 
-      const filteredData = allData.filter(row => {
-        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
-      });
-
-      filteredData.forEach((row, i) => {
+      allData.forEach((row, i) => {
         const mapped: any = {};
         let hasErrorInRow = false;
         let hasMissingRequired = false;
+        const currentLine = headerRow + 2 + i;
 
         mappings.forEach(m => {
           if (m.excel && m.excel !== 'no_mapping') {
@@ -462,8 +460,16 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               const dateResult = convertDateValue(rawVal, m.format || 'auto');
               mapped[m.system] = dateResult.formatted;
               if (!dateResult.isValid && rawVal) {
-                hasErrorInRow = true;
-                dateErrorRows++;
+                // If the date is invalid, we don't necessarily fail the row if the field is optional
+                // but we track it. For now, we only log it if it's fundamentally unparseable.
+                if (dateResult.formatUsed === 'Inválido') {
+                  detailedErrors.push({
+                    linha: currentLine,
+                    campo: m.excel,
+                    valor: String(rawVal),
+                    motivo: "Formato de data não reconhecido"
+                  });
+                }
               }
             } else if (m.system === 'is_prorrogado') {
               const val = String(rawVal || '').toLowerCase();
@@ -478,6 +484,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         REQUIRED_FIELDS.forEach(field => {
           if (!mapped[field.key] || mapped[field.key] === '') {
             hasMissingRequired = true;
+            detailedErrors.push({
+              linha: currentLine,
+              campo: field.label,
+              valor: 'Vazio',
+              motivo: "Campo obrigatório ausente"
+            });
           }
         });
 
@@ -489,17 +501,10 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
         // Determinar status baseado em validade
         let status: 'valido' | 'vencido' | 'prorrogado' = 'valido';
-        const dateStr = mapped.nova_data_validade || mapped.data_validade;
+        const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
         
-        // Se a data estiver em formato brasileiro dd/mm/aaaa, vamos converter para aaaa-mm-dd para o objeto Date
-        let dateToParse = dateStr;
-        if (dateStr && dateStr.includes('/') && dateStr.split('/')[0].length === 2) {
-          const parts = dateStr.split('/');
-          dateToParse = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-
-        if (dateToParse) {
-          const expiryDate = new Date(dateToParse);
+        if (expiryDateStr) {
+          const expiryDate = new Date(expiryDateStr);
           if (isValid(expiryDate)) {
             status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
           }
@@ -529,6 +534,8 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           status: status,
         });
       });
+
+      setImportErrors(detailedErrors);
 
       if (newBancos.length === 0) {
         setIsProcessing(false);

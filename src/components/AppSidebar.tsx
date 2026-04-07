@@ -18,16 +18,18 @@ import {
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
-  { title: 'Controle de Provimento', url: '/vagas', icon: Briefcase },
+  { title: 'Vagas', url: '/vagas', icon: Briefcase },
+  { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users },
   { title: 'Fila de Editais', url: '/fila-editais', icon: TrendingUp },
-  { title: 'Editais e Etapas', url: '/editais', icon: FileText },
-  { title: 'Convocações', url: '/convocacoes', icon: Users },
+  { title: 'Convocações', url: '/convocacoes', icon: Calendar },
 ];
 
 const secondaryItems = [
-  { title: 'Validações', url: '/validacao', icon: CheckCircle },
+  { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle },
+  { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet },
   { title: 'Administração', url: '/gestor', icon: Settings },
 ];
+
 
 export function AppSidebar() {
   const { state } = useSidebar();

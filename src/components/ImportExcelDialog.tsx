@@ -16,7 +16,7 @@ import {
   Search, Info, Check, X, FileWarning, Database, Layers
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
-import { Vaga, StatusEdital, TipoVaga } from '@/types/vaga';
+import { Vaga, StatusEdital, TipoVaga, StatusVaga } from '@/types/vaga';
 import { toast } from 'sonner';
 
 type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summary';
@@ -29,22 +29,21 @@ interface ColumnMapping {
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
   { key: 'data_abertura', label: 'Data Abertura' },
-  { key: 'numero_requisicao', label: 'Nº Requisição' },
+  { key: 'requisicao', label: 'Nº Requisição' },
   { key: 'cargo', label: 'Cargo' },
-  { key: 'quantidade', label: 'Nº Vagas' },
+  { key: 'numero_vagas', label: 'Nº Vagas' },
 ];
 
 const OPTIONAL_FIELDS = [
+  { key: 'data_recebimento', label: 'Data Recebimento' },
   { key: 'numero_edital', label: 'Nº Edital' },
   { key: 'numero_processo', label: 'Nº Processo' },
-  { key: 'estado', label: 'Estado' },
   { key: 'secao', label: 'Seção' },
   { key: 'tipo_vaga', label: 'Tipo' },
-  { key: 'selecao', label: 'Seleção' },
-  { key: 'pcd', label: 'PCD' },
-  { key: 'total_inscritos', label: 'Total Inscritos' },
-  { key: 'observacoes', label: 'Observações' },
+  { key: 'analista_responsavel', label: 'Analista' },
+  { key: 'observacoes_internas', label: 'Observações' },
 ];
+
 
 export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { addVagas, vagas, addImportHistory } = useVagasStore();
@@ -167,35 +166,34 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
     setIsProcessing(false);
   };
 
-  const processImport = (dataToImport: any[], treatAsNew: boolean = true) => {
+  const processImport = (dataToImport: any[]) => {
     setIsProcessing(true);
     const now = new Date().toISOString();
     const loteId = `LOTE-${Date.now()}`;
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
-      const statusEdital: StatusEdital = row.numero_edital ? 'Em andamento' : (row.numero_processo ? 'Aguardando edital' : 'Aguardando processo e edital');
+      const statusVaga: StatusVaga = 'aberta';
       
       return {
         id: `imp-${Date.now()}-${i}`,
         unidade: String(row.unidade || ''),
         data_abertura: String(row.data_abertura || now.split('T')[0]),
-        numero_requisicao: String(row.numero_requisicao || `REQ-${Date.now()}-${i}`),
+        data_recebimento: String(row.data_recebimento || now.split('T')[0]),
+        requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
+        numero_requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
         cargo: String(row.cargo || 'Não informado'),
-        quantidade: Number(row.quantidade) || 1,
+        numero_vagas: Number(row.numero_vagas || row.quantidade) || 1,
+        quantidade: Number(row.numero_vagas || row.quantidade) || 1,
         secao: String(row.secao || ''),
-        pcd: row.pcd === 'Sim' || row.pcd === true,
-        estado: String(row.estado || 'GO'),
-        tipo_vaga: (row.tipo_vaga as TipoVaga) || 'quadro',
-        selecao: String(row.selecao || 'Pública'),
-        numero_edital: row.numero_edital ? String(row.numero_edital) : undefined,
-        numero_processo: row.numero_processo ? String(row.numero_processo) : undefined,
-        status_geral: 'aberta',
-        status_edital: statusEdital,
+        tipo_vaga: (row.tipo_vaga as TipoVaga) || 'substituicao',
+        analista_responsavel: String(row.analista_responsavel || 'Sistema'),
+        status: statusVaga,
+        status_geral: statusVaga,
+        tem_banco_valido: false,
+        observacoes_internas: String(row.observacoes_internas || row.observacoes || ''),
         origem_importacao: file?.name || 'Excel',
         data_importacao: now,
         lote_importacao: loteId,
-        observacoes: String(row.observacoes || ''),
-        analista_responsavel: 'Sistema',
         historico: [{
           id: `h-${Date.now()}-${i}`,
           data: now.split('T')[0],
@@ -218,12 +216,13 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
     
     addImportHistory({
       id: loteId,
-      data: now,
+      data_hora: now,
       usuario: 'Ana Paula Oliveira',
-      nome_arquivo: file?.name || 'excel_import.xlsx',
+      arquivo: file?.name || 'excel_import.xlsx',
       ...summary,
       status: 'concluido'
     });
+
 
     setImportSummary(summary);
     setStep('summary');

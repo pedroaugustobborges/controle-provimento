@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS, StatusGeral, EtapaEdital, STATUS_EDITAL_COLORS } from '@/types/vaga';
-import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info } from 'lucide-react';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS } from '@/types/vaga';
+import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+
 
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
@@ -27,8 +29,9 @@ export default function VagaDetalhePage() {
 
   const handleStatusChange = (newStatus: string) => {
     updateVaga(vaga.id, {
-      status_geral: newStatus as StatusGeral,
-      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusGeral]}`, usuario: 'Analista' }],
+      status: newStatus as StatusVaga,
+      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, usuario: 'Analista' }],
+
     });
     toast.success('Status atualizado');
   };
@@ -43,16 +46,17 @@ export default function VagaDetalhePage() {
               <h2 className="text-2xl font-bold text-slate-800">{vaga.cargo}</h2>
               {vaga.reabertura_suspeita && <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 font-bold">REABERTURA</Badge>}
             </div>
-            <p className="text-sm text-slate-500 font-medium">{vaga.numero_requisicao} · {vaga.unidade}</p>
+            <p className="text-sm text-slate-500 font-medium">{vaga.requisicao || vaga.numero_requisicao} · {vaga.unidade}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {vaga.status_edital && (
-            <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital]} font-bold text-xs px-3 py-1`}>
+            <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital as any]} font-bold text-xs px-3 py-1`}>
               {vaga.status_edital}
             </Badge>
           )}
-          <StatusBadge status={vaga.status_geral} />
+          <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
+
         </div>
       </div>
 
@@ -80,9 +84,12 @@ export default function VagaDetalhePage() {
       <Tabs defaultValue="dados" className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>
-          <TabsTrigger value="edital" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Edital e Fluxo</TabsTrigger>
+          <TabsTrigger value="edital" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Edital e Fila</TabsTrigger>
+          <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Banco de Talentos</TabsTrigger>
+          <TabsTrigger value="convocacoes" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Convocações</TabsTrigger>
           <TabsTrigger value="validacao" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Validação</TabsTrigger>
           <TabsTrigger value="historico" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Histórico</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="dados">
@@ -98,21 +105,23 @@ export default function VagaDetalhePage() {
                   <p className="text-sm font-semibold text-slate-700">{vaga.secao || 'Não informada'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Estado</label>
-                  <p className="text-sm font-semibold text-slate-700">{vaga.estado}</p>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Recebimento</label>
+                  <p className="text-sm font-semibold text-slate-700">{formatDate(vaga.data_recebimento!)}</p>
+
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Tipo de Provimento</label>
                   <p className="text-sm font-semibold text-slate-700">{TIPO_VAGA_LABELS[vaga.tipo_vaga]}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Tipo de Seleção</label>
-                  <p className="text-sm font-semibold text-slate-700">{vaga.selecao}</p>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> Analista Resp.</label>
+                  <p className="text-sm font-semibold text-slate-700">{vaga.analista_responsavel}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> PCD</label>
-                  <p className="text-sm font-semibold text-slate-700">{vaga.pcd ? 'Sim' : 'Não'}</p>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Info className="h-3 w-3" /> Banco Válido?</label>
+                  <p className="text-sm font-semibold text-slate-700">{vaga.tem_banco_valido ? 'Sim' : 'Não'}</p>
                 </div>
+
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Edital</label>
                   <p className="text-sm font-bold text-primary">{vaga.numero_edital || 'Pendente'}</p>
@@ -123,14 +132,14 @@ export default function VagaDetalhePage() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Requisição</label>
-                  <p className="text-sm font-bold text-slate-700 font-mono">{vaga.numero_requisicao}</p>
+                  <p className="text-sm font-bold text-slate-700 font-mono">{vaga.requisicao || vaga.numero_requisicao}</p>
                 </div>
               </div>
 
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Vagas</label>
-                  <p className="text-xl font-bold text-slate-800">{vaga.quantidade}</p>
+                  <p className="text-xl font-bold text-slate-800">{vaga.numero_vagas || vaga.quantidade}</p>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Inscritos</label>
@@ -164,12 +173,13 @@ export default function VagaDetalhePage() {
                   <div className="space-y-1">
                     <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Status Atual</label>
                     <div className="mt-1">
-                      <Select value={vaga.status_geral} onValueChange={handleStatusChange}>
+                      <Select value={(vaga.status || vaga.status_geral) as string} onValueChange={handleStatusChange}>
                         <SelectTrigger className="h-9 bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                          {Object.entries(STATUS_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                         </SelectContent>
                       </Select>
+
                     </div>
                   </div>
                 </div>
@@ -178,7 +188,7 @@ export default function VagaDetalhePage() {
               <div className="space-y-2">
                 <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Observações Internas</label>
                 <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 min-h-[100px] text-sm text-slate-600 whitespace-pre-wrap">
-                  {vaga.observacoes || 'Nenhuma observação registrada.'}
+                  {vaga.observacoes_internas || vaga.observacoes || 'Nenhuma observação registrada.'}
                 </div>
               </div>
             </CardContent>
@@ -188,10 +198,19 @@ export default function VagaDetalhePage() {
         <TabsContent value="edital">
           <EditalTab vagaId={vaga.id} edital={edital} />
         </TabsContent>
+        
+        <TabsContent value="banco">
+          <BancoTab vaga={vaga} />
+        </TabsContent>
+
+        <TabsContent value="convocacoes">
+          <ConvocacoesTab vagaId={vaga.id} />
+        </TabsContent>
 
         <TabsContent value="validacao">
           <ValidacaoTab vagaId={vaga.id} validacao={validacao} />
         </TabsContent>
+
 
         <TabsContent value="historico">
           <Card className="border-slate-200 shadow-sm">
@@ -367,27 +386,143 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   );
 }
 
-function Building2(props: any) {
+function BancoTab({ vaga }: { vaga: any }) {
+  const { getBancoByVaga } = useVagasStore();
+  const banco = getBancoByVaga(vaga.id);
+
+  if (!banco) {
+    return (
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+          <div className="bg-slate-50 p-4 rounded-full mb-4">
+            <XCircle className="h-10 w-10 text-slate-300" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-700">Sem Banco de Talentos</h3>
+          <p className="text-sm text-slate-500 max-w-xs mt-1">Não foi encontrado um banco de talentos válido para este cargo e unidade.</p>
+          <Button variant="outline" className="mt-6 gap-2">Consultar Outros Bancos</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const isValido = banco.status === 'valido' || banco.status === 'prorrogado';
+
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18" />
-      <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
-      <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
-      <path d="M10 6h4" />
-      <path d="M10 10h4" />
-      <path d="M10 14h4" />
-      <path d="M10 18h4" />
-    </svg>
+    <Card className="border-slate-200 shadow-sm">
+      <CardContent className="pt-6 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${isValido ? 'bg-green-50' : 'bg-red-50'}`}>
+              <CheckCircle2 className={`h-6 w-6 ${isValido ? 'text-green-600' : 'text-red-600'}`} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800">{banco.numero_edital}</h3>
+              <p className="text-xs text-slate-500 font-medium">Validade: {formatDate(banco.nova_data_validade || banco.data_validade)}</p>
+            </div>
+          </div>
+          <Badge className={`${isValido ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-bold`}>
+            {banco.status.toUpperCase()}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Data de Abertura</label>
+            <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_abertura_edital)}</p>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Validade Original</label>
+            <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_validade)}</p>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Prorrogado?</label>
+            <p className="text-sm font-semibold text-slate-700">{banco.is_prorrogado ? 'Sim' : 'Não'}</p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+          <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 block">Observações do Banco</label>
+          <p className="text-sm text-slate-600">{banco.observacoes || 'Sem observações.'}</p>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" className="text-xs font-bold uppercase tracking-wider">Ver Edital Completo</Button>
+          <Button className="text-xs font-bold uppercase tracking-wider bg-primary">Realizar Convocação</Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
+
+function ConvocacoesTab({ vagaId }: { vagaId: string }) {
+  const { getConvocacoesByVaga } = useVagasStore();
+  const convocacoes = getConvocacoesByVaga(vagaId);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Histórico de Convocações</h3>
+        <Button size="sm" className="gap-2 bg-primary">
+          <Plus className="h-4 w-4" /> Nova Convocação
+        </Button>
+      </div>
+
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow>
+                <TableHead className="text-[10px] font-bold uppercase">Data/Hora</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase">Candidato</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-center">Class.</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase">E-doc</TableHead>
+                <TableHead className="text-right"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {convocacoes.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">{c.horario}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700">{c.nome_candidato}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">{c.tipo_convocacao}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center font-bold text-slate-600">{c.classificacao}º</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[10px] font-bold">
+                      {c.status.toUpperCase()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs font-mono text-primary font-bold">{c.edoc || '—'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm">Ver Detalhes</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {convocacoes.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
+                    Nenhuma convocação realizada para esta vaga.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Re-using Building2 if needed or removing if duplicated
+// Manual table components removed
+
+

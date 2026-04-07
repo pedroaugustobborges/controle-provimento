@@ -41,11 +41,14 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   // Stats calculation
-  const abertas = vagas.filter((v) => v.status_geral === 'aberta').length;
-  const emAndamento = vagas.filter((v) => ['em_triagem', 'entrevista'].includes(v.status_geral)).length;
-  const emEdital = vagas.filter((v) => v.status_geral === 'em_edital').length;
+  const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
+  
+  const abertas = getStatusCount('aberta');
+  const emAndamento = vagas.filter((v) => ['em_triagem', 'entrevista', 'documentacao', 'realizar_convocacao'].includes((v.status || v.status_geral) as string)).length;
+  const emEdital = getStatusCount('em_edital') + getStatusCount('publicado_edital');
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
-  const encerradas = vagas.filter((v) => ['encerrada', 'finalizada'].includes(v.status_geral)).length;
+  const encerradas = vagas.filter((v) => ['encerrada', 'finalizada', 'admissao_efetivada'].includes((v.status || v.status_geral) as string)).length;
+
   const convocacoesHoje = 12; // Mock data for now
 
   const stats = [
@@ -58,7 +61,8 @@ export default function DashboardPage() {
   ];
 
   const alerts = vagas.filter((v) => {
-    if (['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)) return false;
+    const status = v.status || v.status_geral;
+    if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
     const lastHist = v.historico[v.historico.length - 1];
     return !lastHist || calcDiasAberto(lastHist.data) > 10;
   });
@@ -67,8 +71,9 @@ export default function DashboardPage() {
   const chartData = unidades.map((u) => ({
     name: u.replace('Hospital ', '').replace('Unidade ', ''),
     total: vagas.filter((v) => v.unidade === u).length,
-    abertas: vagas.filter((v) => v.unidade === u && v.status_geral === 'aberta').length,
+    abertas: vagas.filter((v) => v.unidade === u && (v.status === 'aberta' || v.status_geral === 'aberta')).length,
   })).sort((a, b) => b.total - a.total);
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -161,7 +166,7 @@ export default function DashboardPage() {
               {alerts.slice(0, 5).map((v) => (
                 <div key={v.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-mono font-bold text-slate-400">#{v.numero_requisicao}</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400">#{v.requisicao || v.numero_requisicao}</span>
                     <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1 uppercase">
                       <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias
                     </span>
@@ -220,7 +225,7 @@ export default function DashboardPage() {
                     className="hover:bg-slate-50/50 cursor-pointer transition-all duration-150"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-6 py-4 font-mono text-[11px] font-bold text-primary">{v.numero_requisicao}</td>
+                    <td className="px-6 py-4 font-mono text-[11px] font-bold text-primary">{v.requisicao || v.numero_requisicao}</td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-700 text-sm">{v.cargo}</span>
@@ -233,8 +238,9 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge status={v.status_geral} />
+                      <StatusBadge status={v.status || v.status_geral || 'aberta'} />
                     </td>
+
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-xs font-semibold text-slate-600">

@@ -94,21 +94,46 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   return synonyms.some(syn => h.includes(syn) || syn.includes(h));
 }
 
-const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string } => {
-  if (!value) return { date: null, isValid: true, formatted: '' };
+const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string, isExcelSerial?: boolean } => {
+  if (value === undefined || value === null || value === '') return { date: null, isValid: true, formatted: '' };
+  
   let d: Date | null = null;
-  if (targetFormat === 'excel_serial' || (typeof value === 'number' && targetFormat === 'auto')) {
-    d = addDays(new Date(1899, 11, 30), Number(value));
+  let isExcelSerial = false;
+
+  // Se for número ou parecer número e o formato for auto ou excel_serial
+  const numValue = Number(value);
+  const looksLikeExcelSerial = !isNaN(numValue) && numValue > 30000 && numValue < 60000; // Range razoável para datas (1982 a 2064)
+
+  if (targetFormat === 'excel_serial' || (targetFormat === 'auto' && looksLikeExcelSerial)) {
+    d = addDays(new Date(1899, 11, 30), numValue);
+    isExcelSerial = true;
   } else if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed) return { date: null, isValid: true, formatted: '' };
-    const formats = targetFormat === 'auto' ? ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy'] : [targetFormat];
+    
+    // Tenta vários formatos se for auto
+    const formats = targetFormat === 'auto' ? ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy', 'd/M/yyyy'] : [targetFormat];
+    
     for (const f of formats) {
       const parsed = parse(trimmed, f, new Date());
-      if (isValid(parsed)) { d = parsed; break; }
+      if (isValid(parsed)) {
+        d = parsed;
+        break;
+      }
     }
-  } else if (value instanceof Date) { d = value; }
-  if (d && isValid(d)) return { date: d, isValid: true, formatted: format(d, 'yyyy-MM-dd') };
+  } else if (value instanceof Date) {
+    d = value;
+  }
+
+  if (d && isValid(d)) {
+    return { 
+      date: d, 
+      isValid: true, 
+      formatted: format(d, 'yyyy-MM-dd'),
+      isExcelSerial
+    };
+  }
+  
   return { date: null, isValid: false, formatted: String(value) };
 };
 

@@ -199,7 +199,7 @@ export default function VagasPage() {
                 {filtered.map((v) => (
                   <tr
                     key={v.id}
-                    className="border-b last:border-0 hover:bg-slate-50/50 cursor-pointer transition-colors whitespace-nowrap group"
+                    className="border-b last:border-0 hover:bg-slate-50/50 transition-colors whitespace-nowrap group"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
                     <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.requisicao || v.numero_requisicao}</td>

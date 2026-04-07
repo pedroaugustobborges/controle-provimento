@@ -41,17 +41,17 @@ const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
   { key: 'cargo', label: 'Cargo' },
   { key: 'secao', label: 'Seção' },
-  { key: 'numero_edital', label: 'Nº Edital' },
-  { key: 'data_abertura_edital', label: 'Data Publicação' },
+  { key: 'numero_edital', label: 'Número do edital' },
+  { key: 'data_abertura_edital', label: 'Data de Publicação' },
   { key: 'data_validade', label: 'Validade' },
 ];
 
 const OPTIONAL_FIELDS = [
-  { key: 'numero_processo', label: 'Nº Processo' },
+  { key: 'numero_processo', label: 'Número do processo' },
   { key: 'nome', label: 'Nome' },
   { key: 'classificacao', label: 'Classificação' },
-  { key: 'is_prorrogado', label: 'Prorrogado (Sim/Não)' },
-  { key: 'nova_data_validade', label: 'Nova Data Final' },
+  { key: 'is_prorrogado', label: 'Banco prorrogado' },
+  { key: 'nova_data_validade', label: 'Nova data final' },
   { key: 'data_convocacao', label: 'Data de Convocação' },
   { key: 'observacoes', label: 'Observações' },
 ];

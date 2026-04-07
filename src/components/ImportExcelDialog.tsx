@@ -533,18 +533,41 @@ export function ImportExcelDialog({
 
           <div className="flex-1 overflow-auto p-6">
             {step === 'select' && (
-              <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl border-border hover:border-primary/50 transition-colors bg-muted/30" onClick={() => fileInputRef.current?.click()}>
-                <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleFileChange} />
-                <div className="bg-background p-4 rounded-full shadow-sm mb-4">
-                  <Upload className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">Selecione o arquivo Excel</h3>
-                <p className="text-sm text-muted-foreground mt-1">Arraste e solte ou clique para navegar</p>
-                <div className="mt-6 flex gap-4">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Info className="h-4 w-4" /> Baixar Modelo
-                  </Button>
-                </div>
+              <div 
+                className={`flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl border-border hover:border-primary/50 transition-all bg-muted/30 cursor-pointer ${isLoadingFile ? 'opacity-70 pointer-events-none' : ''}`} 
+                onClick={() => !isLoadingFile && fileInputRef.current?.click()}
+              >
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept=".xlsx, .xls, .xlsm, .csv" 
+                  onChange={handleFileChange} 
+                />
+                
+                {isLoadingFile ? (
+                  <div className="flex flex-col items-center">
+                    <div className="h-12 w-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground">Lendo arquivo...</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {file?.name} ({(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`})
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-background p-4 rounded-full shadow-sm mb-4">
+                      <Upload className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">Selecione o arquivo</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Arraste e solte ou clique para navegar</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase font-bold tracking-wider">Formatos suportados: .xlsx, .xlsm, .xls, .csv</p>
+                    <div className="mt-6 flex gap-4">
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Info className="h-4 w-4" /> Baixar Modelo
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

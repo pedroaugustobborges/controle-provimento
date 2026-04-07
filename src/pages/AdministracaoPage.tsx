@@ -181,7 +181,15 @@ export default function AdministracaoPage() {
                               <DropdownMenuItem className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}>
                                 {user.status === 'ativo' ? 'Inativar usuário' : 'Ativar usuário'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir usuário</DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => {
+                                  setUsuarioParaExcluir(user.id);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir usuário
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

@@ -215,34 +215,56 @@ export function ImportExcelDialog({
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setIsLoadingFile(true);
       const now = new Date().toISOString();
       const id = `FILE-${Date.now()}`;
       setFileId(id);
 
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const bstr = evt.target?.result as string;
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        
-        // Save file to store
-        addImportedFile({
-          id,
-          nome_original: selectedFile.name,
-          nome_interno: id,
-          tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          tamanho: selectedFile.size,
-          data_upload: now,
-          usuario: 'Ana Paula Oliveira', // User name from admin context
-          email_usuario: 'ana.oliveira@agir.org.br',
-          modulo_origem: 'vagas',
-          status: 'enviado',
-          content: bstr // Persisting content for reprocess
-        });
+        try {
+          const bstr = evt.target?.result as string;
+          const wb = XLSX.read(bstr, { type: 'binary' });
+          
+          if (!wb.SheetNames || wb.SheetNames.length === 0) {
+            throw new Error('O arquivo selecionado não possui planilhas válidas.');
+          }
 
-        setWorkbook(wb);
-        setSelectedSheets([wb.SheetNames[0]]);
-        setStep('sheets');
+          // Save file to store
+          addImportedFile({
+            id,
+            nome_original: selectedFile.name,
+            nome_interno: id,
+            tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            tamanho: selectedFile.size,
+            data_upload: now,
+            usuario: 'Ana Paula Oliveira', 
+            email_usuario: 'ana.oliveira@agir.org.br',
+            modulo_origem: 'vagas',
+            status: 'enviado',
+            content: bstr
+          });
+
+          setWorkbook(wb);
+          setSelectedSheets([wb.SheetNames[0]]);
+          setStep('sheets');
+          toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
+        } catch (error) {
+          console.error('Erro ao ler arquivo:', error);
+          toast.error('Erro ao ler arquivo. Verifique se o formato é válido.');
+          setFile(null);
+        } finally {
+          setIsLoadingFile(false);
+          // Clear input so same file can be selected again
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
       };
+      
+      reader.onerror = () => {
+        setIsLoadingFile(false);
+        toast.error('Ocorreu um erro ao carregar o arquivo.');
+      };
+      
       reader.readAsBinaryString(selectedFile);
     }
   };

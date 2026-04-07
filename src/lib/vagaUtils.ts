@@ -66,3 +66,25 @@ export function formatDate(date: string): string {
   if (!date) return '—';
   return new Date(date).toLocaleDateString('pt-BR');
 }
+
+export function normalizeStatus(statusText: string): StatusVaga {
+  if (!statusText) return 'aberta';
+  
+  const text = statusText.toLowerCase().trim();
+  
+  if (text.includes('aberta') || text.includes('novo')) return 'aberta';
+  if (text.includes('edital') || text.includes('publicado')) return 'em_edital';
+  if (text.includes('convoc')) return 'realizar_convocacao';
+  if (text.includes('admissao') || text.includes('admitido')) return 'admissao';
+  if (text.includes('document')) return 'documentacao';
+  if (text.includes('cancel')) return 'cancelada';
+  if (text.includes('susp')) return 'suspensa';
+  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'finalizada';
+  if (text.includes('triagem')) return 'em_triagem';
+  if (text.includes('entrev')) return 'entrevista';
+  if (text.includes('lideranca')) return 'vaga_lideranca';
+  if (text.includes('movimentacao') || text.includes('interna')) return 'movimentacao_interna';
+  if (text.includes('unidade')) return 'aguardando_unidade';
+  
+  return 'aberta';
+}

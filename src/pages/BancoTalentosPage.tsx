@@ -1,4 +1,5 @@
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,17 +7,27 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatDate } from '@/lib/vagaUtils';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export default function BancoTalentosPage() {
   const { bancos } = useVagasStore();
+  const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
 
-  const filtered = bancos.filter(b => 
-    b.cargo.toLowerCase().includes(search.toLowerCase()) || 
-    b.unidade.toLowerCase().includes(search.toLowerCase()) ||
-    b.numero_edital.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    return bancos.filter(b => {
+      // Unit access restriction
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
+        return false;
+      }
+      
+      const matchSearch = b.cargo.toLowerCase().includes(search.toLowerCase()) || 
+        b.unidade.toLowerCase().includes(search.toLowerCase()) ||
+        b.numero_edital.toLowerCase().includes(search.toLowerCase());
+        
+      return matchSearch;
+    });
+  }, [bancos, currentUser, search]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -34,88 +45,88 @@ export default function BancoTalentosPage() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Banco de Talentos</h1>
           <p className="text-slate-500 mt-1">Gestão de validade e disponibilidade de candidatos aprovados.</p>
         </div>
-        <Button className="gap-2 bg-primary">
+        <Button className="gap-2 bg-primary shadow-md shadow-primary/20">
           <Plus className="h-4 w-4" /> Novo Banco
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-green-50 p-2 rounded-lg">
+              <div className="bg-green-100 p-2.5 rounded-lg">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Bancos Válidos</p>
-                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'valido' || b.status === 'prorrogado').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'valido' || b.status === 'prorrogado').length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-50 p-2 rounded-lg">
+              <div className="bg-blue-100 p-2.5 rounded-lg">
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Prorrogados</p>
-                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'prorrogado').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'prorrogado').length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-red-50 p-2 rounded-lg">
+              <div className="bg-red-100 p-2.5 rounded-lg">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Vencidos</p>
-                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'vencido').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'vencido').length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-slate-50 p-2 rounded-lg">
+              <div className="bg-slate-100 p-2.5 rounded-lg">
                 <Calendar className="h-5 w-5 text-slate-600" />
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total</p>
-                <p className="text-2xl font-bold text-slate-900">{bancos.length}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Visível</p>
+                <p className="text-2xl font-bold text-slate-900">{filtered.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-3 border-b">
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 border-b bg-slate-50/50">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input 
                 placeholder="Buscar por cargo, unidade ou edital..." 
-                className="pl-9"
+                className="pl-9 bg-white"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Filter className="h-4 w-4" /> Filtros
+              <Button variant="outline" size="sm" className="gap-2 bg-white">
+                <Filter className="h-4 w-4" /> Filtros Avançados
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/50">
+            <TableHeader className="bg-slate-50/80">
               <TableRow>
                 <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
                 <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
@@ -131,7 +142,7 @@ export default function BancoTalentosPage() {
                   <TableCell className="font-bold text-primary text-xs">{b.numero_edital}</TableCell>
                   <TableCell>
                     <div className="font-semibold text-slate-800">{b.cargo}</div>
-                    <div className="text-[10px] text-slate-400 font-medium uppercase">{b.secao}</div>
+                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{b.secao}</div>
                   </TableCell>
                   <TableCell className="text-slate-600 font-medium">{b.unidade}</TableCell>
                   <TableCell>{getStatusBadge(b.status)}</TableCell>
@@ -142,14 +153,14 @@ export default function BancoTalentosPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Ver Detalhes</Button>
+                    <Button variant="ghost" size="sm" className="font-bold text-xs text-primary hover:bg-primary/5">Detalhes</Button>
                   </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium">
-                    Nenhum banco de talentos encontrado.
+                  <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">
+                    Nenhum banco de talentos encontrado para os filtros aplicados.
                   </TableCell>
                 </TableRow>
               )}

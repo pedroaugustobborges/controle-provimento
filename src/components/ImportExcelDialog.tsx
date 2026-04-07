@@ -59,6 +59,7 @@ const OPTIONAL_FIELDS = [
   { key: 'numero_processo', label: 'Nº Processo' },
   { key: 'secao', label: 'Seção' },
   { key: 'tipo_vaga', label: 'Tipo' },
+  { key: 'status', label: 'Status / Acompanhamento' },
   { key: 'analista_responsavel', label: 'Analista' },
   { key: 'observacoes_internas', label: 'Observações' },
 ];
@@ -72,6 +73,7 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   numero_vagas: ['nº de vagas', 'n vagas', 'numero de vagas', 'vagas', 'qtd', 'quantidade', 'qtde', 'nº vagas'],
   secao: ['seção', 'secao', 'setor', 'departamento', 'depto', 'área', 'area'],
   tipo_vaga: ['tipo', 'tipo vaga', 'tipo de vaga', 'modalidade'],
+  status: ['status', 'acompanhamento', 'fase', 'etapa', 'situacao', 'situação', 'status geral'],
   analista_responsavel: ['analista', 'responsável', 'responsavel', 'analista responsável'],
   observacoes_internas: ['observações', 'observacoes', 'obs', 'notas', 'comentários', 'comentarios'],
   numero_edital: ['nº edital', 'numero edital', 'edital', 'n edital', 'nº do edital', 'número do edital'],
@@ -349,11 +351,16 @@ export function ImportExcelDialog({
     const loteId = `LOTE-${Date.now()}`;
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
-      const statusVaga: StatusVaga = 'aberta';
       const unidade = String(row.unidade || '');
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
-      
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
+      
+      // Better status mapping
+      const importStatus = row.status || row.acompanhamento || row.fase || row.etapa || 'aberta';
+      const normalizedStatus = importStatus === 'aberta' ? 'aberta' : (typeof importStatus === 'string' ? importStatus : 'aberta');
+      
+      // Use normalizeStatus utility if needed, but here we can try to find the best match
+      const statusFinal: StatusVaga = normalizedStatus as StatusVaga;
 
       return {
         id: `imp-${Date.now()}-${i}`,
@@ -369,8 +376,8 @@ export function ImportExcelDialog({
         tipo_vaga: tipoVaga,
         analista_responsavel: analista,
         assistentes: assistentes,
-        status: statusVaga,
-        status_geral: statusVaga,
+        status: statusFinal,
+        status_geral: statusFinal,
         tem_banco_valido: false,
         observacoes_internas: String(row.observacoes_internas || row.observacoes || ''),
         origem_importacao: file?.name || 'Excel',
@@ -379,7 +386,7 @@ export function ImportExcelDialog({
         historico: [{
           id: `h-${Date.now()}-${i}`,
           data: now.split('T')[0],
-          descricao: `Importado via Excel (${file?.name})`,
+          descricao: `Importado via Excel (${file?.name}). Status original: ${importStatus}`,
           usuario: 'Ana Paula Oliveira'
         }]
       };

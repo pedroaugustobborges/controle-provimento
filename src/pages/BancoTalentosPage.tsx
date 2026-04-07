@@ -77,6 +77,7 @@ export default function BancoTalentosPage() {
       case 'valido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Válido</Badge>;
       case 'vencido': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200">Vencido</Badge>;
       case 'prorrogado': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200">Prorrogado</Badge>;
+      case 'convocado': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200">Convocado</Badge>;
       default: return <Badge variant="outline">Indeterminado</Badge>;
     }
   };
@@ -226,7 +227,7 @@ export default function BancoTalentosPage() {
               <Separator />
 
               {/* Convocação */}
-              {(selectedBanco.unidade_convocacao || selectedBanco.numero_chamada || selectedBanco.numero_processo_seletivo || selectedBanco.numero_vaga_aproveitamento) && (
+              {(selectedBanco.data_convocacao || selectedBanco.status === 'convocado') && (
                 <>
                   <section>
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">

@@ -39,6 +39,9 @@ export const useVagasStore = create<VagasState>((set, get) => ({
   updateVaga: (id, data) => set((s) => ({
     vagas: s.vagas.map((v) => v.id === id ? { ...v, ...data } : v),
   })),
+  deleteVaga: (id) => set((s) => ({
+    vagas: s.vagas.filter((v) => v.id !== id),
+  })),
   updateEdital: (id, data) => set((s) => ({
     editais: s.editais.map((e) => e.id === id ? { ...e, ...data } : e),
   })),

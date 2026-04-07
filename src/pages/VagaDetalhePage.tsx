@@ -91,7 +91,15 @@ export default function VagaDetalhePage() {
             </Badge>
           )}
           <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
-
+          {canDelete && (
+            <Button 
+              variant="outline" 
+              className="text-destructive border-destructive/20 hover:bg-destructive/5 gap-2"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Excluir
+            </Button>
+          )}
         </div>
       </div>
 

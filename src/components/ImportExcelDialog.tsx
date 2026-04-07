@@ -612,7 +612,7 @@ export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpe
                                   <SelectValue placeholder="Selecione a coluna..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {headers.map((h, i) => (
+                                  {headers.filter(h => h && h.trim() !== '').map((h, i) => (
                                     <SelectItem key={`${h}-${i}`} value={h}>{h}</SelectItem>
                                   ))}
                                 </SelectContent>

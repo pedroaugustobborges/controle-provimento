@@ -176,6 +176,7 @@ export function ImportExcelDialog({
   const [duplicates, setDuplicates] = useState<any[]>([]);
   const [importSummary, setImportSummary] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [headerRow, setHeaderRow] = useState<number>(0);
   const [rawPreview, setRawPreview] = useState<any[][]>([]);
   const [fileId, setFileId] = useState<string | null>(null);

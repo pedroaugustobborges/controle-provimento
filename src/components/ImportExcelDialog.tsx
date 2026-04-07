@@ -107,6 +107,50 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
   return synonyms.some(syn => h.includes(syn) || syn.includes(h));
 }
 
+const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string } => {
+  if (!value) return { date: null, isValid: true, formatted: '' };
+
+  let d: Date | null = null;
+  
+  // Excel serial number
+  if (targetFormat === 'excel_serial' || (typeof value === 'number' && targetFormat === 'auto')) {
+    const serialValue = Number(value);
+    if (!isNaN(serialValue)) {
+      // Excel serial 1 is 1900-01-01, JS Date starts 1970-01-01
+      // 25569 is the number of days between 1900 and 1970
+      d = addDays(new Date(1899, 11, 30), serialValue);
+    }
+  } else if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return { date: null, isValid: true, formatted: '' };
+    
+    if (targetFormat === 'auto' || !targetFormat) {
+      // Try common formats
+      const formats = ['dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd', 'dd-MM-yyyy'];
+      for (const f of formats) {
+        const parsed = parse(trimmed, f, new Date());
+        if (isValid(parsed)) {
+          d = parsed;
+          break;
+        }
+      }
+    } else {
+      const parsed = parse(trimmed, targetFormat, new Date());
+      if (isValid(parsed)) {
+        d = parsed;
+      }
+    }
+  } else if (value instanceof Date) {
+    d = value;
+  }
+
+  if (d && isValid(d)) {
+    return { date: d, isValid: true, formatted: format(d, 'yyyy-MM-dd') };
+  }
+
+  return { date: null, isValid: false, formatted: String(value) };
+};
+
 export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { addVagas, vagas, addImportHistory } = useVagasStore();
   const [step, setStep] = useState<Step>('select');

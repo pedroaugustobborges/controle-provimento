@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS, StatusGeral, EtapaEdital, STATUS_EDITAL_COLORS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS } from '@/types/vaga';
 import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';

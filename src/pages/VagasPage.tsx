@@ -2,24 +2,29 @@ import { useState, useRef } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
 import { calcDiasAberto, formatDate } from '@/lib/vagaUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Search, Upload, Plus, FileText, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Search, Upload, Plus, FileText, X, Building2, 
+  Filter, FileSpreadsheet, ListFilter 
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { ImportExcelDialog } from '@/components/ImportExcelDialog';
 
 export default function VagasPage() {
-  const { vagas, addVagas } = useVagasStore();
+  const { vagas } = useVagasStore();
   const navigate = useNavigate();
-  const fileRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const unidades = [...new Set(vagas.map((v) => v.unidade))];
   const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))];
@@ -33,53 +38,6 @@ export default function VagasPage() {
     const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
     return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista;
   });
-
-  const handleImport = () => {
-    toast.info('Para importar, selecione um arquivo CSV com colunas: numero_requisicao, cargo, tipo_vaga, quantidade, secao, unidade, analista_responsavel');
-    fileRef.current?.click();
-  };
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const text = ev.target?.result as string;
-        const lines = text.split('\n').filter(Boolean);
-        const headers = lines[0].split(/[,;]/).map((h) => h.trim().toLowerCase());
-        const newVagas = lines.slice(1).map((line, i) => {
-          const cols = line.split(/[,;]/).map((c) => c.trim());
-          const row: Record<string, string> = {};
-          headers.forEach((h, j) => { row[h] = cols[j] || ''; });
-          return {
-            id: `imp-${Date.now()}-${i}`,
-            numero_requisicao: row.numero_requisicao || `REQ-IMP-${i + 1}`,
-            data_abertura: new Date().toISOString().split('T')[0],
-            cargo: row.cargo || 'Não informado',
-            tipo_vaga: (row.tipo_vaga as any) || 'quadro',
-            quantidade: parseInt(row.quantidade) || 1,
-            secao: row.secao || '',
-            unidade: row.unidade || '',
-            analista_responsavel: row.analista_responsavel || '',
-            status_geral: 'aberta' as const,
-            origem_importacao: file.name,
-            observacoes: '',
-            pcd: false,
-            estado: 'Goiás',
-            selecao: 'Pública',
-            historico: [{ id: `h-${Date.now()}-${i}`, data: new Date().toISOString().split('T')[0], descricao: `Importado de ${file.name}`, usuario: 'Sistema' }],
-          };
-        });
-        addVagas(newVagas);
-        toast.success(`${newVagas.length} vagas importadas com sucesso!`);
-      } catch {
-        toast.error('Erro ao processar arquivo. Verifique o formato.');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
 
   const clearFilters = () => {
     setSearch('');
@@ -96,14 +54,16 @@ export default function VagasPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Controle de Provimento</h1>
         <div className="flex gap-2">
-          <input type="file" ref={fileRef} accept=".csv,.txt" className="hidden" onChange={handleFile} />
-          <Button variant="outline" size="sm" onClick={handleImport}>
-            <Upload className="h-4 w-4 mr-1" /> Importar CSV
+          <Button variant="outline" className="gap-2 border-primary/20 hover:bg-primary/5 text-primary font-bold shadow-sm shadow-primary/5" onClick={() => setIsImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" /> Importar Excel
+          </Button>
+          <Button className="gap-2 shadow-md shadow-primary/20">
+            <Plus className="h-4 w-4" /> Nova Vaga
           </Button>
         </div>
       </div>
 
-      <Card>
+      <Card className="border-slate-200 shadow-sm">
         <CardContent className="pt-4 pb-3">
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-[200px]">
@@ -113,31 +73,24 @@ export default function VagasPage() {
               </div>
             </div>
             <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Unidade" /></SelectTrigger>
+              <SelectTrigger className="w-[160px] bg-white"><SelectValue placeholder="Unidade" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas Unidades</SelectItem>
                 {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-[140px] bg-white"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos Status</SelectItem>
                 {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterTipo} onValueChange={setFilterTipo}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectTrigger className="w-[160px] bg-white"><SelectValue placeholder="Tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos Tipos</SelectItem>
                 {Object.entries(TIPO_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterAnalista} onValueChange={setFilterAnalista}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Analista" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos Analistas</SelectItem>
-                {analistas.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
               </SelectContent>
             </Select>
             {hasFilters && (
@@ -147,58 +100,75 @@ export default function VagasPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/30 whitespace-nowrap">
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Requisição</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Cargo</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Unidade</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Edital</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">PCD</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Tipo</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Seleção</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider text-center">Vagas</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Inscritos</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Abertura</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Dias</th>
+                <tr className="border-b bg-slate-50/50 whitespace-nowrap">
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Requisição</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Cargo</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Unidade</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Edital / Processo</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Status Geral</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left whitespace-nowrap">Status Edital</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Vagas</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Data Abertura</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Dias</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((v) => (
                   <tr
                     key={v.id}
-                    className="border-b last:border-0 hover:bg-muted/20 cursor-pointer transition-colors whitespace-nowrap"
+                    className="border-b last:border-0 hover:bg-slate-50/50 cursor-pointer transition-colors whitespace-nowrap group"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="p-3 font-mono text-xs">{v.numero_requisicao}</td>
-                    <td className="p-3 font-medium">{v.cargo}</td>
-                    <td className="p-3 text-muted-foreground">{v.unidade}</td>
-                    <td className="p-3 text-xs">{v.numero_edital || '—'}</td>
-                    <td className="p-3 text-xs">{v.pcd ? 'Sim' : 'Não'}</td>
-                    <td className="p-3 text-xs">{TIPO_VAGA_LABELS[v.tipo_vaga]}</td>
-                    <td className="p-3 text-xs">{v.selecao}</td>
-                    <td className="p-3"><StatusBadge status={v.status_geral} /></td>
-                    <td className="p-3 text-center">{v.quantidade}</td>
-                    <td className="p-3 text-center">{v.total_inscritos || 0}</td>
-                    <td className="p-3 text-xs">{formatDate(v.data_abertura)}</td>
-                    <td className="p-3 text-xs font-medium">{calcDiasAberto(v.data_abertura, v.data_encerramento)}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.numero_requisicao}</td>
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-slate-800">{v.cargo}</div>
+                      <div className="flex gap-1 mt-1">
+                        <Badge variant="outline" className="text-[9px] font-bold py-0 h-4">{TIPO_VAGA_LABELS[v.tipo_vaga]}</Badge>
+                        {v.pcd && <Badge variant="outline" className="text-[9px] font-bold py-0 h-4 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 font-medium">{v.unidade}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-slate-700 font-bold">{v.numero_edital || '—'}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{v.numero_processo || '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4"><StatusBadge status={v.status_geral} /></td>
+                    <td className="px-6 py-4">
+                      {v.status_edital && (
+                        <Badge className={`${STATUS_EDITAL_COLORS[v.status_edital]} font-bold text-[10px] py-0.5 whitespace-nowrap`}>
+                          {v.status_edital}
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.quantidade}</td>
+                    <td className="px-6 py-4 text-slate-500 text-xs">{formatDate(v.data_abertura)}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 font-bold text-[10px]">
+                        {calcDiasAberto(v.data_abertura, v.data_encerramento)}
+                      </span>
+                    </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Nenhuma vaga encontrada.</td></tr>
+                  <tr><td colSpan={9} className="px-6 py-20 text-center text-muted-foreground font-medium">Nenhuma vaga encontrada para os filtros aplicados.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
-          <div className="p-3 border-t text-xs text-muted-foreground">
-            {filtered.length} de {vagas.length} vagas
+          <div className="px-6 py-4 border-t text-xs text-slate-500 font-medium bg-slate-50/30">
+            Exibindo {filtered.length} de {vagas.length} vagas registradas no sistema
           </div>
         </CardContent>
       </Card>
+
+      <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
     </div>
   );
 }

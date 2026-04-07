@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS } from '@/types/vaga';
 import { calcDiasAberto, formatDate, getEtapaColor } from '@/lib/vagaUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Clock, History, FileSpreadsheet, User, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const PIE_COLORS = ['hsl(213,70%,45%)', 'hsl(38,92%,50%)', 'hsl(280,50%,55%)', 'hsl(199,89%,48%)', 'hsl(142,60%,42%)', 'hsl(0,0%,70%)', 'hsl(0,65%,55%)'];
 
 export default function GestorPage() {
-  const { vagas, editais } = useVagasStore();
+  const { vagas, editais, importHistory } = useVagasStore();
   const [filterUnidade, setFilterUnidade] = useState('all');
+  const [activeTab, setActiveTab] = useState<'stats' | 'history'>('stats');
+  
   const unidades = [...new Set(vagas.map((v) => v.unidade))];
 
   const filtered = filterUnidade === 'all' ? vagas : vagas.filter((v) => v.unidade === filterUnidade);
@@ -34,85 +38,184 @@ export default function GestorPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Visão Gestor</h2>
-        <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-          <SelectTrigger className="w-[200px]"><SelectValue placeholder="Todas Unidades" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas Unidades</SelectItem>
-            {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Total de Vagas</p><p className="text-3xl font-bold">{filtered.length}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Em Andamento</p><p className="text-3xl font-bold">{filtered.filter((v) => !['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)).length}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Tempo Médio (dias)</p><p className="text-3xl font-bold">{tempoMedio}</p></CardContent></Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Por Status</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
-                  {statusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Por Tipo de Vaga</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={tipoData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214,20%,88%)" />
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="value" name="Vagas" fill="hsl(213,70%,45%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Todas as Vagas</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/30">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Requisição</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Cargo</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Unidade</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Abertura</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Dias</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Analista</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((v) => (
-                  <tr key={v.id} className="border-b last:border-0">
-                    <td className="p-3 font-mono text-xs">{v.numero_requisicao}</td>
-                    <td className="p-3">{v.cargo}</td>
-                    <td className="p-3 text-muted-foreground">{v.unidade}</td>
-                    <td className="p-3"><StatusBadge status={v.status_geral} /></td>
-                    <td className="p-3 text-xs">{formatDate(v.data_abertura)}</td>
-                    <td className="p-3 text-xs">{calcDiasAberto(v.data_abertura, v.data_encerramento)}</td>
-                    <td className="p-3 text-xs text-muted-foreground">{v.analista_responsavel}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-800">Administração e Gestão</h2>
+          <p className="text-slate-500 mt-1">Indicadores de performance e histórico operacional do sistema.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-lg">
+            <button 
+              onClick={() => setActiveTab('stats')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'stats' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Indicadores
+            </button>
+            <button 
+              onClick={() => setActiveTab('history')}
+              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'history' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Histórico
+            </button>
           </div>
-        </CardContent>
-      </Card>
+          <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+            <SelectTrigger className="w-[200px] bg-white border-slate-200"><SelectValue placeholder="Todas Unidades" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas Unidades</SelectItem>
+              {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {activeTab === 'stats' ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p><p className="text-3xl font-bold text-slate-800">{filtered.length}</p></CardContent></Card>
+            <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-primary uppercase tracking-wider">Em Andamento</p><p className="text-3xl font-bold text-slate-800">{filtered.filter((v) => !['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)).length}</p></CardContent></Card>
+            <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Tempo Médio (dias)</p><p className="text-3xl font-bold text-slate-800">{tempoMedio}</p></CardContent></Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Distribuição por Status</CardTitle></CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value}`} labelLine={false} stroke="none">
+                      {statusData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Distribuição por Tipo</CardTitle></CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={tipoData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(214,20%,94%)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Bar dataKey="value" name="Vagas" fill="hsl(213,70%,45%)" radius={[4, 4, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Listagem Consolidada</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-slate-50/30 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                      <th className="text-left px-6 py-4">Requisição</th>
+                      <th className="text-left px-6 py-4">Cargo</th>
+                      <th className="text-left px-6 py-4">Unidade</th>
+                      <th className="text-left px-6 py-4">Status</th>
+                      <th className="text-left px-6 py-4">Abertura</th>
+                      <th className="text-left px-6 py-4">Dias</th>
+                      <th className="text-left px-6 py-4">Analista</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((v) => (
+                      <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.numero_requisicao}</td>
+                        <td className="px-6 py-4 font-semibold text-slate-700">{v.cargo}</td>
+                        <td className="px-6 py-4 text-slate-500">{v.unidade}</td>
+                        <td className="px-6 py-4"><StatusBadge status={v.status_geral} /></td>
+                        <td className="px-6 py-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(v.data_abertura)}</td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[10px]">
+                            {calcDiasAberto(v.data_abertura, v.data_encerramento)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-medium text-slate-500">{v.analista_responsavel}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <CardHeader className="pb-3 border-b bg-slate-50/50">
+            <div className="flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle className="text-lg font-bold">Histórico de Importações</CardTitle>
+                <CardDescription>Registro de todas as cargas de dados realizadas via Excel.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50/30 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    <th className="text-left px-6 py-4">Data/Hora</th>
+                    <th className="text-left px-6 py-4">Usuário</th>
+                    <th className="text-left px-6 py-4">Arquivo</th>
+                    <th className="text-center px-6 py-4">Registros</th>
+                    <th className="text-center px-6 py-4">Novos</th>
+                    <th className="text-center px-6 py-4">Repetições</th>
+                    <th className="text-center px-6 py-4">Erros</th>
+                    <th className="text-right px-6 py-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importHistory.length > 0 ? importHistory.map((h) => (
+                    <tr key={h.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="text-xs font-medium text-slate-700">{new Date(h.data).toLocaleString()}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="text-xs font-semibold text-slate-600">{h.usuario}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
+                          <span className="text-xs font-mono text-slate-500 truncate max-w-[150px]">{h.nome_arquivo}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center font-bold">{h.total_lidos}</td>
+                      <td className="px-6 py-4 text-center text-green-600 font-bold">{h.total_novos}</td>
+                      <td className="px-6 py-4 text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</td>
+                      <td className="px-6 py-4 text-center text-red-600 font-bold">{h.total_erros}</td>
+                      <td className="px-6 py-4 text-right">
+                        <Badge variant="outline" className={`bg-green-50 text-green-700 border-green-200 text-[10px] font-bold uppercase tracking-wider`}>
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Concluído
+                        </Badge>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-20 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 opacity-30">
+                          <History className="h-10 w-10" />
+                          <p className="font-medium">Nenhuma importação realizada até o momento.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

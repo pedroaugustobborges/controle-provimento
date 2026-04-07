@@ -20,6 +20,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const labels: Record<string, string> = {
       'vagas': 'Processos Seletivos',
       'editais': 'Editais e Etapas',
+      'fila-editais': 'Fila de Editais',
       'convocacoes': 'Convocações',
       'validacao': 'Validações',
       'gestor': 'Administração',
@@ -103,4 +104,3 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-

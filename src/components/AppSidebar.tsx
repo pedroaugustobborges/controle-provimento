@@ -19,6 +19,7 @@ import {
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
   { title: 'Controle de Provimento', url: '/vagas', icon: Briefcase },
+  { title: 'Fila de Editais', url: '/fila-editais', icon: TrendingUp },
   { title: 'Editais e Etapas', url: '/editais', icon: FileText },
   { title: 'Convocações', url: '/convocacoes', icon: Users },
 ];

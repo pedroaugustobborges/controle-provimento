@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS, StatusGeral, EtapaEdital } from '@/types/vaga';
-import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus } from 'lucide-react';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS, StatusGeral, EtapaEdital, STATUS_EDITAL_COLORS } from '@/types/vaga';
+import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -33,147 +34,152 @@ export default function VagaDetalhePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}><ArrowLeft className="h-4 w-4" /></Button>
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold">{vaga.cargo}</h2>
-          <p className="text-sm text-muted-foreground">{vaga.numero_requisicao} · {vaga.unidade}</p>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-slate-100"><ArrowLeft className="h-5 w-5" /></Button>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-slate-800">{vaga.cargo}</h2>
+              {vaga.reabertura_suspeita && <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 font-bold">REABERTURA</Badge>}
+            </div>
+            <p className="text-sm text-slate-500 font-medium">{vaga.numero_requisicao} · {vaga.unidade}</p>
+          </div>
         </div>
-        <StatusBadge status={vaga.status_geral} />
+        <div className="flex items-center gap-3">
+          {vaga.status_edital && (
+            <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital]} font-bold text-xs px-3 py-1`}>
+              {vaga.status_edital}
+            </Badge>
+          )}
+          <StatusBadge status={vaga.status_geral} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura) },
-          { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias` },
-          { icon: User, label: 'Analista', value: vaga.analista_responsavel },
-          { icon: MapPin, label: 'Seção', value: vaga.secao },
+          { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura), color: 'text-blue-600', bg: 'bg-blue-50' },
+          { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias`, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { icon: User, label: 'Responsável', value: vaga.analista_responsavel || 'Sistema', color: 'text-purple-600', bg: 'bg-purple-50' },
+          { icon: FileSpreadsheet, label: 'Origem', value: vaga.origem_importacao || 'Manual', color: 'text-green-600', bg: 'bg-green-50' },
         ].map((item) => (
-          <Card key={item.label} className="bg-card">
-            <CardContent className="pt-3 pb-3 px-4">
-              <div className="flex items-center gap-2 mb-1">
-                <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
+          <Card key={item.label} className="border-slate-200 shadow-sm">
+            <CardContent className="pt-4 pb-4 px-4 flex items-center gap-3">
+              <div className={`${item.bg} p-2 rounded-lg`}>
+                <item.icon className={`h-5 w-5 ${item.color}`} />
               </div>
-              <p className="text-sm font-medium">{item.value}</p>
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.label}</p>
+                <p className="text-sm font-bold text-slate-700">{item.value}</p>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <Tabs defaultValue="dados" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="dados">Dados</TabsTrigger>
-          <TabsTrigger value="edital">Edital</TabsTrigger>
-          <TabsTrigger value="validacao">Validação</TabsTrigger>
-          <TabsTrigger value="historico">Histórico</TabsTrigger>
+        <TabsList className="bg-slate-100 p-1">
+          <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>
+          <TabsTrigger value="edital" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Edital e Fluxo</TabsTrigger>
+          <TabsTrigger value="validacao" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Validação</TabsTrigger>
+          <TabsTrigger value="historico" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dados">
-          <Card>
-            <CardContent className="pt-5 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Unidade</label>
-                  <p className="text-sm font-medium">{vaga.unidade}</p>
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="pt-6 space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Building2 className="h-3 w-3" /> Unidade</label>
+                  <p className="text-sm font-semibold text-slate-700">{vaga.unidade}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Seção</label>
-                  <p className="text-sm font-medium">{vaga.secao}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Seção</label>
+                  <p className="text-sm font-semibold text-slate-700">{vaga.secao || 'Não informada'}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Estado</label>
-                  <p className="text-sm font-medium">{vaga.estado}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Estado</label>
+                  <p className="text-sm font-semibold text-slate-700">{vaga.estado}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Tipo de Provimento</label>
-                  <p className="text-sm font-medium">{TIPO_VAGA_LABELS[vaga.tipo_vaga]}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Tipo de Provimento</label>
+                  <p className="text-sm font-semibold text-slate-700">{TIPO_VAGA_LABELS[vaga.tipo_vaga]}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Tipo de Seleção</label>
-                  <p className="text-sm font-medium">{vaga.selecao}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Tipo de Seleção</label>
+                  <p className="text-sm font-semibold text-slate-700">{vaga.selecao}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">PCD</label>
-                  <p className="text-sm font-medium">{vaga.pcd ? 'Sim' : 'Não'}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> PCD</label>
+                  <p className="text-sm font-semibold text-slate-700">{vaga.pcd ? 'Sim' : 'Não'}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Nº Edital</label>
-                  <p className="text-sm font-medium">{vaga.numero_edital || '—'}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Edital</label>
+                  <p className="text-sm font-bold text-primary">{vaga.numero_edital || 'Pendente'}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Nº Processo</label>
-                  <p className="text-sm font-medium">{vaga.numero_processo || '—'}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Processo</label>
+                  <p className="text-sm font-bold text-primary">{vaga.numero_processo || 'Pendente'}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Nº Requisição</label>
-                  <p className="text-sm font-medium">{vaga.numero_requisicao}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Quantidade de Vagas</label>
-                  <p className="text-sm font-medium">{vaga.quantidade}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Etapa Atual</label>
-                  <p className="text-sm font-medium">{vaga.etapa_atual_vaga || 'Não iniciada'}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status do Processo</label>
-                  <Select value={vaga.status_geral} onValueChange={handleStatusChange}>
-                    <SelectTrigger className="mt-1 h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Requisição</label>
+                  <p className="text-sm font-bold text-slate-700 font-mono">{vaga.numero_requisicao}</p>
                 </div>
               </div>
 
-              <div className="border-t pt-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total de Inscritos</label>
-                  <p className="text-sm font-medium">{vaga.total_inscritos || 0}</p>
+              <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Vagas</label>
+                  <p className="text-xl font-bold text-slate-800">{vaga.quantidade}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Aprovados Triagem</label>
-                  <p className="text-sm font-medium">{vaga.aprovados_triagem || 0}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Inscritos</label>
+                  <p className="text-xl font-bold text-slate-800">{vaga.total_inscritos || 0}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Aprovados Avaliação</label>
-                  <p className="text-sm font-medium">{vaga.aprovados_avaliacao || 0}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Triagem</label>
+                  <p className="text-xl font-bold text-slate-800">{vaga.aprovados_triagem || 0}</p>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Convocados Entrevista</label>
-                  <p className="text-sm font-medium">{vaga.convocados_entrevista || 0}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Aprovados Finais</label>
-                  <p className="text-sm font-medium">{vaga.aprovados_finais || 0}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Candidatos em Banco</label>
-                  <p className="text-sm font-medium">{vaga.banco || 0}</p>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Aprovados</label>
+                  <p className="text-xl font-bold text-green-600">{vaga.aprovados_finais || 0}</p>
                 </div>
               </div>
 
-              <div className="border-t pt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Data Abertura</label>
-                  <p className="text-sm font-medium">{formatDate(vaga.data_abertura)}</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <Info className="h-4 w-4 text-slate-400" />
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Informações Complementares</h4>
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Data Encerramento</label>
-                  <p className="text-sm font-medium">{vaga.data_encerramento ? formatDate(vaga.data_encerramento) : '—'}</p>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Tempo em Aberto</label>
-                  <p className="text-sm font-medium">{calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias corridos / {vaga.dias_uteis || 0} dias úteis</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Origem Importação</label>
+                    <p className="text-sm font-medium text-slate-600">{vaga.origem_importacao || 'Lançamento Manual'}</p>
+                    {vaga.data_importacao && <p className="text-[10px] text-slate-400">Importado em: {new Date(vaga.data_importacao).toLocaleDateString()}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Lote de Importação</label>
+                    <p className="text-sm font-mono text-slate-600">{vaga.lote_importacao || '—'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Status Atual</label>
+                    <div className="mt-1">
+                      <Select value={vaga.status_geral} onValueChange={handleStatusChange}>
+                        <SelectTrigger className="h-9 bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="border-t pt-6">
-                <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Observações</label>
-                <p className="text-sm mt-1 whitespace-pre-wrap">{vaga.observacoes || 'Nenhuma observação registrada.'}</p>
+              <div className="space-y-2">
+                <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Observações Internas</label>
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 min-h-[100px] text-sm text-slate-600 whitespace-pre-wrap">
+                  {vaga.observacoes || 'Nenhuma observação registrada.'}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -188,15 +194,21 @@ export default function VagaDetalhePage() {
         </TabsContent>
 
         <TabsContent value="historico">
-          <Card>
-            <CardContent className="pt-5">
-              <div className="space-y-3">
-                {vaga.historico.map((h) => (
-                  <div key={h.id} className="flex gap-3 items-start">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <div>
-                      <p className="text-sm">{h.descricao}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(h.data)} · {h.usuario}</p>
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-2 border-b bg-slate-50/50">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Linha do Tempo</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-6 relative before:absolute before:inset-0 before:left-2 before:w-0.5 before:bg-slate-100">
+                {vaga.historico.map((h, idx) => (
+                  <div key={h.id} className="flex gap-4 items-start relative pl-8">
+                    <div className={`absolute left-0 w-4 h-4 rounded-full border-2 border-white shadow-sm z-10 ${idx === 0 ? 'bg-primary' : 'bg-slate-300'}`} />
+                    <div className="flex-1 pb-4 border-b last:border-0 border-slate-50">
+                      <p className="text-sm font-semibold text-slate-700">{h.descricao}</p>
+                      <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(h.data)}</span>
+                        <span className="flex items-center gap-1"><User className="h-3 w-3" /> {h.usuario}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -228,58 +240,52 @@ function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-5 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs text-muted-foreground">Nº Processo</label>
-            <Input value={form.numero_processo} onChange={(e) => setForm({ ...form, numero_processo: e.target.value })} className="mt-1" />
+    <Card className="border-slate-200 shadow-sm">
+      <CardContent className="pt-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nº Processo Administrativo</label>
+            <Input value={form.numero_processo} onChange={(e) => setForm({ ...form, numero_processo: e.target.value })} className="bg-white border-slate-200" />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Nº Edital</label>
-            <Input value={form.numero_edital} onChange={(e) => setForm({ ...form, numero_edital: e.target.value })} className="mt-1" />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nº Edital de Seleção</label>
+            <Input value={form.numero_edital} onChange={(e) => setForm({ ...form, numero_edital: e.target.value })} className="bg-white border-slate-200" />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Abertura Edital</label>
-            <Input type="date" value={form.data_abertura_edital} onChange={(e) => setForm({ ...form, data_abertura_edital: e.target.value })} className="mt-1" />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Data de Publicação</label>
+            <Input type="date" value={form.data_abertura_edital} onChange={(e) => setForm({ ...form, data_abertura_edital: e.target.value })} className="bg-white border-slate-200" />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Data Prova</label>
-            <Input type="date" value={form.data_prova || ''} onChange={(e) => setForm({ ...form, data_prova: e.target.value })} className="mt-1" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Data Entrevista</label>
-            <Input type="date" value={form.data_entrevista || ''} onChange={(e) => setForm({ ...form, data_entrevista: e.target.value })} className="mt-1" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Etapa Atual</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Etapa Atual do Edital</label>
             <Select value={form.etapa_atual} onValueChange={(v) => setForm({ ...form, etapa_atual: v })}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="bg-white border-slate-200"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(ETAPA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <label className="text-xs text-muted-foreground">Total Inscritos</label>
-            <Input type="number" value={form.total_inscritos} onChange={(e) => setForm({ ...form, total_inscritos: +e.target.value })} className="mt-1" />
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-slate-400 font-bold uppercase">Total Inscritos</label>
+            <Input type="number" value={form.total_inscritos} onChange={(e) => setForm({ ...form, total_inscritos: +e.target.value })} className="bg-white" />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Aprovados Triagem</label>
-            <Input type="number" value={form.aprovados_triagem} onChange={(e) => setForm({ ...form, aprovados_triagem: +e.target.value })} className="mt-1" />
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-slate-400 font-bold uppercase">Aprovados Triagem</label>
+            <Input type="number" value={form.aprovados_triagem} onChange={(e) => setForm({ ...form, aprovados_triagem: +e.target.value })} className="bg-white" />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Convocados Entrevista</label>
-            <Input type="number" value={form.convocados_entrevista} onChange={(e) => setForm({ ...form, convocados_entrevista: +e.target.value })} className="mt-1" />
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-slate-400 font-bold uppercase">Entrevistados</label>
+            <Input type="number" value={form.convocados_entrevista} onChange={(e) => setForm({ ...form, convocados_entrevista: +e.target.value })} className="bg-white" />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground">Aprovados Finais</label>
-            <Input type="number" value={form.aprovados_finais} onChange={(e) => setForm({ ...form, aprovados_finais: +e.target.value })} className="mt-1" />
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-slate-400 font-bold uppercase">Aprovados Finais</label>
+            <Input type="number" value={form.aprovados_finais} onChange={(e) => setForm({ ...form, aprovados_finais: +e.target.value })} className="bg-white" />
           </div>
         </div>
-        <Button onClick={save}>Salvar Edital</Button>
+        <div className="flex justify-end">
+          <Button onClick={save} className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 px-8">Salvar Alterações</Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -297,17 +303,6 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
     status_validacao: 'pendente',
   });
 
-  const items = [
-    { key: 'precisa_validacao', label: 'Precisa validação?' },
-    { key: 'etapa_finalizada', label: 'Etapa finalizada?' },
-  ];
-
-  const cycle = (current: boolean | null) => {
-    if (current === null) return true;
-    if (current === true) return false;
-    return null;
-  };
-
   const save = () => {
     if (validacao) {
       updateValidacao(validacao.id, form);
@@ -317,41 +312,82 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
     toast.success('Validação salva!');
   };
 
-  const getIcon = (val: boolean | null) => {
-    if (val === true) return <CheckCircle2 className="h-5 w-5 text-success" />;
-    if (val === false) return <XCircle className="h-5 w-5 text-destructive" />;
-    return <Minus className="h-5 w-5 text-muted-foreground" />;
+  const getIcon = (val: boolean) => {
+    if (val === true) return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+    return <XCircle className="h-5 w-5 text-red-500" />;
   };
 
   return (
-    <Card>
-      <CardContent className="pt-5 space-y-4">
-        <div className="space-y-2">
-          {items.map((item) => (
-            <div
-              key={item.key}
-              className="flex items-center justify-between p-3 rounded-md bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => setForm({ ...form, [item.key]: !form[item.key as keyof typeof form] })}
-            >
-              <span className="text-sm">{item.label}</span>
-              {getIcon(form[item.key as keyof typeof form] as boolean | null)}
+    <Card className="border-slate-200 shadow-sm">
+      <CardContent className="pt-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div
+            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.precisa_validacao ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
+            onClick={() => setForm({ ...form, precisa_validacao: !form.precisa_validacao })}
+          >
+            <div>
+              <p className="text-sm font-bold text-slate-700">Precisa de Validação?</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Requer aprovação de gestor</p>
             </div>
-          ))}
+            {getIcon(form.precisa_validacao)}
+          </div>
+          <div
+            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.etapa_finalizada ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
+            onClick={() => setForm({ ...form, etapa_finalizada: !form.etapa_finalizada })}
+          >
+            <div>
+              <p className="text-sm font-bold text-slate-700">Etapa Finalizada?</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Conclusão do processo</p>
+            </div>
+            {getIcon(form.etapa_finalizada)}
+          </div>
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Responsável pela validação</label>
-          <Input value={form.responsavel_validacao} onChange={(e) => setForm({ ...form, responsavel_validacao: e.target.value })} className="mt-1" />
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Responsável pela Validação</label>
+            <Input value={form.responsavel_validacao} onChange={(e) => setForm({ ...form, responsavel_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Nome do gestor ou analista..." />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Validação</label>
+            <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Ex: Técnica, Comportamental..." />
+          </div>
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Tipo de validação</label>
-          <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="mt-1" />
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Observações e Parecer</label>
+          <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="bg-white border-slate-200 min-h-[120px]" placeholder="Descreva os detalhes da validação..." />
         </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Observação</label>
-          <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="mt-1" rows={3} />
+
+        <div className="flex justify-end">
+          <Button onClick={save} className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 px-8">Salvar Validação</Button>
         </div>
-        <Button onClick={save}>Salvar Validação</Button>
       </CardContent>
     </Card>
+  );
+}
+
+function Building2(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18" />
+      <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+      <path d="M10 6h4" />
+      <path d="M10 10h4" />
+      <path d="M10 14h4" />
+      <path d="M10 18h4" />
+    </svg>
   );
 }

@@ -226,29 +226,51 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setIsLoadingFile(true);
       const id = `FILE-BT-${Date.now()}`;
       setFileId(id);
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const bstr = evt.target?.result as string;
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        addImportedFile({
-          id,
-          nome_original: selectedFile.name,
-          nome_interno: id,
-          tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          tamanho: selectedFile.size,
-          data_upload: new Date().toISOString(),
-          usuario: 'Ana Paula Oliveira',
-          email_usuario: 'ana.oliveira@agir.org.br',
-          modulo_origem: 'banco_talentos',
-          status: 'enviado',
-          content: bstr
-        });
-        setWorkbook(wb);
-        setSelectedSheets([wb.SheetNames[0]]);
-        setStep('sheets');
+        try {
+          const bstr = evt.target?.result as string;
+          const wb = XLSX.read(bstr, { type: 'binary' });
+          
+          if (!wb.SheetNames || wb.SheetNames.length === 0) {
+            throw new Error('O arquivo selecionado não possui planilhas válidas.');
+          }
+
+          addImportedFile({
+            id,
+            nome_original: selectedFile.name,
+            nome_interno: id,
+            tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            tamanho: selectedFile.size,
+            data_upload: new Date().toISOString(),
+            usuario: 'Ana Paula Oliveira',
+            email_usuario: 'ana.oliveira@agir.org.br',
+            modulo_origem: 'banco_talentos',
+            status: 'enviado',
+            content: bstr
+          });
+          setWorkbook(wb);
+          setSelectedSheets([wb.SheetNames[0]]);
+          setStep('sheets');
+          toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
+        } catch (error) {
+          console.error('Erro ao ler arquivo:', error);
+          toast.error('Erro ao ler arquivo. Verifique se o formato é válido.');
+          setFile(null);
+        } finally {
+          setIsLoadingFile(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
       };
+      
+      reader.onerror = () => {
+        setIsLoadingFile(false);
+        toast.error('Ocorreu um erro ao carregar o arquivo.');
+      };
+      
       reader.readAsBinaryString(selectedFile);
     }
   };

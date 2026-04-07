@@ -33,6 +33,17 @@ export default function BancoTalentosPage() {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (bancoParaExcluir) {
+      deleteBanco(bancoParaExcluir);
+      toast.success('Banco de talentos excluído com sucesso.');
+      setIsDeleteDialogOpen(false);
+      setBancoParaExcluir(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     return bancos.filter(b => {

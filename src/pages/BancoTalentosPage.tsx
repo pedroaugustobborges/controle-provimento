@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2 } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle } from 'lucide-react';
 import { formatDate } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -14,6 +14,16 @@ import { ImportBancoTalentosDialog } from '@/components/ImportBancoTalentosDialo
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function BancoTalentosPage() {
   const { bancos, importHistory, importedFiles, deleteBanco } = useVagasStore();
@@ -23,6 +33,17 @@ export default function BancoTalentosPage() {
   const [statusFilter, setStatusFilter] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (bancoParaExcluir) {
+      deleteBanco(bancoParaExcluir);
+      toast.success('Banco de talentos excluído com sucesso.');
+      setIsDeleteDialogOpen(false);
+      setBancoParaExcluir(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     return bancos.filter(b => {
@@ -238,10 +259,8 @@ export default function BancoTalentosPage() {
                               size="icon" 
                               className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                               onClick={() => {
-                                if (window.confirm('Tem certeza que deseja excluir este banco de talentos?')) {
-                                  deleteBanco(b.id);
-                                  toast.success('Banco de talentos excluído com sucesso.');
-                                }
+                                setBancoParaExcluir(b.id);
+                                setIsDeleteDialogOpen(true);
                               }}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -311,6 +330,26 @@ export default function BancoTalentosPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Excluir banco de talentos?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. O registro será removido permanentemente do sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBancoParaExcluir(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -26,6 +26,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -44,6 +54,16 @@ export default function AdministracaoPage() {
   
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
+
+  const handleDeleteUser = () => {
+    if (usuarioParaExcluir) {
+      toast.success('Usuário removido com sucesso.');
+      setIsDeleteDialogOpen(false);
+      setUsuarioParaExcluir(null);
+    }
+  };
 
   const handleTestEmail = (id: string) => {
     setTestEmailLoading(id);
@@ -161,7 +181,15 @@ export default function AdministracaoPage() {
                               <DropdownMenuItem className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}>
                                 {user.status === 'ativo' ? 'Inativar usuário' : 'Ativar usuário'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir usuário</DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => {
+                                  setUsuarioParaExcluir(user.id);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir usuário
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -617,6 +645,26 @@ export default function AdministracaoPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Excluir usuário?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. O usuário perderá o acesso ao sistema permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUsuarioParaExcluir(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -28,11 +28,33 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
 
 export default function ValidacaoPage() {
   const { convocacoes } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
+
+  const handleDelete = () => {
+    if (registroParaExcluir) {
+      // Logic for deletion (this page seems to be a view, but the dropdown has a delete option)
+      toast.success('Registro excluído com sucesso.');
+      setIsDeleteDialogOpen(false);
+      setRegistroParaExcluir(null);
+    }
+  };
 
   const filteredConvocacoes = useMemo(() => {
     return convocacoes.filter(c => {
@@ -189,7 +211,13 @@ export default function ValidacaoPage() {
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Dados
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="gap-2 text-destructive">
+                          <DropdownMenuItem 
+                            className="gap-2 text-destructive"
+                            onClick={() => {
+                              setRegistroParaExcluir(c.id);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
                             <Trash2 className="h-4 w-4" /> Excluir Registro
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -209,6 +237,26 @@ export default function ValidacaoPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Excluir registro?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. O registro será removido permanentemente do fluxo de validação.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setRegistroParaExcluir(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

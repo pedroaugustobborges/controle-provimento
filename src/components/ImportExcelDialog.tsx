@@ -394,17 +394,29 @@ export function ImportExcelDialog({
       total_ignorados: 0,
       total_erros: 0,
       repeticoes_tratadas: duplicates.length,
-      total_datas_convertidas: dataToImport.length, // Simplificado
     };
     
     addImportHistory({
       id: loteId,
       data_hora: now,
       usuario: 'Ana Paula Oliveira',
+      email_usuario: 'ana.oliveira@agir.org.br',
       arquivo: file?.name || 'excel_import.xlsx',
+      tipo_importacao: 'vagas',
+      planilha_aba: selectedSheets.join(', '),
+      linha_cabecalho: headerRow,
       ...summary,
-      status: 'concluido'
+      status: 'concluido',
+      referencia_arquivo: fileId || undefined,
+      mapeamento_aplicado: mappings
     });
+
+    if (fileId) {
+      updateImportedFile(fileId, {
+        status: 'processado',
+        vaga_importacao_id: loteId
+      });
+    }
 
     setImportSummary(summary);
     setStep('summary');

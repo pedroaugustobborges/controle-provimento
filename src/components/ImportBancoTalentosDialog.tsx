@@ -73,25 +73,65 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
 };
 
 function detectHeaderRow(rawRows: any[][]): number {
+  if (!rawRows || rawRows.length === 0) return 0;
+  
   let bestRow = 0;
   let bestScore = 0;
-  for (let i = 0; i < Math.min(10, rawRows.length); i++) {
+  
+  // Analisamos as primeiras 15 linhas para encontrar o cabeçalho mais provável
+  for (let i = 0; i < Math.min(15, rawRows.length); i++) {
     const row = rawRows[i];
-    if (!row) continue;
-    const filledCells = row.filter(c => c != null && String(c).trim() !== '');
-    if (filledCells.length > bestScore) {
-      bestScore = filledCells.length;
+    if (!row || !Array.isArray(row)) continue;
+    
+    // Contamos células não vazias e que não parecem ser apenas números (dados)
+    const filledCells = row.filter(c => {
+      if (c == null) return false;
+      const str = String(c).trim();
+      if (str === '') return false;
+      
+      // Se for uma data ou número muito grande, provavelmente é dado, não cabeçalho
+      if (!isNaN(Number(str)) && str.length > 2) return false;
+      
+      return true;
+    });
+    
+    // Verificamos se contém palavras-chave comuns de cabeçalho
+    const hasKeywords = row.some(c => {
+      const str = String(c).toLowerCase();
+      return ['nome', 'cargo', 'edital', 'unidade', 'cpf', 'data', 'status'].some(k => str.includes(k));
+    });
+
+    let score = filledCells.length;
+    if (hasKeywords) score += 5; // Bônus para linhas com palavras-chave
+
+    if (score > bestScore) {
+      bestScore = score;
       bestRow = i;
     }
   }
   return bestRow;
 }
 
+function normalizeString(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/[\r\n]+/g, ' ')       // remove quebras de linha
+    .replace(/\s+/g, ' ');          // normaliza espaços
+}
+
 function fuzzyMatch(header: string, fieldKey: string): boolean {
-  const h = header.toLowerCase().trim();
+  if (!header) return false;
+  const h = normalizeString(header);
   const synonyms = FIELD_SYNONYMS[fieldKey];
   if (!synonyms) return false;
-  return synonyms.some(syn => h.includes(syn) || syn.includes(h));
+  
+  return synonyms.some(syn => {
+    const normalizedSyn = normalizeString(syn);
+    return h === normalizedSyn || h.includes(normalizedSyn) || normalizedSyn.includes(h);
+  });
 }
 
 const parseDateValue = (value: any, targetFormat: string): { date: Date | null, isValid: boolean, formatted: string, isExcelSerial?: boolean } => {
@@ -147,12 +187,28 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
   useEffect(() => {
     if (workbook && selectedSheets.length > 0) {
-      const sheet = workbook.Sheets[selectedSheets[0]];
-      if (sheet) {
-        const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-        const preview = rows.slice(0, 10);
-        setRawPreview(preview);
-        setHeaderRow(detectHeaderRow(preview));
+      try {
+        const sheet = workbook.Sheets[selectedSheets[0]];
+        if (sheet) {
+          // Usamos raw: true e header: 1 para pegar a estrutura bruta sem processamento automático do XLSX
+          const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { 
+            header: 1, 
+            raw: true,
+            defval: null // Garante que células vazias não sejam ignoradas no array
+          });
+          
+          if (rows && rows.length > 0) {
+            const preview = rows.slice(0, 15); // Pegamos um pouco mais de linhas para detecção
+            setRawPreview(preview);
+            setHeaderRow(detectHeaderRow(preview));
+          } else {
+            setRawPreview([]);
+            setHeaderRow(0);
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao carregar prévia da aba:", err);
+        setRawPreview([]);
       }
     }
   }, [workbook, selectedSheets]);
@@ -202,34 +258,75 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       }
 
       if (!rawPreview || rawPreview.length === 0) {
-        toast.error("Não foi possível identificar as colunas da aba selecionada. Tente outra aba ou verifique o arquivo.");
+        toast.error("Não foi possível carregar os dados da aba. Tente selecionar outra aba.");
         return;
       }
 
-      const headers = (rawPreview[headerRow] || []).map((c, i) => {
-        if (c === null || c === undefined || String(c).trim() === '') return `Coluna ${i + 1}`;
-        return String(c).trim();
+      // 1. Extrair e tratar cabeçalhos
+      const rawHeaders = rawPreview[headerRow] || [];
+      const processedHeaders: string[] = [];
+      const usedNames = new Map<string, number>();
+
+      rawHeaders.forEach((c, i) => {
+        // Fallback para nomes vazios
+        let name = (c !== null && c !== undefined && String(c).trim() !== '') 
+          ? String(c).trim().replace(/[\r\n]+/g, ' ') 
+          : `Coluna ${i + 1}`;
+        
+        // Tratar duplicados
+        if (usedNames.has(name)) {
+          const count = usedNames.get(name)! + 1;
+          usedNames.set(name, count);
+          name = `${name}_${count}`;
+        } else {
+          usedNames.set(name, 1);
+        }
+        
+        processedHeaders.push(name);
       });
 
-      console.log("Colunas detectadas:", headers);
+      console.log("Colunas processadas:", processedHeaders);
 
+      // 2. Mapeamento inicial inteligente
       const initialMappings = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(field => {
-        const matchedHeader = headers.find(h => fuzzyMatch(h, field.key));
+        // Tenta encontrar um match exato primeiro, depois fuzzy
+        let matchedHeader = processedHeaders.find(h => normalizeString(h) === normalizeString(field.label));
+        
+        if (!matchedHeader) {
+          matchedHeader = processedHeaders.find(h => fuzzyMatch(h, field.key));
+        }
+
         return { 
-          excel: (matchedHeader && headers.includes(matchedHeader)) ? matchedHeader : '', 
+          excel: matchedHeader || '', 
           system: field.key, 
           format: DATE_FIELDS.includes(field.key) ? 'auto' : undefined, 
           isDate: DATE_FIELDS.includes(field.key) 
         };
       });
 
+      // 3. Atualizar estados e avançar
       setMappings(initialMappings);
       setStep('mapping');
-      toast.success("Abas configuradas! Agora faça o mapeamento das colunas.");
-      console.log("Etapa alterada para 'mapping' com sucesso");
+      
+      // Se faltarem colunas importantes, avisar amigavelmente em vez de travar
+      const foundCount = initialMappings.filter(m => m.excel).length;
+      if (foundCount < REQUIRED_FIELDS.length) {
+        toast.info("Aba selecionada. Algumas colunas não foram identificadas automaticamente e precisam de mapeamento manual.");
+      } else {
+        toast.success("Colunas identificadas com sucesso!");
+      }
+
     } catch (error) {
       console.error("Erro ao iniciar mapeamento:", error);
-      toast.error("Erro crítico ao processar colunas. Verifique o console.");
+      // Fallback seguro: avançar mesmo com erro, limpando mapeamentos problemáticos
+      setMappings([...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].map(f => ({
+        excel: '',
+        system: f.key,
+        format: DATE_FIELDS.includes(f.key) ? 'auto' : undefined,
+        isDate: DATE_FIELDS.includes(f.key)
+      })));
+      setStep('mapping');
+      toast.error("Houve um problema ao processar as colunas automaticamente. Por favor, faça o mapeamento manual.");
     }
   };
 
@@ -496,7 +593,13 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="no_mapping" className="text-muted-foreground italic">Não mapear</SelectItem>
-                                  {rawPreview[headerRow]?.map((h, i) => h ? <SelectItem key={i} value={String(h)}>{String(h)}</SelectItem> : null)}
+                                  {(rawPreview[headerRow] || []).map((h, i) => {
+                                    const label = (h !== null && h !== undefined && String(h).trim() !== '') ? String(h).trim() : `Coluna ${i + 1}`;
+                                    // Verificamos se há duplicados e mostramos o índice se necessário para diferenciar no dropdown
+                                    const isDuplicate = (rawPreview[headerRow] || []).filter(x => String(x).trim() === String(h).trim()).length > 1;
+                                    const displayLabel = isDuplicate ? `${label} (Posição ${i + 1})` : label;
+                                    return <SelectItem key={i} value={label}>{displayLabel}</SelectItem>;
+                                  })}
                                 </SelectContent>
                               </Select>
 

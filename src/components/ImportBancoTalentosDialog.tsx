@@ -38,7 +38,7 @@ const DATE_FORMATS = Object.entries(DATE_FORMAT_LABELS).map(([value, label]) => 
   value: value as DateFormat
 }));
 
-const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao'];
+const DATE_FIELDS = ['data_abertura_edital', 'data_validade', 'nova_data_validade', 'data_convocacao', 'is_prorrogado'];
 
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },

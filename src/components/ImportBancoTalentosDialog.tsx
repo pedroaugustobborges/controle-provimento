@@ -183,6 +183,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [importSummary, setImportSummary] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [headerRow, setHeaderRow] = useState<number>(0);
   const [rawPreview, setRawPreview] = useState<any[][]>([]);
   const [fileId, setFileId] = useState<string | null>(null);
@@ -225,29 +226,51 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setIsLoadingFile(true);
       const id = `FILE-BT-${Date.now()}`;
       setFileId(id);
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const bstr = evt.target?.result as string;
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        addImportedFile({
-          id,
-          nome_original: selectedFile.name,
-          nome_interno: id,
-          tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          tamanho: selectedFile.size,
-          data_upload: new Date().toISOString(),
-          usuario: 'Ana Paula Oliveira',
-          email_usuario: 'ana.oliveira@agir.org.br',
-          modulo_origem: 'banco_talentos',
-          status: 'enviado',
-          content: bstr
-        });
-        setWorkbook(wb);
-        setSelectedSheets([wb.SheetNames[0]]);
-        setStep('sheets');
+        try {
+          const bstr = evt.target?.result as string;
+          const wb = XLSX.read(bstr, { type: 'binary' });
+          
+          if (!wb.SheetNames || wb.SheetNames.length === 0) {
+            throw new Error('O arquivo selecionado não possui planilhas válidas.');
+          }
+
+          addImportedFile({
+            id,
+            nome_original: selectedFile.name,
+            nome_interno: id,
+            tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            tamanho: selectedFile.size,
+            data_upload: new Date().toISOString(),
+            usuario: 'Ana Paula Oliveira',
+            email_usuario: 'ana.oliveira@agir.org.br',
+            modulo_origem: 'banco_talentos',
+            status: 'enviado',
+            content: bstr
+          });
+          setWorkbook(wb);
+          setSelectedSheets([wb.SheetNames[0]]);
+          setStep('sheets');
+          toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
+        } catch (error) {
+          console.error('Erro ao ler arquivo:', error);
+          toast.error('Erro ao ler arquivo. Verifique se o formato é válido.');
+          setFile(null);
+        } finally {
+          setIsLoadingFile(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
       };
+      
+      reader.onerror = () => {
+        setIsLoadingFile(false);
+        toast.error('Ocorreu um erro ao carregar o arquivo.');
+      };
+      
       reader.readAsBinaryString(selectedFile);
     }
   };
@@ -518,17 +541,61 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
         <div className="flex-1 overflow-auto p-6 bg-background/50">
           {step === 'select' && (
-            <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed rounded-2xl border-border hover:border-primary/50 transition-all bg-muted/20 cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
-              <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleFileChange} />
-              <div className="bg-background p-6 rounded-full shadow-md mb-6 group-hover:scale-110 transition-transform"><Upload className="h-10 w-10 text-primary" /></div>
-              <h3 className="text-xl font-bold">Selecione o arquivo Excel</h3>
-              <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">Arraste e solte o arquivo ou clique aqui para selecionar do seu computador</p>
-              <Button variant="outline" className="mt-8">Procurar Arquivo</Button>
+            <div 
+              className={`flex flex-col items-center justify-center h-80 border-2 border-dashed rounded-2xl border-border hover:border-primary/50 transition-all bg-muted/20 cursor-pointer group ${isLoadingFile ? 'opacity-70 pointer-events-none' : ''}`} 
+              onClick={() => !isLoadingFile && fileInputRef.current?.click()}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept=".xlsx, .xls, .xlsm, .csv" 
+                onChange={handleFileChange} 
+              />
+              
+              {isLoadingFile ? (
+                <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                  <div className="h-16 w-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-6" />
+                  <h3 className="text-xl font-bold text-foreground">Lendo arquivo...</h3>
+                  <p className="text-sm text-muted-foreground mt-2 text-center px-6">
+                    {file?.name} ({(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`})
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-4 uppercase font-bold tracking-widest">Aguarde o processamento</p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-background p-6 rounded-full shadow-md mb-6 group-hover:scale-110 transition-transform">
+                    <Upload className="h-10 w-10 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold">Selecione o arquivo Excel</h3>
+                  <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">Arraste e solte o arquivo ou clique aqui para selecionar do seu computador</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-4 uppercase font-bold tracking-wider">Formatos suportados: .xlsx, .xlsm, .xls, .csv</p>
+                  <Button variant="outline" className="mt-8 pointer-events-none">Procurar Arquivo</Button>
+                </>
+              )}
             </div>
           )}
 
           {step === 'sheets' && workbook && (
             <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <FileSpreadsheet className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-primary uppercase tracking-widest">Arquivo carregado</p>
+                    <p className="text-base font-bold text-foreground">{file?.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {(file?.size || 0) / 1024 > 1024 ? `${((file?.size || 0) / (1024 * 1024)).toFixed(2)} MB` : `${((file?.size || 0) / 1024).toFixed(2)} KB`} • {workbook?.SheetNames.length || 0} abas encontradas
+                    </p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setStep('select')} className="text-xs h-9 text-muted-foreground hover:text-destructive hover:bg-destructive/5 hover:border-destructive/30 transition-all font-bold uppercase tracking-wider">
+                  Remover e trocar
+                </Button>
+              </div>
+
               <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
                 <Info className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div className="text-sm text-blue-800">

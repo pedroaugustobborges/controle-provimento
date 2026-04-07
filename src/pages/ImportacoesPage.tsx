@@ -47,8 +47,17 @@ export default function ImportacoesPage() {
   const { importHistory, importedFiles, deleteImportedFile } = useVagasStore();
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [reprocessFile, setReprocessFile] = useState<any>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);
 
-  const getStatusBadge = (status: string) => {
+  const handleDeleteFile = () => {
+    if (fileParaExcluir) {
+      deleteImportedFile(fileParaExcluir);
+      toast.success('Arquivo removido com sucesso');
+      setIsDeleteDialogOpen(false);
+      setFileParaExcluir(null);
+    }
+  };
     switch (status) {
       case 'concluido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Concluído</Badge>;
       case 'concluido_alertas': return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 font-bold border-amber-200">Concluído c/ Alertas</Badge>;

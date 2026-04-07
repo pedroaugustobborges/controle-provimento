@@ -17,15 +17,15 @@ import {
 } from '@/components/ui/sidebar';
 
 const mainItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Processos', url: '/vagas', icon: Briefcase },
-  { title: 'Editais', url: '/editais', icon: FileText },
+  { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
+  { title: 'Processos Seletivos', url: '/vagas', icon: Briefcase },
+  { title: 'Editais e Etapas', url: '/editais', icon: FileText },
   { title: 'Convocações', url: '/convocacoes', icon: Users },
 ];
 
 const secondaryItems = [
   { title: 'Validações', url: '/validacao', icon: CheckCircle },
-  { title: 'Visão Gestor', url: '/gestor', icon: TrendingUp },
+  { title: 'Administração', url: '/gestor', icon: Settings },
 ];
 
 export function AppSidebar() {

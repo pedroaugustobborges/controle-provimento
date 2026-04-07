@@ -150,16 +150,16 @@ export default function VagasPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Requisição</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Cargo</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Unidade</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Seção</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Tipo</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Qtd</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Analista</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Abertura</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Dias</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Requisição</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Cargo</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Unidade</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Seção</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Tipo</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider text-center">Qtd</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Analista</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Abertura</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Dias</th>
                 </tr>
               </thead>
               <tbody>

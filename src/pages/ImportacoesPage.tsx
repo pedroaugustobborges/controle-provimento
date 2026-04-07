@@ -24,7 +24,8 @@ import {
   Info,
   Layers,
   FileCheck,
-  AlertTriangle
+  AlertTriangle,
+  AlertCircle
 } from 'lucide-react';
 import { formatDate } from '@/lib/vagaUtils';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
@@ -41,7 +42,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertCircle } from 'lucide-react';
 
 export default function ImportacoesPage() {
   const { importHistory, importedFiles, deleteImportedFile } = useVagasStore();
@@ -58,6 +58,8 @@ export default function ImportacoesPage() {
       setFileParaExcluir(null);
     }
   };
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'concluido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Concluído</Badge>;
       case 'concluido_alertas': return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 font-bold border-amber-200">Concluído c/ Alertas</Badge>;
@@ -80,11 +82,6 @@ export default function ImportacoesPage() {
   const handleReprocess = (file: any) => {
     setReprocessFile(file);
     setIsImportOpen(true);
-  };
-
-  const handleDeleteFile = (id: string) => {
-    deleteImportedFile(id);
-    toast.success('Arquivo removido com sucesso');
   };
 
   return (
@@ -326,7 +323,13 @@ export default function ImportacoesPage() {
                                 <ExternalLink className="h-4 w-4" /> Ver Importação
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onClick={() => handleDeleteFile(f.id)} className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setFileParaExcluir(f.id);
+                                setIsDeleteDialogOpen(true);
+                              }} 
+                              className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                            >
                               <Trash2 className="h-4 w-4" /> Excluir Arquivo
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -353,6 +356,26 @@ export default function ImportacoesPage() {
         onOpenChange={setIsImportOpen} 
         reprocessFile={reprocessFile}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Excluir arquivo importado?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. O arquivo será removido permanentemente do repositório.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFileParaExcluir(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteFile} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

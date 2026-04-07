@@ -307,9 +307,14 @@ export default function VagasPage() {
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
                           </DropdownMenuItem>
                           {v.tem_banco_valido && (
-                            <DropdownMenuItem onClick={() => navigate(`/convocacoes/nova?vagaId=${v.id}`)} className="gap-2 font-bold text-green-600">
-                              <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
+                                <Database className="h-4 w-4" /> Ver Banco de Talentos
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate(`/convocacoes/nova?vagaId=${v.id}`)} className="gap-2 font-bold text-green-600">
+                                <CheckCircle2 className="h-4 w-4" /> Ir para Convocação
+                              </DropdownMenuItem>
+                            </>
                           )}
                           <DropdownMenuItem className="gap-2">
                             <History className="h-4 w-4 text-slate-500" /> Histórico Completo

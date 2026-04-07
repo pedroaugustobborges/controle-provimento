@@ -192,6 +192,7 @@ export default function VagasPage() {
                   <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Vagas</th>
                   <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Data Abertura</th>
                   <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Dias</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>

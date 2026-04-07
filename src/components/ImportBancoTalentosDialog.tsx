@@ -490,16 +490,21 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const processImport = () => {
     setIsProcessing(true);
     try {
-      const allData: any[] = [];
+      const allRowsRaw = [];
       selectedSheets.forEach(sheetName => {
         const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { 
           header: detectedHeaders, 
           range: headerRow + 1,
           defval: '' 
         });
-        allData.push(...data);
+        allRowsRaw.push(...data);
       });
 
+      const allData = allRowsRaw.filter(row => {
+        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
+      });
+
+      const emptyRowsCount = allRowsRaw.length - allData.length;
       const now = new Date();
       const newBancos: BancoTalentos[] = [];
       let totalErros = 0;

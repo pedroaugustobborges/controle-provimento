@@ -15,6 +15,7 @@ import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEd
 import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
 import {
   AlertDialog,
   AlertDialogAction,

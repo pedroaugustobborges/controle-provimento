@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
 import { Vaga, StatusEdital, TipoVaga, StatusVaga } from '@/types/vaga';
+import { getResponsavelPorUnidade } from '@/data/equipe';
+import { format, parse, isValid, addDays } from 'date-fns';
 import { toast } from 'sonner';
 
 type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summary';

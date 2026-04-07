@@ -137,7 +137,7 @@ export default function VagaDetalhePage() {
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Vagas</label>
-                  <p className="text-xl font-bold text-slate-800">{vaga.quantidade}</p>
+                  <p className="text-xl font-bold text-slate-800">{vaga.numero_vagas || vaga.quantidade}</p>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Inscritos</label>

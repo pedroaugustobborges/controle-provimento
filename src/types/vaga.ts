@@ -3,6 +3,7 @@ export type StatusGeral = 'aberta' | 'em_edital' | 'em_triagem' | 'entrevista' |
 export type StatusPublicacao = 'pendente' | 'publicado' | 'encerrado';
 export type StatusValidacao = 'pendente' | 'aprovado' | 'reprovado';
 export type EtapaEdital = 'inscricoes' | 'triagem' | 'prova' | 'entrevista' | 'resultado' | 'encerrado';
+export type StatusEdital = 'Nova vaga' | 'Aguardando processo' | 'Aguardando edital' | 'Aguardando processo e edital' | 'Em andamento' | 'Encerrada';
 
 export interface Vaga {
   id: string;
@@ -31,7 +32,19 @@ export interface Vaga {
   observacoes: string;
   analista_responsavel: string;
   status_geral: StatusGeral;
+  
+  // Novos campos para importação e fluxo de editais
+  status_edital?: StatusEdital;
   origem_importacao: string;
+  data_importacao?: string;
+  lote_importacao?: string;
+  reabertura_suspeita?: boolean;
+  
+  // Campos adicionais do requisito 9
+  precisa_validacao?: boolean;
+  responsavel_validacao?: string;
+  etapa_finalizada?: boolean;
+
   historico: HistoricoItem[];
 }
 
@@ -62,6 +75,20 @@ export interface ValidacaoEdital {
   observacao: string;
   etapa_finalizada: boolean;
   status_validacao: StatusValidacao;
+}
+
+export interface ImportHistory {
+  id: string;
+  data: string;
+  usuario: string;
+  nome_arquivo: string;
+  total_lidos: number;
+  total_novos: number;
+  total_atualizados: number;
+  total_ignorados: number;
+  total_erros: number;
+  repeticoes_tratadas: number;
+  status: 'concluido' | 'erro' | 'em_processamento';
 }
 
 export interface HistoricoItem {
@@ -97,4 +124,13 @@ export const ETAPA_LABELS: Record<EtapaEdital, string> = {
   entrevista: 'Entrevista',
   resultado: 'Resultado',
   encerrado: 'Encerrado',
+};
+
+export const STATUS_EDITAL_COLORS: Record<StatusEdital, string> = {
+  'Nova vaga': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Aguardando processo': 'bg-amber-100 text-amber-700 border-amber-200',
+  'Aguardando edital': 'bg-orange-100 text-orange-700 border-orange-200',
+  'Aguardando processo e edital': 'bg-red-100 text-red-700 border-red-200',
+  'Em andamento': 'bg-green-100 text-green-700 border-green-200',
+  'Encerrada': 'bg-gray-100 text-gray-700 border-gray-200',
 };

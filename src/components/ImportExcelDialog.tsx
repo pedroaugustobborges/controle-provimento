@@ -194,14 +194,48 @@ export function ImportExcelDialog({
     }
   }, [workbook, selectedSheets]);
 
+  // Handle reprocess
+  useEffect(() => {
+    if (reprocessFile && open) {
+      setFile({ name: reprocessFile.nome_original } as any);
+      setFileId(reprocessFile.id);
+      if (reprocessFile.content) {
+        const wb = XLSX.read(reprocessFile.content, { type: 'binary' });
+        setWorkbook(wb);
+        setSelectedSheets([wb.SheetNames[0]]);
+        setStep('sheets');
+      }
+    }
+  }, [reprocessFile, open]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      const now = new Date().toISOString();
+      const id = `FILE-${Date.now()}`;
+      setFileId(id);
+
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const bstr = evt.target?.result;
+        const bstr = evt.target?.result as string;
         const wb = XLSX.read(bstr, { type: 'binary' });
+        
+        // Save file to store
+        addImportedFile({
+          id,
+          nome_original: selectedFile.name,
+          nome_interno: id,
+          tipo: selectedFile.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          tamanho: selectedFile.size,
+          data_upload: now,
+          usuario: 'Ana Paula Oliveira', // User name from admin context
+          email_usuario: 'ana.oliveira@agir.org.br',
+          modulo_origem: 'vagas',
+          status: 'enviado',
+          content: bstr // Persisting content for reprocess
+        });
+
         setWorkbook(wb);
         setSelectedSheets([wb.SheetNames[0]]);
         setStep('sheets');

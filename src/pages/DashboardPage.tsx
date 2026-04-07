@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
   const unidades = [...new Set(vagas.map((v) => v.unidade))];
   const chartData = unidades.map((u) => ({
-    name: u.replace('Hospital ', '').replace('Unidade ', ''),
+    name: u.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, ''),
     total: vagas.filter((v) => v.unidade === u).length,
     abertas: vagas.filter((v) => v.unidade === u && (v.status === 'aberta' || v.status_geral === 'aberta')).length,
   })).sort((a, b) => b.total - a.total);

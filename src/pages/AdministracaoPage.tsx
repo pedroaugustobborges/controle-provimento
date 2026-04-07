@@ -27,7 +27,7 @@ export default function AdministracaoPage() {
 
   const unidades = [
     { id: '1', nome: 'Hospital Central (GO)', estado: 'GO', status: 'ativo', analistas: 5 },
-    { id: '2', nome: 'Unidade Barra (ES)', estado: 'ES', status: 'ativo', analistas: 3 },
+    { id: '2', nome: 'Hospital das Clínicas', estado: 'ES', status: 'ativo', analistas: 3 },
     { id: '3', nome: 'Hospital do Norte (GO)', estado: 'GO', status: 'ativo', analistas: 4 },
   ];
 

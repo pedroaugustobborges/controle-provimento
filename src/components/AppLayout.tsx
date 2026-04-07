@@ -42,7 +42,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/" className="text-slate-500 hover:text-primary transition-colors text-xs font-medium uppercase tracking-wider">Início</Link>
+                      <Link to="/" className="text-slate-500 hover:text-primary transition-colors text-xs font-medium uppercase tracking-wider">Visão Geral</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   {pathnames.map((name, index) => {

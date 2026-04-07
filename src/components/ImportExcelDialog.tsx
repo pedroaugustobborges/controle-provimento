@@ -29,22 +29,21 @@ interface ColumnMapping {
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
   { key: 'data_abertura', label: 'Data Abertura' },
-  { key: 'numero_requisicao', label: 'Nº Requisição' },
+  { key: 'requisicao', label: 'Nº Requisição' },
   { key: 'cargo', label: 'Cargo' },
-  { key: 'quantidade', label: 'Nº Vagas' },
+  { key: 'numero_vagas', label: 'Nº Vagas' },
 ];
 
 const OPTIONAL_FIELDS = [
+  { key: 'data_recebimento', label: 'Data Recebimento' },
   { key: 'numero_edital', label: 'Nº Edital' },
   { key: 'numero_processo', label: 'Nº Processo' },
-  { key: 'estado', label: 'Estado' },
   { key: 'secao', label: 'Seção' },
   { key: 'tipo_vaga', label: 'Tipo' },
-  { key: 'selecao', label: 'Seleção' },
-  { key: 'pcd', label: 'PCD' },
-  { key: 'total_inscritos', label: 'Total Inscritos' },
-  { key: 'observacoes', label: 'Observações' },
+  { key: 'analista_responsavel', label: 'Analista' },
+  { key: 'observacoes_internas', label: 'Observações' },
 ];
+
 
 export function ImportExcelDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { addVagas, vagas, addImportHistory } = useVagasStore();

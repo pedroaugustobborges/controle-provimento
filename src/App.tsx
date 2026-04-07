@@ -11,6 +11,7 @@ import EditaisPage from "@/pages/EditaisPage";
 import ValidacaoPage from "@/pages/ValidacaoPage";
 import GestorPage from "@/pages/GestorPage";
 import ConvocacoesPage from "@/pages/ConvocacoesPage";
+import FilaEditaisPage from "@/pages/FilaEditaisPage";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<DashboardPage />} />
             <Route path="/vagas" element={<VagasPage />} />
             <Route path="/vagas/:id" element={<VagaDetalhePage />} />
+            <Route path="/fila-editais" element={<FilaEditaisPage />} />
             <Route path="/editais" element={<EditaisPage />} />
             <Route path="/convocacoes" element={<ConvocacoesPage />} />
             <Route path="/validacao" element={<ValidacaoPage />} />

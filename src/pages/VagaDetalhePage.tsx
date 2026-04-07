@@ -27,8 +27,9 @@ export default function VagaDetalhePage() {
 
   const handleStatusChange = (newStatus: string) => {
     updateVaga(vaga.id, {
-      status_geral: newStatus as StatusGeral,
-      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusGeral]}`, usuario: 'Analista' }],
+      status: newStatus as StatusVaga,
+      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, usuario: 'Analista' }],
+
     });
     toast.success('Status atualizado');
   };

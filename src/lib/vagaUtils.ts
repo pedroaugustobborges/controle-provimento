@@ -72,6 +72,19 @@ export function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('pt-BR');
 }
 
+export function normalizeCargo(cargo: string): string {
+  if (!cargo) return '';
+  return cargo
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[-–—]/g, " ") // replace all types of hyphens/dashes with space
+    .replace(/[^a-z0-9 ]/g, " ") // remove other special chars
+    .replace(/\s+/g, " ") // collapse multiple spaces
+    .trim();
+}
+
 export function normalizeStatus(statusText: string): StatusVaga {
   if (!statusText) return 'aberta';
   

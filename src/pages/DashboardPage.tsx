@@ -136,7 +136,7 @@ export default function DashboardPage() {
       if (!normalizedName) return;
 
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
-      const qtd = (v.numero_vagas || v.quantidade || 1);
+      const qtd = 1; // 1 registro = 1 vaga
       
       current.total += qtd;
       

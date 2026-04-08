@@ -255,10 +255,22 @@ export function ImportExcelDialog({
             });
           });
 
-          // Clear existing banco before adding new ones
+          // Regra de Ouro: SUBSTITUIÇÃO TOTAL
+          const totalAntigoBanco = useVagasStore.getState().bancos.length;
           clearBancos();
           addBancos(newBancos);
+          const totalNovoBanco = useVagasStore.getState().bancos.length;
           
+          // Log detalhado conforme solicitado
+          console.log(`[IMPORT BANCO] Processo concluído.`);
+          console.log(`- Registros antigos apagados: ${totalAntigoBanco}`);
+          console.log(`- Registros lidos do arquivo: ${data.length}`);
+          console.log(`- Registros válidos inseridos: ${newBancos.length}`);
+          console.log(`- Total final na base: ${totalNovoBanco}`);
+          console.log(`  * Cadastro Reserva: ${countCR}`);
+          console.log(`  * Convocados: ${countConv}`);
+          console.log(`  * Vencidos: ${countVenc}`);
+
           setSummary({
             type: 'banco',
             total: newBancos.length,
@@ -282,7 +294,7 @@ export function ImportExcelDialog({
             data_hora: now
           });
 
-          toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
+          toast.success(`Importação de Banco: ${newBancos.length} registros inseridos em modo substituição.`);
         } else {
           toast.error("Formato de arquivo não suportado para esta operação.");
           reset();

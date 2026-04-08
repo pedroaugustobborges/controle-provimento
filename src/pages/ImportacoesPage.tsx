@@ -81,6 +81,31 @@ export default function ImportacoesPage() {
       setFileParaExcluir(null);
     }
   };
+
+  const handleDeleteBatch = async () => {
+    if (batchParaExcluir) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const totalRecs = (batchParaExcluir.total_novos || 0) + (batchParaExcluir.total_atualizados || 0);
+          await DatabaseService.logAudit('IMPORT', batchParaExcluir.id, 'DELETE_BATCH', user.id, null, null, { 
+            lote_id: batchParaExcluir.id,
+            arquivo: batchParaExcluir.arquivo || batchParaExcluir.nome_arquivo, 
+            registros_removidos: totalRecs,
+            tipo_importacao: batchParaExcluir.tipo_importacao,
+            data_hora_lote: batchParaExcluir.data_hora || batchParaExcluir.data
+          });
+        }
+        deleteImportBatch(batchParaExcluir.id);
+        toast.success(`Lote ${batchParaExcluir.arquivo || batchParaExcluir.id} e seus registros foram excluídos com sucesso.`);
+      } catch (error) {
+        console.error('Erro ao excluir lote:', error);
+        toast.error('Erro ao excluir lote do histórico');
+      } finally {
+        setBatchParaExcluir(null);
+      }
+    }
+  };
   const handleClearAllData = async () => {
     try {
       // Registrar ação na auditoria antes de limpar

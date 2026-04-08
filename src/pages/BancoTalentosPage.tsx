@@ -617,7 +617,112 @@ export default function BancoTalentosPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history">
+        <TabsContent value="convocados" className="space-y-4">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b bg-slate-50/50">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Buscar por nome, cargo ou edital..." 
+                    className="pl-9 bg-white"
+                    value={convocadosSearch}
+                    onChange={(e) => setConvocadosSearch(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Select value={convocadosUnidadeFilter} onValueChange={setConvocadosUnidadeFilter}>
+                    <SelectTrigger className="w-[180px] h-9 bg-white text-xs">
+                      <SelectValue placeholder="Unidade Convocada" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas Unidades</SelectItem>
+                      {convocadosUnidades.map(u => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={convocadosCargoFilter} onValueChange={setConvocadosCargoFilter}>
+                    <SelectTrigger className="w-[180px] h-9 bg-white text-xs">
+                      <SelectValue placeholder="Cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos Cargos</SelectItem>
+                      {convocadosCargos.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50/80">
+                    <TableRow>
+                      <TableHead className="text-[10px] font-bold uppercase">Nome</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Class.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Data Conv.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Unid. Conv.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">N° Chamada</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {convocadosFiltered.map((b) => (
+                      <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
+                        <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
+                        <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">
+                            {b.classificacao}°
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-green-600">
+                          {b.data_convocacao ? formatDate(b.data_convocacao) : '-'}
+                        </TableCell>
+                        <TableCell className="text-xs font-medium text-slate-600">
+                          <div className="flex items-center gap-1.5">
+                            <Building className="h-3 w-3 text-slate-400" />
+                            {b.unidade_convocacao || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center text-xs font-bold text-slate-500">
+                          {b.numero_chamada || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                            onClick={() => {
+                              setSelectedBanco(b);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            Detalhes
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {convocadosFiltered.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                          Nenhum convocado encontrado para os filtros aplicados.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>
               <TableHeader className="bg-slate-50/80">

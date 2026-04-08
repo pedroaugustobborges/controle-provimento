@@ -306,7 +306,7 @@ export default function VagasPage() {
                           <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
                           </DropdownMenuItem>
-                          {v.tem_banco_valido && (
+                          {getBancoByVaga(v.id) && (
                             <>
                               <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
                                 <Database className="h-4 w-4" /> Ver Banco de Talentos

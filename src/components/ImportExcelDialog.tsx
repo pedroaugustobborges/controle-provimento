@@ -112,7 +112,7 @@ export function ImportExcelDialog({
               const row = rawRows[i];
               if (!row) continue;
 
-              const cargo = String(row[5] || '').trim();
+              const cargo = String(row[4] || '').trim(); // Coluna E (index 4)
               if (!cargo) continue;
 
               totalProcessed++;
@@ -128,16 +128,22 @@ export function ImportExcelDialog({
                 }
               }
 
-              const dataAbertura = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
-              const dataRecebimento = row[2] ? convertDateValue(row[2], 'auto').formatted : '';
-              const requisicao = String(row[3] || '');
-              const numVagas = Number(row[6]) || 1;
-              const secao = String(row[7] || '');
-              const tipoVaga = (row[8] || 'substituicao') as TipoVaga;
-              const statusRaw = String(row[9] || '');
-              const analista = String(row[10] || '');
-              const vagaId = String(row[11] || '');
-              const obs = String(row[12] || '');
+              const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : ''; // Coluna A (0)
+              const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : ''; // Coluna B (1)
+              const requisicao = String(row[2] || ''); // Coluna C (2)
+              const secao = String(row[3] || ''); // Coluna D (3)
+              const rawTipo = String(row[5] || '').toLowerCase(); // Coluna F (5)
+              const numVagas = Number(row[6]) || 1; // Coluna G (6)
+              const analista = String(row[7] || ''); // Coluna H (7)
+              const statusRaw = String(row[8] || ''); // Coluna I (8)
+              const vagaId = String(row[9] || ''); // Coluna J (9)
+              const obs = String(row[10] || ''); // Coluna K (10)
+
+              // Normalização do Tipo de Vaga
+              let tipoVaga: TipoVaga = 'substituicao';
+              if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
+              else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
+              else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
 
               const statusNormalized = normalizeStatus(statusRaw);
               const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(finalUnit, tipoVaga);

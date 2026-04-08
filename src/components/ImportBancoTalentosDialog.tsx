@@ -817,7 +817,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {workbook.SheetNames.map(name => (
+                {workbook.SheetNames.filter(name => name.toUpperCase() === 'BANCO GERAL').map(name => (
                   <button key={name} onClick={() => {
                     console.log("Aba selecionada:", name);
                     setSelectedSheets([name]);
@@ -830,6 +830,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                   </button>
                 ))}
               </div>
+              {workbook.SheetNames.filter(name => name.toUpperCase() === 'BANCO GERAL').length === 0 && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Aba obrigatória não encontrada</AlertTitle>
+                  <AlertDescription>
+                    O arquivo deve conter uma aba chamada <strong>BANCO GERAL</strong>. Por favor, verifique o arquivo e tente novamente.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

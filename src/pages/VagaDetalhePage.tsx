@@ -170,7 +170,10 @@ export default function VagaDetalhePage() {
               <h2 className="text-2xl font-bold text-slate-800">{vaga.cargo}</h2>
               {vaga.reabertura_suspeita && <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 font-bold">REABERTURA</Badge>}
             </div>
-            <p className="text-sm text-slate-500 font-medium">{vaga.requisicao || vaga.numero_requisicao} · {vaga.unidade}</p>
+            <p className="text-sm text-slate-500 font-medium">
+              {vaga.requisicao || vaga.numero_requisicao} · {vaga.unidade}
+              {vaga.trace_key && <span className="ml-2 text-[10px] text-slate-400 font-mono opacity-60">ID Rastro: {vaga.trace_key}</span>}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">

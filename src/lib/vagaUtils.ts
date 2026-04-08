@@ -159,7 +159,8 @@ export function formatDate(dateStr: string): string {
   if (!dateStr || dateStr.trim() === '' || dateStr === '—') return '—';
   
   // Try to parse ISO date first
-  const date = new Date(dateStr);
+  // Se a string estiver no formato YYYY-MM-DD, adicione T12:00:00 para evitar problemas de fuso horário
+  const date = dateStr.includes('-') && dateStr.length === 10 ? new Date(dateStr + 'T12:00:00') : new Date(dateStr);
   if (isNaN(date.getTime())) {
     // If it's not a valid date, just return the string or a placeholder
     // This prevents "Invalid Date" from appearing in the UI

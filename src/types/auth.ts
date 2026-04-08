@@ -6,7 +6,8 @@ export type UserProfile =
   | 'Analista de convocações' 
   | 'Gestão' 
   | 'Gerência'
-  | 'Administrador';
+  | 'Administrador'
+  | 'Analista' | 'Supervisão' | 'Coordenação' | 'Admin';
 
 export interface Permissions {
   canRead: boolean;
@@ -19,27 +20,34 @@ export interface Permissions {
 
 export interface User {
   id: string;
-  nome: string;
+  nome_completo: string;
   email: string;
   perfil: UserProfile;
-  unidade_id?: string;
+  cargo?: string;
   status: 'ativo' | 'inativo';
+  visualiza_todas_unidades: boolean;
+  unidades_vinculadas: string[];
   pode_incluir_registros: boolean;
   pode_excluir_requisicoes: boolean;
   pode_editar_configuracoes: boolean;
   pode_gerenciar_usuarios: boolean;
-  created_at: string;
+  ultimo_acesso?: string;
+  created_at?: string;
 }
 
 export interface AuditLog {
   id: string;
-  usuario_id: string;
+  usuario_id?: string;
+  usuario_nome: string;
+  perfil?: string;
+  data?: string;
+  hora?: string;
   acao: string;
   modulo: string;
-  registro_id?: string;
+  registro_afetado: string;
   valor_anterior?: any;
   valor_novo?: any;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface SupportConfig {

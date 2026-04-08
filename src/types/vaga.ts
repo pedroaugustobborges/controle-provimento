@@ -101,6 +101,9 @@ export interface BancoTalentos {
   numero_processo_seletivo?: string;
   numero_vaga_aproveitamento?: string;
   cargo_normalizado?: string;
+  import_batch_id?: string;
+  data_importacao?: string;
+  origem_importacao?: string;
 }
 
 export interface Convocacao {

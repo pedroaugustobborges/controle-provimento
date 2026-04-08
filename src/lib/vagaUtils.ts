@@ -38,12 +38,16 @@ export const CATEGORIAS_STATUS = {
 };
 
 export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
-  if (!status || status === '' || status === 'sem_status') return 'sem_status';
-  if (CATEGORIAS_STATUS.em_andamento.includes(status)) return 'em_andamento';
-  if (CATEGORIAS_STATUS.aguardando_unidade.includes(status)) return 'aguardando_unidade';
-  if (CATEGORIAS_STATUS.encerradas.includes(status)) return 'encerradas';
-  if (CATEGORIAS_STATUS.lideranca.includes(status)) return 'lideranca';
-  if (CATEGORIAS_STATUS.movimentacao_interna.includes(status)) return 'movimentacao_interna';
+  if (!status || status === '' || status === 'sem_status' || status === 'nan' || status === 'null' || status === 'undefined') return 'sem_status';
+  
+  const s = status.toLowerCase();
+  if (CATEGORIAS_STATUS.em_andamento.includes(s)) return 'em_andamento';
+  if (CATEGORIAS_STATUS.aguardando_unidade.includes(s)) return 'aguardando_unidade';
+  if (CATEGORIAS_STATUS.encerradas.includes(s)) return 'encerradas';
+  if (CATEGORIAS_STATUS.lideranca.includes(s)) return 'lideranca';
+  if (CATEGORIAS_STATUS.movimentacao_interna.includes(s)) return 'movimentacao_interna';
+  if (CATEGORIAS_STATUS.outros.includes(s)) return 'outros';
+  
   return 'outros';
 }
 
@@ -135,7 +139,7 @@ export function normalizeCargo(cargo: string): string {
 }
 
 export function normalizeStatus(statusText: string): StatusVaga {
-  if (!statusText) return '' as StatusVaga;
+  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan') return '' as StatusVaga;
   
   const text = statusText.toLowerCase().trim();
   
@@ -157,8 +161,8 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text.includes('susp')) return 'suspensa';
   if (text.includes('cancel')) return 'cancelada';
   if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'encerrada';
-  if (text.includes('aberta') || text.includes('novo')) return 'aberta';
+  if (text.includes('aberta') || text.includes('novo') || text.includes('nova')) return 'aberta';
   
-  // Se não bater com nada conhecido, retorna vazio para ser tratado como "Sem Status"
-  return '' as StatusVaga;
+  // Se não bater com nada conhecido, retorna o próprio texto se ele for um status válido, ou vazio
+  return text as StatusVaga;
 }

@@ -295,11 +295,11 @@ export default function VagasPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-semibold text-slate-800 truncate max-w-[200px]" title={v.cargo}>{v.cargo}</div>
-                      <div className="flex flex-wrap gap-1 mt-0.5">
-                        <Badge variant="secondary" className="text-[9px] font-bold py-0 h-3.5 bg-slate-100 text-slate-600 border-none">{TIPO_VAGA_LABELS[v.tipo_vaga]}</Badge>
-                        {v.pcd && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>}
-                        
-                      </div>
+                      {v.cargo.toLowerCase().includes('pcd') && (
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
                     <td className="px-4 py-3">

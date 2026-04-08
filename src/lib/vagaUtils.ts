@@ -1,5 +1,28 @@
 import { StatusVaga, StatusValidacao, EtapaEdital, StatusPublicacao } from '@/types/vaga';
 
+export const CATEGORIAS_STATUS = {
+  em_andamento: [
+    'em_edital', 'publicado_edital', 'em_triagem', 'entrevista', 
+    'documentacao', 'documentacao_ok', 'documentacao_pendente', 
+    'casos_ok', 'admissao', 'admissao_enviada', 'realizar_convocacao'
+  ],
+  aguardando_unidade: ['aguardando_unidade', 'aberta'],
+  encerradas: ['admissao_efetivada', 'finalizada', 'encerrada'],
+  lideranca: ['vaga_lideranca'],
+  movimentacao_interna: ['movimentacao_interna'],
+  outros: ['suspensa', 'cancelada']
+};
+
+export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
+  if (CATEGORIAS_STATUS.em_andamento.includes(status)) return 'em_andamento';
+  if (CATEGORIAS_STATUS.aguardando_unidade.includes(status)) return 'aguardando_unidade';
+  if (CATEGORIAS_STATUS.encerradas.includes(status)) return 'encerradas';
+  if (CATEGORIAS_STATUS.lideranca.includes(status)) return 'lideranca';
+  if (CATEGORIAS_STATUS.movimentacao_interna.includes(status)) return 'movimentacao_interna';
+  return 'outros';
+}
+
+
 export function getStatusColor(status: StatusVaga): string {
   const map: Record<StatusVaga, string> = {
     movimentacao_interna: 'bg-blue-100 text-blue-800',

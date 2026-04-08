@@ -10,6 +10,7 @@ import {
   FileText, 
   CheckCircle2, 
   AlertTriangle, 
+  AlertCircle,
   Clock, 
   TrendingUp,
   ArrowUpRight,

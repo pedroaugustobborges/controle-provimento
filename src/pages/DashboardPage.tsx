@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   getCategoriaStatus, normalizeUnitName, countVacancies, 
-  getStatusSummary, getValidVacancyBase 
+  getStatusSummary, getValidVacancyBase, normalizeStatus
 } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 

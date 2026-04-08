@@ -1,17 +1,15 @@
 
 
-## Correção: Conteúdo "vazando" atrás do header em todas as páginas
+## Plano: Remover badge "Tem Banco" duplicada abaixo do cargo
 
 ### Problema
-O conteúdo das páginas (Vagas, Banco de Talentos, etc.) continua aparecendo visualmente por trás do header sticky. O breadcrumb bar e possivelmente o header principal ainda têm fundos transparentes ou semi-transparentes em certas condições.
+Na tabela de Vagas (`src/pages/VagasPage.tsx`), abaixo do nome do cargo aparece uma badge **"Tem Banco"** (linha 301) junto com as badges de tipo de vaga e PCD. Isso é redundante porque já existe uma **coluna dedicada** ao status do banco (linhas 305-337) que mostra "Tem banco válido", "Banco prorrogado", "Banco vencido" ou "Não tem banco" com ícone e cores.
 
-### Solução em `src/components/AppLayout.tsx`:
+### Solução
+**Remover a badge "Tem Banco"** da célula do cargo (linha 301), mantendo apenas as badges de tipo de vaga e PCD. A informação de banco já está claramente exibida na coluna própria ao lado.
 
-1. **Garantir fundo opaco no `<header>` wrapper** — adicionar `bg-background` diretamente no elemento `<header>` (linha 88), não apenas nos divs internos. Isso garante que NENHUM conteúdo vaze por trás, independente da rota.
+### Arquivo alterado:
+- `src/pages/VagasPage.tsx` — remover linha 301 (`{getBancoByVaga(v.id) && <Badge ...>Tem Banco</Badge>}`)
 
-2. **Breadcrumb bar com fundo opaco** — a barra de breadcrumb (linha ~193) usa `bg-muted/30` (semi-transparente). Trocar para `bg-muted` ou `bg-background` sólido.
-
-3. **Manter consistência** — tanto o modo expandido quanto o compacto devem usar fundos 100% opacos em todos os elementos do header.
-
-### Alteração mínima — apenas classes CSS no header e breadcrumb bar.
+Alteração mínima de 1 linha.
 

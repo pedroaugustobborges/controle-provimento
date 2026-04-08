@@ -199,6 +199,33 @@ export const useVagasStore = create<VagasState>()(
         return found;
       },
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),
+      getMatchingDiagnostic: () => {
+        const state = get();
+        const pendingVagas = state.vagas.filter(v => !['encerrada', 'finalizada', 'admissao_efetivada'].includes(v.status || v.status_geral || ''));
+        
+        return pendingVagas.map(v => {
+          const matchedBanco = get().getBancoByVaga(v.id);
+          if (matchedBanco) return null;
+          
+          // If no match, collect potential candidates (same unit or similar cargo)
+          const potentialBancos = state.bancos.filter(b => {
+            const normV = (v.cargo || '').toLowerCase();
+            const normB = (b.cargo || '').toLowerCase();
+            return b.unidade === v.unidade || normB.includes(normV) || normV.includes(normB);
+          }).slice(0, 3);
+          
+          return {
+            vagaId: v.id,
+            vagaCargo: v.cargo,
+            vagaUnidade: v.unidade,
+            potentialBancos: potentialBancos.map(b => ({
+              cargo: b.cargo,
+              unidade: b.unidade,
+              status: b.status
+            }))
+          };
+        }).filter(Boolean);
+      },
     }),
     {
       name: 'hospital-recruitment-store',

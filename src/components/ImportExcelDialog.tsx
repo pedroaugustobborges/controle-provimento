@@ -217,7 +217,19 @@ export function ImportExcelDialog({
           });
 
           setWorkbook(wb);
-          setSelectedSheets([wb.SheetNames[0]]);
+          
+          // DEFAULT: Select all sheets starting with "Vagas - " if it's the .xlsm file
+          if (selectedFile.name.toLowerCase().endsWith('.xlsm')) {
+            const vagaSheets = wb.SheetNames.filter(name => name.startsWith('Vagas - '));
+            if (vagaSheets.length > 0) {
+              setSelectedSheets(vagaSheets);
+            } else {
+              setSelectedSheets([wb.SheetNames[0]]);
+            }
+          } else {
+            setSelectedSheets([wb.SheetNames[0]]);
+          }
+
           // For XLSM or larger files, we don't automatically jump to sheets step 
           // to allow the user to see the file info first as requested
           // setStep('sheets'); 

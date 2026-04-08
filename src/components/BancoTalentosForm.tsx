@@ -12,6 +12,8 @@ import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { toast } from 'sonner';
 import { BancoTalentos } from '@/types/vaga';
+import { normalizeCargo } from '@/lib/vagaUtils';
+
 
 const formSchema = z.object({
   unidade: z.string().min(1, 'Unidade é obrigatória'),

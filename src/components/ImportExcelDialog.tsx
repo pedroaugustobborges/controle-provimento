@@ -162,8 +162,12 @@ export function ImportExcelDialog({
                 }]
               });
             }
+          });
+
+          // Clear existing vagas before adding new ones
           clearVagas();
           addVagas(newVagas);
+          
           setSummary({
             type: 'vagas',
             total: newVagas.length,
@@ -227,8 +231,13 @@ export function ImportExcelDialog({
               is_prorrogado: false,
               observacoes: '',
               status_import: statusRaw
+            });
+          });
+
+          // Clear existing banco before adding new ones
           clearBancos();
           addBancos(newBancos);
+          
           setSummary({
             type: 'banco',
             total: newBancos.length,

@@ -46,10 +46,11 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { ShieldAlert } from 'lucide-react';
 
 export default function ImportacoesPage() {
-  const { importHistory, importedFiles, deleteImportedFile } = useVagasStore();
+  const { importHistory, importedFiles, deleteImportedFile, clearAllData } = useVagasStore();
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [reprocessFile, setReprocessFile] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);
   const permissions = usePermissions();
 
@@ -75,6 +76,11 @@ export default function ImportacoesPage() {
       setIsDeleteDialogOpen(false);
       setFileParaExcluir(null);
     }
+  };
+  const handleClearAllData = () => {
+    clearAllData();
+    toast.success('Todos os dados foram removidos com sucesso');
+    setIsClearAllDialogOpen(false);
   };
 
   const getStatusBadge = (status: string) => {
@@ -109,9 +115,18 @@ export default function ImportacoesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Importações</h1>
           <p className="text-slate-500 mt-1">Gerencie a migração inicial e a entrada de dados em massa.</p>
         </div>
-        <Button className="gap-2 bg-primary" onClick={() => { setReprocessFile(null); setIsImportOpen(true); }}>
-          <Upload className="h-4 w-4" /> Nova Importação
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+            onClick={() => setIsClearAllDialogOpen(true)}
+          >
+            <Trash2 className="h-4 w-4" /> Limpar Todos os Dados
+          </Button>
+          <Button className="gap-2 bg-primary" onClick={() => { setReprocessFile(null); setIsImportOpen(true); }}>
+            <Upload className="h-4 w-4" /> Nova Importação
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -390,6 +405,31 @@ export default function ImportacoesPage() {
             <AlertDialogCancel onClick={() => setFileParaExcluir(null)}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteFile} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Confirmar Exclusão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Limpar Todos os Dados?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Esta ação <strong>excluirá permanentemente</strong> todos os registros de vagas, banco de talentos, convocações, editais e histórico de importações.
+              </p>
+              <p className="font-bold text-slate-900">
+                Esta operação é irreversível e removerá todos os dados acumulados indevidamente.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearAllData} className="bg-red-600 text-white hover:bg-red-700">
+              Confirmar Limpeza Total
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

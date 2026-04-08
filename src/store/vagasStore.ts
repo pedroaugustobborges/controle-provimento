@@ -32,6 +32,9 @@ interface VagasState {
   addImportedFile: (file: ImportedFile) => void;
   updateImportedFile: (id: string, data: Partial<ImportedFile>) => void;
   deleteImportedFile: (id: string) => void;
+  clearVagas: () => void;
+  clearBancos: () => void;
+  clearAllData: () => void;
   getVaga: (id: string) => Vaga | undefined;
   getEditalByVaga: (vagaId: string) => Edital | undefined;
   getValidacaoByVaga: (vagaId: string) => ValidacaoEdital | undefined;
@@ -87,6 +90,17 @@ export const useVagasStore = create<VagasState>()(
       deleteImportedFile: (id) => set((s) => ({
         importedFiles: s.importedFiles.filter((f) => f.id !== id),
       })),
+      clearVagas: () => set({ vagas: [] }),
+      clearBancos: () => set({ bancos: [] }),
+      clearAllData: () => set({ 
+        vagas: [], 
+        bancos: [], 
+        convocacoes: [], 
+        editais: [], 
+        validacoes: [], 
+        importHistory: [], 
+        importedFiles: [] 
+      }),
       getVaga: (id) => get().vagas.find((v) => v.id === id),
       getEditalByVaga: (vagaId) => get().editais.find((e) => e.vaga_id === vagaId),
       getValidacaoByVaga: (vagaId) => get().validacoes.find((v) => v.vaga_id === vagaId),

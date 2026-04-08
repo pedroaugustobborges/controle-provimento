@@ -179,7 +179,7 @@ export const useVagasStore = create<VagasState>()(
 
           if (!hasStringMatch && !hasTokenMatch) return false;
           
-          const normalizedBancoUnidade = normalizeStr(b.unidade);
+          const normalizedBancoUnidade = normalizeCargo(b.unidade);
           
           // 1. Exact match of unit
           if (normalizedBancoUnidade === normalizedVagaUnidade) return true;

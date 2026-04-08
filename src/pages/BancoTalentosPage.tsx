@@ -111,7 +111,22 @@ export default function BancoTalentosPage() {
     return Object.values(groups).sort((a, b) => a.cargo.localeCompare(b.cargo));
   }, [filtered]);
 
+  const selectedGroupCandidates = useMemo(() => {
+    if (!selectedBanco) return [];
+    const cargoNorm = selectedBanco.cargo_normalizado || normalizeCargo(selectedBanco.cargo);
+    return filtered.filter(b => 
+      b.numero_edital === selectedBanco.numero_edital && 
+      b.unidade === selectedBanco.unidade && 
+      (b.cargo_normalizado || normalizeCargo(b.cargo)) === cargoNorm
+    ).sort((a, b) => {
+      const classA = typeof a.classificacao === 'number' ? a.classificacao : parseInt(String(a.classificacao)) || 999;
+      const classB = typeof b.classificacao === 'number' ? b.classificacao : parseInt(String(b.classificacao)) || 999;
+      return classA - classB;
+    });
+  }, [selectedBanco, filtered]);
+
   const historyBT = useMemo(() => {
+
 
     return importHistory.filter(h => h.tipo_importacao === 'banco');
   }, [importHistory]);

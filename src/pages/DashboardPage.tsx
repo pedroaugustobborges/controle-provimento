@@ -79,71 +79,97 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+      {/* Header Section with Glass Effect or Strong Visual Separation */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Visão Geral de Provimento</h1>
-          <p className="text-slate-500 mt-1 max-w-2xl">
-            Acompanhamento estratégico e operacional de processos seletivos, editais e fluxo de contratações AGIR.
+          <div className="flex items-center gap-2 mb-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Operacional</span>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Visão Geral de Provimento</h1>
+          <p className="text-slate-500 mt-2 max-w-2xl text-sm font-medium">
+            Monitoramento em tempo real dos processos seletivos e fluxo de contratações AGIR.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="text-xs font-semibold h-9 border-slate-200 shadow-sm">
-            Exportar Relatório
+          <Button variant="outline" className="text-xs font-bold h-10 px-5 border-slate-200 hover:bg-slate-50 text-slate-600 transition-all rounded-xl shadow-sm">
+            Relatórios Detalhados
           </Button>
-          <Button className="text-xs font-semibold h-9 shadow-sm">
-            Novo Processo
+          <Button className="text-xs font-bold h-10 px-5 bg-primary hover:bg-primary/90 text-white transition-all rounded-xl shadow-lg shadow-primary/20">
+            Novo Processo Seletivo
           </Button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid - More Dynamic Design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-5">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group">
-            <CardContent className="p-5">
-              <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+          <Card key={idx} className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden bg-white">
+            <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
+            <CardContent className="p-6">
+              <div className={`p-2.5 rounded-xl ${stat.bg} w-fit mb-4 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </div>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-              <p className="text-2xl font-bold mt-1 text-slate-900">{stat.value}</p>
+              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-3xl font-black text-slate-900 tracking-tighter">{stat.value}</p>
+                <div className="h-1.5 w-1.5 rounded-full bg-slate-100 group-hover:bg-primary/20 transition-colors"></div>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Unit View */}
-        <Card className="lg:col-span-2 border-slate-200/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-50 mb-4">
+        {/* Unit View - Modernized Bar Chart */}
+        <Card className="lg:col-span-2 border-none shadow-sm bg-white overflow-hidden flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">
             <div>
-              <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-primary" /> Visão por Unidade
+              <CardTitle className="text-lg font-black text-slate-800 flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-primary" />
+                </div>
+                Visão Estratégica por Unidade
               </CardTitle>
-              <CardDescription className="text-xs">Distribuição de processos ativos por complexo hospitalar.</CardDescription>
+              <CardDescription className="text-xs font-medium text-slate-400 ml-10.5">Distribuição geográfica de processos e demandas ativas.</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
+                <div className="h-2 w-2 rounded-full bg-primary"></div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Total</span>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-[320px] w-full">
+          <CardContent className="flex-1 pb-8">
+            <div className="h-[340px] w-full mt-4 pr-6">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 60, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="4 4" horizontal={true} vertical={false} stroke="#f1f5f9" />
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 
                     type="category" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 11, fontWeight: 500, fill: '#64748b' }} 
+                    width={140}
+                    tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} 
                   />
                   <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: '#f8fafc', radius: 4 }}
+                    contentStyle={{ 
+                      borderRadius: '12px', 
+                      border: 'none', 
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      padding: '12px',
+                      fontSize: '11px',
+                      fontWeight: 'bold'
+                    }}
+                    itemStyle={{ padding: '2px 0' }}
                   />
-                  <Bar dataKey="total" name="Total de Processos" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20}>
+                  <Bar dataKey="total" name="Processos Totais" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={24} animationDuration={1500}>
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.7)'} />
+                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.8)'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -152,108 +178,135 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Operational Alerts */}
-        <Card className="border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="pb-4 border-b border-slate-50">
+        {/* Operational Alerts - Modernized with better states */}
+        <Card className="border-none shadow-sm bg-white overflow-hidden flex flex-col">
+          <CardHeader className="pb-4 border-b border-slate-50 bg-amber-50/30">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" /> Alertas Operacionais
-              </CardTitle>
-              <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                </div>
+                <CardTitle className="text-lg font-black text-slate-800">Alertas Ativos</CardTitle>
+              </div>
+              <span className="bg-amber-100 text-amber-700 text-[9px] font-black px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm animate-pulse">
                 {alerts.length} Pendências
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-0 flex-1 overflow-auto">
-            <div className="divide-y divide-slate-100">
-              {alerts.slice(0, 5).map((v) => (
-                <div key={v.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-mono font-bold text-slate-400">#{v.requisicao || v.numero_requisicao}</span>
-                    <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1 uppercase">
-                      <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias
-                    </span>
+          <CardContent className="p-0 flex-1 overflow-auto max-h-[400px]">
+            {alerts.length > 0 ? (
+              <div className="divide-y divide-slate-50">
+                {alerts.slice(0, 5).map((v) => (
+                  <div key={v.id} className="p-5 hover:bg-slate-50/80 transition-all cursor-pointer group flex items-start gap-4">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-2 shrink-0 group-hover:scale-150 transition-transform"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[10px] font-mono font-black text-slate-300 group-hover:text-primary/40 transition-colors uppercase">#{v.requisicao || v.numero_requisicao}</span>
+                        <span className="text-[10px] font-black text-amber-600 flex items-center gap-1 uppercase bg-white border border-amber-100 px-2 py-0.5 rounded-md">
+                          <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)}d
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors truncate leading-snug">{v.cargo}</h4>
+                      <p className="text-[11px] text-slate-400 font-semibold mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
+                        <Building2 className="h-3 w-3 opacity-50" /> {v.unidade}
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors">{v.cargo}</h4>
-                  <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
-                    <Building2 className="h-3 w-3" /> {v.unidade}
-                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full py-12 px-6 text-center">
+                <div className="h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+                  <ShieldCheck className="h-8 w-8 text-emerald-500" />
                 </div>
-              ))}
-            </div>
+                <h4 className="text-sm font-bold text-slate-700">Tudo sob controle</h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-[200px]">Nenhum processo em atraso crítico no momento.</p>
+              </div>
+            )}
           </CardContent>
-          <div className="p-3 bg-slate-50/50 border-t border-slate-100">
-            <Button variant="ghost" className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-wider">
-              Ver todos os alertas <ChevronRight className="ml-1 h-3 w-3" />
+          <div className="p-4 bg-slate-50/50 border-t border-slate-100">
+            <Button variant="ghost" className="w-full text-[10px] font-black text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all">
+              Gestão de Gargalos <ChevronRight className="ml-1 h-3 w-3" />
             </Button>
           </div>
         </Card>
       </div>
 
-      {/* Recent Activities Section */}
-      <Card className="border-slate-200/60 shadow-sm overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50">
+      {/* Recent Activities Section - Table Refinement */}
+      <Card className="border-none shadow-sm bg-white overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 bg-slate-50/30">
           <div>
-            <CardTitle className="text-base font-bold text-slate-800">Atividades Recentes</CardTitle>
-            <CardDescription className="text-xs">Últimas movimentações nos processos seletivos e editais.</CardDescription>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Activity className="h-4 w-4 text-primary" />
+              <CardTitle className="text-lg font-black text-slate-800">Atividades Recentes</CardTitle>
+            </div>
+            <CardDescription className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-6">Últimas movimentações nos processos AGIR</CardDescription>
           </div>
           <div className="flex gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <div className="relative group">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
               <input 
                 type="text" 
-                placeholder="Filtrar..." 
-                className="pl-8 h-9 text-xs border border-slate-200 rounded-lg w-40 bg-white focus:ring-1 focus:ring-primary outline-none transition-all"
+                placeholder="Pesquisar processos..." 
+                className="pl-9 h-10 text-[11px] font-bold border border-slate-100 rounded-xl w-48 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-inner"
               />
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full">
               <thead>
-                <tr className="bg-slate-50/80 text-left border-b border-slate-100">
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Requisição</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Cargo e Unidade</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Tipo</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Status</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Última Atualização</th>
-                  <th className="px-6 py-3.5 w-10"></th>
+                <tr className="bg-slate-50/50 text-left border-b border-slate-100/50">
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Requisição</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Cargo e Unidade</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Tipo</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Status Operacional</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Atualização</th>
+                  <th className="px-6 py-4 w-10"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {vagas.slice(0, 5).map((v) => (
                   <tr
                     key={v.id}
-                    className="hover:bg-slate-50/50 cursor-pointer transition-all duration-150"
+                    className="group hover:bg-slate-50/80 cursor-pointer transition-all duration-200"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-6 py-4 font-mono text-[11px] font-bold text-primary">{v.requisicao || v.numero_requisicao}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-700 text-sm">{v.cargo}</span>
-                        <span className="text-[11px] text-slate-500 font-medium">{v.unidade}</span>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary transition-colors"></div>
+                        <span className="font-mono text-[11px] font-black text-primary leading-none uppercase">{v.requisicao || v.numero_requisicao}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200 uppercase tracking-tighter">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="font-extrabold text-slate-700 text-sm leading-tight tracking-tight group-hover:text-primary transition-colors">{v.cargo}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{v.unidade}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 text-[9px] font-black border border-slate-200 uppercase tracking-widest shadow-sm">
                         {TIPO_VAGA_LABELS[v.tipo_vaga]}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <StatusBadge status={v.status || v.status_geral || 'aberta'} />
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-slate-600">
+                        <span className="text-xs font-black text-slate-600">
                           {v.historico.length > 0 ? formatDate(v.historico[v.historico.length - 1].data) : formatDate(v.data_abertura)}
                         </span>
-                        <span className="text-[10px] text-slate-400">Há {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
+                        <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase mt-1">
+                          <Clock className="h-2.5 w-2.5" />
+                          <span>Há {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary">
+                    <td className="px-6 py-5">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-300 hover:text-primary hover:bg-white hover:shadow-sm rounded-lg transition-all">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </td>
@@ -262,13 +315,13 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="p-4 bg-slate-50/30 border-t border-slate-100 flex justify-center">
+          <div className="p-5 bg-slate-50/30 border-t border-slate-100 flex justify-center">
             <Button 
               variant="ghost" 
               onClick={() => navigate('/vagas')} 
-              className="text-xs text-primary font-bold hover:bg-primary/5 uppercase tracking-widest"
+              className="text-[10px] text-primary font-black hover:bg-primary/5 uppercase tracking-[0.2em] transition-all"
             >
-              Ver todos os processos <ArrowUpRight className="ml-1 h-3 w-3" />
+              Histórico Completo de Processos <ArrowUpRight className="ml-2 h-3.5 w-3.5" />
             </Button>
           </div>
         </CardContent>

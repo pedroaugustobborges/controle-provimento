@@ -70,7 +70,7 @@ export default function ConvocacoesPage() {
     const allConvocacoes = [
       ...convocacoes,
       ...bancos
-        .filter(b => b.status === 'convocado')
+        .filter(b => b.status === 'CONVOCADO')
         .map(b => ({
           id: b.id,
           vaga_id: '',
@@ -83,7 +83,8 @@ export default function ConvocacoesPage() {
           unidade: b.unidade_convocacao || b.unidade,
           requisicao: b.numero_edital,
           status: 'aceite' as any,
-          observacoes: b.observacoes || ''
+          observacoes: b.observacoes || '',
+          responsavel: 'Sistema'
         }))
     ];
 

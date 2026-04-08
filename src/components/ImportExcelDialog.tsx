@@ -894,7 +894,7 @@ export function ImportExcelDialog({
                               <TableCell className="text-xs">{row.unidade}</TableCell>
                               <TableCell className="text-xs">
                                 <span className={row.__errors?.data_abertura ? "text-destructive font-bold" : ""}>
-                                  {row.data_abertura ? format(new Date(row.data_abertura), 'dd/MM/yyyy') : '-'}
+                                  {row.data_abertura ? (() => { const d = new Date(row.data_abertura); return isValid(d) ? format(d, 'dd/MM/yyyy') : String(row.data_abertura); })() : '-'}
                                 </span>
                               </TableCell>
                               <TableCell className="text-xs">

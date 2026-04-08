@@ -86,7 +86,7 @@ export default function DashboardPage() {
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
-      const unitKey = isVitoriaUnit(v.unidade) ? 'Vitória' : v.unidade;
+      const unitKey = v.unidade; // Removed isVitoriaUnit grouping
       const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
       
       current.total += 1;
@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
     // Also include units from EQUIPE_POR_UNIDADE that might not have vagas
     EQUIPE_POR_UNIDADE.forEach(e => {
-      const unitKey = isVitoriaUnit(e.unidade) ? 'Vitória' : e.unidade;
+      const unitKey = e.unidade; // Removed isVitoriaUnit grouping
       if (!groupedMap.has(unitKey)) {
         groupedMap.set(unitKey, { total: 0, abertas: 0 });
       }

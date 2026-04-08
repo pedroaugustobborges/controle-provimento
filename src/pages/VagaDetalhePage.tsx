@@ -207,12 +207,21 @@ export default function VagaDetalhePage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {vaga.status_edital && (
-            <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital as any]} font-bold text-xs px-3 py-1`}>
-              {vaga.status_edital}
-            </Badge>
-          )}
-          <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
+          <div className="flex flex-wrap gap-2">
+            {isAtrasada && <Badge className="bg-red-100 text-red-700 border-red-200 animate-pulse font-black px-3 py-1 uppercase text-[10px] tracking-wider"><AlertCircle className="h-3 w-3 mr-1" /> Etapa em Atraso</Badge>}
+            {hasAceite && <Badge className="bg-green-100 text-green-700 border-green-200 font-bold text-[10px] uppercase">Convocação Aceita</Badge>}
+            {hasRecusa && <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold text-[10px] uppercase">Convocação Recusada</Badge>}
+            {vaga.tem_banco_valido && <Badge className="bg-blue-100 text-blue-700 border-blue-200 font-bold text-[10px] uppercase">Banco Gerado</Badge>}
+            {vaga.status === 'publicar_novo_edital' && <Badge className="bg-rose-100 text-rose-700 border-rose-200 font-bold text-[10px] uppercase">Necessidade de Novo Edital</Badge>}
+            {isConcluido && <Badge className="bg-slate-100 text-slate-700 border-slate-200 font-bold text-[10px] uppercase">Processo Concluído</Badge>}
+            
+            {vaga.status_edital && (
+              <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital as any] || 'bg-slate-100'} font-bold text-xs px-3 py-1`}>
+                {vaga.status_edital}
+              </Badge>
+            )}
+            <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
+          </div>
           {canDelete && (
             <Button 
               variant="outline" 

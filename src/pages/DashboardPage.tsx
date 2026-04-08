@@ -86,8 +86,8 @@ export default function DashboardPage() {
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
-      const unitKey = v.unidade; // Removed isVitoriaUnit grouping
-      const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
+      const unitKey = isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade;
+
       
       current.total += 1;
       if (v.status === 'aberta' || v.status_geral === 'aberta') {
@@ -98,14 +98,15 @@ export default function DashboardPage() {
 
     // Also include units from EQUIPE_POR_UNIDADE that might not have vagas
     EQUIPE_POR_UNIDADE.forEach(e => {
-      const unitKey = e.unidade; // Removed isVitoriaUnit grouping
+      const unitKey = isVitoriaUnit(e.unidade) ? 'VITÓRIA' : e.unidade;
       if (!groupedMap.has(unitKey)) {
         groupedMap.set(unitKey, { total: 0, abertas: 0 });
       }
     });
 
     return Array.from(groupedMap.entries()).map(([name, data]) => ({
-      name: name.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim(),
+      name: name.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim().toUpperCase(),
+
       total: data.total,
       abertas: data.abertas,
     })).sort((a, b) => b.total - a.total);

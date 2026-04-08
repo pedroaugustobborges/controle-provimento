@@ -51,12 +51,6 @@ export const EQUIPE_POR_UNIDADE: EquipeResponsavel[] = [
     analista: 'Geovana Miranda',
     assistentes: ['Nara Rubia']
   },
-  {
-    unidade: 'Teia Serra',
-    analista: 'Geovana Miranda',
-    assistentes: ['Nara Rubia']
-  }
-];
 
 export const RESPONSAVEL_LIDERANCA = 'Ellen Leticia';
 

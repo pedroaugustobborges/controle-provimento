@@ -131,23 +131,6 @@ export const mockVagas: Vaga[] = [
     tem_banco_valido: false,
     historico: [],
   },
-  {
-    id: '8',
-    requisicao: 'REQ-2025-008',
-    numero_requisicao: 'REQ-2025-008',
-    data_abertura: '2025-02-22',
-    cargo: 'Fisioterapeuta',
-    tipo_vaga: 'substituicao',
-    numero_vagas: 1,
-    secao: 'Reabilitação',
-    unidade: 'Teia Serra',
-    analista_responsavel: 'Geovana Miranda',
-    status: 'aberta',
-    observacoes_internas: '',
-    tem_banco_valido: false,
-    historico: [],
-  }
-];
 
 export const mockBancos: BancoTalentos[] = [
   {

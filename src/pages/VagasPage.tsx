@@ -190,10 +190,11 @@ export default function VagasPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
             <p className="text-2xl font-bold text-slate-800">{vagas.length}</p>
+            <p className="text-[10px] text-slate-400">Total absoluto em base</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">

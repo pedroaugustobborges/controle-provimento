@@ -1095,7 +1095,7 @@ export function ImportExcelDialog({
 
             {step === 'preview' && (
               <Button onClick={detectDuplicates} disabled={isProcessing}>
-                {isProcessing ? 'Processando...' : 'Verificar Repetições'} <ArrowRight className="h-4 w-4 ml-2" />
+                {isProcessing ? 'Processando...' : 'Processar Importação'} <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             )}
           </div>
@@ -1105,7 +1105,7 @@ export function ImportExcelDialog({
   );
 }
 
-function Plus(props: any) {
+function PlusIcon(props: any) {
   return (
     <svg
       {...props}

@@ -105,13 +105,22 @@ export function getEtapaColor(etapa: EtapaEdital): string {
   const map: Record<EtapaEdital, string> = {
     inscricoes: 'bg-blue-100 text-blue-800',
     triagem: 'bg-purple-100 text-purple-800',
-    prova: 'bg-indigo-100 text-indigo-800',
-    entrevista: 'bg-amber-100 text-amber-800',
-    resultado: 'bg-green-100 text-green-800',
-    encerrado: 'bg-gray-100 text-gray-600',
+    resultado_da_triagem: 'bg-purple-50 text-purple-700',
+    avaliacao_curricular: 'bg-indigo-50 text-indigo-700',
+    avaliacao_especifica_online: 'bg-cyan-100 text-cyan-800',
+    resultado_da_avaliacao_especifica_online: 'bg-cyan-50 text-cyan-700',
+    entrevistas: 'bg-amber-100 text-amber-800',
+    resultado_final: 'bg-green-100 text-green-800',
+    convocacao_do_edital: 'bg-emerald-100 text-emerald-800',
+    encerramento: 'bg-gray-100 text-gray-600',
+    banco_gerado: 'bg-teal-100 text-teal-800',
+    sem_exito: 'bg-red-100 text-red-800',
+    aguardar_anuencia: 'bg-yellow-100 text-yellow-800',
+    publicar_novo_edital: 'bg-rose-100 text-rose-800',
   };
-  return map[etapa];
+  return map[etapa] || 'bg-gray-100 text-gray-600';
 }
+
 
 export function getPublicacaoColor(status: StatusPublicacao): string {
   const map: Record<StatusPublicacao, string> = {

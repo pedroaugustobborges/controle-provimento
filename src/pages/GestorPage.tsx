@@ -85,7 +85,9 @@ export default function GestorPage() {
                 {unidades.map(u => (
                   <div key={u} className="flex justify-between items-center text-xs">
                     <span className="text-slate-600 font-medium">{u}</span>
-                    <Badge variant="secondary" className="font-bold">{vagas.filter(v => v.unidade === u).length}</Badge>
+                    <Badge variant="secondary" className="font-bold">
+                      {vagas.filter(v => (u === 'Vitória' ? isVitoriaUnit(v.unidade) : v.unidade === u)).length}
+                    </Badge>
                   </div>
                 ))}
               </CardContent>

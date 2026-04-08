@@ -108,6 +108,18 @@ export const useVagasStore = create<VagasState>()(
         tarefas: s.tarefas.filter((t) => t.id !== id),
       })),
       addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
+      deleteImportBatch: (batchId) => set((s) => {
+        // Find if we are deleting vagas or bancos to handle dependencies
+        const vagasToRemove = s.vagas.filter(v => v.import_batch_id === batchId).map(v => v.id);
+        
+        return {
+          vagas: s.vagas.filter((v) => v.import_batch_id !== batchId),
+          bancos: s.bancos.filter((b) => b.import_batch_id !== batchId),
+          convocacoes: s.convocacoes.filter((c) => !vagasToRemove.includes(c.vaga_id)),
+          importHistory: s.importHistory.filter((h) => h.id !== batchId),
+          importedFiles: s.importedFiles.filter((f) => f.vaga_importacao_id !== batchId && f.id !== batchId),
+        };
+      }),
       updateAlerta: (id, data) => set((s) => ({
         alertas: s.alertas.map((a) => a.id === id ? { ...a, ...data } : a),
       })),

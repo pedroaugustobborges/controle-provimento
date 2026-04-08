@@ -238,7 +238,7 @@ export default function VagasPage() {
                       <div className="flex flex-wrap gap-1 mt-0.5">
                         <Badge variant="secondary" className="text-[9px] font-bold py-0 h-3.5 bg-slate-100 text-slate-600 border-none">{TIPO_VAGA_LABELS[v.tipo_vaga]}</Badge>
                         {v.pcd && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>}
-                        {v.tem_banco_valido && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-green-50 text-green-600 border-green-100">Tem Banco</Badge>}
+                        {getBancoByVaga(v.id) && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-green-50 text-green-600 border-green-100">Tem Banco</Badge>}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>

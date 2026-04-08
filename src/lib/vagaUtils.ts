@@ -26,9 +26,8 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['sem_status', 'publicar_novo_edital'],
+  fila_edital: ['sem_status', 'publicar_novo_edital', 'aberta'],
   em_andamento: [
-    'aberta',
     'em_edital', 
     'em_documentacao', 
     'documentacao_ok_azul_pendente', 

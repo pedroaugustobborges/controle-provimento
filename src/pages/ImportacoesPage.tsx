@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { usePermissions } from '@/hooks/usePermissions';
 import { ShieldAlert } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { DatabaseService } from '@/services/databaseService';
 
 export default function ImportacoesPage() {
   const { importHistory, importedFiles, deleteImportedFile, clearAllData } = useVagasStore();

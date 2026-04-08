@@ -428,48 +428,57 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const processImport = () => {
     setIsProcessing(true);
     try {
-      const allRowsRaw = [];
-      selectedSheets.forEach(sheetName => {
-        const data = XLSX.utils.sheet_to_json(workbook!.Sheets[sheetName], { 
-          header: detectedHeaders, 
-          range: headerRow + 1,
-          defval: '' 
-        });
-        allRowsRaw.push(...data);
-      });
-
-      const allData = allRowsRaw.filter(row => {
-        return mappings.some(m => m.excel && m.excel !== 'no_mapping' && row[m.excel] != null && String(row[m.excel]).trim() !== '');
-      });
-
-      const emptyRowsCount = allRowsRaw.length - allData.length;
+      const allData: any[] = [];
+      const loteId = `LOTE-BT-${Date.now()}`;
       const now = new Date();
-      const newBancos: BancoTalentos[] = [];
-      let totalErros = 0;
-      let missingFieldsRows = 0;
-      let dateErrorRows = 0;
-      const detailedErrors: any[] = [];
+      
+      selectedSheets.forEach(sheetName => {
+        const sheet = workbook!.Sheets[sheetName];
+        if (!sheet) return;
 
-      allData.forEach((row, i) => {
-        const mapped: any = {};
-        let hasMissingRequired = false;
-        const currentLine = headerRow + 2 + i;
+        // Use header: 1 for raw array access to ensure data integrity
+        const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+        
+        // Headers are at headerRow
+        const headers = rawRows[headerRow] || [];
+        
+        // Process all rows after the header row
+        for (let i = headerRow + 1; i < rawRows.length; i++) {
+          const row = rawRows[i];
+          if (!row || row.length === 0) continue;
 
-        mappings.forEach(m => {
-          if (m.excel && m.excel !== 'no_mapping') {
-            const rawVal = row[m.excel];
-            if (m.isDate) {
-              const dateResult = convertDateValue(rawVal, m.format || 'auto');
-              mapped[m.system] = dateResult.formatted;
-            } else if (m.system === 'is_prorrogado') {
-              const val = String(rawVal || '').toLowerCase();
-              const isSim = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
-              mapped[m.system] = isSim;
-            } else {
-              mapped[m.system] = String(rawVal || '').trim();
+          const mapped: any = {
+            __sheet: sheetName,
+            __line: i + 1
+          };
+
+          mappings.forEach(m => {
+            if (m.excel && m.excel !== 'no_mapping') {
+              const colIndex = headers.indexOf(m.excel);
+              if (colIndex !== -1) {
+                const rawVal = row[colIndex];
+                if (m.isDate) {
+                  const dateResult = convertDateValue(rawVal, m.format || 'auto');
+                  mapped[m.system] = dateResult.formatted;
+                } else if (m.system === 'is_prorrogado') {
+                  const val = String(rawVal || '').toLowerCase();
+                  const isSim = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
+                  mapped[m.system] = isSim;
+                } else {
+                  mapped[m.system] = String(rawVal || '').trim();
+                }
+              }
             }
+          });
+
+          // Check if row has at least some data
+          if (Object.keys(mapped).length > 2) {
+            allData.push(mapped);
           }
-        });
+        }
+      });
+
+      const newBancos: BancoTalentos[] = [];
 
         // RULE: Process status correctly from Column H
         // User requirement: "filtre STATUS=CONVOCADO"

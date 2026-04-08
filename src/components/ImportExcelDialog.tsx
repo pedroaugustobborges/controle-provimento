@@ -207,6 +207,12 @@ export function ImportExcelDialog({
           
           const totalNovoVagas = useVagasStore.getState().vagas.length;
           
+          // Auditoria por Unidade para o Resumo
+          const byUnit: Record<string, number> = {};
+          newVagas.forEach(v => {
+            byUnit[v.unidade] = (byUnit[v.unidade] || 0) + 1;
+          });
+
           // Log detalhado conforme solicitado
           console.log(`[IMPORT VAGAS] Processo concluído.`);
           console.log(`- Registros antigos apagados: ${totalAntigoVagas}`);
@@ -222,7 +228,8 @@ export function ImportExcelDialog({
             type: 'vagas',
             total: newVagas.length,
             dashboardTotal: totalVagasDashboard,
-            fileName: selectedFile.name
+            fileName: selectedFile.name,
+            byUnit
           });
           
           addImportHistory({

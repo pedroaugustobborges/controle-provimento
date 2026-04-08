@@ -50,7 +50,7 @@ export function ImportExcelDialog({
   onOpenChange,
   reprocessFile 
 }: ImportExcelDialogProps) {
-  const { addVagas, addBancos, addImportHistory } = useVagasStore();
+  const { addVagas, addBancos, addImportHistory, clearVagas, clearBancos } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -162,8 +162,7 @@ export function ImportExcelDialog({
                 }]
               });
             }
-          });
-
+          clearVagas();
           addVagas(newVagas);
           setSummary({
             type: 'vagas',
@@ -228,9 +227,7 @@ export function ImportExcelDialog({
               is_prorrogado: false,
               observacoes: '',
               status_import: statusRaw
-            });
-          });
-
+          clearBancos();
           addBancos(newBancos);
           setSummary({
             type: 'banco',

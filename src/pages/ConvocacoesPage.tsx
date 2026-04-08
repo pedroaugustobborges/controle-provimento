@@ -67,7 +67,27 @@ export default function ConvocacoesPage() {
   }, [filteredVagas]);
 
   const filteredConvocacoes = useMemo(() => {
-    return convocacoes.filter(c => {
+    const allConvocacoes = [
+      ...convocacoes,
+      ...useVagasStore.getState().bancos
+        .filter(b => b.status === 'convocado')
+        .map(b => ({
+          id: b.id,
+          vaga_id: '',
+          data_convocacao: b.data_convocacao || '',
+          horario: '',
+          nome_candidato: b.nome || 'Não identificado',
+          classificacao: Number(b.classificacao) || 0,
+          tipo_convocacao: 'Importado',
+          cargo: b.cargo,
+          unidade: b.unidade_convocacao || b.unidade,
+          requisicao: b.numero_edital,
+          status: 'aceite' as any,
+          observacoes: b.observacoes || ''
+        }))
+    ];
+
+    return allConvocacoes.filter(c => {
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) {
         return false;
       }

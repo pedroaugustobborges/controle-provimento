@@ -35,7 +35,7 @@ import { toast } from 'sonner';
 
 export default function ConvocacoesPage() {
   const navigate = useNavigate();
-  const { vagas, convocacoes } = useVagasStore();
+  const { vagas, convocacoes, getBancoByVaga } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [view, setView] = useState<'kanban' | 'list' | 'pending'>('kanban');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

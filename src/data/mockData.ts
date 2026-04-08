@@ -219,7 +219,24 @@ export const mockBancos: BancoTalentos[] = [
     is_prorrogado: false,
     observacoes: 'Banco Geral Goiânia',
     status: 'valido'
-  }
+  },
+  // Mock convocados as per user request (Reference number 378)
+  ...Array.from({ length: 378 }).map((_, i) => ({
+    id: `conv-${i}`,
+    nome: `Candidato Convocado ${i + 1}`,
+    unidade: ['GOIÂNIA', 'UPA', 'JATAÍ', 'POLICLÍNICA'][i % 4],
+    cargo: ['Enfermeiro(a)', 'Técnico de Enfermagem', 'Fisioterapeuta', 'Auxiliar Administrativo'][i % 4],
+    numero_edital: `ED-2024-${100 + (i % 50)}`,
+    data_abertura_edital: '2024-01-10',
+    data_validade: '2025-01-10',
+    data_convocacao: '2025-03-01',
+    unidade_convocacao: ['CRER', 'HUGOL', 'HECAD', 'HDS', 'SÃO PEDRO', 'POLICLÍNICA'][i % 6],
+    classificacao: (i % 20) + 1,
+    numero_chamada: String(Math.floor(i / 20) + 1),
+    is_prorrogado: false,
+    observacoes: 'Importado como convocado',
+    status: 'convocado' as const
+  }))
 ];
 
 export const mockConvocacoes: Convocacao[] = [

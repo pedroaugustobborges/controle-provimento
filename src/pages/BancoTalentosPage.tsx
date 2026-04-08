@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Briefcase, Building, FileText, ClipboardList } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle } from 'lucide-react';
 import { formatDate, normalizeCargo } from '@/lib/vagaUtils';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -34,9 +35,14 @@ export default function BancoTalentosPage() {
   const { bancos, importHistory, importedFiles, deleteBanco } = useVagasStore();
   const { currentUser } = useAdminStore();
   const permissions = usePermissions();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'list');
   const [unidadeFilter, setUnidadeFilter] = useState('todas');
   const [statusFilter, setStatusFilter] = useState('todos');
+  const [convocadosSearch, setConvocadosSearch] = useState('');
+  const [convocadosUnidadeFilter, setConvocadosUnidadeFilter] = useState('todas');
+  const [convocadosCargoFilter, setConvocadosCargoFilter] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -52,6 +58,25 @@ export default function BancoTalentosPage() {
       setBancoParaExcluir(null);
     }
   };
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['list', 'convocados', 'history'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+    
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearch(searchParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams(prev => {
+      prev.set('tab', value);
+      return prev;
+    });
+  };
 
   const filtered = useMemo(() => {
     return bancos.filter(b => {
@@ -60,18 +85,51 @@ export default function BancoTalentosPage() {
         return false;
       }
       
+      // Exclude convocados from the main list as requested
+      if (b.status === 'convocado') return false;
+      
       const normalizedSearch = normalizeCargo(search);
       const matchSearch = normalizeCargo(b.cargo).includes(normalizedSearch) || 
         normalizeCargo(b.unidade).includes(normalizedSearch) ||
         normalizeCargo(b.numero_edital).includes(normalizedSearch);
 
-        
       const matchUnidade = unidadeFilter === 'todas' || b.unidade === unidadeFilter;
       const matchStatus = statusFilter === 'todos' || b.status === statusFilter;
         
       return matchSearch && matchUnidade && matchStatus;
     });
   }, [bancos, currentUser, search, unidadeFilter, statusFilter]);
+
+  const convocadosFiltered = useMemo(() => {
+    return bancos.filter(b => {
+      if (b.status !== 'convocado') return false;
+      
+      // Unit access restriction
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
+        return false;
+      }
+      
+      const normalizedSearch = normalizeCargo(convocadosSearch);
+      const matchSearch = normalizeCargo(b.nome || '').includes(normalizedSearch) || 
+        normalizeCargo(b.cargo).includes(normalizedSearch) ||
+        normalizeCargo(b.numero_edital).includes(normalizedSearch);
+
+      const matchUnidade = convocadosUnidadeFilter === 'todas' || b.unidade_convocacao === convocadosUnidadeFilter;
+      const matchCargo = convocadosCargoFilter === 'todos' || b.cargo === convocadosCargoFilter;
+        
+      return matchSearch && matchUnidade && matchCargo;
+    });
+  }, [bancos, currentUser, convocadosSearch, convocadosUnidadeFilter, convocadosCargoFilter]);
+
+  const convocadosCargos = useMemo(() => {
+    const cargos = [...new Set(bancos.filter(b => b.status === 'convocado').map(b => b.cargo))];
+    return cargos.sort();
+  }, [bancos]);
+
+  const convocadosUnidades = useMemo(() => {
+    const unidades = [...new Set(bancos.filter(b => b.status === 'convocado' && b.unidade_convocacao).map(b => b.unidade_convocacao!))];
+    return unidades.sort();
+  }, [bancos]);
 
   const groupedBancos = useMemo(() => {
     const groups: Record<string, {
@@ -379,8 +437,21 @@ export default function BancoTalentosPage() {
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Candidatos</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cadastro Reserva</p>
                 <p className="text-2xl font-bold text-slate-900">{filtered.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 p-2.5 rounded-lg">
+                <Users className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Convocados</p>
+                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'convocado').length}</p>
               </div>
             </div>
           </CardContent>
@@ -439,10 +510,13 @@ export default function BancoTalentosPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="list" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="list" className="gap-2">
-            <Filter className="h-4 w-4" /> Bancos de Talentos
+            <Filter className="h-4 w-4" /> Cadastro Reserva
+          </TabsTrigger>
+          <TabsTrigger value="convocados" className="gap-2">
+            <CheckCircle className="h-4 w-4" /> Convocados
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" /> Histórico de Importações
@@ -565,6 +639,111 @@ export default function BancoTalentosPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="convocados" className="space-y-4">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b bg-slate-50/50">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Buscar por nome, cargo ou edital..." 
+                    className="pl-9 bg-white"
+                    value={convocadosSearch}
+                    onChange={(e) => setConvocadosSearch(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Select value={convocadosUnidadeFilter} onValueChange={setConvocadosUnidadeFilter}>
+                    <SelectTrigger className="w-[180px] h-9 bg-white text-xs">
+                      <SelectValue placeholder="Unidade Convocada" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas Unidades</SelectItem>
+                      {convocadosUnidades.map(u => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={convocadosCargoFilter} onValueChange={setConvocadosCargoFilter}>
+                    <SelectTrigger className="w-[180px] h-9 bg-white text-xs">
+                      <SelectValue placeholder="Cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos Cargos</SelectItem>
+                      {convocadosCargos.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50/80">
+                    <TableRow>
+                      <TableHead className="text-[10px] font-bold uppercase">Nome</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Class.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Data Conv.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Unid. Conv.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">N° Chamada</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {convocadosFiltered.map((b) => (
+                      <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
+                        <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
+                        <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">
+                            {b.classificacao}°
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-green-600">
+                          {b.data_convocacao ? formatDate(b.data_convocacao) : '-'}
+                        </TableCell>
+                        <TableCell className="text-xs font-medium text-slate-600">
+                          <div className="flex items-center gap-1.5">
+                            <Building className="h-3 w-3 text-slate-400" />
+                            {b.unidade_convocacao || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center text-xs font-bold text-slate-500">
+                          {b.numero_chamada || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                            onClick={() => {
+                              setSelectedBanco(b);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            Detalhes
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {convocadosFiltered.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                          Nenhum convocado encontrado para os filtros aplicados.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>

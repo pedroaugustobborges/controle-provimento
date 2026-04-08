@@ -15,13 +15,17 @@ import { NavLink } from '@/components/NavLink';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
+  SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/hooks/usePermissions';
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
   { title: 'Vagas', url: '/vagas', icon: Briefcase },
-  { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users },
+  { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users, subMenu: [
+    { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
+    { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
+  ] },
   { title: 'Fila de Editais', url: '/fila-editais', icon: TrendingUp },
   { title: 'Convocações', url: '/convocacoes', icon: Calendar },
 ];
@@ -60,17 +64,49 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === '/'}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
-                      activeClassName="bg-white/10 text-white font-bold shadow-md"
-                    >
-                      <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
-                      {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
+                  {item.subMenu ? (
+                    <>
+                      <SidebarMenuButton asChild tooltip={item.title}>
+                        <NavLink
+                          to={item.url}
+                          className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
+                          activeClassName="bg-white/10 text-white font-bold shadow-md"
+                        >
+                          <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
+                          {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                      {!collapsed && (
+                        <SidebarMenuSub>
+                          {item.subMenu.map((sub) => (
+                            <SidebarMenuSubItem key={sub.title}>
+                              <SidebarMenuSubButton asChild>
+                                <NavLink
+                                  to={sub.url}
+                                  className="text-white/60 hover:text-white text-[11px] py-1"
+                                  activeClassName="text-white font-bold"
+                                >
+                                  {sub.title}
+                                </NavLink>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      )}
+                    </>
+                  ) : (
+                    <SidebarMenuButton asChild tooltip={item.title}>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === '/'}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
+                        activeClassName="bg-white/10 text-white font-bold shadow-md"
+                      >
+                        <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
+                        {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

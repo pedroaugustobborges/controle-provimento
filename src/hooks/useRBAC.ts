@@ -61,7 +61,7 @@ export function useRBAC() {
       canAudit: isManagement,
     };
 
-    const perfil = userData?.perfil;
+    const perfil = userToUse?.perfil;
 
     switch (module) {
       case 'vagas':

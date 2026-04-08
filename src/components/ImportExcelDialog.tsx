@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose 
@@ -31,7 +31,7 @@ const UNIT_MAPPING: Record<string, string> = {
   'Vagas - HUGOL': 'HUGOL',
   'Vagas - HDS': 'HDS',
   'Vagas - POLICLÍNICA': 'POLICLÍNICA',
-  'Vagas - VITÓRIA': 'SÃO PEDRO', // Based on user requirements SÃO PEDRO=31
+  'Vagas - VITÓRIA': 'SÃO PEDRO',
   'Vagas - JATAÍ': 'JATAÍ',
   'Vagas - TEIA ANÁPOLIS': 'TEIA ANÁPOLIS',
   'Vagas - TEIA CANEDO': 'TEIA CANEDO',
@@ -39,13 +39,17 @@ const UNIT_MAPPING: Record<string, string> = {
   'Vagas - TEIA GOIÂNIA': 'TEIA GOIÂNIA',
 };
 
+interface ImportExcelDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  reprocessFile?: any; // Kept for compatibility with other components
+}
+
 export function ImportExcelDialog({ 
   open, 
-  onOpenChange 
-}: { 
-  open: boolean, 
-  onOpenChange: (open: boolean) => void 
-}) {
+  onOpenChange,
+  reprocessFile 
+}: ImportExcelDialogProps) {
   const { addVagas, addBancos, addImportHistory } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
@@ -82,7 +86,6 @@ export function ImportExcelDialog({
         const batchId = `IMPORT-${Date.now()}`;
 
         if (fileName.endsWith('.xlsm')) {
-          // FILE 1: Proposta de Gestão de Vagas
           const newVagas: Vaga[] = [];
           let totalProcessed = 0;
 
@@ -93,7 +96,6 @@ export function ImportExcelDialog({
             const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
             const unitName = UNIT_MAPPING[sheetName] || sheetName.replace('Vagas - ', '');
             
-            // Logic: start from row 4 (index 3), check column F (index 5)
             for (let i = 3; i < rawRows.length; i++) {
               const row = rawRows[i];
               if (!row) continue;
@@ -103,7 +105,6 @@ export function ImportExcelDialog({
 
               totalProcessed++;
 
-              // Mapping columns based on requirements/common structure
               const dataAbertura = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
               const dataRecebimento = row[2] ? convertDateValue(row[2], 'auto').formatted : '';
               const requisicao = String(row[3] || '');
@@ -141,6 +142,7 @@ export function ImportExcelDialog({
                 lote_importacao: batchId,
                 source_sheet: sheetName,
                 source_row_index: i + 1,
+                tem_banco_valido: false,
                 historico: [{
                   id: `h-${Date.now()}-${totalProcessed}`,
                   data: now.split('T')[0],
@@ -151,23 +153,30 @@ export function ImportExcelDialog({
             }
           });
 
-          // Check for SUÁ=23. User said read ONLY listed sheets. 
-          // If SUÁ was part of AGIR or VITÓRIA, it would be counted.
-          // But user listed VITÓRIA and in totals listed SÃO PEDRO=31 and SUÁ=23.
-          // If VITÓRIA has 54 rows, and I map it to SÃO PEDRO, I might miss SUÁ label.
-          // However, the rule is just to count. 
-          // Total should be 736.
-
           addVagas(newVagas);
           setSummary({
             type: 'vagas',
             total: newVagas.length,
             fileName: selectedFile.name
           });
+          
+          addImportHistory({
+            id: batchId,
+            usuario: 'Sistema',
+            total_lidos: totalProcessed,
+            total_novos: newVagas.length,
+            total_atualizados: 0,
+            total_ignorados: 0,
+            total_erros: 0,
+            status: 'concluido',
+            tipo_importacao: 'vagas',
+            arquivo: selectedFile.name,
+            data_hora: now
+          });
+          
           toast.success(`Importação de Vagas concluída: ${newVagas.length} vagas encontradas.`);
 
         } else if (fileName.endsWith('.xlsx')) {
-          // FILE 2: Banco de Dados
           const sheet = wb.Sheets['BANCO GERAL'];
           if (!sheet) {
             toast.error("Aba 'BANCO GERAL' não encontrada.");
@@ -183,11 +192,19 @@ export function ImportExcelDialog({
           let countVenc = 0;
 
           data.forEach((row, i) => {
-            const status = String(row['STATUS'] || row['status'] || '').toUpperCase().trim();
-            
-            if (status === 'CADASTRO RESERVA') countCR++;
-            else if (status === 'CONVOCADO') countConv++;
-            else if (status === 'VENCIDO') countVenc++;
+            const statusRaw = String(row['STATUS'] || row['status'] || '').toUpperCase().trim();
+            let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' | 'nenhum' = 'nenhum';
+
+            if (statusRaw === 'CADASTRO RESERVA') {
+              status = 'valido';
+              countCR++;
+            } else if (statusRaw === 'CONVOCADO') {
+              status = 'convocado';
+              countConv++;
+            } else if (statusRaw === 'VENCIDO') {
+              status = 'vencido';
+              countVenc++;
+            }
 
             newBancos.push({
               id: `banco-${batchId}-${i}`,
@@ -195,9 +212,11 @@ export function ImportExcelDialog({
               unidade: String(row['UNIDADE'] || row['unidade'] || ''),
               status: status,
               numero_edital: String(row['EDITAL'] || row['edital'] || ''),
-              data_validade: row['VALIDADE'] ? convertDateValue(row['VALIDADE'], 'auto').formatted : undefined,
-              quantidade_candidatos: 1,
-              origem: selectedFile.name
+              data_abertura_edital: now.split('T')[0],
+              data_validade: row['VALIDADE'] ? convertDateValue(row['VALIDADE'], 'auto').formatted : '',
+              is_prorrogado: false,
+              observacoes: '',
+              status_import: statusRaw
             });
           });
 
@@ -210,6 +229,21 @@ export function ImportExcelDialog({
             venc: countVenc,
             fileName: selectedFile.name
           });
+
+          addImportHistory({
+            id: batchId,
+            usuario: 'Sistema',
+            total_lidos: data.length,
+            total_novos: newBancos.length,
+            total_atualizados: 0,
+            total_ignorados: 0,
+            total_erros: 0,
+            status: 'concluido',
+            tipo_importacao: 'banco',
+            arquivo: selectedFile.name,
+            data_hora: now
+          });
+
           toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
         } else {
           toast.error("Formato de arquivo não suportado para esta operação.");
@@ -241,7 +275,7 @@ export function ImportExcelDialog({
         <div className="py-8">
           {step === 'select' && (
             <div 
-              className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl border-muted hover:border-primary/50 transition-all cursor-pointer bg-muted/20"
+              className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl border-border hover:border-primary/50 transition-all cursor-pointer bg-muted/20"
               onClick={() => fileInputRef.current?.click()}
             >
               <input 
@@ -260,35 +294,35 @@ export function ImportExcelDialog({
           {step === 'processing' && (
             <div className="flex flex-col items-center justify-center h-64">
               <div className="h-12 w-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
-              <h3 className="text-lg font-semibold">Processando dados...</h3>
+              <h3 className="text-lg font-semibold text-foreground">Processando dados...</h3>
               <p className="text-sm text-muted-foreground mt-2">Aplicando filtros rigorosos e contando registros.</p>
             </div>
           )}
 
           {step === 'summary' && summary && (
             <div className="space-y-6">
-              <div className="bg-green-50 border border-green-200 rounded-xl p-6 flex flex-col items-center text-center">
-                <CheckCircle2 className="h-12 w-12 text-green-600 mb-4" />
-                <h3 className="text-xl font-bold text-green-900">Importação Concluída!</h3>
-                <p className="text-sm text-green-700 mt-1">{summary.fileName}</p>
+              <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 flex flex-col items-center text-center">
+                <CheckCircle2 className="h-12 w-12 text-primary mb-4" />
+                <h3 className="text-xl font-bold text-primary">Importação Concluída!</h3>
+                <p className="text-sm text-muted-foreground mt-1">{summary.fileName}</p>
                 
                 <div className="mt-6 grid grid-cols-1 gap-4 w-full max-w-sm">
-                  <div className="bg-white p-4 rounded-lg border border-green-100 shadow-sm flex justify-between items-center">
+                  <div className="bg-background p-4 rounded-lg border border-border shadow-sm flex justify-between items-center">
                     <span className="text-sm font-medium text-muted-foreground">Total de Registros:</span>
                     <span className="text-xl font-bold">{summary.total}</span>
                   </div>
                   
                   {summary.type === 'banco' && (
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-white p-3 rounded-lg border border-green-100 shadow-sm flex flex-col items-center">
+                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
                         <span className="text-[10px] font-bold text-muted-foreground uppercase">Reserva</span>
                         <span className="text-lg font-bold text-blue-600">{summary.cr}</span>
                       </div>
-                      <div className="bg-white p-3 rounded-lg border border-green-100 shadow-sm flex flex-col items-center">
+                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
                         <span className="text-[10px] font-bold text-muted-foreground uppercase">Convoc.</span>
                         <span className="text-lg font-bold text-green-600">{summary.conv}</span>
                       </div>
-                      <div className="bg-white p-3 rounded-lg border border-green-100 shadow-sm flex flex-col items-center">
+                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
                         <span className="text-[10px] font-bold text-muted-foreground uppercase">Vencido</span>
                         <span className="text-lg font-bold text-red-600">{summary.venc}</span>
                       </div>
@@ -306,7 +340,8 @@ export function ImportExcelDialog({
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3">
                   <Info className="h-5 w-5 text-amber-500 shrink-0" />
                   <p className="text-xs text-amber-700">
-                    Atenção: O total de vagas ({summary.total}) difere do esperado (736). Verifique se todas as abas foram selecionadas corretamente.
+                    Atenção: O total de vagas ({summary.total}) difere do esperado (736). 
+                    HUGOL: 246, CRER: 118, HECAD: 89, AGIR: 62, JATAÍ: 91, HDS: 30, SÃO PEDRO: 31, SUÁ: 23, POLICLÍNICA: 14, CANEDO: 11, GOIÂNIA: 9, ANÁPOLIS: 6, APARECIDA: 6.
                   </p>
                 </div>
               )}

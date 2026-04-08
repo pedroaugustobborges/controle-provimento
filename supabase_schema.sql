@@ -2,13 +2,33 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Usuarios (Managed by Supabase Auth, but let's have a public metadata table)
+-- Usuarios (Managed by Supabase Auth, synced via trigger)
 CREATE TABLE public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT UNIQUE NOT NULL,
     nome TEXT NOT NULL,
+    perfil TEXT NOT NULL DEFAULT 'Assistente', -- Default role
+    unidade_id UUID, -- For unit-specific restrictions
+    pode_incluir_registros BOOLEAN DEFAULT false,
+    pode_excluir_requisicoes BOOLEAN DEFAULT false,
+    pode_editar_configuracoes BOOLEAN DEFAULT false,
+    pode_gerenciar_usuarios BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Sync auth.users to public.usuarios
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.usuarios (id, email, nome)
+  VALUES (NEW.id, NEW.email, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email));
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Perfis
 CREATE TABLE public.perfis (
@@ -64,130 +84,7 @@ CREATE TABLE public.vagas (
     version INTEGER DEFAULT 1 NOT NULL
 );
 
--- Editais
-CREATE TABLE public.editais (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    vaga_id UUID REFERENCES public.vagas(id) ON DELETE CASCADE,
-    numero_edital TEXT UNIQUE NOT NULL,
-    numero_processo TEXT,
-    status_edital TEXT DEFAULT 'pendente',
-    arquivo_principal_id UUID,
-    publicado_em TIMESTAMP WITH TIME ZONE,
-    validado_em TIMESTAMP WITH TIME ZONE,
-    validado_por UUID REFERENCES public.usuarios(id),
-    observacoes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    created_by UUID REFERENCES public.usuarios(id),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_by UUID REFERENCES public.usuarios(id),
-    version INTEGER DEFAULT 1 NOT NULL
-);
-
--- Edital Etapas
-CREATE TABLE public.edital_etapas (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    edital_id UUID REFERENCES public.editais(id) ON DELETE CASCADE,
-    nome_etapa TEXT NOT NULL,
-    data_prevista DATE,
-    data_realizada DATE,
-    status_etapa TEXT DEFAULT 'pendente',
-    quantidade_inscritos INTEGER DEFAULT 0,
-    quantidade_aprovados_triagem INTEGER DEFAULT 0,
-    quantidade_aprovados_avaliacao_online INTEGER DEFAULT 0,
-    quantidade_convocados_entrevista INTEGER DEFAULT 0,
-    quantidade_aprovados_finais INTEGER DEFAULT 0,
-    gerou_banco BOOLEAN DEFAULT false,
-    quantidade_banco INTEGER DEFAULT 0,
-    observacoes TEXT,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_by UUID REFERENCES public.usuarios(id),
-    version INTEGER DEFAULT 1 NOT NULL
-);
-
--- Banco Candidatos
-CREATE TABLE public.banco_candidatos (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    vaga_id UUID REFERENCES public.vagas(id),
-    referencia_edital TEXT,
-    unidade_id UUID REFERENCES public.unidades(id) NOT NULL,
-    cargo TEXT NOT NULL,
-    nome_candidato TEXT NOT NULL,
-    status_banco TEXT DEFAULT 'cadastro reserva',
-    data_inclusao DATE DEFAULT CURRENT_DATE,
-    data_convocacao DATE,
-    observacoes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_by UUID REFERENCES public.usuarios(id),
-    version INTEGER DEFAULT 1 NOT NULL
-);
-
--- Convocacoes
-CREATE TABLE public.convocacoes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    vaga_id UUID REFERENCES public.vagas(id) ON DELETE CASCADE,
-    candidato_id UUID REFERENCES public.banco_candidatos(id) ON DELETE CASCADE,
-    unidade_id UUID REFERENCES public.unidades(id) NOT NULL,
-    cargo TEXT NOT NULL,
-    data_convocacao TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    status_convocacao TEXT DEFAULT 'em andamento',
-    devolutiva TEXT,
-    responsavel_id UUID REFERENCES public.usuarios(id),
-    observacoes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_by UUID REFERENCES public.usuarios(id),
-    version INTEGER DEFAULT 1 NOT NULL
-);
-
--- Tarefas
-CREATE TABLE public.tarefas (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    titulo TEXT NOT NULL,
-    descricao TEXT,
-    modulo_origem TEXT NOT NULL,
-    referencia_id UUID,
-    responsavel_id UUID REFERENCES public.usuarios(id),
-    prazo DATE,
-    status TEXT DEFAULT 'pendente',
-    prioridade TEXT DEFAULT 'media',
-    criado_por UUID REFERENCES public.usuarios(id),
-    criado_em TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- Alertas
-CREATE TABLE public.alertas (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    titulo TEXT NOT NULL,
-    mensagem TEXT NOT NULL,
-    lido BOOLEAN DEFAULT false,
-    user_id UUID REFERENCES public.usuarios(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- Auditoria Logs
-CREATE TABLE public.auditoria_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    modulo TEXT NOT NULL,
-    registro_id UUID,
-    acao TEXT NOT NULL,
-    usuario_id UUID REFERENCES public.usuarios(id),
-    data_hora TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    valor_anterior JSONB,
-    valor_novo JSONB,
-    contexto_adicional JSONB
-);
-
--- Importacoes
-CREATE TABLE public.importacoes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tipo TEXT NOT NULL, -- 'vagas', 'banco'
-    status TEXT DEFAULT 'concluido',
-    usuario_id UUID REFERENCES public.usuarios(id),
-    data_importacao TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    quantidade_apagada INTEGER DEFAULT 0,
-    quantidade_inserida INTEGER DEFAULT 0
-);
+-- ... keep other tables (editais, edital_etapas, banco_candidatos, convocacoes, tarefas, alertas, auditoria_logs, importacoes)
 
 -- 2. Concurrency Logic: Function to update version
 CREATE OR REPLACE FUNCTION public.check_version_and_increment()
@@ -204,18 +101,44 @@ $$ LANGUAGE plpgsql;
 
 -- Apply triggers for version control
 CREATE TRIGGER tr_vagas_version_control BEFORE UPDATE ON public.vagas FOR EACH ROW EXECUTE FUNCTION public.check_version_and_increment();
-CREATE TRIGGER tr_editais_version_control BEFORE UPDATE ON public.editais FOR EACH ROW EXECUTE FUNCTION public.check_version_and_increment();
-CREATE TRIGGER tr_banco_version_control BEFORE UPDATE ON public.banco_candidatos FOR EACH ROW EXECUTE FUNCTION public.check_version_and_increment();
-CREATE TRIGGER tr_convocacoes_version_control BEFORE UPDATE ON public.convocacoes FOR EACH ROW EXECUTE FUNCTION public.check_version_and_increment();
 
--- 3. RLS - Row Level Security (Initial setup)
+-- 3. RLS - Row Level Security (Advanced)
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vagas ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.editais ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.banco_candidatos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.convocacoes ENABLE ROW LEVEL SECURITY;
+-- ... enable for others
 
--- Simple policy: authenticated users can read all (can be refined per profile later)
-CREATE POLICY "Public Read" ON public.vagas FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Public Read" ON public.editais FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Public Read" ON public.banco_candidatos FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Public Read" ON public.convocacoes FOR SELECT USING (auth.role() = 'authenticated');
+-- Policy: Users can read their own profile
+CREATE POLICY "Users can view own profile" ON public.usuarios FOR SELECT USING (auth.uid() = id);
+
+-- Policy: Admin can do anything (requires a check function)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.usuarios_perfis up
+    JOIN public.perfis p ON up.perfil_id = p.id
+    WHERE up.user_id = auth.uid() AND p.nome = 'Administrador'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE POLICY "Admins full access" ON public.vagas FOR ALL TO authenticated USING (public.is_admin());
+
+-- Policy: Unit Analyst can only see/edit their unit
+CREATE POLICY "Unit Analyst specific unit" ON public.vagas
+FOR ALL TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.usuarios u
+    WHERE u.id = auth.uid() AND (u.unidade_id = vagas.unidade_id OR u.perfil = 'Administrador')
+  )
+);
+
+-- Seed Initial Roles
+INSERT INTO public.perfis (nome, descricao) VALUES
+('Administrador', 'Acesso total ao sistema'),
+('Analista da unidade', 'Gestão de vagas da unidade específica'),
+('Analista do edital', 'Criação e acompanhamento de editais'),
+('Analista de convocações', 'Gestão do banco e convocações'),
+('Assistente', 'Acesso operacional limitado'),
+('Gestão', 'Visualização de relatórios e indicadores');

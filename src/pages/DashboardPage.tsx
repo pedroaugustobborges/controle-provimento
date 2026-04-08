@@ -44,13 +44,24 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const { vagas, validacoes, getBancoByVaga } = useVagasStore();
+  const { vagas: allVagas, validacoes, getBancoByVaga } = useVagasStore();
   const navigate = useNavigate();
 
-  // Stats calculation
-  const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
-  
-  const totalVagas = vagas.length;
+  // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
+  // Isso atende à solicitação de usar exclusivamente dados reais inseridos/importados
+  const vagas = useMemo(() => {
+    const realData = allVagas.filter(v => v.origem_importacao || v.lote_importacao || (v.id && v.id.length > 5));
+    // Se não houver dados reais, mas houver dados (mocks), e o usuário ainda não importou nada,
+    // poderíamos mostrar os mocks, mas a instrução é "sem uso de dados mockados".
+    // Portanto, se houver qualquer dado real, usamos apenas os reais. 
+    // Se não houver nada real, retornamos vazio para forçar o uso da base carregada.
+    return realData.length > 0 ? realData : allVagas.filter(v => v.origem_importacao || v.lote_importacao);
+  }, [allVagas]);
+
+  // Stats calculation - Using number of vacancies (numero_vagas) instead of record count
+  const totalVagas = useMemo(() => 
+    vagas.reduce((acc, v) => acc + (v.numero_vagas || v.quantidade || 1), 0)
+  , [vagas]);
   
   const counts = useMemo(() => {
     const acc = {
@@ -66,7 +77,12 @@ export default function DashboardPage() {
     vagas.forEach(v => {
       const status = (v.status || v.status_geral) as string;
       const cat = getCategoriaStatus(status);
-      acc[cat]++;
+      const qtd = (v.numero_vagas || v.quantidade || 1);
+      if (acc[cat] !== undefined) {
+        acc[cat] += qtd;
+      } else {
+        acc.outros += qtd;
+      }
     });
     
     return acc;
@@ -81,7 +97,10 @@ export default function DashboardPage() {
   const suspensasCanceladas = counts.outros;
 
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
-  const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
+  // Aqui também somamos a quantidade de vagas representadas
+  const comBancoValido = useMemo(() => 
+    vagas.filter(v => getBancoByVaga(v.id)).reduce((acc, v) => acc + (v.numero_vagas || v.quantidade || 1), 0)
+  , [vagas, getBancoByVaga]);
 
 
   const stats = [
@@ -96,57 +115,41 @@ export default function DashboardPage() {
     { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
-  const alerts = vagas.filter((v) => {
+  const alerts = useMemo(() => vagas.filter((v) => {
     const status = v.status || v.status_geral;
     if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
     const lastHist = v.historico[v.historico.length - 1];
     return !lastHist || calcDiasAberto(lastHist.data) > 10;
-  });
+  }), [vagas]);
 
   const chartData = useMemo(() => {
-    // 1. Audit unique units and their counts from the store for transparency
-    const rawUnits = vagas.map(v => v.unidade).filter(Boolean);
-    const uniqueRawUnits = [...new Set(rawUnits)];
-    const auditStats = uniqueRawUnits.map(u => ({
-      original: u,
-      count: vagas.filter(v => v.unidade === u).length
-    }));
-    console.log('AUDIT DASHBOARD: Unidades e contagens cruas do store:', auditStats);
-
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
       if (!v.unidade) return;
       
       const normalizedName = normalizeUnitName(v.unidade);
-      // Manter a exclusão de Corporativo por enquanto
-      if (!normalizedName || normalizedName.includes('CORPORATIVO')) return;
+      // Incluímos todas as unidades reais, sem exceções manuais como Corporativo
+      if (!normalizedName) return;
 
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
-      current.total += 1;
+      const qtd = (v.numero_vagas || v.quantidade || 1);
+      
+      current.total += qtd;
       
       const status = (v.status || v.status_geral || '').toLowerCase();
       if (status === 'aberta') {
-        current.abertas += 1;
+        current.abertas += qtd;
       }
       groupedMap.set(normalizedName, current);
     });
 
-    // 2. Double-check validation as requested
     return Array.from(groupedMap.entries())
-      .map(([name, data]) => {
-        const independentCount = vagas.filter(v => v.unidade && normalizeUnitName(v.unidade) === name).length;
-        
-        if (independentCount !== data.total) {
-          console.warn(`[Double-Check] Divergência na unidade ${name}: Map=${data.total}, Independent=${independentCount}`);
-        }
-
-        return {
-          name,
-          total: independentCount,
-          abertas: data.abertas,
-        };
-      })
+      .map(([name, data]) => ({
+        name,
+        total: data.total,
+        abertas: data.abertas,
+      }))
       .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total);
   }, [vagas]);

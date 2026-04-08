@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital } from '@/types/vaga';
-import { formatDate } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
@@ -33,26 +33,33 @@ export default function FilaEditaisPage() {
 
   const pendingVagas = useMemo(() => {
     return vagas.filter(v => {
+      // Normalização para consistência
+      const vUnitNormalized = normalizeUnitName(v.unidade);
+      
       // Unit access restriction
-      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
-        return false;
+      if (!currentUser?.visualiza_todas_unidades) {
+        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+        if (!userUnidades.includes(vUnitNormalized)) {
+          return false;
+        }
       }
 
       // Show only vacancies that need process or notice number, or recently imported
       const isPending = !v.numero_processo || !v.numero_edital || v.status_edital !== 'Encerrada';
       
+      const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
-        v.cargo.toLowerCase().includes(search.toLowerCase()) || 
-        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase());
+        v.cargo.toLowerCase().includes(searchTerm) || 
+        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);
       
-      const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
+      const matchUnidade = filterUnidade === 'all' || vUnitNormalized === filterUnidade;
       const matchStatus = filterStatus === 'all' || v.status_edital === filterStatus;
 
       return isPending && matchSearch && matchUnidade && matchStatus;
     });
   }, [vagas, currentUser, search, filterUnidade, filterStatus]);
 
-  const unidades = useMemo(() => Array.from(new Set(vagas.map(v => v.unidade))), [vagas]);
+  const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
   const statusOptions: StatusEdital[] = [
     'Nova vaga', 'Aguardando processo', 'Aguardando edital', 
     'Aguardando processo e edital', 'Em andamento', 'Encerrada'
@@ -101,7 +108,7 @@ export default function FilaEditaisPage() {
               <div className="bg-blue-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-blue-600" /></div>
               <div>
                 <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Aguardando Processo</p>
-                <p className="text-2xl font-bold text-slate-800">{vagas.filter(v => v.status_edital === 'Aguardando processo' || v.status_edital === 'Aguardando processo e edital').length}</p>
+                <p className="text-2xl font-bold text-slate-800">{vagas.filter(v => v.status_edital === 'Aguardando processo' || v.status_edital === 'Aguardando processo e edital').reduce((acc, v) => acc + (v.numero_vagas || v.quantidade || 1), 0)}</p>
               </div>
             </div>
           </CardContent>
@@ -112,7 +119,7 @@ export default function FilaEditaisPage() {
               <div className="bg-amber-100 p-2 rounded-lg"><FileText className="h-5 w-5 text-amber-600" /></div>
               <div>
                 <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Aguardando Edital</p>
-                <p className="text-2xl font-bold text-slate-800">{vagas.filter(v => v.status_edital === 'Aguardando edital' || v.status_edital === 'Aguardando processo e edital').length}</p>
+                <p className="text-2xl font-bold text-slate-800">{vagas.filter(v => v.status_edital === 'Aguardando edital' || v.status_edital === 'Aguardando processo e edital').reduce((acc, v) => acc + (v.numero_vagas || v.quantidade || 1), 0)}</p>
               </div>
             </div>
           </CardContent>

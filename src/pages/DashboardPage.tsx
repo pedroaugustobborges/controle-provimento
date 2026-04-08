@@ -98,15 +98,15 @@ export default function DashboardPage() {
 
 
   const totalCR = useMemo(() => 
-    bancos.filter(b => b.status_import === 'CADASTRO RESERVA' || b.status === 'valido').length
+    bancos.filter(b => b.status === 'CADASTRO RESERVA' || b.status === 'valido').length
   , [bancos]);
 
   const totalVencidos = useMemo(() => 
-    bancos.filter(b => b.status === 'vencido').length
+    bancos.filter(b => b.status === 'VENCIDO' || (b as any).status === 'vencido').length
   , [bancos]);
 
   const totalConvocados = useMemo(() => {
-    return bancos.filter(b => b.status === 'convocado' || b.status_import === 'CONVOCADO').length;
+    return bancos.filter(b => b.status === 'CONVOCADO' || (b as any).status === 'convocado').length;
   }, [bancos]);
 
   const stats = [

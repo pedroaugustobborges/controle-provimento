@@ -267,16 +267,16 @@ export default function DashboardPage() {
                     }}
                     itemStyle={{ padding: '2px 0' }}
                   />
-                  <Bar 
-                    dataKey="total" 
-                    name="Processos Totais" 
+                    <Bar 
+                    dataKey="abertas" 
+                    name="Processos em Aberto" 
                     fill="hsl(var(--primary))" 
                     radius={[0, 6, 6, 0]} 
                     barSize={24} 
                     animationDuration={1500}
                   >
                     <LabelList 
-                      dataKey="total" 
+                      dataKey="abertas" 
                       position="right" 
                       style={{ fill: '#64748b', fontSize: '11px', fontWeight: 'bold' }}
                       offset={10}

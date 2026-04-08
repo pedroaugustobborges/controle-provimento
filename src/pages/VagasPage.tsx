@@ -1,4 +1,5 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
@@ -54,6 +55,8 @@ import {
 
 export default function VagasPage() {
   const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic } = useVagasStore();
+  const [searchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog } = useAdminStore();
   const navigate = useNavigate();
   const permissions = usePermissions();
@@ -253,7 +256,11 @@ export default function VagasPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {currentTab === 'acompanhamento' ? (
+        <AcompanhamentoEditalList />
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Controle de Provimento</h1>
           <p className="text-sm text-muted-foreground mt-1">Gerenciamento centralizado de vagas, editais e convocações.</p>
@@ -642,6 +649,101 @@ export default function VagasPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AcompanhamentoEditalList() {
+  const { vagas } = useVagasStore();
+  const { currentUser } = useAdminStore();
+  const navigate = useNavigate();
+
+  const editaisEmAndamento = useMemo(() => {
+    return vagas.filter(v => {
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      // Regra 4.2: Grupo: edital em andamento
+      const isAndamento = ['em_edital', 'em_documentacao', 'documentacao_ok_azul_pendente', 'documentacao_pendente_azul_ok', 'em_admissao', 'admissao_enviada'].includes(status);
+      
+      if (!isAndamento) return false;
+
+      if (!currentUser?.visualiza_todas_unidades) {
+        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+        if (!userUnidades.includes(normalizeUnitName(v.unidade))) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [vagas, currentUser]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Acompanhamento do Edital</h1>
+          <p className="text-slate-500 mt-1">Acompanhamento operacional das etapas dos editais publicados.</p>
+        </div>
+      </div>
+
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="px-6 py-4 text-left">Unidade</th>
+                  <th className="px-6 py-4 text-left">Cargo</th>
+                  <th className="px-6 py-4 text-left">Nº Edital</th>
+                  <th className="px-6 py-4 text-left">Etapa Atual</th>
+                  <th className="px-6 py-4 text-center">Situação</th>
+                  <th className="px-6 py-4 text-center">Inscritos</th>
+                  <th className="px-6 py-4 text-center">Aprovados</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {editaisEmAndamento.map((v) => (
+                  <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-700">{v.unidade}</td>
+                    <td className="px-6 py-4 font-semibold text-slate-800">{v.cargo}</td>
+                    <td className="px-6 py-4 font-bold text-primary">{v.numero_edital || '—'}</td>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-bold">
+                        {v.acompanhamento?.etapa_atual || 'Não informada'}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                       {v.acompanhamento?.situacao_etapa === 'atrasada' ? (
+                         <Badge className="bg-red-100 text-red-700 border-red-200 font-bold">ATRASADA</Badge>
+                       ) : v.acompanhamento?.situacao_etapa === 'realizada' ? (
+                         <Badge className="bg-green-100 text-green-700 border-green-200 font-bold">REALIZADA</Badge>
+                       ) : (
+                         <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold">PENDENTE</Badge>
+                       )}
+                    </td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.total_inscritos || 0}</td>
+                    <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || 0}</td>
+                    <td className="px-6 py-4 text-right">
+                      <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => navigate(`/vagas/${v.id}?tab=acompanhamento`)}>
+                        Atualizar <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {editaisEmAndamento.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                      Nenhum edital em andamento visível para suas unidades.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

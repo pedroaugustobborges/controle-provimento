@@ -1,4 +1,12 @@
-export type UserProfile = 'Assistente' | 'Analista' | 'Supervisão' | 'Coordenação' | 'Gerência' | 'Admin';
+export type UserProfile = 
+  | 'Analista da unidade' 
+  | 'Analista do edital' 
+  | 'Analista administrativo' 
+  | 'Assistente' 
+  | 'Analista de convocações' 
+  | 'Gestão' 
+  | 'Administrador'
+  | 'Analista' | 'Supervisão' | 'Coordenação' | 'Gerência' | 'Admin';
 
 export interface User {
   id: string;

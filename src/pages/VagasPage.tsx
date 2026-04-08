@@ -309,8 +309,13 @@ export default function VagasPage() {
                       {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block">
-                        {v.requisicao || v.numero_requisicao || '-'}
+                      <div className="flex flex-col gap-0.5">
+                        <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
+                          {v.requisicao || v.numero_requisicao || '-'}
+                        </div>
+                        {v.source_row_index && (
+                          <span className="text-[9px] text-slate-400 ml-1">Linha {v.source_row_index}</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">

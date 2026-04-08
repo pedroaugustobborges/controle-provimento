@@ -51,6 +51,10 @@ export default function DashboardPage() {
   const totalVagas = vagas.length;
   const emAndamento = vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length;
   const aguardandoUnidade = vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length;
+  const semStatusCount = vagas.filter((v) => {
+    const s = v.status || v.status_geral;
+    return !s || s === '' || s === 'sem_status';
+  }).length;
   const liderancaCount = vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length;
   const movimentacaoCount = vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length;
   const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;

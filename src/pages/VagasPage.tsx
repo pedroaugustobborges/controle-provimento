@@ -125,6 +125,27 @@ export default function VagasPage() {
           <p className="text-sm text-muted-foreground mt-1">Gerenciamento centralizado de vagas, editais e convocações.</p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-[10px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
+            onClick={() => {
+              const diag = getMatchingDiagnostic();
+              console.log('Matching Diagnostic:', diag);
+              toast.info(`${diag.length} vagas sem banco encontradas. Veja o console para detalhes.`);
+              
+              // Export to JSON
+              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(diag, null, 2));
+              const downloadAnchorNode = document.createElement('a');
+              downloadAnchorNode.setAttribute("href",     dataStr);
+              downloadAnchorNode.setAttribute("download", "diagnostico_matching.json");
+              document.body.appendChild(downloadAnchorNode);
+              downloadAnchorNode.click();
+              downloadAnchorNode.remove();
+            }}
+          >
+            <Database className="h-3 w-3" /> Diagnóstico
+          </Button>
           <Button variant="outline" className="gap-2 border-primary/20 hover:bg-primary/5 text-primary font-bold shadow-sm" onClick={() => setIsImportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" /> Importar Excel
           </Button>

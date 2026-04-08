@@ -163,6 +163,7 @@ export function ImportExcelDialog({
                 origem_importacao: selectedFile.name,
                 data_importacao: now,
                 lote_importacao: batchId,
+                import_batch_id: batchId,
                 source_sheet: sheetName,
                 source_row_index: i + 1,
                 tem_banco_valido: false,

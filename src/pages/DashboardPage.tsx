@@ -87,8 +87,8 @@ export default function DashboardPage() {
     
     vagas.forEach(v => {
       const unitKey = isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade;
+      const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
 
-      
       current.total += 1;
       if (v.status === 'aberta' || v.status_geral === 'aberta') {
         current.abertas += 1;

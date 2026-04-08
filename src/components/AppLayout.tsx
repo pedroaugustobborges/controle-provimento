@@ -10,10 +10,17 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link } from 'react-router-dom';
-import { Bell, Search, Home, ChevronRight, Sparkles } from 'lucide-react';
+import { Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -100,19 +107,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 
                 <div className="h-8 w-px bg-border/50 mx-1" />
                 
-                <div className="flex items-center gap-3 cursor-pointer group">
-                  <div className="hidden sm:flex flex-col items-end">
-                    <span className="text-xs font-bold text-foreground leading-none group-hover:text-primary transition-colors">
-                      {currentUser?.nome_completo || 'Usuário'}
-                    </span>
-                    <span className="text-[9px] text-primary/70 font-bold uppercase tracking-widest mt-1">
-                      {currentUser?.perfil || 'Usuário'}
-                    </span>
-                  </div>
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-bold text-xs shadow-lg shadow-primary/15 ring-2 ring-white transition-transform group-hover:scale-105">
-                    {initials}
-                  </div>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-bold text-xs shadow-lg shadow-primary/15 ring-2 ring-white transition-transform hover:scale-105 focus:outline-none">
+                      {initials}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem className="gap-2 cursor-pointer">
+                      <User className="h-4 w-4" />
+                      Meu Perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 cursor-pointer">
+                      <Settings className="h-4 w-4" />
+                      Configurações
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 

@@ -110,6 +110,14 @@ export default function VagasPage() {
     return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
   }), [vagas, currentUser, search, filterUnidade, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
 
+  const countEmAndamento = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countAguardandoUnidade = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countEncerradas = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countLideranca = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countMovimentacao = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countComBanco = useMemo(() => vagas.filter(v => getBancoByVaga(v.id)).length, [vagas, getBancoByVaga]);
+
+
   const clearFilters = () => {
     setSearch('');
     setFilterUnidade('all');

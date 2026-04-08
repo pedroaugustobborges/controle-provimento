@@ -192,11 +192,12 @@ export default function VagaDetalhePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura), color: 'text-blue-600', bg: 'bg-blue-50' },
           { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias`, color: 'text-amber-600', bg: 'bg-amber-50' },
           { icon: FileSpreadsheet, label: 'Origem', value: vaga.origem_importacao || 'Manual', color: 'text-green-600', bg: 'bg-green-50' },
+          { icon: Building2, label: 'Qtd. Vagas', value: vaga.numero_vagas || vaga.quantidade || 0, color: 'text-primary', bg: 'bg-primary/5' },
         ].map((item) => (
           <Card key={item.label} className="border-slate-200 shadow-sm">
             <CardContent className="pt-4 pb-4 px-4 flex items-center gap-3">

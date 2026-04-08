@@ -57,9 +57,14 @@ export function getPublicacaoColor(status: StatusPublicacao): string {
 }
 
 export function calcDiasAberto(dataAbertura: string, dataEncerramento?: string): number {
+  if (!dataAbertura) return 0;
   const start = new Date(dataAbertura);
-  const end = dataEncerramento ? new Date(dataEncerramento) : new Date();
-  return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const end = (dataEncerramento && dataEncerramento !== '') ? new Date(dataEncerramento) : new Date();
+  
+  if (isNaN(start.getTime())) return 0;
+  
+  const diffTime = end.getTime() - start.getTime();
+  return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 }
 
 export function formatDate(date: string): string {

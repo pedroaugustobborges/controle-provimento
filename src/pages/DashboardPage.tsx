@@ -61,7 +61,7 @@ export default function DashboardPage() {
   const convocacoesHoje = 12; // Mock data for now
 
   const stats = [
-    { label: 'Vagas Abertas', value: abertas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Em Edital', value: emEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },

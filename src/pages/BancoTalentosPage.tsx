@@ -63,18 +63,51 @@ export default function BancoTalentosPage() {
         return false;
       }
       
+      // Exclude convocados from the main list as requested
+      if (b.status === 'convocado') return false;
+      
       const normalizedSearch = normalizeCargo(search);
       const matchSearch = normalizeCargo(b.cargo).includes(normalizedSearch) || 
         normalizeCargo(b.unidade).includes(normalizedSearch) ||
         normalizeCargo(b.numero_edital).includes(normalizedSearch);
 
-        
       const matchUnidade = unidadeFilter === 'todas' || b.unidade === unidadeFilter;
       const matchStatus = statusFilter === 'todos' || b.status === statusFilter;
         
       return matchSearch && matchUnidade && matchStatus;
     });
   }, [bancos, currentUser, search, unidadeFilter, statusFilter]);
+
+  const convocadosFiltered = useMemo(() => {
+    return bancos.filter(b => {
+      if (b.status !== 'convocado') return false;
+      
+      // Unit access restriction
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
+        return false;
+      }
+      
+      const normalizedSearch = normalizeCargo(convocadosSearch);
+      const matchSearch = normalizeCargo(b.nome || '').includes(normalizedSearch) || 
+        normalizeCargo(b.cargo).includes(normalizedSearch) ||
+        normalizeCargo(b.numero_edital).includes(normalizedSearch);
+
+      const matchUnidade = convocadosUnidadeFilter === 'todas' || b.unidade_convocacao === convocadosUnidadeFilter;
+      const matchCargo = convocadosCargoFilter === 'todos' || b.cargo === convocadosCargoFilter;
+        
+      return matchSearch && matchUnidade && matchCargo;
+    });
+  }, [bancos, currentUser, convocadosSearch, convocadosUnidadeFilter, convocadosCargoFilter]);
+
+  const convocadosCargos = useMemo(() => {
+    const cargos = [...new Set(bancos.filter(b => b.status === 'convocado').map(b => b.cargo))];
+    return cargos.sort();
+  }, [bancos]);
+
+  const convocadosUnidades = useMemo(() => {
+    const unidades = [...new Set(bancos.filter(b => b.status === 'convocado' && b.unidade_convocacao).map(b => b.unidade_convocacao!))];
+    return unidades.sort();
+  }, [bancos]);
 
   const groupedBancos = useMemo(() => {
     const groups: Record<string, {

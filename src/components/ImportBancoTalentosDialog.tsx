@@ -472,6 +472,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         });
 
         // RULE: Process status correctly from Column H
+        // User requirement: "filtre STATUS=CONVOCADO"
         const statusImportRaw = String(mapped.status_import || '').toUpperCase().trim();
         
         let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' = 'valido';
@@ -489,10 +490,11 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
             }
           }
-        } else if (!statusImportRaw) {
-          // If status is empty, ignore line
-          return;
         }
+        
+        // Ensure that CONVOCADO rows are always included if the user requested it
+        // The previous logic was returning; if statusImportRaw was empty which might have skipped rows
+        if (!statusImportRaw && !mapped.nome) return; // Only skip if both are empty
 
         // Validar campos obrigatórios
         REQUIRED_FIELDS.forEach(field => {

@@ -314,6 +314,15 @@ export default function ImportacoesPage() {
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Baixar Relatório">
                             <Download className="h-4 w-4" />
                           </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-slate-400 hover:text-destructive group-hover:bg-destructive/5" 
+                            title="Excluir Lote e Registros"
+                            onClick={() => setBatchParaExcluir(h)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

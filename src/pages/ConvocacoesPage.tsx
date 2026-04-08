@@ -69,7 +69,7 @@ export default function ConvocacoesPage() {
   const filteredConvocacoes = useMemo(() => {
     const allConvocacoes = [
       ...convocacoes,
-      ...useVagasStore.getState().bancos
+      ...bancos
         .filter(b => b.status === 'convocado')
         .map(b => ({
           id: b.id,
@@ -99,7 +99,7 @@ export default function ConvocacoesPage() {
       }
       return true;
     });
-  }, [convocacoes, currentUser, search]);
+  }, [convocacoes, bancos, currentUser, search]);
 
   const handleNewConvocacao = (vaga?: any) => {
     setSelectedVaga(vaga || null);

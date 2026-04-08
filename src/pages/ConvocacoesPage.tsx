@@ -243,7 +243,7 @@ export default function ConvocacoesPage() {
 
       <div className="mt-2 h-full min-h-[500px]">
         {view === 'kanban' ? (
-          <KanbanBoard />
+          <KanbanBoard convocacoes={filteredConvocacoes} />
         ) : view === 'list' ? (
           <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
             <CardHeader className="bg-slate-50/50 border-b pb-3">

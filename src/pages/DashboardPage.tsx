@@ -152,19 +152,19 @@ export default function DashboardPage() {
     { label: 'Fila de Editais', value: filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Concluídas', value: concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Estratégicas', value: estrategicas, icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Convocações', value: convocacao, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Exceções', value: excecoes, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Com Banco Válido', value: comBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Mov. Interna', value: totalMovInterna, icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Liderança', value: totalLideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Conv. Realizadas', value: totalConvRealizadas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Etapas em Atraso', value: totalAtrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Canceladas', value: totalCanceladas, icon: X, color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Dispensa', value: totalDispensa, icon: RefreshCw, color: 'text-slate-600', bg: 'bg-slate-50' },
     { label: 'Aguardar Anuência', value: totalAnuencia, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    { label: 'Etapas em Atraso', value: totalAtrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Edital Pend. Valid.', value: emValidacao, icon: ShieldCheck, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50' },
-  ], [totalVagas, filaEdital, emAndamento, concluidas, totalMovInterna, totalLideranca, totalCR, totalConvocados, totalVencidos, totalConvRealizadas, totalCanceladas, totalDispensa, totalAnuencia, totalAtrasadas, emValidacao, totalTarefasPendentes]);
+  ], [totalVagas, filaEdital, emAndamento, concluidas, estrategicas, convocacao, excecoes, comBancoValido, totalMovInterna, totalLideranca, totalAtrasadas, totalCanceladas, totalDispensa, totalAnuencia, emValidacao, totalTarefasPendentes]);
 
   const alerts = useMemo(() => vagas.filter((v) => {
     const status = v.status || v.status_geral;

@@ -190,8 +190,9 @@ export default function BancoTalentosPage() {
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <SheetTitle className="text-xl font-bold">{selectedBanco?.nome || "Detalhes do Candidato"}</SheetTitle>
-                <SheetDescription>Informações detalhadas do banco de talentos.</SheetDescription>
+                <SheetTitle className="text-xl font-bold">{selectedBanco?.cargo || "Detalhes do Banco"}</SheetTitle>
+                <SheetDescription>Banco total: <span className="font-bold text-primary">{selectedBanco?.quantidade_banco || 'Não informado'}</span></SheetDescription>
+
               </div>
             </div>
             {selectedBanco && (

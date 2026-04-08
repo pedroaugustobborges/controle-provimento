@@ -216,7 +216,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text.includes('triagem')) return 'em_edital'; 
   if (text.includes('finaliz') || text.includes('concluid') || text.includes('concluíd') || text.includes('encerrad')) return 'admissao_efetivada';
   
-  return 'sem_status';
+  return 'aberta';
 }
 
 

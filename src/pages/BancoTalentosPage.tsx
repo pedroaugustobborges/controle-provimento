@@ -510,7 +510,7 @@ export default function BancoTalentosPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="list" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="list" className="gap-2">
             <Filter className="h-4 w-4" /> Cadastro Reserva

@@ -3,7 +3,7 @@ import { useVagasStore } from '@/store/vagasStore';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, getCategoriaStatus } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 
   Briefcase, 
@@ -51,28 +51,48 @@ export default function DashboardPage() {
   const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
   
   const totalVagas = vagas.length;
-  const emAndamento = vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length;
-  const aguardandoUnidade = vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length;
-  const semStatusCount = vagas.filter((v) => {
-    const s = (v.status || v.status_geral) as string;
-    return !s || s === '' || s === 'sem_status';
-  }).length;
-  const liderancaCount = vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length;
-  const movimentacaoCount = vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length;
-  const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;
+  
+  const counts = useMemo(() => {
+    const acc = {
+      em_andamento: 0,
+      aguardando_unidade: 0,
+      sem_status: 0,
+      lideranca: 0,
+      movimentacao_interna: 0,
+      encerradas: 0,
+      outros: 0,
+    };
+    
+    vagas.forEach(v => {
+      const status = (v.status || v.status_geral) as string;
+      const cat = getCategoriaStatus(status);
+      acc[cat]++;
+    });
+    
+    return acc;
+  }, [vagas]);
+
+  const emAndamento = counts.em_andamento;
+  const aguardandoUnidade = counts.aguardando_unidade;
+  const semStatusCount = counts.sem_status;
+  const liderancaCount = counts.lideranca;
+  const movimentacaoCount = counts.movimentacao_interna;
+  const encerradas = counts.encerradas;
+  const suspensasCanceladas = counts.outros;
+
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
-  
+
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Aguardando Unidade', value: aguardandoUnidade, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Sem Status', value: semStatusCount, icon: AlertCircle, color: 'text-slate-500', bg: 'bg-slate-50' },
-    { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Liderança', value: liderancaCount, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Movimentação Int.', value: movimentacaoCount, icon: RefreshCw, color: 'text-cyan-600', bg: 'bg-cyan-50' },
-    { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-slate-600', bg: 'bg-slate-100' },
+    { label: 'Suspensas/Canc.', value: suspensasCanceladas, icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Sem Status', value: semStatusCount, icon: AlertCircle, color: 'text-slate-500', bg: 'bg-slate-50' },
+    { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 

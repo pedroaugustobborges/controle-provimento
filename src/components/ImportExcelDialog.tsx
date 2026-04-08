@@ -19,24 +19,36 @@ import { convertDateValue } from '@/lib/dateImportUtils';
 type Step = 'select' | 'processing' | 'summary';
 
 const VAGA_SHEETS = [
+  'tb_HECAD', 'tb_CRER', 'tb_AGIR', 'tb_HUGOL', 'tb_HDS', 
+  'tb_POLICLINICA', 'tb_VITORIA', 'tb_JATAI', 'tb_TEIA_ANAPOLIS', 
+  'tb_TEIA_CANEDO', 'tb_TEIA_APARECIDA', 'tb_TEIA_GOIANIA',
+  // Manter suporte aos nomes antigos por retrocompatibilidade se necessário
   'Vagas - HECAD', 'Vagas - CRER', 'Vagas - AGIR', 'Vagas - HUGOL', 
   'Vagas - HDS', 'Vagas - POLICLÍNICA', 'Vagas - VITÓRIA', 'Vagas - JATAÍ', 
   'Vagas - TEIA ANÁPOLIS', 'Vagas - TEIA CANEDO', 'Vagas - TEIA APARECIDA', 'Vagas - TEIA GOIÂNIA'
 ];
 
 const UNIT_MAPPING: Record<string, string> = {
+  'tb_HECAD': 'HECAD',
+  'tb_CRER': 'CRER',
+  'tb_AGIR': 'AGIR',
+  'tb_HUGOL': 'HUGOL',
+  'tb_HDS': 'HDS',
+  'tb_POLICLINICA': 'POLICLÍNICA',
+  'tb_VITORIA': 'VITÓRIA',
+  'tb_JATAI': 'JATAÍ',
+  'tb_TEIA_ANAPOLIS': 'TEIA ANÁPOLIS',
+  'tb_TEIA_CANEDO': 'TEIA CANEDO',
+  'tb_TEIA_APARECIDA': 'TEIA APARECIDA',
+  'tb_TEIA_GOIANIA': 'TEIA GOIÂNIA',
   'Vagas - HECAD': 'HECAD',
   'Vagas - CRER': 'CRER',
   'Vagas - AGIR': 'AGIR',
   'Vagas - HUGOL': 'HUGOL',
   'Vagas - HDS': 'HDS',
   'Vagas - POLICLÍNICA': 'POLICLÍNICA',
-  'Vagas - VITÓRIA': 'VITÓRIA', // Will be split between SÃO PEDRO and SUÁ
+  'Vagas - VITÓRIA': 'VITÓRIA',
   'Vagas - JATAÍ': 'JATAÍ',
-  'Vagas - TEIA ANÁPOLIS': 'TEIA ANÁPOLIS',
-  'Vagas - TEIA CANEDO': 'TEIA CANEDO',
-  'Vagas - TEIA APARECIDA': 'TEIA APARECIDA',
-  'Vagas - TEIA GOIÂNIA': 'TEIA GOIÂNIA',
 };
 
 interface ImportExcelDialogProps {

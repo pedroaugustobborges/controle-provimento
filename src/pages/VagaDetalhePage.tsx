@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga } from '@/types/vaga';
 import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
@@ -276,6 +276,7 @@ export default function VagaDetalhePage() {
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>
           <TabsTrigger value="edital" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Edital e Fila</TabsTrigger>
+          <TabsTrigger value="acompanhamento" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Acompanhamento</TabsTrigger>
           <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Banco de Talentos</TabsTrigger>
           <TabsTrigger value="convocacoes" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Convocações</TabsTrigger>
           <TabsTrigger value="validacao" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Validação</TabsTrigger>
@@ -490,6 +491,10 @@ export default function VagaDetalhePage() {
           <EditalTab vagaId={vaga.id} edital={edital} />
         </TabsContent>
         
+        <TabsContent value="acompanhamento">
+          <AcompanhamentoTab vaga={vaga} />
+        </TabsContent>
+        
         <TabsContent value="banco">
           <BancoTab vaga={vaga} onStartConvocacao={() => setIsConvocacaoDialogOpen(true)} />
         </TabsContent>
@@ -574,6 +579,137 @@ export default function VagaDetalhePage() {
     </div>
   );
 }
+
+function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
+  const { updateVaga } = useVagasStore();
+  const [form, setForm] = useState<any>(vaga.acompanhamento || {
+    etapa_atual: 'inscricoes',
+    total_inscritos: 0,
+    aprovados_triagem: 0,
+    aprovados_avaliacao_especifica: 0,
+    convocados_entrevista: 0,
+    aprovados_finais: 0,
+    gerou_banco: false,
+    quantidade_banco: 0,
+    situacao_etapa: 'pendente',
+    observacoes_etapa: ''
+  });
+
+
+  const [cronograma, setCronograma] = useState(vaga.cronograma || {});
+
+  const save = () => {
+    updateVaga(vaga.id, { 
+      acompanhamento: form,
+      cronograma: cronograma,
+      total_inscritos: form.total_inscritos,
+      aprovados_triagem: form.aprovados_triagem,
+      aprovados_finais: form.aprovados_finais,
+      convocados_entrevista: form.convocados_entrevista
+    });
+    toast.success('Acompanhamento atualizado!');
+  };
+
+  return (
+    <Card className="border-slate-200 shadow-sm">
+      <CardContent className="pt-6 space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest border-b pb-2">Etapa Atual e Situação</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500">Etapa Atual</label>
+                <Select value={form.etapa_atual} onValueChange={(v) => setForm({ ...form, etapa_atual: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ETAPA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500">Situação</label>
+                <Select value={form.situacao_etapa} onValueChange={(v: any) => setForm({ ...form, situacao_etapa: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="realizada">Realizada</SelectItem>
+                    <SelectItem value="atrasada">Atrasada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500">Observações da Etapa</label>
+              <Textarea 
+                value={form.observacoes_etapa} 
+                onChange={(e) => setForm({ ...form, observacoes_etapa: e.target.value })} 
+                placeholder="Ex: Aguardando retorno da banca..."
+              />
+            </div>
+
+
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest border-b pb-2 pt-4">Indicadores Quantitativos</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Total Inscritos</label>
+                <Input type="number" value={form.total_inscritos} onChange={(e) => setForm({ ...form, total_inscritos: +e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Aprov. Triagem</label>
+                <Input type="number" value={form.aprovados_triagem} onChange={(e) => setForm({ ...form, aprovados_triagem: +e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Aprov. Online</label>
+                <Input type="number" value={form.aprovados_avaliacao_especifica} onChange={(e) => setForm({ ...form, aprovados_avaliacao_especifica: +e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Conv. Entrevista</label>
+                <Input type="number" value={form.convocados_entrevista} onChange={(e) => setForm({ ...form, convocados_entrevista: +e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Aprov. Finais</label>
+                <Input type="number" value={form.aprovados_finais} onChange={(e) => setForm({ ...form, aprovados_finais: +e.target.value })} />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6 bg-slate-50/50 p-6 rounded-xl border border-slate-100">
+            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest border-b pb-2">Cronograma do Edital</h4>
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                { label: 'Inscrição', key: 'data_inscricao' },
+                { label: 'Triagem', key: 'data_triagem' },
+                { label: 'Avaliação Curricular', key: 'data_avaliacao_curricular' },
+                { label: 'Avaliação Específica Online', key: 'data_avaliacao_especifica_online' },
+                { label: 'Res. Aval. Online', key: 'data_resultado_avaliacao_especifica_online' },
+                { label: 'Entrevistas', key: 'data_entrevistas' },
+                { label: 'Resultado Final', key: 'data_resultado_final' },
+                { label: 'Convocação', key: 'data_convocacao' },
+                { label: 'Encerramento', key: 'data_encerramento_processo' },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between gap-4">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase">{item.label}</label>
+                  <Input 
+                    type="date" 
+                    value={cronograma[item.key as keyof typeof cronograma] || ''} 
+                    onChange={(e) => setCronograma({ ...cronograma, [item.key]: e.target.value })}
+                    className="w-40 bg-white"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4 border-t border-slate-100">
+          <Button onClick={save} className="bg-primary px-12 font-bold">Salvar Acompanhamento</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
   const { updateEdital, addEdital } = useVagasStore();

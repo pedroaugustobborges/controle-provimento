@@ -75,6 +75,19 @@ export default function ValidacaoEditaisPage() {
         usuario: currentUser?.nome_completo || 'Admin'
       }]
     });
+    
+    addAuditLog({
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || 'sistema@sistema.com',
+      perfil: currentUser?.perfil || 'Admin',
+      data: new Date().toISOString().split('T')[0],
+      hora: new Date().toLocaleTimeString(),
+      acao: `Validação de Edital: ${status.toUpperCase()}`,
+      modulo: 'Editais',
+      registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+      valor_novo: status
+    });
+
 
     toast.success(`Edital ${status === 'aprovado' ? 'validado' : 'reprovado'} com sucesso.`);
     setIsModalOpen(false);

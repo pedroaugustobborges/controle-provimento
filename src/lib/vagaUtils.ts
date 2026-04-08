@@ -252,6 +252,44 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
     .toUpperCase();
 }
 
+/**
+ * Canonical filter to ensure parity between metrics, dashboards and tables.
+ * Implements the spreadsheet rule: 
+ * - Must have cargo (Column F in Excel)
+ * - Unit filter (B4 in Excel)
+ * - Month filter on data_abertura (B10 in Excel)
+ */
+export function getValidVacancyBase(
+  records: any[],
+  selectedUnit?: string,
+  selectedMonth?: string
+): any[] {
+  const normUnit = selectedUnit && selectedUnit !== 'all' && selectedUnit !== 'TODOS' 
+    ? normalizeUnitName(selectedUnit) 
+    : 'TODOS';
+    
+  const normMonth = selectedMonth && selectedMonth !== 'all' && selectedMonth !== 'TODOS' 
+    ? selectedMonth.toUpperCase().trim() 
+    : 'TODOS';
+
+  return records.filter((row) => {
+    // 1. Mandatory Cargo (Column F)
+    const hasCargo = String(row.cargo ?? "").trim() !== "";
+    if (!hasCargo) return false;
+
+    // 2. Unit Filter (Sheet name or unidade field)
+    const rowUnit = normalizeUnitName(row.unidade);
+    const passesUnit = normUnit === 'TODOS' || rowUnit === normUnit;
+    if (!passesUnit) return false;
+
+    // 3. Month Filter (Column B)
+    if (normMonth === 'TODOS') return true;
+    
+    const aberturaMonth = getMonthNamePtBrUpper(row.data_abertura);
+    return aberturaMonth === normMonth;
+  });
+}
+
 export function countVacancies({
   records,
   selectedUnit,
@@ -261,56 +299,12 @@ export function countVacancies({
   selectedUnit: string;
   selectedMonth?: string;
 }) {
-  const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
-  const hasValue = (val?: any) => String(val ?? "").trim() !== "";
-
-  const normalizedUnit = normalize(selectedUnit);
-  const normalizedMonth = normalize(selectedMonth);
-
-  return records.filter((row) => {
-    const rowUnit = normalize(row.unidade);
-    const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
-    const hasCargoValue = hasValue(row.cargo);
-
-    if (!sameUnit || !hasCargoValue) {
-      return false;
-    }
-
-    if (normalizedMonth === "" || normalizedMonth === "TODOS") {
-      return true;
-    }
-
-    const aberturaMonth = getMonthNamePtBrUpper(row.data_abertura);
-    return aberturaMonth === normalizedMonth;
-  }).length;
+  return getValidVacancyBase(records, selectedUnit, selectedMonth).length;
 }
 
 export function getStatusSummary(records: any[], selectedUnit: string, selectedMonth?: string) {
-  const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
-  const hasValue = (val?: any) => String(val ?? "").trim() !== "";
+  const validVacancies = getValidVacancyBase(records, selectedUnit, selectedMonth);
 
-  const normalizedUnit = normalize(selectedUnit);
-  const normalizedMonth = normalize(selectedMonth);
-
-  // 1. Get valid vacancy base (same logic as countVacancies but returning the rows)
-  const validVacancies = records.filter((row) => {
-    const rowUnit = normalize(row.unidade);
-    const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
-    const hasCargoValue = hasValue(row.cargo);
-
-    if (!sameUnit || !hasCargoValue) {
-      return false;
-    }
-
-    if (normalizedMonth === "" || normalizedMonth === "TODOS") {
-      return true;
-    }
-
-    const aberturaMonth = getMonthNamePtBrUpper(row.data_abertura);
-    return aberturaMonth === normalizedMonth;
-  });
-
-  // 2. Group by status
   const summary: Record<string, number> = {};
   validVacancies.forEach(row => {
     const status = (row.status || row.status_geral || 'SEM_STATUS').toUpperCase().trim();

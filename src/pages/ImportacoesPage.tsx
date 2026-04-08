@@ -77,10 +77,25 @@ export default function ImportacoesPage() {
       setFileParaExcluir(null);
     }
   };
-  const handleClearAllData = () => {
-    clearAllData();
-    toast.success('Todos os dados foram removidos com sucesso');
-    setIsClearAllDialogOpen(false);
+  const handleClearAllData = async () => {
+    try {
+      // Registrar ação na auditoria antes de limpar
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await DatabaseService.logAudit('SISTEMA', 'all', 'CLEAR_ALL_DATA', user.id, { reason: 'User requested full reset' });
+      }
+
+      // Em um cenário real, isso seria uma chamada para o backend/RPC
+      // Aqui limpamos o store local e simulamos a limpeza do banco
+      clearAllData();
+      
+      toast.success('Todos os dados foram removidos com sucesso (Store Local e Auditoria Registrada)');
+    } catch (error) {
+      console.error('Erro ao limpar dados:', error);
+      toast.error('Erro ao limpar dados do sistema');
+    } finally {
+      setIsClearAllDialogOpen(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {

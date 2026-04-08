@@ -172,7 +172,7 @@ export default function DashboardPage() {
     if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
     
     // Cálculo de dias aberto usa data de recebimento se não houver histórico recente
-    const lastHist = v.historico[v.historico.length - 1];
+    const lastHist = v.historico?.[v.historico.length - 1];
     const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
     return calcDiasAberto(baseDate) > 10;
   }), [vagas]);

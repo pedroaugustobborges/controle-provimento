@@ -102,7 +102,7 @@ export default function DashboardPage() {
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   // Aqui também somamos a quantidade de vagas representadas
   const comBancoValido = useMemo(() => 
-    vagas.filter(v => getBancoByVaga(v.id)).reduce((acc, v) => acc + (v.numero_vagas || v.quantidade || 1), 0)
+    vagas.filter(v => getBancoByVaga(v.id)).length
   , [vagas, getBancoByVaga]);
 
 

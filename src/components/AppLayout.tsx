@@ -35,16 +35,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex w-full bg-[#F8FAFC]">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center justify-between border-b bg-white px-6 shrink-0 z-10 sticky top-0 shadow-sm">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger className="h-9 w-9 text-slate-500 hover:text-primary transition-colors" />
-              <div className="h-6 w-[1px] bg-slate-200 hidden md:block"></div>
+          <header className="h-20 flex items-center justify-between border-b bg-white/80 backdrop-blur-md px-8 shrink-0 z-20 sticky top-0 shadow-sm border-slate-100">
+            <div className="flex items-center gap-6">
+              <SidebarTrigger className="h-10 w-10 text-slate-400 hover:text-primary hover:bg-primary/5 transition-all rounded-xl border border-slate-100" />
+              <div className="h-8 w-[1px] bg-slate-100 hidden md:block"></div>
               
               <Breadcrumb className="hidden md:block">
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to="/" className="text-slate-500 hover:text-primary transition-colors text-xs font-medium uppercase tracking-wider">Visão Geral</Link>
+                      <Link to="/" className="text-slate-400 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em]">Home</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   {pathnames.map((name, index) => {
@@ -52,13 +52,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     const isLast = index === pathnames.length - 1;
                     return (
                       <React.Fragment key={name}>
-                        <BreadcrumbSeparator className="text-slate-300" />
+                        <BreadcrumbSeparator className="text-slate-200" />
                         <BreadcrumbItem>
                           {isLast ? (
-                            <BreadcrumbPage className="text-slate-800 font-bold text-xs uppercase tracking-wider">{getBreadcrumbLabel(name)}</BreadcrumbPage>
+                            <BreadcrumbPage className="text-slate-800 font-black text-[10px] uppercase tracking-[0.2em] bg-slate-50 px-2 py-1 rounded-md border border-slate-100">{getBreadcrumbLabel(name)}</BreadcrumbPage>
                           ) : (
                             <BreadcrumbLink asChild>
-                              <Link to={routeTo} className="text-slate-500 hover:text-primary transition-colors text-xs font-medium uppercase tracking-wider">{getBreadcrumbLabel(name)}</Link>
+                              <Link to={routeTo} className="text-slate-400 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em]">{getBreadcrumbLabel(name)}</Link>
                             </BreadcrumbLink>
                           )}
                         </BreadcrumbItem>
@@ -69,29 +69,33 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </Breadcrumb>
             </div>
 
-            <div className="flex items-center gap-6">
-              <div className="hidden lg:flex items-center gap-2 text-[10px] text-slate-400 font-medium uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                <Clock className="h-3 w-3" />
-                <span>Atualizado: Hoje, 14:30</span>
+            <div className="flex items-center gap-8">
+              <div className="hidden xl:flex items-center gap-2.5 text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] bg-slate-50/50 px-4 py-2 rounded-full border border-slate-100 shadow-inner">
+                <Clock className="h-3.5 w-3.5 text-primary/60" />
+                <span>Sync: Hoje, 14:30</span>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button className="p-2 text-slate-400 hover:text-primary transition-colors">
-                  <Search className="h-5 w-5" />
-                </button>
-                <button className="p-2 text-slate-400 hover:text-primary transition-colors relative">
+              <div className="flex items-center gap-4">
+                <div className="relative group hidden sm:block">
+                  <button className="p-2.5 text-slate-400 hover:text-primary transition-all rounded-xl hover:bg-primary/5 border border-transparent hover:border-primary/10">
+                    <Search className="h-5 w-5" />
+                  </button>
+                  <span className="absolute -bottom-1 -right-1 h-4 w-4 bg-white border border-slate-200 rounded text-[8px] font-black flex items-center justify-center shadow-sm text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">/</span>
+                </div>
+                
+                <button className="p-2.5 text-slate-400 hover:text-primary transition-all rounded-xl hover:bg-primary/5 relative border border-transparent hover:border-primary/10">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute top-2 right-2 h-2 w-2 bg-destructive rounded-full border-2 border-white"></span>
+                  <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-destructive rounded-full border-2 border-white shadow-sm ring-2 ring-destructive/20 animate-pulse"></span>
                 </button>
                 
-                <div className="h-8 w-[1px] bg-slate-200 mx-1"></div>
+                <div className="h-10 w-[1px] bg-slate-100 mx-1"></div>
                 
-                <div className="flex items-center gap-3 pl-1">
+                <div className="flex items-center gap-4 pl-1 group cursor-pointer">
                   <div className="flex flex-col items-end">
-                    <span className="text-xs font-bold text-slate-700 leading-none">Ana Paula Oliveira</span>
-                    <span className="text-[10px] text-primary font-semibold uppercase tracking-tighter mt-1">Gestora de RH · AGIR</span>
+                    <span className="text-xs font-black text-slate-800 leading-none group-hover:text-primary transition-colors">Ana Paula Oliveira</span>
+                    <span className="text-[9px] text-primary font-black uppercase tracking-widest mt-1.5 opacity-70">RH Admin · AGIR</span>
                   </div>
-                  <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xs shadow-sm shadow-primary/20">
+                  <div className="h-11 w-11 rounded-xl bg-primary flex items-center justify-center text-white font-black text-xs shadow-lg shadow-primary/20 ring-2 ring-white transition-transform group-hover:scale-105">
                     AP
                   </div>
                 </div>

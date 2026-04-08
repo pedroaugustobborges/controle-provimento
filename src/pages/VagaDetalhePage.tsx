@@ -46,6 +46,7 @@ export default function VagaDetalhePage() {
 
   const edital = getEditalByVaga(vaga.id);
   const validacao = getValidacaoByVaga(vaga.id);
+  const banco = useVagasStore(s => s.getBancoByVaga(vaga.id));
 
   const handleStatusChange = (newStatus: string) => {
     const oldStatus = vaga.status || vaga.status_geral;
@@ -119,11 +120,10 @@ export default function VagaDetalhePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {[
           { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura), color: 'text-blue-600', bg: 'bg-blue-50' },
           { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias`, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { icon: User, label: 'Responsável', value: vaga.analista_responsavel || 'Sistema', color: 'text-purple-600', bg: 'bg-purple-50' },
           { icon: FileSpreadsheet, label: 'Origem', value: vaga.origem_importacao || 'Manual', color: 'text-green-600', bg: 'bg-green-50' },
         ].map((item) => (
           <Card key={item.label} className="border-slate-200 shadow-sm">
@@ -183,8 +183,17 @@ export default function VagaDetalhePage() {
                   </div>
                 )}
                 <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><Info className="h-3 w-3" /> Banco Válido?</label>
-                  <p className="text-sm font-semibold text-slate-700">{vaga.tem_banco_valido ? 'Sim' : 'Não'}</p>
+                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3" /> Banco Ativo?</label>
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm font-bold ${banco ? 'text-green-600' : 'text-slate-500'}`}>
+                      {banco ? `Sim (${banco.numero_edital})` : 'Não'}
+                    </p>
+                    {banco && (
+                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-green-200 text-green-700 bg-green-50">
+                        {banco.status.toUpperCase()}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -534,7 +543,7 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="space-y-1">
             <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Data de Abertura</label>
             <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_abertura_edital)}</p>
@@ -546,6 +555,10 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
           <div className="space-y-1">
             <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Prorrogado?</label>
             <p className="text-sm font-semibold text-slate-700">{banco.is_prorrogado ? 'Sim' : 'Não'}</p>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Candidatos no Banco</label>
+            <p className="text-sm font-bold text-primary">{banco.quantidade_banco || 'Não informado'}</p>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ import {
 export default function BancoTalentosPage() {
   const { bancos, importHistory, importedFiles, deleteBanco } = useVagasStore();
   const { currentUser } = useAdminStore();
+  const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [unidadeFilter, setUnidadeFilter] = useState('todas');
   const [statusFilter, setStatusFilter] = useState('todos');
@@ -151,13 +153,15 @@ export default function BancoTalentosPage() {
           <p className="text-slate-500 mt-1">Gestão de validade e disponibilidade de candidatos aprovados.</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2 border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
-            onClick={() => setIsImportOpen(true)}
-          >
-            <FileSpreadsheet className="h-4 w-4" /> Importar Excel
-          </Button>
+          {permissions.canImport() && (
+            <Button 
+              variant="outline" 
+              className="gap-2 border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
+              onClick={() => setIsImportOpen(true)}
+            >
+              <FileSpreadsheet className="h-4 w-4" /> Importar Excel
+            </Button>
+          )}
           <Button 
             className="gap-2 bg-primary shadow-md shadow-primary/20"
             onClick={() => setIsFormOpen(true)}

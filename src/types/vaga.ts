@@ -72,6 +72,9 @@ export interface Vaga {
   convocados_entrevista?: number;
   trace_key?: string;
   vaga?: string; // Identifier for the specific vacancy within a requisition
+  source_row_index?: number;
+  import_batch_id?: string;
+  raw_row_hash?: string;
 }
 
 export interface BancoTalentos {

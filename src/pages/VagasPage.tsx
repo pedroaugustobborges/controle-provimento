@@ -190,10 +190,11 @@ export default function VagasPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
             <p className="text-2xl font-bold text-slate-800">{vagas.length}</p>
+            <p className="text-[10px] text-slate-400">Total absoluto em base</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">
@@ -308,8 +309,13 @@ export default function VagasPage() {
                       {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block">
-                        {v.requisicao || v.numero_requisicao || '-'}
+                      <div className="flex flex-col gap-0.5">
+                        <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
+                          {v.requisicao || v.numero_requisicao || '-'}
+                        </div>
+                        {v.source_row_index && (
+                          <span className="text-[9px] text-slate-400 ml-1">Linha {v.source_row_index}</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">

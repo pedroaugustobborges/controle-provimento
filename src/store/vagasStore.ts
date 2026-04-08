@@ -115,21 +115,6 @@ export const useVagasStore = create<VagasState>()(
           }
         }
         
-        // Regional unit sets for scope matching
-        const goianiaUnits = [
-          'CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 
-          'CEALCON', 'HUGO', 'HEAPA', 'HEG', 'HDT', 'GOIANIA', 'AGIR',
-          'HOSPITAL CENTRAL', 'CENTRAL', 'MATERNIDADE', 'HEMMNSL', 'HOSPITAL ESTADUAL',
-          'CORA', 'HECON', 'HESLV', 'HETRIN', 'HEEL', 'HEJA', 'HERP', 'GOIAS', 'GO',
-          'HGG', 'HOSPITAL GERAL', 'HEVANA', 'HEAPA', 'HEMO', 'HEMONUCLEO', 'IPASGO', 'HOSPITAL',
-          'CMMNSL', 'CEAL', 'HUAPA', 'HURRE', 'HEAPA', 'HUGOL', 'HECAD', 'HDT', 'HDS', 'HEG', 'HOSPITAL'
-        ].map(normalizeCargo);
-        
-        const vitoriaUnits = [
-          'SUA', 'SAO PEDRO', 'VITORIA', 'UPA', 'ES', 'ESPIRITO SANTO', 'SERRA', 'CARIACICA', 'VILA VELHA', 'VITORIA', 'SERRA',
-          'ASAS', 'HOSPITAL ESTADUAL', 'DR JAYME', 'HESVV', 'CRE', 'UPA'
-        ].map(normalizeCargo);
-
         // Fallback: match by cargo and unit scope
         const normalizedVagaCargo = normalizeCargo(vaga.cargo);
         const normalizedVagaUnidade = normalizeCargo(vaga.unidade);
@@ -140,7 +125,6 @@ export const useVagasStore = create<VagasState>()(
             .split(' ')
             .filter(word => word.length > 2 && !['das', 'dos', 'com', 'para', 'pela', 'pelo', 'uma', 'uns', 'nas', 'nos'].includes(word))
             .map(word => {
-              // Expand common abbreviations
               if (word === 'tec') return 'tecnico';
               if (word === 'aux') return 'auxiliar';
               if (word === 'esp') return 'especialista';
@@ -153,24 +137,28 @@ export const useVagasStore = create<VagasState>()(
         
         const vagaTokens = getCargoTokens(vaga.cargo);
 
+        // Define regional units for matching
+        const goianiaUnits = [
+          'crer', 'hugol', 'hecad', 'hds', 'corporativo', 'policlinica', 
+          'cealcon', 'hugo', 'heapa', 'heg', 'hdt', 'goiania', 'agir',
+          'hospital central', 'central', 'maternidade', 'hemmnsl', 'hospital estadual',
+          'cora', 'hecon', 'heslv', 'hetrin', 'heel', 'heja', 'herp', 'hgg', 'hevana', 'hemo', 'hemonucleo', 'ipasgo',
+          'cmmnsl', 'ceal', 'huapa', 'hurre'
+        ];
+        
+        const vitoriaUnits = [
+          'sua', 'sao pedro', 'vitoria', 'upa', 'es', 'espirito santo', 'serra', 'cariacica', 'vila velha',
+          'asas', 'hospital estadual', 'dr jayme', 'hesvv', 'cre'
+        ];
 
-
-        // Fallback: match by cargo and unit scope
         const found = state.bancos.find(b => {
-          // Status check - we might still want to return expired ones for UI info, 
-          // but usually the logic filters it. The UI in VagasPage expects it to be returned to show 'vencido'.
-          // if (b.status === 'vencido') return false;
-          
           const normalizedBancoCargo = normalizeCargo(b.cargo);
           const bancoTokens = getCargoTokens(b.cargo);
           
-          // Cargo matching logic:
-          // 1. Exact or partial string match
           const hasStringMatch = normalizedBancoCargo === normalizedVagaCargo || 
                                 normalizedBancoCargo.includes(normalizedVagaCargo) || 
                                 normalizedVagaCargo.includes(normalizedBancoCargo);
           
-          // 2. Token overlap (at least 50% of vaga tokens or at least 1 if only 1 exists)
           const commonTokens = vagaTokens.filter(t => bancoTokens.some(bt => bt.includes(t) || t.includes(bt)));
           const hasTokenMatch = vagaTokens.length > 0 && (
             commonTokens.length >= Math.ceil(vagaTokens.length * 0.5) ||
@@ -181,10 +169,8 @@ export const useVagasStore = create<VagasState>()(
           
           const normalizedBancoUnidade = normalizeCargo(b.unidade);
           
-          // 1. Exact match of unit
           if (normalizedBancoUnidade === normalizedVagaUnidade) return true;
           
-          // 2. Partial match (full word match)
           const bancoUnitTokens = normalizedBancoUnidade.split(' ');
           const vagaUnitTokens = normalizedVagaUnidade.split(' ');
           const hasPartialUnitMatch = vagaUnitTokens.some(vt => bancoUnitTokens.includes(vt)) ||
@@ -192,19 +178,13 @@ export const useVagasStore = create<VagasState>()(
           
           if (hasPartialUnitMatch) return true;
           
-          // 3. Regional scope: Goiânia/GO
-          const isBancoGoiania = goianiaUnits.some(u => normalizedBancoUnidade.split(' ').includes(u)) || 
-                                 normalizedBancoUnidade === 'goiania' || 
-                                 normalizedBancoUnidade === 'agir';
-          const isVagaGoiania = goianiaUnits.some(u => normalizedVagaUnidade.split(' ').includes(u));
+          const isBancoGoiania = goianiaUnits.some(u => normalizedBancoUnidade.includes(u));
+          const isVagaGoiania = goianiaUnits.some(u => normalizedVagaUnidade.includes(u));
           
           if (isBancoGoiania && isVagaGoiania) return true;
           
-          // 4. Regional scope: Vitória/ES
-          const isBancoVitoria = vitoriaUnits.some(u => normalizedBancoUnidade.split(' ').includes(u)) || 
-                                 normalizedBancoUnidade === 'vitoria' || 
-                                 normalizedBancoUnidade === 'upa';
-          const isVagaVitoria = vitoriaUnits.some(u => normalizedVagaUnidade.split(' ').includes(u));
+          const isBancoVitoria = vitoriaUnits.some(u => normalizedBancoUnidade.includes(u));
+          const isVagaVitoria = vitoriaUnits.some(u => normalizedVagaUnidade.includes(u));
           
           if (isBancoVitoria && isVagaVitoria) return true;
           

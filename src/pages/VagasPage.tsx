@@ -96,9 +96,15 @@ export default function VagasPage() {
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
   const filtered = useMemo(() => vagas.filter((v) => {
-    // Unit access restriction
-    if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
-      return false;
+    // Audit for transparency
+    const vUnitNormalized = normalizeUnitName(v.unidade);
+    
+    // Unit access restriction - using normalized names for consistency
+    if (!currentUser?.visualiza_todas_unidades) {
+      const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+      if (!userUnidades.includes(vUnitNormalized)) {
+        return false;
+      }
     }
 
     const searchTerm = search.toLowerCase();

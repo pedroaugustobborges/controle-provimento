@@ -288,12 +288,79 @@ export default function VagasPage() {
         </div>
       </div>
 
+      {isDebugOpen && (
+        <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-4">
+          <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-xs font-bold text-amber-800 uppercase flex items-center gap-2">
+                <Bug className="h-3 w-3" /> Diagnóstico de Paridade Excel (Audit)
+              </CardTitle>
+              <CardDescription className="text-[10px] text-amber-600 font-medium">
+                Comparação entre dados importados e regras de negócio de contagem.
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setIsDebugOpen(false)} className="h-6 w-6 p-0 text-amber-700">
+              <X className="h-3 w-3" />
+            </Button>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Escopo Atual</p>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">{auditData.selectedUnit}</Badge>
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">{auditData.selectedMonth}</Badge>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Funil de Paridade</p>
+                <div className="text-[11px] font-mono text-amber-900 leading-tight">
+                  <p>Total Importado: {auditData.rawTotal}</p>
+                  <p>Com Cargo (F): {auditData.withCargoCount}</p>
+                  <p>Após Unid (Unit): {auditData.afterUnitCount}</p>
+                  <p className="font-bold text-primary">Final (Metric): {auditData.finalCount}</p>
+                  <p>Tabela (Table): {auditData.tableCount}</p>
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-[10px] text-amber-700 font-bold uppercase mb-1">Amostra de Rejeitados (Parity Check)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white/50 p-1.5 rounded border border-amber-100">
+                    <p className="text-[9px] font-bold text-red-600 mb-1 flex items-center gap-1"><X className="h-2 w-2" /> S/ Cargo (F is Blank)</p>
+                    {auditData.rejectedByCargo.map((r, i) => (
+                      <p key={i} className="text-[8px] text-slate-500 truncate">Linha {r.source_row_index}: {r.unidade}</p>
+                    ))}
+                  </div>
+                  <div className="bg-white/50 p-1.5 rounded border border-amber-100">
+                    <p className="text-[9px] font-bold text-amber-600 mb-1 flex items-center gap-1"><Filter className="h-2 w-2" /> Mismatch Unidade</p>
+                    {auditData.rejectedByUnit.map((r, i) => (
+                      <p key={i} className="text-[8px] text-slate-500 truncate">[{r.unidade}] != {auditData.selectedUnit}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {auditData.finalCount !== auditData.tableCount && (
+              <Alert className="bg-red-50 border-red-200 py-2">
+                <AlertCircle className="h-3 w-3 text-red-600" />
+                <AlertTitle className="text-[10px] font-bold text-red-800 uppercase">Atenção: Desvio de Paridade</AlertTitle>
+                <AlertDescription className="text-[10px] text-red-700">
+                  O Total de Vagas ({auditData.finalCount}) difere do número de linhas na tabela ({auditData.tableCount}). 
+                  Verifique se há filtros de pesquisa ou status aplicados que não fazem parte da regra base do Excel.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
-            <p className="text-2xl font-bold text-slate-800">{totalVagas}</p>
-            <p className="text-[10px] text-slate-400">Regra de Negócio (Cargo + Mes)</p>
+            <p className="text-2xl font-bold text-slate-800">{auditData.finalCount}</p>
+            <p className="text-[10px] text-slate-400">Regra Excel (Cargo + Mes)</p>
           </CardContent>
         </Card>
 

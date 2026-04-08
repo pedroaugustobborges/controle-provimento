@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
@@ -76,34 +76,39 @@ export default function VagasPage() {
     }
   };
 
-  const allUnidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
+  const allUnidades = useMemo(() => [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort(), [vagas]);
   
   // Restriction by unit
-  const visibleUnidades = currentUser?.visualiza_todas_unidades 
+  const visibleUnidades = useMemo(() => currentUser?.visualiza_todas_unidades 
     ? allUnidades 
-    : (currentUser?.unidades_vinculadas || []);
+    : (currentUser?.unidades_vinculadas || []), [currentUser, allUnidades]);
 
-  const unidades = allUnidades.filter(u => visibleUnidades.includes(u));
-  const analistas = [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort();
-  const assistentes = [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort();
+  const unidades = useMemo(() => allUnidades.filter(u => visibleUnidades.includes(u)), [allUnidades, visibleUnidades]);
+  const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
+  const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
-  const filtered = vagas.filter((v) => {
+  const filtered = useMemo(() => vagas.filter((v) => {
     // Unit access restriction
     if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
       return false;
     }
 
-    const matchSearch = !search || v.cargo.toLowerCase().includes(search.toLowerCase()) ||
-      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(search.toLowerCase()) ||
-      v.unidade.toLowerCase().includes(search.toLowerCase());
+    const searchTerm = search.toLowerCase();
+    const matchSearch = !search || 
+      v.cargo.toLowerCase().includes(searchTerm) ||
+      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm) ||
+      v.unidade.toLowerCase().includes(searchTerm) ||
+      (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
+
     const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
     const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
     const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
     const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
+    
     return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
-  });
+  }), [vagas, currentUser, search, filterUnidade, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
 
   const clearFilters = () => {
     setSearch('');

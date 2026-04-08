@@ -47,6 +47,7 @@ export function getStatusColor(status: StatusVaga): string {
     entrevista: 'bg-indigo-100 text-indigo-800',
     finalizada: 'bg-green-100 text-green-800',
     encerrada: 'bg-gray-100 text-gray-600',
+    sem_status: 'bg-gray-100 text-gray-600',
   };
   return map[status] || 'bg-gray-100 text-gray-600';
 }

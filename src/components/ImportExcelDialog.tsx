@@ -176,10 +176,19 @@ export function ImportExcelDialog({
             }
           });
 
-          // Clear existing vagas before adding new ones
+          // Regra de Ouro: SUBSTITUIÇÃO TOTAL
+          const totalAntigoVagas = useVagasStore.getState().vagas.length;
           clearVagas();
           addVagas(newVagas);
+          const totalNovoVagas = useVagasStore.getState().vagas.length;
           
+          // Log detalhado conforme solicitado
+          console.log(`[IMPORT VAGAS] Processo concluído.`);
+          console.log(`- Registros antigos apagados: ${totalAntigoVagas}`);
+          console.log(`- Registros lidos do arquivo: ${totalProcessed}`);
+          console.log(`- Registros válidos inseridos: ${newVagas.length}`);
+          console.log(`- Total final na base: ${totalNovoVagas}`);
+
           setSummary({
             type: 'vagas',
             total: newVagas.length,
@@ -200,7 +209,7 @@ export function ImportExcelDialog({
             data_hora: now
           });
           
-          toast.success(`Importação de Vagas concluída: ${newVagas.length} vagas encontradas.`);
+          toast.success(`Importação de Vagas: ${newVagas.length} registros inseridos em modo substituição.`);
 
         } else if (fileName.endsWith('.xlsx')) {
           const sheet = wb.Sheets['BANCO GERAL'];

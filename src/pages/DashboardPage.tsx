@@ -49,7 +49,15 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const { vagas: allVagas, validacoes, getBancoByVaga, convocacoes, bancos, tarefas, alertas: storeAlertas } = useVagasStore();
+  const { 
+    vagas: allVagas = [], 
+    validacoes = [], 
+    getBancoByVaga, 
+    convocacoes = [], 
+    bancos = [], 
+    tarefas = [], 
+    alertas: storeAlertas = [] 
+  } = useVagasStore();
   const navigate = useNavigate();
 
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote

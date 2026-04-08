@@ -326,6 +326,21 @@ export default function VagasPage() {
                 {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={filterMes} onValueChange={setFilterMes}>
+              <SelectTrigger className="w-[160px] bg-white text-xs">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3 w-3" />
+                  <SelectValue placeholder="Mês Abertura" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Meses</SelectItem>
+                {['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'].map((m) => (
+                  <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>

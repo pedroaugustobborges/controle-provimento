@@ -143,6 +143,8 @@ export const mockVagas: Vaga[] = [
     unidade: 'CRER',
     analista_responsavel: 'Ana Paula',
     status: 'aberta',
+    observacoes_internas: '',
+    tem_banco_valido: false,
     historico: [],
   },
   {
@@ -157,6 +159,8 @@ export const mockVagas: Vaga[] = [
     unidade: 'CRER',
     analista_responsavel: 'Ana Paula',
     status: 'aberta',
+    observacoes_internas: '',
+    tem_banco_valido: false,
     historico: [],
   },
   {
@@ -171,9 +175,12 @@ export const mockVagas: Vaga[] = [
     unidade: 'CRER',
     analista_responsavel: 'Ana Paula',
     status: 'suspensa', // SUSPENDED - Should still count if cargo exists
+    observacoes_internas: '',
+    tem_banco_valido: false,
     historico: [],
   }
 ];
+
 
 export const mockBancos: BancoTalentos[] = [
   {

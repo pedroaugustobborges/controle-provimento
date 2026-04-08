@@ -36,6 +36,7 @@ interface VagasState {
   getValidacaoByVaga: (vagaId: string) => ValidacaoEdital | undefined;
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
+  getMatchingDiagnostic: () => any[];
 }
 
 export const useVagasStore = create<VagasState>()(
@@ -128,47 +129,66 @@ export const useVagasStore = create<VagasState>()(
         const goianiaUnits = [
           'CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 
           'CEALCON', 'HUGO', 'HEAPA', 'HEG', 'HDT', 'GOIANIA', 'AGIR',
-          'HOSPITAL CENTRAL', 'CENTRAL'
+          'HOSPITAL CENTRAL', 'CENTRAL', 'MATERNIDADE', 'HEMMNSL', 'HOSPITAL ESTADUAL',
+          'CORA', 'HECON', 'HESLV', 'HETRIN', 'HEEL', 'HEJA', 'HERP', 'GOIAS', 'GO',
+          'HGG', 'HOSPITAL GERAL'
         ].map(normalizeStr);
         
         const vitoriaUnits = [
-          'SUA', 'SAO PEDRO', 'VITORIA', 'UPA', 'ES'
+          'SUA', 'SAO PEDRO', 'VITORIA', 'UPA', 'ES', 'ESPIRITO SANTO', 'SERRA', 'CARIACICA', 'VILA VELHA', 'VITORIA'
         ].map(normalizeStr);
         
+        const getCargoTokens = (cargo: string) => {
+          return normalizeStr(cargo)
+            .split(' ')
+            .filter(word => word.length > 2 && !['das', 'dos', 'com'].includes(word));
+        };
+
         const normalizedVagaCargo = normalizeStr(vaga.cargo);
         const normalizedVagaUnidade = normalizeStr(vaga.unidade);
-        
+        const vagaTokens = getCargoTokens(vaga.cargo);
+
         // Fallback: match by cargo and unit scope
         const found = state.bancos.find(b => {
-          // Status check
+          // Status check - be more lenient if needed, but respect 'vencido'
           if (b.status === 'vencido') return false;
           
-          // Cargo match (normalized and partial)
           const normalizedBancoCargo = normalizeStr(b.cargo);
-          const cargoMatch = normalizedBancoCargo === normalizedVagaCargo || 
-                            normalizedBancoCargo.includes(normalizedVagaCargo) || 
-                            normalizedVagaCargo.includes(normalizedBancoCargo);
+          const bancoTokens = getCargoTokens(b.cargo);
           
-          if (!cargoMatch) return false;
+          // Cargo matching logic:
+          // 1. Exact or partial string match
+          // 2. Token overlap (at least 2 tokens or all tokens if less than 2)
+          const hasStringMatch = normalizedBancoCargo === normalizedVagaCargo || 
+                                normalizedBancoCargo.includes(normalizedVagaCargo) || 
+                                normalizedVagaCargo.includes(normalizedBancoCargo);
+          
+          const commonTokens = vagaTokens.filter(t => bancoTokens.includes(t));
+          const hasTokenMatch = vagaTokens.length > 0 && (
+            commonTokens.length >= Math.min(vagaTokens.length, 2) ||
+            (vagaTokens.length === 1 && commonTokens.length === 1)
+          );
+
+          if (!hasStringMatch && !hasTokenMatch) return false;
           
           const normalizedBancoUnidade = normalizeStr(b.unidade);
           
           // 1. Exact match of unit
           if (normalizedBancoUnidade === normalizedVagaUnidade) return true;
           
-          // 2. Regional scope: Goiânia
-          const isBancoGoiania = normalizedBancoUnidade === 'goiania' || 
-                                 normalizedBancoUnidade === 'agir' || 
-                                 goianiaUnits.includes(normalizedBancoUnidade);
-          const isVagaGoiania = goianiaUnits.includes(normalizedVagaUnidade);
+          // 2. Regional scope: Goiânia/GO
+          const isBancoGoiania = goianiaUnits.some(u => normalizedBancoUnidade.includes(u)) || 
+                                 normalizedBancoUnidade === 'goiania' || 
+                                 normalizedBancoUnidade === 'agir';
+          const isVagaGoiania = goianiaUnits.some(u => normalizedVagaUnidade.includes(u));
           
           if (isBancoGoiania && isVagaGoiania) return true;
           
-          // 3. Regional scope: Vitória
-          const isBancoVitoria = normalizedBancoUnidade === 'vitoria' || 
-                                 normalizedBancoUnidade === 'upa' || 
-                                 vitoriaUnits.includes(normalizedBancoUnidade);
-          const isVagaVitoria = vitoriaUnits.includes(normalizedVagaUnidade);
+          // 3. Regional scope: Vitória/ES
+          const isBancoVitoria = vitoriaUnits.some(u => normalizedBancoUnidade.includes(u)) || 
+                                 normalizedBancoUnidade === 'vitoria' || 
+                                 normalizedBancoUnidade === 'upa';
+          const isVagaVitoria = vitoriaUnits.some(u => normalizedVagaUnidade.includes(u));
           
           if (isBancoVitoria && isVagaVitoria) return true;
           
@@ -180,6 +200,34 @@ export const useVagasStore = create<VagasState>()(
         return found;
       },
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),
+      getMatchingDiagnostic: () => {
+        const state = get();
+        const pendingVagas = state.vagas.filter(v => !['encerrada', 'finalizada', 'admissao_efetivada'].includes(v.status || v.status_geral || ''));
+        
+        return pendingVagas.map(v => {
+          const matchedBanco = get().getBancoByVaga(v.id);
+          if (matchedBanco) return null;
+          
+          // If no match, collect potential candidates (same unit or similar cargo)
+          const potentialBancos = state.bancos.filter(b => {
+            const normV = (v.cargo || '').toLowerCase();
+            const normB = (b.cargo || '').toLowerCase();
+            return b.unidade === v.unidade || normB.includes(normV) || normV.includes(normB);
+          }).slice(0, 10);
+          
+          return {
+            vagaId: v.id,
+            vagaCargo: v.cargo,
+            vagaUnidade: v.unidade,
+            vagaReq: v.requisicao || v.numero_requisicao,
+            potentialBancos: potentialBancos.map(b => ({
+              cargo: b.cargo,
+              unidade: b.unidade,
+              status: b.status
+            }))
+          };
+        }).filter(Boolean);
+      },
     }),
     {
       name: 'hospital-recruitment-store',

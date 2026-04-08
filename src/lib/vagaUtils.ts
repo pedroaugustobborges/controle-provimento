@@ -111,7 +111,7 @@ export function normalizeCargo(cargo: string): string {
 }
 
 export function normalizeStatus(statusText: string): StatusVaga {
-  if (!statusText) return 'aberta';
+  if (!statusText) return '' as StatusVaga;
   
   const text = statusText.toLowerCase().trim();
   
@@ -135,6 +135,6 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'encerrada';
   if (text.includes('aberta') || text.includes('novo')) return 'aberta';
   
-  // Se não bater com nada conhecido, mantém como aberta por padrão ou tenta ser mais inteligente
-  return 'aberta';
+  // Se não bater com nada conhecido, retorna vazio para ser tratado como "Sem Status"
+  return '' as StatusVaga;
 }

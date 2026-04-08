@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { 
@@ -10,7 +10,7 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link } from 'react-router-dom';
-import { Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut } from 'lucide-react';
+import { Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, Upload, LayoutDashboard } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
@@ -29,10 +29,36 @@ function getGreeting(): string {
   return 'Boa noite';
 }
 
+const routeContextMap: Record<string, { color: string; bgLight: string; icon: React.ElementType }> = {
+  'vagas': { color: 'text-blue-600', bgLight: 'bg-blue-50 border-blue-200', icon: Briefcase },
+  'editais': { color: 'text-teal-600', bgLight: 'bg-teal-50 border-teal-200', icon: FileText },
+  'fila-editais': { color: 'text-cyan-600', bgLight: 'bg-cyan-50 border-cyan-200', icon: ListOrdered },
+  'convocacoes': { color: 'text-amber-600', bgLight: 'bg-amber-50 border-amber-200', icon: Megaphone },
+  'validacao': { color: 'text-emerald-600', bgLight: 'bg-emerald-50 border-emerald-200', icon: ShieldCheck },
+  'gestor': { color: 'text-purple-600', bgLight: 'bg-purple-50 border-purple-200', icon: Settings },
+  'banco-talentos': { color: 'text-indigo-600', bgLight: 'bg-indigo-50 border-indigo-200', icon: Users },
+  'importacoes': { color: 'text-green-600', bgLight: 'bg-green-50 border-green-200', icon: Upload },
+};
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter((x) => x);
   const { currentUser } = useAdminStore();
+  const [isCompact, setIsCompact] = useState(false);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mainEl = mainRef.current;
+    if (!mainEl) return;
+    const handleScroll = () => {
+      setIsCompact(mainEl.scrollTop > 50);
+    };
+    mainEl.addEventListener('scroll', handleScroll, { passive: true });
+    return () => mainEl.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const activeRoute = pathnames[0] || '';
+  const routeCtx = routeContextMap[activeRoute];
 
   const getBreadcrumbLabel = (path: string) => {
     const labels: Record<string, string> = {
@@ -59,24 +85,38 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="shrink-0 z-20 sticky top-0">
-            {/* Top bar with gradient */}
-            <div className="h-16 flex items-center justify-between px-6 bg-gradient-to-r from-white via-white to-primary/[0.03] border-b border-border/60 backdrop-blur-xl">
+          <header className="shrink-0 z-20 sticky top-0 transition-all duration-300">
+            {/* Top bar */}
+            <div className={`flex items-center justify-between px-6 border-b transition-all duration-300 ${
+              isCompact 
+                ? 'h-12 bg-white/80 backdrop-blur-xl border-border/40' 
+                : 'h-16 bg-gradient-to-r from-white via-white to-primary/[0.03] border-border/60 backdrop-blur-xl'
+            }`}>
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all rounded-lg border border-border/50" />
                 
-                {/* Greeting */}
-                <div className="hidden md:flex flex-col">
-                  <div className="flex items-center gap-1.5">
+                {/* Greeting — hidden when compact */}
+                <div className={`hidden md:flex flex-col transition-all duration-300 overflow-hidden ${
+                  isCompact ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'
+                }`}>
+                  <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <Sparkles className="h-3.5 w-3.5 text-warning" />
                     <span className="text-sm font-semibold text-foreground">
                       {getGreeting()}, <span className="text-primary">{userName}</span>
                     </span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-medium tracking-wide">
+                  <span className="text-[10px] text-muted-foreground font-medium tracking-wide whitespace-nowrap">
                     {currentUser?.cargo || 'Sistema AGIR'} · {currentUser?.perfil || 'Usuário'}
                   </span>
                 </div>
+
+                {/* Route context icon — shown when compact */}
+                {isCompact && routeCtx && (
+                  <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all duration-300 ${routeCtx.bgLight} ${routeCtx.color}`}>
+                    <routeCtx.icon className="h-3.5 w-3.5" />
+                    <span>{getBreadcrumbLabel(activeRoute)}</span>
+                  </div>
+                )}
               </div>
 
               {/* Search */}
@@ -85,7 +125,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input
                     placeholder="Buscar vagas, editais, candidatos..."
-                    className="pl-9 pr-12 h-9 bg-muted/40 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/60 focus-visible:ring-primary/20 focus-visible:bg-white transition-all"
+                    className={`pl-9 pr-12 bg-muted/40 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/60 focus-visible:ring-primary/20 focus-visible:bg-white transition-all ${
+                      isCompact ? 'h-8' : 'h-9'
+                    }`}
                   />
                   <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-bold text-muted-foreground/50 bg-background border border-border/50 rounded px-1.5 py-0.5">
                     ⌘K
@@ -95,7 +137,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
               {/* Right actions */}
               <div className="flex items-center gap-3">
-                <div className="hidden xl:flex items-center gap-2 text-[10px] text-muted-foreground font-semibold bg-success/5 text-success px-3 py-1.5 rounded-full border border-success/20">
+                <div className={`hidden xl:flex items-center gap-2 text-[10px] text-muted-foreground font-semibold bg-success/5 text-success px-3 py-1.5 rounded-full border border-success/20 transition-all duration-300 ${
+                  isCompact ? 'opacity-0 max-w-0 overflow-hidden px-0 border-0' : 'opacity-100 max-w-xs'
+                }`}>
                   <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                   Sistema sincronizado
                 </div>
@@ -109,7 +153,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-bold text-xs shadow-lg shadow-primary/15 ring-2 ring-white transition-transform hover:scale-105 focus:outline-none">
+                    <button className={`rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-bold text-xs shadow-lg shadow-primary/15 ring-2 ring-white transition-all duration-300 hover:scale-105 focus:outline-none ${
+                      isCompact ? 'h-8 w-8' : 'h-10 w-10'
+                    }`}>
                       {initials}
                     </button>
                   </DropdownMenuTrigger>
@@ -134,7 +180,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Breadcrumb bar */}
             {pathnames.length > 0 && (
-              <div className="h-10 flex items-center px-6 bg-muted/30 border-b border-border/30">
+              <div className={`flex items-center px-6 border-b border-border/30 transition-all duration-300 ${
+                isCompact ? 'h-0 opacity-0 overflow-hidden border-0' : 'h-10 opacity-100 bg-muted/30'
+              }`}>
                 <Breadcrumb>
                   <BreadcrumbList className="gap-1">
                     <BreadcrumbItem>
@@ -148,6 +196,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     {pathnames.map((name, index) => {
                       const routeTo = `/${pathnames.slice(0, index + 1).join('/')}`;
                       const isLast = index === pathnames.length - 1;
+                      const ctx = routeContextMap[name];
                       return (
                         <React.Fragment key={name}>
                           <BreadcrumbSeparator>
@@ -155,7 +204,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                           </BreadcrumbSeparator>
                           <BreadcrumbItem>
                             {isLast ? (
-                              <BreadcrumbPage className="text-foreground font-semibold text-xs">
+                              <BreadcrumbPage className={`text-xs font-semibold px-2 py-0.5 rounded-md transition-all ${
+                                ctx ? `${ctx.bgLight} ${ctx.color} border` : 'text-foreground'
+                              }`}>
+                                {ctx && <ctx.icon className="h-3 w-3 inline mr-1 -mt-0.5" />}
                                 {getBreadcrumbLabel(name)}
                               </BreadcrumbPage>
                             ) : (
@@ -175,7 +227,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             )}
           </header>
 
-          <main className="flex-1 overflow-auto p-8 max-w-[1600px] mx-auto w-full">
+          <main ref={mainRef} className="flex-1 overflow-auto p-8 max-w-[1600px] mx-auto w-full">
             {children}
           </main>
           <AIAssistant />

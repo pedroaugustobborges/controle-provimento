@@ -70,6 +70,7 @@ export interface Vaga {
   aprovados_triagem?: number;
   aprovados_finais?: number;
   convocados_entrevista?: number;
+  trace_key?: string;
 }
 
 export interface BancoTalentos {

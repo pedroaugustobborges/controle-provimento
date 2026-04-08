@@ -205,30 +205,53 @@ export default function BancoTalentosPage() {
 
           {selectedBanco && (
             <div className="space-y-6">
-              {/* Identificação */}
+              {/* Candidatos */}
+              <section>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2"><User className="h-3 w-3" /> Candidatos Classificados ({selectedGroupCandidates.length})</div>
+                </h3>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {selectedGroupCandidates.map((c, idx) => (
+                    <div key={c.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-7 w-7 bg-white border border-slate-200 rounded-full flex items-center justify-center text-[10px] font-bold text-primary shadow-sm">
+                          {c.classificacao}°
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">{c.nome || "Não identificado"}</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Classificação original</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(c.status)}
+                      </div>
+                    </div>
+                  ))}
+                  {selectedGroupCandidates.length === 0 && (
+                    <p className="text-sm text-slate-400 italic text-center py-4">Nenhum candidato listado.</p>
+                  )}
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Identificação do Grupo */}
               <section>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <User className="h-3 w-3" /> Identificação
+                  <Building className="h-3 w-3" /> Unidade e Cargo
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Candidato</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.nome || "Não informado"}</p>
-                  </div>
-                  <div className="space-y-1">
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.unidade}</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco?.unidade}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Cargo</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.cargo}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Seção</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.secao || "Não informado"}</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco?.cargo}</p>
                   </div>
                 </div>
               </section>
+
 
               <Separator />
 

@@ -94,6 +94,7 @@ export interface BancoTalentos {
   numero_chamada?: string;
   numero_processo_seletivo?: string;
   numero_vaga_aproveitamento?: string;
+  cargo_normalizado?: string;
 }
 
 export interface Convocacao {

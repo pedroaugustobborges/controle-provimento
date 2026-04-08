@@ -4,8 +4,8 @@ export type StatusVaga =
   | 'publicar_novo_edital'
   | 'em_edital'
   | 'em_documentacao'
-  | 'documentacao_ok_aso_pendente'
-  | 'documentacao_pendente_aso_ok'
+  | 'documentacao_ok_azul_pendente'
+  | 'documentacao_pendente_azul_ok'
   | 'em_admissao'
   | 'admissao_enviada'
   | 'admissao_efetivada'
@@ -296,8 +296,8 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   publicar_novo_edital: 'Publicar Novo Edital',
   em_edital: 'Em Edital',
   em_documentacao: 'Em Documentação',
-  documentacao_ok_aso_pendente: 'Doc. OK e ASO Pendente',
-  documentacao_pendente_aso_ok: 'Doc. Pendente e ASO OK',
+  documentacao_ok_azul_pendente: 'Doc. OK e Azul Pendente',
+  documentacao_pendente_azul_ok: 'Doc. Pendente e Azul OK',
   em_admissao: 'Em Admissão',
   admissao_enviada: 'Admissão Enviada',
   admissao_efetivada: 'Admissão Efetivada',

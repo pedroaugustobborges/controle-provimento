@@ -80,7 +80,7 @@ export default function DashboardPage() {
     vagas.forEach(v => {
       const status = (v.status || v.status_geral) as string;
       const cat = getCategoriaStatus(status);
-      const qtd = (v.numero_vagas || v.quantidade || 1);
+      const qtd = 1; // 1 registro = 1 vaga
       if (acc[cat] !== undefined) {
         acc[cat] += qtd;
       } else {

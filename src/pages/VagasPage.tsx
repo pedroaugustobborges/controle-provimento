@@ -129,16 +129,78 @@ export default function VagasPage() {
     return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
   }), [vagas, currentUser, search, filterUnidade, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
 
-  const countEmAndamento = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countAguardandoUnidade = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countSemStatus = useMemo(() => vagas.filter((v) => {
-    const s = (v.status || v.status_geral) as string;
-    return !s || s === '' || s === 'sem_status';
-  }).length, [vagas]);
-  const countEncerradas = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countLideranca = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countMovimentacao = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countComBanco = useMemo(() => vagas.filter(v => getBancoByVaga(v.id)).length, [vagas, getBancoByVaga]);
+  const vacancyStats = useMemo(() => {
+    const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
+    const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
+    
+    return getStatusSummary(vagas, selectedUnit, selectedMonth);
+  }, [vagas, filterUnidade, filterMes]);
+
+  const totalVagas = vacancyStats.total;
+  
+  // Status summary groupings mapped to dashboard cards
+  // Note: These must follow the "independent from status" rule for the base total
+  const countEmAndamento = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.em_andamento.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countAguardandoUnidade = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.aguardando_unidade.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countSemStatus = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => !status || status === '' || status === 'SEM_STATUS' || status === 'NULL' || status === 'NAN')
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countEncerradas = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.encerradas.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countLideranca = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.lideranca.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countMovimentacao = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.movimentacao_interna.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countComBanco = useMemo(() => {
+    // For this one, we filter from the base of valid vacancies
+    const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
+    const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
+    
+    const validBase = vagas.filter(row => {
+      const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
+      const rowUnit = normalize(row.unidade);
+      const normalizedUnit = normalize(selectedUnit);
+      const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
+      const hasCargoValue = String(row.cargo ?? "").trim() !== "";
+      
+      if (!sameUnit || !hasCargoValue) return false;
+      
+      if (selectedMonth !== 'TODOS' && selectedMonth !== 'all' && selectedMonth !== '') {
+        const aberturaMonth = (row as any).data_abertura ? 
+          new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date((row as any).data_abertura)).toUpperCase() : "";
+        if (aberturaMonth !== selectedMonth.toUpperCase()) return false;
+      }
+      return true;
+    });
+
+    return validBase.filter(v => getBancoByVaga(v.id)).length;
+  }, [vagas, filterUnidade, filterMes, getBancoByVaga]);
+
 
 
   const clearFilters = () => {

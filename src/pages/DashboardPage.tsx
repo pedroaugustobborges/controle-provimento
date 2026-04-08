@@ -87,7 +87,10 @@ export default function DashboardPage() {
     };
     
     vagas.forEach(v => {
-      const status = (v.status || v.status_geral) as string;
+      // Usamos normalizeStatus para garantir que mesmo dados legados ou importados sem normalização completa
+      // sejam categorizados conforme as novas regras objetivas.
+      const statusRaw = (v.status || v.status_geral) as string;
+      const status = normalizeStatus(statusRaw);
       const cat = getCategoriaStatus(status);
       if (acc[cat] !== undefined) {
         acc[cat]++;

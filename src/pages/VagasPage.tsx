@@ -113,12 +113,22 @@ export default function VagasPage() {
 
     const searchTerm = search.toLowerCase();
     const matchSearch = !search || 
-      v.cargo.toLowerCase().includes(searchTerm) ||
+      (v.cargo || '').toLowerCase().includes(searchTerm) ||
       (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm) ||
-      v.unidade.toLowerCase().includes(searchTerm) ||
+      (v.unidade || '').toLowerCase().includes(searchTerm) ||
       (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
     const matchUnidade = filterUnidade === 'all' || normalizeUnitName(v.unidade) === filterUnidade;
+
+    // Rule: if cargo is blank, it shouldn't be counted in Total de Vagas, but let's keep it visible in the table 
+    // unless the user specifically wants the table to match the vacancy count logic.
+    // The user said: "visible table row count" shouldn't determine the metric, but 
+    // "Implement the platform count so it behaves exactly like the spreadsheet: unit-scoped, cargo-based, month-filtered by abertura"
+    // To maintain parity, the table should show what's being counted.
+    const hasCargoValue = String(v.cargo ?? "").trim() !== "";
+    if (!hasCargoValue) return false;
+
+    const matchMes = filterMes === 'all' || getMonthNamePtBrUpper(v.data_abertura) === filterMes.toUpperCase();
 
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
@@ -126,8 +136,9 @@ export default function VagasPage() {
     const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
     const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
     
-    return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
-  }), [vagas, currentUser, search, filterUnidade, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
+    return matchSearch && matchUnidade && matchMes && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
+  }), [vagas, currentUser, search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
+
 
   const vacancyStats = useMemo(() => {
     const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;

@@ -79,35 +79,43 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+      {/* Header Section with Glass Effect or Strong Visual Separation */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Visão Geral de Provimento</h1>
-          <p className="text-slate-500 mt-1 max-w-2xl">
-            Acompanhamento estratégico e operacional de processos seletivos, editais e fluxo de contratações AGIR.
+          <div className="flex items-center gap-2 mb-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Operacional</span>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Visão Geral de Provimento</h1>
+          <p className="text-slate-500 mt-2 max-w-2xl text-sm font-medium">
+            Monitoramento em tempo real dos processos seletivos e fluxo de contratações AGIR.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="text-xs font-semibold h-9 border-slate-200 shadow-sm">
-            Exportar Relatório
+          <Button variant="outline" className="text-xs font-bold h-10 px-5 border-slate-200 hover:bg-slate-50 text-slate-600 transition-all rounded-xl shadow-sm">
+            Relatórios Detalhados
           </Button>
-          <Button className="text-xs font-semibold h-9 shadow-sm">
-            Novo Processo
+          <Button className="text-xs font-bold h-10 px-5 bg-primary hover:bg-primary/90 text-white transition-all rounded-xl shadow-lg shadow-primary/20">
+            Novo Processo Seletivo
           </Button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid - More Dynamic Design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-5">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group">
-            <CardContent className="p-5">
-              <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+          <Card key={idx} className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden bg-white">
+            <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
+            <CardContent className="p-6">
+              <div className={`p-2.5 rounded-xl ${stat.bg} w-fit mb-4 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </div>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-              <p className="text-2xl font-bold mt-1 text-slate-900">{stat.value}</p>
+              <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-3xl font-black text-slate-900 tracking-tighter">{stat.value}</p>
+                <div className="h-1.5 w-1.5 rounded-full bg-slate-100 group-hover:bg-primary/20 transition-colors"></div>
+              </div>
             </CardContent>
           </Card>
         ))}

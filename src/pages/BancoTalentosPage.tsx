@@ -86,7 +86,7 @@ export default function BancoTalentosPage() {
       }
       
       // Exclude convocados from the main list as requested
-      if (b.status === 'convocado') return false;
+      if (b.status === 'CONVOCADO') return false;
       
       const normalizedSearch = normalizeCargo(search);
       const matchSearch = normalizeCargo(b.cargo).includes(normalizedSearch) || 
@@ -102,7 +102,7 @@ export default function BancoTalentosPage() {
 
   const convocadosFiltered = useMemo(() => {
     return bancos.filter(b => {
-      if (b.status !== 'convocado') return false;
+      if (b.status !== 'CONVOCADO') return false;
       
       // Unit access restriction
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
@@ -122,12 +122,12 @@ export default function BancoTalentosPage() {
   }, [bancos, currentUser, convocadosSearch, convocadosUnidadeFilter, convocadosCargoFilter]);
 
   const convocadosCargos = useMemo(() => {
-    const cargos = [...new Set(bancos.filter(b => b.status === 'convocado').map(b => b.cargo))];
+    const cargos = [...new Set(bancos.filter(b => b.status === 'CONVOCADO').map(b => b.cargo))];
     return cargos.sort();
   }, [bancos]);
 
   const convocadosUnidades = useMemo(() => {
-    const unidades = [...new Set(bancos.filter(b => b.status === 'convocado' && b.unidade_convocacao).map(b => b.unidade_convocacao!))];
+    const unidades = [...new Set(bancos.filter(b => b.status === 'CONVOCADO' && b.unidade_convocacao).map(b => b.unidade_convocacao!))];
     return unidades.sort();
   }, [bancos]);
 
@@ -195,9 +195,12 @@ export default function BancoTalentosPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'valido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Válido</Badge>;
+      case 'CADASTRO RESERVA': 
+      case 'valido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Cadastro Reserva</Badge>;
+      case 'VENCIDO':
       case 'vencido': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200">Vencido</Badge>;
       case 'prorrogado': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200">Prorrogado</Badge>;
+      case 'CONVOCADO':
       case 'convocado': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200">Convocado</Badge>;
       default: return <Badge variant="outline">Indeterminado</Badge>;
     }
@@ -374,7 +377,7 @@ export default function BancoTalentosPage() {
               <Separator />
 
               {/* Convocação */}
-              {(selectedBanco.data_convocacao || selectedBanco.status === 'convocado') && (
+              {(selectedBanco.data_convocacao || selectedBanco.status === 'CONVOCADO') && (
                 <>
                   <section>
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -451,7 +454,7 @@ export default function BancoTalentosPage() {
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Convocados</p>
-                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'convocado').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'CONVOCADO' || (b as any).status === 'convocado').length}</p>
               </div>
             </div>
           </CardContent>
@@ -490,7 +493,7 @@ export default function BancoTalentosPage() {
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Vencidos</p>
-                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'vencido').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'VENCIDO' || (b as any).status === 'vencido').length}</p>
               </div>
             </div>
           </CardContent>

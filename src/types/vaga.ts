@@ -126,7 +126,7 @@ export interface BancoTalentos {
   data_convocacao?: string;
   unidade_convocacao?: string;
   observacoes: string;
-  status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' | 'nenhum';
+  status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum';
   status_import?: string;
   numero_processo?: string;
   nome?: string;
@@ -155,11 +155,39 @@ export interface Convocacao {
   edital_relacionado?: string;
   banco_relacionado?: string;
   observacoes: string;
+  devolutiva?: string;
+  responsavel: string;
   status: StatusConvocacao;
   edoc?: string;
   resultado_final?: string;
   validado_por?: string;
   data_validacao?: string;
+}
+
+export interface Tarefa {
+  id: string;
+  titulo: string;
+  descricao: string;
+  status: 'pendente' | 'concluida';
+  prioridade: 'baixa' | 'media' | 'alta';
+  data_criacao: string;
+  data_vencimento?: string;
+  atribuido_a: string; // ID ou nome do usuário/perfil
+  relacionado_a?: {
+    tipo: 'vaga' | 'edital' | 'banco' | 'convocacao';
+    id: string;
+  };
+}
+
+export interface Alerta {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: 'atraso' | 'validacao' | 'informativo' | 'critico';
+  status: 'lido' | 'nao_lido' | 'resolvido';
+  data_criacao: string;
+  destinatario: string; // Perfil ou ID
+  link?: string;
 }
 
 export interface HistoricoItem {

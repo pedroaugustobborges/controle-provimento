@@ -493,19 +493,22 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         // User requirement: "filtre STATUS=CONVOCADO"
         const statusImportRaw = String(mapped.status_import || '').toUpperCase().trim();
         
-        let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' = 'valido';
+        let status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum' = 'CADASTRO RESERVA';
         
         if (statusImportRaw === 'CONVOCADO') {
-          status = 'convocado';
+          status = 'CONVOCADO';
         } else if (statusImportRaw === 'VENCIDO') {
-          status = 'vencido';
+          status = 'VENCIDO';
         } else if (statusImportRaw === 'CADASTRO RESERVA' || statusImportRaw === 'CADASTRO-RESERVA') {
+          status = 'CADASTRO RESERVA';
           // Default logic for valid/expired based on dates
           const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
           if (expiryDateStr) {
             const expiryDate = new Date(expiryDateStr);
             if (isValid(expiryDate)) {
-              status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
+              if (expiryDate <= now) {
+                status = 'VENCIDO';
+              }
             }
           }
         }

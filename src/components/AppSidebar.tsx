@@ -8,7 +8,8 @@ import {
   Settings,
   HelpCircle,
   Calendar,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Bell
 } from 'lucide-react';
 
 import { NavLink } from '@/components/NavLink';
@@ -24,16 +25,19 @@ const mainItems = [
   { title: 'Vagas', url: '/vagas', icon: Briefcase, subMenu: [
     { title: 'Todas as Vagas', url: '/vagas' },
     { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
+    { title: 'Fila de Editais', url: '/fila-editais' },
   ] },
   { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users, subMenu: [
     { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
     { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
+    { title: 'Vencidos', url: '/banco-talentos?tab=vencidos' },
   ] },
-  { title: 'Editais', url: '/fila-editais', icon: TrendingUp, subMenu: [
-    { title: 'Fila de Editais', url: '/fila-editais' },
-    { title: 'Validar Editais', url: '/validacao-editais' },
+  { title: 'Convocações', url: '/convocacoes', icon: Calendar, subMenu: [
+    { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
+    { title: 'Histórico', url: '/convocacoes?tab=list' },
+    { title: 'Pendentes', url: '/convocacoes?tab=pending' },
   ] },
-  { title: 'Convocações', url: '/convocacoes', icon: Calendar },
+  { title: 'Alertas e Tarefas', url: '/alertas-tarefas', icon: Bell },
 ];
 
 export function AppSidebar() {

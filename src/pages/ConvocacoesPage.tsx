@@ -4,9 +4,10 @@ import {
   Plus, Search, Filter, Download, LayoutGrid, List, 
   Calendar, MapPin, Building2, User, CheckCircle2, 
   AlertCircle, ArrowRight, Database, MoreVertical,
-  History, Eye, Edit, Trash2, X
+  History, Eye, Edit, Trash2, X, Clock
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Badge } from '@/components/ui/badge';
@@ -35,14 +36,27 @@ import { toast } from 'sonner';
 
 export default function ConvocacoesPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { vagas, convocacoes, bancos, getBancoByVaga } = useVagasStore();
   const { currentUser } = useAdminStore();
-  const [view, setView] = useState<'kanban' | 'list' | 'pending'>('kanban');
+  const [view, setView] = useState<'kanban' | 'list' | 'pending' | 'diaria'>('kanban');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
   const [search, setSearch] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['kanban', 'list', 'pending', 'diaria'].includes(tab)) {
+      setView(tab as any);
+    }
+  }, [searchParams]);
+
+  const handleViewChange = (newView: string) => {
+    setView(newView as any);
+    setSearchParams({ tab: newView });
+  };
 
   const handleDelete = () => {
     if (registroParaExcluir) {
@@ -70,7 +84,7 @@ export default function ConvocacoesPage() {
     const allConvocacoes = [
       ...convocacoes,
       ...bancos
-        .filter(b => b.status === 'convocado')
+        .filter(b => b.status === 'CONVOCADO')
         .map(b => ({
           id: b.id,
           vaga_id: '',
@@ -83,7 +97,8 @@ export default function ConvocacoesPage() {
           unidade: b.unidade_convocacao || b.unidade,
           requisicao: b.numero_edital,
           status: 'aceite' as any,
-          observacoes: b.observacoes || ''
+          observacoes: b.observacoes || '',
+          responsavel: 'Sistema'
         }))
     ];
 
@@ -120,8 +135,16 @@ export default function ConvocacoesPage() {
             <Button 
               variant="ghost" 
               size="sm" 
+              className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+              onClick={() => handleViewChange('diaria')}
+            >
+              <Calendar className="h-3.5 w-3.5" /> Diária
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
               className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-              onClick={() => setView('kanban')}
+              onClick={() => handleViewChange('kanban')}
             >
               <LayoutGrid className="h-3.5 w-3.5" /> Quadro
             </Button>
@@ -129,7 +152,7 @@ export default function ConvocacoesPage() {
               variant="ghost" 
               size="sm" 
               className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-              onClick={() => setView('list')}
+              onClick={() => handleViewChange('list')}
             >
               <List className="h-3.5 w-3.5" /> Histórico
             </Button>
@@ -137,7 +160,7 @@ export default function ConvocacoesPage() {
               variant="ghost" 
               size="sm" 
               className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'pending' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-              onClick={() => setView('pending')}
+              onClick={() => handleViewChange('pending')}
             >
               <AlertCircle className="h-3.5 w-3.5" /> Pendentes
               {pendingVagas.length > 0 && (
@@ -244,7 +267,42 @@ export default function ConvocacoesPage() {
       )}
 
       <div className="mt-2 h-full min-h-[500px]">
-        {view === 'kanban' ? (
+        {view === 'diaria' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredConvocacoes.filter(c => formatDate(c.data_convocacao) === formatDate(new Date().toISOString())).map((c) => (
+              <Card key={c.id} className="border-l-4 border-l-primary shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <Badge className="bg-primary/10 text-primary border-none text-[10px] font-bold uppercase">{c.status}</Badge>
+                    <span className="text-xs font-mono font-bold text-slate-400">#{c.requisicao}</span>
+                  </div>
+                  <CardTitle className="text-lg font-bold text-slate-800 mt-2">{c.nome_candidato}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <Building2 className="h-3.5 w-3.5" /> {c.unidade}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-600 font-bold">
+                      <User className="h-3.5 w-3.5" /> {c.cargo}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <Clock className="h-3.5 w-3.5" /> {c.horario || 'Horário não informado'}
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full text-xs font-bold h-9" onClick={() => navigate(`/vagas/${c.vaga_id}`)}>
+                    Ver Vaga Relacionada
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+            {filteredConvocacoes.filter(c => formatDate(c.data_convocacao) === formatDate(new Date().toISOString())).length === 0 && (
+              <div className="col-span-full py-20 text-center text-slate-400 font-medium italic bg-white rounded-xl border-2 border-dashed border-slate-100">
+                Nenhuma convocação agendada para hoje.
+              </div>
+            )}
+          </div>
+        ) : view === 'kanban' ? (
           <KanbanBoard convocacoes={filteredConvocacoes} />
         ) : view === 'list' ? (
           <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">

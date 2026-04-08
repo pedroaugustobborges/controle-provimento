@@ -22,7 +22,7 @@ interface ConvocacaoDialogProps {
 }
 
 export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }: ConvocacaoDialogProps) {
-  const { addConvocacao, updateConvocacao, updateVaga } = useVagasStore();
+  const { addConvocacao, updateConvocacao, updateVaga, updateBanco, addAlerta, addTarefa } = useVagasStore();
   const { currentUser } = useAdminStore();
   
   const [formData, setFormData] = useState<Partial<Convocacao>>({
@@ -33,7 +33,8 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
     tipo_convocacao: 'Presencial',
     status: 'pendente',
     observacoes: '',
-    edoc: ''
+    edoc: '',
+    responsavel: currentUser?.nome_completo || 'Analista'
   });
 
   useEffect(() => {
@@ -61,21 +62,77 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
       return;
     }
 
+    const today = new Date().toISOString().split('T')[0];
+    const convocacaoId = convocacaoToEdit ? convocacaoToEdit.id : `conv-${Date.now()}`;
+    const status = formData.status as string;
+
     if (convocacaoToEdit) {
       updateConvocacao(convocacaoToEdit.id, formData);
-      toast.success('Convocação atualizada com sucesso');
     } else {
       const newConvocacao: Convocacao = {
         ...formData as Convocacao,
-        id: `conv-${Date.now()}`,
+        id: convocacaoId,
       };
       addConvocacao(newConvocacao);
-      
-      // Se vier de uma vaga, podemos atualizar o status da vaga
-      if (vaga) {
-        // updateVaga(vaga.id, { status: 'documentacao' });
+    }
+
+    // Section 10.5: Aceite e Recusa Logic
+    if (vaga) {
+      if (status === 'aceite') {
+        // Aceitou: sinalizar ao analista da unidade e permitir fechamento
+        addAlerta({
+          id: `a-acc-${Date.now()}`,
+          titulo: 'Convocação ACEITA',
+          mensagem: `O candidato ${formData.nome_candidato} aceitou a convocação para a vaga ${vaga.cargo} (${vaga.requisicao}).`,
+          tipo: 'informativo',
+          status: 'nao_lido',
+          data_criacao: today,
+          destinatario: vaga.analista_responsavel,
+          link: `/vagas/${vaga.id}`
+        });
+
+        // Mudar status no banco para CONVOCADO e remover disponibilidade
+        if (formData.banco_relacionado) {
+          updateBanco(formData.banco_relacionado, { 
+            status: 'CONVOCADO', 
+            data_convocacao: today, 
+            unidade_convocacao: vaga.unidade 
+          });
+        }
+
+        // Permitir que a vaga siga para fechamento (mudar para documentação ou admissão)
+        updateVaga(vaga.id, { status: 'em_documentacao' });
+        toast.success('Convocação ACEITA. Vaga movida para "Em Documentação".');
+
+      } else if (['recusa_plantao', 'recusa_unidade', 'recusa_horario', 'desistiu', 'faltou'].includes(status)) {
+        // Recusou: registrar recusa
+        toast.warning('Convocação RECUSADA registrada.');
+        
+        // Verificar se ainda há banco disponível
+        const matchedBanco = useVagasStore.getState().getBancoByVaga(vaga.id);
+        if (!matchedBanco || !matchedBanco.quantidade_banco || Number(matchedBanco.quantidade_banco) <= 0) {
+          // Se não houver banco, habilitar flag para publicar novo edital
+          updateVaga(vaga.id, { status: 'publicar_novo_edital' });
+          addAlerta({
+            id: `a-new-ed-${Date.now()}`,
+            titulo: 'Necessidade de Novo Edital',
+            mensagem: `Candidato recusou convocação para a vaga ${vaga.cargo} e não há mais banco disponível.`,
+            tipo: 'critico',
+            status: 'nao_lido',
+            data_criacao: today,
+            destinatario: 'Analista do edital',
+            link: `/vagas/${vaga.id}`
+          });
+          toast.info('Sem banco disponível. Vaga marcada para "Publicar Novo Edital".');
+        } else {
+          toast.info('Ainda há candidatos no banco disponível.');
+        }
       }
-      
+    }
+    
+    if (convocacaoToEdit) {
+      toast.success('Convocação atualizada');
+    } else {
       toast.success('Convocação registrada com sucesso');
     }
     

@@ -14,7 +14,7 @@ import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatus
 import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS } from '@/types/vaga';
 import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
 import {
   AlertDialog,
@@ -31,7 +31,7 @@ import {
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -47,6 +47,23 @@ export default function VagaDetalhePage() {
   });
 
   const vaga = getVaga(id!);
+  
+  const isAtrasada = useMemo(() => {
+    if (!vaga) return false;
+    const status = (vaga.status || vaga.status_geral) as string;
+    if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status)) return false;
+    const lastHist = vaga.historico?.[vaga.historico.length - 1];
+    const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
+    return calcDiasAberto(baseDate) > 10;
+  }, [vaga]);
+
+  const vagaConvocacoes = useMemo(() => 
+    convocacoes.filter(c => c.vaga_id === vaga?.id)
+  , [vaga?.id, convocacoes]);
+
+  const hasAceite = vagaConvocacoes.some(c => c.status === 'aceite');
+  const hasRecusa = vagaConvocacoes.some(c => ['recusa_plantao', 'recusa_unidade', 'recusa_horario', 'desistiu', 'faltou'].includes(c.status));
+  const isConcluido = ['encerrada', 'finalizada', 'admissao_efetivada'].includes(vaga?.status || vaga?.status_geral || '');
   
   useEffect(() => {
     if (vaga) {
@@ -80,18 +97,21 @@ export default function VagaDetalhePage() {
 
   const applyStatusChange = (newStatus: string, createBanco = false) => {
     const oldStatus = vaga.status || vaga.status_geral;
+    const now = new Date().toISOString();
+    const today = now.split('T')[0];
+    
     const updateData: Partial<any> = {
       status: newStatus as StatusVaga,
       historico: [...vaga.historico, { 
         id: `h-${Date.now()}`, 
-        data: new Date().toISOString().split('T')[0], 
+        data: today, 
         descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, 
         usuario: currentUser?.nome_completo || 'Analista' 
       }],
     };
 
     if (newStatus === 'encerrada' || newStatus === 'finalizada') {
-      updateData.data_encerramento = new Date().toISOString().split('T')[0];
+      updateData.data_encerramento = today;
     }
 
     if (createBanco) {
@@ -102,17 +122,44 @@ export default function VagaDetalhePage() {
         cargo: vaga.cargo,
         secao: vaga.secao,
         numero_edital: vaga.numero_edital || 'ED-' + (vaga.requisicao || vaga.id),
-        data_abertura_edital: new Date().toISOString().split('T')[0],
+        data_abertura_edital: today,
         data_validade: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 6 months
         is_prorrogado: false,
-        status: 'valido' as const,
+        status: 'CADASTRO RESERVA' as const,
         observacoes: `Banco criado a partir da vaga ${vaga.requisicao || vaga.id}`,
-        numero_processo: vaga.numero_processo
+        numero_processo: vaga.numero_processo,
+        quantidade_banco: vaga.acompanhamento?.quantidade_banco || indicators.aprovados_finais || 0
       };
-      useVagasStore.getState().addBanco(novoBanco);
+      
+      addBanco(novoBanco);
       updateData.tem_banco_valido = true;
       updateData.banco_id = bancoId;
-      toast.info('Banco de Talentos criado com sucesso');
+
+      // Section 8.4: Create task and alert for assistant
+      const tarefaId = `t-${Date.now()}`;
+      addTarefa({
+        id: tarefaId,
+        titulo: `Complementar dados do banco: ${vaga.cargo}`,
+        descricao: `Complementar dados do banco gerado para a vaga ${vaga.requisicao}. Conferir quantidade e finalizar inclusão no cadastro reserva.`,
+        status: 'pendente',
+        prioridade: 'media',
+        data_criacao: today,
+        atribuido_a: 'Assistente',
+        relacionado_a: { tipo: 'vaga', id: vaga.id }
+      });
+
+      addAlerta({
+        id: `a-${Date.now()}`,
+        titulo: 'Novo Banco Gerado',
+        mensagem: `Foi gerado um banco para a vaga ${vaga.cargo} (${vaga.requisicao}). Uma tarefa foi atribuída para complementação dos dados.`,
+        tipo: 'informativo',
+        status: 'nao_lido',
+        data_criacao: today,
+        destinatario: 'Assistente',
+        link: `/vagas/${vaga.id}`
+      });
+
+      toast.info('Banco de Talentos criado e tarefas atribuídas à assistência');
     }
 
     updateVaga(vaga.id, updateData);
@@ -121,7 +168,7 @@ export default function VagaDetalhePage() {
       usuario_nome: currentUser?.nome_completo || 'Sistema',
       usuario_email: currentUser?.email || 'sistema@sistema.com',
       perfil: currentUser?.perfil || 'Sistema',
-      data: new Date().toISOString().split('T')[0],
+      data: today,
       hora: new Date().toLocaleTimeString(),
       acao: 'Alteração de Status',
       modulo: 'Vagas',
@@ -177,12 +224,21 @@ export default function VagaDetalhePage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {vaga.status_edital && (
-            <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital as any]} font-bold text-xs px-3 py-1`}>
-              {vaga.status_edital}
-            </Badge>
-          )}
-          <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
+          <div className="flex flex-wrap gap-2">
+            {isAtrasada && <Badge className="bg-red-100 text-red-700 border-red-200 animate-pulse font-black px-3 py-1 uppercase text-[10px] tracking-wider"><AlertCircle className="h-3 w-3 mr-1" /> Etapa em Atraso</Badge>}
+            {hasAceite && <Badge className="bg-green-100 text-green-700 border-green-200 font-bold text-[10px] uppercase">Convocação Aceita</Badge>}
+            {hasRecusa && <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold text-[10px] uppercase">Convocação Recusada</Badge>}
+            {vaga.tem_banco_valido && <Badge className="bg-blue-100 text-blue-700 border-blue-200 font-bold text-[10px] uppercase">Banco Gerado</Badge>}
+            {vaga.status === 'publicar_novo_edital' && <Badge className="bg-rose-100 text-rose-700 border-rose-200 font-bold text-[10px] uppercase">Necessidade de Novo Edital</Badge>}
+            {isConcluido && <Badge className="bg-slate-100 text-slate-700 border-slate-200 font-bold text-[10px] uppercase">Processo Concluído</Badge>}
+            
+            {vaga.status_edital && (
+              <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital as any] || 'bg-slate-100'} font-bold text-xs px-3 py-1`}>
+                {vaga.status_edital}
+              </Badge>
+            )}
+            <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
+          </div>
           {canDelete && (
             <Button 
               variant="outline" 
@@ -563,7 +619,7 @@ function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
             </Select>
           </div>
         </div>
-        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-5 gap-6">
           <div className="space-y-1.5">
             <label className="text-[10px] text-slate-400 font-bold uppercase">Total Inscritos</label>
             <Input type="number" value={form.total_inscritos} onChange={(e) => setForm({ ...form, total_inscritos: +e.target.value })} className="bg-white" />
@@ -579,6 +635,26 @@ function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
           <div className="space-y-1.5">
             <label className="text-[10px] text-slate-400 font-bold uppercase">Aprovados Finais</label>
             <Input type="number" value={form.aprovados_finais} onChange={(e) => setForm({ ...form, aprovados_finais: +e.target.value })} className="bg-white" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-slate-400 font-bold uppercase">Gerou Banco?</label>
+            <div className="flex items-center gap-2 pt-1">
+              <input 
+                type="checkbox" 
+                checked={form.gerou_banco} 
+                onChange={(e) => setForm({ ...form, gerou_banco: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              {form.gerou_banco && (
+                <Input 
+                  type="number" 
+                  placeholder="Qtd." 
+                  value={form.quantidade_banco} 
+                  onChange={(e) => setForm({ ...form, quantidade_banco: +e.target.value })} 
+                  className="h-8 w-20 bg-white" 
+                />
+              )}
+            </div>
           </div>
         </div>
         <div className="flex justify-end">

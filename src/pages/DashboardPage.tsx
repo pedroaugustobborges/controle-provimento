@@ -31,7 +31,8 @@ import {
   CheckCircle,
   Database,
   Star,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -48,7 +49,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const { vagas: allVagas, validacoes, getBancoByVaga, convocacoes, bancos } = useVagasStore();
+  const { vagas: allVagas, validacoes, getBancoByVaga, convocacoes, bancos, tarefas, alertas: storeAlertas } = useVagasStore();
   const navigate = useNavigate();
 
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
@@ -69,26 +70,52 @@ export default function DashboardPage() {
       excecoes: 0,
       estrategicas: 0,
       convocacao: 0,
+      movimentacao_interna: 0,
+      vaga_lideranca: 0,
+      cancelada: 0,
+      dispensa: 0,
+      aguardar_anuencia: 0,
+      atrasadas: 0,
     };
     
     vagas.forEach(v => {
       const status = (v.status || v.status_geral) as string;
       const cat = getCategoriaStatus(status);
-      const qtd = 1;
       if (acc[cat] !== undefined) {
-        acc[cat] += qtd;
+        acc[cat]++;
+      }
+      
+      if (status === 'movimentacao_interna') acc.movimentacao_interna++;
+      if (status === 'vaga_lideranca') acc.vaga_lideranca++;
+      if (status === 'cancelada') acc.cancelada++;
+      if (status === 'dispensa') acc.dispensa++;
+      if (status === 'aguardar_anuencia') acc.aguardar_anuencia++;
+      
+      // Check if delayed
+      const lastHist = v.historico?.[v.historico.length - 1];
+      const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
+      if (calcDiasAberto(baseDate) > 10 && !['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status)) {
+        acc.atrasadas++;
       }
     });
     
     return acc;
   }, [vagas]);
 
-  const filaEdital = counts.fila_edital;
-  const emAndamento = counts.em_andamento;
-  const concluidas = counts.concluidas;
-  const excecoes = counts.excecoes;
-  const estrategicas = counts.estrategicas;
-  const convocacao = counts.convocacao;
+  const {
+    fila_edital: filaEdital,
+    em_andamento: emAndamento,
+    concluidas,
+    excecoes,
+    estrategicas,
+    convocacao,
+    movimentacao_interna: totalMovInterna,
+    vaga_lideranca: totalLideranca,
+    cancelada: totalCanceladas,
+    dispensa: totalDispensa,
+    aguardar_anuencia: totalAnuencia,
+    atrasadas: totalAtrasadas
+  } = counts;
 
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   // Aqui também somamos a quantidade de vagas representadas
@@ -98,27 +125,37 @@ export default function DashboardPage() {
 
 
   const totalCR = useMemo(() => 
-    bancos.filter(b => b.status_import === 'CADASTRO RESERVA' || b.status === 'valido').length
+    bancos.filter(b => b.status === 'CADASTRO RESERVA' || b.status === 'valido').length
   , [bancos]);
 
   const totalVencidos = useMemo(() => 
-    bancos.filter(b => b.status === 'vencido').length
+    bancos.filter(b => b.status === 'VENCIDO' || (b as any).status === 'vencido').length
   , [bancos]);
 
   const totalConvocados = useMemo(() => {
-    return bancos.filter(b => b.status === 'convocado' || b.status_import === 'CONVOCADO').length;
+    return bancos.filter(b => b.status === 'CONVOCADO' || (b as any).status === 'convocado').length;
   }, [bancos]);
+
+  const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
+  const totalConvRealizadas = convocacoes.length;
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Fila de Editais', value: filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Concluídas', value: concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Estratégicas', value: estrategicas, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { label: 'Convocações', value: convocacao, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Exceções', value: excecoes, icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Mov. Interna', value: totalMovInterna, icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Liderança', value: totalLideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Vagas com Banco', value: comBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Conv. Realizadas', value: totalConvRealizadas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Canceladas', value: totalCanceladas, icon: X, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Dispensa', value: totalDispensa, icon: RefreshCw, color: 'text-slate-600', bg: 'bg-slate-50' },
+    { label: 'Aguardar Anuência', value: totalAnuencia, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { label: 'Etapas em Atraso', value: totalAtrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Edital Pend. Valid.', value: emValidacao, icon: ShieldCheck, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50' },
   ];
 
   const alerts = useMemo(() => vagas.filter((v) => {
@@ -194,7 +231,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid - More Dynamic Design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-9 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-5">
         {stats.map((stat, idx) => (
           <Card key={idx} className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden bg-white">
             <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>

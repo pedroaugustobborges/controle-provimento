@@ -227,9 +227,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             // content: data as any // Removido para evitar estourar quota do localStorage e excesso de memória
           });
           setWorkbook(wb);
-          setSelectedSheets([wb.SheetNames[0]]);
-          // Don't jump to next step automatically
-          // setStep('sheets');
+          
+          // DEFAULT: Select "BANCO GERAL" sheet if it exists
+          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.toUpperCase() === 'BANCO GERAL');
+          if (bancoGeralIndex !== -1) {
+            setSelectedSheets([wb.SheetNames[bancoGeralIndex]]);
+          } else {
+            setSelectedSheets([wb.SheetNames[0]]);
+          }
+
           toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
         } catch (error: any) {
           console.error('Erro ao ler arquivo:', error);

@@ -13,30 +13,42 @@ import { useVagasStore } from '@/store/vagasStore';
 import { Vaga, StatusVaga, TipoVaga, BancoTalentos } from '@/types/vaga';
 import { getResponsavelPorUnidade } from '@/data/equipe';
 import { toast } from 'sonner';
-import { normalizeStatus } from '@/lib/vagaUtils';
+import { normalizeStatus, getValidVacancyBase } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 
 type Step = 'select' | 'processing' | 'summary';
 
 const VAGA_SHEETS = [
+  'tb_HECAD', 'tb_CRER', 'tb_AGIR', 'tb_HUGOL', 'tb_HDS', 
+  'tb_POLICLINICA', 'tb_VITORIA', 'tb_JATAI', 'tb_TEIA_ANAPOLIS', 
+  'tb_TEIA_CANEDO', 'tb_TEIA_APARECIDA', 'tb_TEIA_GOIANIA',
+  // Manter suporte aos nomes antigos por retrocompatibilidade se necessário
   'Vagas - HECAD', 'Vagas - CRER', 'Vagas - AGIR', 'Vagas - HUGOL', 
   'Vagas - HDS', 'Vagas - POLICLÍNICA', 'Vagas - VITÓRIA', 'Vagas - JATAÍ', 
   'Vagas - TEIA ANÁPOLIS', 'Vagas - TEIA CANEDO', 'Vagas - TEIA APARECIDA', 'Vagas - TEIA GOIÂNIA'
 ];
 
 const UNIT_MAPPING: Record<string, string> = {
+  'tb_HECAD': 'HECAD',
+  'tb_CRER': 'CRER',
+  'tb_AGIR': 'AGIR',
+  'tb_HUGOL': 'HUGOL',
+  'tb_HDS': 'HDS',
+  'tb_POLICLINICA': 'POLICLÍNICA',
+  'tb_VITORIA': 'VITÓRIA',
+  'tb_JATAI': 'JATAÍ',
+  'tb_TEIA_ANAPOLIS': 'TEIA ANÁPOLIS',
+  'tb_TEIA_CANEDO': 'TEIA CANEDO',
+  'tb_TEIA_APARECIDA': 'TEIA APARECIDA',
+  'tb_TEIA_GOIANIA': 'TEIA GOIÂNIA',
   'Vagas - HECAD': 'HECAD',
   'Vagas - CRER': 'CRER',
   'Vagas - AGIR': 'AGIR',
   'Vagas - HUGOL': 'HUGOL',
   'Vagas - HDS': 'HDS',
   'Vagas - POLICLÍNICA': 'POLICLÍNICA',
-  'Vagas - VITÓRIA': 'VITÓRIA', // Will be split between SÃO PEDRO and SUÁ
+  'Vagas - VITÓRIA': 'VITÓRIA',
   'Vagas - JATAÍ': 'JATAÍ',
-  'Vagas - TEIA ANÁPOLIS': 'TEIA ANÁPOLIS',
-  'Vagas - TEIA CANEDO': 'TEIA CANEDO',
-  'Vagas - TEIA APARECIDA': 'TEIA APARECIDA',
-  'Vagas - TEIA GOIÂNIA': 'TEIA GOIÂNIA',
 };
 
 interface ImportExcelDialogProps {
@@ -151,6 +163,7 @@ export function ImportExcelDialog({
                 origem_importacao: selectedFile.name,
                 data_importacao: now,
                 lote_importacao: batchId,
+                import_batch_id: batchId,
                 source_sheet: sheetName,
                 source_row_index: i + 1,
                 tem_banco_valido: false,
@@ -164,13 +177,27 @@ export function ImportExcelDialog({
             }
           });
 
-          // Clear existing vagas before adding new ones
+          // Regra de Ouro: SUBSTITUIÇÃO TOTAL
+          const totalAntigoVagas = useVagasStore.getState().vagas.length;
           clearVagas();
           addVagas(newVagas);
+          const totalNovoVagas = useVagasStore.getState().vagas.length;
           
+          // Log detalhado conforme solicitado
+          console.log(`[IMPORT VAGAS] Processo concluído.`);
+          console.log(`- Registros antigos apagados: ${totalAntigoVagas}`);
+          console.log(`- Registros lidos do arquivo: ${totalProcessed}`);
+          console.log(`- Registros válidos inseridos: ${newVagas.length}`);
+          console.log(`- Total final na base: ${totalNovoVagas}`);
+          
+          // Métrica específica solicitada para conferência
+          const totalVagasDashboard = getValidVacancyBase(newVagas, 'TODOS', 'TODOS').length;
+          console.log(`- TOTAL VAGAS (DASHBOARD): ${totalVagasDashboard}`);
+
           setSummary({
             type: 'vagas',
             total: newVagas.length,
+            dashboardTotal: totalVagasDashboard,
             fileName: selectedFile.name
           });
           
@@ -188,7 +215,7 @@ export function ImportExcelDialog({
             data_hora: now
           });
           
-          toast.success(`Importação de Vagas concluída: ${newVagas.length} vagas encontradas.`);
+          toast.success(`Importação de Vagas: ${newVagas.length} registros inseridos em modo substituição.`);
 
         } else if (fileName.endsWith('.xlsx')) {
           const sheet = wb.Sheets['BANCO GERAL'];
@@ -230,14 +257,29 @@ export function ImportExcelDialog({
               data_validade: row['VALIDADE'] ? convertDateValue(row['VALIDADE'], 'auto').formatted : '',
               is_prorrogado: false,
               observacoes: '',
-              status_import: statusRaw
+              status_import: statusRaw,
+              import_batch_id: batchId,
+              data_importacao: now,
+              origem_importacao: selectedFile.name,
             });
           });
 
-          // Clear existing banco before adding new ones
+          // Regra de Ouro: SUBSTITUIÇÃO TOTAL
+          const totalAntigoBanco = useVagasStore.getState().bancos.length;
           clearBancos();
           addBancos(newBancos);
+          const totalNovoBanco = useVagasStore.getState().bancos.length;
           
+          // Log detalhado conforme solicitado
+          console.log(`[IMPORT BANCO] Processo concluído.`);
+          console.log(`- Registros antigos apagados: ${totalAntigoBanco}`);
+          console.log(`- Registros lidos do arquivo: ${data.length}`);
+          console.log(`- Registros válidos inseridos: ${newBancos.length}`);
+          console.log(`- Total final na base: ${totalNovoBanco}`);
+          console.log(`  * Cadastro Reserva: ${countCR}`);
+          console.log(`  * Convocados: ${countConv}`);
+          console.log(`  * Vencidos: ${countVenc}`);
+
           setSummary({
             type: 'banco',
             total: newBancos.length,
@@ -261,7 +303,7 @@ export function ImportExcelDialog({
             data_hora: now
           });
 
-          toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
+          toast.success(`Importação de Banco: ${newBancos.length} registros inseridos em modo substituição.`);
         } else {
           toast.error("Formato de arquivo não suportado para esta operação.");
           reset();

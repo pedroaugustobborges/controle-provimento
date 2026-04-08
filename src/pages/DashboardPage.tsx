@@ -3,7 +3,7 @@ import { useVagasStore } from '@/store/vagasStore';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, getCategoriaStatus } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, getCategoriaStatus, normalizeUnitName } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 
   Briefcase, 
@@ -104,34 +104,50 @@ export default function DashboardPage() {
   });
 
   const chartData = useMemo(() => {
+    // 1. Audit unique units and their counts from the store for transparency
+    const rawUnits = vagas.map(v => v.unidade).filter(Boolean);
+    const uniqueRawUnits = [...new Set(rawUnits)];
+    const auditStats = uniqueRawUnits.map(u => ({
+      original: u,
+      count: vagas.filter(v => v.unidade === u).length
+    }));
+    console.log('AUDIT DASHBOARD: Unidades e contagens cruas do store:', auditStats);
+
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
       if (!v.unidade) return;
       
-      const unitName = v.unidade.toUpperCase();
-      // Skip Corporativo if requested (though we should only skip if not in data)
-      // The prompt says "Se essa unidade não existir nos dados importados, ela não deve aparecer"
-      // By using only 'vagas', we ensure only existing units appear.
-      if (unitName.includes('CORPORATIVO')) return;
+      const normalizedName = normalizeUnitName(v.unidade);
+      // Manter a exclusão de Corporativo por enquanto
+      if (!normalizedName || normalizedName.includes('CORPORATIVO')) return;
 
-      const unitKey = isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase().replace('HOSPITAL ', '').replace('UNIDADE ', '').replace(/\s*\(.*\)/, '').trim();
-      const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
-      
+      const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
       current.total += 1;
-      if (v.status === 'aberta' || v.status_geral === 'aberta') {
+      
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      if (status === 'aberta') {
         current.abertas += 1;
       }
-      groupedMap.set(unitKey, current);
+      groupedMap.set(normalizedName, current);
     });
 
+    // 2. Double-check validation as requested
     return Array.from(groupedMap.entries())
-      .map(([name, data]) => ({
-        name,
-        total: data.total,
-        abertas: data.abertas,
-      }))
-      .filter(item => item.total > 0) // Ensure we only show units with real data
+      .map(([name, data]) => {
+        const independentCount = vagas.filter(v => v.unidade && normalizeUnitName(v.unidade) === name).length;
+        
+        if (independentCount !== data.total) {
+          console.warn(`[Double-Check] Divergência na unidade ${name}: Map=${data.total}, Independent=${independentCount}`);
+        }
+
+        return {
+          name,
+          total: independentCount,
+          abertas: data.abertas,
+        };
+      })
+      .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total);
   }, [vagas]);
 
@@ -288,7 +304,7 @@ export default function DashboardPage() {
                       </div>
                       <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors truncate leading-snug">{v.cargo}</h4>
                       <p className="text-[11px] text-slate-400 font-semibold mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
-                        <Building2 className="h-3 w-3 opacity-50" /> {isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase()}
+                        <Building2 className="h-3 w-3 opacity-50" /> {normalizeUnitName(v.unidade)}
                       </p>
                     </div>
                   </div>

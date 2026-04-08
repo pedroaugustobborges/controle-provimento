@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, normalizeUnitName } from '@/lib/vagaUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -78,12 +78,15 @@ export default function VagasPage() {
     }
   };
 
-  const allUnidades = useMemo(() => [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort(), [vagas]);
+  const allUnidades = useMemo(() => [...new Set(vagas.map((v) => normalizeUnitName(v.unidade)))].filter(Boolean).sort(), [vagas]);
   
-  // Restriction by unit
-  const visibleUnidades = useMemo(() => currentUser?.visualiza_todas_unidades 
-    ? allUnidades 
-    : (currentUser?.unidades_vinculadas || []), [currentUser, allUnidades]);
+  // Restriction by unit - normalization for consistent comparison
+  const visibleUnidades = useMemo(() => {
+    const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+    return currentUser?.visualiza_todas_unidades 
+      ? allUnidades 
+      : userUnidades;
+  }, [currentUser, allUnidades]);
 
   const unidades = useMemo(() => {
     return allUnidades.filter(u => visibleUnidades.includes(u)).sort();
@@ -105,7 +108,7 @@ export default function VagasPage() {
       v.unidade.toLowerCase().includes(searchTerm) ||
       (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-    const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
+    const matchUnidade = filterUnidade === 'all' || normalizeUnitName(v.unidade) === filterUnidade;
 
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;

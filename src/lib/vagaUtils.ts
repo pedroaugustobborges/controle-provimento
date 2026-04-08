@@ -13,12 +13,22 @@ function removeAccents(str: string): string {
 export function isVitoriaUnit(unidade: string): boolean {
   if (!unidade) return false;
   const normalized = removeAccents(unidade.toLowerCase().trim());
+  const words = normalized.split(/[\s,.-]+/);
+  
   // Se for Vitória, já é Vitória
-  if (normalized === 'vitoria') return true;
-  // Se contiver algum dos bairros/cidades da Grande Vitória
-  return VITORIA_SUB_UNIDADES.some(sub => 
-    normalized.includes(removeAccents(sub.toLowerCase()))
-  );
+  if (words.some(w => w === 'vitoria' || w === 'vix')) return true;
+  
+  // Tokens que representam a Grande Vitória
+  const vitoriaTokens = VITORIA_SUB_UNIDADES.map(sub => removeAccents(sub.toLowerCase()));
+  
+  return vitoriaTokens.some(token => {
+    if (token.length <= 3) {
+      // Para tokens curtos (como 'es', 'sua'), exige correspondência de palavra inteira
+      return words.includes(token);
+    }
+    // Para nomes maiores (como 'jardim da penha'), pode ser sub-string
+    return normalized.includes(token);
+  });
 }
 
 
@@ -165,4 +175,25 @@ export function normalizeStatus(statusText: string): StatusVaga {
   
   // Se não bater com nada conhecido, retorna o próprio texto se ele for um status válido, ou vazio
   return text as StatusVaga;
+}
+
+export function normalizeUnitName(name: string): string {
+  if (!name) return '';
+  const upper = name.toUpperCase().trim();
+  
+  // Mapeamento explícito de unidades AGIR para precisão absoluta
+  if (upper.includes('HECAD')) return 'HECAD';
+  if (upper.includes('HUGOL')) return 'HUGOL';
+  if (upper.includes('CRER')) return 'CRER';
+  if (upper.includes('HDS')) return 'HDS';
+  if (upper.includes('POLICLINICA') || upper.includes('POLICLÍNICA')) return 'POLICLÍNICA';
+  
+  if (isVitoriaUnit(name)) return 'VITÓRIA';
+  
+  // Limpeza padrão para outras unidades preservando o nome principal
+  return upper
+    .replace(/^(HOSPITAL|UNIDADE|HOSP)\s+/i, '')
+    .replace(/^(ESTADUAL\s+)/i, '')
+    .replace(/\s*\(.*\)/g, '')
+    .trim();
 }

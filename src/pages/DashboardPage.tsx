@@ -3,7 +3,11 @@ import { useVagasStore } from '@/store/vagasStore';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, getCategoriaStatus, normalizeUnitName, countVacancies, getStatusSummary } from '@/lib/vagaUtils';
+import { 
+  calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
+  getCategoriaStatus, normalizeUnitName, countVacancies, 
+  getStatusSummary, getValidVacancyBase 
+} from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 
   Briefcase, 
@@ -49,18 +53,11 @@ export default function DashboardPage() {
 
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
   // Isso atende à solicitação de usar exclusivamente dados reais inseridos/importados
+  // Canonical base for dashboard - using the same parity rule as Excel
   const vagas = useMemo(() => {
-    // Audit: Rule 1 — cargo determines whether the row counts as a vacancy
-    // Remove the uniqueness filter by requisicao as requested
-    return allVagas.filter(v => {
-      const hasCargoValue = String(v.cargo ?? "").trim() !== "";
-      const isRealData = v.origem_importacao || v.lote_importacao || (v.id && v.id.length > 5);
-      return hasCargoValue && isRealData;
-    });
+    return getValidVacancyBase(allVagas, 'TODOS', 'TODOS');
   }, [allVagas]);
 
-  // Total de Vagas must be calculated using the same business rule as Excel
-  // No status filtering for the total count.
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 
   

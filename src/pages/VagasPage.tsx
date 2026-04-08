@@ -5,10 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, normalizeUnitName, countVacancies, getStatusSummary, getMonthNamePtBrUpper } from '@/lib/vagaUtils';
-import { Calendar } from 'lucide-react';
+import { 
+  calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
+  normalizeUnitName, countVacancies, getStatusSummary, 
+  getMonthNamePtBrUpper, getValidVacancyBase 
+} from '@/lib/vagaUtils';
+import { Calendar, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -54,6 +59,7 @@ export default function VagasPage() {
   const [filterLideranca, setFilterLideranca] = useState('all');
 
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -99,53 +105,43 @@ export default function VagasPage() {
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
-  const filtered = useMemo(() => vagas.filter((v) => {
-    // Audit for transparency
-    const vUnitNormalized = normalizeUnitName(v.unidade);
-    
-    // Unit access restriction - using normalized names for consistency
-    if (!currentUser?.visualiza_todas_unidades) {
-      const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-      if (!userUnidades.includes(vUnitNormalized)) {
-        return false;
-      }
-    }
-
-    const searchTerm = search.toLowerCase();
-    const matchSearch = !search || 
-      (v.cargo || '').toLowerCase().includes(searchTerm) ||
-      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm) ||
-      (v.unidade || '').toLowerCase().includes(searchTerm) ||
-      (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
-
-    const matchUnidade = filterUnidade === 'all' || normalizeUnitName(v.unidade) === filterUnidade;
-
-    // Rule: if cargo is blank, it shouldn't be counted in Total de Vagas, but let's keep it visible in the table 
-    // unless the user specifically wants the table to match the vacancy count logic.
-    // The user said: "visible table row count" shouldn't determine the metric, but 
-    // "Implement the platform count so it behaves exactly like the spreadsheet: unit-scoped, cargo-based, month-filtered by abertura"
-    // To maintain parity, the table should show what's being counted.
-    const hasCargoValue = String(v.cargo ?? "").trim() !== "";
-    if (!hasCargoValue) return false;
-
-    const matchMes = filterMes === 'all' || getMonthNamePtBrUpper(v.data_abertura) === filterMes.toUpperCase();
-
-    const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
-    const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
-    const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
-    const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
-    const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
-    
-    return matchSearch && matchUnidade && matchMes && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
-  }), [vagas, currentUser, search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
-
-
-  const vacancyStats = useMemo(() => {
-    const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
-    const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
-    
-    return getStatusSummary(vagas, selectedUnit, selectedMonth);
+  // 1. Canonical base for all metrics - exactly matching Excel parity
+  const canonicalBase = useMemo(() => {
+    return getValidVacancyBase(vagas, filterUnidade, filterMes);
   }, [vagas, filterUnidade, filterMes]);
+
+  // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
+  const filtered = useMemo(() => {
+    return canonicalBase.filter((v) => {
+      const searchTerm = search.toLowerCase();
+      const matchSearch = !search || 
+        (v.cargo || '').toLowerCase().includes(searchTerm) ||
+        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm) ||
+        (v.unidade || '').toLowerCase().includes(searchTerm) ||
+        (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
+
+      const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
+      const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
+      const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
+      const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
+      const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
+      
+      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
+    });
+  }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
+
+  // 3. Vacancy summary - strictly using the same canonical base
+  const vacancyStats = useMemo(() => {
+    const summary: Record<string, number> = {};
+    canonicalBase.forEach(row => {
+      const status = (row.status || row.status_geral || 'SEM_STATUS').toUpperCase().trim();
+      summary[status] = (summary[status] || 0) + 1;
+    });
+    return {
+      total: canonicalBase.length,
+      byStatus: summary
+    };
+  }, [canonicalBase]);
 
   const totalVagas = vacancyStats.total;
   
@@ -188,29 +184,46 @@ export default function VagasPage() {
   }, [vacancyStats.byStatus]);
 
   const countComBanco = useMemo(() => {
-    // For this one, we filter from the base of valid vacancies
+    return canonicalBase.filter(v => getBancoByVaga(v.id)).length;
+  }, [canonicalBase, getBancoByVaga]);
+
+  // Debug Diagnostics for Audit
+  const auditData = useMemo(() => {
     const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
     const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
     
-    const validBase = vagas.filter(row => {
-      const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
-      const rowUnit = normalize(row.unidade);
-      const normalizedUnit = normalize(selectedUnit);
-      const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
-      const hasCargoValue = String(row.cargo ?? "").trim() !== "";
-      
-      if (!sameUnit || !hasCargoValue) return false;
-      
-      if (selectedMonth !== 'TODOS' && selectedMonth !== 'all' && selectedMonth !== '') {
-        const aberturaMonth = (row as any).data_abertura ? 
-          new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date((row as any).data_abertura)).toUpperCase() : "";
-        if (aberturaMonth !== selectedMonth.toUpperCase()) return false;
-      }
-      return true;
+    // Total raw records
+    const rawTotal = vagas.length;
+    
+    // Step-by-step filtering for transparency
+    const withCargo = vagas.filter(v => String(v.cargo ?? "").trim() !== "");
+    
+    const normUnit = selectedUnit !== 'TODOS' ? normalizeUnitName(selectedUnit) : 'TODOS';
+    const afterUnit = withCargo.filter(v => normUnit === 'TODOS' || normalizeUnitName(v.unidade) === normUnit);
+    
+    const normMonth = selectedMonth !== 'TODOS' ? selectedMonth.toUpperCase() : 'TODOS';
+    const afterMonth = afterUnit.filter(v => {
+      if (normMonth === 'TODOS') return true;
+      return getMonthNamePtBrUpper(v.data_abertura) === normMonth;
     });
 
-    return validBase.filter(v => getBancoByVaga(v.id)).length;
-  }, [vagas, filterUnidade, filterMes, getBancoByVaga]);
+    const rejectedByCargo = vagas.filter(v => String(v.cargo ?? "").trim() === "").slice(0, 5);
+    const rejectedByUnit = withCargo.filter(v => normUnit !== 'TODOS' && normalizeUnitName(v.unidade) !== normUnit).slice(0, 5);
+    const rejectedByMonth = afterUnit.filter(v => normMonth !== 'TODOS' && getMonthNamePtBrUpper(v.data_abertura) !== normMonth).slice(0, 5);
+
+    return {
+      selectedUnit,
+      selectedMonth,
+      rawTotal,
+      withCargoCount: withCargo.length,
+      afterUnitCount: afterUnit.length,
+      finalCount: afterMonth.length,
+      tableCount: filtered.length,
+      rejectedByCargo,
+      rejectedByUnit,
+      rejectedByMonth,
+    };
+  }, [vagas, filterUnidade, filterMes, filtered]);
 
 
 
@@ -241,6 +254,14 @@ export default function VagasPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
+                className={`text-[10px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary'}`}
+                onClick={() => setIsDebugOpen(!isDebugOpen)}
+              >
+                <Bug className="h-3 w-3" /> Audit
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 className="text-[10px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
                 onClick={() => {
                   const diag = getMatchingDiagnostic();
@@ -268,12 +289,79 @@ export default function VagasPage() {
         </div>
       </div>
 
+      {isDebugOpen && (
+        <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-4">
+          <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-xs font-bold text-amber-800 uppercase flex items-center gap-2">
+                <Bug className="h-3 w-3" /> Diagnóstico de Paridade Excel (Audit)
+              </CardTitle>
+              <CardDescription className="text-[10px] text-amber-600 font-medium">
+                Comparação entre dados importados e regras de negócio de contagem.
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setIsDebugOpen(false)} className="h-6 w-6 p-0 text-amber-700">
+              <X className="h-3 w-3" />
+            </Button>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Escopo Atual</p>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">{auditData.selectedUnit}</Badge>
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">{auditData.selectedMonth}</Badge>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Funil de Paridade</p>
+                <div className="text-[11px] font-mono text-amber-900 leading-tight">
+                  <p>Total Importado: {auditData.rawTotal}</p>
+                  <p>Com Cargo (F): {auditData.withCargoCount}</p>
+                  <p>Após Unid (Unit): {auditData.afterUnitCount}</p>
+                  <p className="font-bold text-primary">Final (Metric): {auditData.finalCount}</p>
+                  <p>Tabela (Table): {auditData.tableCount}</p>
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-[10px] text-amber-700 font-bold uppercase mb-1">Amostra de Rejeitados (Parity Check)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white/50 p-1.5 rounded border border-amber-100">
+                    <p className="text-[9px] font-bold text-red-600 mb-1 flex items-center gap-1"><X className="h-2 w-2" /> S/ Cargo (F is Blank)</p>
+                    {auditData.rejectedByCargo.map((r, i) => (
+                      <p key={i} className="text-[8px] text-slate-500 truncate">Linha {r.source_row_index}: {r.unidade}</p>
+                    ))}
+                  </div>
+                  <div className="bg-white/50 p-1.5 rounded border border-amber-100">
+                    <p className="text-[9px] font-bold text-amber-600 mb-1 flex items-center gap-1"><Filter className="h-2 w-2" /> Mismatch Unidade</p>
+                    {auditData.rejectedByUnit.map((r, i) => (
+                      <p key={i} className="text-[8px] text-slate-500 truncate">[{r.unidade}] != {auditData.selectedUnit}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {auditData.finalCount !== auditData.tableCount && (
+              <Alert className="bg-red-50 border-red-200 py-2">
+                <AlertCircle className="h-3 w-3 text-red-600" />
+                <AlertTitle className="text-[10px] font-bold text-red-800 uppercase">Atenção: Desvio de Paridade</AlertTitle>
+                <AlertDescription className="text-[10px] text-red-700">
+                  O Total de Vagas ({auditData.finalCount}) difere do número de linhas na tabela ({auditData.tableCount}). 
+                  Verifique se há filtros de pesquisa ou status aplicados que não fazem parte da regra base do Excel.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
-            <p className="text-2xl font-bold text-slate-800">{totalVagas}</p>
-            <p className="text-[10px] text-slate-400">Regra de Negócio (Cargo + Mes)</p>
+            <p className="text-2xl font-bold text-slate-800">{auditData.finalCount}</p>
+            <p className="text-[10px] text-slate-400">Regra Excel (Cargo + Mes)</p>
           </CardContent>
         </Card>
 

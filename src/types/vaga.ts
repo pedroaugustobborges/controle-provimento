@@ -213,27 +213,26 @@ export const TIPO_VAGA_LABELS: Record<TipoVaga, string> = {
 };
 
 export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
-  movimentacao_interna: 'Movimentação Interna',
-  vaga_lideranca: 'Vaga de Liderança',
-  publicado_edital: 'Publicado no Edital',
+  sem_status: 'Sem Status',
+  publicar_novo_edital: 'Publicar Novo Edital',
   em_edital: 'Em Edital',
-  documentacao: 'Documentação',
-  documentacao_ok: 'Documentação OK',
-  documentacao_pendente: 'Documentação Pendente',
-  casos_ok: 'Casos OK',
-  admissao: 'Admissão',
+  em_documentacao: 'Em Documentação',
+  documentacao_ok_azul_pendente: 'Doc. OK e Azul Pendente',
+  documentacao_pendente_azul_ok: 'Doc. Pendente e Azul OK',
+  em_admissao: 'Em Admissão',
   admissao_enviada: 'Admissão Enviada',
   admissao_efetivada: 'Admissão Efetivada',
-  suspensa: 'Suspensa',
+  dispensa: 'Dispensa',
   cancelada: 'Cancelada',
-  aguardando_unidade: 'Aguardando Unidade',
+  aguardar_anuencia: 'Aguardar Anuência',
+  movimentacao_interna: 'Movimentação Interna',
+  vaga_lideranca: 'Vaga de Liderança',
   realizar_convocacao: 'Realizar Convocação',
   aberta: 'Aberta',
   em_triagem: 'Em Triagem',
   entrevista: 'Entrevista',
   finalizada: 'Finalizada',
   encerrada: 'Encerrada',
-  sem_status: 'Sem Status',
 };
 
 export const STATUS_LABELS = STATUS_VAGA_LABELS;

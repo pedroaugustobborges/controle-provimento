@@ -130,7 +130,8 @@ export const mockVagas: Vaga[] = [
     observacoes_internas: '',
     tem_banco_valido: false,
     historico: [],
-  },
+  }
+];
 
 export const mockBancos: BancoTalentos[] = [
   {

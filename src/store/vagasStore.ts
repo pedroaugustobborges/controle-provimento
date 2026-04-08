@@ -36,6 +36,7 @@ interface VagasState {
   getValidacaoByVaga: (vagaId: string) => ValidacaoEdital | undefined;
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
+  getMatchingDiagnostic: () => any[];
 }
 
 export const useVagasStore = create<VagasState>()(

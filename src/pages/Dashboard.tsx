@@ -13,30 +13,38 @@ import {
   CalendarDays,
   XCircle,
   PauseCircle,
-  HelpCircle
+  HelpCircle,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const stats = [
-  { name: 'Vagas Ativas', value: '42', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
-  { name: 'Em Andamento', value: '28', icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-100' },
-  { name: 'Processos Concluídos', value: '156', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-  { name: 'Fila de Editais', value: '5', icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-  { name: 'Movimentação Interna', value: '12', icon: ArrowUpRight, color: 'text-purple-600', bg: 'bg-purple-100' },
-  { name: 'Vagas de Liderança', value: '3', icon: Users, color: 'text-rose-600', bg: 'bg-rose-100' },
-  { name: 'Cadastro Reserva', value: '840', icon: Users2, color: 'text-cyan-600', bg: 'bg-cyan-100' },
-  { name: 'Convocados', value: '24', icon: UserPlus, color: 'text-teal-600', bg: 'bg-teal-100' },
-  { name: 'Vencidos', value: '18', icon: CalendarDays, color: 'text-orange-600', bg: 'bg-orange-100' },
-  { name: 'Convocações Realizadas', value: '12', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-  { name: 'Canceladas', value: '8', icon: XCircle, color: 'text-destructive', bg: 'bg-red-100' },
-  { name: 'Dispensa', value: '4', icon: PauseCircle, color: 'text-slate-600', bg: 'bg-slate-100' },
-  { name: 'Aguardar Anuência', value: '2', icon: HelpCircle, color: 'text-zinc-600', bg: 'bg-zinc-100' },
-  { name: 'Etapas em Atraso', value: '6', icon: AlertTriangle, color: 'text-destructive', bg: 'bg-red-100' },
-  { name: 'Editais Pendentes de Validação', value: '2', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
-  { name: 'Tarefas Pendentes', value: '14', icon: CheckCircle2, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-];
+import { useQuery } from '@tanstack/react-query';
+import { DashboardService } from '@/services/dashboardService';
 
 export function Dashboard() {
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ['dashboard-metrics'],
+    queryFn: () => DashboardService.getDashboardMetrics(),
+    refetchInterval: 30000, // Refresh every 30s
+  });
+
+  const stats = [
+    { name: 'Vagas Ativas', value: metrics?.filaEditais || '0', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { name: 'Em Andamento', value: '28', icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { name: 'Processos Concluídos', value: metrics?.concluidos || '0', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    { name: 'Fila de Editais', value: metrics?.filaEditais || '0', icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+    { name: 'Movimentação Interna', value: '12', icon: ArrowUpRight, color: 'text-purple-600', bg: 'bg-purple-100' },
+    { name: 'Vagas de Liderança', value: '3', icon: Users, color: 'text-rose-600', bg: 'bg-rose-100' },
+    { name: 'Cadastro Reserva', value: metrics?.cadastroReserva || '0', icon: Users2, color: 'text-cyan-600', bg: 'bg-cyan-100' },
+    { name: 'Convocados', value: metrics?.convocados || '0', icon: UserPlus, color: 'text-teal-600', bg: 'bg-teal-100' },
+    { name: 'Vencidos', value: metrics?.vencidos || '0', icon: CalendarDays, color: 'text-orange-600', bg: 'bg-orange-100' },
+    { name: 'Convocações Realizadas', value: metrics?.convocados || '0', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    { name: 'Canceladas', value: '8', icon: XCircle, color: 'text-destructive', bg: 'bg-red-100' },
+    { name: 'Dispensa', value: '4', icon: PauseCircle, color: 'text-slate-600', bg: 'bg-slate-100' },
+    { name: 'Aguardar Anuência', value: '2', icon: HelpCircle, color: 'text-zinc-600', bg: 'bg-zinc-100' },
+    { name: 'Etapas em Atraso', value: '6', icon: AlertTriangle, color: 'text-destructive', bg: 'bg-red-100' },
+    { name: 'Editais Pendentes de Validação', value: metrics?.pendentesValidacao || '0', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { name: 'Tarefas Pendentes', value: metrics?.tarefasAssistente || '0', icon: CheckCircle2, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+  ];
   return (
     <div className="space-y-8">
       <div>

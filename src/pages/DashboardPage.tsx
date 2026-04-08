@@ -304,7 +304,7 @@ export default function DashboardPage() {
                       </div>
                       <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors truncate leading-snug">{v.cargo}</h4>
                       <p className="text-[11px] text-slate-400 font-semibold mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
-                        <Building2 className="h-3 w-3 opacity-50" /> {isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase()}
+                        <Building2 className="h-3 w-3 opacity-50" /> {normalizeUnitName(v.unidade)}
                       </p>
                     </div>
                   </div>

@@ -155,39 +155,39 @@ export default function VagasPage() {
   
   // Status summary groupings mapped to dashboard cards
   // Note: These must follow the "independent from status" rule for the base total
+  const countFilaEdital = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.fila_edital.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
   const countEmAndamento = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
       .filter(([status]) => CATEGORIAS_STATUS.em_andamento.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countAguardandoUnidade = useMemo(() => {
+  const countConcluidas = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.aguardando_unidade.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.concluidas.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countSemStatus = useMemo(() => {
+  const countExcecoes = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => !status || status === '' || status === 'SEM_STATUS' || status === 'NULL' || status === 'NAN')
+      .filter(([status]) => CATEGORIAS_STATUS.excecoes.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countEncerradas = useMemo(() => {
+  const countEstrategicas = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.encerradas.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.estrategicas.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countLideranca = useMemo(() => {
+  const countConvocacao = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.lideranca.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countMovimentacao = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.movimentacao_interna.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.convocacao.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
@@ -409,46 +409,46 @@ export default function VagasPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-amber-500">
+          <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fila de Editais</p>
+            <p className="text-2xl font-bold text-amber-600">{countFilaEdital}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Andamento</p>
             <p className="text-2xl font-bold text-blue-600">{countEmAndamento}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-amber-500">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Unidade</p>
-            <p className="text-2xl font-bold text-amber-600">{countAguardandoUnidade}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
+            <p className="text-2xl font-bold text-green-600">{countConcluidas}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-indigo-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sem Status</p>
-            <p className="text-2xl font-bold text-slate-600">{countSemStatus}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estratégicas</p>
+            <p className="text-2xl font-bold text-indigo-600">{countEstrategicas}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-violet-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Liderança</p>
-            <p className="text-2xl font-bold text-indigo-600">{countLideranca}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Convocações</p>
+            <p className="text-2xl font-bold text-violet-600">{countConvocacao}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-rose-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Movimentação Int.</p>
-            <p className="text-2xl font-bold text-cyan-600">{countMovimentacao}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Exceções</p>
+            <p className="text-2xl font-bold text-rose-600">{countExcecoes}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-emerald-500">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
-            <p className="text-2xl font-bold text-green-600">{countComBanco}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Encerradas</p>
-            <p className="text-2xl font-bold text-emerald-600">{countEncerradas}</p>
+            <p className="text-2xl font-bold text-emerald-600">{countComBanco}</p>
           </CardContent>
         </Card>
       </div>

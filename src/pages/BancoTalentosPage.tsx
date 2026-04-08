@@ -446,20 +446,23 @@ export default function BancoTalentosPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((b) => (
-                    <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                      <TableCell className="font-bold text-primary text-xs">{b.numero_edital}</TableCell>
+                   {groupedBancos.map((group) => (
+                    <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
                       <TableCell>
-                        <div className="font-semibold text-slate-800">{b.cargo}</div>
-                        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{b.secao}</div>
+                        <div className="font-semibold text-slate-800">{group.cargo}</div>
+                        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
-                      <TableCell className="text-slate-600 font-medium">{b.unidade}</TableCell>
-                      <TableCell>{getStatusBadge(b.status)}</TableCell>
+                      <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                      <TableCell>{getStatusBadge(group.status)}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-700">{formatDate(b.nova_data_validade || b.data_validade)}</span>
-                          {b.is_prorrogado && <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Prorrogado</span>}
+                          <span className="text-sm font-bold text-slate-700">{formatDate(group.validade)}</span>
+                          {group.isProrrogado && <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Prorrogado</span>}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-bold bg-slate-50">{group.qtdBanco}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
@@ -468,11 +471,11 @@ export default function BancoTalentosPage() {
                             size="sm" 
                             className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
                             onClick={() => {
-                              setSelectedBanco(b);
+                              setSelectedBanco(group.candidatos[0]);
                               setIsDetailsOpen(true);
                             }}
                           >
-                            Detalhes
+                            Detalhes ({group.candidatos.length})
                           </Button>
                           {currentUser?.perfil === 'Admin' && (
                             <Button 
@@ -480,7 +483,7 @@ export default function BancoTalentosPage() {
                               size="icon" 
                               className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                               onClick={() => {
-                                setBancoParaExcluir(b.id);
+                                setBancoParaExcluir(group.id);
                                 setIsDeleteDialogOpen(true);
                               }}
                             >
@@ -491,7 +494,8 @@ export default function BancoTalentosPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {filtered.length === 0 && (
+                  {groupedBancos.length === 0 && (
+
                     <TableRow>
                       <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">
                         Nenhum banco de talentos encontrado para os filtros aplicados.

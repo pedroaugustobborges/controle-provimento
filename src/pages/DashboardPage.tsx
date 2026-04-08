@@ -113,34 +113,13 @@ export default function DashboardPage() {
     }));
     console.log('AUDIT DASHBOARD: Unidades e contagens cruas do store:', auditStats);
 
-    const normalizeUnitName = (name: string): string => {
-      if (!name) return '';
-      const upper = name.toUpperCase().trim();
-      
-      // Explicit AGIR units mapping for absolute precision
-      if (upper.includes('HECAD')) return 'HECAD';
-      if (upper.includes('HUGOL')) return 'HUGOL';
-      if (upper.includes('CRER')) return 'CRER';
-      if (upper.includes('HDS')) return 'HDS';
-      if (upper.includes('POLICLINICA') || upper.includes('POLICLÍNICA')) return 'POLICLÍNICA';
-      
-      if (isVitoriaUnit(name)) return 'VITÓRIA';
-      
-      // Standard cleanup for other units while preserving the core name
-      return upper
-        .replace(/^(HOSPITAL|UNIDADE|HOSP)\s+/i, '')
-        .replace(/^(ESTADUAL\s+)/i, '')
-        .replace(/\s*\(.*\)/g, '')
-        .trim();
-    };
-
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
       if (!v.unidade) return;
       
       const normalizedName = normalizeUnitName(v.unidade);
-      // Skip Corporativo specifically if present as requested/maintained
+      // Manter a exclusão de Corporativo por enquanto
       if (!normalizedName || normalizedName.includes('CORPORATIVO')) return;
 
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
@@ -153,10 +132,9 @@ export default function DashboardPage() {
       groupedMap.set(normalizedName, current);
     });
 
-    // 2. Double-check validation against independent filter logic
+    // 2. Double-check validation as requested
     return Array.from(groupedMap.entries())
       .map(([name, data]) => {
-        // Cross-check: find all vagas that normalize to this unit name
         const independentCount = vagas.filter(v => v.unidade && normalizeUnitName(v.unidade) === name).length;
         
         if (independentCount !== data.total) {
@@ -165,7 +143,7 @@ export default function DashboardPage() {
 
         return {
           name,
-          total: independentCount, // Prioritize the independent count to guarantee accuracy
+          total: independentCount,
           abertas: data.abertas,
         };
       })

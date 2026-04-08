@@ -39,6 +39,7 @@ interface VagasState {
   deleteTarefa: (id: string) => void;
   addAlerta: (alerta: Alerta) => void;
   updateAlerta: (id: string, data: Partial<Alerta>) => void;
+  deleteImportBatch: (batchId: string) => void;
   clearVagas: () => void;
   clearBancos: () => void;
   clearAllData: () => void;

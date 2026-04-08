@@ -5,7 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, normalizeUnitName } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, normalizeUnitName, countVacancies, getStatusSummary, getMonthNamePtBrUpper } from '@/lib/vagaUtils';
+import { Calendar } from 'lucide-react';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,11 +46,13 @@ export default function VagasPage() {
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
+  const [filterMes, setFilterMes] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
+
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -109,12 +113,22 @@ export default function VagasPage() {
 
     const searchTerm = search.toLowerCase();
     const matchSearch = !search || 
-      v.cargo.toLowerCase().includes(searchTerm) ||
+      (v.cargo || '').toLowerCase().includes(searchTerm) ||
       (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm) ||
-      v.unidade.toLowerCase().includes(searchTerm) ||
+      (v.unidade || '').toLowerCase().includes(searchTerm) ||
       (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
     const matchUnidade = filterUnidade === 'all' || normalizeUnitName(v.unidade) === filterUnidade;
+
+    // Rule: if cargo is blank, it shouldn't be counted in Total de Vagas, but let's keep it visible in the table 
+    // unless the user specifically wants the table to match the vacancy count logic.
+    // The user said: "visible table row count" shouldn't determine the metric, but 
+    // "Implement the platform count so it behaves exactly like the spreadsheet: unit-scoped, cargo-based, month-filtered by abertura"
+    // To maintain parity, the table should show what's being counted.
+    const hasCargoValue = String(v.cargo ?? "").trim() !== "";
+    if (!hasCargoValue) return false;
+
+    const matchMes = filterMes === 'all' || getMonthNamePtBrUpper(v.data_abertura) === filterMes.toUpperCase();
 
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
@@ -122,24 +136,88 @@ export default function VagasPage() {
     const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
     const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
     
-    return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
-  }), [vagas, currentUser, search, filterUnidade, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
+    return matchSearch && matchUnidade && matchMes && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
+  }), [vagas, currentUser, search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
 
-  const countEmAndamento = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countAguardandoUnidade = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countSemStatus = useMemo(() => vagas.filter((v) => {
-    const s = (v.status || v.status_geral) as string;
-    return !s || s === '' || s === 'sem_status';
-  }).length, [vagas]);
-  const countEncerradas = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countLideranca = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countMovimentacao = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length, [vagas]);
-  const countComBanco = useMemo(() => vagas.filter(v => getBancoByVaga(v.id)).length, [vagas, getBancoByVaga]);
+
+  const vacancyStats = useMemo(() => {
+    const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
+    const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
+    
+    return getStatusSummary(vagas, selectedUnit, selectedMonth);
+  }, [vagas, filterUnidade, filterMes]);
+
+  const totalVagas = vacancyStats.total;
+  
+  // Status summary groupings mapped to dashboard cards
+  // Note: These must follow the "independent from status" rule for the base total
+  const countEmAndamento = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.em_andamento.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countAguardandoUnidade = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.aguardando_unidade.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countSemStatus = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => !status || status === '' || status === 'SEM_STATUS' || status === 'NULL' || status === 'NAN')
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countEncerradas = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.encerradas.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countLideranca = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.lideranca.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countMovimentacao = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.movimentacao_interna.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
+  const countComBanco = useMemo(() => {
+    // For this one, we filter from the base of valid vacancies
+    const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
+    const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
+    
+    const validBase = vagas.filter(row => {
+      const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
+      const rowUnit = normalize(row.unidade);
+      const normalizedUnit = normalize(selectedUnit);
+      const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
+      const hasCargoValue = String(row.cargo ?? "").trim() !== "";
+      
+      if (!sameUnit || !hasCargoValue) return false;
+      
+      if (selectedMonth !== 'TODOS' && selectedMonth !== 'all' && selectedMonth !== '') {
+        const aberturaMonth = (row as any).data_abertura ? 
+          new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date((row as any).data_abertura)).toUpperCase() : "";
+        if (aberturaMonth !== selectedMonth.toUpperCase()) return false;
+      }
+      return true;
+    });
+
+    return validBase.filter(v => getBancoByVaga(v.id)).length;
+  }, [vagas, filterUnidade, filterMes, getBancoByVaga]);
+
 
 
   const clearFilters = () => {
     setSearch('');
     setFilterUnidade('all');
+    setFilterMes('all');
     setFilterStatus('all');
     setFilterTipo('all');
     setFilterAnalista('all');
@@ -147,7 +225,8 @@ export default function VagasPage() {
     setFilterLideranca('all');
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all';
+  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all';
+
 
   return (
     <div className="space-y-4">
@@ -193,10 +272,11 @@ export default function VagasPage() {
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
-            <p className="text-2xl font-bold text-slate-800">{vagas.length}</p>
-            <p className="text-[10px] text-slate-400">Total absoluto em base</p>
+            <p className="text-2xl font-bold text-slate-800">{totalVagas}</p>
+            <p className="text-[10px] text-slate-400">Regra de Negócio (Cargo + Mes)</p>
           </CardContent>
         </Card>
+
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Andamento</p>
@@ -257,6 +337,21 @@ export default function VagasPage() {
                 {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={filterMes} onValueChange={setFilterMes}>
+              <SelectTrigger className="w-[160px] bg-white text-xs">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3 w-3" />
+                  <SelectValue placeholder="Mês Abertura" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Meses</SelectItem>
+                {['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'].map((m) => (
+                  <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>

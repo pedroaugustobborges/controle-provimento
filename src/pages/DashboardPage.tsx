@@ -3,7 +3,7 @@ import { useVagasStore } from '@/store/vagasStore';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, getCategoriaStatus, normalizeUnitName } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, getCategoriaStatus, normalizeUnitName, countVacancies, getStatusSummary } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 
   Briefcase, 
@@ -50,31 +50,19 @@ export default function DashboardPage() {
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
   // Isso atende à solicitação de usar exclusivamente dados reais inseridos/importados
   const vagas = useMemo(() => {
-    // Filtrar dados reais e garantir unicidade por ID ou Requisição para evitar contagem dupla
-    const realData = allVagas.filter(v => v.origem_importacao || v.lote_importacao || (v.id && v.id.length > 5));
-    
-    const uniqueVagas = new Map();
-    realData.forEach(v => {
-      // Prioridade para número de requisição como chave única, depois ID
-      const key = v.requisicao || v.numero_requisicao || v.id;
-      if (key) {
-        // Sempre atualiza para manter a versão mais recente do registro caso haja duplicatas no store
-        uniqueVagas.set(key, v);
-      }
+    // Audit: Rule 1 — cargo determines whether the row counts as a vacancy
+    // Remove the uniqueness filter by requisicao as requested
+    return allVagas.filter(v => {
+      const hasCargoValue = String(v.cargo ?? "").trim() !== "";
+      const isRealData = v.origem_importacao || v.lote_importacao || (v.id && v.id.length > 5);
+      return hasCargoValue && isRealData;
     });
-
-    return Array.from(uniqueVagas.values()) as typeof allVagas;
   }, [allVagas]);
 
-  // Stats calculation - Use simple count (1 record = 1 vacancy) to avoid double counting
-  // We only count active/open vacancies for the "Total" to reflect the operational reality
-  const totalVagas = useMemo(() => 
-    vagas.filter(v => {
-      const status = (v.status || v.status_geral || '').toLowerCase();
-      const cat = getCategoriaStatus(status);
-      return cat === 'em_andamento' || cat === 'aguardando_unidade' || cat === 'lideranca' || cat === 'movimentacao_interna';
-    }).length
-  , [vagas]);
+  // Total de Vagas must be calculated using the same business rule as Excel
+  // No status filtering for the total count.
+  const totalVagas = useMemo(() => vagas.length, [vagas]);
+
   
   const counts = useMemo(() => {
     const acc = {

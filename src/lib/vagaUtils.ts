@@ -205,3 +205,121 @@ export function normalizeUnitName(name: string): string {
     .replace(/\s*\(.*\)/g, '')
     .trim();
 }
+
+export function parseSpreadsheetDate(value: any): Date | null {
+  if (!value) return null;
+  
+  // If it's already a Date
+  if (value instanceof Date) return value;
+  
+  // If it's a number (Excel serial date)
+  if (typeof value === 'number') {
+    // Excel base date is 1899-12-30
+    return new Date((value - 25569) * 86400 * 1000);
+  }
+  
+  if (typeof value !== 'string') return null;
+  
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  
+  // Try dd/mm/yyyy
+  if (trimmed.includes('/')) {
+    const parts = trimmed.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // 0-indexed
+      const year = parseInt(parts[2], 10);
+      const date = new Date(year, month, day);
+      if (!isNaN(date.getTime())) return date;
+    }
+  }
+  
+  // Try ISO or other formats
+  const date = new Date(trimmed);
+  if (!isNaN(date.getTime())) return date;
+  
+  return null;
+}
+
+export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number): string {
+  if (!dateValue) return "";
+
+  const date = parseSpreadsheetDate(dateValue);
+  if (!date || isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("pt-BR", { month: "long" })
+    .format(date)
+    .toUpperCase();
+}
+
+export function countVacancies({
+  records,
+  selectedUnit,
+  selectedMonth,
+}: {
+  records: any[];
+  selectedUnit: string;
+  selectedMonth?: string;
+}) {
+  const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
+  const hasValue = (val?: any) => String(val ?? "").trim() !== "";
+
+  const normalizedUnit = normalize(selectedUnit);
+  const normalizedMonth = normalize(selectedMonth);
+
+  return records.filter((row) => {
+    const rowUnit = normalize(row.unidade);
+    const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
+    const hasCargoValue = hasValue(row.cargo);
+
+    if (!sameUnit || !hasCargoValue) {
+      return false;
+    }
+
+    if (normalizedMonth === "" || normalizedMonth === "TODOS") {
+      return true;
+    }
+
+    const aberturaMonth = getMonthNamePtBrUpper(row.data_abertura);
+    return aberturaMonth === normalizedMonth;
+  }).length;
+}
+
+export function getStatusSummary(records: any[], selectedUnit: string, selectedMonth?: string) {
+  const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
+  const hasValue = (val?: any) => String(val ?? "").trim() !== "";
+
+  const normalizedUnit = normalize(selectedUnit);
+  const normalizedMonth = normalize(selectedMonth);
+
+  // 1. Get valid vacancy base (same logic as countVacancies but returning the rows)
+  const validVacancies = records.filter((row) => {
+    const rowUnit = normalize(row.unidade);
+    const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
+    const hasCargoValue = hasValue(row.cargo);
+
+    if (!sameUnit || !hasCargoValue) {
+      return false;
+    }
+
+    if (normalizedMonth === "" || normalizedMonth === "TODOS") {
+      return true;
+    }
+
+    const aberturaMonth = getMonthNamePtBrUpper(row.data_abertura);
+    return aberturaMonth === normalizedMonth;
+  });
+
+  // 2. Group by status
+  const summary: Record<string, number> = {};
+  validVacancies.forEach(row => {
+    const status = (row.status || row.status_geral || 'SEM_STATUS').toUpperCase().trim();
+    summary[status] = (summary[status] || 0) + 1;
+  });
+
+  return {
+    total: validVacancies.length,
+    byStatus: summary
+  };
+}

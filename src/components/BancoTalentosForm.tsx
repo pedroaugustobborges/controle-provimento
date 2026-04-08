@@ -82,7 +82,9 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
       id: `banco-${Date.now()}`,
       unidade: values.unidade,
       cargo: values.cargo,
+      cargo_normalizado: normalizeCargo(values.cargo),
       secao: values.secao || '',
+
       numero_edital: values.numero_edital,
       numero_processo: values.numero_processo,
       nome: values.nome,

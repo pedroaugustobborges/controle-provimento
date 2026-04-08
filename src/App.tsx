@@ -14,6 +14,7 @@ import ConvocacoesPage from "@/pages/ConvocacoesPage";
 import FilaEditaisPage from "@/pages/FilaEditaisPage";
 import BancoTalentosPage from "@/pages/BancoTalentosPage";
 import ImportacoesPage from "@/pages/ImportacoesPage";
+import ValidacaoEditaisPage from "@/pages/ValidacaoEditaisPage";
 import AdministracaoPage from "@/pages/AdministracaoPage";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/convocacoes" element={<ConvocacoesPage />} />
             <Route path="/validacao" element={<ValidacaoPage />} />
             <Route path="/importacoes" element={<ImportacoesPage />} />
+            <Route path="/validacao-editais" element={<ValidacaoEditaisPage />} />
             <Route path="/gestor" element={<AdministracaoPage />} />
 
             <Route path="*" element={<NotFound />} />

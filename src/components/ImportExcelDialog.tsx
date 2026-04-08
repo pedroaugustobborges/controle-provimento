@@ -112,7 +112,7 @@ export function ImportExcelDialog({
               const row = rawRows[i];
               if (!row) continue;
 
-              const cargo = String(row[5] || '').trim();
+              const cargo = String(row[4] || '').trim(); // Coluna E (index 4) - Se estiver em branco, ignorar
               if (!cargo) continue;
 
               totalProcessed++;
@@ -128,16 +128,38 @@ export function ImportExcelDialog({
                 }
               }
 
-              const dataAbertura = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
-              const dataRecebimento = row[2] ? convertDateValue(row[2], 'auto').formatted : '';
-              const requisicao = String(row[3] || '');
+              // Mapeamento correto conforme revisão da base real:
+              // 0: Abertura (A)
+              // 1: Recebimento (B)
+              // 2: Requisição (C)
+              // 3: Seção (D)
+              // 4: Cargo (E)
+              // 5: Tipo (F)
+              // 6: Quantidade (G)
+              // 7: Analista (H)
+              // 8: Status (I)
+              // 9: Vaga ID (J)
+              // 10: Obs (K)
+
+              const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : '';
+              const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
+              const requisicao = String(row[2] || '');
+              const secao = String(row[3] || '');
+              const rawTipo = String(row[5] || '').toLowerCase();
               const numVagas = Number(row[6]) || 1;
-              const secao = String(row[7] || '');
-              const tipoVaga = (row[8] || 'substituicao') as TipoVaga;
-              const statusRaw = String(row[9] || '');
-              const analista = String(row[10] || '');
-              const vagaId = String(row[11] || '');
-              const obs = String(row[12] || '');
+              const analista = String(row[7] || '');
+              const statusRaw = String(row[8] || '');
+              const vagaId = String(row[9] || '');
+              const obs = String(row[10] || '');
+
+              // Normalização do Tipo de Vaga
+              let tipoVaga: TipoVaga = 'substituicao';
+              if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
+              else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
+              else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
+              else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
+              else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
+              else if (rawTipo.includes('edital')) tipoVaga = 'edital';
 
               const statusNormalized = normalizeStatus(statusRaw);
               const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(finalUnit, tipoVaga);

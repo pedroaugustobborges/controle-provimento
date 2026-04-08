@@ -155,9 +155,18 @@ export function calcDiasUteis(dataRecebimento: string, dataConclusao?: string): 
 }
 
 
-export function formatDate(date: string): string {
-  if (!date) return '—';
-  return new Date(date).toLocaleDateString('pt-BR');
+export function formatDate(dateStr: string): string {
+  if (!dateStr || dateStr.trim() === '' || dateStr === '—') return '—';
+  
+  // Try to parse ISO date first
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) {
+    // If it's not a valid date, just return the string or a placeholder
+    // This prevents "Invalid Date" from appearing in the UI
+    return dateStr.length > 20 ? dateStr.substring(0, 20) + '...' : dateStr;
+  }
+  
+  return date.toLocaleDateString('pt-BR');
 }
 
 export function normalizeCargo(cargo: string): string {

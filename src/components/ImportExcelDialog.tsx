@@ -444,7 +444,8 @@ export function ImportExcelDialog({
   const processImport = (dataToImport: any[], loteId?: string, now?: string) => {
     setIsProcessing(true);
     const currentNow = now || new Date().toISOString();
-    
+    const currentLoteId = loteId || `LOTE-${Date.now()}`;
+
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
       let rawUnidade = String(row.unidade || '').trim();
       

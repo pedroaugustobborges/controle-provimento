@@ -3,7 +3,7 @@ import { useVagasStore } from '@/store/vagasStore';
 import { EQUIPE_POR_UNIDADE } from '@/data/equipe';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 
   Briefcase, 
@@ -82,17 +82,34 @@ export default function DashboardPage() {
     return !lastHist || calcDiasAberto(lastHist.data) > 10;
   });
 
-  const todasUnidades = useMemo(() => {
-    const fromVagas = vagas.map((v) => v.unidade);
-    const fromEquipe = EQUIPE_POR_UNIDADE.map(e => e.unidade);
-    return [...new Set([...fromVagas, ...fromEquipe])].filter(Boolean);
-  }, [vagas]);
+  const chartData = useMemo(() => {
+    const groupedMap = new Map<string, { total: number, abertas: number }>();
+    
+    vagas.forEach(v => {
+      const unitKey = isVitoriaUnit(v.unidade) ? 'Vitória' : v.unidade;
+      const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
+      
+      current.total += 1;
+      if (v.status === 'aberta' || v.status_geral === 'aberta') {
+        current.abertas += 1;
+      }
+      groupedMap.set(unitKey, current);
+    });
 
-  const chartData = useMemo(() => todasUnidades.map((u) => ({
-    name: u.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim(),
-    total: vagas.filter((v) => v.unidade === u).length,
-    abertas: vagas.filter((v) => v.unidade === u && (v.status === 'aberta' || v.status_geral === 'aberta')).length,
-  })).sort((a, b) => b.total - a.total), [todasUnidades, vagas]);
+    // Also include units from EQUIPE_POR_UNIDADE that might not have vagas
+    EQUIPE_POR_UNIDADE.forEach(e => {
+      const unitKey = isVitoriaUnit(e.unidade) ? 'Vitória' : e.unidade;
+      if (!groupedMap.has(unitKey)) {
+        groupedMap.set(unitKey, { total: 0, abertas: 0 });
+      }
+    });
+
+    return Array.from(groupedMap.entries()).map(([name, data]) => ({
+      name: name.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim(),
+      total: data.total,
+      abertas: data.abertas,
+    })).sort((a, b) => b.total - a.total);
+  }, [vagas]);
 
 
   return (

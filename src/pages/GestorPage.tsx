@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS } from '@/types/vaga';
-import { calcDiasAberto, formatDate, getEtapaColor } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, getEtapaColor, isVitoriaUnit } from '@/lib/vagaUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Clock, History, FileSpreadsheet, User, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -16,9 +16,12 @@ export default function GestorPage() {
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [activeTab, setActiveTab] = useState<'stats' | 'history'>('stats');
   
-  const unidades = [...new Set(vagas.map((v) => v.unidade))];
+  const allUnidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean);
+  const unidades = Array.from(new Set(allUnidades.map(u => isVitoriaUnit(u) ? 'Vitória' : u))).sort();
 
-  const filtered = filterUnidade === 'all' ? vagas : vagas.filter((v) => v.unidade === filterUnidade);
+  const filtered = filterUnidade === 'all' 
+    ? vagas 
+    : vagas.filter((v) => filterUnidade === 'Vitória' ? isVitoriaUnit(v.unidade) : v.unidade === filterUnidade);
 
   const statusData = Object.entries(STATUS_LABELS).map(([k, v], i) => ({
     name: v,
@@ -82,7 +85,9 @@ export default function GestorPage() {
                 {unidades.map(u => (
                   <div key={u} className="flex justify-between items-center text-xs">
                     <span className="text-slate-600 font-medium">{u}</span>
-                    <Badge variant="secondary" className="font-bold">{vagas.filter(v => v.unidade === u).length}</Badge>
+                    <Badge variant="secondary" className="font-bold">
+                      {vagas.filter(v => (u === 'Vitória' ? isVitoriaUnit(v.unidade) : v.unidade === u)).length}
+                    </Badge>
                   </div>
                 ))}
               </CardContent>

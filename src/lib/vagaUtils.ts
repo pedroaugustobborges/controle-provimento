@@ -1,5 +1,23 @@
 import { StatusVaga, StatusValidacao, EtapaEdital, StatusPublicacao } from '@/types/vaga';
 
+export const VITORIA_SUB_UNIDADES = [
+  'sao pedro', 'suá', 'sua', 'bento ferreira', 'jardim da penha', 
+  'maruípe', 'maruipe', 'vitoria', 'vitória', 'vix', 'espirito santo', 
+  'es', 'serra', 'cariacica', 'vila velha', 'viana'
+];
+
+export function isVitoriaUnit(unidade: string): boolean {
+  if (!unidade) return false;
+  const normalized = unidade.toLowerCase().trim();
+  // Se for Vitória, já é Vitória
+  if (normalized === 'vitoria' || normalized === 'vitória') return true;
+  // Se contiver algum dos bairros/cidades da Grande Vitória
+  return VITORIA_SUB_UNIDADES.some(sub => 
+    normalized.includes(sub.toLowerCase())
+  );
+}
+
+
 export const CATEGORIAS_STATUS = {
   em_andamento: [
     'em_edital', 'publicado_edital', 'em_triagem', 'entrevista', 

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
-import { calcDiasAberto, formatDate, CATEGORIAS_STATUS } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit } from '@/lib/vagaUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -85,7 +85,18 @@ export default function VagasPage() {
     ? allUnidades 
     : (currentUser?.unidades_vinculadas || []), [currentUser, allUnidades]);
 
-  const unidades = useMemo(() => allUnidades.filter(u => visibleUnidades.includes(u)), [allUnidades, visibleUnidades]);
+  const unidades = useMemo(() => {
+    const rawUnidades = allUnidades.filter(u => visibleUnidades.includes(u));
+    const hasVitoriaSubUnit = rawUnidades.some(u => isVitoriaUnit(u));
+    
+    // Remove individual ES units and add "Vitória" if any exists
+    let filteredList = rawUnidades.filter(u => !isVitoriaUnit(u));
+    if (hasVitoriaSubUnit) {
+      filteredList.push('Vitória');
+    }
+    return [...new Set(filteredList)].sort();
+  }, [allUnidades, visibleUnidades]);
+
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
@@ -102,7 +113,9 @@ export default function VagasPage() {
       v.unidade.toLowerCase().includes(searchTerm) ||
       (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-    const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
+    const matchUnidade = filterUnidade === 'all' || 
+      (filterUnidade === 'Vitória' ? isVitoriaUnit(v.unidade) : v.unidade === filterUnidade);
+
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
     const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;

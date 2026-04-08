@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
-import { EQUIPE_POR_UNIDADE } from '@/data/equipe';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit } from '@/lib/vagaUtils';
@@ -39,6 +39,7 @@ import {
   Tooltip, 
   ResponsiveContainer, 
   Cell,
+  LabelList
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 
@@ -61,7 +62,7 @@ export default function DashboardPage() {
   const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
-  const convocacoesHoje = 12; // Mock data for now
+  
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
@@ -86,6 +87,14 @@ export default function DashboardPage() {
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
+      if (!v.unidade) return;
+      
+      const unitName = v.unidade.toUpperCase();
+      // Skip Corporativo if requested (though we should only skip if not in data)
+      // The prompt says "Se essa unidade não existir nos dados importados, ela não deve aparecer"
+      // By using only 'vagas', we ensure only existing units appear.
+      if (unitName.includes('CORPORATIVO')) return;
+
       const unitKey = isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase().replace('HOSPITAL ', '').replace('UNIDADE ', '').replace(/\s*\(.*\)/, '').trim();
       const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
       
@@ -96,19 +105,14 @@ export default function DashboardPage() {
       groupedMap.set(unitKey, current);
     });
 
-    // Also include units from EQUIPE_POR_UNIDADE that might not have vagas
-    EQUIPE_POR_UNIDADE.forEach(e => {
-      const unitKey = isVitoriaUnit(e.unidade) ? 'VITÓRIA' : e.unidade.toUpperCase().trim();
-      if (!groupedMap.has(unitKey)) {
-        groupedMap.set(unitKey, { total: 0, abertas: 0 });
-      }
-    });
-
-    return Array.from(groupedMap.entries()).map(([name, data]) => ({
-      name,
-      total: data.total,
-      abertas: data.abertas,
-    })).sort((a, b) => b.total - a.total);
+    return Array.from(groupedMap.entries())
+      .map(([name, data]) => ({
+        name,
+        total: data.total,
+        abertas: data.abertas,
+      }))
+      .filter(item => item.total > 0) // Ensure we only show units with real data
+      .sort((a, b) => b.total - a.total);
   }, [vagas]);
 
 
@@ -210,7 +214,20 @@ export default function DashboardPage() {
                     }}
                     itemStyle={{ padding: '2px 0' }}
                   />
-                  <Bar dataKey="total" name="Processos Totais" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={24} animationDuration={1500}>
+                  <Bar 
+                    dataKey="total" 
+                    name="Processos Totais" 
+                    fill="hsl(var(--primary))" 
+                    radius={[0, 6, 6, 0]} 
+                    barSize={24} 
+                    animationDuration={1500}
+                  >
+                    <LabelList 
+                      dataKey="total" 
+                      position="right" 
+                      style={{ fill: '#64748b', fontSize: '11px', fontWeight: 'bold' }}
+                      offset={10}
+                    />
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={index % 2 === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.8)'} />
                     ))}

@@ -54,6 +54,8 @@ export default function ImportacoesPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);
+  const [batchParaExcluir, setBatchParaExcluir] = useState<any | null>(null);
+  const { deleteImportBatch } = useVagasStore();
   const permissions = usePermissions();
 
   if (!permissions.canImport()) {
@@ -77,6 +79,31 @@ export default function ImportacoesPage() {
       toast.success('Arquivo removido com sucesso');
       setIsDeleteDialogOpen(false);
       setFileParaExcluir(null);
+    }
+  };
+
+  const handleDeleteBatch = async () => {
+    if (batchParaExcluir) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const totalRecs = (batchParaExcluir.total_novos || 0) + (batchParaExcluir.total_atualizados || 0);
+          await DatabaseService.logAudit('IMPORT', batchParaExcluir.id, 'DELETE_BATCH', user.id, null, null, { 
+            lote_id: batchParaExcluir.id,
+            arquivo: batchParaExcluir.arquivo || batchParaExcluir.nome_arquivo, 
+            registros_removidos: totalRecs,
+            tipo_importacao: batchParaExcluir.tipo_importacao,
+            data_hora_lote: batchParaExcluir.data_hora || batchParaExcluir.data
+          });
+        }
+        deleteImportBatch(batchParaExcluir.id);
+        toast.success(`Lote ${batchParaExcluir.arquivo || batchParaExcluir.id} e seus registros foram excluídos com sucesso.`);
+      } catch (error) {
+        console.error('Erro ao excluir lote:', error);
+        toast.error('Erro ao excluir lote do histórico');
+      } finally {
+        setBatchParaExcluir(null);
+      }
     }
   };
   const handleClearAllData = async () => {
@@ -287,6 +314,15 @@ export default function ImportacoesPage() {
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Baixar Relatório">
                             <Download className="h-4 w-4" />
                           </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-slate-400 hover:text-destructive group-hover:bg-destructive/5" 
+                            title="Excluir Lote e Registros"
+                            onClick={() => setBatchParaExcluir(h)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -406,6 +442,43 @@ export default function ImportacoesPage() {
         onOpenChange={setIsImportOpen} 
         reprocessFile={reprocessFile}
       />
+
+      <AlertDialog open={!!batchParaExcluir} onOpenChange={(open) => !open && setBatchParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Excluir lote de importação?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Você está prestes a excluir o lote <strong>{batchParaExcluir?.arquivo || batchParaExcluir?.id}</strong>.
+              </p>
+              <div className="bg-destructive/5 p-3 rounded-lg border border-destructive/10 text-destructive text-xs space-y-1">
+                <p className="font-bold flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" /> Atenção:
+                </p>
+                <ul className="list-disc list-inside">
+                  <li>Todos os registros vinculados a este lote serão removidos.</li>
+                  <li>Dados em outros módulos que dependem desta importação serão afetados.</li>
+                  <li>Esta ação é definitiva e será registrada no log de auditoria.</li>
+                </ul>
+              </div>
+              {batchParaExcluir && (
+                <p className="text-xs text-slate-500 italic">
+                  Estimativa: {(batchParaExcluir.total_novos || 0) + (batchParaExcluir.total_atualizados || 0)} registros serão removidos.
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteBatch} className="bg-destructive text-white hover:bg-destructive/90">
+              Confirmar Exclusão do Lote
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

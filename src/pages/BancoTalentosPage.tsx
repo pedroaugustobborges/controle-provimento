@@ -415,8 +415,21 @@ export default function BancoTalentosPage() {
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Candidatos</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cadastro Reserva</p>
                 <p className="text-2xl font-bold text-slate-900">{filtered.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 p-2.5 rounded-lg">
+                <Users className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Convocados</p>
+                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'convocado').length}</p>
               </div>
             </div>
           </CardContent>

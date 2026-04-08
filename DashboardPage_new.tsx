@@ -49,15 +49,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const { 
-    vagas: allVagas = [], 
-    validacoes = [], 
-    getBancoByVaga, 
-    convocacoes = [], 
-    bancos = [], 
-    tarefas = [], 
-    alertas: storeAlertas = [] 
-  } = useVagasStore();
+  const { vagas: allVagas, validacoes, getBancoByVaga, convocacoes, bancos, tarefas, alertas: storeAlertas } = useVagasStore();
   const navigate = useNavigate();
 
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
@@ -172,7 +164,7 @@ export default function DashboardPage() {
     if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
     
     // Cálculo de dias aberto usa data de recebimento se não houver histórico recente
-    const lastHist = v.historico?.[v.historico.length - 1];
+    const lastHist = v.historico[v.historico.length - 1];
     const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
     return calcDiasAberto(baseDate) > 10;
   }), [vagas]);
@@ -440,7 +432,7 @@ export default function DashboardPage() {
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
                         <span className="font-extrabold text-slate-700 text-sm leading-tight tracking-tight group-hover:text-primary transition-colors">{v.cargo}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{isVitoriaUnit(v.unidade) ? 'VITÓRIA' : (v.unidade || '').toUpperCase()}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase()}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -455,11 +447,11 @@ export default function DashboardPage() {
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
                         <span className="text-xs font-black text-slate-600">
-                          {v.historico && v.historico.length > 0 ? formatDate(v.historico[v.historico.length - 1].data) : formatDate(v.data_abertura)}
+                          {v.historico.length > 0 ? formatDate(v.historico[v.historico.length - 1].data) : formatDate(v.data_abertura)}
                         </span>
                         <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase mt-1">
                           <Clock className="h-2.5 w-2.5" />
-                          <span>Há {calcDiasAberto(v.historico?.[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
+                          <span>Há {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
                         </div>
                       </div>
                     </td>

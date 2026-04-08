@@ -49,15 +49,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const { 
-    vagas: allVagas = [], 
-    validacoes = [], 
-    getBancoByVaga, 
-    convocacoes = [], 
-    bancos = [], 
-    tarefas = [], 
-    alertas: storeAlertas = [] 
-  } = useVagasStore();
+  const { vagas: allVagas, validacoes, getBancoByVaga, convocacoes, bancos, tarefas, alertas: storeAlertas } = useVagasStore();
   const navigate = useNavigate();
 
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
@@ -147,7 +139,7 @@ export default function DashboardPage() {
   const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
   const totalConvRealizadas = convocacoes.length;
 
-  const stats = useMemo(() => [
+  const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Fila de Editais', value: filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -164,7 +156,7 @@ export default function DashboardPage() {
     { label: 'Etapas em Atraso', value: totalAtrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Edital Pend. Valid.', value: emValidacao, icon: ShieldCheck, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50' },
-  ], [totalVagas, filaEdital, emAndamento, concluidas, totalMovInterna, totalLideranca, totalCR, totalConvocados, totalVencidos, totalConvRealizadas, totalCanceladas, totalDispensa, totalAnuencia, totalAtrasadas, emValidacao, totalTarefasPendentes]);
+  ];
 
   const alerts = useMemo(() => vagas.filter((v) => {
     const status = v.status || v.status_geral;
@@ -172,7 +164,7 @@ export default function DashboardPage() {
     if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
     
     // Cálculo de dias aberto usa data de recebimento se não houver histórico recente
-    const lastHist = v.historico?.[v.historico.length - 1];
+    const lastHist = v.historico[v.historico.length - 1];
     const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
     return calcDiasAberto(baseDate) > 10;
   }), [vagas]);
@@ -440,7 +432,7 @@ export default function DashboardPage() {
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
                         <span className="font-extrabold text-slate-700 text-sm leading-tight tracking-tight group-hover:text-primary transition-colors">{v.cargo}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{isVitoriaUnit(v.unidade) ? 'VITÓRIA' : (v.unidade || '').toUpperCase()}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase()}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -455,11 +447,11 @@ export default function DashboardPage() {
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
                         <span className="text-xs font-black text-slate-600">
-                          {v.historico && v.historico.length > 0 ? formatDate(v.historico[v.historico.length - 1].data) : formatDate(v.data_abertura)}
+                          {v.historico.length > 0 ? formatDate(v.historico[v.historico.length - 1].data) : formatDate(v.data_abertura)}
                         </span>
                         <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase mt-1">
                           <Clock className="h-2.5 w-2.5" />
-                          <span>Há {calcDiasAberto(v.historico?.[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
+                          <span>Há {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
                         </div>
                       </div>
                     </td>

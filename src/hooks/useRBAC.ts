@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { UserProfile, Permissions } from '../types/auth';
+import { UserProfile, Permissions, User } from '../types/auth';
 
 export function useRBAC() {
-  const { data: userData, isLoading } = useQuery({
+  const { data: userData, isLoading, error } = useQuery({
     queryKey: ['user_profile'],
-    queryFn: async () => {
+    queryFn: async (): Promise<User | null> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
@@ -13,10 +13,13 @@ export function useRBAC() {
         .from('usuarios')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      return profile;
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      return profile as User;
     },
   });
 
@@ -27,10 +30,19 @@ export function useRBAC() {
   };
 
   const isAdmin = userData?.perfil === 'Administrador';
-  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência';
+  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência' || userData?.perfil === 'Supervisão';
 
   const getPermissions = (module: string): Permissions => {
-    if (isAdmin) return { canRead: true, canCreate: true, canEdit: true, canValidate: true, canDelete: true, canAudit: true };
+    if (isAdmin) {
+      return { 
+        canRead: true, 
+        canCreate: true, 
+        canEdit: true, 
+        canValidate: true, 
+        canDelete: true, 
+        canAudit: true 
+      };
+    }
     
     const perms: Permissions = {
       canRead: true,
@@ -41,7 +53,7 @@ export function useRBAC() {
       canAudit: isManagement,
     };
 
-    const perfil = userData?.perfil as UserProfile;
+    const perfil = userData?.perfil;
 
     switch (module) {
       case 'vagas':
@@ -49,7 +61,10 @@ export function useRBAC() {
         if (perfil === 'Analista do edital') perms.canRead = true;
         break;
       case 'editais':
-        if (perfil === 'Analista do edital') perms.canCreate = perms.canEdit = true;
+        if (perfil === 'Analista do edital') {
+          perms.canCreate = true;
+          perms.canEdit = true;
+        }
         if (perfil === 'Analista administrativo') perms.canValidate = true;
         break;
       case 'banco':
@@ -57,7 +72,10 @@ export function useRBAC() {
         if (perfil === 'Analista de convocações') perms.canRead = true;
         break;
       case 'convocacoes':
-        if (perfil === 'Analista de convocações') perms.canCreate = perms.canEdit = true;
+        if (perfil === 'Analista de convocações') {
+          perms.canCreate = true;
+          perms.canEdit = true;
+        }
         break;
     }
 
@@ -67,6 +85,7 @@ export function useRBAC() {
   return {
     userData,
     isLoading,
+    error,
     hasRole,
     isAdmin,
     isManagement,

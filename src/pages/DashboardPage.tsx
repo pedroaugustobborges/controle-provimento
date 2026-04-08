@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   getCategoriaStatus, normalizeUnitName, countVacancies, 
-  getStatusSummary, getValidVacancyBase 
+  getStatusSummary, getValidVacancyBase, normalizeStatus
 } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 
@@ -87,7 +87,10 @@ export default function DashboardPage() {
     };
     
     vagas.forEach(v => {
-      const status = (v.status || v.status_geral) as string;
+      // Usamos normalizeStatus para garantir que mesmo dados legados ou importados sem normalização completa
+      // sejam categorizados conforme as novas regras objetivas.
+      const statusRaw = (v.status || v.status_geral) as string;
+      const status = normalizeStatus(statusRaw);
       const cat = getCategoriaStatus(status);
       if (acc[cat] !== undefined) {
         acc[cat]++;
@@ -257,7 +260,82 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Tabela de Conferência Objetiva (Solicitação do Usuário) */}
+      <Card className="border-none shadow-sm bg-white overflow-hidden mt-8">
+        <CardHeader className="pb-4 border-b border-slate-50 bg-blue-50/30">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Database className="h-4 w-4 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-black text-slate-800">Conferência de Status (Dados Reais)</CardTitle>
+              <CardDescription className="text-xs font-medium text-slate-400">Validação objetiva de como cada registro original está sendo classificado.</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0 overflow-auto max-h-[500px]">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50/80 sticky top-0 z-10 border-b border-slate-100">
+              <tr>
+                <th className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider">Status Original Importado</th>
+                <th className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider text-center">Quantidade</th>
+                <th className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider">Grupo/Card de Destino</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50 font-medium">
+              {useMemo(() => {
+                const distribution = new Map<string, { count: number, group: string }>();
+                
+                  vagas.forEach(v => {
+                    const status = (v.status || v.status_geral || 'SEM STATUS') as string;
+                    const groupKey = getCategoriaStatus(status);
+                    
+                    // Improved matching for labels
+                    const groupLabelMap: Record<string, string> = {
+                      fila_edital: 'Fila de Editais',
+                      em_andamento: 'Em Andamento',
+                      concluidas: 'Concluídas',
+                      excecoes: 'Exceções',
+                      estrategicas: 'Estratégicas',
+                      convocacao: 'Convocações'
+                    };
+                    const groupLabel = groupLabelMap[groupKey] || groupKey;
+                    
+                    const current = distribution.get(status) || { count: 0, group: groupLabel };
+                    current.count++;
+                    distribution.set(status, current);
+                  });
+                
+                return Array.from(distribution.entries())
+                  .sort((a, b) => b[1].count - a[1].count)
+                  .map(([status, data]) => (
+                    <tr key={status} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-black text-xs">
+                          {data.count}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className={`h-2 w-2 rounded-full ${
+                            data.group.includes('Fila') ? 'bg-amber-400' : 
+                            data.group.includes('Concluídas') ? 'bg-green-500' : 
+                            data.group.includes('Exceções') ? 'bg-red-500' : 
+                            'bg-blue-400'
+                          }`}></div>
+                          <span className="text-slate-500 font-bold uppercase text-[10px] tracking-tight">{data.group}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ));
+              }, [vagas, stats])}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         {/* Unit View - Modernized Bar Chart */}
         <Card className="lg:col-span-2 border-none shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">

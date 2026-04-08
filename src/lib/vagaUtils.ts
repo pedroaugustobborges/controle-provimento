@@ -26,9 +26,8 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['sem_status', 'publicar_novo_edital'],
+  fila_edital: ['sem_status', 'publicar_novo_edital', 'aberta'],
   em_andamento: [
-    'aberta',
     'em_edital', 
     'em_documentacao', 
     'documentacao_ok_azul_pendente', 
@@ -195,32 +194,38 @@ export function normalizeCargo(cargo: string): string {
 }
 
 export function normalizeStatus(statusText: string): StatusVaga {
-  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan') return 'sem_status';
+  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan' || statusText === '0') return 'sem_status';
   
   const text = statusText.toLowerCase().trim();
   
-  // Specific requirements from user rule
+  // Exact or very close matches for the requested statuses
+  if (text === 'admissao efetivada' || text === 'admissão efetivada' || text === 'admissao_efetivada') return 'admissao_efetivada';
+  if (text === 'dispensa' || text.includes('dispensa')) return 'dispensa';
+  if (text === 'cancelada' || text.includes('cancelada') || text.includes('cancelado')) return 'cancelada';
+  if (text.includes('anuencia') || text.includes('anuência')) return 'aguardar_anuencia';
   if (text.includes('publicar') && text.includes('edital')) return 'publicar_novo_edital';
+  if (text.includes('movimentacao interna') || text.includes('movimentação interna') || text === 'movimentacao_interna') return 'movimentacao_interna';
+  if (text.includes('lideranca') || text.includes('liderança') || text === 'vaga_lideranca') return 'vaga_lideranca';
+  if (text.includes('realizar convocacao') || text.includes('realizar convocação') || text === 'realizar_convocacao') return 'realizar_convocacao';
+  
+  // Broader keyword matches
   if (text.includes('em edital')) return 'em_edital';
   if ((text.includes('documentacao ok') || text.includes('documentação ok')) && (text.includes('azul pendente') || text.includes('aso pendente'))) return 'documentacao_ok_azul_pendente';
   if ((text.includes('documentacao pendente') || text.includes('documentação pendente')) && (text.includes('azul ok') || text.includes('aso ok'))) return 'documentacao_pendente_azul_ok';
   if (text.includes('document')) return 'em_documentacao';
   if (text.includes('admissao enviada') || text.includes('admissão enviada')) return 'admissao_enviada';
-  if (text.includes('admissao efetivada') || text.includes('admissão efetivada')) return 'admissao_efetivada';
   if (text.includes('admissao') || text.includes('admissão')) return 'em_admissao';
-  if (text.includes('realizar convoc')) return 'realizar_convocacao';
-  if (text.includes('lideranca') || text.includes('liderança')) return 'vaga_lideranca';
-  if (text.includes('movimentacao') || text.includes('interna') || text.includes('movimentação')) return 'movimentacao_interna';
-  if (text.includes('cancel')) return 'cancelada';
-  if (text.includes('dispensa')) return 'dispensa';
-  if (text.includes('anuencia') || text.includes('anuência')) return 'aguardar_anuencia';
   if (text.includes('unidade') && text.includes('aguardar')) return 'aguardar_unidade';
   
   // Legacy or generic mappings
-  if (text.includes('triagem')) return 'em_edital'; 
+  if (text.includes('triagem')) return 'em_triagem'; 
+  if (text.includes('entrevista')) return 'entrevista';
   if (text.includes('finaliz') || text.includes('concluid') || text.includes('concluíd') || text.includes('encerrad')) return 'admissao_efetivada';
   
-  return 'aberta';
+  // Default to sem_status if it looks like a placeholder or is very short/unrecognized
+  if (text.length < 3 || text === 'aberta' || text === 'aberto') return 'aberta';
+  
+  return 'sem_status';
 }
 
 

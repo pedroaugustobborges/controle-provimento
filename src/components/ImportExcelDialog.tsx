@@ -112,7 +112,7 @@ export function ImportExcelDialog({
               const row = rawRows[i];
               if (!row) continue;
 
-              const cargo = String(row[4] || '').trim(); // Coluna E (index 4)
+              const cargo = String(row[4] || '').trim(); // Coluna E (index 4) - Se estiver em branco, ignorar
               if (!cargo) continue;
 
               totalProcessed++;
@@ -128,16 +128,29 @@ export function ImportExcelDialog({
                 }
               }
 
-              const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : ''; // Coluna A (0)
-              const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : ''; // Coluna B (1)
-              const requisicao = String(row[2] || ''); // Coluna C (2)
-              const secao = String(row[3] || ''); // Coluna D (3)
-              const rawTipo = String(row[5] || '').toLowerCase(); // Coluna F (5)
-              const numVagas = Number(row[6]) || 1; // Coluna G (6)
-              const analista = String(row[7] || ''); // Coluna H (7)
-              const statusRaw = String(row[8] || ''); // Coluna I (8)
-              const vagaId = String(row[9] || ''); // Coluna J (9)
-              const obs = String(row[10] || ''); // Coluna K (10)
+              // Mapeamento correto conforme revisão da base real:
+              // 0: Abertura (A)
+              // 1: Recebimento (B)
+              // 2: Requisição (C)
+              // 3: Seção (D)
+              // 4: Cargo (E)
+              // 5: Tipo (F)
+              // 6: Quantidade (G)
+              // 7: Analista (H)
+              // 8: Status (I)
+              // 9: Vaga ID (J)
+              // 10: Obs (K)
+
+              const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : '';
+              const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
+              const requisicao = String(row[2] || '');
+              const secao = String(row[3] || '');
+              const rawTipo = String(row[5] || '').toLowerCase();
+              const numVagas = Number(row[6]) || 1;
+              const analista = String(row[7] || '');
+              const statusRaw = String(row[8] || '');
+              const vagaId = String(row[9] || '');
+              const obs = String(row[10] || '');
 
               // Normalização do Tipo de Vaga
               let tipoVaga: TipoVaga = 'substituicao';

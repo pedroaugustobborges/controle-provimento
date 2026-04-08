@@ -50,13 +50,16 @@ export default function DashboardPage() {
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
   // Isso atende à solicitação de usar exclusivamente dados reais inseridos/importados
   const vagas = useMemo(() => {
-    // Filtrar dados reais e garantir unicidade por ID para evitar contagem dupla
+    // Filtrar dados reais e garantir unicidade por ID ou Requisição para evitar contagem dupla
     const realData = allVagas.filter(v => v.origem_importacao || v.lote_importacao || (v.id && v.id.length > 5));
     
     const uniqueVagas = new Map();
     realData.forEach(v => {
-      if (v.id && !uniqueVagas.has(v.id)) {
-        uniqueVagas.set(v.id, v);
+      // Prioridade para número de requisição como chave única, depois ID
+      const key = v.requisicao || v.numero_requisicao || v.id;
+      if (key) {
+        // Sempre atualiza para manter a versão mais recente do registro caso haja duplicatas no store
+        uniqueVagas.set(key, v);
       }
     });
 
@@ -64,7 +67,14 @@ export default function DashboardPage() {
   }, [allVagas]);
 
   // Stats calculation - Use simple count (1 record = 1 vacancy) to avoid double counting
-  const totalVagas = vagas.length;
+  // We only count active/open vacancies for the "Total" to reflect the operational reality
+  const totalVagas = useMemo(() => 
+    vagas.filter(v => {
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      const cat = getCategoriaStatus(status);
+      return cat === 'em_andamento' || cat === 'aguardando_unidade' || cat === 'lideranca' || cat === 'movimentacao_interna';
+    }).length
+  , [vagas]);
   
   const counts = useMemo(() => {
     const acc = {
@@ -107,7 +117,7 @@ export default function DashboardPage() {
 
 
   const stats = [
-    { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Vagas em Aberto', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Aguardando Unidade', value: aguardandoUnidade, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Liderança', value: liderancaCount, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -120,9 +130,13 @@ export default function DashboardPage() {
 
   const alerts = useMemo(() => vagas.filter((v) => {
     const status = v.status || v.status_geral;
+    // Vagas encerradas ou com admissão efetivada não geram alerta de atraso
     if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
+    
+    // Cálculo de dias aberto usa data de recebimento se não houver histórico recente
     const lastHist = v.historico[v.historico.length - 1];
-    return !lastHist || calcDiasAberto(lastHist.data) > 10;
+    const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
+    return calcDiasAberto(baseDate) > 10;
   }), [vagas]);
 
   const chartData = useMemo(() => {
@@ -132,18 +146,23 @@ export default function DashboardPage() {
       if (!v.unidade) return;
       
       const normalizedName = normalizeUnitName(v.unidade);
-      // Incluímos todas as unidades reais, sem exceções manuais como Corporativo
       if (!normalizedName) return;
 
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
       const qtd = 1; // 1 registro = 1 vaga
       
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      const categoria = getCategoriaStatus(status);
+      const isEncerrada = categoria === 'encerradas' || status === 'admissao_efetivada';
+
+      // Contagem de totais deve respeitar se a vaga não está duplicada (já tratado acima no memo vagas)
       current.total += qtd;
       
-      const status = (v.status || v.status_geral || '').toLowerCase();
-      if (status === 'aberta') {
+      // Vaga aberta é aquela que NÃO está encerrada ou suspensa/cancelada
+      if (categoria === 'em_andamento' || categoria === 'aguardando_unidade' || categoria === 'lideranca') {
         current.abertas += qtd;
       }
+      
       groupedMap.set(normalizedName, current);
     });
 
@@ -217,7 +236,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
                 <div className="h-2 w-2 rounded-full bg-primary"></div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Total</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Abertas</span>
               </div>
             </div>
           </CardHeader>
@@ -256,16 +275,16 @@ export default function DashboardPage() {
                     }}
                     itemStyle={{ padding: '2px 0' }}
                   />
-                  <Bar 
-                    dataKey="total" 
-                    name="Processos Totais" 
+                    <Bar 
+                    dataKey="abertas" 
+                    name="Processos em Aberto" 
                     fill="hsl(var(--primary))" 
                     radius={[0, 6, 6, 0]} 
                     barSize={24} 
                     animationDuration={1500}
                   >
                     <LabelList 
-                      dataKey="total" 
+                      dataKey="abertas" 
                       position="right" 
                       style={{ fill: '#64748b', fontSize: '11px', fontWeight: 'bold' }}
                       offset={10}
@@ -305,7 +324,7 @@ export default function DashboardPage() {
                       <div className="flex justify-between items-center mb-1.5">
                         <span className="text-[10px] font-mono font-black text-slate-300 group-hover:text-primary/40 transition-colors uppercase">#{v.requisicao || v.numero_requisicao}</span>
                         <span className="text-[10px] font-black text-amber-600 flex items-center gap-1 uppercase bg-white border border-amber-100 px-2 py-0.5 rounded-md">
-                          <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)}d
+                          <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_recebimento || v.data_abertura)}d
                         </span>
                       </div>
                       <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors truncate leading-snug">{v.cargo}</h4>

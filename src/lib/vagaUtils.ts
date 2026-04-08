@@ -182,17 +182,17 @@ export function normalizeUnitName(name: string): string {
   const upper = name.toUpperCase().trim();
   
   // Mapeamento explícito de unidades AGIR para precisão absoluta
-  if (upper.includes('HECAD')) return 'HECAD';
-  if (upper.includes('HUGOL')) return 'HUGOL';
-  if (upper.includes('CRER')) return 'CRER';
-  if (upper.includes('HDS')) return 'HDS';
+  if (upper === 'HECAD' || upper === 'HOSPITAL HECAD' || upper === 'HOSPITAL ESTADUAL HECAD') return 'HECAD';
+  if (upper === 'HUGOL' || upper === 'HOSPITAL HUGOL' || upper === 'HOSPITAL ESTADUAL HUGOL') return 'HUGOL';
+  if (upper === 'CRER' || upper === 'HOSPITAL CRER' || upper === 'HOSPITAL ESTADUAL CRER') return 'CRER';
+  if (upper === 'HDS' || upper === 'HOSPITAL HDS' || upper === 'HOSPITAL ESTADUAL HDS') return 'HDS';
   if (upper.includes('CEALCON')) return 'CEALCON';
   if (upper.includes('CORA')) return 'CORA';
   if (upper.includes('POLICLINICA') || upper.includes('POLICLÍNICA')) return 'POLICLÍNICA';
   if (upper.includes('TEIA') && upper.includes('GOI')) return 'TEIA GOIÂNIA';
   if (upper.includes('TEIA') && upper.includes('APARECIDA')) return 'TEIA APARECIDA';
   if (upper.includes('TEIA') && upper.includes('CANEDO')) return 'TEIA CANEDO';
-  if (upper.includes('TEIA')) return upper; // Preserve other Teia units if any
+  if (upper.includes('TEIA')) return upper; 
   if (upper.includes('JATAI') || upper.includes('JATAÍ')) return 'JATAÍ';
   
   if (isVitoriaUnit(name)) return 'VITÓRIA';

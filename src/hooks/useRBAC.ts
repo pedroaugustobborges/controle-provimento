@@ -23,10 +23,11 @@ export function useRBAC() {
   const { data: userRoles, isLoading } = useQuery({
     queryKey: ['user_roles'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
       if (!user) return [];
 
-      const { data: roles, error } = await supabase
+      const { data: rolesData, error } = await supabase
         .from('usuarios_perfis')
         .select(`
           perfil:perfis (nome)
@@ -35,8 +36,11 @@ export function useRBAC() {
 
       if (error) throw error;
       
-      // Typed response
-      const roles = (rolesData as any[] || []).map(r => r.perfil?.nome) as UserProfile[];
+      // Clean roles
+      const roles = (rolesData || [])
+        .map((r: any) => r.perfil?.nome)
+        .filter(Boolean) as UserProfile[];
+        
       return roles;
     },
   });

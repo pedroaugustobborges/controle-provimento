@@ -444,17 +444,17 @@ export function ImportExcelDialog({
   const processImport = (dataToImport: any[], loteId?: string, now?: string) => {
     setIsProcessing(true);
     const currentNow = now || new Date().toISOString();
-    const currentLoteId = loteId || `LOTE-${Date.now()}`;
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
-      let rawUnidade = String(row.unidade || '');
+      let rawUnidade = String(row.unidade || '').trim();
       
-      // FALLBACK: If unidade column is empty, try to extract it from the sheet name
-      if (!rawUnidade && row.__sheet && row.__sheet.includes('Vagas - ')) {
+      // CRITICAL: Force unit from sheet name if it's one of the known "Vagas - " tabs
+      // This ensures HUGOL=246, CRER=118, etc. counts match the specific tabs
+      if (row.__sheet && row.__sheet.includes('Vagas - ')) {
         rawUnidade = row.__sheet.replace('Vagas - ', '').trim();
       }
       
-      const unidade = rawUnidade; // Keep the original string as much as possible for parity
+      const unidade = rawUnidade; // Keep original sheet-based name for strict parity
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
 

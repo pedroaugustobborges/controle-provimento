@@ -375,6 +375,7 @@ export function ImportExcelDialog({
         requisicao: reqValue,
         numero_requisicao: reqValue,
         cargo: cargoValue,
+        vaga: row.vaga ? String(row.vaga) : undefined,
         numero_vagas: Number(row.numero_vagas || row.quantidade) || 1,
         quantidade: Number(row.numero_vagas || row.quantidade) || 1,
         secao: String(row.secao || ''),

@@ -144,6 +144,9 @@ export function ImportExcelDialog({
               if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
               else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
               else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
+              else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
+              else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
+              else if (rawTipo.includes('edital')) tipoVaga = 'edital';
 
               const statusNormalized = normalizeStatus(statusRaw);
               const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(finalUnit, tipoVaga);

@@ -95,6 +95,7 @@ export const mockVagas: Vaga[] = [
     unidade: 'JATAÍ',
     analista_responsavel: 'Geovana Miranda',
     status: 'em_edital',
+    observacoes_internas: '',
     tem_banco_valido: false,
     historico: [],
   },
@@ -110,6 +111,7 @@ export const mockVagas: Vaga[] = [
     unidade: 'VITÓRIA',
     analista_responsavel: 'Geovana Miranda',
     status: 'aberta',
+    observacoes_internas: '',
     tem_banco_valido: true,
     historico: [],
   },
@@ -125,6 +127,7 @@ export const mockVagas: Vaga[] = [
     unidade: 'REDE TEIA',
     analista_responsavel: 'Geovana Miranda',
     status: 'em_triagem',
+    observacoes_internas: '',
     tem_banco_valido: false,
     historico: [],
   }

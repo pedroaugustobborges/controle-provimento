@@ -46,11 +46,13 @@ export default function VagasPage() {
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
+  const [filterMes, setFilterMes] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
+
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);

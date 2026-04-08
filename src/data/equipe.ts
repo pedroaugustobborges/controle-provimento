@@ -47,7 +47,12 @@ export const EQUIPE_POR_UNIDADE: EquipeResponsavel[] = [
     assistentes: ['Nara Rubia']
   },
   {
-    unidade: 'REDE TEIA',
+    unidade: 'Teia Canedo',
+    analista: 'Geovana Miranda',
+    assistentes: ['Nara Rubia']
+  },
+  {
+    unidade: 'Teia Serra',
     analista: 'Geovana Miranda',
     assistentes: ['Nara Rubia']
   }

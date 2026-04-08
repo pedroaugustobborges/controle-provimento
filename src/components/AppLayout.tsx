@@ -89,8 +89,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Top bar */}
             <div className={`flex items-center justify-between px-6 border-b transition-all duration-300 ${
               isCompact 
-                ? 'h-12 bg-white/80 backdrop-blur-xl border-border/40' 
-                : 'h-16 bg-gradient-to-r from-white via-white to-primary/[0.03] border-border/60 backdrop-blur-xl'
+                ? 'h-12 bg-background shadow-sm border-border/40' 
+                : 'h-16 bg-gradient-to-r from-background via-background to-primary/[0.03] border-border/60'
             }`}>
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all rounded-lg border border-border/50" />

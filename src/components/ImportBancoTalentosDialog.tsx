@@ -75,7 +75,7 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   nome: ['nome', 'candidato', 'NOME'],
   classificacao: ['classificação', 'posicao', 'ranking', 'CLASSIFICAÇÃO'],
   quantidade_banco: ['quantidade banco', 'qntd banco', 'QNTD BANCO'],
-  status_import: ['status', 'STATUS'],
+  status_import: ['status', 'STATUS', 'SITUAÇÃO', 'SITUACAO', 'ACOMPANHAMENTO', 'FASE', 'Fase', 'Status', 'Situação'],
   data_abertura_edital: ['abertura', 'data abertura', 'dt abertura', 'publicação', 'publicacao', 'data publicação', 'data publicacao', 'PUBLICAÇÃO'],
   data_validade: ['validade', 'data validade', 'dt validade', 'vencimento', 'VALIDADE'],
   is_prorrogado: ['prorrogado', 'prorrogação', 'PRORROGAÇÃO'],

@@ -87,18 +87,20 @@ export default function ConvocacoesPage() {
         }))
     ];
 
-    return allConvocacoes.filter(c => {
-      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) {
-        return false;
-      }
-      if (search) {
-        const s = search.toLowerCase();
-        return c.nome_candidato.toLowerCase().includes(s) || 
-               c.cargo.toLowerCase().includes(s) || 
-               c.unidade.toLowerCase().includes(s);
-      }
-      return true;
-    });
+    return allConvocacoes
+      .filter(c => {
+        if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) {
+          return false;
+        }
+        if (search) {
+          const s = search.toLowerCase();
+          return c.nome_candidato.toLowerCase().includes(s) || 
+                 c.cargo.toLowerCase().includes(s) || 
+                 c.unidade.toLowerCase().includes(s);
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.data_convocacao).getTime() - new Date(a.data_convocacao).getTime());
   }, [convocacoes, bancos, currentUser, search]);
 
   const handleNewConvocacao = (vaga?: any) => {

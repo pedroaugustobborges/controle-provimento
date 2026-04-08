@@ -67,6 +67,21 @@ export const mockVagas: Vaga[] = [
       { id: 'h4', data: '2025-01-20', descricao: 'Vaga cadastrada', usuario: 'Maria Silva' },
     ],
   },
+  {
+    id: '4', 
+    requisicao: 'REQ-2025-004', 
+    numero_requisicao: 'REQ-2025-004',
+    data_abertura: '2025-02-10', 
+    cargo: 'Fisioterapeuta',
+    tipo_vaga: 'substituicao', 
+    numero_vagas: 1, 
+    secao: 'Reabilitação', 
+    unidade: 'CRER',
+    analista_responsavel: 'Ana Paula', 
+    status: 'aberta',
+    tem_banco_valido: true,
+    historico: [],
+  }
 ];
 
 export const mockBancos: BancoTalentos[] = [
@@ -93,6 +108,18 @@ export const mockBancos: BancoTalentos[] = [
     data_validade: '2025-02-15',
     is_prorrogado: false,
     observacoes: '',
+    status: 'valido'
+  },
+  {
+    id: 'b3',
+    unidade: 'GOIÂNIA',
+    cargo: 'Fisioterapeuta',
+    secao: 'Reabilitação',
+    numero_edital: 'ED-2024-010',
+    data_abertura_edital: '2024-10-01',
+    data_validade: '2025-10-01',
+    is_prorrogado: false,
+    observacoes: 'Banco Geral Goiânia',
     status: 'valido'
   }
 ];

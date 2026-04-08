@@ -71,10 +71,10 @@ const OPTIONAL_FIELDS = [
 const FIELD_SYNONYMS: Record<string, string[]> = {
   vaga: ['vaga', 'id vaga', 'número vaga', 'nº vaga', 'n vaga', 'posição', 'posicao', 'identificador'],
   unidade: ['unidade', 'filial', 'loja', 'local', 'unid'],
-  data_abertura: ['data abertura', 'dt abertura', 'data de abertura', 'abertura', 'dt. abertura'],
+  data_abertura: ['data abertura', 'dt abertura', 'data de abertura', 'abertura', 'dt. abertura', 'coluna b', 'coluna 2', 'abertura de vaga'],
   data_recebimento: ['data recebimento', 'dt recebimento', 'data de recebimento', 'recebimento', 'dt. recebimento'],
   requisicao: ['requisição', 'requisicao', 'nº requisição', 'n requisição', 'req', 'nº req'],
-  cargo: ['cargo', 'função', 'funcao', 'vaga', 'posição', 'posicao'],
+  cargo: ['cargo', 'função', 'funcao', 'vaga', 'posição', 'posicao', 'coluna f', 'coluna 6', 'cargo ocupação'],
   numero_vagas: ['nº de vagas', 'n vagas', 'numero de vagas', 'vagas', 'qtd', 'quantidade', 'qtde', 'nº vagas'],
   secao: ['seção', 'secao', 'setor', 'departamento', 'depto', 'área', 'area'],
   tipo_vaga: ['tipo', 'tipo vaga', 'tipo de vaga', 'modalidade'],

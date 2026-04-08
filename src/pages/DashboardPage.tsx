@@ -178,39 +178,55 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Operational Alerts */}
-        <Card className="border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="pb-4 border-b border-slate-50">
+        {/* Operational Alerts - Modernized with better states */}
+        <Card className="border-none shadow-sm bg-white overflow-hidden flex flex-col">
+          <CardHeader className="pb-4 border-b border-slate-50 bg-amber-50/30">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" /> Alertas Operacionais
-              </CardTitle>
-              <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                </div>
+                <CardTitle className="text-lg font-black text-slate-800">Alertas Ativos</CardTitle>
+              </div>
+              <span className="bg-amber-100 text-amber-700 text-[9px] font-black px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm animate-pulse">
                 {alerts.length} Pendências
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-0 flex-1 overflow-auto">
-            <div className="divide-y divide-slate-100">
-              {alerts.slice(0, 5).map((v) => (
-                <div key={v.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-mono font-bold text-slate-400">#{v.requisicao || v.numero_requisicao}</span>
-                    <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1 uppercase">
-                      <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias
-                    </span>
+          <CardContent className="p-0 flex-1 overflow-auto max-h-[400px]">
+            {alerts.length > 0 ? (
+              <div className="divide-y divide-slate-50">
+                {alerts.slice(0, 5).map((v) => (
+                  <div key={v.id} className="p-5 hover:bg-slate-50/80 transition-all cursor-pointer group flex items-start gap-4">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-2 shrink-0 group-hover:scale-150 transition-transform"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[10px] font-mono font-black text-slate-300 group-hover:text-primary/40 transition-colors uppercase">#{v.requisicao || v.numero_requisicao}</span>
+                        <span className="text-[10px] font-black text-amber-600 flex items-center gap-1 uppercase bg-white border border-amber-100 px-2 py-0.5 rounded-md">
+                          <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)}d
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors truncate leading-snug">{v.cargo}</h4>
+                      <p className="text-[11px] text-slate-400 font-semibold mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
+                        <Building2 className="h-3 w-3 opacity-50" /> {v.unidade}
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors">{v.cargo}</h4>
-                  <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
-                    <Building2 className="h-3 w-3" /> {v.unidade}
-                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full py-12 px-6 text-center">
+                <div className="h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+                  <ShieldCheck className="h-8 w-8 text-emerald-500" />
                 </div>
-              ))}
-            </div>
+                <h4 className="text-sm font-bold text-slate-700">Tudo sob controle</h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-[200px]">Nenhum processo em atraso crítico no momento.</p>
+              </div>
+            )}
           </CardContent>
-          <div className="p-3 bg-slate-50/50 border-t border-slate-100">
-            <Button variant="ghost" className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-wider">
-              Ver todos os alertas <ChevronRight className="ml-1 h-3 w-3" />
+          <div className="p-4 bg-slate-50/50 border-t border-slate-100">
+            <Button variant="ghost" className="w-full text-[10px] font-black text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all">
+              Gestão de Gargalos <ChevronRight className="ml-1 h-3 w-3" />
             </Button>
           </div>
         </Card>

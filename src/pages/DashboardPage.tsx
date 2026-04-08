@@ -50,18 +50,21 @@ export default function DashboardPage() {
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
   // Isso atende à solicitação de usar exclusivamente dados reais inseridos/importados
   const vagas = useMemo(() => {
+    // Filtrar dados reais e garantir unicidade por ID para evitar contagem dupla
     const realData = allVagas.filter(v => v.origem_importacao || v.lote_importacao || (v.id && v.id.length > 5));
-    // Se não houver dados reais, mas houver dados (mocks), e o usuário ainda não importou nada,
-    // poderíamos mostrar os mocks, mas a instrução é "sem uso de dados mockados".
-    // Portanto, se houver qualquer dado real, usamos apenas os reais. 
-    // Se não houver nada real, retornamos vazio para forçar o uso da base carregada.
-    return realData.length > 0 ? realData : allVagas.filter(v => v.origem_importacao || v.lote_importacao);
+    
+    const uniqueVagas = new Map();
+    realData.forEach(v => {
+      if (v.id && !uniqueVagas.has(v.id)) {
+        uniqueVagas.set(v.id, v);
+      }
+    });
+
+    return Array.from(uniqueVagas.values()) as typeof allVagas;
   }, [allVagas]);
 
-  // Stats calculation - Using number of vacancies (numero_vagas) instead of record count
-  const totalVagas = useMemo(() => 
-    vagas.reduce((acc, v) => acc + (v.numero_vagas || v.quantidade || 1), 0)
-  , [vagas]);
+  // Stats calculation - Use simple count (1 record = 1 vacancy) to avoid double counting
+  const totalVagas = vagas.length;
   
   const counts = useMemo(() => {
     const acc = {
@@ -77,7 +80,7 @@ export default function DashboardPage() {
     vagas.forEach(v => {
       const status = (v.status || v.status_geral) as string;
       const cat = getCategoriaStatus(status);
-      const qtd = (v.numero_vagas || v.quantidade || 1);
+      const qtd = 1; // 1 registro = 1 vaga
       if (acc[cat] !== undefined) {
         acc[cat] += qtd;
       } else {
@@ -99,7 +102,7 @@ export default function DashboardPage() {
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   // Aqui também somamos a quantidade de vagas representadas
   const comBancoValido = useMemo(() => 
-    vagas.filter(v => getBancoByVaga(v.id)).reduce((acc, v) => acc + (v.numero_vagas || v.quantidade || 1), 0)
+    vagas.filter(v => getBancoByVaga(v.id)).length
   , [vagas, getBancoByVaga]);
 
 
@@ -133,7 +136,7 @@ export default function DashboardPage() {
       if (!normalizedName) return;
 
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
-      const qtd = (v.numero_vagas || v.quantidade || 1);
+      const qtd = 1; // 1 registro = 1 vaga
       
       current.total += qtd;
       

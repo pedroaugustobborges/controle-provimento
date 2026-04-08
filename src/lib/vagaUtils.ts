@@ -189,7 +189,10 @@ export function normalizeUnitName(name: string): string {
   if (upper.includes('CEALCON')) return 'CEALCON';
   if (upper.includes('CORA')) return 'CORA';
   if (upper.includes('POLICLINICA') || upper.includes('POLICLÍNICA')) return 'POLICLÍNICA';
-  if (upper.includes('TEIA') || upper.includes('CANEDO')) return 'TEIA CANEDO';
+  if (upper.includes('TEIA') && upper.includes('GOI')) return 'TEIA GOIÂNIA';
+  if (upper.includes('TEIA') && upper.includes('APARECIDA')) return 'TEIA APARECIDA';
+  if (upper.includes('TEIA') && upper.includes('CANEDO')) return 'TEIA CANEDO';
+  if (upper.includes('TEIA')) return upper; // Preserve other Teia units if any
   if (upper.includes('JATAI') || upper.includes('JATAÍ')) return 'JATAÍ';
   
   if (isVitoriaUnit(name)) return 'VITÓRIA';

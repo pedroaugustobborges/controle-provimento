@@ -39,16 +39,16 @@ export function AppSidebar() {
   const collapsed = state === 'collapsed';
   
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="border-b border-sidebar-border/30 py-6">
-        <div className="flex items-center gap-3 px-2">
-          <div className="bg-white/10 p-2 rounded-lg">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar shadow-xl">
+      <SidebarHeader className="border-b border-sidebar-border/30 py-8">
+        <div className="flex items-center gap-3 px-3">
+          <div className="bg-white/10 p-2.5 rounded-xl shadow-inner backdrop-blur-sm border border-white/5">
             <Building2 className="h-6 w-6 text-white shrink-0" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col overflow-hidden">
-              <span className="font-bold text-base text-white truncate leading-tight tracking-tight">AGIR</span>
-              <span className="text-[10px] text-white/70 truncate uppercase tracking-widest font-semibold">Sistema de Provimento</span>
+            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
+              <span className="font-extrabold text-lg text-white truncate leading-tight tracking-tight">AGIR</span>
+              <span className="text-[10px] text-white/60 truncate uppercase tracking-[0.2em] font-bold">Provimento Digital</span>
             </div>
           )}
         </div>

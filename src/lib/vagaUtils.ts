@@ -6,14 +6,18 @@ export const VITORIA_SUB_UNIDADES = [
   'es', 'serra', 'cariacica', 'vila velha', 'viana'
 ];
 
+function removeAccents(str: string): string {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 export function isVitoriaUnit(unidade: string): boolean {
   if (!unidade) return false;
-  const normalized = unidade.toLowerCase().trim();
+  const normalized = removeAccents(unidade.toLowerCase().trim());
   // Se for Vitória, já é Vitória
-  if (normalized === 'vitoria' || normalized === 'vitória') return true;
+  if (normalized === 'vitoria') return true;
   // Se contiver algum dos bairros/cidades da Grande Vitória
   return VITORIA_SUB_UNIDADES.some(sub => 
-    normalized.includes(sub.toLowerCase())
+    normalized.includes(removeAccents(sub.toLowerCase()))
   );
 }
 

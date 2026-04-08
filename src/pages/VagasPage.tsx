@@ -10,7 +10,7 @@ import {
   normalizeUnitName, countVacancies, getStatusSummary, 
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity 
 } from '@/lib/vagaUtils';
-import { Calendar, Bug, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Bug, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -43,6 +43,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function VagasPage() {
   const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic } = useVagasStore();

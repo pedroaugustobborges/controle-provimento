@@ -582,7 +582,7 @@ export default function VagaDetalhePage() {
 
 function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
   const { updateVaga } = useVagasStore();
-  const [form, setForm] = useState(vaga.acompanhamento || {
+  const [form, setForm] = useState<any>(vaga.acompanhamento || {
     etapa_atual: 'inscricoes',
     total_inscritos: 0,
     aprovados_triagem: 0,
@@ -592,8 +592,9 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
     gerou_banco: false,
     quantidade_banco: 0,
     situacao_etapa: 'pendente',
-    notes: ''
+    observacoes_etapa: ''
   });
+
 
   const [cronograma, setCronograma] = useState(vaga.cronograma || {});
 
@@ -641,11 +642,12 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500">Observações da Etapa</label>
               <Textarea 
-                value={form.notes} 
-                onChange={(e) => setForm({ ...form, notes: e.target.value })} 
+                value={form.observacoes_etapa} 
+                onChange={(e) => setForm({ ...form, observacoes_etapa: e.target.value })} 
                 placeholder="Ex: Aguardando retorno da banca..."
               />
             </div>
+
 
             <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest border-b pb-2 pt-4">Indicadores Quantitativos</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

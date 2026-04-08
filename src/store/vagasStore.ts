@@ -140,21 +140,30 @@ export const useVagasStore = create<VagasState>()(
         
         const vagaTokens = getCargoTokens(vaga.cargo);
 
-        // Define regional units for matching - expanded
-        const goianiaUnits = [
-          'crer', 'hugol', 'hecad', 'hds', 'corporativo', 'policlinica', 
-          'cealcon', 'hugo', 'heapa', 'heg', 'hdt', 'goiania', 'agir',
-          'hospital central', 'central', 'maternidade', 'hemmnsl', 'hospital estadual',
-          'cora', 'hecon', 'heslv', 'hetrin', 'heel', 'heja', 'herp', 'hgg', 'hevana', 'hemo', 'hemonucleo', 'ipasgo',
-          'cmmnsl', 'ceal', 'huapa', 'hurre', 'sede', 'go'
-        ];
-        
-        const vitoriaUnits = [
-          'sua', 'sao pedro', 'vitoria', 'upa', 'es', 'espirito santo', 'serra', 'cariacica', 'vila velha',
-          'asas', 'hospital estadual', 'dr jayme', 'hesvv', 'cre', 'vix'
-        ];
+        // Specific units for matching as requested
+        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds'];
+        const vitoriaUnits = ['vitoria', 'sao pedro', 'sua', 'suá'];
 
         const found = state.bancos.find(b => {
+          const normalizedBancoUnidade = normalizeCargo(b.unidade || '');
+          const normalizedVagaUnidade = normalizeCargo(vaga.unidade || '');
+
+          // Check for exact match first
+          if (normalizedBancoUnidade === normalizedVagaUnidade) return true;
+
+          // GOIÂNIA mapping
+          if (normalizedBancoUnidade === 'goiania' && goianiaUnits.includes(normalizedVagaUnidade)) return true;
+          
+          // VITÓRIA mapping
+          if (normalizedBancoUnidade === 'upa' && vitoriaUnits.includes(normalizedVagaUnidade)) return true;
+          if (normalizedBancoUnidade === 'vitoria' && vitoriaUnits.includes(normalizedVagaUnidade)) return true;
+
+          // Default unit tokens match for other units
+          const isJatai = (normalizedBancoUnidade.includes('jatai') && normalizedVagaUnidade.includes('jatai'));
+          const isPoliclinica = (normalizedBancoUnidade.includes('policlinica') && normalizedVagaUnidade.includes('policlinica'));
+          
+          if (isJatai || isPoliclinica) return true;
+
           const normalizedBancoCargo = normalizeCargo(b.cargo);
           const bancoTokens = getCargoTokens(b.cargo);
           

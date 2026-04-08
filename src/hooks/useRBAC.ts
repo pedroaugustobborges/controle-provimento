@@ -1,101 +1,94 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-
-export type UserProfile = 
-  | 'Assistente' 
-  | 'Analista da Unidade' 
-  | 'Analista do Edital' 
-  | 'Analista das Convocações' 
-  | 'Analista Administrativo' 
-  | 'Supervisão / Coordenação / Gestão' 
-  | 'Administrador';
-
-export interface Permissions {
-  canRead: boolean;
-  canCreate: boolean;
-  canEdit: boolean;
-  canValidate: boolean;
-  canDelete: boolean;
-  canAudit: boolean;
-}
+import { UserProfile, Permissions, User } from '../types/auth';
 
 export function useRBAC() {
-  const { data: userRoles, isLoading } = useQuery({
-    queryKey: ['user_roles'],
-    queryFn: async () => {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      if (!user) return [];
+  const { data: userData, isLoading, error } = useQuery({
+    queryKey: ['user_profile'],
+    queryFn: async (): Promise<User | null> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
 
-      const { data: rolesData, error } = await supabase
-        .from('usuarios_perfis')
-        .select(`
-          perfil:perfis (nome)
-        `)
-        .eq('user_id', user.id);
+      const { data: profile, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
-      
-      // Clean roles
-      const roles = (rolesData || [])
-        .map((r: any) => r.perfil?.nome)
-        .filter(Boolean) as UserProfile[];
-        
-      return roles;
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      return profile as User;
     },
   });
 
   const hasRole = (role: UserProfile | UserProfile[]) => {
-    if (!userRoles) return false;
+    if (!userData) return false;
     const rolesToCheck = Array.isArray(role) ? role : [role];
-    return rolesToCheck.some(r => userRoles.includes(r));
+    return rolesToCheck.includes(userData.perfil as UserProfile);
   };
 
-  const isAdmin = hasRole('Administrador');
-  const isSupervisor = hasRole('Supervisão / Coordenação / Gestão');
+  const isAdmin = userData?.perfil === 'Administrador';
+  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência' || userData?.perfil === 'Supervisão';
 
   const getPermissions = (module: string): Permissions => {
-    // Basic implementation of permissions based on roles
-    if (isAdmin) return { canRead: true, canCreate: true, canEdit: true, canValidate: true, canDelete: true, canAudit: true };
-    if (isSupervisor) return { canRead: true, canCreate: true, canEdit: true, canValidate: true, canDelete: false, canAudit: true };
-
+    if (isAdmin) {
+      return { 
+        canRead: true, 
+        canCreate: true, 
+        canEdit: true, 
+        canValidate: true, 
+        canDelete: true, 
+        canAudit: true 
+      };
+    }
+    
     const perms: Permissions = {
       canRead: true,
       canCreate: false,
       canEdit: false,
       canValidate: false,
       canDelete: false,
-      canAudit: false,
+      canAudit: isManagement,
     };
 
-    if (module === 'vagas') {
-      if (hasRole('Analista da Unidade')) perms.canEdit = true;
-      if (hasRole('Analista do Edital')) perms.canRead = true;
-    }
+    const perfil = userData?.perfil;
 
-    if (module === 'editais') {
-      if (hasRole('Analista do Edital')) perms.canCreate = perms.canEdit = true;
-      if (hasRole('Analista Administrativo')) perms.canValidate = true;
-    }
-
-    if (module === 'banco') {
-      if (hasRole('Assistente')) perms.canEdit = true;
-      if (hasRole('Analista das Convocações')) perms.canRead = true;
-    }
-
-    if (module === 'convocacoes') {
-      if (hasRole('Analista das Convocações')) perms.canCreate = perms.canEdit = true;
+    switch (module) {
+      case 'vagas':
+        if (perfil === 'Analista da unidade') perms.canEdit = true;
+        if (perfil === 'Analista do edital') perms.canRead = true;
+        break;
+      case 'editais':
+        if (perfil === 'Analista do edital') {
+          perms.canCreate = true;
+          perms.canEdit = true;
+        }
+        if (perfil === 'Analista administrativo') perms.canValidate = true;
+        break;
+      case 'banco':
+        if (perfil === 'Assistente') perms.canEdit = true;
+        if (perfil === 'Analista de convocações') perms.canRead = true;
+        break;
+      case 'convocacoes':
+        if (perfil === 'Analista de convocações') {
+          perms.canCreate = true;
+          perms.canEdit = true;
+        }
+        break;
     }
 
     return perms;
   };
 
   return {
-    userRoles,
+    userData,
     isLoading,
+    error,
     hasRole,
     isAdmin,
-    isSupervisor,
+    isManagement,
     getPermissions,
   };
 }

@@ -122,36 +122,54 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Unit View */}
-        <Card className="lg:col-span-2 border-slate-200/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-50 mb-4">
+        {/* Unit View - Modernized Bar Chart */}
+        <Card className="lg:col-span-2 border-none shadow-sm bg-white overflow-hidden flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">
             <div>
-              <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-primary" /> Visão por Unidade
+              <CardTitle className="text-lg font-black text-slate-800 flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-primary" />
+                </div>
+                Visão Estratégica por Unidade
               </CardTitle>
-              <CardDescription className="text-xs">Distribuição de processos ativos por complexo hospitalar.</CardDescription>
+              <CardDescription className="text-xs font-medium text-slate-400 ml-10.5">Distribuição geográfica de processos e demandas ativas.</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
+                <div className="h-2 w-2 rounded-full bg-primary"></div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Total</span>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-[320px] w-full">
+          <CardContent className="flex-1 pb-8">
+            <div className="h-[340px] w-full mt-4 pr-6">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 60, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="4 4" horizontal={true} vertical={false} stroke="#f1f5f9" />
                   <XAxis type="number" hide />
                   <YAxis 
                     dataKey="name" 
                     type="category" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 11, fontWeight: 500, fill: '#64748b' }} 
+                    width={140}
+                    tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} 
                   />
                   <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: '#f8fafc', radius: 4 }}
+                    contentStyle={{ 
+                      borderRadius: '12px', 
+                      border: 'none', 
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      padding: '12px',
+                      fontSize: '11px',
+                      fontWeight: 'bold'
+                    }}
+                    itemStyle={{ padding: '2px 0' }}
                   />
-                  <Bar dataKey="total" name="Total de Processos" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20}>
+                  <Bar dataKey="total" name="Processos Totais" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} barSize={24} animationDuration={1500}>
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.7)'} />
+                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.8)'} />
                     ))}
                   </Bar>
                 </BarChart>

@@ -115,6 +115,21 @@ export const useVagasStore = create<VagasState>()(
           }
         }
         
+        // Regional unit sets for scope matching
+        const goianiaUnits = [
+          'CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 
+          'CEALCON', 'HUGO', 'HEAPA', 'HEG', 'HDT', 'GOIANIA', 'AGIR',
+          'HOSPITAL CENTRAL', 'CENTRAL', 'MATERNIDADE', 'HEMMNSL', 'HOSPITAL ESTADUAL',
+          'CORA', 'HECON', 'HESLV', 'HETRIN', 'HEEL', 'HEJA', 'HERP', 'GOIAS', 'GO',
+          'HGG', 'HOSPITAL GERAL', 'HEVANA', 'HEAPA', 'HEMO', 'HEMONUCLEO', 'IPASGO', 'HOSPITAL',
+          'CMMNSL', 'CEAL', 'HUAPA', 'HURRE', 'HEAPA', 'HUGOL', 'HECAD', 'HDT', 'HDS', 'HEG', 'HOSPITAL'
+        ].map(normalizeCargo);
+        
+        const vitoriaUnits = [
+          'SUA', 'SAO PEDRO', 'VITORIA', 'UPA', 'ES', 'ESPIRITO SANTO', 'SERRA', 'CARIACICA', 'VILA VELHA', 'VITORIA', 'SERRA',
+          'ASAS', 'HOSPITAL ESTADUAL', 'DR JAYME', 'HESVV', 'CRE', 'UPA'
+        ].map(normalizeCargo);
+
         // Fallback: match by cargo and unit scope
         const normalizedVagaCargo = normalizeCargo(vaga.cargo);
         const normalizedVagaUnidade = normalizeCargo(vaga.unidade);
@@ -137,6 +152,7 @@ export const useVagasStore = create<VagasState>()(
         };
         
         const vagaTokens = getCargoTokens(vaga.cargo);
+
 
 
         // Fallback: match by cargo and unit scope

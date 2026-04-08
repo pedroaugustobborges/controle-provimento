@@ -67,6 +67,7 @@ export default function DashboardPage() {
     { label: 'Movimentação Int.', value: movimentacaoCount, icon: RefreshCw, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-slate-600', bg: 'bg-slate-100' },
     { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Convocações do Dia', value: convocacoesHoje, icon: Users, color: 'text-slate-600', bg: 'bg-slate-100' },
   ];
 
   const alerts = vagas.filter((v) => {

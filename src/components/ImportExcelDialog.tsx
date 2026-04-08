@@ -64,10 +64,12 @@ const OPTIONAL_FIELDS = [
   { key: 'tipo_vaga', label: 'Tipo' },
   { key: 'status', label: 'Status / Acompanhamento' },
   { key: 'analista_responsavel', label: 'Analista' },
+  { key: 'vaga', label: 'ID/Número da Vaga (Identificador Único)' },
   { key: 'observacoes_internas', label: 'Observações' },
 ];
 
 const FIELD_SYNONYMS: Record<string, string[]> = {
+  vaga: ['vaga', 'id vaga', 'número vaga', 'nº vaga', 'n vaga', 'posição', 'posicao', 'identificador'],
   unidade: ['unidade', 'filial', 'loja', 'local', 'unid'],
   data_abertura: ['data abertura', 'dt abertura', 'data de abertura', 'abertura', 'dt. abertura'],
   data_recebimento: ['data recebimento', 'dt recebimento', 'data de recebimento', 'recebimento', 'dt. recebimento'],

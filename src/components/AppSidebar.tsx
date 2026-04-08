@@ -21,12 +21,18 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
-  { title: 'Vagas', url: '/vagas', icon: Briefcase },
+  { title: 'Vagas', url: '/vagas', icon: Briefcase, subMenu: [
+    { title: 'Todas as Vagas', url: '/vagas' },
+    { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
+  ] },
   { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users, subMenu: [
     { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
     { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
   ] },
-  { title: 'Fila de Editais', url: '/fila-editais', icon: TrendingUp },
+  { title: 'Editais', url: '/fila-editais', icon: TrendingUp, subMenu: [
+    { title: 'Fila de Editais', url: '/fila-editais' },
+    { title: 'Validar Editais', url: '/validacao-editais' },
+  ] },
   { title: 'Convocações', url: '/convocacoes', icon: Calendar },
 ];
 

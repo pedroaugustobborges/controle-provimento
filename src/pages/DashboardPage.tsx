@@ -63,36 +63,32 @@ export default function DashboardPage() {
   
   const counts = useMemo(() => {
     const acc = {
+      fila_edital: 0,
       em_andamento: 0,
-      aguardando_unidade: 0,
-      sem_status: 0,
-      lideranca: 0,
-      movimentacao_interna: 0,
-      encerradas: 0,
-      outros: 0,
+      concluidas: 0,
+      excecoes: 0,
+      estrategicas: 0,
+      convocacao: 0,
     };
     
     vagas.forEach(v => {
       const status = (v.status || v.status_geral) as string;
       const cat = getCategoriaStatus(status);
-      const qtd = 1; // 1 registro = 1 vaga
+      const qtd = 1;
       if (acc[cat] !== undefined) {
         acc[cat] += qtd;
-      } else {
-        acc.outros += qtd;
       }
     });
     
     return acc;
   }, [vagas]);
 
+  const filaEdital = counts.fila_edital;
   const emAndamento = counts.em_andamento;
-  const aguardandoUnidade = counts.aguardando_unidade;
-  const semStatusCount = counts.sem_status;
-  const liderancaCount = counts.lideranca;
-  const movimentacaoCount = counts.movimentacao_interna;
-  const encerradas = counts.encerradas;
-  const suspensasCanceladas = counts.outros;
+  const concluidas = counts.concluidas;
+  const excecoes = counts.excecoes;
+  const estrategicas = counts.estrategicas;
+  const convocacao = counts.convocacao;
 
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   // Aqui também somamos a quantidade de vagas representadas
@@ -115,14 +111,14 @@ export default function DashboardPage() {
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
-    { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Fila de Editais', value: filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Aguardando Unid.', value: aguardandoUnidade, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Concluídas', value: concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Estratégicas', value: estrategicas, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Convocações', value: convocacao, icon: Users, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Exceções', value: excecoes, icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Vagas com Banco', value: comBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-slate-600', bg: 'bg-slate-50' },
-    { label: 'Susp/Canc.', value: suspensasCanceladas, icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-50' },
   ];
 
   const alerts = useMemo(() => vagas.filter((v) => {
@@ -150,13 +146,12 @@ export default function DashboardPage() {
       
       const status = (v.status || v.status_geral || '').toLowerCase();
       const categoria = getCategoriaStatus(status);
-      const isEncerrada = categoria === 'encerradas' || status === 'admissao_efetivada';
-
+      
       // Contagem de totais deve respeitar se a vaga não está duplicada (já tratado acima no memo vagas)
       current.total += qtd;
       
-      // Vaga aberta é aquela que NÃO está encerrada ou suspensa/cancelada
-      if (categoria === 'em_andamento' || categoria === 'aguardando_unidade' || categoria === 'lideranca') {
+      // Vaga aberta é aquela que NÃO está encerrada ou exceção
+      if (categoria !== 'concluidas' && categoria !== 'excecoes') {
         current.abertas += qtd;
       }
       

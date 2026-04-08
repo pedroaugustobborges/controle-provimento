@@ -1,21 +1,21 @@
 export type TipoVaga = 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
 export type StatusVaga = 
-  | 'movimentacao_interna' 
-  | 'vaga_lideranca' 
-  | 'publicado_edital' 
-  | 'em_edital' 
-  | 'documentacao' 
-  | 'documentacao_ok' 
-  | 'documentacao_pendente' 
-  | 'casos_ok' 
-  | 'admissao' 
-  | 'admissao_enviada' 
-  | 'admissao_efetivada' 
-  | 'suspensa' 
-  | 'cancelada' 
-  | 'aguardando_unidade' 
+  | 'sem_status'
+  | 'publicar_novo_edital'
+  | 'em_edital'
+  | 'em_documentacao'
+  | 'documentacao_ok_azul_pendente'
+  | 'documentacao_pendente_azul_ok'
+  | 'em_admissao'
+  | 'admissao_enviada'
+  | 'admissao_efetivada'
+  | 'dispensa'
+  | 'cancelada'
+  | 'aguardar_anuencia'
+  | 'movimentacao_interna'
+  | 'vaga_lideranca'
   | 'realizar_convocacao'
-  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada' | 'sem_status';
+  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada';
 
 export type StatusGeral = StatusVaga;
 export type StatusConvocacao = 
@@ -32,31 +32,66 @@ export type StatusPublicacao = 'pendente' | 'publicado' | 'encerrado';
 export type StatusValidacao = 'pendente' | 'aprovado' | 'reprovado';
 export type EtapaEdital = 'inscricoes' | 'triagem' | 'prova' | 'entrevista' | 'resultado' | 'encerrado';
 
+export interface VagaCronograma {
+  data_inscricao?: string;
+  data_triagem?: string;
+  data_avaliacao_curricular?: string;
+  data_avaliacao_especifica_online?: string;
+  data_resultado_avaliacao_especifica_online?: string;
+  data_entrevistas?: string;
+  data_resultado_final?: string;
+  data_convocacao?: string;
+  data_encerramento_processo?: string;
+}
+
+export interface VagaAcompanhamento {
+  etapa_atual: string;
+  total_inscritos?: number;
+  aprovados_triagem?: number;
+  aprovados_avaliacao_especifica?: number;
+  convocados_entrevista?: number;
+  aprovados_finais?: number;
+  gerou_banco?: boolean;
+  quantidade_banco?: number;
+  observacoes_etapa?: string;
+  data_real_etapa?: string;
+  situacao_etapa?: 'pendente' | 'realizada' | 'atrasada';
+}
+
 export interface Vaga {
   id: string;
   data_abertura: string;
   data_recebimento?: string;
   unidade: string;
   requisicao: string;
-  numero_requisicao?: string; // Compatibilidade
+  numero_requisicao?: string; 
   cargo: string;
   secao: string;
   tipo_vaga: TipoVaga;
   numero_vagas: number;
-  quantidade?: number; // Compatibilidade
+  quantidade?: number; 
   analista_responsavel: string;
   assistentes?: string[];
   observacoes_internas: string;
-  observacoes?: string; // Compatibilidade
+  observacoes?: string; 
   status: StatusVaga;
-  status_geral?: StatusGeral; // Compatibilidade
+  status_geral?: StatusGeral; 
   tem_banco_valido: boolean;
   banco_id?: string;
   numero_processo?: string;
   numero_edital?: string;
+  arquivo_edital?: string; // URL ou nome do arquivo
+  validado_por?: string;
+  data_validacao?: string;
+  observacoes_validacao?: string;
+  status_validacao?: StatusValidacao;
   historico: HistoricoItem[];
   
-  // Compatibilidade
+  // Acompanhamento do Edital
+  cronograma?: VagaCronograma;
+  acompanhamento?: VagaAcompanhamento;
+
+  // Compatibilidade e Extras
   pcd?: boolean;
   estado?: string;
   selecao?: string;
@@ -71,7 +106,7 @@ export interface Vaga {
   aprovados_finais?: number;
   convocados_entrevista?: number;
   trace_key?: string;
-  vaga?: string; // Identifier for the specific vacancy within a requisition
+  vaga?: string; 
   source_row_index?: number;
   import_batch_id?: string;
   raw_row_hash?: string;
@@ -213,27 +248,26 @@ export const TIPO_VAGA_LABELS: Record<TipoVaga, string> = {
 };
 
 export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
-  movimentacao_interna: 'Movimentação Interna',
-  vaga_lideranca: 'Vaga de Liderança',
-  publicado_edital: 'Publicado no Edital',
+  sem_status: 'Sem Status',
+  publicar_novo_edital: 'Publicar Novo Edital',
   em_edital: 'Em Edital',
-  documentacao: 'Documentação',
-  documentacao_ok: 'Documentação OK',
-  documentacao_pendente: 'Documentação Pendente',
-  casos_ok: 'Casos OK',
-  admissao: 'Admissão',
+  em_documentacao: 'Em Documentação',
+  documentacao_ok_azul_pendente: 'Doc. OK e Azul Pendente',
+  documentacao_pendente_azul_ok: 'Doc. Pendente e Azul OK',
+  em_admissao: 'Em Admissão',
   admissao_enviada: 'Admissão Enviada',
   admissao_efetivada: 'Admissão Efetivada',
-  suspensa: 'Suspensa',
+  dispensa: 'Dispensa',
   cancelada: 'Cancelada',
-  aguardando_unidade: 'Aguardando Unidade',
+  aguardar_anuencia: 'Aguardar Anuência',
+  movimentacao_interna: 'Movimentação Interna',
+  vaga_lideranca: 'Vaga de Liderança',
   realizar_convocacao: 'Realizar Convocação',
   aberta: 'Aberta',
   em_triagem: 'Em Triagem',
   entrevista: 'Entrevista',
   finalizada: 'Finalizada',
   encerrada: 'Encerrada',
-  sem_status: 'Sem Status',
 };
 
 export const STATUS_LABELS = STATUS_VAGA_LABELS;

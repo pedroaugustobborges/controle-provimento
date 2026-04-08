@@ -33,58 +33,55 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
+  fila_edital: ['sem_status', 'publicar_novo_edital', '', null, undefined, 'nan'],
   em_andamento: [
-    'em_edital', 'publicado_edital', 'em_triagem', 'entrevista', 
-    'documentacao', 'documentacao_ok', 'documentacao_pendente', 
-    'casos_ok', 'admissao', 'admissao_enviada', 'realizar_convocacao',
-    'aberta', 'em_andamento', 'nova_vaga'
+    'em_edital', 'em_documentacao', 'documentacao_ok_azul_pendente', 
+    'documentacao_pendente_azul_ok', 'em_admissao', 'admissao_enviada',
+    'em_triagem', 'entrevista', 'aberta'
   ],
-  aguardando_unidade: ['aguardando_unidade', 'aguardando_processo', 'aguardando_edital', 'aguardando_processo_e_edital'],
-  encerradas: ['admissao_efetivada', 'finalizada', 'encerrada', 'concluida'],
-  lideranca: ['vaga_lideranca'],
-  movimentacao_interna: ['movimentacao_interna'],
-  sem_status: ['sem_status', '', null, undefined, 'nan'],
-  outros: ['suspensa', 'cancelada']
+  concluidas: ['admissao_efetivada', 'finalizada', 'encerrada'],
+  excecoes: ['dispensa', 'cancelada', 'aguardar_anuencia'],
+  estrategicas: ['movimentacao_interna', 'vaga_lideranca'],
+  convocacao: ['realizar_convocacao']
 };
 
 export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
-  if (!status || status === '' || status === 'sem_status' || status === 'nan' || status === 'null' || status === 'undefined') return 'sem_status';
+  if (!status || status === '' || status === 'sem_status' || status === 'nan' || status === 'null' || status === 'undefined') return 'fila_edital';
   
   const s = status.toLowerCase();
+  if (CATEGORIAS_STATUS.fila_edital.includes(s)) return 'fila_edital';
   if (CATEGORIAS_STATUS.em_andamento.includes(s)) return 'em_andamento';
-  if (CATEGORIAS_STATUS.aguardando_unidade.includes(s)) return 'aguardando_unidade';
-  if (CATEGORIAS_STATUS.encerradas.includes(s)) return 'encerradas';
-  if (CATEGORIAS_STATUS.lideranca.includes(s)) return 'lideranca';
-  if (CATEGORIAS_STATUS.movimentacao_interna.includes(s)) return 'movimentacao_interna';
-  if (CATEGORIAS_STATUS.outros.includes(s)) return 'outros';
+  if (CATEGORIAS_STATUS.concluidas.includes(s)) return 'concluidas';
+  if (CATEGORIAS_STATUS.excecoes.includes(s)) return 'excecoes';
+  if (CATEGORIAS_STATUS.estrategicas.includes(s)) return 'estrategicas';
+  if (CATEGORIAS_STATUS.convocacao.includes(s)) return 'convocacao';
   
-  return 'outros';
+  return 'excecoes';
 }
 
 
 export function getStatusColor(status: StatusVaga): string {
   const map: Record<StatusVaga, string> = {
-    movimentacao_interna: 'bg-blue-100 text-blue-800',
-    vaga_lideranca: 'bg-indigo-100 text-indigo-800',
-    publicado_edital: 'bg-green-100 text-green-800',
-    em_edital: 'bg-amber-100 text-amber-800',
-    documentacao: 'bg-orange-100 text-orange-800',
-    documentacao_ok: 'bg-emerald-100 text-emerald-800',
-    documentacao_pendente: 'bg-rose-100 text-rose-800',
-    casos_ok: 'bg-teal-100 text-teal-800',
-    admissao: 'bg-sky-100 text-sky-800',
-    admissao_enviada: 'bg-cyan-100 text-cyan-800',
-    admissao_efetivada: 'bg-green-100 text-green-800',
-    suspensa: 'bg-slate-100 text-slate-800',
-    cancelada: 'bg-red-100 text-red-800',
-    aguardando_unidade: 'bg-yellow-100 text-yellow-800',
-    realizar_convocacao: 'bg-violet-100 text-violet-800',
-    aberta: 'bg-blue-100 text-blue-800',
-    em_triagem: 'bg-purple-100 text-purple-800',
-    entrevista: 'bg-indigo-100 text-indigo-800',
-    finalizada: 'bg-green-100 text-green-800',
-    encerrada: 'bg-gray-100 text-gray-600',
     sem_status: 'bg-gray-100 text-gray-600',
+    publicar_novo_edital: 'bg-blue-100 text-blue-700 border-blue-200',
+    em_edital: 'bg-amber-100 text-amber-700 border-amber-200',
+    em_documentacao: 'bg-orange-100 text-orange-700 border-orange-200',
+    documentacao_ok_azul_pendente: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    documentacao_pendente_azul_ok: 'bg-rose-100 text-rose-700 border-rose-200',
+    em_admissao: 'bg-sky-100 text-sky-700 border-sky-200',
+    admissao_enviada: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+    admissao_efetivada: 'bg-green-100 text-green-700 border-green-200',
+    dispensa: 'bg-slate-100 text-slate-700 border-slate-200',
+    cancelada: 'bg-red-100 text-red-700 border-red-200',
+    aguardar_anuencia: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    movimentacao_interna: 'bg-blue-100 text-blue-700 border-blue-200',
+    vaga_lideranca: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    realizar_convocacao: 'bg-violet-100 text-violet-700 border-violet-200',
+    aberta: 'bg-blue-100 text-blue-700',
+    em_triagem: 'bg-purple-100 text-purple-700',
+    entrevista: 'bg-indigo-100 text-indigo-700',
+    finalizada: 'bg-green-100 text-green-700',
+    encerrada: 'bg-gray-100 text-gray-600',
   };
   return map[status] || 'bg-gray-100 text-gray-600';
 }
@@ -149,32 +146,30 @@ export function normalizeCargo(cargo: string): string {
 }
 
 export function normalizeStatus(statusText: string): StatusVaga {
-  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan') return '' as StatusVaga;
+  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan') return 'sem_status';
   
   const text = statusText.toLowerCase().trim();
   
-  if (text.includes('publicado') && text.includes('edital')) return 'publicado_edital';
+  if (text.includes('publicar') && text.includes('edital')) return 'publicar_novo_edital';
   if (text.includes('em edital')) return 'em_edital';
   if (text.includes('triagem')) return 'em_triagem';
   if (text.includes('entrev')) return 'entrevista';
-  if (text.includes('document') && text.includes('ok')) return 'documentacao_ok';
-  if (text.includes('document') && text.includes('pendente')) return 'documentacao_pendente';
-  if (text.includes('document')) return 'documentacao';
-  if (text.includes('casos ok')) return 'casos_ok';
+  if (text.includes('document') && text.includes('ok') && text.includes('azul')) return 'documentacao_ok_azul_pendente';
+  if (text.includes('document') && text.includes('pendente') && text.includes('azul')) return 'documentacao_pendente_azul_ok';
+  if (text.includes('document')) return 'em_documentacao';
   if (text.includes('admissao enviada')) return 'admissao_enviada';
   if (text.includes('admissao efetivada')) return 'admissao_efetivada';
-  if (text.includes('admissao')) return 'admissao';
+  if (text.includes('admissao')) return 'em_admissao';
   if (text.includes('convoc')) return 'realizar_convocacao';
-  if (text.includes('unidade') || text.includes('aguardando')) return 'aguardando_unidade';
   if (text.includes('lideranca')) return 'vaga_lideranca';
   if (text.includes('movimentacao') || text.includes('interna')) return 'movimentacao_interna';
-  if (text.includes('susp')) return 'suspensa';
   if (text.includes('cancel')) return 'cancelada';
+  if (text.includes('dispensa')) return 'dispensa';
+  if (text.includes('anuencia')) return 'aguardar_anuencia';
   if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'encerrada';
   if (text.includes('aberta') || text.includes('novo') || text.includes('nova')) return 'aberta';
   
-  // Se não bater com nada conhecido, retorna o próprio texto se ele for um status válido, ou vazio
-  return text as StatusVaga;
+  return 'sem_status';
 }
 
 export function normalizeUnitName(name: string): string {

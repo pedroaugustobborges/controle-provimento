@@ -1,4 +1,5 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
   Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle,
-  Database, CheckCircle2
+  Database, CheckCircle2, ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
@@ -54,6 +55,8 @@ import {
 
 export default function VagasPage() {
   const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic } = useVagasStore();
+  const [searchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog } = useAdminStore();
   const navigate = useNavigate();
   const permissions = usePermissions();
@@ -155,39 +158,39 @@ export default function VagasPage() {
   
   // Status summary groupings mapped to dashboard cards
   // Note: These must follow the "independent from status" rule for the base total
+  const countFilaEdital = useMemo(() => {
+    return Object.entries(vacancyStats.byStatus)
+      .filter(([status]) => CATEGORIAS_STATUS.fila_edital.includes(status.toLowerCase()))
+      .reduce((acc, [_, count]) => acc + count, 0);
+  }, [vacancyStats.byStatus]);
+
   const countEmAndamento = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
       .filter(([status]) => CATEGORIAS_STATUS.em_andamento.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countAguardandoUnidade = useMemo(() => {
+  const countConcluidas = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.aguardando_unidade.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.concluidas.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countSemStatus = useMemo(() => {
+  const countExcecoes = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => !status || status === '' || status === 'SEM_STATUS' || status === 'NULL' || status === 'NAN')
+      .filter(([status]) => CATEGORIAS_STATUS.excecoes.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countEncerradas = useMemo(() => {
+  const countEstrategicas = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.encerradas.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.estrategicas.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countLideranca = useMemo(() => {
+  const countConvocacao = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.lideranca.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countMovimentacao = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.movimentacao_interna.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.convocacao.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
@@ -253,7 +256,11 @@ export default function VagasPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {currentTab === 'acompanhamento' ? (
+        <AcompanhamentoEditalList />
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Controle de Provimento</h1>
           <p className="text-sm text-muted-foreground mt-1">Gerenciamento centralizado de vagas, editais e convocações.</p>
@@ -409,46 +416,46 @@ export default function VagasPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-amber-500">
+          <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fila de Editais</p>
+            <p className="text-2xl font-bold text-amber-600">{countFilaEdital}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Andamento</p>
             <p className="text-2xl font-bold text-blue-600">{countEmAndamento}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-amber-500">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Unidade</p>
-            <p className="text-2xl font-bold text-amber-600">{countAguardandoUnidade}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
+            <p className="text-2xl font-bold text-green-600">{countConcluidas}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-indigo-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sem Status</p>
-            <p className="text-2xl font-bold text-slate-600">{countSemStatus}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estratégicas</p>
+            <p className="text-2xl font-bold text-indigo-600">{countEstrategicas}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-violet-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Liderança</p>
-            <p className="text-2xl font-bold text-indigo-600">{countLideranca}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Convocações</p>
+            <p className="text-2xl font-bold text-violet-600">{countConvocacao}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-rose-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Movimentação Int.</p>
-            <p className="text-2xl font-bold text-cyan-600">{countMovimentacao}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Exceções</p>
+            <p className="text-2xl font-bold text-rose-600">{countExcecoes}</p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-emerald-500">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
-            <p className="text-2xl font-bold text-green-600">{countComBanco}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Encerradas</p>
-            <p className="text-2xl font-bold text-emerald-600">{countEncerradas}</p>
+            <p className="text-2xl font-bold text-emerald-600">{countComBanco}</p>
           </CardContent>
         </Card>
       </div>
@@ -642,6 +649,101 @@ export default function VagasPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AcompanhamentoEditalList() {
+  const { vagas } = useVagasStore();
+  const { currentUser } = useAdminStore();
+  const navigate = useNavigate();
+
+  const editaisEmAndamento = useMemo(() => {
+    return vagas.filter(v => {
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      // Regra 4.2: Grupo: edital em andamento
+      const isAndamento = ['em_edital', 'em_documentacao', 'documentacao_ok_azul_pendente', 'documentacao_pendente_azul_ok', 'em_admissao', 'admissao_enviada'].includes(status);
+      
+      if (!isAndamento) return false;
+
+      if (!currentUser?.visualiza_todas_unidades) {
+        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+        if (!userUnidades.includes(normalizeUnitName(v.unidade))) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [vagas, currentUser]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Acompanhamento do Edital</h1>
+          <p className="text-slate-500 mt-1">Acompanhamento operacional das etapas dos editais publicados.</p>
+        </div>
+      </div>
+
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="px-6 py-4 text-left">Unidade</th>
+                  <th className="px-6 py-4 text-left">Cargo</th>
+                  <th className="px-6 py-4 text-left">Nº Edital</th>
+                  <th className="px-6 py-4 text-left">Etapa Atual</th>
+                  <th className="px-6 py-4 text-center">Situação</th>
+                  <th className="px-6 py-4 text-center">Inscritos</th>
+                  <th className="px-6 py-4 text-center">Aprovados</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {editaisEmAndamento.map((v) => (
+                  <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-700">{v.unidade}</td>
+                    <td className="px-6 py-4 font-semibold text-slate-800">{v.cargo}</td>
+                    <td className="px-6 py-4 font-bold text-primary">{v.numero_edital || '—'}</td>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-bold">
+                        {v.acompanhamento?.etapa_atual || 'Não informada'}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                       {v.acompanhamento?.situacao_etapa === 'atrasada' ? (
+                         <Badge className="bg-red-100 text-red-700 border-red-200 font-bold">ATRASADA</Badge>
+                       ) : v.acompanhamento?.situacao_etapa === 'realizada' ? (
+                         <Badge className="bg-green-100 text-green-700 border-green-200 font-bold">REALIZADA</Badge>
+                       ) : (
+                         <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold">PENDENTE</Badge>
+                       )}
+                    </td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.total_inscritos || 0}</td>
+                    <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || 0}</td>
+                    <td className="px-6 py-4 text-right">
+                      <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => navigate(`/vagas/${v.id}?tab=acompanhamento`)}>
+                        Atualizar <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {editaisEmAndamento.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                      Nenhum edital em andamento visível para suas unidades.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

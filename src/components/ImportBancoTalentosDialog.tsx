@@ -605,6 +605,20 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           : 'Importação realizada com sucesso.'
       });
 
+      if (fileId) updateImportedFile(fileId, { status: 'processado' });
+      
+      setImportSummary({ 
+        total_planilha: totalRawRows,
+        total_lidos: allData.length, 
+        total_novos: newBancos.length,
+        total_erros: totalErros,
+        total_vazios: totalRawRows - allData.length,
+        total_alertas_data: 0
+      });
+
+      setStep('summary');
+      setIsProcessing(false);
+      
       if (totalErros > 0) {
         toast.warning(`Importação concluída: ${newBancos.length} salvos, ${totalErros} ignorados por erros.`);
       } else {

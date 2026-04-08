@@ -8,7 +8,7 @@ import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_C
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   normalizeUnitName, countVacancies, getStatusSummary, 
-  getMonthNamePtBrUpper, getValidVacancyBase 
+  getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity 
 } from '@/lib/vagaUtils';
 import { Calendar, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -307,50 +307,84 @@ export default function VagasPage() {
             </Button>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="space-y-1">
-                <p className="text-[10px] text-amber-700 font-bold uppercase">Escopo Atual</p>
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Escopo Selecionado</p>
                 <div className="flex gap-2">
-                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">{auditData.selectedUnit}</Badge>
-                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">{auditData.selectedMonth}</Badge>
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">Unidade: {parityAudit.selUnit}</Badge>
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">Mês: {parityAudit.selMonth}</Badge>
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] text-amber-700 font-bold uppercase">Funil de Paridade</p>
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Contagem de Paridade</p>
                 <div className="text-[11px] font-mono text-amber-900 leading-tight">
-                  <p>Total Importado: {auditData.rawTotal}</p>
-                  <p>Com Cargo (F): {auditData.withCargoCount}</p>
-                  <p>Após Unid (Unit): {auditData.afterUnitCount}</p>
-                  <p className="font-bold text-primary">Final (Metric): {auditData.finalCount}</p>
-                  <p>Tabela (Table): {auditData.tableCount}</p>
+                  <p>Excel Parity Count: <span className="font-bold">{parityAudit.excelCount}</span></p>
+                  <p>App Card Count: <span className="font-bold">{parityAudit.appCount}</span></p>
+                  <p>Diferença: <span className={`font-bold ${parityAudit.difference !== 0 ? 'text-red-600' : 'text-green-600'}`}>{parityAudit.difference}</span></p>
                 </div>
               </div>
-              <div className="md:col-span-2">
-                <p className="text-[10px] text-amber-700 font-bold uppercase mb-1">Amostra de Rejeitados (Parity Check)</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/50 p-1.5 rounded border border-amber-100">
-                    <p className="text-[9px] font-bold text-red-600 mb-1 flex items-center gap-1"><X className="h-2 w-2" /> S/ Cargo (F is Blank)</p>
-                    {auditData.rejectedByCargo.map((r, i) => (
-                      <p key={i} className="text-[8px] text-slate-500 truncate">Linha {r.source_row_index}: {r.unidade}</p>
-                    ))}
-                  </div>
-                  <div className="bg-white/50 p-1.5 rounded border border-amber-100">
-                    <p className="text-[9px] font-bold text-amber-600 mb-1 flex items-center gap-1"><Filter className="h-2 w-2" /> Mismatch Unidade</p>
-                    {auditData.rejectedByUnit.map((r, i) => (
-                      <p key={i} className="text-[8px] text-slate-500 truncate">[{r.unidade}] != {auditData.selectedUnit}</p>
-                    ))}
-                  </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Status de Dados</p>
+                <div className="text-[11px] font-mono text-amber-900 leading-tight">
+                  <p>Linhas na Tabela: {parityAudit.tableCount}</p>
+                  <p>Total de Vagas (Card): {parityAudit.appCount}</p>
                 </div>
               </div>
             </div>
             
-            {auditData.finalCount !== auditData.tableCount && (
-              <Alert className="bg-red-50 border-red-200 py-2">
-                <AlertCircle className="h-3 w-3 text-red-600" />
-                <AlertTitle className="text-[10px] font-bold text-red-800 uppercase">Atenção: Desvio de Paridade</AlertTitle>
-                <AlertDescription className="text-[10px] text-red-700">
-                  O Total de Vagas ({auditData.finalCount}) difere do número de linhas na tabela ({auditData.tableCount}). 
-                  Verifique se há filtros de pesquisa ou status aplicados que não fazem parte da regra base do Excel.
+            <div className="mt-4 border-t border-amber-200 pt-3">
+              <p className="text-[10px] text-amber-700 font-bold uppercase mb-2">Relatório de Divergência (Row-level)</p>
+              {parityAudit.mismatches.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table className="text-[9px]">
+                    <TableHeader>
+                      <TableRow className="h-8 hover:bg-transparent border-amber-200">
+                        <TableHead className="h-8 text-amber-800 font-bold">Record ID</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold">Linha</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold">Unidade</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold">Data</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold">Cargo</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold">Mês Extr.</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold text-center">Excel?</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold text-center">App?</TableHead>
+                        <TableHead className="h-8 text-amber-800 font-bold">Motivo Divergência</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {parityAudit.mismatches.slice(0, 10).map((m, i) => (
+                        <TableRow key={i} className="h-8 hover:bg-amber-100/50 border-amber-100">
+                          <TableCell className="h-8 font-mono">{m.id.substring(0, 8)}...</TableCell>
+                          <TableCell className="h-8 font-bold">{m.source_row_index || '—'}</TableCell>
+                          <TableCell className="h-8">{m.unidade}</TableCell>
+                          <TableCell className="h-8">{m.data_abertura}</TableCell>
+                          <TableCell className="h-8 truncate max-w-[120px]">{m.cargo}</TableCell>
+                          <TableCell className="h-8 font-bold text-blue-700">{m.parsedMonth}</TableCell>
+                          <TableCell className="h-8 text-center">{m.includedByExcelParity ? <CheckCircle2 className="h-3 w-3 text-green-600 inline" /> : <X className="h-3 w-3 text-red-600 inline" />}</TableCell>
+                          <TableCell className="h-8 text-center">{m.includedByApp ? <CheckCircle2 className="h-3 w-3 text-green-600 inline" /> : <X className="h-3 w-3 text-red-600 inline" />}</TableCell>
+                          <TableCell className="h-8 text-red-700 font-medium">{m.rejectionReason || 'Diferença de filtro extra UI'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {parityAudit.mismatches.length > 10 && (
+                    <p className="text-[8px] text-amber-600 mt-1 italic">Mostrando 10 de {parityAudit.mismatches.length} divergências.</p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-green-700 bg-green-50 p-2 rounded border border-green-100">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <p className="text-[10px] font-bold">Paridade 100% confirmada entre regra Excel e App para os filtros atuais.</p>
+                </div>
+              )}
+            </div>
+
+            {(parityAudit.appCount !== parityAudit.tableCount) && (
+              <Alert className="bg-amber-100 border-amber-300 py-2 mt-4">
+                <Info className="h-3 w-3 text-amber-700" />
+                <AlertTitle className="text-[10px] font-bold text-amber-800 uppercase">Informação: Filtros de Visualização Ativos</AlertTitle>
+                <AlertDescription className="text-[10px] text-amber-700">
+                  A tabela ({parityAudit.tableCount}) exibe menos linhas que o total calculado ({parityAudit.appCount}) 
+                  porque filtros de pesquisa ou status estão aplicados. O Total de Vagas ignora estes filtros de busca.
                 </AlertDescription>
               </Alert>
             )}
@@ -362,7 +396,7 @@ export default function VagasPage() {
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
-            <p className="text-2xl font-bold text-slate-800">{auditData.finalCount}</p>
+            <p className="text-2xl font-bold text-slate-800">{parityAudit.appCount}</p>
             <p className="text-[10px] text-slate-400">Regra Excel (Cargo + Mes)</p>
           </CardContent>
         </Card>

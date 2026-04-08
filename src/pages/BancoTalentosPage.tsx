@@ -722,7 +722,7 @@ export default function BancoTalentosPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
+        <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>
               <TableHeader className="bg-slate-50/80">

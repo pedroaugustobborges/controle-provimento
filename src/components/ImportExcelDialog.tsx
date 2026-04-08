@@ -87,6 +87,8 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   admissao: ['admissão', 'admissao', 'data admissão', 'dt admissão'],
   admissao_enviada: ['admissão enviada', 'admissao enviada', 'dt admissão enviada'],
   admissao_efetivada: ['admissão efetivada', 'admissao efetivada', 'dt admissão efetivada'],
+};
+
 const ALLOWED_VAGA_SHEETS = [
   'Vagas - HECAD',
   'Vagas - CRER',
@@ -724,7 +726,17 @@ export function ImportExcelDialog({
                   </AlertDescription>
                 </Alert>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {workbook.SheetNames.map(name => (
+                  {workbook.SheetNames
+                    .filter(name => {
+                      // Se for arquivo de vagas, mostrar apenas as permitidas e esconder proibidas
+                      const isVagaSheet = name.startsWith('Vagas - ');
+                      if (isVagaSheet) {
+                        return ALLOWED_VAGA_SHEETS.includes(name.trim());
+                      }
+                      return !FORBIDDEN_SHEETS.includes(name.trim());
+                    })
+                    .map(name => (
+
                     <button
                       key={name}
                       onClick={() => handleSheetToggle(name)}

@@ -31,7 +31,7 @@ const UNIT_MAPPING: Record<string, string> = {
   'Vagas - HUGOL': 'HUGOL',
   'Vagas - HDS': 'HDS',
   'Vagas - POLICLÍNICA': 'POLICLÍNICA',
-  'Vagas - VITÓRIA': 'SÃO PEDRO',
+  'Vagas - VITÓRIA': 'VITÓRIA', // Will be split between SÃO PEDRO and SUÁ
   'Vagas - JATAÍ': 'JATAÍ',
   'Vagas - TEIA ANÁPOLIS': 'TEIA ANÁPOLIS',
   'Vagas - TEIA CANEDO': 'TEIA CANEDO',
@@ -42,7 +42,7 @@ const UNIT_MAPPING: Record<string, string> = {
 interface ImportExcelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  reprocessFile?: any; // Kept for compatibility with other components
+  reprocessFile?: any; 
 }
 
 export function ImportExcelDialog({ 
@@ -94,7 +94,7 @@ export function ImportExcelDialog({
             if (!sheet) return;
 
             const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-            const unitName = UNIT_MAPPING[sheetName] || sheetName.replace('Vagas - ', '');
+            let unitName = UNIT_MAPPING[sheetName] || sheetName.replace('Vagas - ', '');
             
             for (let i = 3; i < rawRows.length; i++) {
               const row = rawRows[i];
@@ -104,6 +104,17 @@ export function ImportExcelDialog({
               if (!cargo) continue;
 
               totalProcessed++;
+
+              // Refinement for VITÓRIA sheet which contains SÃO PEDRO and SUÁ
+              let finalUnit = unitName;
+              if (sheetName === 'Vagas - VITÓRIA') {
+                const rowString = JSON.stringify(row).toUpperCase();
+                if (rowString.includes('SUÁ') || rowString.includes('SUA')) {
+                  finalUnit = 'SUÁ';
+                } else {
+                  finalUnit = 'SÃO PEDRO';
+                }
+              }
 
               const dataAbertura = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
               const dataRecebimento = row[2] ? convertDateValue(row[2], 'auto').formatted : '';
@@ -117,11 +128,11 @@ export function ImportExcelDialog({
               const obs = String(row[12] || '');
 
               const statusNormalized = normalizeStatus(statusRaw);
-              const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitName, tipoVaga);
+              const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(finalUnit, tipoVaga);
 
               newVagas.push({
                 id: `vaga-${batchId}-${totalProcessed}`,
-                unidade: unitName,
+                unidade: finalUnit,
                 cargo,
                 requisicao,
                 numero_requisicao: requisicao,

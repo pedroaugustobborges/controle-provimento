@@ -320,9 +320,12 @@ export function ImportExcelDialog({
   const detectDuplicates = () => {
     setIsProcessing(true);
     
+    // In strict data-integrity mode, we treat every spreadsheet row as a unique record.
+    // We skip the destructive deduplication logic and proceed to import all rows.
     const allData: any[] = [];
     selectedSheets.forEach(sheetName => {
       const sheet = workbook?.Sheets[sheetName];
+      // Using raw: true to preserve original data exactly as it is in the sheet
       const data = XLSX.utils.sheet_to_json(sheet!, { range: headerRow });
       allData.push(...data.map((row: any) => {
         const mapped: any = { __original: row, __sheet: sheetName };
@@ -331,28 +334,8 @@ export function ImportExcelDialog({
       }));
     });
 
-    const foundDuplicates = allData.filter(newRow => {
-      const newReq = String(newRow.requisicao || newRow.numero_requisicao || '');
-      return vagas.some(existing => 
-        (newReq && (existing.requisicao === newReq || existing.numero_requisicao === newReq)) ||
-        (existing.cargo === newRow.cargo && existing.unidade === newRow.unidade && existing.data_abertura === String(newRow.data_abertura))
-      );
-    }).map(d => {
-      const dReq = String(d.requisicao || d.numero_requisicao || '');
-      return {
-        ...d,
-        __existing: vagas.find(v => (dReq && (v.requisicao === dReq || v.numero_requisicao === dReq))) || 
-                    vagas.find(v => v.cargo === d.cargo && v.unidade === d.unidade)
-      };
-    });
-
-    setDuplicates(foundDuplicates);
-    
-    if (foundDuplicates.length > 0) {
-      setStep('duplicates');
-    } else {
-      processImport(allData);
-    }
+    // Skip the duplicates step and process all rows as independent records
+    processImport(allData);
     setIsProcessing(false);
   };
 
@@ -366,35 +349,48 @@ export function ImportExcelDialog({
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
       
-      // Better status mapping using utility - avoid defaulting to 'aberta' if empty
+      // Preserve status exactly as imported, allow blank
       const importStatus = row.status || row.acompanhamento || row.fase || row.etapa || '';
-      const statusFinal = normalizeStatus(String(importStatus));
+      // Only normalize if there's a value, otherwise keep it as 'sem_status' or blank if the system allows
+      const statusFinal = importStatus ? normalizeStatus(String(importStatus)) : 'sem_status';
+
+      // Preserve dates or keep them blank if they are blank in source
+      const dataAbertura = row.data_abertura ? convertDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted : '';
+      const dataRecebimento = row.data_recebimento ? convertDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted : '';
+
+      const reqValue = String(row.requisicao || row.numero_requisicao || '');
+      const cargoValue = String(row.cargo || '');
+      const vagaValue = String(row.vaga || row.numero_vagas || row.quantidade || '');
+
+      // Create a non-destructive trace key for observability as requested
+      const traceKey = `${reqValue}::${cargoValue}::${vagaValue}`;
 
       return {
-        id: `imp-${Date.now()}-${i}`,
+        id: `row-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
         unidade,
-        data_abertura: convertDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted || now.split('T')[0],
-        data_recebimento: convertDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted || now.split('T')[0],
-        requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
-        numero_requisicao: String(row.requisicao || row.numero_requisicao || `REQ-${Date.now()}-${i}`),
-        cargo: String(row.cargo || 'Não informado'),
+        data_abertura: dataAbertura || '',
+        data_recebimento: dataRecebimento || '',
+        requisicao: reqValue,
+        numero_requisicao: reqValue,
+        cargo: cargoValue,
         numero_vagas: Number(row.numero_vagas || row.quantidade) || 1,
         quantidade: Number(row.numero_vagas || row.quantidade) || 1,
         secao: String(row.secao || ''),
         tipo_vaga: tipoVaga,
         analista_responsavel: analista,
         assistentes: assistentes,
-        status: statusFinal,
-        status_geral: statusFinal,
+        status: statusFinal as StatusVaga,
+        status_geral: statusFinal as StatusVaga,
         tem_banco_valido: false,
         observacoes_internas: String(row.observacoes_internas || row.observacoes || ''),
         origem_importacao: file?.name || 'Excel',
         data_importacao: now,
         lote_importacao: loteId,
+        trace_key: traceKey,
         historico: [{
           id: `h-${Date.now()}-${i}`,
           data: now.split('T')[0],
-          descricao: `Importado via Excel (${file?.name}). Status original: ${importStatus}`,
+          descricao: `Importado via Excel (${file?.name}). Registro original preservado fielmente.`,
           usuario: 'Ana Paula Oliveira'
         }]
       };
@@ -408,7 +404,7 @@ export function ImportExcelDialog({
       total_atualizados: 0,
       total_ignorados: 0,
       total_erros: 0,
-      repeticoes_tratadas: duplicates.length,
+      repeticoes_tratadas: 0, // No longer deduplicating automatically
     };
     
     addImportHistory({
@@ -436,7 +432,7 @@ export function ImportExcelDialog({
     setImportSummary(summary);
     setStep('summary');
     setIsProcessing(false);
-    toast.success('Importação concluída com sucesso!');
+    toast.success(`Importação concluída: ${newVagas.length} registros processados.`);
   };
 
   const handleDuplicateAction = (action: 'new' | 'update' | 'ignore') => {

@@ -79,7 +79,7 @@ export function normalizeCargo(cargo: string): string {
     .trim()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // remove accents
-    .replace(/[-–—]/g, " ") // replace all types of hyphens/dashes with space
+    .replace(/[-–—/\\._,]/g, " ") // replace more separators with space
     .replace(/[^a-z0-9 ]/g, " ") // remove other special chars
     .replace(/\s+/g, " ") // collapse multiple spaces
     .trim();

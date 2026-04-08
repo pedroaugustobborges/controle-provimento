@@ -484,6 +484,91 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+      {/* Technical Audit Section */}
+      <Card className="border-none shadow-md bg-slate-900 text-white overflow-hidden mt-8">
+        <CardHeader className="border-b border-white/10 bg-white/5">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                <ShieldCheck className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black tracking-tight">Auditoria de Dados e Cálculos</CardTitle>
+                <CardDescription className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Verificação em tempo real da base operacional</CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></div>
+              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-tighter">Sincronizado com o Lote Atual</span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] border-l-2 border-primary pl-3">Total de Vagas</h4>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/5 hover:bg-white/[0.08] transition-colors">
+                <p className="text-4xl font-black text-white tracking-tighter">{totalVagas}</p>
+                <p className="text-[10px] text-slate-400 font-bold mt-2 leading-relaxed">
+                  Calculado via <code className="text-emerald-400">vagas.length</code>. 
+                  Reflete o total de registros válidos (com cargo) no lote atual.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] border-l-2 border-amber-500 pl-3">Distribuição Operacional</h4>
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-2.5">
+                {Object.entries(counts).filter(([_, v]) => v > 0).slice(0, 6).map(([k, v]) => (
+                  <div key={k} className="flex justify-between items-center border-b border-white/5 pb-1.5 last:border-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{k.replace(/_/g, ' ')}</span>
+                    <span className="text-xs font-black text-white bg-white/10 px-2 py-0.5 rounded-md">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] border-l-2 border-emerald-500 pl-3">Banco de Talentos</h4>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                <div className="flex justify-between items-end mb-4">
+                  <div>
+                    <p className="text-2xl font-black text-white">{comBancoValido}</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Com Banco Válido</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-black text-slate-500">{totalVagas - comBancoValido}</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase">Sem Cobertura</p>
+                  </div>
+                </div>
+                <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden flex shadow-inner">
+                  <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-1000" style={{ width: `${(comBancoValido / (totalVagas || 1)) * 100}%` }}></div>
+                </div>
+                <p className="text-[9px] text-slate-500 mt-4 leading-tight italic">
+                  * Match por cargo e unidade entre Processos e Banco Geral.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] border-l-2 border-indigo-500 pl-3">Rastreabilidade</h4>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-8 w-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                    <Database className="h-4 w-4 text-indigo-400" />
+                  </div>
+                  <p className="text-xs font-black text-white truncate max-w-[150px]">
+                    {vagas[0]?.origem_importacao || 'Nenhum lote'}
+                  </p>
+                </div>
+                <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
+                  Modo de Substituição Total Ativo. Os números refletem 100% da verdade do último arquivo importado.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

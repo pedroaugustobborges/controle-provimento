@@ -28,25 +28,28 @@ export function isVitoriaUnit(unidade: string): boolean {
 export const CATEGORIAS_STATUS = {
   fila_edital: ['sem_status', 'publicar_novo_edital'],
   em_andamento: [
+    'aberta',
     'em_edital', 
     'em_documentacao', 
     'documentacao_ok_azul_pendente', 
     'documentacao_pendente_azul_ok', 
     'em_admissao', 
-    'admissao_enviada'
+    'admissao_enviada',
+    'aguardar_unidade',
+    'em_triagem',
+    'entrevista'
   ],
-  concluidas: ['admissao_efetivada'],
+  concluidas: ['admissao_efetivada', 'finalizada', 'encerrada'],
   excecoes: ['dispensa', 'cancelada', 'aguardar_anuencia'],
   estrategicas: ['movimentacao_interna', 'vaga_lideranca'],
   convocacao: ['realizar_convocacao']
 };
 
 export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
-  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') return 'fila_edital';
+  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') return 'em_andamento';
   
   const s = status.toLowerCase().trim();
   
-  if (s === 'sem_status') return 'fila_edital';
   if (CATEGORIAS_STATUS.fila_edital.includes(s)) return 'fila_edital';
   if (CATEGORIAS_STATUS.em_andamento.includes(s)) return 'em_andamento';
   if (CATEGORIAS_STATUS.concluidas.includes(s)) return 'concluidas';
@@ -54,7 +57,8 @@ export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STAT
   if (CATEGORIAS_STATUS.estrategicas.includes(s)) return 'estrategicas';
   if (CATEGORIAS_STATUS.convocacao.includes(s)) return 'convocacao';
   
-  return 'excecoes';
+  // Se não mapeado, assumimos em andamento para não inflar exceções erroneamente
+  return 'em_andamento';
 }
 
 

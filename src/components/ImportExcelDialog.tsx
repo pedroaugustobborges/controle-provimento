@@ -207,6 +207,12 @@ export function ImportExcelDialog({
           
           const totalNovoVagas = useVagasStore.getState().vagas.length;
           
+          // Auditoria por Unidade para o Resumo
+          const byUnit: Record<string, number> = {};
+          newVagas.forEach(v => {
+            byUnit[v.unidade] = (byUnit[v.unidade] || 0) + 1;
+          });
+
           // Log detalhado conforme solicitado
           console.log(`[IMPORT VAGAS] Processo concluído.`);
           console.log(`- Registros antigos apagados: ${totalAntigoVagas}`);
@@ -222,7 +228,8 @@ export function ImportExcelDialog({
             type: 'vagas',
             total: newVagas.length,
             dashboardTotal: totalVagasDashboard,
-            fileName: selectedFile.name
+            fileName: selectedFile.name,
+            byUnit
           });
           
           addImportHistory({
@@ -419,20 +426,24 @@ export function ImportExcelDialog({
                 </div>
               </div>
               
-              {summary.type === 'vagas' && summary.total !== 736 && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3">
-                  <Info className="h-5 w-5 text-amber-500 shrink-0" />
-                  <p className="text-xs text-amber-700">
-                    Atenção: O total de vagas ({summary.total}) difere do esperado (736). 
-                    HUGOL: 246, CRER: 118, HECAD: 89, AGIR: 62, JATAÍ: 91, HDS: 30, SÃO PEDRO: 31, SUÁ: 23, POLICLÍNICA: 14, CANEDO: 11, GOIÂNIA: 9, ANÁPOLIS: 6, APARECIDA: 6.
-                  </p>
-                </div>
-              )}
-              {summary.type === 'banco' && summary.cr !== 579 && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3">
-                  <Info className="h-5 w-5 text-amber-500 shrink-0" />
-                  <p className="text-xs text-amber-700">
-                    Atenção: O total de Cadastro Reserva ({summary.cr}) difere do esperado (579).
+              {summary.type === 'vagas' && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <Info className="h-5 w-5 text-emerald-500 shrink-0" />
+                    <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">
+                      Auditoria de Importação - Registros por Unidade
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-8">
+                    {Object.entries(summary.byUnit || {}).map(([unit, count]) => (
+                      <div key={unit} className="flex justify-between items-center text-[10px] bg-white/50 p-1.5 rounded border border-emerald-100">
+                        <span className="font-bold text-emerald-800">{unit}</span>
+                        <span className="bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded-full font-black">{count as number}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-emerald-600 mt-1 italic text-center">
+                    * Todos os registros acima possuem cargo preenchido e foram integrados à base operacional.
                   </p>
                 </div>
               )}

@@ -31,7 +31,22 @@ export type StatusConvocacao =
 export type StatusEdital = 'Nova vaga' | 'Aguardando processo' | 'Aguardando edital' | 'Aguardando processo e edital' | 'Em andamento' | 'Encerrada';
 export type StatusPublicacao = 'pendente' | 'publicado' | 'encerrado';
 export type StatusValidacao = 'pendente' | 'aprovado' | 'reprovado';
-export type EtapaEdital = 'inscricoes' | 'triagem' | 'prova' | 'entrevista' | 'resultado' | 'encerrado';
+export type EtapaEdital = 
+  | 'inscricoes' 
+  | 'triagem' 
+  | 'resultado_da_triagem'
+  | 'avaliacao_curricular'
+  | 'avaliacao_especifica_online'
+  | 'resultado_da_avaliacao_especifica_online'
+  | 'entrevistas' 
+  | 'resultado_final' 
+  | 'convocacao_do_edital'
+  | 'encerramento'
+  | 'banco_gerado'
+  | 'sem_exito'
+  | 'aguardar_anuencia'
+  | 'publicar_novo_edital';
+
 
 export interface VagaCronograma {
   data_inscricao?: string;
@@ -315,11 +330,20 @@ export const STATUS_CONVOCACAO_LABELS: Record<StatusConvocacao, string> = {
 export const ETAPA_LABELS: Record<EtapaEdital, string> = {
   inscricoes: 'Inscrições',
   triagem: 'Triagem',
-  prova: 'Prova',
-  entrevista: 'Entrevista',
-  resultado: 'Resultado',
-  encerrado: 'Encerrado',
+  resultado_da_triagem: 'Resultado da Triagem',
+  avaliacao_curricular: 'Avaliação Curricular',
+  avaliacao_especifica_online: 'Avaliação Específica Online',
+  resultado_da_avaliacao_especifica_online: 'Res. Aval. Específica Online',
+  entrevistas: 'Entrevistas',
+  resultado_final: 'Resultado Final',
+  convocacao_do_edital: 'Convocação do Edital',
+  encerramento: 'Encerramento',
+  banco_gerado: 'Banco Gerado',
+  sem_exito: 'Sem Êxito',
+  aguardar_anuencia: 'Aguardar Anuência',
+  publicar_novo_edital: 'Publicar Novo Edital',
 };
+
 
 export const STATUS_EDITAL_COLORS: Record<StatusEdital, string> = {
   'Nova vaga': 'bg-blue-100 text-blue-700 border-blue-200',

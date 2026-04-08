@@ -1105,7 +1105,7 @@ export function ImportExcelDialog({
   );
 }
 
-function PlusIcon(props: any) {
+function Plus(props: any) {
   return (
     <svg
       {...props}

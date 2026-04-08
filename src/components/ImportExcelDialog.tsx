@@ -13,7 +13,7 @@ import { useVagasStore } from '@/store/vagasStore';
 import { Vaga, StatusVaga, TipoVaga, BancoTalentos } from '@/types/vaga';
 import { getResponsavelPorUnidade } from '@/data/equipe';
 import { toast } from 'sonner';
-import { normalizeStatus } from '@/lib/vagaUtils';
+import { normalizeStatus, getValidVacancyBase } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 
 type Step = 'select' | 'processing' | 'summary';

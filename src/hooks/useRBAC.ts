@@ -34,7 +34,10 @@ export function useRBAC() {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      return roles?.map(r => (r.perfil as any).nome) as UserProfile[];
+      
+      // Typed response
+      const roles = (rolesData as any[] || []).map(r => r.perfil?.nome) as UserProfile[];
+      return roles;
     },
   });
 

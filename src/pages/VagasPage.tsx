@@ -58,6 +58,7 @@ export default function VagasPage() {
   const [filterLideranca, setFilterLideranca] = useState('all');
 
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 

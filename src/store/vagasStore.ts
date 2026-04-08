@@ -89,34 +89,55 @@ export const useVagasStore = create<VagasState>()(
       getEditalByVaga: (vagaId) => get().editais.find((e) => e.vaga_id === vagaId),
       getValidacaoByVaga: (vagaId) => get().validacoes.find((v) => v.vaga_id === vagaId),
       getBancoByVaga: (vagaId) => {
-        const vaga = get().vagas.find(v => v.id === vagaId);
+        const state = get();
+        const vaga = state.vagas.find(v => v.id === vagaId);
         if (!vaga) return undefined;
         
-        // Try by ID first
+        // 1. Try by ID first
         if (vaga.banco_id) {
-          const banco = get().bancos.find(b => b.id === vaga.banco_id);
+          const banco = state.bancos.find(b => b.id === vaga.banco_id);
           if (banco) return banco;
         }
+
+        // 2. Try by process number or edital number (Exact match)
+        if (vaga.numero_processo || vaga.numero_edital) {
+          const matchedByNumber = state.bancos.find(b => 
+            (vaga.numero_processo && (b.numero_processo === vaga.numero_processo || b.numero_processo_seletivo === vaga.numero_processo)) ||
+            (vaga.numero_edital && b.numero_edital === vaga.numero_edital)
+          );
+          if (matchedByNumber) return matchedByNumber;
+        }
         
-        const goianiaUnits = ['CRER', 'HUGOL', 'HECAD', 'HDS'];
-        const vitoriaUnits = ['SUÁ', 'São Pedro', 'Vitória']; // Vitória (SUÁ/São Pedro)
+        const normalizeStr = (str: string) => {
+          if (!str) return '';
+          return str.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        };
+
+        const goianiaUnits = ['CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 'CEALCON'].map(normalizeStr);
+        const vitoriaUnits = ['SUA', 'SÃO PEDRO', 'VITÓRIA', 'UPA'].map(normalizeStr);
+        
+        const normalizedVagaCargo = normalizeStr(vaga.cargo);
+        const normalizedVagaUnidade = normalizeStr(vaga.unidade);
         
         // Fallback: match by cargo and unit scope
-        return get().bancos.find(b => {
-          if (b.cargo.toLowerCase() !== vaga.cargo.toLowerCase()) return false;
+        return state.bancos.find(b => {
+          // Status check
           if (b.status === 'vencido') return false;
           
-          const bancoUnidade = b.unidade;
-          const vagaUnidade = vaga.unidade;
+          // Cargo match (normalized)
+          const normalizedBancoCargo = normalizeStr(b.cargo);
+          if (normalizedBancoCargo !== normalizedVagaCargo) return false;
           
-          // Se o banco for da unidade "Goiânia" → válido para CRER, HUGOL, HECAD e HDS.
-          if (bancoUnidade === 'Goiânia' && goianiaUnits.includes(vagaUnidade)) return true;
+          const normalizedBancoUnidade = normalizeStr(b.unidade);
+          
+          // Se o banco for da unidade "Goiânia" → válido para as unidades de Goiânia
+          if (normalizedBancoUnidade === 'goiania' && goianiaUnits.includes(normalizedVagaUnidade)) return true;
           
           // Se o banco for da unidade "UPA" ou "Vitória" → válido para Vitória (SUÁ/São Pedro).
-          if ((bancoUnidade === 'UPA' || bancoUnidade === 'Vitória') && vitoriaUnits.includes(vagaUnidade)) return true;
+          if ((normalizedBancoUnidade === 'upa' || normalizedBancoUnidade === 'vitoria') && vitoriaUnits.includes(normalizedVagaUnidade)) return true;
           
-          // Para todas as outras unidades → o banco só é válido se a unidade do banco corresponder exatamente à unidade da vaga.
-          return bancoUnidade === vagaUnidade;
+          // Match exato (normalizado)
+          return normalizedBancoUnidade === normalizedVagaUnidade;
         });
       },
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),

@@ -228,11 +228,13 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           });
           setWorkbook(wb);
           
-          // DEFAULT: Select "BANCO GERAL" sheet if it exists
-          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.toUpperCase() === 'BANCO GERAL');
+          // RULE: ONLY Select "BANCO GERAL" sheet
+          const targetSheetName = 'BANCO GERAL';
+          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.toUpperCase() === targetSheetName);
           if (bancoGeralIndex !== -1) {
             setSelectedSheets([wb.SheetNames[bancoGeralIndex]]);
           } else {
+            // If not found, we still need to select something to avoid breaking, but we'll show a warning later
             setSelectedSheets([wb.SheetNames[0]]);
           }
 

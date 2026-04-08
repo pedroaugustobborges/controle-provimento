@@ -35,7 +35,9 @@ export default function BancoTalentosPage() {
   const { bancos, importHistory, importedFiles, deleteBanco } = useVagasStore();
   const { currentUser } = useAdminStore();
   const permissions = usePermissions();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'list');
   const [unidadeFilter, setUnidadeFilter] = useState('todas');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [convocadosSearch, setConvocadosSearch] = useState('');

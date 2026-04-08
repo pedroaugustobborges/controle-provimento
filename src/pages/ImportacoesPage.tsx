@@ -42,6 +42,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { usePermissions } from '@/hooks/usePermissions';
+import { ShieldAlert } from 'lucide-react';
 
 export default function ImportacoesPage() {
   const { importHistory, importedFiles, deleteImportedFile } = useVagasStore();
@@ -49,6 +51,22 @@ export default function ImportacoesPage() {
   const [reprocessFile, setReprocessFile] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);
+  const permissions = usePermissions();
+
+  if (!permissions.canImport()) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4 text-center">
+        <div className="h-16 w-16 rounded-2xl bg-destructive/10 flex items-center justify-center">
+          <ShieldAlert className="h-8 w-8 text-destructive" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Acesso Restrito</h2>
+        <p className="text-muted-foreground max-w-md">
+          Você não possui permissão para acessar o módulo de importações. 
+          Solicite acesso ao administrador do sistema.
+        </p>
+      </div>
+    );
+  }
 
   const handleDeleteFile = () => {
     if (fileParaExcluir) {

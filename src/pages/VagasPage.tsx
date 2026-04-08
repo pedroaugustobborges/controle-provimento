@@ -78,12 +78,15 @@ export default function VagasPage() {
     }
   };
 
-  const allUnidades = useMemo(() => [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort(), [vagas]);
+  const allUnidades = useMemo(() => [...new Set(vagas.map((v) => normalizeUnitName(v.unidade)))].filter(Boolean).sort(), [vagas]);
   
-  // Restriction by unit
-  const visibleUnidades = useMemo(() => currentUser?.visualiza_todas_unidades 
-    ? allUnidades 
-    : (currentUser?.unidades_vinculadas || []), [currentUser, allUnidades]);
+  // Restriction by unit - normalization for consistent comparison
+  const visibleUnidades = useMemo(() => {
+    const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+    return currentUser?.visualiza_todas_unidades 
+      ? allUnidades 
+      : userUnidades;
+  }, [currentUser, allUnidades]);
 
   const unidades = useMemo(() => {
     return allUnidades.filter(u => visibleUnidades.includes(u)).sort();

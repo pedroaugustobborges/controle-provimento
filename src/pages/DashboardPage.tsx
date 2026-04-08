@@ -66,7 +66,14 @@ export default function DashboardPage() {
   }, [allVagas]);
 
   // Stats calculation - Use simple count (1 record = 1 vacancy) to avoid double counting
-  const totalVagas = vagas.length;
+  // We only count active/open vacancies for the "Total" to reflect the operational reality
+  const totalVagas = useMemo(() => 
+    vagas.filter(v => {
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      const cat = getCategoriaStatus(status);
+      return cat === 'em_andamento' || cat === 'aguardando_unidade' || cat === 'lideranca' || cat === 'movimentacao_interna';
+    }).length
+  , [vagas]);
   
   const counts = useMemo(() => {
     const acc = {

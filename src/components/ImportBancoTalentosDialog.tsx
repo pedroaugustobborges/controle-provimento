@@ -479,6 +479,13 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       });
 
       const newBancos: BancoTalentos[] = [];
+      let totalErros = 0;
+      let missingFieldsRows = 0;
+      const detailedErrors: any[] = [];
+
+      allData.forEach((mapped, i) => {
+        let hasMissingRequired = false;
+        const currentLine = mapped.__line;
 
         // RULE: Process status correctly from Column H
         // User requirement: "filtre STATUS=CONVOCADO"
@@ -502,7 +509,6 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         }
         
         // Ensure that CONVOCADO rows are always included if the user requested it
-        // The previous logic was returning; if statusImportRaw was empty which might have skipped rows
         if (!statusImportRaw && !mapped.nome) return; // Only skip if both are empty
 
         // Validar campos obrigatórios
@@ -538,14 +544,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           unidade = 'POLICLÍNICA';
         }
 
-
         newBancos.push({
           id: `imp-bt-${Date.now()}-${i}`,
           unidade: unidade,
           cargo: mapped.cargo || 'Não informado',
           cargo_normalizado: normalizeCargo(mapped.cargo || ''),
           secao: mapped.secao || '',
-
           numero_edital: mapped.numero_edital || '000/0000',
           numero_processo: mapped.numero_processo || '',
           nome: mapped.nome || '',

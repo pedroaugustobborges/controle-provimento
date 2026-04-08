@@ -58,6 +58,25 @@ export default function BancoTalentosPage() {
       setBancoParaExcluir(null);
     }
   };
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['list', 'convocados', 'history'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+    
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearch(searchParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams(prev => {
+      prev.set('tab', value);
+      return prev;
+    });
+  };
 
   const filtered = useMemo(() => {
     return bancos.filter(b => {

@@ -443,6 +443,43 @@ export default function ImportacoesPage() {
         reprocessFile={reprocessFile}
       />
 
+      <AlertDialog open={!!batchParaExcluir} onOpenChange={(open) => !open && setBatchParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Excluir lote de importação?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Você está prestes a excluir o lote <strong>{batchParaExcluir?.arquivo || batchParaExcluir?.id}</strong>.
+              </p>
+              <div className="bg-destructive/5 p-3 rounded-lg border border-destructive/10 text-destructive text-xs space-y-1">
+                <p className="font-bold flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" /> Atenção:
+                </p>
+                <ul className="list-disc list-inside">
+                  <li>Todos os registros vinculados a este lote serão removidos.</li>
+                  <li>Dados em outros módulos que dependem desta importação serão afetados.</li>
+                  <li>Esta ação é definitiva e será registrada no log de auditoria.</li>
+                </ul>
+              </div>
+              {batchParaExcluir && (
+                <p className="text-xs text-slate-500 italic">
+                  Estimativa: {(batchParaExcluir.total_novos || 0) + (batchParaExcluir.total_atualizados || 0)} registros serão removidos.
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteBatch} className="bg-destructive text-white hover:bg-destructive/90">
+              Confirmar Exclusão do Lote
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

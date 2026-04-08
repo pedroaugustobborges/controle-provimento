@@ -325,55 +325,6 @@ export default function VagasPage() {
                     <td className="px-4 py-3 text-center font-bold text-slate-700">
                       {v.numero_vagas || v.quantidade || 0}
                     </td>
-                    <td className="px-4 py-3">
-                      {(() => {
-                        const banco = getBancoByVaga(v.id);
-                        if (!banco) {
-                          return (
-                            <div className="flex items-center gap-1.5 text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 w-fit">
-                              <X className="h-3 w-3" />
-                              <span className="text-[10px] font-bold">Não tem banco</span>
-                            </div>
-                          );
-                        }
-                        
-                        const statusColors = {
-                          valido: 'text-green-600 bg-green-50 border-green-100',
-                          prorrogado: 'text-blue-600 bg-blue-50 border-blue-100',
-                          vencido: 'text-red-600 bg-red-50 border-red-100',
-                          nenhum: 'text-slate-400 bg-slate-50 border-slate-100'
-                        };
-                        
-                        const statusLabels = {
-                          valido: 'Tem banco válido',
-                          prorrogado: 'Banco prorrogado',
-                          vencido: 'Banco vencido',
-                          nenhum: 'Não tem banco'
-                        };
-                        
-                        return (
-                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border w-fit ${statusColors[banco.status] || statusColors.nenhum}`}>
-                            <Database className="h-3 w-3" />
-                            <span className="text-[10px] font-bold">{statusLabels[banco.status] || statusLabels.nenhum}</span>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={v.status || v.status_geral || 'aberta'} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col">
-                        <span className="text-[11px] text-slate-700 font-bold">{v.numero_edital || '—'}</span>
-                        <span className="text-[9px] text-slate-400 font-mono">{v.numero_processo || '—'}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant="outline" className="font-bold text-[10px] bg-slate-50 border-slate-200 text-slate-600">
-                        {calcDiasAberto(v.data_abertura, v.data_encerramento)}d
-                      </Badge>
-                    </td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

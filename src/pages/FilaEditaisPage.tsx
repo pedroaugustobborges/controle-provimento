@@ -33,7 +33,6 @@ export default function FilaEditaisPage() {
 
   const pendingVagas = useMemo(() => {
     return vagas.filter(v => {
-      // Normalização para consistência
       const vUnitNormalized = normalizeUnitName(v.unidade);
       
       // Unit access restriction
@@ -44,20 +43,23 @@ export default function FilaEditaisPage() {
         }
       }
 
-      // Show only vacancies that need process or notice number, or recently imported
-      const isPending = !v.numero_processo || !v.numero_edital || v.status_edital !== 'Encerrada';
+      // Regra 4.1: Grupo: fila de edital / início de processo
+      // Status: sem status, publicar novo edital
+      const status = (v.status || v.status_geral || 'sem_status').toLowerCase();
+      const isFilaEdital = status === 'sem_status' || status === 'publicar_novo_edital';
       
+      if (!isFilaEdital) return false;
+
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
         v.cargo.toLowerCase().includes(searchTerm) || 
         (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);
       
       const matchUnidade = filterUnidade === 'all' || vUnitNormalized === filterUnidade;
-      const matchStatus = filterStatus === 'all' || v.status_edital === filterStatus;
 
-      return isPending && matchSearch && matchUnidade && matchStatus;
+      return matchSearch && matchUnidade;
     });
-  }, [vagas, currentUser, search, filterUnidade, filterStatus]);
+  }, [vagas, currentUser, search, filterUnidade]);
 
   const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
   const statusOptions: StatusEdital[] = [

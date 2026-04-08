@@ -51,16 +51,35 @@ export default function DashboardPage() {
   const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
   
   const totalVagas = vagas.length;
-  const emAndamento = vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length;
-  const aguardandoUnidade = vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length;
-  const semStatusCount = vagas.filter((v) => {
-    const s = (v.status || v.status_geral) as string;
-    return !s || s === '' || s === 'sem_status';
-  }).length;
-  const liderancaCount = vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length;
-  const movimentacaoCount = vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length;
-  const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;
-  const suspensasCanceladas = vagas.filter((v) => CATEGORIAS_STATUS.outros.includes((v.status || v.status_geral) as string)).length;
+  
+  const counts = useMemo(() => {
+    const acc = {
+      em_andamento: 0,
+      aguardando_unidade: 0,
+      sem_status: 0,
+      lideranca: 0,
+      movimentacao_interna: 0,
+      encerradas: 0,
+      outros: 0,
+    };
+    
+    vagas.forEach(v => {
+      const status = (v.status || v.status_geral) as string;
+      const cat = getCategoriaStatus(status);
+      acc[cat]++;
+    });
+    
+    return acc;
+  }, [vagas]);
+
+  const emAndamento = counts.em_andamento;
+  const aguardandoUnidade = counts.aguardando_unidade;
+  const semStatusCount = counts.sem_status;
+  const liderancaCount = counts.lideranca;
+  const movimentacaoCount = counts.movimentacao_interna;
+  const encerradas = counts.encerradas;
+  const suspensasCanceladas = counts.outros;
+
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
 

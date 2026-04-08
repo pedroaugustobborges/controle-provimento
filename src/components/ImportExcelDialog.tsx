@@ -46,13 +46,14 @@ const DATE_FIELDS = ['data_abertura', 'data_recebimento', 'publicacao', 'admissa
 
 const REQUIRED_FIELDS = [
   { key: 'unidade', label: 'Unidade' },
-  { key: 'data_abertura', label: 'Data Abertura' },
-  { key: 'requisicao', label: 'Nº Requisição' },
   { key: 'cargo', label: 'Cargo' },
   { key: 'numero_vagas', label: 'Nº Vagas' },
 ];
 
 const OPTIONAL_FIELDS = [
+  { key: 'data_abertura', label: 'Data Abertura' },
+  { key: 'requisicao', label: 'Nº Requisição' },
+...
   { key: 'data_recebimento', label: 'Data Recebimento' },
   { key: 'publicacao', label: 'Data Publicação' },
   { key: 'admissao', label: 'Data Admissão' },

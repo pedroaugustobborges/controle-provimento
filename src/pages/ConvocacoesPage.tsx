@@ -184,7 +184,7 @@ export default function ConvocacoesPage() {
                     <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
                     <TableCell className="text-slate-600 font-medium">{v.unidade}</TableCell>
                     <TableCell className="text-center">
-                      {v.tem_banco_valido ? (
+                      {getBancoByVaga(v.id) ? (
                         <div className="flex items-center justify-center gap-1.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 mx-auto w-fit">
                           <Database className="h-3 w-3" />
                           <span className="text-[10px] font-bold">Válido</span>

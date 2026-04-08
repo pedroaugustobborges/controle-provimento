@@ -323,28 +323,57 @@ export function ImportExcelDialog({
     setIsProcessing(true);
     
     // In strict data-integrity mode, we treat every spreadsheet row as a unique record.
-    // We skip the destructive deduplication logic and proceed to import all rows.
     const allData: any[] = [];
+    const loteId = `LOTE-${Date.now()}`;
+    const now = new Date().toISOString();
+    
     selectedSheets.forEach(sheetName => {
       const sheet = workbook?.Sheets[sheetName];
-      // Using raw: true to preserve original data exactly as it is in the sheet
-      const data = XLSX.utils.sheet_to_json(sheet!, { range: headerRow });
-      allData.push(...data.map((row: any) => {
-        const mapped: any = { __original: row, __sheet: sheetName };
-        mappings.forEach(m => { if (m.excel) mapped[m.system] = row[m.excel]; });
-        return mapped;
-      }));
+      if (!sheet) return;
+      
+      // Using header: 1 to get raw arrays and avoid any object-key-collision or skipping logic
+      const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+      
+      // Headers are at headerRow
+      const headers = rawRows[headerRow] || [];
+      
+      // Process all rows AFTER the header row
+      for (let i = headerRow + 1; i < rawRows.length; i++) {
+        const row = rawRows[i];
+        if (!row || row.length === 0) continue;
+        
+        // Check if the row is truly empty (all cells are null/undefined/empty string)
+        const isEmpty = row.every(cell => cell == null || String(cell).trim() === '');
+        if (isEmpty) continue;
+
+        const mapped: any = { 
+          __sheet: sheetName,
+          __source_row_index: i + 1, // 1-indexed for business reference
+          __import_batch_id: loteId,
+          __raw_row_hash: btoa(unescape(encodeURIComponent(JSON.stringify(row)))), // Simple unique-ish hash for diagnostics
+        };
+
+        // Map columns by index based on identified headers
+        mappings.forEach(m => {
+          if (m.excel) {
+            const colIndex = headers.indexOf(m.excel);
+            if (colIndex !== -1) {
+              mapped[m.system] = row[colIndex];
+            }
+          }
+        });
+        
+        allData.push(mapped);
+      }
     });
 
     // Skip the duplicates step and process all rows as independent records
-    processImport(allData);
+    processImport(allData, loteId, now);
     setIsProcessing(false);
   };
 
-  const processImport = (dataToImport: any[]) => {
+  const processImport = (dataToImport: any[], loteId: string, now: string) => {
     setIsProcessing(true);
-    const now = new Date().toISOString();
-    const loteId = `LOTE-${Date.now()}`;
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
       const unidade = String(row.unidade || '');
@@ -353,10 +382,9 @@ export function ImportExcelDialog({
       
       // Preserve status exactly as imported, allow blank
       const importStatus = row.status || row.acompanhamento || row.fase || row.etapa || '';
-      // Only normalize if there's a value, otherwise keep it as 'sem_status' or blank if the system allows
       const statusFinal = importStatus ? normalizeStatus(String(importStatus)) : 'sem_status';
 
-      // Preserve dates or keep them blank if they are blank in source
+      // Use column mapping formats for dates
       const dataAbertura = row.data_abertura ? convertDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted : '';
       const dataRecebimento = row.data_recebimento ? convertDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted : '';
 
@@ -364,11 +392,11 @@ export function ImportExcelDialog({
       const cargoValue = String(row.cargo || '');
       const vagaValue = String(row.vaga || row.numero_vagas || row.quantidade || '');
 
-      // Create a non-destructive trace key for observability as requested
+      // Trace key is for diagnostic only, not uniqueness
       const traceKey = `${reqValue}::${cargoValue}::${vagaValue}`;
 
       return {
-        id: `row-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `vaga-${loteId}-${i}-${Math.random().toString(36).substr(2, 5)}`,
         unidade,
         data_abertura: dataAbertura || '',
         data_recebimento: dataRecebimento || '',
@@ -390,10 +418,13 @@ export function ImportExcelDialog({
         data_importacao: now,
         lote_importacao: loteId,
         trace_key: traceKey,
+        source_row_index: row.__source_row_index,
+        import_batch_id: row.__import_batch_id,
+        raw_row_hash: row.__raw_row_hash,
         historico: [{
-          id: `h-${Date.now()}-${i}`,
+          id: `h-${loteId}-${i}`,
           data: now.split('T')[0],
-          descricao: `Importado via Excel (${file?.name}). Registro original preservado fielmente.`,
+          descricao: `Importado via Excel (${file?.name}). Registro original preservado fielmente (Linha ${row.__source_row_index}).`,
           usuario: 'Ana Paula Oliveira'
         }]
       };
@@ -407,7 +438,7 @@ export function ImportExcelDialog({
       total_atualizados: 0,
       total_ignorados: 0,
       total_erros: 0,
-      repeticoes_tratadas: 0, // No longer deduplicating automatically
+      repeticoes_tratadas: 0, 
     };
     
     addImportHistory({

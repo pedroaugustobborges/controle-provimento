@@ -189,9 +189,9 @@ export default function VagasPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pendentes</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Início</p>
             <p className="text-2xl font-bold text-red-500">
               {vagas.filter(v => {
                 const s = v.status || v.status_geral;

@@ -115,7 +115,7 @@ export const useVagasStore = create<VagasState>()(
           }
         }
         
-        // Fallback: match by cargo and unit scope
+        // Fallback: match by cargo and unit scope - relaxed matching
         const normalizedVagaCargo = normalizeCargo(vaga.cargo);
         const normalizedVagaUnidade = normalizeCargo(vaga.unidade);
         
@@ -123,32 +123,35 @@ export const useVagasStore = create<VagasState>()(
           if (!cargo) return [];
           return normalizeCargo(cargo)
             .split(' ')
-            .filter(word => word.length > 2 && !['das', 'dos', 'com', 'para', 'pela', 'pelo', 'uma', 'uns', 'nas', 'nos'].includes(word))
+            .filter(word => word.length > 2 && !['das', 'dos', 'com', 'para', 'pela', 'pelo', 'uma', 'uns', 'nas', 'nos', 'est', 'estadual', 'hospital'].includes(word))
             .map(word => {
+              // Common abbreviations
               if (word === 'tec') return 'tecnico';
               if (word === 'aux') return 'auxiliar';
               if (word === 'esp') return 'especialista';
               if (word === 'enfer') return 'enfermeiro';
               if (word === 'psic') return 'psicologo';
               if (word === 'fisio') return 'fisioterapeuta';
+              if (word === 'enf') return 'enfermeiro';
+              if (word === 'adm') return 'administrativo';
               return word;
             });
         };
         
         const vagaTokens = getCargoTokens(vaga.cargo);
 
-        // Define regional units for matching
+        // Define regional units for matching - expanded
         const goianiaUnits = [
           'crer', 'hugol', 'hecad', 'hds', 'corporativo', 'policlinica', 
           'cealcon', 'hugo', 'heapa', 'heg', 'hdt', 'goiania', 'agir',
           'hospital central', 'central', 'maternidade', 'hemmnsl', 'hospital estadual',
           'cora', 'hecon', 'heslv', 'hetrin', 'heel', 'heja', 'herp', 'hgg', 'hevana', 'hemo', 'hemonucleo', 'ipasgo',
-          'cmmnsl', 'ceal', 'huapa', 'hurre'
+          'cmmnsl', 'ceal', 'huapa', 'hurre', 'sede', 'go'
         ];
         
         const vitoriaUnits = [
           'sua', 'sao pedro', 'vitoria', 'upa', 'es', 'espirito santo', 'serra', 'cariacica', 'vila velha',
-          'asas', 'hospital estadual', 'dr jayme', 'hesvv', 'cre'
+          'asas', 'hospital estadual', 'dr jayme', 'hesvv', 'cre', 'vix'
         ];
 
         const found = state.bancos.find(b => {
@@ -161,20 +164,23 @@ export const useVagasStore = create<VagasState>()(
           
           const commonTokens = vagaTokens.filter(t => bancoTokens.some(bt => bt.includes(t) || t.includes(bt)));
           const hasTokenMatch = vagaTokens.length > 0 && (
-            commonTokens.length >= Math.ceil(vagaTokens.length * 0.5) ||
+            commonTokens.length >= Math.ceil(vagaTokens.length * 0.4) || // Reduced threshold
             (vagaTokens.length === 1 && commonTokens.length === 1)
           );
 
           if (!hasStringMatch && !hasTokenMatch) return false;
           
-          const normalizedBancoUnidade = normalizeCargo(b.unidade);
+          const normalizedBancoUnidade = normalizeCargo(b.unidade || '');
           
           if (normalizedBancoUnidade === normalizedVagaUnidade) return true;
           
+          // Relaxed unit matching
+          if (normalizedBancoUnidade.includes('corporativo') || normalizedBancoUnidade.includes('agir')) return true;
+
           const bancoUnitTokens = normalizedBancoUnidade.split(' ');
           const vagaUnitTokens = normalizedVagaUnidade.split(' ');
-          const hasPartialUnitMatch = vagaUnitTokens.some(vt => bancoUnitTokens.includes(vt)) ||
-                                     bancoUnitTokens.some(bt => vagaUnitTokens.includes(bt));
+          const hasPartialUnitMatch = vagaUnitTokens.some(vt => vt.length > 2 && bancoUnitTokens.includes(vt)) ||
+                                     bancoUnitTokens.some(bt => bt.length > 2 && vagaUnitTokens.includes(bt));
           
           if (hasPartialUnitMatch) return true;
           
@@ -227,20 +233,21 @@ export const useVagasStore = create<VagasState>()(
       name: 'hospital-recruitment-store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Persistir dados essenciais e bancos de talentos
-        vagas: state.vagas.length > 500 ? state.vagas.slice(0, 500) : state.vagas,
-        bancos: state.bancos.length > 1000 ? state.bancos.slice(0, 1000) : state.bancos,
+        // Persistir dados essenciais e bancos de talentos - aumentado limite para evitar perda de dados
+        vagas: state.vagas.length > 2000 ? state.vagas.slice(0, 2000) : state.vagas,
+        bancos: state.bancos.length > 5000 ? state.bancos.slice(0, 5000) : state.bancos,
         editais: state.editais,
         validacoes: state.validacoes,
+        convocacoes: state.convocacoes,
         importHistory: state.importHistory.map(h => ({
           ...h,
           relatorio_erros: undefined,
           mapeamento_aplicado: undefined
-        })).slice(0, 20),
+        })).slice(0, 50),
         importedFiles: state.importedFiles.map(f => ({
           ...f,
           content: undefined
-        })).slice(0, 10),
+        })).slice(0, 20),
       }),
     }
   )

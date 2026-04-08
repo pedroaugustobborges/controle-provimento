@@ -50,7 +50,7 @@ export default function DashboardPage() {
   const emAndamento = vagas.filter((v) => {
     const s = (v.status || v.status_geral) as string;
     return [
-      'em_triagem', 'entrevista', 'documentacao', 'documentacao_ok', 
+      'aberta', 'em_triagem', 'entrevista', 'documentacao', 'documentacao_ok', 
       'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 
       'realizar_convocacao', 'aguardando_unidade', 'vaga_lideranca', 'movimentacao_interna'
     ].includes(s);

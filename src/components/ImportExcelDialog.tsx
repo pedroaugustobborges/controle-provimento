@@ -384,30 +384,37 @@ export function ImportExcelDialog({
     const loteId = `LOTE-${Date.now()}`;
     const now = new Date().toISOString();
     
-    selectedSheets.forEach(sheetName => {
+    // CRITICAL: Filter sheets strictly based on user requirement
+    const validSheets = selectedSheets.filter(name => 
+      ALLOWED_VAGA_SHEETS.includes(name.trim()) && !FORBIDDEN_SHEETS.includes(name.trim())
+    );
+
+    validSheets.forEach(sheetName => {
       const sheet = workbook?.Sheets[sheetName];
       if (!sheet) return;
       
       // Using header: 1 to get raw arrays and avoid any object-key-collision or skipping logic
       const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
       
-      // Headers are at headerRow
+      // Headers are at headerRow (index 2 for line 3)
       const headers = rawRows[headerRow] || [];
       
-      // Process all rows AFTER the header row
-      for (let i = headerRow + 1; i < rawRows.length; i++) {
+      // CRITICAL: Process all rows starting from line 4 (index 3)
+      // Requirement: "conte as linhas que têm valor preenchido na coluna F (CARGO), a partir da linha 4"
+      const startRow = 3; 
+      for (let i = startRow; i < rawRows.length; i++) {
         const row = rawRows[i];
-        if (!row || row.length === 0) continue;
+        if (!row) continue;
         
-        // Check if the row is truly empty (all cells are null/undefined/empty string)
-        const isEmpty = row.every(cell => cell == null || String(cell).trim() === '');
-        if (isEmpty) continue;
+        // Count ONLY if column F (index 5) has CARGO value
+        const cargoValue = row[5]; 
+        if (cargoValue == null || String(cargoValue).trim() === '') continue;
 
         const mapped: any = { 
           __sheet: sheetName,
           __source_row_index: i + 1, // 1-indexed for business reference
           __import_batch_id: loteId,
-          __raw_row_hash: btoa(unescape(encodeURIComponent(JSON.stringify(row)))), // Simple unique-ish hash for diagnostics
+          __raw_row_hash: btoa(unescape(encodeURIComponent(JSON.stringify(row)))),
         };
 
         // Map columns by index based on identified headers
@@ -419,12 +426,17 @@ export function ImportExcelDialog({
             }
           }
         });
+
+        // Ensure cargo is set from column F if mapping failed or to be double sure
+        if (!mapped.cargo && cargoValue) {
+          mapped.cargo = String(cargoValue).trim();
+        }
         
         allData.push(mapped);
       }
     });
 
-    // Skip the duplicates step and process all rows as independent records
+    // Process all rows as independent records
     processImport(allData, loteId, now);
     setIsProcessing(false);
   };
@@ -433,16 +445,17 @@ export function ImportExcelDialog({
     setIsProcessing(true);
     const currentNow = now || new Date().toISOString();
     const currentLoteId = loteId || `LOTE-${Date.now()}`;
-    
+
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
-      let rawUnidade = String(row.unidade || '');
+      let rawUnidade = String(row.unidade || '').trim();
       
-      // FALLBACK: If unidade column is empty, try to extract it from the sheet name
-      if (!rawUnidade && row.__sheet && row.__sheet.includes('Vagas - ')) {
+      // CRITICAL: Force unit from sheet name if it's one of the known "Vagas - " tabs
+      // This ensures HUGOL=246, CRER=118, etc. counts match the specific tabs
+      if (row.__sheet && row.__sheet.includes('Vagas - ')) {
         rawUnidade = row.__sheet.replace('Vagas - ', '').trim();
       }
       
-      const unidade = rawUnidade; // Keep the original string as much as possible for parity
+      const unidade = rawUnidade; // Keep original sheet-based name for strict parity
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
 

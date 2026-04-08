@@ -130,11 +130,12 @@ export const useVagasStore = create<VagasState>()(
           'CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 
           'CEALCON', 'HUGO', 'HEAPA', 'HEG', 'HDT', 'GOIANIA', 'AGIR',
           'HOSPITAL CENTRAL', 'CENTRAL', 'MATERNIDADE', 'HEMMNSL', 'HOSPITAL ESTADUAL',
-          'CORA', 'HECON', 'HESLV', 'HETRIN', 'HEEL', 'HEJA', 'HERP', 'GOIAS', 'GO'
+          'CORA', 'HECON', 'HESLV', 'HETRIN', 'HEEL', 'HEJA', 'HERP', 'GOIAS', 'GO',
+          'HGG', 'HOSPITAL GERAL'
         ].map(normalizeStr);
         
         const vitoriaUnits = [
-          'SUA', 'SAO PEDRO', 'VITORIA', 'UPA', 'ES', 'ESPIRITO SANTO', 'SERRA', 'CARIACICA', 'VILA VELHA'
+          'SUA', 'SAO PEDRO', 'VITORIA', 'UPA', 'ES', 'ESPIRITO SANTO', 'SERRA', 'CARIACICA', 'VILA VELHA', 'VITORIA'
         ].map(normalizeStr);
         
         const getCargoTokens = (cargo: string) => {

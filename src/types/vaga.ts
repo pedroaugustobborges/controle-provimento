@@ -224,6 +224,7 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   entrevista: 'Entrevista',
   finalizada: 'Finalizada',
   encerrada: 'Encerrada',
+  sem_status: 'Sem Status',
 };
 
 export const STATUS_LABELS = STATUS_VAGA_LABELS;

@@ -283,15 +283,25 @@ export default function DashboardPage() {
               {useMemo(() => {
                 const distribution = new Map<string, { count: number, group: string }>();
                 
-                vagas.forEach(v => {
-                  const status = (v.status || v.status_geral || 'SEM STATUS') as string;
-                  const groupKey = getCategoriaStatus(status);
-                  const groupLabel = stats.find(s => s.label.toLowerCase().includes(groupKey.replace('_', ' ')))?.label || groupKey;
-                  
-                  const current = distribution.get(status) || { count: 0, group: groupLabel };
-                  current.count++;
-                  distribution.set(status, current);
-                });
+                  vagas.forEach(v => {
+                    const status = (v.status || v.status_geral || 'SEM STATUS') as string;
+                    const groupKey = getCategoriaStatus(status);
+                    
+                    // Improved matching for labels
+                    const groupLabelMap: Record<string, string> = {
+                      fila_edital: 'Fila de Editais',
+                      em_andamento: 'Em Andamento',
+                      concluidas: 'Concluídas',
+                      excecoes: 'Exceções',
+                      estrategicas: 'Estratégicas',
+                      convocacao: 'Convocações'
+                    };
+                    const groupLabel = groupLabelMap[groupKey] || groupKey;
+                    
+                    const current = distribution.get(status) || { count: 0, group: groupLabel };
+                    current.count++;
+                    distribution.set(status, current);
+                  });
                 
                 return Array.from(distribution.entries())
                   .sort((a, b) => b[1].count - a[1].count)

@@ -206,6 +206,7 @@ export default function VagasPage() {
   const clearFilters = () => {
     setSearch('');
     setFilterUnidade('all');
+    setFilterMes('all');
     setFilterStatus('all');
     setFilterTipo('all');
     setFilterAnalista('all');
@@ -213,7 +214,8 @@ export default function VagasPage() {
     setFilterLideranca('all');
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all';
+  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all';
+
 
   return (
     <div className="space-y-4">

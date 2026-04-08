@@ -4,7 +4,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
-import { calcDiasAberto, formatDate } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS } from '@/lib/vagaUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -110,6 +110,14 @@ export default function VagasPage() {
     return matchSearch && matchUnidade && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
   }), [vagas, currentUser, search, filterUnidade, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
 
+  const countEmAndamento = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countAguardandoUnidade = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countEncerradas = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countLideranca = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countMovimentacao = useMemo(() => vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length, [vagas]);
+  const countComBanco = useMemo(() => vagas.filter(v => getBancoByVaga(v.id)).length, [vagas, getBancoByVaga]);
+
+
   const clearFilters = () => {
     setSearch('');
     setFilterUnidade('all');
@@ -160,7 +168,7 @@ export default function VagasPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
@@ -169,35 +177,38 @@ export default function VagasPage() {
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Andamento</p>
+            <p className="text-2xl font-bold text-blue-600">{countEmAndamento}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-amber-500">
+          <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Unidade</p>
+            <p className="text-2xl font-bold text-amber-600">{countAguardandoUnidade}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white">
+          <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Liderança</p>
+            <p className="text-2xl font-bold text-indigo-600">{countLideranca}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white">
+          <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Movimentação Int.</p>
+            <p className="text-2xl font-bold text-cyan-600">{countMovimentacao}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white">
+          <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
-            <p className="text-2xl font-bold text-green-600">{vagas.filter(v => getBancoByVaga(v.id)).length}</p>
+            <p className="text-2xl font-bold text-green-600">{countComBanco}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Edital</p>
-            <p className="text-2xl font-bold text-blue-600">
-              {vagas.filter(v => (v.status || v.status_geral) === 'em_edital' || (v.status || v.status_geral) === 'publicado_edital').length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Convocação</p>
-            <p className="text-2xl font-bold text-amber-600">
-              {vagas.filter(v => (v.status || v.status_geral) === 'realizar_convocacao').length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Início</p>
-            <p className="text-2xl font-bold text-red-500">
-              {vagas.filter(v => {
-                const s = v.status || v.status_geral;
-                return s === 'aberta' || s === 'aguardando_unidade';
-              }).length}
-            </p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Encerradas</p>
+            <p className="text-2xl font-bold text-emerald-600">{countEncerradas}</p>
           </CardContent>
         </Card>
       </div>

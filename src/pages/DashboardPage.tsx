@@ -3,7 +3,7 @@ import { useVagasStore } from '@/store/vagasStore';
 import { EQUIPE_POR_UNIDADE } from '@/data/equipe';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { calcDiasAberto, formatDate } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, CATEGORIAS_STATUS } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS } from '@/types/vaga';
 import { 
   Briefcase, 
@@ -24,7 +24,9 @@ import {
   ChevronRight,
   ShieldCheck,
   CheckCircle,
-  Database
+  Database,
+  Star,
+  RefreshCw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -47,27 +49,23 @@ export default function DashboardPage() {
   const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
   
   const totalVagas = vagas.length;
-  const emAndamento = vagas.filter((v) => {
-    const s = (v.status || v.status_geral) as string;
-    return [
-      'aberta', 'em_triagem', 'entrevista', 'documentacao', 'documentacao_ok', 
-      'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 
-      'realizar_convocacao', 'aguardando_unidade', 'vaga_lideranca', 'movimentacao_interna'
-    ].includes(s);
-  }).length;
-  const emEdital = getStatusCount('em_edital') + getStatusCount('publicado_edital');
+  const emAndamento = vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length;
+  const aguardandoUnidade = vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length;
+  const liderancaCount = vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length;
+  const movimentacaoCount = vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length;
+  const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
-  const encerradas = vagas.filter((v) => ['encerrada', 'finalizada', 'admissao_efetivada'].includes((v.status || v.status_geral) as string)).length;
   const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
-
   const convocacoesHoje = 12; // Mock data for now
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Em Edital', value: emEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Aguardando Unidade', value: aguardandoUnidade, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Liderança', value: liderancaCount, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Movimentação Int.', value: movimentacaoCount, icon: RefreshCw, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-slate-600', bg: 'bg-slate-100' },
     { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Convocações do Dia', value: convocacoesHoje, icon: Users, color: 'text-slate-600', bg: 'bg-slate-100' },
   ];
@@ -117,7 +115,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid - More Dynamic Design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-9 gap-5">
         {stats.map((stat, idx) => (
           <Card key={idx} className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden bg-white">
             <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>

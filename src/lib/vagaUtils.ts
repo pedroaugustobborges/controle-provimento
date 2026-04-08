@@ -1,5 +1,28 @@
 import { StatusVaga, StatusValidacao, EtapaEdital, StatusPublicacao } from '@/types/vaga';
 
+export const CATEGORIAS_STATUS = {
+  em_andamento: [
+    'em_edital', 'publicado_edital', 'em_triagem', 'entrevista', 
+    'documentacao', 'documentacao_ok', 'documentacao_pendente', 
+    'casos_ok', 'admissao', 'admissao_enviada', 'realizar_convocacao'
+  ],
+  aguardando_unidade: ['aguardando_unidade', 'aberta'],
+  encerradas: ['admissao_efetivada', 'finalizada', 'encerrada'],
+  lideranca: ['vaga_lideranca'],
+  movimentacao_interna: ['movimentacao_interna'],
+  outros: ['suspensa', 'cancelada']
+};
+
+export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
+  if (CATEGORIAS_STATUS.em_andamento.includes(status)) return 'em_andamento';
+  if (CATEGORIAS_STATUS.aguardando_unidade.includes(status)) return 'aguardando_unidade';
+  if (CATEGORIAS_STATUS.encerradas.includes(status)) return 'encerradas';
+  if (CATEGORIAS_STATUS.lideranca.includes(status)) return 'lideranca';
+  if (CATEGORIAS_STATUS.movimentacao_interna.includes(status)) return 'movimentacao_interna';
+  return 'outros';
+}
+
+
 export function getStatusColor(status: StatusVaga): string {
   const map: Record<StatusVaga, string> = {
     movimentacao_interna: 'bg-blue-100 text-blue-800',
@@ -90,19 +113,26 @@ export function normalizeStatus(statusText: string): StatusVaga {
   
   const text = statusText.toLowerCase().trim();
   
-  if (text.includes('aberta') || text.includes('novo')) return 'aberta';
-  if (text.includes('edital') || text.includes('publicado')) return 'em_edital';
-  if (text.includes('convoc')) return 'realizar_convocacao';
-  if (text.includes('admissao') || text.includes('admitido')) return 'admissao';
-  if (text.includes('document')) return 'documentacao';
-  if (text.includes('cancel')) return 'cancelada';
-  if (text.includes('susp')) return 'suspensa';
-  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'finalizada';
+  if (text.includes('publicado') && text.includes('edital')) return 'publicado_edital';
+  if (text.includes('em edital')) return 'em_edital';
   if (text.includes('triagem')) return 'em_triagem';
   if (text.includes('entrev')) return 'entrevista';
+  if (text.includes('document') && text.includes('ok')) return 'documentacao_ok';
+  if (text.includes('document') && text.includes('pendente')) return 'documentacao_pendente';
+  if (text.includes('document')) return 'documentacao';
+  if (text.includes('casos ok')) return 'casos_ok';
+  if (text.includes('admissao enviada')) return 'admissao_enviada';
+  if (text.includes('admissao efetivada')) return 'admissao_efetivada';
+  if (text.includes('admissao')) return 'admissao';
+  if (text.includes('convoc')) return 'realizar_convocacao';
+  if (text.includes('unidade')) return 'aguardando_unidade';
   if (text.includes('lideranca')) return 'vaga_lideranca';
   if (text.includes('movimentacao') || text.includes('interna')) return 'movimentacao_interna';
-  if (text.includes('unidade')) return 'aguardando_unidade';
+  if (text.includes('susp')) return 'suspensa';
+  if (text.includes('cancel')) return 'cancelada';
+  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'encerrada';
+  if (text.includes('aberta') || text.includes('novo')) return 'aberta';
   
+  // Se não bater com nada conhecido, mantém como aberta por padrão ou tenta ser mais inteligente
   return 'aberta';
 }

@@ -88,7 +88,7 @@ export default function DashboardPage() {
     vagas.forEach(v => {
       const unitKey = isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade;
       const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
-
+      
       current.total += 1;
       if (v.status === 'aberta' || v.status_geral === 'aberta') {
         current.abertas += 1;
@@ -106,7 +106,6 @@ export default function DashboardPage() {
 
     return Array.from(groupedMap.entries()).map(([name, data]) => ({
       name: name.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim().toUpperCase(),
-
       total: data.total,
       abertas: data.abertas,
     })).sort((a, b) => b.total - a.total);

@@ -146,7 +146,7 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
 // parseDateValue was removed in favor of convertDateValue from dateImportUtils
 
 export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { addBancos, addImportHistory, addImportedFile, updateImportedFile } = useVagasStore();
+  const { addBancos, addImportHistory, addImportedFile, updateImportedFile, clearBancos } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
@@ -584,6 +584,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         return;
       }
 
+      clearBancos();
       addBancos(newBancos);
       
       addImportHistory({

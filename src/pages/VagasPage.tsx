@@ -171,19 +171,28 @@ export default function VagasPage() {
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Edital</p>
-            <p className="text-2xl font-bold text-blue-600">{vagas.filter(v => v.status === 'em_edital' || v.status === 'publicado_edital').length}</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {vagas.filter(v => (v.status || v.status_geral) === 'em_edital' || (v.status || v.status_geral) === 'publicado_edital').length}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Convocação</p>
-            <p className="text-2xl font-bold text-amber-600">{vagas.filter(v => v.status === 'realizar_convocacao').length}</p>
+            <p className="text-2xl font-bold text-amber-600">
+              {vagas.filter(v => (v.status || v.status_geral) === 'realizar_convocacao').length}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pendentes</p>
-            <p className="text-2xl font-bold text-red-500">{vagas.filter(v => v.status === 'aberta' || v.status === 'aguardando_unidade').length}</p>
+            <p className="text-2xl font-bold text-red-500">
+              {vagas.filter(v => {
+                const s = v.status || v.status_geral;
+                return s === 'aberta' || s === 'aguardando_unidade';
+              }).length}
+            </p>
           </CardContent>
         </Card>
       </div>

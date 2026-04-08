@@ -44,8 +44,15 @@ export default function DashboardPage() {
   // Stats calculation
   const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
   
-  const abertas = getStatusCount('aberta');
-  const emAndamento = vagas.filter((v) => ['em_triagem', 'entrevista', 'documentacao', 'realizar_convocacao'].includes((v.status || v.status_geral) as string)).length;
+  const totalVagas = vagas.length;
+  const emAndamento = vagas.filter((v) => {
+    const s = (v.status || v.status_geral) as string;
+    return [
+      'em_triagem', 'entrevista', 'documentacao', 'documentacao_ok', 
+      'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 
+      'realizar_convocacao', 'aguardando_unidade', 'vaga_lideranca', 'movimentacao_interna'
+    ].includes(s);
+  }).length;
   const emEdital = getStatusCount('em_edital') + getStatusCount('publicado_edital');
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const encerradas = vagas.filter((v) => ['encerrada', 'finalizada', 'admissao_efetivada'].includes((v.status || v.status_geral) as string)).length;
@@ -54,7 +61,7 @@ export default function DashboardPage() {
   const convocacoesHoje = 12; // Mock data for now
 
   const stats = [
-    { label: 'Vagas Abertas', value: abertas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Em Edital', value: emEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },

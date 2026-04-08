@@ -12,6 +12,8 @@ import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { toast } from 'sonner';
 import { BancoTalentos } from '@/types/vaga';
+import { normalizeCargo } from '@/lib/vagaUtils';
+
 
 const formSchema = z.object({
   unidade: z.string().min(1, 'Unidade é obrigatória'),
@@ -80,7 +82,9 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
       id: `banco-${Date.now()}`,
       unidade: values.unidade,
       cargo: values.cargo,
+      cargo_normalizado: normalizeCargo(values.cargo),
       secao: values.secao || '',
+
       numero_edital: values.numero_edital,
       numero_processo: values.numero_processo,
       nome: values.nome,

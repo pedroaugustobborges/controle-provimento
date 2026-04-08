@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Briefcase, Building, FileText, ClipboardList } from 'lucide-react';
-import { formatDate } from '@/lib/vagaUtils';
+import { formatDate, normalizeCargo } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -57,9 +58,11 @@ export default function BancoTalentosPage() {
         return false;
       }
       
-      const matchSearch = b.cargo.toLowerCase().includes(search.toLowerCase()) || 
-        b.unidade.toLowerCase().includes(search.toLowerCase()) ||
-        b.numero_edital.toLowerCase().includes(search.toLowerCase());
+      const normalizedSearch = normalizeCargo(search);
+      const matchSearch = normalizeCargo(b.cargo).includes(normalizedSearch) || 
+        normalizeCargo(b.unidade).includes(normalizedSearch) ||
+        normalizeCargo(b.numero_edital).includes(normalizedSearch);
+
         
       const matchUnidade = unidadeFilter === 'todas' || b.unidade === unidadeFilter;
       const matchStatus = statusFilter === 'todos' || b.status === statusFilter;
@@ -68,7 +71,65 @@ export default function BancoTalentosPage() {
     });
   }, [bancos, currentUser, search, unidadeFilter, statusFilter]);
 
+  const groupedBancos = useMemo(() => {
+    const groups: Record<string, {
+      id: string;
+      edital: string;
+      unidade: string;
+      cargo: string;
+      cargoNormalizado: string;
+      status: string;
+      validade: string;
+      isProrrogado: boolean;
+      qtdBanco: string | number;
+      candidatos: BancoTalentos[];
+    }> = {};
+
+    filtered.forEach(b => {
+      const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
+      const key = `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
+
+      if (!groups[key]) {
+        groups[key] = {
+          id: b.id,
+          edital: b.numero_edital,
+          unidade: b.unidade,
+          cargo: b.cargo,
+          cargoNormalizado: cargoNorm,
+          status: b.status,
+          validade: b.nova_data_validade || b.data_validade,
+          isProrrogado: b.is_prorrogado,
+          qtdBanco: b.quantidade_banco || 0,
+          candidatos: []
+        };
+      }
+      
+      // Keep the most recent valid status/dates for the group if needed
+      // But for simplicity, we use the first one found as representative
+      
+      groups[key].candidatos.push(b);
+    });
+
+    return Object.values(groups).sort((a, b) => a.cargo.localeCompare(b.cargo));
+  }, [filtered]);
+
+  const selectedGroupCandidates = useMemo(() => {
+    if (!selectedBanco) return [];
+    const cargoNorm = selectedBanco.cargo_normalizado || normalizeCargo(selectedBanco.cargo);
+    return filtered.filter(b => 
+      b.numero_edital === selectedBanco.numero_edital && 
+      b.unidade === selectedBanco.unidade && 
+      (b.cargo_normalizado || normalizeCargo(b.cargo)) === cargoNorm
+    ).sort((a, b) => {
+      const classA = typeof a.classificacao === 'number' ? a.classificacao : parseInt(String(a.classificacao)) || 999;
+      const classB = typeof b.classificacao === 'number' ? b.classificacao : parseInt(String(b.classificacao)) || 999;
+      return classA - classB;
+    });
+  }, [selectedBanco, filtered]);
+
   const historyBT = useMemo(() => {
+
+
     return importHistory.filter(h => h.tipo_importacao === 'banco');
   }, [importHistory]);
 
@@ -131,8 +192,9 @@ export default function BancoTalentosPage() {
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <SheetTitle className="text-xl font-bold">{selectedBanco?.nome || "Detalhes do Candidato"}</SheetTitle>
-                <SheetDescription>Informações detalhadas do banco de talentos.</SheetDescription>
+                <SheetTitle className="text-xl font-bold">{selectedBanco?.cargo || "Detalhes do Banco"}</SheetTitle>
+                <SheetDescription>Banco total: <span className="font-bold text-primary">{selectedBanco?.quantidade_banco || 'Não informado'}</span></SheetDescription>
+
               </div>
             </div>
             {selectedBanco && (
@@ -145,30 +207,53 @@ export default function BancoTalentosPage() {
 
           {selectedBanco && (
             <div className="space-y-6">
-              {/* Identificação */}
+              {/* Candidatos */}
+              <section>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2"><User className="h-3 w-3" /> Candidatos Classificados ({selectedGroupCandidates.length})</div>
+                </h3>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {selectedGroupCandidates.map((c, idx) => (
+                    <div key={c.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-7 w-7 bg-white border border-slate-200 rounded-full flex items-center justify-center text-[10px] font-bold text-primary shadow-sm">
+                          {c.classificacao}°
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">{c.nome || "Não identificado"}</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Classificação original</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(c.status)}
+                      </div>
+                    </div>
+                  ))}
+                  {selectedGroupCandidates.length === 0 && (
+                    <p className="text-sm text-slate-400 italic text-center py-4">Nenhum candidato listado.</p>
+                  )}
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Identificação do Grupo */}
               <section>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <User className="h-3 w-3" /> Identificação
+                  <Building className="h-3 w-3" /> Unidade e Cargo
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Candidato</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.nome || "Não informado"}</p>
-                  </div>
-                  <div className="space-y-1">
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.unidade}</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco?.unidade}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Cargo</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.cargo}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Seção</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.secao || "Não informado"}</p>
+                    <p className="text-sm font-semibold text-slate-800">{selectedBanco?.cargo}</p>
                   </div>
                 </div>
               </section>
+
 
               <Separator />
 
@@ -396,24 +481,29 @@ export default function BancoTalentosPage() {
                     <TableHead className="text-[10px] font-bold uppercase">Unidade</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Validade</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase">Qtd. Banco</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((b) => (
-                    <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                      <TableCell className="font-bold text-primary text-xs">{b.numero_edital}</TableCell>
+                   {groupedBancos.map((group) => (
+                    <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
                       <TableCell>
-                        <div className="font-semibold text-slate-800">{b.cargo}</div>
-                        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{b.secao}</div>
+                        <div className="font-semibold text-slate-800">{group.cargo}</div>
+                        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
-                      <TableCell className="text-slate-600 font-medium">{b.unidade}</TableCell>
-                      <TableCell>{getStatusBadge(b.status)}</TableCell>
+                      <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                      <TableCell>{getStatusBadge(group.status)}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-700">{formatDate(b.nova_data_validade || b.data_validade)}</span>
-                          {b.is_prorrogado && <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Prorrogado</span>}
+                          <span className="text-sm font-bold text-slate-700">{formatDate(group.validade)}</span>
+                          {group.isProrrogado && <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Prorrogado</span>}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-bold bg-slate-50">{group.qtdBanco}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
@@ -422,11 +512,11 @@ export default function BancoTalentosPage() {
                             size="sm" 
                             className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
                             onClick={() => {
-                              setSelectedBanco(b);
+                              setSelectedBanco(group.candidatos[0]);
                               setIsDetailsOpen(true);
                             }}
                           >
-                            Detalhes
+                            Detalhes ({group.candidatos.length})
                           </Button>
                           {currentUser?.perfil === 'Admin' && (
                             <Button 
@@ -434,7 +524,7 @@ export default function BancoTalentosPage() {
                               size="icon" 
                               className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                               onClick={() => {
-                                setBancoParaExcluir(b.id);
+                                setBancoParaExcluir(group.id);
                                 setIsDeleteDialogOpen(true);
                               }}
                             >
@@ -445,7 +535,8 @@ export default function BancoTalentosPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {filtered.length === 0 && (
+                  {groupedBancos.length === 0 && (
+
                     <TableRow>
                       <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">
                         Nenhum banco de talentos encontrado para os filtros aplicados.

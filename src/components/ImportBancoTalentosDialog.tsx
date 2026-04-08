@@ -17,6 +17,8 @@ import { useVagasStore } from '@/store/vagasStore';
 import { BancoTalentos } from '@/types/vaga';
 import { format, isValid } from 'date-fns';
 import { toast } from 'sonner';
+import { normalizeCargo } from '@/lib/vagaUtils';
+
 import { 
   detectColumnFormat, 
   convertDateValue, 
@@ -532,7 +534,9 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           id: `imp-bt-${Date.now()}-${i}`,
           unidade: mapped.unidade || 'HGG',
           cargo: mapped.cargo || 'Não informado',
+          cargo_normalizado: normalizeCargo(mapped.cargo || ''),
           secao: mapped.secao || '',
+
           numero_edital: mapped.numero_edital || '000/0000',
           numero_processo: mapped.numero_processo || '',
           nome: mapped.nome || '',

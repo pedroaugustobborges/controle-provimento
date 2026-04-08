@@ -161,7 +161,7 @@ export const useVagasStore = create<VagasState>()(
           // but usually the logic filters it. The UI in VagasPage expects it to be returned to show 'vencido'.
           // if (b.status === 'vencido') return false;
           
-          const normalizedBancoCargo = normalizeStr(b.cargo);
+          const normalizedBancoCargo = normalizeCargo(b.cargo);
           const bancoTokens = getCargoTokens(b.cargo);
           
           // Cargo matching logic:

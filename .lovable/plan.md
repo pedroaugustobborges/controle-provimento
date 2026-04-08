@@ -1,20 +1,28 @@
 
 
-## Correção do erro `Select.Item` com valor vazio
+## Plano de Correção: Erro `RangeError: Invalid time value`
 
 ### Problema
-O erro `A <Select.Item /> must have a value prop that is not an empty string` ocorre no `ImportExcelDialog.tsx` e possivelmente no `VagasPage.tsx`, quando headers do Excel ou valores de filtro são strings vazias.
+O erro ocorre em `src/components/ImportExcelDialog.tsx` na linha 897, onde `format(new Date(row.data_abertura), 'dd/MM/yyyy')` é chamado com um valor de data inválido (ex: serial Excel, string mal formatada). Isso causa tela branca na aplicação.
 
-### Correções
+### Correção
 
-**1. `src/components/ImportExcelDialog.tsx`**
-- Na renderização dos headers como `<SelectItem>`, filtrar headers vazios:
-  - Onde aparece `{headers.map((h, i) => (<SelectItem key={...} value={h}>` — adicionar `.filter(h => h && h.trim() !== '')` antes do `.map()`
+**Arquivo: `src/components/ImportExcelDialog.tsx` (linha 897)**
 
-**2. `src/pages/VagasPage.tsx`**  
-- Nos filtros de Analista e Assistente, filtrar valores vazios:
-  - `analistas` e `assistentes` arrays — adicionar `.filter(Boolean)` para remover strings vazias
-  - Também em `unidades`
+Substituir:
+```tsx
+{row.data_abertura ? format(new Date(row.data_abertura), 'dd/MM/yyyy') : '-'}
+```
 
-Ambas as correções são simples: adicionar `.filter(Boolean)` ou `.filter(h => h)` antes dos `.map()` que geram `<SelectItem>`.
+Por uma versão segura com validação:
+```tsx
+{row.data_abertura ? (() => {
+  const d = new Date(row.data_abertura);
+  return isValid(d) ? format(d, 'dd/MM/yyyy') : String(row.data_abertura);
+})() : '-'}
+```
+
+A função `isValid` do `date-fns` já está importada no arquivo (linha 21). Basta adicionar a verificação antes de chamar `format()` para evitar o `RangeError` quando o valor não é uma data válida.
+
+Isso é uma correção de uma linha que resolve a tela branca imediatamente.
 

@@ -427,6 +427,7 @@ export function ImportExcelDialog({
         source_row_index: row.__source_row_index || i + 1,
         import_batch_id: row.__import_batch_id || currentLoteId,
         raw_row_hash: row.__raw_row_hash || '',
+        source_sheet: row.__sheet || '',
         historico: [{
           id: `h-${currentNow.replace(/[:.-]/g, '')}-${i}`,
           data: currentNow.split('T')[0],

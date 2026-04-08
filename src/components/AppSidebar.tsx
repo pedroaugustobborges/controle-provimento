@@ -21,7 +21,10 @@ import { usePermissions } from '@/hooks/usePermissions';
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
   { title: 'Vagas', url: '/vagas', icon: Briefcase },
-  { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users },
+  { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users, subMenu: [
+    { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
+    { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
+  ] },
   { title: 'Fila de Editais', url: '/fila-editais', icon: TrendingUp },
   { title: 'Convocações', url: '/convocacoes', icon: Calendar },
 ];

@@ -19,6 +19,7 @@ export class DatabaseService {
         ...updateData,
         updated_by: userId,
         updated_at: new Date().toISOString(),
+        version: (version || 0) + 1, // Increment version for next time
       })
       .eq('id', id)
       .eq('version', version)
@@ -72,44 +73,59 @@ export class DatabaseService {
     newData: any[],
     userId: string
   ): Promise<{ count: number; error: Error | null }> {
-    // In a real environment, we would call an RPC to do this in a single transaction
-    // Using supabase.rpc('import_by_substitution', { tipo, data, userId })
-    
     try {
       // Step 1: Count existing
+      const tableName = tipo === 'vagas' ? 'vagas' : 'banco_candidatos';
       const { count: countBefore } = await supabase
-        .from(tipo === 'vagas' ? 'vagas' : 'banco_candidatos')
+        .from(tableName)
         .select('*', { count: 'exact', head: true });
 
-      // Step 2: Delete existing
+      // Step 2: Record import log
+      const { data: logData, error: logError } = await supabase.from('importacoes').insert({
+        tipo,
+        usuario_id: userId,
+        status: 'processando',
+        quantidade_apagada: countBefore || 0,
+      }).select().single();
+
+      if (logError) throw logError;
+
+      // Step 3: Delete existing
+      // IMPORTANT: In a production environment, this should be wrapped in a transaction (RPC)
       const { error: deleteError } = await supabase
-        .from(tipo === 'vagas' ? 'vagas' : 'banco_candidatos')
+        .from(tableName)
         .delete()
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
 
       if (deleteError) throw deleteError;
 
-      // Step 3: Insert new
-      const { data: inserted, error: insertError } = await supabase
-        .from(tipo === 'vagas' ? 'vagas' : 'banco_candidatos')
-        .insert(newData.map(item => ({ ...item, created_by: userId, updated_by: userId })))
-        .select();
+      // Step 4: Insert new in chunks to avoid request size limits
+      const chunkSize = 500;
+      let insertedCount = 0;
+      
+      for (let i = 0; i < newData.length; i += chunkSize) {
+        const chunk = newData.slice(i, i + chunkSize);
+        const { data: inserted, error: insertError } = await supabase
+          .from(tableName)
+          .insert(chunk.map(item => ({ ...item, created_by: userId, updated_by: userId })))
+          .select();
 
-      if (insertError) throw insertError;
+        if (insertError) throw insertError;
+        insertedCount += inserted?.length || 0;
+      }
 
-      // Step 4: Record import log
-      await supabase.from('importacoes').insert({
-        tipo,
-        usuario_id: userId,
-        quantidade_apagada: countBefore || 0,
-        quantidade_inserida: inserted?.length || 0
-      });
+      // Step 5: Update import log to completed
+      await supabase.from('importacoes').update({
+        status: 'concluido',
+        quantidade_inserida: insertedCount
+      }).eq('id', logData.id);
 
       // Audit
-      this.logAudit('IMPORT', 'all', `IMPORT_${tipo.toUpperCase()}`, userId, { countBefore }, { countAfter: inserted?.length });
+      this.logAudit('IMPORT', 'all', `IMPORT_${tipo.toUpperCase()}`, userId, { countBefore }, { countAfter: insertedCount });
 
-      return { count: inserted?.length || 0, error: null };
+      return { count: insertedCount, error: null };
     } catch (err: any) {
+      console.error(`Import failed for ${tipo}:`, err);
       return { count: 0, error: err };
     }
   }

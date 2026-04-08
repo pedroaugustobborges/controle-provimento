@@ -177,10 +177,12 @@ export function ImportExcelDialog({
             }
           });
 
-          // Regra de Ouro: SUBSTITUIÇÃO TOTAL
+          // Regra de Ouro: SUBSTITUIÇÃO TOTAL - Feito de forma atômica
           const totalAntigoVagas = useVagasStore.getState().vagas.length;
-          clearVagas();
-          addVagas(newVagas);
+          
+          // Use a single set to avoid inconsistent states
+          useVagasStore.setState({ vagas: newVagas });
+          
           const totalNovoVagas = useVagasStore.getState().vagas.length;
           
           // Log detalhado conforme solicitado

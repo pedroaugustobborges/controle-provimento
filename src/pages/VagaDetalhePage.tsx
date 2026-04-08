@@ -31,7 +31,7 @@ import {
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -47,6 +47,23 @@ export default function VagaDetalhePage() {
   });
 
   const vaga = getVaga(id!);
+  
+  const isAtrasada = useMemo(() => {
+    if (!vaga) return false;
+    const status = (vaga.status || vaga.status_geral) as string;
+    if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status)) return false;
+    const lastHist = vaga.historico?.[vaga.historico.length - 1];
+    const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
+    return calcDiasAberto(baseDate) > 10;
+  }, [vaga]);
+
+  const vagaConvocacoes = useMemo(() => 
+    convocacoes.filter(c => c.vaga_id === vaga?.id)
+  , [vaga?.id, convocacoes]);
+
+  const hasAceite = vagaConvocacoes.some(c => c.status === 'aceite');
+  const hasRecusa = vagaConvocacoes.some(c => ['recusa_plantao', 'recusa_unidade', 'recusa_horario', 'desistiu', 'faltou'].includes(c.status));
+  const isConcluido = ['encerrada', 'finalizada', 'admissao_efetivada'].includes(vaga?.status || vaga?.status_geral || '');
   
   useEffect(() => {
     if (vaga) {

@@ -1,19 +1,17 @@
 
 
-## Problema
-O conteúdo da página (`<main>`) está passando visualmente por trás do header sticky, criando um efeito de "vazamento" — o texto e elementos ficam visíveis através do header semi-transparente (causado pelo `bg-white/80` e `backdrop-blur`).
+## Correção: Conteúdo "vazando" atrás do header em todas as páginas
 
-## Solução
+### Problema
+O conteúdo das páginas (Vagas, Banco de Talentos, etc.) continua aparecendo visualmente por trás do header sticky. O breadcrumb bar e possivelmente o header principal ainda têm fundos transparentes ou semi-transparentes em certas condições.
 
-### `src/components/AppLayout.tsx`
-1. **Trocar fundo semi-transparente por fundo sólido** no header:
-   - Modo compacto: `bg-white/80` → `bg-white` (opaco)
-   - Modo expandido: manter gradiente mas com base totalmente opaca (`from-white via-white`)
-   - Manter o `backdrop-blur` como fallback, mas o fundo opaco já resolve o problema
-   
-2. **Adicionar `shadow-sm`** no header quando em modo compacto para criar separação visual clara entre header e conteúdo
+### Solução em `src/components/AppLayout.tsx`:
 
-3. **Garantir `z-20`** no header (já existe) para que fique sempre acima do conteúdo
+1. **Garantir fundo opaco no `<header>` wrapper** — adicionar `bg-background` diretamente no elemento `<header>` (linha 88), não apenas nos divs internos. Isso garante que NENHUM conteúdo vaze por trás, independente da rota.
 
-Alteração mínima — apenas ajustar as classes CSS do header para usar fundos opacos em vez de semi-transparentes.
+2. **Breadcrumb bar com fundo opaco** — a barra de breadcrumb (linha ~193) usa `bg-muted/30` (semi-transparente). Trocar para `bg-muted` ou `bg-background` sólido.
+
+3. **Manter consistência** — tanto o modo expandido quanto o compacto devem usar fundos 100% opacos em todos os elementos do header.
+
+### Alteração mínima — apenas classes CSS no header e breadcrumb bar.
 

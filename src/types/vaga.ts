@@ -15,7 +15,7 @@ export type StatusVaga =
   | 'cancelada' 
   | 'aguardando_unidade' 
   | 'realizar_convocacao'
-  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada';
+  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada' | 'sem_status';
 
 export type StatusGeral = StatusVaga;
 export type StatusConvocacao = 

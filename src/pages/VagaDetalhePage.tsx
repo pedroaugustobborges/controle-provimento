@@ -14,7 +14,7 @@ import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatus
 import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS } from '@/types/vaga';
 import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
 import {
   AlertDialog,
@@ -33,6 +33,7 @@ export default function VagaDetalhePage() {
   const navigate = useNavigate();
   const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
+  
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConvocacaoDialogOpen, setIsConvocacaoDialogOpen] = useState(false);
   const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
@@ -41,20 +42,32 @@ export default function VagaDetalhePage() {
   const [indicators, setIndicators] = useState({
     total_inscritos: 0,
     aprovados_triagem: 0,
+    convocados_entrevista: 0,
     aprovados_finais: 0
   });
 
-  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
-  const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';
-  const isAssistente = currentUser?.perfil === 'Assistente';
-
-
   const vaga = getVaga(id!);
+  
+  useEffect(() => {
+    if (vaga) {
+      setIndicators({
+        total_inscritos: vaga.total_inscritos || 0,
+        aprovados_triagem: vaga.aprovados_triagem || 0,
+        convocados_entrevista: vaga.convocados_entrevista || 0,
+        aprovados_finais: vaga.aprovados_finais || 0
+      });
+    }
+  }, [vaga?.id]);
+
   if (!vaga) return <div className="p-8 text-center text-muted-foreground">Vaga não encontrada.</div>;
 
   const edital = getEditalByVaga(vaga.id);
   const validacao = getValidacaoByVaga(vaga.id);
-  const banco = useVagasStore(s => s.getBancoByVaga(vaga.id));
+  const banco = useVagasStore.getState().getBancoByVaga(vaga.id);
+
+  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
+  const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';
+  const isAssistente = currentUser?.perfil === 'Assistente';
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === 'encerrada' || newStatus === 'finalizada') {
@@ -78,7 +91,6 @@ export default function VagaDetalhePage() {
     };
 
     if (newStatus === 'encerrada' || newStatus === 'finalizada') {
-      updateData.data_封闭 = new Date().toISOString().split('T')[0]; // Oops, typo in my thought, fixing to data_encerramento
       updateData.data_encerramento = new Date().toISOString().split('T')[0];
     }
 
@@ -128,16 +140,10 @@ export default function VagaDetalhePage() {
     toast.success('Indicadores atualizados');
   };
 
-  // Initialize indicators when vaga changes
-  useState(() => {
-    setIndicators({
-      total_inscritos: vaga.total_inscritos || 0,
-      aprovados_triagem: vaga.aprovados_triagem || 0,
-      aprovados_finais: vaga.aprovados_finais || 0
-    });
-  });
   const handleDelete = () => {
     if (vaga && canDelete) {
+// ... keep existing code
+
       deleteVaga(vaga.id);
       addAuditLog({
         usuario_nome: currentUser?.nome_completo || 'Sistema',
@@ -272,22 +278,53 @@ export default function VagaDetalhePage() {
                 </div>
               </div>
 
-              <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-6">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Vagas</label>
-                  <p className="text-xl font-bold text-slate-800">{vaga.numero_vagas || vaga.quantidade}</p>
+              <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Indicadores do Processo</h4>
+                  {canEdit && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => isEditingIndicators ? handleSaveIndicators() : setIsEditingIndicators(true)}
+                      className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider"
+                    >
+                      {isEditingIndicators ? 'Salvar Indicadores' : 'Editar Indicadores'}
+                    </Button>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Inscritos</label>
-                  <p className="text-xl font-bold text-slate-800">{vaga.total_inscritos || 0}</p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Triagem</label>
-                  <p className="text-xl font-bold text-slate-800">{vaga.aprovados_triagem || 0}</p>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Aprovados</label>
-                  <p className="text-xl font-bold text-green-600">{vaga.aprovados_finais || 0}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Inscritos</label>
+                    {isEditingIndicators ? (
+                      <Input type="number" value={indicators.total_inscritos} onChange={(e) => setIndicators({ ...indicators, total_inscritos: +e.target.value })} className="h-8 bg-white" />
+                    ) : (
+                      <p className="text-xl font-bold text-slate-800">{vaga.total_inscritos || 0}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Triagem</label>
+                    {isEditingIndicators ? (
+                      <Input type="number" value={indicators.aprovados_triagem} onChange={(e) => setIndicators({ ...indicators, aprovados_triagem: +e.target.value })} className="h-8 bg-white" />
+                    ) : (
+                      <p className="text-xl font-bold text-slate-800">{vaga.aprovados_triagem || 0}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Em Entrevista</label>
+                    {isEditingIndicators ? (
+                      <Input type="number" value={indicators.convocados_entrevista} onChange={(e) => setIndicators({ ...indicators, convocados_entrevista: +e.target.value })} className="h-8 bg-white" />
+                    ) : (
+                      <p className="text-xl font-bold text-slate-800">{vaga.convocados_entrevista || 0}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Aprovados</label>
+                    {isEditingIndicators ? (
+                      <Input type="number" value={indicators.aprovados_finais} onChange={(e) => setIndicators({ ...indicators, aprovados_finais: +e.target.value })} className="h-8 bg-white" />
+                    ) : (
+                      <p className="text-xl font-bold text-green-600">{vaga.aprovados_finais || 0}</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -436,6 +473,24 @@ export default function VagaDetalhePage() {
         onOpenChange={setIsConvocacaoDialogOpen} 
         vaga={vaga} 
       />
+
+      <AlertDialog open={isCreateBancoDialogOpen} onOpenChange={setIsCreateBancoDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-primary">
+              <Building2 className="h-5 w-5" />
+              Criar Banco de Talentos?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              A vaga está sendo encerrada. Deseja criar um novo Banco de Talentos a partir dos aprovados deste processo seletivo?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { applyStatusChange(pendingStatus!); setIsCreateBancoDialogOpen(false); }}>Não</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { applyStatusChange(pendingStatus!, true); setIsCreateBancoDialogOpen(false); }}>Sim, criar banco</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

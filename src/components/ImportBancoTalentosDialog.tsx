@@ -471,23 +471,32 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           }
         });
 
-        // RULE: Filter where column H (STATUS) = CADASTRO RESERVA
-        const statusImport = String(mapped.status_import || '').toUpperCase();
-        if (statusImport !== 'CADASTRO RESERVA') {
+        // RULE: Process status correctly from Column H
+        const statusImportRaw = String(mapped.status_import || '').toUpperCase().trim();
+        
+        let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' = 'valido';
+        
+        if (statusImportRaw === 'CONVOCADO') {
+          status = 'convocado';
+        } else if (statusImportRaw === 'VENCIDO') {
+          status = 'vencido';
+        } else if (statusImportRaw === 'CADASTRO RESERVA' || statusImportRaw === 'CADASTRO-RESERVA') {
+          // Default logic for valid/expired based on dates
+          const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
+          if (expiryDateStr) {
+            const expiryDate = new Date(expiryDateStr);
+            if (isValid(expiryDate)) {
+              status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
+            }
+          }
+        } else if (!statusImportRaw) {
+          // If status is empty, ignore line
           return;
         }
 
         // Validar campos obrigatórios
         REQUIRED_FIELDS.forEach(field => {
-          if (!mapped[field.key] || mapped[field.key] === '') {
-            hasMissingRequired = true;
-            detailedErrors.push({
-              linha: currentLine,
-              campo: field.label,
-              valor: 'Vazio',
-              motivo: "Campo obrigatório ausente"
-            });
-          }
+...
         });
 
         if (hasMissingRequired) {
@@ -497,29 +506,19 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         }
 
         // Mapeamento de unidades conforme solicitado
-        let unidade = mapped.unidade || '';
-        const unidadeUpper = unidade.toUpperCase();
+        let unidade = (mapped.unidade || '').trim();
+        const u = unidade.toUpperCase();
         
-        if (unidadeUpper === 'GOIÂNIA' || unidadeUpper === 'GOIANIA') {
-          // Keep as GOIÂNIA, but we know it maps to CRER, HUGOL, HECAD, HDS
+        if (['GOIÂNIA', 'GOIANIA', 'CRER', 'HUGOL', 'HECAD', 'HDS'].some(unit => u.includes(unit))) {
           unidade = 'GOIÂNIA';
-        } else if (unidadeUpper === 'UPA') {
+        } else if (['UPA', 'VITÓRIA', 'VITORIA', 'SÃO PEDRO', 'SAO PEDRO', 'SUÁ', 'SUA', 'SUA'].some(unit => u.includes(unit))) {
           unidade = 'VITÓRIA';
-        } else if (unidadeUpper === 'JATAÍ' || unidadeUpper === 'JATAI') {
+        } else if (u.includes('JATAÍ') || u.includes('JATAI')) {
           unidade = 'JATAÍ';
-        } else if (unidadeUpper === 'POLICLÍNICA' || unidadeUpper === 'POLICLINICA') {
+        } else if (u.includes('POLICLÍNICA') || u.includes('POLICLINICA')) {
           unidade = 'POLICLÍNICA';
         }
 
-        // Determinar status baseado em validade e convocação
-        let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' = 'valido';
-        const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
-        if (expiryDateStr) {
-          const expiryDate = new Date(expiryDateStr);
-          if (isValid(expiryDate)) {
-            status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
-          }
-        }
 
         newBancos.push({
           id: `imp-bt-${Date.now()}-${i}`,

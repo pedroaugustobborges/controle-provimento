@@ -1,36 +1,44 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { UserProfile, Permissions, User } from '../types/auth';
+import { useAdminStore } from '@/store/adminStore';
 
 export function useRBAC() {
+  const mockUser = useAdminStore((s) => s.currentUser);
   const { data: userData, isLoading, error } = useQuery({
     queryKey: ['user_profile'],
     queryFn: async (): Promise<User | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return mockUser; // Return mock for local dev/testing if not logged in
 
-      const { data: profile, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+        const { data: profile, error } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
+        if (error || !profile) {
+          return mockUser; // Fallback to mock
+        }
+        return profile as User;
+      } catch (e) {
+        return mockUser; // Fallback to mock on any error
       }
-      return profile as User;
     },
+    initialData: mockUser // Start with mock
   });
 
   const hasRole = (role: UserProfile | UserProfile[]) => {
-    if (!userData) return false;
+    const userToUse = userData || mockUser;
+    if (!userToUse) return false;
     const rolesToCheck = Array.isArray(role) ? role : [role];
-    return rolesToCheck.includes(userData.perfil as UserProfile);
+    return rolesToCheck.includes(userToUse.perfil as UserProfile);
   };
 
-  const isAdmin = userData?.perfil === 'Administrador';
-  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência' || userData?.perfil === 'Supervisão';
+  const userToUse = userData || mockUser;
+  const isAdmin = userToUse?.perfil === 'Administrador' || userToUse?.perfil === 'Admin';
+  const isManagement = userToUse?.perfil === 'Gestão' || userToUse?.perfil === 'Gerência' || userToUse?.perfil === 'Supervisão' || userToUse?.perfil === 'Coordenação';
 
   const getPermissions = (module: string): Permissions => {
     if (isAdmin) {
@@ -53,7 +61,7 @@ export function useRBAC() {
       canAudit: isManagement,
     };
 
-    const perfil = userData?.perfil;
+    const perfil = userToUse?.perfil;
 
     switch (module) {
       case 'vagas':

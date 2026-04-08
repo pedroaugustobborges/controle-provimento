@@ -454,7 +454,7 @@ export default function BancoTalentosPage() {
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Convocados</p>
-                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'convocado').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'CONVOCADO' || (b as any).status === 'convocado').length}</p>
               </div>
             </div>
           </CardContent>
@@ -493,7 +493,7 @@ export default function BancoTalentosPage() {
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Vencidos</p>
-                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'vencido').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'VENCIDO' || (b as any).status === 'vencido').length}</p>
               </div>
             </div>
           </CardContent>

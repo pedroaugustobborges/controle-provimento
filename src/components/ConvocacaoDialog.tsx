@@ -39,15 +39,16 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
   useEffect(() => {
     if (convocacaoToEdit) {
       setFormData(convocacaoToEdit);
-    } else if (vaga) {
+    } else if (vaga && open) {
+      const matchedBanco = useVagasStore.getState().getBancoByVaga(vaga.id);
       setFormData(prev => ({
         ...prev,
         vaga_id: vaga.id,
         cargo: vaga.cargo,
         unidade: vaga.unidade,
         requisicao: vaga.requisicao || vaga.numero_requisicao,
-        edital_relacionado: vaga.numero_edital,
-        banco_relacionado: vaga.banco_id
+        edital_relacionado: matchedBanco?.numero_edital || vaga.numero_edital || '',
+        banco_relacionado: matchedBanco?.id || vaga.banco_id || ''
       }));
     }
   }, [vaga, convocacaoToEdit, open]);

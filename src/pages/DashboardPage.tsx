@@ -21,7 +21,8 @@ import {
   Building2,
   ChevronRight,
   ShieldCheck,
-  CheckCircle
+  CheckCircle,
+  Database
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -37,7 +38,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const { vagas, validacoes } = useVagasStore();
+  const { vagas, validacoes, getBancoByVaga } = useVagasStore();
   const navigate = useNavigate();
 
   // Stats calculation
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const emEdital = getStatusCount('em_edital') + getStatusCount('publicado_edital');
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const encerradas = vagas.filter((v) => ['encerrada', 'finalizada', 'admissao_efetivada'].includes((v.status || v.status_geral) as string)).length;
+  const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
 
   const convocacoesHoje = 12; // Mock data for now
 
@@ -55,6 +57,7 @@ export default function DashboardPage() {
     { label: 'Vagas Abertas', value: abertas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Em Edital', value: emEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Convocações do Dia', value: convocacoesHoje, icon: Users, color: 'text-slate-600', bg: 'bg-slate-100' },
@@ -96,7 +99,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, idx) => (
           <Card key={idx} className="border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group">
             <CardContent className="p-5">

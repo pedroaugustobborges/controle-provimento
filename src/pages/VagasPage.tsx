@@ -144,7 +144,7 @@ export default function VagasPage() {
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
-            <p className="text-2xl font-bold text-green-600">{vagas.filter(v => v.tem_banco_valido).length}</p>
+            <p className="text-2xl font-bold text-green-600">{vagas.filter(v => getBancoByVaga(v.id)).length}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">
@@ -238,7 +238,7 @@ export default function VagasPage() {
                       <div className="flex flex-wrap gap-1 mt-0.5">
                         <Badge variant="secondary" className="text-[9px] font-bold py-0 h-3.5 bg-slate-100 text-slate-600 border-none">{TIPO_VAGA_LABELS[v.tipo_vaga]}</Badge>
                         {v.pcd && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>}
-                        {v.tem_banco_valido && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-green-50 text-green-600 border-green-100">Tem Banco</Badge>}
+                        {getBancoByVaga(v.id) && <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-green-50 text-green-600 border-green-100">Tem Banco</Badge>}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
@@ -306,7 +306,7 @@ export default function VagasPage() {
                           <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
                           </DropdownMenuItem>
-                          {v.tem_banco_valido && (
+                          {getBancoByVaga(v.id) && (
                             <>
                               <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
                                 <Database className="h-4 w-4" /> Ver Banco de Talentos

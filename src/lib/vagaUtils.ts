@@ -13,12 +13,22 @@ function removeAccents(str: string): string {
 export function isVitoriaUnit(unidade: string): boolean {
   if (!unidade) return false;
   const normalized = removeAccents(unidade.toLowerCase().trim());
+  const words = normalized.split(/[\s,.-]+/);
+  
   // Se for Vitória, já é Vitória
-  if (normalized === 'vitoria') return true;
-  // Se contiver algum dos bairros/cidades da Grande Vitória
-  return VITORIA_SUB_UNIDADES.some(sub => 
-    normalized.includes(removeAccents(sub.toLowerCase()))
-  );
+  if (words.some(w => w === 'vitoria' || w === 'vix')) return true;
+  
+  // Tokens que representam a Grande Vitória
+  const vitoriaTokens = VITORIA_SUB_UNIDADES.map(sub => removeAccents(sub.toLowerCase()));
+  
+  return vitoriaTokens.some(token => {
+    if (token.length <= 3) {
+      // Para tokens curtos (como 'es', 'sua'), exige correspondência de palavra inteira
+      return words.includes(token);
+    }
+    // Para nomes maiores (como 'jardim da penha'), pode ser sub-string
+    return normalized.includes(token);
+  });
 }
 
 

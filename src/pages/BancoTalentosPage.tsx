@@ -440,7 +440,9 @@ export default function BancoTalentosPage() {
                     <TableHead className="text-[10px] font-bold uppercase">Unidade</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Validade</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase">Qtd. Banco</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+
                   </TableRow>
                 </TableHeader>
                 <TableBody>

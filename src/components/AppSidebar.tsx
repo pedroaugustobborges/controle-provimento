@@ -2,7 +2,6 @@ import {
   Building2, 
   LayoutDashboard, 
   Briefcase, 
-  FileText, 
   Users, 
   CheckCircle, 
   TrendingUp,
@@ -13,11 +12,11 @@ import {
 } from 'lucide-react';
 
 import { NavLink } from '@/components/NavLink';
-import { useLocation } from 'react-router-dom';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
@@ -27,16 +26,16 @@ const mainItems = [
   { title: 'Convocações', url: '/convocacoes', icon: Calendar },
 ];
 
-const secondaryItems = [
-  { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle },
-  { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet },
-  { title: 'Administração', url: '/gestor', icon: Settings },
-];
-
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
+  const { canImport, canAccessAdmin } = usePermissions();
+
+  const secondaryItems = [
+    { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle, visible: true },
+    { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: canImport() },
+    { title: 'Administração', url: '/gestor', icon: Settings, visible: canAccessAdmin() },
+  ].filter(item => item.visible);
   
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar shadow-xl">
@@ -78,39 +77,33 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4">
-          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Apoio Administrativo</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
-                      activeClassName="bg-white/10 text-white font-bold shadow-md"
-                    >
-                      <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-primary" />
-                      {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {secondaryItems.length > 0 && (
+          <SidebarGroup className="mt-4">
+            <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Apoio Administrativo</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {secondaryItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild tooltip={item.title}>
+                      <NavLink
+                        to={item.url}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
+                        activeClassName="bg-white/10 text-white font-bold shadow-md"
+                      >
+                        <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
+                        {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-white/10 p-4 mt-auto">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Configurações">
-              <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 text-white/60 transition-all group">
-                <Settings className="h-4.5 w-4.5 group-hover:text-white" />
-                {!collapsed && <span className="text-sm">Configurações</span>}
-              </button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Ajuda">
               <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 text-white/60 transition-all group">

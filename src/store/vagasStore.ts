@@ -140,61 +140,52 @@ export const useVagasStore = create<VagasState>()(
         
         const vagaTokens = getCargoTokens(vaga.cargo);
 
-        // Define regional units for matching - expanded
-        const goianiaUnits = [
-          'crer', 'hugol', 'hecad', 'hds', 'corporativo', 'policlinica', 
-          'cealcon', 'hugo', 'heapa', 'heg', 'hdt', 'goiania', 'agir',
-          'hospital central', 'central', 'maternidade', 'hemmnsl', 'hospital estadual',
-          'cora', 'hecon', 'heslv', 'hetrin', 'heel', 'heja', 'herp', 'hgg', 'hevana', 'hemo', 'hemonucleo', 'ipasgo',
-          'cmmnsl', 'ceal', 'huapa', 'hurre', 'sede', 'go'
-        ];
-        
-        const vitoriaUnits = [
-          'sua', 'sao pedro', 'vitoria', 'upa', 'es', 'espirito santo', 'serra', 'cariacica', 'vila velha',
-          'asas', 'hospital estadual', 'dr jayme', 'hesvv', 'cre', 'vix'
-        ];
+        // Specific units for matching as requested
+        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds'];
+        const vitoriaUnits = ['vitoria', 'sao pedro', 'sua', 'suá'];
 
         const found = state.bancos.find(b => {
-          const normalizedBancoCargo = normalizeCargo(b.cargo);
-          const bancoTokens = getCargoTokens(b.cargo);
-          
+          const normalizedBancoUnidade = normalizeCargo(b.unidade || '');
+          const normalizedVagaUnidade = normalizeCargo(vaga.unidade || '');
+          const normalizedBancoCargo = normalizeCargo(b.cargo || '');
+          const normalizedVagaCargo = normalizeCargo(vaga.cargo || '');
+
+          // --- Unit Matching ---
+          let unitMatch = false;
+
+          if (normalizedBancoUnidade === normalizedVagaUnidade) {
+            unitMatch = true;
+          } else if (normalizedBancoUnidade === 'goiania' && goianiaUnits.includes(normalizedVagaUnidade)) {
+            unitMatch = true;
+          } else if (normalizedBancoUnidade === 'upa' && vitoriaUnits.includes(normalizedVagaUnidade)) {
+            unitMatch = true;
+          } else if (normalizedBancoUnidade === 'vitoria' && vitoriaUnits.includes(normalizedVagaUnidade)) {
+            unitMatch = true;
+          } else if (normalizedBancoUnidade.includes('jatai') && normalizedVagaUnidade.includes('jatai')) {
+            unitMatch = true;
+          } else if (normalizedBancoUnidade.includes('policlinica') && normalizedVagaUnidade.includes('policlinica')) {
+            unitMatch = true;
+          } else if (normalizedBancoUnidade.includes('corporativo') || normalizedBancoUnidade.includes('agir')) {
+            unitMatch = true;
+          }
+
+          if (!unitMatch) return false;
+
+          // --- Cargo Matching ---
           const hasStringMatch = normalizedBancoCargo === normalizedVagaCargo || 
                                 normalizedBancoCargo.includes(normalizedVagaCargo) || 
                                 normalizedVagaCargo.includes(normalizedBancoCargo);
           
+          if (hasStringMatch) return true;
+
+          const bancoTokens = getCargoTokens(b.cargo);
           const commonTokens = vagaTokens.filter(t => bancoTokens.some(bt => bt.includes(t) || t.includes(bt)));
           const hasTokenMatch = vagaTokens.length > 0 && (
-            commonTokens.length >= Math.ceil(vagaTokens.length * 0.4) || // Reduced threshold
+            commonTokens.length >= Math.ceil(vagaTokens.length * 0.4) || 
             (vagaTokens.length === 1 && commonTokens.length === 1)
           );
 
-          if (!hasStringMatch && !hasTokenMatch) return false;
-          
-          const normalizedBancoUnidade = normalizeCargo(b.unidade || '');
-          
-          if (normalizedBancoUnidade === normalizedVagaUnidade) return true;
-          
-          // Relaxed unit matching
-          if (normalizedBancoUnidade.includes('corporativo') || normalizedBancoUnidade.includes('agir')) return true;
-
-          const bancoUnitTokens = normalizedBancoUnidade.split(' ');
-          const vagaUnitTokens = normalizedVagaUnidade.split(' ');
-          const hasPartialUnitMatch = vagaUnitTokens.some(vt => vt.length > 2 && bancoUnitTokens.includes(vt)) ||
-                                     bancoUnitTokens.some(bt => bt.length > 2 && vagaUnitTokens.includes(bt));
-          
-          if (hasPartialUnitMatch) return true;
-          
-          const isBancoGoiania = goianiaUnits.some(u => normalizedBancoUnidade.includes(u));
-          const isVagaGoiania = goianiaUnits.some(u => normalizedVagaUnidade.includes(u));
-          
-          if (isBancoGoiania && isVagaGoiania) return true;
-          
-          const isBancoVitoria = vitoriaUnits.some(u => normalizedBancoUnidade.includes(u));
-          const isVagaVitoria = vitoriaUnits.some(u => normalizedVagaUnidade.includes(u));
-          
-          if (isBancoVitoria && isVagaVitoria) return true;
-          
-          return false;
+          return hasTokenMatch;
         });
 
         return found;

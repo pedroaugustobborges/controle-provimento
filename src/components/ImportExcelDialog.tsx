@@ -154,11 +154,19 @@ export function ImportExcelDialog({
         const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
         const preview = rows.slice(0, 10);
         setRawPreview(preview);
-        const detected = detectHeaderRow(preview);
-        setHeaderRow(detected);
+        
+        // Specific rule for "Proposta de Gestão de Vagas" files (.xlsm)
+        // Row 3 is header (index 2), Row 4 starts data
+        const isVagasFile = file?.name.toLowerCase().endsWith('.xlsm');
+        if (isVagasFile) {
+          setHeaderRow(2);
+        } else {
+          const detected = detectHeaderRow(preview);
+          setHeaderRow(detected);
+        }
       }
     }
-  }, [workbook, selectedSheets]);
+  }, [workbook, selectedSheets, file?.name]);
 
   // Handle reprocess
   useEffect(() => {
@@ -209,7 +217,19 @@ export function ImportExcelDialog({
           });
 
           setWorkbook(wb);
-          setSelectedSheets([wb.SheetNames[0]]);
+          
+          // DEFAULT: Select all sheets starting with "Vagas - " if it's the .xlsm file
+          if (selectedFile.name.toLowerCase().endsWith('.xlsm')) {
+            const vagaSheets = wb.SheetNames.filter(name => name.startsWith('Vagas - '));
+            if (vagaSheets.length > 0) {
+              setSelectedSheets(vagaSheets);
+            } else {
+              setSelectedSheets([wb.SheetNames[0]]);
+            }
+          } else {
+            setSelectedSheets([wb.SheetNames[0]]);
+          }
+
           // For XLSM or larger files, we don't automatically jump to sheets step 
           // to allow the user to see the file info first as requested
           // setStep('sheets'); 

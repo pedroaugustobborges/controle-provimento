@@ -227,9 +227,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             // content: data as any // Removido para evitar estourar quota do localStorage e excesso de memória
           });
           setWorkbook(wb);
-          setSelectedSheets([wb.SheetNames[0]]);
-          // Don't jump to next step automatically
-          // setStep('sheets');
+          
+          // DEFAULT: Select "BANCO GERAL" sheet if it exists
+          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.toUpperCase() === 'BANCO GERAL');
+          if (bancoGeralIndex !== -1) {
+            setSelectedSheets([wb.SheetNames[bancoGeralIndex]]);
+          } else {
+            setSelectedSheets([wb.SheetNames[0]]);
+          }
+
           toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
         } catch (error: any) {
           console.error('Erro ao ler arquivo:', error);
@@ -444,7 +450,6 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
       allData.forEach((row, i) => {
         const mapped: any = {};
-        let hasErrorInRow = false;
         let hasMissingRequired = false;
         const currentLine = headerRow + 2 + i;
 
@@ -454,42 +459,21 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
             if (m.isDate) {
               const dateResult = convertDateValue(rawVal, m.format || 'auto');
               mapped[m.system] = dateResult.formatted;
-              if (!dateResult.isValid && rawVal) {
-                // If the date is invalid, we don't necessarily fail the row if the field is optional
-                // but we track it. For now, we only log it if it's fundamentally unparseable.
-                if (dateResult.formatUsed === 'Inválido') {
-                  detailedErrors.push({
-                    linha: currentLine,
-                    campo: m.excel,
-                    valor: String(rawVal),
-                    motivo: "Formato de data não reconhecido"
-                  });
-                }
-              }
             } else if (m.system === 'is_prorrogado') {
               const val = String(rawVal || '').toLowerCase();
               const isSim = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
-              
-              // Se não for "sim/não" óbvio, tenta ver se é uma data
-              if (!isSim && rawVal) {
-                const dateResult = convertDateValue(rawVal, 'auto');
-                if (dateResult.isValid && dateResult.date) {
-                  mapped[m.system] = true;
-                  // Se a nova data de validade ainda não foi preenchida, usamos esta
-                  if (!mapped.nova_data_validade) {
-                    mapped.nova_data_validade = dateResult.formatted;
-                  }
-                } else {
-                  mapped[m.system] = false;
-                }
-              } else {
-                mapped[m.system] = isSim;
-              }
+              mapped[m.system] = isSim;
             } else {
               mapped[m.system] = String(rawVal || '').trim();
             }
           }
         });
+
+        // RULE: Filter where column H (STATUS) = CADASTRO RESERVA
+        const statusImport = String(mapped.status_import || '').toUpperCase();
+        if (statusImport !== 'CADASTRO RESERVA') {
+          return;
+        }
 
         // Validar campos obrigatórios
         REQUIRED_FIELDS.forEach(field => {
@@ -507,27 +491,37 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         if (hasMissingRequired) {
           missingFieldsRows++;
           totalErros++;
-          return; // Pula este registro se faltar campo obrigatório
+          return; 
+        }
+
+        // Mapeamento de unidades conforme solicitado
+        let unidade = mapped.unidade || '';
+        const unidadeUpper = unidade.toUpperCase();
+        
+        if (unidadeUpper === 'GOIÂNIA' || unidadeUpper === 'GOIANIA') {
+          // Keep as GOIÂNIA, but we know it maps to CRER, HUGOL, HECAD, HDS
+          unidade = 'GOIÂNIA';
+        } else if (unidadeUpper === 'UPA') {
+          unidade = 'VITÓRIA';
+        } else if (unidadeUpper === 'JATAÍ' || unidadeUpper === 'JATAI') {
+          unidade = 'JATAÍ';
+        } else if (unidadeUpper === 'POLICLÍNICA' || unidadeUpper === 'POLICLINICA') {
+          unidade = 'POLICLÍNICA';
         }
 
         // Determinar status baseado em validade e convocação
         let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' = 'valido';
-        
-        if (mapped.data_convocacao) {
-          status = 'convocado';
-        } else {
-          const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
-          if (expiryDateStr) {
-            const expiryDate = new Date(expiryDateStr);
-            if (isValid(expiryDate)) {
-              status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
-            }
+        const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
+        if (expiryDateStr) {
+          const expiryDate = new Date(expiryDateStr);
+          if (isValid(expiryDate)) {
+            status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
           }
         }
 
         newBancos.push({
           id: `imp-bt-${Date.now()}-${i}`,
-          unidade: mapped.unidade || 'HGG',
+          unidade: unidade,
           cargo: mapped.cargo || 'Não informado',
           cargo_normalizado: normalizeCargo(mapped.cargo || ''),
           secao: mapped.secao || '',

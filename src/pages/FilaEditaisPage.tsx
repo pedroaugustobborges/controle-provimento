@@ -200,15 +200,15 @@ export default function FilaEditaisPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="px-6 py-4 text-left">Requisição</th>
                   <th className="px-6 py-4 text-left">Unidade</th>
-                  <th className="px-6 py-4 text-left">Data Abertura</th>
-                  <th className="px-6 py-4 text-left">Nº Requisição</th>
                   <th className="px-6 py-4 text-left">Cargo</th>
-                  <th className="px-6 py-4 text-left">Seção</th>
-                  <th className="px-6 py-4 text-center">Nº Vagas</th>
-                  <th className="px-6 py-4 text-left">Nº Processo</th>
-                  <th className="px-6 py-4 text-left">Nº Edital</th>
-                  <th className="px-6 py-4 text-left">Status Edital</th>
+                  <th className="px-6 py-4 text-left">Tipo</th>
+                  <th className="px-6 py-4 text-center">Vagas</th>
+                  <th className="px-6 py-4 text-left">Recebimento</th>
+                  <th className="px-6 py-4 text-center">Dias Aberto</th>
+                  <th className="px-6 py-4 text-left">Status Atual</th>
+                  <th className="px-6 py-4 text-left">Responsável</th>
                   <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
               </thead>

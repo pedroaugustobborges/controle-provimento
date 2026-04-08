@@ -187,43 +187,45 @@ export default function VagasPage() {
     return canonicalBase.filter(v => getBancoByVaga(v.id)).length;
   }, [canonicalBase, getBancoByVaga]);
 
-  // Debug Diagnostics for Audit
-  const auditData = useMemo(() => {
-    const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
-    const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
-    
-    // Total raw records
-    const rawTotal = vagas.length;
-    
-    // Step-by-step filtering for transparency
-    const withCargo = vagas.filter(v => String(v.cargo ?? "").trim() !== "");
-    
-    const normUnit = selectedUnit !== 'TODOS' ? normalizeUnitName(selectedUnit) : 'TODOS';
-    const afterUnit = withCargo.filter(v => normUnit === 'TODOS' || normalizeUnitName(v.unidade) === normUnit);
-    
-    const normMonth = selectedMonth !== 'TODOS' ? selectedMonth.toUpperCase() : 'TODOS';
-    const afterMonth = afterUnit.filter(v => {
-      if (normMonth === 'TODOS') return true;
-      return getMonthNamePtBrUpper(v.data_abertura) === normMonth;
-    });
+  // 4. Parity Debug Audit - forensic row-level check
+  const parityAudit = useMemo(() => {
+    const selUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
+    const selMonth = filterMes === 'all' ? 'TODOS' : filterMes;
 
-    const rejectedByCargo = vagas.filter(v => String(v.cargo ?? "").trim() === "").slice(0, 5);
-    const rejectedByUnit = withCargo.filter(v => normUnit !== 'TODOS' && normalizeUnitName(v.unidade) !== normUnit).slice(0, 5);
-    const rejectedByMonth = afterUnit.filter(v => normMonth !== 'TODOS' && getMonthNamePtBrUpper(v.data_abertura) !== normMonth).slice(0, 5);
+    // Check every row in the dataset
+    const analyzed = vagas.map(v => checkVacancyParity(v, selUnit, selMonth));
+    
+    // Rows counted by Excel Parity rule
+    const excelCounted = analyzed.filter(r => r.includedByExcelParity);
+    
+    // Rows actually counted by the card metric (finalCount)
+    // In our current implementation, this should exactly match excelCounted
+    // If not, we found a logic divergence between the parity check and the production function
+    const appCounted = canonicalBase; // This is what the UI card uses
+    
+    // Rows in table (can have extra UI filters like search, status)
+    const tableCounted = filtered;
+
+    // Identify divergences
+    const excludedByAppButIncludedByExcel = excelCounted.filter(e => !appCounted.find(a => a.id === e.id));
+    const includedByAppButExcludedByExcel = appCounted.filter(a => !excelCounted.find(e => e.id === a.id));
 
     return {
-      selectedUnit,
-      selectedMonth,
-      rawTotal,
-      withCargoCount: withCargo.length,
-      afterUnitCount: afterUnit.length,
-      finalCount: afterMonth.length,
-      tableCount: filtered.length,
-      rejectedByCargo,
-      rejectedByUnit,
-      rejectedByMonth,
+      selUnit,
+      selMonth,
+      excelCount: excelCounted.length,
+      appCount: appCounted.length,
+      tableCount: tableCounted.length,
+      difference: appCounted.length - excelCounted.length,
+      mismatches: [
+        ...excludedByAppButIncludedByExcel.map(r => ({ ...r, mismatchType: 'EXCLUDED_BY_APP' as const })),
+        ...includedByAppButExcludedByExcel.map(r => {
+          const check = checkVacancyParity(r, selUnit, selMonth);
+          return { ...check, mismatchType: 'INCLUDED_BY_APP' as const };
+        })
+      ]
     };
-  }, [vagas, filterUnidade, filterMes, filtered]);
+  }, [vagas, canonicalBase, filtered, filterUnidade, filterMes]);
 
 
 

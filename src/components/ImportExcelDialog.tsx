@@ -87,7 +87,31 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   admissao: ['admissão', 'admissao', 'data admissão', 'dt admissão'],
   admissao_enviada: ['admissão enviada', 'admissao enviada', 'dt admissão enviada'],
   admissao_efetivada: ['admissão efetivada', 'admissao efetivada', 'dt admissão efetivada'],
-};
+const ALLOWED_VAGA_SHEETS = [
+  'Vagas - HECAD',
+  'Vagas - CRER',
+  'Vagas - AGIR',
+  'Vagas - HUGOL',
+  'Vagas - HDS',
+  'Vagas - POLICLÍNICA',
+  'Vagas - VITÓRIA',
+  'Vagas - JATAÍ',
+  'Vagas - TEIA ANÁPOLIS',
+  'Vagas - TEIA CANEDO',
+  'Vagas - TEIA APARECIDA',
+  'Vagas - TEIA GOIÂNIA'
+];
+
+const FORBIDDEN_SHEETS = [
+  'DADOS_CARGOS',
+  'DASHBOARD',
+  'DASHBOARD - GERAL',
+  'UNIDADES',
+  'DIAGNÓSTICO',
+  'Vagas - Fechadas - Março- RM',
+  'Detalhamento - Vagas- TEIA RV'
+];
+
 
 function detectHeaderRow(rawRows: any[][]): number {
   let bestRow = 0;

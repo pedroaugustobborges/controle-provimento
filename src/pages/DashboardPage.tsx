@@ -1,4 +1,5 @@
 import { useVagasStore } from '@/store/vagasStore';
+import { EQUIPE_POR_UNIDADE } from '@/data/equipe';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate } from '@/lib/vagaUtils';
@@ -77,8 +78,8 @@ export default function DashboardPage() {
     return !lastHist || calcDiasAberto(lastHist.data) > 10;
   });
 
-  const unidades = [...new Set(vagas.map((v) => v.unidade))];
-  const chartData = unidades.map((u) => ({
+  const todasUnidades = [...new Set([...vagas.map((v) => v.unidade), ...EQUIPE_POR_UNIDADE.map(e => e.unidade)])];
+  const chartData = todasUnidades.map((u) => ({
     name: u.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, ''),
     total: vagas.filter((v) => v.unidade === u).length,
     abertas: vagas.filter((v) => v.unidade === u && (v.status === 'aberta' || v.status_geral === 'aberta')).length,

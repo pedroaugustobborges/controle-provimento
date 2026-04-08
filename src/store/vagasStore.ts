@@ -213,12 +213,13 @@ export const useVagasStore = create<VagasState>()(
             const normV = (v.cargo || '').toLowerCase();
             const normB = (b.cargo || '').toLowerCase();
             return b.unidade === v.unidade || normB.includes(normV) || normV.includes(normB);
-          }).slice(0, 3);
+          }).slice(0, 10);
           
           return {
             vagaId: v.id,
             vagaCargo: v.cargo,
             vagaUnidade: v.unidade,
+            vagaReq: v.requisicao || v.numero_requisicao,
             potentialBancos: potentialBancos.map(b => ({
               cargo: b.cargo,
               unidade: b.unidade,

@@ -86,7 +86,7 @@ export default function DashboardPage() {
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
-      const unitKey = v.unidade; // Removed isVitoriaUnit grouping
+      const unitKey = isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade;
       const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
       
       current.total += 1;
@@ -98,14 +98,14 @@ export default function DashboardPage() {
 
     // Also include units from EQUIPE_POR_UNIDADE that might not have vagas
     EQUIPE_POR_UNIDADE.forEach(e => {
-      const unitKey = e.unidade; // Removed isVitoriaUnit grouping
+      const unitKey = isVitoriaUnit(e.unidade) ? 'VITÓRIA' : e.unidade;
       if (!groupedMap.has(unitKey)) {
         groupedMap.set(unitKey, { total: 0, abertas: 0 });
       }
     });
 
     return Array.from(groupedMap.entries()).map(([name, data]) => ({
-      name: name.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim(),
+      name: name.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim().toUpperCase(),
       total: data.total,
       abertas: data.abertas,
     })).sort((a, b) => b.total - a.total);
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                       </div>
                       <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors truncate leading-snug">{v.cargo}</h4>
                       <p className="text-[11px] text-slate-400 font-semibold mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
-                        <Building2 className="h-3 w-3 opacity-50" /> {v.unidade}
+                        <Building2 className="h-3 w-3 opacity-50" /> {isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase()}
                       </p>
                     </div>
                   </div>
@@ -325,7 +325,7 @@ export default function DashboardPage() {
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
                         <span className="font-extrabold text-slate-700 text-sm leading-tight tracking-tight group-hover:text-primary transition-colors">{v.cargo}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{v.unidade}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase()}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">

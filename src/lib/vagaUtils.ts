@@ -27,13 +27,13 @@ export const CATEGORIAS_STATUS = {
     'em_edital', 'publicado_edital', 'em_triagem', 'entrevista', 
     'documentacao', 'documentacao_ok', 'documentacao_pendente', 
     'casos_ok', 'admissao', 'admissao_enviada', 'realizar_convocacao',
-    'aberta'
+    'aberta', 'em_andamento', 'nova_vaga'
   ],
-  aguardando_unidade: ['aguardando_unidade'],
-  encerradas: ['admissao_efetivada', 'finalizada', 'encerrada'],
+  aguardando_unidade: ['aguardando_unidade', 'aguardando_processo', 'aguardando_edital', 'aguardando_processo_e_edital'],
+  encerradas: ['admissao_efetivada', 'finalizada', 'encerrada', 'concluida'],
   lideranca: ['vaga_lideranca'],
   movimentacao_interna: ['movimentacao_interna'],
-  sem_status: ['sem_status', '', null, undefined],
+  sem_status: ['sem_status', '', null, undefined, 'nan'],
   outros: ['suspensa', 'cancelada']
 };
 
@@ -151,7 +151,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text.includes('admissao efetivada')) return 'admissao_efetivada';
   if (text.includes('admissao')) return 'admissao';
   if (text.includes('convoc')) return 'realizar_convocacao';
-  if (text.includes('unidade')) return 'aguardando_unidade';
+  if (text.includes('unidade') || text.includes('aguardando')) return 'aguardando_unidade';
   if (text.includes('lideranca')) return 'vaga_lideranca';
   if (text.includes('movimentacao') || text.includes('interna')) return 'movimentacao_interna';
   if (text.includes('susp')) return 'suspensa';

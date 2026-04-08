@@ -252,7 +252,10 @@ export function ImportExcelDialog({
               data_validade: row['VALIDADE'] ? convertDateValue(row['VALIDADE'], 'auto').formatted : '',
               is_prorrogado: false,
               observacoes: '',
-              status_import: statusRaw
+              status_import: statusRaw,
+              import_batch_id: batchId,
+              data_importacao: now,
+              origem_importacao: selectedFile.name,
             });
           });
 

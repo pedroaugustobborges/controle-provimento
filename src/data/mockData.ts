@@ -130,6 +130,48 @@ export const mockVagas: Vaga[] = [
     observacoes_internas: '',
     tem_banco_valido: false,
     historico: [],
+  },
+  {
+    id: '8',
+    requisicao: 'REQ-2025-008',
+    numero_requisicao: 'REQ-2025-008',
+    data_abertura: '2025-03-05',
+    cargo: 'Auxiliar Administrativo',
+    tipo_vaga: 'substituicao',
+    numero_vagas: 1,
+    secao: 'Administrativo',
+    unidade: 'CRER',
+    analista_responsavel: 'Ana Paula',
+    status: 'aberta',
+    historico: [],
+  },
+  {
+    id: '9',
+    requisicao: 'REQ-2025-009',
+    numero_requisicao: 'REQ-2025-009',
+    data_abertura: '2025-03-10',
+    cargo: '', // EMPTY CARGO - Should not count
+    tipo_vaga: 'substituicao',
+    numero_vagas: 1,
+    secao: 'Administrativo',
+    unidade: 'CRER',
+    analista_responsavel: 'Ana Paula',
+    status: 'aberta',
+    historico: [],
+  },
+  {
+    id: '10',
+    requisicao: 'REQ-2025-010',
+    numero_requisicao: 'REQ-2025-010',
+    data_abertura: '2025-03-15',
+    cargo: 'Enfermeiro',
+    tipo_vaga: 'substituicao',
+    numero_vagas: 1,
+    secao: 'Enfermagem',
+    unidade: 'CRER',
+    analista_responsavel: 'Ana Paula',
+    status: 'suspensa', // SUSPENDED - Should still count if cargo exists
+    historico: [],
   }
 ];
 

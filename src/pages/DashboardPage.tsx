@@ -69,11 +69,11 @@ export default function DashboardPage() {
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Aguardando Unidade', value: aguardandoUnidade, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Sem Status', value: semStatusCount, icon: AlertCircle, color: 'text-slate-500', bg: 'bg-slate-50' },
-    { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Liderança', value: liderancaCount, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Movimentação Int.', value: movimentacaoCount, icon: RefreshCw, color: 'text-cyan-600', bg: 'bg-cyan-50' },
-    { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-slate-600', bg: 'bg-slate-100' },
+    { label: 'Suspensas/Canc.', value: suspensasCanceladas, icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Sem Status', value: semStatusCount, icon: AlertCircle, color: 'text-slate-500', bg: 'bg-slate-50' },
+    { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 

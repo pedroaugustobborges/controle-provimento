@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga, getBancoByVaga } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');

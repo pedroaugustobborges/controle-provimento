@@ -189,10 +189,16 @@ export function ImportExcelDialog({
           console.log(`- Registros lidos do arquivo: ${totalProcessed}`);
           console.log(`- Registros válidos inseridos: ${newVagas.length}`);
           console.log(`- Total final na base: ${totalNovoVagas}`);
+          
+          // Métrica específica solicitada para conferência
+          import { getValidVacancyBase } from '@/lib/vagaUtils';
+          const totalVagasDashboard = getValidVacancyBase(newVagas, 'TODOS', 'TODOS').length;
+          console.log(`- TOTAL VAGAS (DASHBOARD): ${totalVagasDashboard}`);
 
           setSummary({
             type: 'vagas',
             total: newVagas.length,
+            dashboardTotal: totalVagasDashboard,
             fileName: selectedFile.name
           });
           

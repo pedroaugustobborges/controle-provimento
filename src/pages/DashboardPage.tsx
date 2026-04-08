@@ -236,7 +236,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
                 <div className="h-2 w-2 rounded-full bg-primary"></div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Total</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Abertas</span>
               </div>
             </div>
           </CardHeader>

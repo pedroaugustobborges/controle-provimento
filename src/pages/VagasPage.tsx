@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
   Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle,
-  Database, CheckCircle2
+  Database, CheckCircle2, ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';

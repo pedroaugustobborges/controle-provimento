@@ -115,35 +115,13 @@ export const useVagasStore = create<VagasState>()(
           }
         }
         
-        // Aggressive normalization helper
-        const normalizeStr = (str: string) => {
-          if (!str) return '';
-          return str.toLowerCase()
-            .trim()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "") // remove accents
-            .replace(/[^a-z0-9 ]/g, " ") // replace non-alphanumeric with spaces
-            .replace(/\s+/g, " ") // collapse spaces
-            .trim();
-        };
-
-        const goianiaUnits = [
-          'CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 
-          'CEALCON', 'HUGO', 'HEAPA', 'HEG', 'HDT', 'GOIANIA', 'AGIR',
-          'HOSPITAL CENTRAL', 'CENTRAL', 'MATERNIDADE', 'HEMMNSL', 'HOSPITAL ESTADUAL',
-          'CORA', 'HECON', 'HESLV', 'HETRIN', 'HEEL', 'HEJA', 'HERP', 'GOIAS', 'GO',
-          'HGG', 'HOSPITAL GERAL', 'HEVANA', 'HEAPA', 'HEMO', 'HEMONUCLEO', 'IPASGO', 'HOSPITAL',
-          'CMMNSL', 'CEAL', 'HUAPA', 'HURRE', 'HEAPA', 'HUGOL', 'HECAD', 'HDT', 'HDS', 'HEG', 'HOSPITAL'
-        ].map(normalizeStr);
-        
-        const vitoriaUnits = [
-          'SUA', 'SAO PEDRO', 'VITORIA', 'UPA', 'ES', 'ESPIRITO SANTO', 'SERRA', 'CARIACICA', 'VILA VELHA', 'VITORIA', 'SERRA',
-          'ASAS', 'HOSPITAL ESTADUAL', 'DR JAYME', 'HESVV', 'CRE', 'UPA'
-        ].map(normalizeStr);
+        // Fallback: match by cargo and unit scope
+        const normalizedVagaCargo = normalizeCargo(vaga.cargo);
+        const normalizedVagaUnidade = normalizeCargo(vaga.unidade);
         
         const getCargoTokens = (cargo: string) => {
           if (!cargo) return [];
-          return normalizeStr(cargo)
+          return normalizeCargo(cargo)
             .split(' ')
             .filter(word => word.length > 2 && !['das', 'dos', 'com', 'para', 'pela', 'pelo', 'uma', 'uns', 'nas', 'nos'].includes(word))
             .map(word => {
@@ -157,10 +135,9 @@ export const useVagasStore = create<VagasState>()(
               return word;
             });
         };
-
-        const normalizedVagaCargo = normalizeStr(vaga.cargo);
-        const normalizedVagaUnidade = normalizeStr(vaga.unidade);
+        
         const vagaTokens = getCargoTokens(vaga.cargo);
+
 
         // Fallback: match by cargo and unit scope
         const found = state.bancos.find(b => {

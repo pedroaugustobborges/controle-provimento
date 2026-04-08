@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { EQUIPE_POR_UNIDADE } from '@/data/equipe';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -78,12 +79,17 @@ export default function DashboardPage() {
     return !lastHist || calcDiasAberto(lastHist.data) > 10;
   });
 
-  const todasUnidades = [...new Set([...vagas.map((v) => v.unidade), ...EQUIPE_POR_UNIDADE.map(e => e.unidade)])];
-  const chartData = todasUnidades.map((u) => ({
-    name: u.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, ''),
+  const todasUnidades = useMemo(() => {
+    const fromVagas = vagas.map((v) => v.unidade);
+    const fromEquipe = EQUIPE_POR_UNIDADE.map(e => e.unidade);
+    return [...new Set([...fromVagas, ...fromEquipe])].filter(Boolean);
+  }, [vagas]);
+
+  const chartData = useMemo(() => todasUnidades.map((u) => ({
+    name: u.replace('Hospital ', '').replace('Unidade ', '').replace(/\s*\(.*\)/, '').trim(),
     total: vagas.filter((v) => v.unidade === u).length,
     abertas: vagas.filter((v) => v.unidade === u && (v.status === 'aberta' || v.status_geral === 'aberta')).length,
-  })).sort((a, b) => b.total - a.total);
+  })).sort((a, b) => b.total - a.total), [todasUnidades, vagas]);
 
 
   return (

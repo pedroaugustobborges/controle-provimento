@@ -31,7 +31,7 @@ import {
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -63,7 +63,7 @@ export default function VagaDetalhePage() {
 
   const edital = getEditalByVaga(vaga.id);
   const validacao = getValidacaoByVaga(vaga.id);
-  const banco = useVagasStore.getState().getBancoByVaga(vaga.id);
+  const banco = getBancoByVaga(vaga.id);
 
   const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
   const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';

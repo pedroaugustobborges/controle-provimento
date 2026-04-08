@@ -26,6 +26,7 @@ import {
   DATE_FORMAT_LABELS, 
   DateFormat 
 } from '@/lib/dateImportUtils';
+import { normalizeStatus } from '@/lib/vagaUtils';
 
 type Step = 'select' | 'sheets' | 'mapping' | 'preview' | 'duplicates' | 'summary';
 
@@ -331,15 +332,19 @@ export function ImportExcelDialog({
     });
 
     const foundDuplicates = allData.filter(newRow => {
+      const newReq = String(newRow.requisicao || newRow.numero_requisicao || '');
       return vagas.some(existing => 
-        existing.numero_requisicao === String(newRow.numero_requisicao) ||
+        (newReq && (existing.requisicao === newReq || existing.numero_requisicao === newReq)) ||
         (existing.cargo === newRow.cargo && existing.unidade === newRow.unidade && existing.data_abertura === String(newRow.data_abertura))
       );
-    }).map(d => ({
-      ...d,
-      __existing: vagas.find(v => v.numero_requisicao === String(d.numero_requisicao)) || 
-                  vagas.find(v => v.cargo === d.cargo && v.unidade === d.unidade)
-    }));
+    }).map(d => {
+      const dReq = String(d.requisicao || d.numero_requisicao || '');
+      return {
+        ...d,
+        __existing: vagas.find(v => (dReq && (v.requisicao === dReq || v.numero_requisicao === dReq))) || 
+                    vagas.find(v => v.cargo === d.cargo && v.unidade === d.unidade)
+      };
+    });
 
     setDuplicates(foundDuplicates);
     
@@ -361,12 +366,9 @@ export function ImportExcelDialog({
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
       
-      // Better status mapping
-      const importStatus = row.status || row.acompanhamento || row.fase || row.etapa || 'aberta';
-      const normalizedStatus = importStatus === 'aberta' ? 'aberta' : (typeof importStatus === 'string' ? importStatus : 'aberta');
-      
-      // Use normalizeStatus utility if needed, but here we can try to find the best match
-      const statusFinal: StatusVaga = normalizedStatus as StatusVaga;
+      // Better status mapping using utility
+      const importStatus = String(row.status || row.acompanhamento || row.fase || row.etapa || 'aberta');
+      const statusFinal = normalizeStatus(importStatus);
 
       return {
         id: `imp-${Date.now()}-${i}`,

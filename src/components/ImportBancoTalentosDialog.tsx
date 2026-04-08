@@ -128,16 +128,7 @@ function detectHeaderRow(rawRows: any[][]): number {
 }
 
 function normalizeString(str: string): string {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos
-    .replace(/[^a-z0-9\s]/g, ' ')    // substitui caracteres especiais por espaço
-    .replace(/[\r\n]+/g, ' ')       // remove quebras de linha
-    .replace(/\s+/g, ' ')           // normaliza espaços
-    .trim();
+  return normalizeCargo(str);
 }
 
 function fuzzyMatch(header: string, fieldKey: string): boolean {
@@ -519,14 +510,18 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           return; // Pula este registro se faltar campo obrigatório
         }
 
-        // Determinar status baseado em validade
-        let status: 'valido' | 'vencido' | 'prorrogado' = 'valido';
-        const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
+        // Determinar status baseado em validade e convocação
+        let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' = 'valido';
         
-        if (expiryDateStr) {
-          const expiryDate = new Date(expiryDateStr);
-          if (isValid(expiryDate)) {
-            status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
+        if (mapped.data_convocacao) {
+          status = 'convocado';
+        } else {
+          const expiryDateStr = mapped.nova_data_validade || mapped.data_validade;
+          if (expiryDateStr) {
+            const expiryDate = new Date(expiryDateStr);
+            if (isValid(expiryDate)) {
+              status = expiryDate > now ? (mapped.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
+            }
           }
         }
 

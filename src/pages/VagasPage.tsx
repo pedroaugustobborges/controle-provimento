@@ -144,7 +144,7 @@ export default function VagasPage() {
         <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
-            <p className="text-2xl font-bold text-green-600">{vagas.filter(v => v.tem_banco_valido).length}</p>
+            <p className="text-2xl font-bold text-green-600">{vagas.filter(v => getBancoByVaga(v.id)).length}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white">

@@ -1,28 +1,30 @@
 
 
-## Plano de Correção: Erro `RangeError: Invalid time value`
+## Plano de Implementação
 
-### Problema
-O erro ocorre em `src/components/ImportExcelDialog.tsx` na linha 897, onde `format(new Date(row.data_abertura), 'dd/MM/yyyy')` é chamado com um valor de data inválido (ex: serial Excel, string mal formatada). Isso causa tela branca na aplicação.
+### 1. Redesign do Header Superior (`AppLayout.tsx`)
+- Substituir o breadcrumb minimalista por um header mais rico e visualmente atraente
+- Adicionar saudação contextual ("Bom dia/Boa tarde, Ana Paula") com base no horário
+- Tornar a busca mais proeminente com um input visível estilizado
+- Redesenhar o indicador de sync com chip mais elegante
+- Melhorar o breadcrumb com ícones e melhor contraste/tipografia
+- Adicionar gradiente sutil ou fundo com mais personalidade
 
-### Correção
+### 2. Criar hook/utilitário de permissões (`src/hooks/usePermissions.ts`)
+- Criar um hook `usePermissions()` que lê o `currentUser` do `adminStore`
+- Expor funções como `canImport()`, `canManageUsers()`, `canDeleteRecords()`, `canEditSettings()`, `canAccessAdmin()`
+- Regras baseadas no perfil (`Admin`, `Gerência` = acesso total; `Coordenação`, `Supervisão`, `Analista`, `Assistente` = restrito) combinadas com as flags booleanas do usuário (`pode_incluir_registros`, `pode_excluir_requisicoes`, etc.)
 
-**Arquivo: `src/components/ImportExcelDialog.tsx` (linha 897)**
+### 3. Aplicar controle de visibilidade nos componentes
+- **`AppSidebar.tsx`**: Ocultar itens "Importações" e "Administração" para perfis sem permissão
+- **Páginas de Vagas e Banco de Talentos**: Ocultar botões de importação e ações administrativas com base nas permissões
+- **`ImportacoesPage.tsx`**: Redirecionar ou mostrar mensagem de acesso negado se o usuário não tiver permissão
 
-Substituir:
-```tsx
-{row.data_abertura ? format(new Date(row.data_abertura), 'dd/MM/yyyy') : '-'}
-```
-
-Por uma versão segura com validação:
-```tsx
-{row.data_abertura ? (() => {
-  const d = new Date(row.data_abertura);
-  return isValid(d) ? format(d, 'dd/MM/yyyy') : String(row.data_abertura);
-})() : '-'}
-```
-
-A função `isValid` do `date-fns` já está importada no arquivo (linha 21). Basta adicionar a verificação antes de chamar `format()` para evitar o `RangeError` quando o valor não é uma data válida.
-
-Isso é uma correção de uma linha que resolve a tela branca imediatamente.
+### 4. Arquivos modificados
+- `src/components/AppLayout.tsx` — redesign completo do header
+- `src/hooks/usePermissions.ts` — novo hook de permissões
+- `src/components/AppSidebar.tsx` — controle de visibilidade dos menus
+- `src/pages/VagasPage.tsx` — ocultar botões admin
+- `src/pages/BancoTalentosPage.tsx` — ocultar botões admin
+- `src/pages/ImportacoesPage.tsx` — proteção de acesso
 

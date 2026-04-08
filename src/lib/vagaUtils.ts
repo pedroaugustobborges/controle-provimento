@@ -35,12 +35,15 @@ export function isVitoriaUnit(unidade: string): boolean {
 export const CATEGORIAS_STATUS = {
   fila_edital: ['sem_status', 'publicar_novo_edital', '', null, undefined, 'nan'],
   em_andamento: [
-    'em_edital', 'em_documentacao', 'documentacao_ok_azul_pendente', 
-    'documentacao_pendente_azul_ok', 'em_admissao', 'admissao_enviada',
-    'em_triagem', 'entrevista', 'aberta'
+    'em_edital', 
+    'em_documentacao', 
+    'documentacao_ok_aso_pendente', 
+    'documentacao_pendente_aso_ok', 
+    'em_admissao', 
+    'admissao_enviada'
   ],
-  concluidas: ['admissao_efetivada', 'finalizada', 'encerrada'],
-  excecoes: ['dispensa', 'cancelada', 'aguardar_anuencia'],
+  concluidas: ['admissao_efetivada'],
+  excecoes: ['dispensa', 'cancelada', 'aguardar_unidade', 'aguardar_anuencia'],
   estrategicas: ['movimentacao_interna', 'vaga_lideranca'],
   convocacao: ['realizar_convocacao']
 };
@@ -48,7 +51,8 @@ export const CATEGORIAS_STATUS = {
 export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
   if (!status || status === '' || status === 'sem_status' || status === 'nan' || status === 'null' || status === 'undefined') return 'fila_edital';
   
-  const s = status.toLowerCase();
+  const s = status.toLowerCase().trim();
+  
   if (CATEGORIAS_STATUS.fila_edital.includes(s)) return 'fila_edital';
   if (CATEGORIAS_STATUS.em_andamento.includes(s)) return 'em_andamento';
   if (CATEGORIAS_STATUS.concluidas.includes(s)) return 'concluidas';
@@ -58,6 +62,7 @@ export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STAT
   
   return 'excecoes';
 }
+
 
 
 export function getStatusColor(status: StatusVaga): string {
@@ -116,16 +121,36 @@ export function getPublicacaoColor(status: StatusPublicacao): string {
   return map[status];
 }
 
-export function calcDiasAberto(dataAbertura: string, dataEncerramento?: string): number {
-  if (!dataAbertura) return 0;
-  const start = new Date(dataAbertura);
-  const end = (dataEncerramento && dataEncerramento !== '') ? new Date(dataEncerramento) : new Date();
+export function calcDiasAberto(dataRecebimento: string, dataConclusao?: string): number {
+  if (!dataRecebimento) return 0;
+  const start = new Date(dataRecebimento);
+  const end = (dataConclusao && dataConclusao !== '') ? new Date(dataConclusao) : new Date();
   
   if (isNaN(start.getTime())) return 0;
   
   const diffTime = end.getTime() - start.getTime();
   return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 }
+
+export function calcDiasUteis(dataRecebimento: string, dataConclusao?: string): number {
+  if (!dataRecebimento) return 0;
+  const start = new Date(dataRecebimento);
+  const end = (dataConclusao && dataConclusao !== '') ? new Date(dataConclusao) : new Date();
+  
+  if (isNaN(start.getTime())) return 0;
+  
+  let count = 0;
+  const curDate = new Date(start.getTime());
+  while (curDate <= end) {
+    const dayOfWeek = curDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday or Saturday
+      count++;
+    }
+    curDate.setDate(curDate.getDate() + 1);
+  }
+  return count;
+}
+
 
 export function formatDate(date: string): string {
   if (!date) return '—';
@@ -150,27 +175,30 @@ export function normalizeStatus(statusText: string): StatusVaga {
   
   const text = statusText.toLowerCase().trim();
   
+  // Specific requirements from Bloco 1
   if (text.includes('publicar') && text.includes('edital')) return 'publicar_novo_edital';
   if (text.includes('em edital')) return 'em_edital';
-  if (text.includes('triagem')) return 'em_triagem';
-  if (text.includes('entrev')) return 'entrevista';
-  if (text.includes('document') && text.includes('ok') && text.includes('azul')) return 'documentacao_ok_azul_pendente';
-  if (text.includes('document') && text.includes('pendente') && text.includes('azul')) return 'documentacao_pendente_azul_ok';
+  if (text.includes('documentacao ok') && text.includes('aso pendente')) return 'documentacao_ok_aso_pendente';
+  if (text.includes('documentacao pendente') && text.includes('aso ok')) return 'documentacao_pendente_aso_ok';
   if (text.includes('document')) return 'em_documentacao';
   if (text.includes('admissao enviada')) return 'admissao_enviada';
   if (text.includes('admissao efetivada')) return 'admissao_efetivada';
   if (text.includes('admissao')) return 'em_admissao';
-  if (text.includes('convoc')) return 'realizar_convocacao';
+  if (text.includes('realizar convoc')) return 'realizar_convocacao';
   if (text.includes('lideranca')) return 'vaga_lideranca';
   if (text.includes('movimentacao') || text.includes('interna')) return 'movimentacao_interna';
   if (text.includes('cancel')) return 'cancelada';
   if (text.includes('dispensa')) return 'dispensa';
+  if (text.includes('unidade') && text.includes('aguardar')) return 'aguardar_unidade';
   if (text.includes('anuencia')) return 'aguardar_anuencia';
-  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'encerrada';
-  if (text.includes('aberta') || text.includes('novo') || text.includes('nova')) return 'aberta';
+  
+  // Legacy or generic mappings
+  if (text.includes('triagem')) return 'em_edital'; // Map triagem to edital flow
+  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'admissao_efetivada';
   
   return 'sem_status';
 }
+
 
 export function normalizeUnitName(name: string): string {
   if (!name) return '';

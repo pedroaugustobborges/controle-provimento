@@ -382,11 +382,9 @@ export function ImportExcelDialog({
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
       
-      // Preserve status exactly as imported, allow blank
       const importStatus = row.status || row.acompanhamento || row.fase || row.etapa || '';
       const statusFinal = importStatus ? normalizeStatus(String(importStatus)) : 'sem_status';
 
-      // Use column mapping formats for dates
       const dataAbertura = row.data_abertura ? convertDateValue(row.data_abertura, mappings.find(m => m.system === 'data_abertura')?.format || 'auto').formatted : '';
       const dataRecebimento = row.data_recebimento ? convertDateValue(row.data_recebimento, mappings.find(m => m.system === 'data_recebimento')?.format || 'auto').formatted : '';
 
@@ -394,7 +392,6 @@ export function ImportExcelDialog({
       const cargoValue = String(row.cargo || '');
       const vagaValue = String(row.vaga || row.numero_vagas || row.quantidade || '');
 
-      // Trace key is for diagnostic only, not uniqueness
       const traceKey = `${reqValue}::${cargoValue}::${vagaValue}`;
 
       return {
@@ -424,9 +421,9 @@ export function ImportExcelDialog({
         import_batch_id: row.__import_batch_id || currentLoteId,
         raw_row_hash: row.__raw_row_hash || '',
         historico: [{
-          id: `h-${currentLoteId}-${i}`,
+          id: `h-${currentNow.replace(/[:.-]/g, '')}-${i}`,
           data: currentNow.split('T')[0],
-          descricao: `Importado via Excel (${file?.name}). Registro original preservado fielmente.`,
+          descricao: `Importado via Excel (${file?.name}). Registro original preservado (Linha ${row.__source_row_index || i + 1}).`,
           usuario: 'Ana Paula Oliveira'
         }]
       };
@@ -470,48 +467,10 @@ export function ImportExcelDialog({
     setIsProcessing(false);
     toast.success(`Importação concluída: ${newVagas.length} registros processados.`);
   };
-    
-    addImportHistory({
-      id: loteId,
-      data_hora: now,
-      usuario: 'Ana Paula Oliveira',
-      email_usuario: 'ana.oliveira@agir.org.br',
-      arquivo: file?.name || 'excel_import.xlsx',
-      tipo_importacao: 'vagas',
-      planilha_aba: selectedSheets.join(', '),
-      linha_cabecalho: headerRow,
-      ...summary,
-      status: 'concluido',
-      referencia_arquivo: fileId || undefined,
-      mapeamento_aplicado: mappings
-    });
-
-    if (fileId) {
-      updateImportedFile(fileId, {
-        status: 'processado',
-        vaga_importacao_id: loteId
-      });
-    }
-
-    setImportSummary(summary);
-    setStep('summary');
-    setIsProcessing(false);
-    toast.success(`Importação concluída: ${newVagas.length} registros processados.`);
-  };
 
   const handleDuplicateAction = (action: 'new' | 'update' | 'ignore') => {
-    const allData: any[] = [];
-    selectedSheets.forEach(sheetName => {
-      const sheet = workbook?.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet!, { range: headerRow });
-      allData.push(...data.map((row: any) => {
-        const mapped: any = { __original: row, __sheet: sheetName };
-        mappings.forEach(m => { if (m.excel) mapped[m.system] = row[m.excel]; });
-        return mapped;
-      }));
-    });
-
-    processImport(allData);
+    // This flow is now deprecated in favor of strict integrity, but keeping for compatibility
+    detectDuplicates();
   };
 
   const reset = () => {

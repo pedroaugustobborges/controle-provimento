@@ -113,7 +113,7 @@ export const useVagasStore = create<VagasState>()(
           return str.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         };
 
-        const goianiaUnits = ['CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 'CEALCON'].map(normalizeStr);
+        const goianiaUnits = ['CRER', 'HUGOL', 'HECAD', 'HDS', 'CORPORATIVO', 'POLICLINICA', 'CEALCON', 'HUGO', 'HEAPA', 'HEG', 'HDT'].map(normalizeStr);
         const vitoriaUnits = ['SUA', 'SÃO PEDRO', 'VITÓRIA', 'UPA'].map(normalizeStr);
         
         const normalizedVagaCargo = normalizeStr(vaga.cargo);
@@ -124,20 +124,26 @@ export const useVagasStore = create<VagasState>()(
           // Status check
           if (b.status === 'vencido') return false;
           
-          // Cargo match (normalized)
+          // Cargo match (normalized and partial)
           const normalizedBancoCargo = normalizeStr(b.cargo);
-          if (normalizedBancoCargo !== normalizedVagaCargo) return false;
+          const cargoMatch = normalizedBancoCargo === normalizedVagaCargo || 
+                            normalizedBancoCargo.includes(normalizedVagaCargo) || 
+                            normalizedVagaCargo.includes(normalizedBancoCargo);
+          
+          if (!cargoMatch) return false;
           
           const normalizedBancoUnidade = normalizeStr(b.unidade);
           
           // Se o banco for da unidade "Goiânia" → válido para as unidades de Goiânia
-          if (normalizedBancoUnidade === 'goiania' && goianiaUnits.includes(normalizedVagaUnidade)) return true;
+          if ((normalizedBancoUnidade === 'goiania' || normalizedBancoUnidade === 'agir') && goianiaUnits.includes(normalizedVagaUnidade)) return true;
           
           // Se o banco for da unidade "UPA" ou "Vitória" → válido para Vitória (SUÁ/São Pedro).
           if ((normalizedBancoUnidade === 'upa' || normalizedBancoUnidade === 'vitoria') && vitoriaUnits.includes(normalizedVagaUnidade)) return true;
           
-          // Match exato (normalizado)
-          return normalizedBancoUnidade === normalizedVagaUnidade;
+          // Match exato ou parcial de unidade
+          return normalizedBancoUnidade === normalizedVagaUnidade || 
+                 normalizedBancoUnidade.includes(normalizedVagaUnidade) || 
+                 normalizedVagaUnidade.includes(normalizedBancoUnidade);
         });
       },
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),

@@ -139,7 +139,7 @@ export default function DashboardPage() {
   const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
   const totalConvRealizadas = convocacoes.length;
 
-  const stats = [
+  const stats = useMemo(() => [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Fila de Editais', value: filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -156,7 +156,7 @@ export default function DashboardPage() {
     { label: 'Etapas em Atraso', value: totalAtrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Edital Pend. Valid.', value: emValidacao, icon: ShieldCheck, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50' },
-  ];
+  ], [totalVagas, filaEdital, emAndamento, concluidas, totalMovInterna, totalLideranca, totalCR, totalConvocados, totalVencidos, totalConvRealizadas, totalCanceladas, totalDispensa, totalAnuencia, totalAtrasadas, emValidacao, totalTarefasPendentes]);
 
   const alerts = useMemo(() => vagas.filter((v) => {
     const status = v.status || v.status_geral;

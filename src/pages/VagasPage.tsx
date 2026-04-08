@@ -86,15 +86,7 @@ export default function VagasPage() {
     : (currentUser?.unidades_vinculadas || []), [currentUser, allUnidades]);
 
   const unidades = useMemo(() => {
-    const rawUnidades = allUnidades.filter(u => visibleUnidades.includes(u));
-    const hasVitoriaSubUnit = rawUnidades.some(u => isVitoriaUnit(u));
-    
-    // Remove individual ES units and add "Vitória" if any exists
-    let filteredList = rawUnidades.filter(u => !isVitoriaUnit(u));
-    if (hasVitoriaSubUnit) {
-      filteredList.push('Vitória');
-    }
-    return [...new Set(filteredList)].sort();
+    return allUnidades.filter(u => visibleUnidades.includes(u)).sort();
   }, [allUnidades, visibleUnidades]);
 
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);

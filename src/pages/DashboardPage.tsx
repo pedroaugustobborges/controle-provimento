@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
-import { EQUIPE_POR_UNIDADE } from '@/data/equipe';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit } from '@/lib/vagaUtils';
@@ -62,7 +62,7 @@ export default function DashboardPage() {
   const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
-  const convocacoesHoje = 12; // Mock data for now
+  
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },

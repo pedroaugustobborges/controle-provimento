@@ -79,6 +79,7 @@ export const mockVagas: Vaga[] = [
     unidade: 'CRER',
     analista_responsavel: 'Ana Paula', 
     status: 'aberta',
+    observacoes_internas: '',
     tem_banco_valido: true,
     historico: [],
   }

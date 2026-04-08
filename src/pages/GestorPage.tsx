@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS } from '@/types/vaga';
-import { calcDiasAberto, formatDate, getEtapaColor } from '@/lib/vagaUtils';
+import { calcDiasAberto, formatDate, getEtapaColor, isVitoriaUnit } from '@/lib/vagaUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Clock, History, FileSpreadsheet, User, CheckCircle2, AlertCircle } from 'lucide-react';
 

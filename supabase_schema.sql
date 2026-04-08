@@ -6,9 +6,12 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT UNIQUE NOT NULL,
-    nome TEXT NOT NULL,
+    nome_completo TEXT NOT NULL,
     perfil TEXT NOT NULL DEFAULT 'Assistente', -- Default role
     unidade_id UUID, -- For unit-specific restrictions
+    status TEXT DEFAULT 'ativo',
+    visualiza_todas_unidades BOOLEAN DEFAULT false,
+    unidades_vinculadas UUID[] DEFAULT '{}',
     pode_incluir_registros BOOLEAN DEFAULT false,
     pode_excluir_requisicoes BOOLEAN DEFAULT false,
     pode_editar_configuracoes BOOLEAN DEFAULT false,
@@ -20,7 +23,7 @@ CREATE TABLE public.usuarios (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.usuarios (id, email, nome)
+  INSERT INTO public.usuarios (id, email, nome_completo)
   VALUES (NEW.id, NEW.email, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email));
   RETURN NEW;
 END;

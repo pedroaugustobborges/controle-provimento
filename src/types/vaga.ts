@@ -1,21 +1,21 @@
 export type TipoVaga = 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
 export type StatusVaga = 
-  | 'movimentacao_interna' 
-  | 'vaga_lideranca' 
-  | 'publicado_edital' 
-  | 'em_edital' 
-  | 'documentacao' 
-  | 'documentacao_ok' 
-  | 'documentacao_pendente' 
-  | 'casos_ok' 
-  | 'admissao' 
-  | 'admissao_enviada' 
-  | 'admissao_efetivada' 
-  | 'suspensa' 
-  | 'cancelada' 
-  | 'aguardando_unidade' 
+  | 'sem_status'
+  | 'publicar_novo_edital'
+  | 'em_edital'
+  | 'em_documentacao'
+  | 'documentacao_ok_azul_pendente'
+  | 'documentacao_pendente_azul_ok'
+  | 'em_admissao'
+  | 'admissao_enviada'
+  | 'admissao_efetivada'
+  | 'dispensa'
+  | 'cancelada'
+  | 'aguardar_anuencia'
+  | 'movimentacao_interna'
+  | 'vaga_lideranca'
   | 'realizar_convocacao'
-  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada' | 'sem_status';
+  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada';
 
 export type StatusGeral = StatusVaga;
 export type StatusConvocacao = 

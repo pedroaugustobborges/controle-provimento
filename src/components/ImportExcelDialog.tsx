@@ -366,9 +366,9 @@ export function ImportExcelDialog({
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
       
-      // Better status mapping using utility
-      const importStatus = String(row.status || row.acompanhamento || row.fase || row.etapa || 'aberta');
-      const statusFinal = normalizeStatus(importStatus);
+      // Better status mapping using utility - avoid defaulting to 'aberta' if empty
+      const importStatus = row.status || row.acompanhamento || row.fase || row.etapa || '';
+      const statusFinal = normalizeStatus(String(importStatus));
 
       return {
         id: `imp-${Date.now()}-${i}`,

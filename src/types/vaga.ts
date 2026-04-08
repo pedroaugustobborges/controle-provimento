@@ -15,7 +15,7 @@ export type StatusVaga =
   | 'cancelada' 
   | 'aguardando_unidade' 
   | 'realizar_convocacao'
-  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada';
+  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada' | 'sem_status';
 
 export type StatusGeral = StatusVaga;
 export type StatusConvocacao = 
@@ -224,6 +224,7 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   entrevista: 'Entrevista',
   finalizada: 'Finalizada',
   encerrada: 'Encerrada',
+  sem_status: 'Sem Status',
 };
 
 export const STATUS_LABELS = STATUS_VAGA_LABELS;

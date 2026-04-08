@@ -6,14 +6,16 @@ export const CATEGORIAS_STATUS = {
     'documentacao', 'documentacao_ok', 'documentacao_pendente', 
     'casos_ok', 'admissao', 'admissao_enviada', 'realizar_convocacao'
   ],
-  aguardando_unidade: ['aguardando_unidade', 'aberta'],
+  aguardando_unidade: ['aguardando_unidade'],
   encerradas: ['admissao_efetivada', 'finalizada', 'encerrada'],
   lideranca: ['vaga_lideranca'],
   movimentacao_interna: ['movimentacao_interna'],
+  sem_status: ['sem_status', '', null, undefined],
   outros: ['suspensa', 'cancelada']
 };
 
 export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
+  if (!status || status === '' || status === 'sem_status') return 'sem_status';
   if (CATEGORIAS_STATUS.em_andamento.includes(status)) return 'em_andamento';
   if (CATEGORIAS_STATUS.aguardando_unidade.includes(status)) return 'aguardando_unidade';
   if (CATEGORIAS_STATUS.encerradas.includes(status)) return 'encerradas';
@@ -45,6 +47,7 @@ export function getStatusColor(status: StatusVaga): string {
     entrevista: 'bg-indigo-100 text-indigo-800',
     finalizada: 'bg-green-100 text-green-800',
     encerrada: 'bg-gray-100 text-gray-600',
+    sem_status: 'bg-gray-100 text-gray-600',
   };
   return map[status] || 'bg-gray-100 text-gray-600';
 }
@@ -109,7 +112,7 @@ export function normalizeCargo(cargo: string): string {
 }
 
 export function normalizeStatus(statusText: string): StatusVaga {
-  if (!statusText) return 'aberta';
+  if (!statusText) return '' as StatusVaga;
   
   const text = statusText.toLowerCase().trim();
   
@@ -133,6 +136,6 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'encerrada';
   if (text.includes('aberta') || text.includes('novo')) return 'aberta';
   
-  // Se não bater com nada conhecido, mantém como aberta por padrão ou tenta ser mais inteligente
-  return 'aberta';
+  // Se não bater com nada conhecido, retorna vazio para ser tratado como "Sem Status"
+  return '' as StatusVaga;
 }

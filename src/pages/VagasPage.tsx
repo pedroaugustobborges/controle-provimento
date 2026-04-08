@@ -103,53 +103,43 @@ export default function VagasPage() {
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
-  const filtered = useMemo(() => vagas.filter((v) => {
-    // Audit for transparency
-    const vUnitNormalized = normalizeUnitName(v.unidade);
-    
-    // Unit access restriction - using normalized names for consistency
-    if (!currentUser?.visualiza_todas_unidades) {
-      const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-      if (!userUnidades.includes(vUnitNormalized)) {
-        return false;
-      }
-    }
-
-    const searchTerm = search.toLowerCase();
-    const matchSearch = !search || 
-      (v.cargo || '').toLowerCase().includes(searchTerm) ||
-      (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm) ||
-      (v.unidade || '').toLowerCase().includes(searchTerm) ||
-      (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
-
-    const matchUnidade = filterUnidade === 'all' || normalizeUnitName(v.unidade) === filterUnidade;
-
-    // Rule: if cargo is blank, it shouldn't be counted in Total de Vagas, but let's keep it visible in the table 
-    // unless the user specifically wants the table to match the vacancy count logic.
-    // The user said: "visible table row count" shouldn't determine the metric, but 
-    // "Implement the platform count so it behaves exactly like the spreadsheet: unit-scoped, cargo-based, month-filtered by abertura"
-    // To maintain parity, the table should show what's being counted.
-    const hasCargoValue = String(v.cargo ?? "").trim() !== "";
-    if (!hasCargoValue) return false;
-
-    const matchMes = filterMes === 'all' || getMonthNamePtBrUpper(v.data_abertura) === filterMes.toUpperCase();
-
-    const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
-    const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
-    const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
-    const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
-    const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
-    
-    return matchSearch && matchUnidade && matchMes && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
-  }), [vagas, currentUser, search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
-
-
-  const vacancyStats = useMemo(() => {
-    const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
-    const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
-    
-    return getStatusSummary(vagas, selectedUnit, selectedMonth);
+  // 1. Canonical base for all metrics - exactly matching Excel parity
+  const canonicalBase = useMemo(() => {
+    return getValidVacancyBase(vagas, filterUnidade, filterMes);
   }, [vagas, filterUnidade, filterMes]);
+
+  // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
+  const filtered = useMemo(() => {
+    return canonicalBase.filter((v) => {
+      const searchTerm = search.toLowerCase();
+      const matchSearch = !search || 
+        (v.cargo || '').toLowerCase().includes(searchTerm) ||
+        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm) ||
+        (v.unidade || '').toLowerCase().includes(searchTerm) ||
+        (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
+
+      const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
+      const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
+      const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
+      const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
+      const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
+      
+      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
+    });
+  }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
+
+  // 3. Vacancy summary - strictly using the same canonical base
+  const vacancyStats = useMemo(() => {
+    const summary: Record<string, number> = {};
+    canonicalBase.forEach(row => {
+      const status = (row.status || row.status_geral || 'SEM_STATUS').toUpperCase().trim();
+      summary[status] = (summary[status] || 0) + 1;
+    });
+    return {
+      total: canonicalBase.length,
+      byStatus: summary
+    };
+  }, [canonicalBase]);
 
   const totalVagas = vacancyStats.total;
   

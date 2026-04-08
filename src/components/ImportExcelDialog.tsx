@@ -89,6 +89,32 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   admissao_efetivada: ['admissão efetivada', 'admissao efetivada', 'dt admissão efetivada'],
 };
 
+const ALLOWED_VAGA_SHEETS = [
+  'Vagas - HECAD',
+  'Vagas - CRER',
+  'Vagas - AGIR',
+  'Vagas - HUGOL',
+  'Vagas - HDS',
+  'Vagas - POLICLÍNICA',
+  'Vagas - VITÓRIA',
+  'Vagas - JATAÍ',
+  'Vagas - TEIA ANÁPOLIS',
+  'Vagas - TEIA CANEDO',
+  'Vagas - TEIA APARECIDA',
+  'Vagas - TEIA GOIÂNIA'
+];
+
+const FORBIDDEN_SHEETS = [
+  'DADOS_CARGOS',
+  'DASHBOARD',
+  'DASHBOARD - GERAL',
+  'UNIDADES',
+  'DIAGNÓSTICO',
+  'Vagas - Fechadas - Março- RM',
+  'Detalhamento - Vagas- TEIA RV'
+];
+
+
 function detectHeaderRow(rawRows: any[][]): number {
   let bestRow = 0;
   let bestScore = 0;
@@ -218,16 +244,27 @@ export function ImportExcelDialog({
 
           setWorkbook(wb);
           
-          // DEFAULT: Select all sheets starting with "Vagas - " if it's the .xlsm file
+          // DEFAULT: Select only allowed sheets for .xlsm file (Proposta de Gestão de Vagas)
           if (selectedFile.name.toLowerCase().endsWith('.xlsm')) {
-            const vagaSheets = wb.SheetNames.filter(name => name.startsWith('Vagas - '));
+            const vagaSheets = wb.SheetNames.filter(name => ALLOWED_VAGA_SHEETS.includes(name.trim()));
             if (vagaSheets.length > 0) {
               setSelectedSheets(vagaSheets);
             } else {
-              setSelectedSheets([wb.SheetNames[0]]);
+              // If no specific sheets match but it's an .xlsm, try to find sheets starting with Vagas
+              // but still respect the forbidden list
+              const possibleSheets = wb.SheetNames.filter(name => 
+                name.startsWith('Vagas - ') && !FORBIDDEN_SHEETS.includes(name.trim())
+              );
+              if (possibleSheets.length > 0) {
+                setSelectedSheets(possibleSheets);
+              } else {
+                setSelectedSheets([wb.SheetNames[0]]);
+              }
             }
           } else {
-            setSelectedSheets([wb.SheetNames[0]]);
+            // For other files, avoid auto-selecting forbidden sheets
+            const firstValidSheet = wb.SheetNames.find(name => !FORBIDDEN_SHEETS.includes(name.trim()));
+            setSelectedSheets([firstValidSheet || wb.SheetNames[0]]);
           }
 
           // For XLSM or larger files, we don't automatically jump to sheets step 
@@ -689,7 +726,17 @@ export function ImportExcelDialog({
                   </AlertDescription>
                 </Alert>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {workbook.SheetNames.map(name => (
+                  {workbook.SheetNames
+                    .filter(name => {
+                      // Se for arquivo de vagas, mostrar apenas as permitidas e esconder proibidas
+                      const isVagaSheet = name.startsWith('Vagas - ');
+                      if (isVagaSheet) {
+                        return ALLOWED_VAGA_SHEETS.includes(name.trim());
+                      }
+                      return !FORBIDDEN_SHEETS.includes(name.trim());
+                    })
+                    .map(name => (
+
                     <button
                       key={name}
                       onClick={() => handleSheetToggle(name)}

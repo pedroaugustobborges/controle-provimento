@@ -496,7 +496,15 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
         // Validar campos obrigatórios
         REQUIRED_FIELDS.forEach(field => {
-...
+          if (!mapped[field.key] || mapped[field.key] === '') {
+            hasMissingRequired = true;
+            detailedErrors.push({
+              linha: currentLine,
+              campo: field.label,
+              valor: 'Vazio',
+              motivo: "Campo obrigatório ausente"
+            });
+          }
         });
 
         if (hasMissingRequired) {

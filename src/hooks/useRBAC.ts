@@ -30,7 +30,7 @@ export function useRBAC() {
   };
 
   const isAdmin = userData?.perfil === 'Administrador' || userData?.perfil === 'Admin';
-  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência' || userData?.perfil === 'Supervisão' || userData?.perfil === 'Gestor';
+  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência' || userData?.perfil === 'Supervisão' || userData?.perfil === 'Coordenação';
 
   const getPermissions = (module: string): Permissions => {
     if (isAdmin) {

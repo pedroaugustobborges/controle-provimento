@@ -57,7 +57,8 @@ export default function DashboardPage() {
     realData.forEach(v => {
       // Prioridade para número de requisição como chave única, depois ID
       const key = v.requisicao || v.numero_requisicao || v.id;
-      if (key && !uniqueVagas.has(key)) {
+      if (key) {
+        // Sempre atualiza para manter a versão mais recente do registro caso haja duplicatas no store
         uniqueVagas.set(key, v);
       }
     });

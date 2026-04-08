@@ -1,17 +1,24 @@
 
 
-## Plano: Remover duplicação de info do usuário no header
+## Plano: Header fixo com variações contextuais por página
 
-### Problema
-O header exibe o nome/perfil do usuário duas vezes: na saudação à esquerda E no bloco de texto à direita do avatar.
+### Objetivo
+Tornar o header superior mais dinâmico e vivo, mantendo-o fixo no topo com variações visuais sutis que mudam conforme a página ativa.
 
 ### Alterações em `src/components/AppLayout.tsx`:
 
-1. **Remover o bloco textual** à direita do avatar (nome "Admin Master" e badge "Admin") — linhas que renderizam `currentUser?.nome_completo` e `currentUser?.perfil` na seção direita do header
-2. **Manter apenas o avatar circular** com iniciais como elemento visual compacto
-3. **Tornar o avatar clicável** com um dropdown (Meu Perfil, Sair) para dar funcionalidade ao espaço
-4. **Manter inalterada** a saudação contextual à esquerda ("Boa noite, Admin" / "Gerente de TI · Admin")
+1. **Mapeamento de contexto por rota** — Criar um objeto que associa cada rota a uma cor de destaque e ícone específico (ex: `/vagas` → azul/Briefcase, `/convocacoes` → âmbar/Megaphone, `/gestor` → roxo/Settings)
+
+2. **Scroll-aware compact mode** — Usar `useState` + `useEffect` com listener de scroll para detectar quando o usuário rola a página:
+   - **Expandido (scroll = 0):** Header completo com saudação, busca visível, altura normal (~64px)
+   - **Compacto (scroll > 50px):** Esconder saudação, reduzir altura (~48px), aplicar backdrop-blur mais intenso
+
+3. **Variação visual no breadcrumb** — O item ativo do breadcrumb recebe um pill/chip com a cor contextual da página (ex: fundo azul claro com texto azul em "Processos Seletivos")
+
+4. **Transições CSS suaves** — Adicionar `transition-all duration-300` no header para animar mudanças de altura, opacidade e cores
+
+5. **Glassmorphism no scroll** — Quando compacto, aplicar `bg-white/80 backdrop-blur-xl` para efeito de transparência elegante
 
 ### Arquivo modificado:
-- `src/components/AppLayout.tsx` — remover bloco duplicado de nome/perfil na seção direita do header
+- `src/components/AppLayout.tsx`
 

@@ -10,7 +10,7 @@ export class DatabaseService {
     data: T,
     userId: string
   ): Promise<{ data: T | null; error: PostgrestError | Error | null }> {
-    const { id, version, ...updateData } = data as any;
+    const { id, version, ...updateData } = data;
     
     // Attempt update where version matches
     const { data: updated, error } = await supabase
@@ -19,7 +19,8 @@ export class DatabaseService {
         ...updateData,
         updated_by: userId,
         updated_at: new Date().toISOString(),
-      })
+        version: (version || 0) + 1, // Increment version
+      } as any)
       .eq('id', id)
       .eq('version', version)
       .select()
@@ -36,6 +37,7 @@ export class DatabaseService {
     this.logAudit(table, id, 'UPDATE', userId, { version }, updated);
 
     return { data: updated as T, error: null };
+  }
   }
 
   /**

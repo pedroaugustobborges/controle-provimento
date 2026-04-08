@@ -191,7 +191,6 @@ export function ImportExcelDialog({
           console.log(`- Total final na base: ${totalNovoVagas}`);
           
           // Métrica específica solicitada para conferência
-          import { getValidVacancyBase } from '@/lib/vagaUtils';
           const totalVagasDashboard = getValidVacancyBase(newVagas, 'TODOS', 'TODOS').length;
           console.log(`- TOTAL VAGAS (DASHBOARD): ${totalVagasDashboard}`);
 

@@ -491,7 +491,10 @@ export default function BancoTalentosPage() {
       <Tabs defaultValue="list" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="list" className="gap-2">
-            <Filter className="h-4 w-4" /> Bancos de Talentos
+            <Filter className="h-4 w-4" /> Cadastro Reserva
+          </TabsTrigger>
+          <TabsTrigger value="convocados" className="gap-2">
+            <CheckCircle className="h-4 w-4" /> Convocados
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" /> Histórico de Importações

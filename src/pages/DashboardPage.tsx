@@ -44,8 +44,15 @@ export default function DashboardPage() {
   // Stats calculation
   const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
   
-  const abertas = getStatusCount('aberta');
-  const emAndamento = vagas.filter((v) => ['em_triagem', 'entrevista', 'documentacao', 'realizar_convocacao'].includes((v.status || v.status_geral) as string)).length;
+  const totalVagas = vagas.length;
+  const emAndamento = vagas.filter((v) => {
+    const s = (v.status || v.status_geral) as string;
+    return [
+      'em_triagem', 'entrevista', 'documentacao', 'documentacao_ok', 
+      'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 
+      'realizar_convocacao', 'aguardando_unidade', 'vaga_lideranca', 'movimentacao_interna'
+    ].includes(s);
+  }).length;
   const emEdital = getStatusCount('em_edital') + getStatusCount('publicado_edital');
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const encerradas = vagas.filter((v) => ['encerrada', 'finalizada', 'admissao_efetivada'].includes((v.status || v.status_geral) as string)).length;

@@ -283,14 +283,14 @@ export default function VagasPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-slate-50/80 whitespace-nowrap">
+                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Abertura</th>
+                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Recebimento</th>
                   <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Requisição</th>
                   <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Cargo</th>
+                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Tipo</th>
                   <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Unidade</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Banco</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Status Geral</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Processo / Edital</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Vagas</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Dias</th>
+                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Status</th>
+                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Vaga(s)</th>
                   <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
@@ -301,68 +301,29 @@ export default function VagasPage() {
                     className="border-b last:border-0 hover:bg-slate-50/50 transition-colors whitespace-nowrap group cursor-pointer"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                      {v.data_abertura ? formatDate(v.data_abertura) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                      {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block">
-                        {v.requisicao || v.numero_requisicao}
+                        {v.requisicao || v.numero_requisicao || '-'}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-semibold text-slate-800 truncate max-w-[200px]" title={v.cargo}>{v.cargo}</div>
-                      {v.cargo.toLowerCase().includes('pcd') && (
-                        <div className="flex flex-wrap gap-1 mt-0.5">
-                          <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>
-                        </div>
-                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                      {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
                     </td>
                     <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
                     <td className="px-4 py-3">
-                      {(() => {
-                        const banco = getBancoByVaga(v.id);
-                        if (!banco) {
-                          return (
-                            <div className="flex items-center gap-1.5 text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 w-fit">
-                              <X className="h-3 w-3" />
-                              <span className="text-[10px] font-bold">Não tem banco</span>
-                            </div>
-                          );
-                        }
-                        
-                        const statusColors = {
-                          valido: 'text-green-600 bg-green-50 border-green-100',
-                          prorrogado: 'text-blue-600 bg-blue-50 border-blue-100',
-                          vencido: 'text-red-600 bg-red-50 border-red-100',
-                          nenhum: 'text-slate-400 bg-slate-50 border-slate-100'
-                        };
-                        
-                        const statusLabels = {
-                          valido: 'Tem banco válido',
-                          prorrogado: 'Banco prorrogado',
-                          vencido: 'Banco vencido',
-                          nenhum: 'Não tem banco'
-                        };
-                        
-                        return (
-                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border w-fit ${statusColors[banco.status] || statusColors.nenhum}`}>
-                            <Database className="h-3 w-3" />
-                            <span className="text-[10px] font-bold">{statusLabels[banco.status] || statusLabels.nenhum}</span>
-                          </div>
-                        );
-                      })()}
+                      <StatusBadge status={v.status || v.status_geral} />
                     </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={v.status || v.status_geral || 'aberta'} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col">
-                        <span className="text-[11px] text-slate-700 font-bold">{v.numero_edital || '—'}</span>
-                        <span className="text-[9px] text-slate-400 font-mono">{v.numero_processo || '—'}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant="outline" className="font-bold text-[10px] bg-slate-50 border-slate-200 text-slate-600">
-                        {calcDiasAberto(v.data_abertura, v.data_encerramento)}d
-                      </Badge>
+                    <td className="px-4 py-3 text-center font-bold text-slate-700">
+                      {v.numero_vagas || v.quantidade || 0}
                     </td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>

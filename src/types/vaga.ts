@@ -70,6 +70,8 @@ export interface Vaga {
   aprovados_triagem?: number;
   aprovados_finais?: number;
   convocados_entrevista?: number;
+  trace_key?: string;
+  vaga?: string; // Identifier for the specific vacancy within a requisition
 }
 
 export interface BancoTalentos {

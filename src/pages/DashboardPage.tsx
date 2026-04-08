@@ -86,7 +86,7 @@ export default function DashboardPage() {
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
-      const unitKey = isVitoriaUnit(v.unidade) ? 'Vitória' : v.unidade;
+      const unitKey = v.unidade; // Removed isVitoriaUnit grouping
       const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
       
       current.total += 1;
@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
     // Also include units from EQUIPE_POR_UNIDADE that might not have vagas
     EQUIPE_POR_UNIDADE.forEach(e => {
-      const unitKey = isVitoriaUnit(e.unidade) ? 'Vitória' : e.unidade;
+      const unitKey = e.unidade; // Removed isVitoriaUnit grouping
       if (!groupedMap.has(unitKey)) {
         groupedMap.set(unitKey, { total: 0, abertas: 0 });
       }
@@ -176,9 +176,13 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="flex-1 pb-8">
-            <div className="h-[340px] w-full mt-4 pr-6">
+            <div className="h-[400px] w-full mt-4 pr-6">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 60, bottom: 0 }}>
+                <BarChart 
+                  data={chartData} 
+                  layout="vertical" 
+                  margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="4 4" horizontal={true} vertical={false} stroke="#f1f5f9" />
                   <XAxis type="number" hide />
                   <YAxis 
@@ -186,8 +190,13 @@ export default function DashboardPage() {
                     type="category" 
                     axisLine={false} 
                     tickLine={false} 
-                    width={140}
-                    tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} 
+                    width={180}
+                    tick={{ 
+                      fontSize: 10, 
+                      fontWeight: 700, 
+                      fill: '#64748b',
+                    }} 
+                    interval={0}
                   />
                   <Tooltip 
                     cursor={{ fill: '#f8fafc', radius: 4 }}

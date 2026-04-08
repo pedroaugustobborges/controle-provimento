@@ -113,7 +113,9 @@ export default function VagasPage() {
       v.unidade.toLowerCase().includes(searchTerm) ||
       (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-    const matchUnidade = filterUnidade === 'all' || v.unidade === filterUnidade;
+    const matchUnidade = filterUnidade === 'all' || 
+      (filterUnidade === 'Vitória' ? isVitoriaUnit(v.unidade) : v.unidade === filterUnidade);
+
     const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
     const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
     const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;

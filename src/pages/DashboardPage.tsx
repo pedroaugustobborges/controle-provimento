@@ -232,70 +232,81 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Recent Activities Section */}
-      <Card className="border-slate-200/60 shadow-sm overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50">
+      {/* Recent Activities Section - Table Refinement */}
+      <Card className="border-none shadow-sm bg-white overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 bg-slate-50/30">
           <div>
-            <CardTitle className="text-base font-bold text-slate-800">Atividades Recentes</CardTitle>
-            <CardDescription className="text-xs">Últimas movimentações nos processos seletivos e editais.</CardDescription>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Activity className="h-4 w-4 text-primary" />
+              <CardTitle className="text-lg font-black text-slate-800">Atividades Recentes</CardTitle>
+            </div>
+            <CardDescription className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-6">Últimas movimentações nos processos AGIR</CardDescription>
           </div>
           <div className="flex gap-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <div className="relative group">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
               <input 
                 type="text" 
-                placeholder="Filtrar..." 
-                className="pl-8 h-9 text-xs border border-slate-200 rounded-lg w-40 bg-white focus:ring-1 focus:ring-primary outline-none transition-all"
+                placeholder="Pesquisar processos..." 
+                className="pl-9 h-10 text-[11px] font-bold border border-slate-100 rounded-xl w-48 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-inner"
               />
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full">
               <thead>
-                <tr className="bg-slate-50/80 text-left border-b border-slate-100">
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Requisição</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Cargo e Unidade</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Tipo</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Status</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Última Atualização</th>
-                  <th className="px-6 py-3.5 w-10"></th>
+                <tr className="bg-slate-50/50 text-left border-b border-slate-100/50">
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Requisição</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Cargo e Unidade</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Tipo</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Status Operacional</th>
+                  <th className="px-6 py-4 font-black text-slate-400 text-[9px] uppercase tracking-[0.2em]">Atualização</th>
+                  <th className="px-6 py-4 w-10"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {vagas.slice(0, 5).map((v) => (
                   <tr
                     key={v.id}
-                    className="hover:bg-slate-50/50 cursor-pointer transition-all duration-150"
+                    className="group hover:bg-slate-50/80 cursor-pointer transition-all duration-200"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-6 py-4 font-mono text-[11px] font-bold text-primary">{v.requisicao || v.numero_requisicao}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-700 text-sm">{v.cargo}</span>
-                        <span className="text-[11px] text-slate-500 font-medium">{v.unidade}</span>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary transition-colors"></div>
+                        <span className="font-mono text-[11px] font-black text-primary leading-none uppercase">{v.requisicao || v.numero_requisicao}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200 uppercase tracking-tighter">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="font-extrabold text-slate-700 text-sm leading-tight tracking-tight group-hover:text-primary transition-colors">{v.cargo}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{v.unidade}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 text-[9px] font-black border border-slate-200 uppercase tracking-widest shadow-sm">
                         {TIPO_VAGA_LABELS[v.tipo_vaga]}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <StatusBadge status={v.status || v.status_geral || 'aberta'} />
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-slate-600">
+                        <span className="text-xs font-black text-slate-600">
                           {v.historico.length > 0 ? formatDate(v.historico[v.historico.length - 1].data) : formatDate(v.data_abertura)}
                         </span>
-                        <span className="text-[10px] text-slate-400">Há {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
+                        <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase mt-1">
+                          <Clock className="h-2.5 w-2.5" />
+                          <span>Há {calcDiasAberto(v.historico[v.historico.length - 1]?.data || v.data_abertura)} dias</span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary">
+                    <td className="px-6 py-5">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-300 hover:text-primary hover:bg-white hover:shadow-sm rounded-lg transition-all">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </td>
@@ -304,13 +315,13 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          <div className="p-4 bg-slate-50/30 border-t border-slate-100 flex justify-center">
+          <div className="p-5 bg-slate-50/30 border-t border-slate-100 flex justify-center">
             <Button 
               variant="ghost" 
               onClick={() => navigate('/vagas')} 
-              className="text-xs text-primary font-bold hover:bg-primary/5 uppercase tracking-widest"
+              className="text-[10px] text-primary font-black hover:bg-primary/5 uppercase tracking-[0.2em] transition-all"
             >
-              Ver todos os processos <ArrowUpRight className="ml-1 h-3 w-3" />
+              Histórico Completo de Processos <ArrowUpRight className="ml-2 h-3.5 w-3.5" />
             </Button>
           </div>
         </CardContent>

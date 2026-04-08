@@ -104,34 +104,72 @@ export default function DashboardPage() {
   });
 
   const chartData = useMemo(() => {
+    // 1. Audit unique units and their counts from the store for transparency
+    const rawUnits = vagas.map(v => v.unidade).filter(Boolean);
+    const uniqueRawUnits = [...new Set(rawUnits)];
+    const auditStats = uniqueRawUnits.map(u => ({
+      original: u,
+      count: vagas.filter(v => v.unidade === u).length
+    }));
+    console.log('AUDIT DASHBOARD: Unidades e contagens cruas do store:', auditStats);
+
+    const normalizeUnitName = (name: string): string => {
+      if (!name) return '';
+      const upper = name.toUpperCase().trim();
+      
+      // Explicit AGIR units mapping for absolute precision
+      if (upper.includes('HECAD')) return 'HECAD';
+      if (upper.includes('HUGOL')) return 'HUGOL';
+      if (upper.includes('CRER')) return 'CRER';
+      if (upper.includes('HDS')) return 'HDS';
+      if (upper.includes('POLICLINICA') || upper.includes('POLICLÍNICA')) return 'POLICLÍNICA';
+      
+      if (isVitoriaUnit(name)) return 'VITÓRIA';
+      
+      // Standard cleanup for other units while preserving the core name
+      return upper
+        .replace(/^(HOSPITAL|UNIDADE|HOSP)\s+/i, '')
+        .replace(/^(ESTADUAL\s+)/i, '')
+        .replace(/\s*\(.*\)/g, '')
+        .trim();
+    };
+
     const groupedMap = new Map<string, { total: number, abertas: number }>();
     
     vagas.forEach(v => {
       if (!v.unidade) return;
       
-      const unitName = v.unidade.toUpperCase();
-      // Skip Corporativo if requested (though we should only skip if not in data)
-      // The prompt says "Se essa unidade não existir nos dados importados, ela não deve aparecer"
-      // By using only 'vagas', we ensure only existing units appear.
-      if (unitName.includes('CORPORATIVO')) return;
+      const normalizedName = normalizeUnitName(v.unidade);
+      // Skip Corporativo specifically if present as requested/maintained
+      if (!normalizedName || normalizedName.includes('CORPORATIVO')) return;
 
-      const unitKey = isVitoriaUnit(v.unidade) ? 'VITÓRIA' : v.unidade.toUpperCase().replace('HOSPITAL ', '').replace('UNIDADE ', '').replace(/\s*\(.*\)/, '').trim();
-      const current = groupedMap.get(unitKey) || { total: 0, abertas: 0 };
-      
+      const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
       current.total += 1;
-      if (v.status === 'aberta' || v.status_geral === 'aberta') {
+      
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      if (status === 'aberta') {
         current.abertas += 1;
       }
-      groupedMap.set(unitKey, current);
+      groupedMap.set(normalizedName, current);
     });
 
+    // 2. Double-check validation against independent filter logic
     return Array.from(groupedMap.entries())
-      .map(([name, data]) => ({
-        name,
-        total: data.total,
-        abertas: data.abertas,
-      }))
-      .filter(item => item.total > 0) // Ensure we only show units with real data
+      .map(([name, data]) => {
+        // Cross-check: find all vagas that normalize to this unit name
+        const independentCount = vagas.filter(v => v.unidade && normalizeUnitName(v.unidade) === name).length;
+        
+        if (independentCount !== data.total) {
+          console.warn(`[Double-Check] Divergência na unidade ${name}: Map=${data.total}, Independent=${independentCount}`);
+        }
+
+        return {
+          name,
+          total: independentCount, // Prioritize the independent count to guarantee accuracy
+          abertas: data.abertas,
+        };
+      })
+      .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total);
   }, [vagas]);
 

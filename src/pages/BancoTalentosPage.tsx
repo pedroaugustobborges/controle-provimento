@@ -69,7 +69,50 @@ export default function BancoTalentosPage() {
     });
   }, [bancos, currentUser, search, unidadeFilter, statusFilter]);
 
+  const groupedBancos = useMemo(() => {
+    const groups: Record<string, {
+      id: string;
+      edital: string;
+      unidade: string;
+      cargo: string;
+      cargoNormalizado: string;
+      status: string;
+      validade: string;
+      isProrrogado: boolean;
+      qtdBanco: string | number;
+      candidatos: BancoTalentos[];
+    }> = {};
+
+    filtered.forEach(b => {
+      const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
+      const key = `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
+
+      if (!groups[key]) {
+        groups[key] = {
+          id: b.id,
+          edital: b.numero_edital,
+          unidade: b.unidade,
+          cargo: b.cargo,
+          cargoNormalizado: cargoNorm,
+          status: b.status,
+          validade: b.nova_data_validade || b.data_validade,
+          isProrrogado: b.is_prorrogado,
+          qtdBanco: b.quantidade_banco || 0,
+          candidatos: []
+        };
+      }
+      
+      // Keep the most recent valid status/dates for the group if needed
+      // But for simplicity, we use the first one found as representative
+      
+      groups[key].candidatos.push(b);
+    });
+
+    return Object.values(groups).sort((a, b) => a.cargo.localeCompare(b.cargo));
+  }, [filtered]);
+
   const historyBT = useMemo(() => {
+
     return importHistory.filter(h => h.tipo_importacao === 'banco');
   }, [importHistory]);
 

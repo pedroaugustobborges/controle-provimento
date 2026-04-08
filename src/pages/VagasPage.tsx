@@ -253,6 +253,14 @@ export default function VagasPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
+                className={`text-[10px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary'}`}
+                onClick={() => setIsDebugOpen(!isDebugOpen)}
+              >
+                <Bug className="h-3 w-3" /> Audit
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 className="text-[10px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
                 onClick={() => {
                   const diag = getMatchingDiagnostic();

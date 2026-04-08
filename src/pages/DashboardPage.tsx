@@ -50,13 +50,15 @@ export default function DashboardPage() {
   // Filtrar dados mockados: consideramos "reais" apenas dados com origem de importação ou lote
   // Isso atende à solicitação de usar exclusivamente dados reais inseridos/importados
   const vagas = useMemo(() => {
-    // Filtrar dados reais e garantir unicidade por ID para evitar contagem dupla
+    // Filtrar dados reais e garantir unicidade por ID ou Requisição para evitar contagem dupla
     const realData = allVagas.filter(v => v.origem_importacao || v.lote_importacao || (v.id && v.id.length > 5));
     
     const uniqueVagas = new Map();
     realData.forEach(v => {
-      if (v.id && !uniqueVagas.has(v.id)) {
-        uniqueVagas.set(v.id, v);
+      // Prioridade para número de requisição como chave única, depois ID
+      const key = v.requisicao || v.numero_requisicao || v.id;
+      if (key && !uniqueVagas.has(key)) {
+        uniqueVagas.set(key, v);
       }
     });
 

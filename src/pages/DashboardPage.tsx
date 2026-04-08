@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
 
   const stats = [
-    { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Vagas em Aberto', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Aguardando Unidade', value: aguardandoUnidade, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Liderança', value: liderancaCount, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },

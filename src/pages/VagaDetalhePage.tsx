@@ -675,7 +675,13 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
           </div>
           <h3 className="text-lg font-bold text-slate-700">Sem Banco de Talentos</h3>
           <p className="text-sm text-slate-500 max-w-xs mt-1">Não foi encontrado um banco de talentos válido para este cargo e unidade.</p>
-          <Button variant="outline" className="mt-6 gap-2">Consultar Outros Bancos</Button>
+          <Button 
+            variant="outline" 
+            className="mt-6 gap-2"
+            onClick={() => window.location.href = `/banco-talentos?search=${vaga.cargo}`}
+          >
+            Consultar Outros Bancos
+          </Button>
         </CardContent>
       </Card>
     );

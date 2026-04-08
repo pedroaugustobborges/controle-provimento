@@ -69,6 +69,7 @@ export interface Vaga {
   total_inscritos?: number;
   aprovados_triagem?: number;
   aprovados_finais?: number;
+  convocados_entrevista?: number;
 }
 
 export interface BancoTalentos {

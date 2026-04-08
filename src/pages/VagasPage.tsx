@@ -183,29 +183,46 @@ export default function VagasPage() {
   }, [vacancyStats.byStatus]);
 
   const countComBanco = useMemo(() => {
-    // For this one, we filter from the base of valid vacancies
+    return canonicalBase.filter(v => getBancoByVaga(v.id)).length;
+  }, [canonicalBase, getBancoByVaga]);
+
+  // Debug Diagnostics for Audit
+  const auditData = useMemo(() => {
     const selectedUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
     const selectedMonth = filterMes === 'all' ? 'TODOS' : filterMes;
     
-    const validBase = vagas.filter(row => {
-      const normalize = (val?: string | null) => String(val ?? "").trim().toUpperCase();
-      const rowUnit = normalize(row.unidade);
-      const normalizedUnit = normalize(selectedUnit);
-      const sameUnit = normalizedUnit === "TODOS" || normalizedUnit === "" || rowUnit === normalizedUnit;
-      const hasCargoValue = String(row.cargo ?? "").trim() !== "";
-      
-      if (!sameUnit || !hasCargoValue) return false;
-      
-      if (selectedMonth !== 'TODOS' && selectedMonth !== 'all' && selectedMonth !== '') {
-        const aberturaMonth = (row as any).data_abertura ? 
-          new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date((row as any).data_abertura)).toUpperCase() : "";
-        if (aberturaMonth !== selectedMonth.toUpperCase()) return false;
-      }
-      return true;
+    // Total raw records
+    const rawTotal = vagas.length;
+    
+    // Step-by-step filtering for transparency
+    const withCargo = vagas.filter(v => String(v.cargo ?? "").trim() !== "");
+    
+    const normUnit = selectedUnit !== 'TODOS' ? normalizeUnitName(selectedUnit) : 'TODOS';
+    const afterUnit = withCargo.filter(v => normUnit === 'TODOS' || normalizeUnitName(v.unidade) === normUnit);
+    
+    const normMonth = selectedMonth !== 'TODOS' ? selectedMonth.toUpperCase() : 'TODOS';
+    const afterMonth = afterUnit.filter(v => {
+      if (normMonth === 'TODOS') return true;
+      return getMonthNamePtBrUpper(v.data_abertura) === normMonth;
     });
 
-    return validBase.filter(v => getBancoByVaga(v.id)).length;
-  }, [vagas, filterUnidade, filterMes, getBancoByVaga]);
+    const rejectedByCargo = vagas.filter(v => String(v.cargo ?? "").trim() === "").slice(0, 5);
+    const rejectedByUnit = withCargo.filter(v => normUnit !== 'TODOS' && normalizeUnitName(v.unidade) !== normUnit).slice(0, 5);
+    const rejectedByMonth = afterUnit.filter(v => normMonth !== 'TODOS' && getMonthNamePtBrUpper(v.data_abertura) !== normMonth).slice(0, 5);
+
+    return {
+      selectedUnit,
+      selectedMonth,
+      rawTotal,
+      withCargoCount: withCargo.length,
+      afterUnitCount: afterUnit.length,
+      finalCount: afterMonth.length,
+      tableCount: filtered.length,
+      rejectedByCargo,
+      rejectedByUnit,
+      rejectedByMonth,
+    };
+  }, [vagas, filterUnidade, filterMes, filtered]);
 
 
 

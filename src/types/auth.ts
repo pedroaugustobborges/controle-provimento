@@ -39,6 +39,7 @@ export interface AuditLog {
   id: string;
   usuario_id?: string;
   usuario_nome: string;
+  usuario_email?: string;
   perfil?: string;
   data?: string;
   hora?: string;

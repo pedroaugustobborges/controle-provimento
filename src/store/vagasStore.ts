@@ -98,12 +98,26 @@ export const useVagasStore = create<VagasState>()(
           if (banco) return banco;
         }
         
-        // Fallback: match by cargo and unit
-        return get().bancos.find(b => 
-          b.cargo.toLowerCase() === vaga.cargo.toLowerCase() && 
-          b.unidade === vaga.unidade &&
-          b.status !== 'vencido'
-        );
+        const goianiaUnits = ['CRER', 'HUGOL', 'HECAD', 'HDS'];
+        const vitoriaUnits = ['SUÁ', 'São Pedro', 'Vitória']; // Vitória (SUÁ/São Pedro)
+        
+        // Fallback: match by cargo and unit scope
+        return get().bancos.find(b => {
+          if (b.cargo.toLowerCase() !== vaga.cargo.toLowerCase()) return false;
+          if (b.status === 'vencido') return false;
+          
+          const bancoUnidade = b.unidade;
+          const vagaUnidade = vaga.unidade;
+          
+          // Se o banco for da unidade "Goiânia" → válido para CRER, HUGOL, HECAD e HDS.
+          if (bancoUnidade === 'Goiânia' && goianiaUnits.includes(vagaUnidade)) return true;
+          
+          // Se o banco for da unidade "UPA" ou "Vitória" → válido para Vitória (SUÁ/São Pedro).
+          if ((bancoUnidade === 'UPA' || bancoUnidade === 'Vitória') && vitoriaUnits.includes(vagaUnidade)) return true;
+          
+          // Para todas as outras unidades → o banco só é válido se a unidade do banco corresponder exatamente à unidade da vaga.
+          return bancoUnidade === vagaUnidade;
+        });
       },
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),
     }),

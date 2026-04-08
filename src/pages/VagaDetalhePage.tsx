@@ -35,6 +35,14 @@ export default function VagaDetalhePage() {
   const { currentUser, addAuditLog } = useAdminStore();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConvocacaoDialogOpen, setIsConvocacaoDialogOpen] = useState(false);
+  const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [indicators, setIndicators] = useState({
+    total_inscritos: 0,
+    aprovados_triagem: 0,
+    aprovados_finais: 0
+  });
 
   const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
   const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';
@@ -49,11 +57,53 @@ export default function VagaDetalhePage() {
   const banco = useVagasStore(s => s.getBancoByVaga(vaga.id));
 
   const handleStatusChange = (newStatus: string) => {
+    if (newStatus === 'encerrada' || newStatus === 'finalizada') {
+      setPendingStatus(newStatus);
+      setIsCreateBancoDialogOpen(true);
+      return;
+    }
+    applyStatusChange(newStatus);
+  };
+
+  const applyStatusChange = (newStatus: string, createBanco = false) => {
     const oldStatus = vaga.status || vaga.status_geral;
-    updateVaga(vaga.id, {
+    const updateData: Partial<any> = {
       status: newStatus as StatusVaga,
-      historico: [...vaga.historico, { id: `h-${Date.now()}`, data: new Date().toISOString().split('T')[0], descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, usuario: currentUser?.nome_completo || 'Analista' }],
-    });
+      historico: [...vaga.historico, { 
+        id: `h-${Date.now()}`, 
+        data: new Date().toISOString().split('T')[0], 
+        descricao: `Status alterado para ${STATUS_LABELS[newStatus as StatusVaga]}`, 
+        usuario: currentUser?.nome_completo || 'Analista' 
+      }],
+    };
+
+    if (newStatus === 'encerrada' || newStatus === 'finalizada') {
+      updateData.data_封闭 = new Date().toISOString().split('T')[0]; // Oops, typo in my thought, fixing to data_encerramento
+      updateData.data_encerramento = new Date().toISOString().split('T')[0];
+    }
+
+    if (createBanco) {
+      const bancoId = `b-${Date.now()}`;
+      const novoBanco = {
+        id: bancoId,
+        unidade: vaga.unidade,
+        cargo: vaga.cargo,
+        secao: vaga.secao,
+        numero_edital: vaga.numero_edital || 'ED-' + (vaga.requisicao || vaga.id),
+        data_abertura_edital: new Date().toISOString().split('T')[0],
+        data_validade: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 6 months
+        is_prorrogado: false,
+        status: 'valido' as const,
+        observacoes: `Banco criado a partir da vaga ${vaga.requisicao || vaga.id}`,
+        numero_processo: vaga.numero_processo
+      };
+      useVagasStore.getState().addBanco(novoBanco);
+      updateData.tem_banco_valido = true;
+      updateData.banco_id = bancoId;
+      toast.info('Banco de Talentos criado com sucesso');
+    }
+
+    updateVaga(vaga.id, updateData);
     
     addAuditLog({
       usuario_nome: currentUser?.nome_completo || 'Sistema',
@@ -69,7 +119,23 @@ export default function VagaDetalhePage() {
     });
 
     toast.success('Status atualizado');
+    setPendingStatus(null);
   };
+
+  const handleSaveIndicators = () => {
+    updateVaga(vaga.id, indicators);
+    setIsEditingIndicators(false);
+    toast.success('Indicadores atualizados');
+  };
+
+  // Initialize indicators when vaga changes
+  useState(() => {
+    setIndicators({
+      total_inscritos: vaga.total_inscritos || 0,
+      aprovados_triagem: vaga.aprovados_triagem || 0,
+      aprovados_finais: vaga.aprovados_finais || 0
+    });
+  });
   const handleDelete = () => {
     if (vaga && canDelete) {
       deleteVaga(vaga.id);

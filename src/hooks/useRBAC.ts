@@ -29,8 +29,8 @@ export function useRBAC() {
     return rolesToCheck.includes(userData.perfil as UserProfile);
   };
 
-  const isAdmin = userData?.perfil === 'Administrador';
-  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência' || userData?.perfil === 'Supervisão';
+  const isAdmin = userData?.perfil === 'Administrador' || userData?.perfil === 'Admin';
+  const isManagement = userData?.perfil === 'Gestão' || userData?.perfil === 'Gerência' || userData?.perfil === 'Supervisão' || userData?.perfil === 'Gestor';
 
   const getPermissions = (module: string): Permissions => {
     if (isAdmin) {

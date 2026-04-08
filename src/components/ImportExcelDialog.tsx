@@ -234,16 +234,16 @@ export function ImportExcelDialog({
 
           data.forEach((row, i) => {
             const statusRaw = String(row['STATUS'] || row['status'] || '').toUpperCase().trim();
-            let status: 'valido' | 'vencido' | 'prorrogado' | 'convocado' | 'nenhum' = 'nenhum';
+            let status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum' = 'nenhum';
 
             if (statusRaw === 'CADASTRO RESERVA') {
-              status = 'valido';
+              status = 'CADASTRO RESERVA';
               countCR++;
             } else if (statusRaw === 'CONVOCADO') {
-              status = 'convocado';
+              status = 'CONVOCADO';
               countConv++;
             } else if (statusRaw === 'VENCIDO') {
-              status = 'vencido';
+              status = 'VENCIDO';
               countVenc++;
             }
 

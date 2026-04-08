@@ -75,6 +75,7 @@ export interface Vaga {
   source_row_index?: number;
   import_batch_id?: string;
   raw_row_hash?: string;
+  source_sheet?: string;
 }
 
 export interface BancoTalentos {

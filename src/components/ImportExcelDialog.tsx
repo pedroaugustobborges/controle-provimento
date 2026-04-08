@@ -154,11 +154,19 @@ export function ImportExcelDialog({
         const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
         const preview = rows.slice(0, 10);
         setRawPreview(preview);
-        const detected = detectHeaderRow(preview);
-        setHeaderRow(detected);
+        
+        // Specific rule for "Proposta de Gestão de Vagas" files (.xlsm)
+        // Row 3 is header (index 2), Row 4 starts data
+        const isVagasFile = file?.name.toLowerCase().endsWith('.xlsm');
+        if (isVagasFile) {
+          setHeaderRow(2);
+        } else {
+          const detected = detectHeaderRow(preview);
+          setHeaderRow(detected);
+        }
       }
     }
-  }, [workbook, selectedSheets]);
+  }, [workbook, selectedSheets, file?.name]);
 
   // Handle reprocess
   useEffect(() => {

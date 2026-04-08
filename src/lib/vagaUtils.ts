@@ -302,6 +302,65 @@ export function countVacancies({
   return getValidVacancyBase(records, selectedUnit, selectedMonth).length;
 }
 
+export type VacancyEligibilityResult = {
+  id: string;
+  source_row_index?: number;
+  unidade: string;
+  cargo: string;
+  data_abertura: string;
+  status: string;
+  includedByExcelParity: boolean;
+  includedByApp: boolean;
+  hasCargo: boolean;
+  unitMatches: boolean;
+  monthMatches: boolean;
+  parsedMonth: string;
+  rejectionReason?: string;
+};
+
+export function checkVacancyParity(
+  row: any,
+  selectedUnit: string,
+  selectedMonth: string
+): VacancyEligibilityResult {
+  const normSelectedUnit = selectedUnit === 'all' || selectedUnit === 'TODOS' ? 'TODOS' : normalizeUnitName(selectedUnit);
+  const normSelectedMonth = selectedMonth === 'all' || selectedMonth === 'TODOS' ? 'TODOS' : selectedMonth.toUpperCase();
+  
+  const hasCargo = String(row.cargo ?? "").trim() !== "";
+  const rowUnitNorm = normalizeUnitName(row.unidade);
+  const unitMatches = normSelectedUnit === 'TODOS' || rowUnitNorm === normSelectedUnit;
+  
+  const parsedMonth = getMonthNamePtBrUpper(row.data_abertura);
+  const monthMatches = normSelectedMonth === 'TODOS' || parsedMonth === normSelectedMonth;
+  
+  const includedByExcelParity = hasCargo && unitMatches && monthMatches;
+  
+  // For now, includedByApp is the same as Excel Parity, 
+  // but this is where we'd find if the App has extra filters
+  const includedByApp = includedByExcelParity; 
+
+  let rejectionReason = "";
+  if (!hasCargo) rejectionReason = "Cargo vazio (Coluna F)";
+  else if (!unitMatches) rejectionReason = `Unidade não coincide (${rowUnitNorm} vs ${normSelectedUnit})`;
+  else if (!monthMatches) rejectionReason = `Mês não coincide (${parsedMonth} vs ${normSelectedMonth})`;
+
+  return {
+    id: row.id,
+    source_row_index: row.source_row_index,
+    unidade: row.unidade,
+    cargo: row.cargo,
+    data_abertura: row.data_abertura,
+    status: row.status || row.status_geral || '',
+    includedByExcelParity,
+    includedByApp,
+    hasCargo,
+    unitMatches,
+    monthMatches,
+    parsedMonth,
+    rejectionReason: includedByExcelParity ? undefined : rejectionReason
+  };
+}
+
 export function getStatusSummary(records: any[], selectedUnit: string, selectedMonth?: string) {
   const validVacancies = getValidVacancyBase(records, selectedUnit, selectedMonth);
 

@@ -54,6 +54,8 @@ export default function ImportacoesPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);
+  const [batchParaExcluir, setBatchParaExcluir] = useState<any | null>(null);
+  const { deleteImportBatch } = useVagasStore();
   const permissions = usePermissions();
 
   if (!permissions.canImport()) {

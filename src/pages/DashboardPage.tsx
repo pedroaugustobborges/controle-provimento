@@ -122,9 +122,13 @@ export default function DashboardPage() {
 
   const alerts = useMemo(() => vagas.filter((v) => {
     const status = v.status || v.status_geral;
+    // Vagas encerradas ou com admissão efetivada não geram alerta de atraso
     if (['encerrada', 'finalizada', 'cancelada', 'admissao_efetivada'].includes(status as string)) return false;
+    
+    // Cálculo de dias aberto usa data de recebimento se não houver histórico recente
     const lastHist = v.historico[v.historico.length - 1];
-    return !lastHist || calcDiasAberto(lastHist.data) > 10;
+    const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
+    return calcDiasAberto(baseDate) > 10;
   }), [vagas]);
 
   const chartData = useMemo(() => {
@@ -134,18 +138,23 @@ export default function DashboardPage() {
       if (!v.unidade) return;
       
       const normalizedName = normalizeUnitName(v.unidade);
-      // Incluímos todas as unidades reais, sem exceções manuais como Corporativo
       if (!normalizedName) return;
 
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
       const qtd = 1; // 1 registro = 1 vaga
       
+      const status = (v.status || v.status_geral || '').toLowerCase();
+      const categoria = getCategoriaStatus(status);
+      const isEncerrada = categoria === 'encerradas' || status === 'admissao_efetivada';
+
+      // Contagem de totais deve respeitar se a vaga não está duplicada (já tratado acima no memo vagas)
       current.total += qtd;
       
-      const status = (v.status || v.status_geral || '').toLowerCase();
-      if (status === 'aberta') {
+      // Vaga aberta é aquela que NÃO está encerrada ou suspensa/cancelada
+      if (categoria === 'em_andamento' || categoria === 'aguardando_unidade' || categoria === 'lideranca') {
         current.abertas += qtd;
       }
+      
       groupedMap.set(normalizedName, current);
     });
 

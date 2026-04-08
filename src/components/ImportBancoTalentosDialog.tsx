@@ -589,21 +589,22 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       addImportHistory({
         id: currentLoteId,
         data_hora: new Date().toISOString(),
-
-      if (fileId) updateImportedFile(fileId, { status: 'processado' });
-      
-      setImportSummary({ 
-        total_planilha: totalRawRows,
-        total_lidos: allData.length, 
+        usuario: 'Ana Paula Oliveira',
+        email_usuario: 'ana.oliveira@agir.org.br',
+        arquivo: file?.name || 'banco_import.xlsx',
+        tipo_importacao: 'banco',
+        total_lidos: allData.length,
         total_novos: newBancos.length,
+        total_atualizados: 0, 
+        total_ignorados: totalErros, 
         total_erros: totalErros,
-        total_vazios: totalRawRows - allData.length,
-        total_alertas_data: 0
+        status: totalErros > 0 ? 'concluido_alertas' : 'concluido',
+        referencia_arquivo: fileId || undefined,
+        observacoes: totalErros > 0 
+          ? `Importação concluída com ${totalErros} falhas. ${missingFieldsRows} linhas ignoradas por falta de campos obrigatórios.` 
+          : 'Importação realizada com sucesso.'
       });
 
-      setStep('summary');
-      setIsProcessing(false);
-      
       if (totalErros > 0) {
         toast.warning(`Importação concluída: ${newBancos.length} salvos, ${totalErros} ignorados por erros.`);
       } else {

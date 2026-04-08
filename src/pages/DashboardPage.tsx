@@ -47,29 +47,24 @@ export default function DashboardPage() {
   const getStatusCount = (status: string) => vagas.filter((v) => (v.status || v.status_geral) === status).length;
   
   const totalVagas = vagas.length;
-  const emAndamento = vagas.filter((v) => {
-    const s = (v.status || v.status_geral) as string;
-    return [
-      'aberta', 'em_triagem', 'entrevista', 'documentacao', 'documentacao_ok', 
-      'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 
-      'realizar_convocacao', 'aguardando_unidade', 'vaga_lideranca', 'movimentacao_interna'
-    ].includes(s);
-  }).length;
-  const emEdital = getStatusCount('em_edital') + getStatusCount('publicado_edital');
+  const emAndamento = vagas.filter((v) => CATEGORIAS_STATUS.em_andamento.includes((v.status || v.status_geral) as string)).length;
+  const aguardandoUnidade = vagas.filter((v) => CATEGORIAS_STATUS.aguardando_unidade.includes((v.status || v.status_geral) as string)).length;
+  const liderancaCount = vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length;
+  const movimentacaoCount = vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length;
+  const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
-  const encerradas = vagas.filter((v) => ['encerrada', 'finalizada', 'admissao_efetivada'].includes((v.status || v.status_geral) as string)).length;
   const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
-
   const convocacoesHoje = 12; // Mock data for now
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Em Andamento', value: emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Em Edital', value: emEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Aguardando Unidade', value: aguardandoUnidade, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Vagas com Banco', value: comBancoValido, icon: Database, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Liderança', value: liderancaCount, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Movimentação Int.', value: movimentacaoCount, icon: RefreshCw, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { label: 'Em Validação', value: emValidacao, icon: ShieldCheck, color: 'text-slate-600', bg: 'bg-slate-100' },
     { label: 'Encerradas', value: encerradas, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Convocações do Dia', value: convocacoesHoje, icon: Users, color: 'text-slate-600', bg: 'bg-slate-100' },
   ];
 
   const alerts = vagas.filter((v) => {

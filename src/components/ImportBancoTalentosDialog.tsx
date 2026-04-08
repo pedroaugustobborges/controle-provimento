@@ -429,19 +429,21 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
     setIsProcessing(true);
     try {
       const allData: any[] = [];
-      const loteId = `LOTE-BT-${Date.now()}`;
+      const currentLoteId = `LOTE-BT-${Date.now()}`;
       const now = new Date();
-      
+      let totalRawRows = 0;
+
       selectedSheets.forEach(sheetName => {
         const sheet = workbook!.Sheets[sheetName];
         if (!sheet) return;
 
         // Use header: 1 for raw array access to ensure data integrity
         const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+        totalRawRows += rawRows.length;
         
         // Headers are at headerRow
         const headers = rawRows[headerRow] || [];
-        
+
         // Process all rows after the header row
         for (let i = headerRow + 1; i < rawRows.length; i++) {
           const row = rawRows[i];
@@ -607,14 +609,14 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
       if (fileId) updateImportedFile(fileId, { status: 'processado' });
       
       setImportSummary({ 
-        total_planilha: allRowsRaw.length,
+        total_planilha: totalRawRows,
         total_lidos: allData.length, 
         total_novos: newBancos.length,
         total_erros: totalErros,
-        total_vazios: emptyRowsCount,
-        total_alertas_data: dateErrorRows
+        total_vazios: totalRawRows - allData.length,
+        total_alertas_data: 0
       });
-      
+
       setStep('summary');
       setIsProcessing(false);
       

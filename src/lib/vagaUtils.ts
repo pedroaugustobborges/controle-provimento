@@ -176,3 +176,24 @@ export function normalizeStatus(statusText: string): StatusVaga {
   // Se não bater com nada conhecido, retorna o próprio texto se ele for um status válido, ou vazio
   return text as StatusVaga;
 }
+
+export function normalizeUnitName(name: string): string {
+  if (!name) return '';
+  const upper = name.toUpperCase().trim();
+  
+  // Mapeamento explícito de unidades AGIR para precisão absoluta
+  if (upper.includes('HECAD')) return 'HECAD';
+  if (upper.includes('HUGOL')) return 'HUGOL';
+  if (upper.includes('CRER')) return 'CRER';
+  if (upper.includes('HDS')) return 'HDS';
+  if (upper.includes('POLICLINICA') || upper.includes('POLICLÍNICA')) return 'POLICLÍNICA';
+  
+  if (isVitoriaUnit(name)) return 'VITÓRIA';
+  
+  // Limpeza padrão para outras unidades preservando o nome principal
+  return upper
+    .replace(/^(HOSPITAL|UNIDADE|HOSP)\s+/i, '')
+    .replace(/^(ESTADUAL\s+)/i, '')
+    .replace(/\s*\(.*\)/g, '')
+    .trim();
+}

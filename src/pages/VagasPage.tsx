@@ -301,20 +301,30 @@ export default function VagasPage() {
                     className="border-b last:border-0 hover:bg-slate-50/50 transition-colors whitespace-nowrap group cursor-pointer"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                      {v.data_abertura ? formatDate(v.data_abertura) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                      {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block">
-                        {v.requisicao || v.numero_requisicao}
+                        {v.requisicao || v.numero_requisicao || '-'}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-semibold text-slate-800 truncate max-w-[200px]" title={v.cargo}>{v.cargo}</div>
-                      {v.cargo.toLowerCase().includes('pcd') && (
-                        <div className="flex flex-wrap gap-1 mt-0.5">
-                          <Badge variant="outline" className="text-[9px] font-bold py-0 h-3.5 bg-purple-50 text-purple-600 border-purple-100">PCD</Badge>
-                        </div>
-                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                      {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
                     </td>
                     <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={v.status || v.status_geral} />
+                    </td>
+                    <td className="px-4 py-3 text-center font-bold text-slate-700">
+                      {v.numero_vagas || v.quantidade || 0}
+                    </td>
                     <td className="px-4 py-3">
                       {(() => {
                         const banco = getBancoByVaga(v.id);

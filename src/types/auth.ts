@@ -49,6 +49,7 @@ export interface AuditLog {
   valor_anterior?: any;
   valor_novo?: any;
   created_at?: string;
+  ip?: string;
 }
 
 export interface SupportConfig {

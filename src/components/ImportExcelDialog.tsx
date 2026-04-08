@@ -52,9 +52,8 @@ const REQUIRED_FIELDS = [
 
 const OPTIONAL_FIELDS = [
   { key: 'data_abertura', label: 'Data Abertura' },
-  { key: 'requisicao', label: 'Nº Requisição' },
-...
   { key: 'data_recebimento', label: 'Data Recebimento' },
+  { key: 'requisicao', label: 'Nº Requisição' },
   { key: 'publicacao', label: 'Data Publicação' },
   { key: 'admissao', label: 'Data Admissão' },
   { key: 'admissao_enviada', label: 'Admissão Enviada' },

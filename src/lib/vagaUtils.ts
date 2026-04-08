@@ -26,7 +26,8 @@ export const CATEGORIAS_STATUS = {
   em_andamento: [
     'em_edital', 'publicado_edital', 'em_triagem', 'entrevista', 
     'documentacao', 'documentacao_ok', 'documentacao_pendente', 
-    'casos_ok', 'admissao', 'admissao_enviada', 'realizar_convocacao'
+    'casos_ok', 'admissao', 'admissao_enviada', 'realizar_convocacao',
+    'aberta'
   ],
   aguardando_unidade: ['aguardando_unidade'],
   encerradas: ['admissao_efetivada', 'finalizada', 'encerrada'],

@@ -60,9 +60,10 @@ export default function DashboardPage() {
   const liderancaCount = vagas.filter((v) => CATEGORIAS_STATUS.lideranca.includes((v.status || v.status_geral) as string)).length;
   const movimentacaoCount = vagas.filter((v) => CATEGORIAS_STATUS.movimentacao_interna.includes((v.status || v.status_geral) as string)).length;
   const encerradas = vagas.filter((v) => CATEGORIAS_STATUS.encerradas.includes((v.status || v.status_geral) as string)).length;
+  const suspensasCanceladas = vagas.filter((v) => CATEGORIAS_STATUS.outros.includes((v.status || v.status_geral) as string)).length;
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const comBancoValido = vagas.filter(v => getBancoByVaga(v.id)).length;
-  
+
 
   const stats = [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },

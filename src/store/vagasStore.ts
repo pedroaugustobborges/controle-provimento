@@ -161,8 +161,9 @@ export const useVagasStore = create<VagasState>()(
 
         // Fallback: match by cargo and unit scope
         const found = state.bancos.find(b => {
-          // Status check - be more lenient if needed, but respect 'vencido'
-          if (b.status === 'vencido') return false;
+          // Status check - we might still want to return expired ones for UI info, 
+          // but usually the logic filters it. The UI in VagasPage expects it to be returned to show 'vencido'.
+          // if (b.status === 'vencido') return false;
           
           const normalizedBancoCargo = normalizeStr(b.cargo);
           const bancoTokens = getCargoTokens(b.cargo);

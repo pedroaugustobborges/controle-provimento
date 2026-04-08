@@ -378,10 +378,17 @@ export function ImportExcelDialog({
     const currentLoteId = loteId || `LOTE-${Date.now()}`;
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
-      const unidade = String(row.unidade || '');
+      let rawUnidade = String(row.unidade || '');
+      
+      // FALLBACK: If unidade column is empty, try to extract it from the sheet name
+      if (!rawUnidade && row.__sheet && row.__sheet.includes('Vagas - ')) {
+        rawUnidade = row.__sheet.replace('Vagas - ', '').trim();
+      }
+      
+      const unidade = rawUnidade; // Keep the original string as much as possible for parity
       const tipoVaga = (row.tipo_vaga as TipoVaga) || 'substituicao';
       const { analista, assistentes } = getResponsavelPorUnidade(unidade, tipoVaga);
-      
+
       const importStatus = row.status || row.acompanhamento || row.fase || row.etapa || '';
       const statusFinal = importStatus ? normalizeStatus(String(importStatus)) : 'sem_status';
 
@@ -420,6 +427,7 @@ export function ImportExcelDialog({
         source_row_index: row.__source_row_index || i + 1,
         import_batch_id: row.__import_batch_id || currentLoteId,
         raw_row_hash: row.__raw_row_hash || '',
+        source_sheet: row.__sheet || '',
         historico: [{
           id: `h-${currentNow.replace(/[:.-]/g, '')}-${i}`,
           data: currentNow.split('T')[0],

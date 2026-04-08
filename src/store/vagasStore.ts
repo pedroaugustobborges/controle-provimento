@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile } from '@/types/vaga';
-import { mockVagas, mockBancos, mockConvocacoes, mockEditais, mockValidacoes } from '@/data/mockData';
+import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta } from '@/types/vaga';
+import { mockVagas, mockBancos, mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo } from '@/lib/vagaUtils';
 
@@ -13,6 +13,8 @@ interface VagasState {
   validacoes: ValidacaoEdital[];
   importHistory: ImportHistory[];
   importedFiles: ImportedFile[];
+  tarefas: Tarefa[];
+  alertas: Alerta[];
   
   setVagas: (vagas: Vaga[]) => void;
   addVagas: (vagas: Vaga[]) => void;
@@ -32,6 +34,11 @@ interface VagasState {
   addImportedFile: (file: ImportedFile) => void;
   updateImportedFile: (id: string, data: Partial<ImportedFile>) => void;
   deleteImportedFile: (id: string) => void;
+  addTarefa: (tarefa: Tarefa) => void;
+  updateTarefa: (id: string, data: Partial<Tarefa>) => void;
+  deleteTarefa: (id: string) => void;
+  addAlerta: (alerta: Alerta) => void;
+  updateAlerta: (id: string, data: Partial<Alerta>) => void;
   clearVagas: () => void;
   clearBancos: () => void;
   clearAllData: () => void;
@@ -53,6 +60,8 @@ export const useVagasStore = create<VagasState>()(
       validacoes: mockValidacoes,
       importHistory: [],
       importedFiles: [],
+      tarefas: mockTarefas || [],
+      alertas: mockAlertas || [],
       
       setVagas: (vagas) => set({ vagas }),
       addVagas: (newVagas) => set((s) => ({ vagas: [...s.vagas, ...newVagas] })),
@@ -90,6 +99,17 @@ export const useVagasStore = create<VagasState>()(
       deleteImportedFile: (id) => set((s) => ({
         importedFiles: s.importedFiles.filter((f) => f.id !== id),
       })),
+      addTarefa: (tarefa) => set((s) => ({ tarefas: [tarefa, ...s.tarefas] })),
+      updateTarefa: (id, data) => set((s) => ({
+        tarefas: s.tarefas.map((t) => t.id === id ? { ...t, ...data } : t),
+      })),
+      deleteTarefa: (id) => set((s) => ({
+        tarefas: s.tarefas.filter((t) => t.id !== id),
+      })),
+      addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
+      updateAlerta: (id, data) => set((s) => ({
+        alertas: s.alertas.map((a) => a.id === id ? { ...a, ...data } : a),
+      })),
       clearVagas: () => set({ vagas: [] }),
       clearBancos: () => set({ bancos: [] }),
       clearAllData: () => set({ 
@@ -99,7 +119,9 @@ export const useVagasStore = create<VagasState>()(
         editais: [], 
         validacoes: [], 
         importHistory: [], 
-        importedFiles: [] 
+        importedFiles: [],
+        tarefas: [],
+        alertas: []
       }),
       getVaga: (id) => get().vagas.find((v) => v.id === id),
       getEditalByVaga: (vagaId) => get().editais.find((e) => e.vaga_id === vagaId),
@@ -244,6 +266,8 @@ export const useVagasStore = create<VagasState>()(
         editais: state.editais,
         validacoes: state.validacoes,
         convocacoes: state.convocacoes,
+        tarefas: state.tarefas,
+        alertas: state.alertas,
         importHistory: state.importHistory.map(h => ({
           ...h,
           relatorio_erros: undefined,

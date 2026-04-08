@@ -113,19 +113,26 @@ export function normalizeStatus(statusText: string): StatusVaga {
   
   const text = statusText.toLowerCase().trim();
   
-  if (text.includes('aberta') || text.includes('novo')) return 'aberta';
-  if (text.includes('edital') || text.includes('publicado')) return 'em_edital';
-  if (text.includes('convoc')) return 'realizar_convocacao';
-  if (text.includes('admissao') || text.includes('admitido')) return 'admissao';
-  if (text.includes('document')) return 'documentacao';
-  if (text.includes('cancel')) return 'cancelada';
-  if (text.includes('susp')) return 'suspensa';
-  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'finalizada';
+  if (text.includes('publicado') && text.includes('edital')) return 'publicado_edital';
+  if (text.includes('em edital')) return 'em_edital';
   if (text.includes('triagem')) return 'em_triagem';
   if (text.includes('entrev')) return 'entrevista';
+  if (text.includes('document') && text.includes('ok')) return 'documentacao_ok';
+  if (text.includes('document') && text.includes('pendente')) return 'documentacao_pendente';
+  if (text.includes('document')) return 'documentacao';
+  if (text.includes('casos ok')) return 'casos_ok';
+  if (text.includes('admissao enviada')) return 'admissao_enviada';
+  if (text.includes('admissao efetivada')) return 'admissao_efetivada';
+  if (text.includes('admissao')) return 'admissao';
+  if (text.includes('convoc')) return 'realizar_convocacao';
+  if (text.includes('unidade')) return 'aguardando_unidade';
   if (text.includes('lideranca')) return 'vaga_lideranca';
   if (text.includes('movimentacao') || text.includes('interna')) return 'movimentacao_interna';
-  if (text.includes('unidade')) return 'aguardando_unidade';
+  if (text.includes('susp')) return 'suspensa';
+  if (text.includes('cancel')) return 'cancelada';
+  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'encerrada';
+  if (text.includes('aberta') || text.includes('novo')) return 'aberta';
   
+  // Se não bater com nada conhecido, mantém como aberta por padrão ou tenta ser mais inteligente
   return 'aberta';
 }

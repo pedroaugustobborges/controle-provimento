@@ -372,8 +372,10 @@ export function ImportExcelDialog({
     setIsProcessing(false);
   };
 
-  const processImport = (dataToImport: any[], loteId: string, now: string) => {
+  const processImport = (dataToImport: any[], loteId?: string, now?: string) => {
     setIsProcessing(true);
+    const currentNow = now || new Date().toISOString();
+    const currentLoteId = loteId || `LOTE-${Date.now()}`;
     
     const newVagas: Vaga[] = dataToImport.map((row, i) => {
       const unidade = String(row.unidade || '');
@@ -396,7 +398,7 @@ export function ImportExcelDialog({
       const traceKey = `${reqValue}::${cargoValue}::${vagaValue}`;
 
       return {
-        id: `vaga-${loteId}-${i}-${Math.random().toString(36).substr(2, 5)}`,
+        id: `vaga-${currentLoteId}-${i}-${Math.random().toString(36).substr(2, 5)}`,
         unidade,
         data_abertura: dataAbertura || '',
         data_recebimento: dataRecebimento || '',
@@ -415,16 +417,16 @@ export function ImportExcelDialog({
         tem_banco_valido: false,
         observacoes_internas: String(row.observacoes_internas || row.observacoes || ''),
         origem_importacao: file?.name || 'Excel',
-        data_importacao: now,
-        lote_importacao: loteId,
+        data_importacao: currentNow,
+        lote_importacao: currentLoteId,
         trace_key: traceKey,
-        source_row_index: row.__source_row_index,
-        import_batch_id: row.__import_batch_id,
-        raw_row_hash: row.__raw_row_hash,
+        source_row_index: row.__source_row_index || i + 1,
+        import_batch_id: row.__import_batch_id || currentLoteId,
+        raw_row_hash: row.__raw_row_hash || '',
         historico: [{
-          id: `h-${loteId}-${i}`,
-          data: now.split('T')[0],
-          descricao: `Importado via Excel (${file?.name}). Registro original preservado fielmente (Linha ${row.__source_row_index}).`,
+          id: `h-${currentLoteId}-${i}`,
+          data: currentNow.split('T')[0],
+          descricao: `Importado via Excel (${file?.name}). Registro original preservado fielmente.`,
           usuario: 'Ana Paula Oliveira'
         }]
       };
@@ -440,6 +442,34 @@ export function ImportExcelDialog({
       total_erros: 0,
       repeticoes_tratadas: 0, 
     };
+    
+    addImportHistory({
+      id: currentLoteId,
+      data_hora: currentNow,
+      usuario: 'Ana Paula Oliveira',
+      email_usuario: 'ana.oliveira@agir.org.br',
+      arquivo: file?.name || 'excel_import.xlsx',
+      tipo_importacao: 'vagas',
+      planilha_aba: selectedSheets.join(', '),
+      linha_cabecalho: headerRow,
+      ...summary,
+      status: 'concluido',
+      referencia_arquivo: fileId || undefined,
+      mapeamento_aplicado: mappings
+    });
+
+    if (fileId) {
+      updateImportedFile(fileId, {
+        status: 'processado',
+        vaga_importacao_id: currentLoteId
+      });
+    }
+
+    setImportSummary(summary);
+    setStep('summary');
+    setIsProcessing(false);
+    toast.success(`Importação concluída: ${newVagas.length} registros processados.`);
+  };
     
     addImportHistory({
       id: loteId,

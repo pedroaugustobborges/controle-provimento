@@ -58,9 +58,11 @@ export default function BancoTalentosPage() {
         return false;
       }
       
-      const matchSearch = b.cargo.toLowerCase().includes(search.toLowerCase()) || 
-        b.unidade.toLowerCase().includes(search.toLowerCase()) ||
-        b.numero_edital.toLowerCase().includes(search.toLowerCase());
+      const normalizedSearch = normalizeCargo(search);
+      const matchSearch = normalizeCargo(b.cargo).includes(normalizedSearch) || 
+        normalizeCargo(b.unidade).includes(normalizedSearch) ||
+        normalizeCargo(b.numero_edital).includes(normalizedSearch);
+
         
       const matchUnidade = unidadeFilter === 'todas' || b.unidade === unidadeFilter;
       const matchStatus = statusFilter === 'todos' || b.status === statusFilter;

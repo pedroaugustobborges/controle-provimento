@@ -234,7 +234,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           if (bancoGeralIndex !== -1) {
             setSelectedSheets([wb.SheetNames[bancoGeralIndex]]);
           } else {
-            // If not found, we still need to select something to avoid breaking, but we'll show a warning later
+            // Fallback selection to allow the user to see the sheet list if not found
             setSelectedSheets([wb.SheetNames[0]]);
           }
 

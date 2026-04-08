@@ -586,25 +586,9 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
       addBancos(newBancos);
       
-      const loteId = `LOTE-BT-${Date.now()}`;
       addImportHistory({
-        id: loteId,
+        id: currentLoteId,
         data_hora: new Date().toISOString(),
-        usuario: 'Ana Paula Oliveira',
-        email_usuario: 'ana.oliveira@agir.org.br',
-        arquivo: file?.name || 'banco_import.xlsx',
-        tipo_importacao: 'banco',
-        total_lidos: allData.length,
-        total_novos: newBancos.length,
-        total_atualizados: 0, 
-        total_ignorados: totalErros, 
-        total_erros: totalErros,
-        status: totalErros > 0 ? 'concluido_alertas' : 'concluido',
-        referencia_arquivo: fileId || undefined,
-        observacoes: totalErros > 0 
-          ? `Importação concluída com ${totalErros} falhas. ${missingFieldsRows} linhas ignoradas por falta de campos obrigatórios.` 
-          : 'Importação realizada com sucesso.'
-      });
 
       if (fileId) updateImportedFile(fileId, { status: 'processado' });
       

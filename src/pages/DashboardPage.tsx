@@ -1,4 +1,5 @@
 import { useVagasStore } from '@/store/vagasStore';
+import { EQUIPE_POR_UNIDADE } from '@/data/equipe';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate } from '@/lib/vagaUtils';

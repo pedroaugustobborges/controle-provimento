@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
+import { DevolutivaDialog } from '@/components/DevolutivaDialog';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatDate, getCategoriaStatus } from '@/lib/vagaUtils';
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';

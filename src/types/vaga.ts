@@ -143,6 +143,19 @@ export interface Vaga {
   import_batch_id?: string;
   raw_row_hash?: string;
   source_sheet?: string;
+  
+  // Campos complementares de convocação (Item 7)
+  data_convocacao_planilha?: string;
+  horario_convocacao_planilha?: string;
+  candidato_convocado_planilha?: string;
+  classificacao_convocacao_planilha?: string;
+  forma_convocacao_planilha?: string;
+  status_oitiva_convocacao_planilha?: string;
+
+  // Colunas auxiliares de acompanhamento (Item 2)
+  admissao_enviada_acompanhamento?: string;
+  admissao_efetivada_acompanhamento?: string;
+  detalhes_acompanhamento?: string;
 }
 
 export interface BancoTalentos {

@@ -5,7 +5,8 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, ETAPA_LABELS, EtapaEdital } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
+import { AcompanhamentoModal } from '@/components/AcompanhamentoModal';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
@@ -710,6 +711,22 @@ function AcompanhamentoEditalList() {
   const { vagas, updateVaga } = useVagasStore();
   const { currentUser } = useAdminStore();
   const navigate = useNavigate();
+  const [selectedVagaForAcompanhamento, setSelectedVagaForAcompanhamento] = useState<Vaga | null>(null);
+
+  const handleSaveAcompanhamento = (vagaId: string, data: any) => {
+    const vaga = vagas.find(v => v.id === vagaId);
+    if (vaga) {
+      updateVaga(vagaId, { 
+        acompanhamento: data,
+        // Sync root level fields if present in data
+        total_inscritos: data.total_inscritos,
+        aprovados_triagem: data.aprovados_triagem,
+        convocados_entrevista: data.convocados_entrevista,
+        aprovados_finais: data.aprovados_finais
+      });
+      toast.success('Acompanhamento atualizado com sucesso');
+    }
+  };
 
   const handleUpdateEtapa = (vagaId: string, etapa: string) => {
     const vaga = vagas.find(v => v.id === vagaId);
@@ -795,7 +812,10 @@ function AcompanhamentoEditalList() {
                       </td>
                       <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</td>
                       <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
+                        <div 
+                          className="flex flex-col gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setSelectedVagaForAcompanhamento(v)}
+                        >
                           <Badge className={`${getEtapaColor(displayEtapa as EtapaEdital)} font-bold text-[10px] uppercase py-0.5 px-2 w-fit`}>
                             {ETAPA_LABELS[displayEtapa as EtapaEdital] || displayEtapa}
                           </Badge>
@@ -830,7 +850,7 @@ function AcompanhamentoEditalList() {
                       <td className="px-6 py-4 text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</td>
                       <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</td>
                       <td className="px-6 py-4 text-right">
-                        <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => navigate(`/vagas/${v.id}?tab=acompanhamento`)}>
+                        <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => setSelectedVagaForAcompanhamento(v)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
                       </td>
@@ -849,6 +869,15 @@ function AcompanhamentoEditalList() {
           </div>
         </CardContent>
       </Card>
+
+      {selectedVagaForAcompanhamento && (
+        <AcompanhamentoModal
+          isOpen={!!selectedVagaForAcompanhamento}
+          onClose={() => setSelectedVagaForAcompanhamento(null)}
+          vaga={selectedVagaForAcompanhamento}
+          onSave={handleSaveAcompanhamento}
+        />
+      )}
     </div>
   );
 }

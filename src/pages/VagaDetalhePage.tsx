@@ -11,8 +11,18 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma } from '@/types/vaga';
-import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check } from 'lucide-react';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS } from '@/types/vaga';
+import { 
+  ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, 
+  FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check, 
+  Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
+  AlertTriangle, ArrowRightCircle, ExternalLink
+} from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
@@ -35,16 +45,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Zap, 
-  UserCheck, 
-  Send, 
-  Search, 
-  CheckCircle, 
-  AlertTriangle,
-  ArrowRightCircle,
-  ExternalLink
-} from 'lucide-react';
 
 
 export default function VagaDetalhePage() {
@@ -842,27 +842,7 @@ export default function VagaDetalhePage() {
   );
 }
 
-const TODAS_AS_ETAPAS: EtapaEdital[] = [
-  'validacao_edital',
-  'inscricoes',
-  'triagem',
-  'resultado_da_triagem',
-  'avaliacao_especifica_online',
-  'resultado_preliminar_avaliacao_especifica_online',
-  'recurso_avaliacao_especifica_online',
-  'resultado_recurso_avaliacao_especifica_online',
-  'resultado_final_avaliacao_especifica_online',
-  'envio_certificados_titulos',
-  'declaracao_experiencia',
-  'analise_curricular_preliminar',
-  'recurso_analise_curricular',
-  'resultado_recurso_analise_curricular',
-  'analise_curricular_final',
-  'entrevistas',
-  'resultado_final',
-  'convocacao_do_edital',
-  'encerramento'
-];
+// TODAS_AS_ETAPAS is now imported from @/types/vaga
 
 const CRONOGRAMA_KEYS: Record<EtapaEdital, keyof VagaCronograma> = {
   validacao_edital: 'data_validacao_edital',
@@ -1081,24 +1061,48 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
                                 )}
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2">
-                                <Input 
-                                  type="date" 
-                                  className="h-8 w-32 text-[10px] bg-white" 
-                                  defaultValue={new Date().toISOString().split('T')[0]}
-                                  id={`date-${e}`}
-                                />
-                                <Button 
-                                  size="sm" 
-                                  className="h-8 text-[10px] font-bold uppercase bg-primary hover:bg-primary/90"
-                                  onClick={() => {
-                                    const dateInput = document.getElementById(`date-${e}`) as HTMLInputElement;
-                                    markStageAsCompleted(e, dateInput.value || new Date().toISOString().split('T')[0]);
-                                  }}
-                                >
-                                  Marcar Concluída
-                                </Button>
-                              </div>
+                                <div className="flex items-center gap-2">
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className={cn(
+                                          "h-8 w-40 justify-start text-left font-semibold border-slate-200 hover:bg-slate-50 transition-all rounded-lg shadow-sm text-[10px]",
+                                        )}
+                                      >
+                                        <Calendar className="mr-2 h-3 w-3 text-primary" />
+                                        {document.getElementById(`date-${e}`) ? (document.getElementById(`date-${e}`) as HTMLInputElement).value : format(new Date(), "dd/MM/yyyy")}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="end">
+                                      <CalendarComponent
+                                        mode="single"
+                                        onSelect={(date) => {
+                                          if (date) {
+                                            const isoDate = date.toISOString().split('T')[0];
+                                            const input = document.getElementById(`date-${e}`) as HTMLInputElement;
+                                            if (input) input.value = isoDate;
+                                            // Trigger a re-render if needed, but here we just use the ref/id
+                                          }
+                                        }}
+                                        initialFocus
+                                        locale={ptBR}
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                  <input type="hidden" id={`date-${e}`} defaultValue={new Date().toISOString().split('T')[0]} />
+                                  <Button 
+                                    size="sm" 
+                                    className="h-8 text-[10px] font-bold uppercase bg-primary hover:bg-primary/90 rounded-lg shadow-sm"
+                                    onClick={() => {
+                                      const dateInput = document.getElementById(`date-${e}`) as HTMLInputElement;
+                                      markStageAsCompleted(e, dateInput.value || new Date().toISOString().split('T')[0]);
+                                    }}
+                                  >
+                                    Marcar Concluída
+                                  </Button>
+                                </div>
                             )}
                           </div>
                         </div>
@@ -1115,8 +1119,8 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                   {[
-                    { label: 'Inscritos', key: 'total_inscritos', icon: User, color: 'text-blue-600' },
-                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: Search, color: 'text-purple-600' },
+                    { label: 'Inscritos', key: 'total_inscritos', icon: Users, color: 'text-blue-600' },
+                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: SearchIcon, color: 'text-purple-600' },
                     { label: 'Avaliação OK', key: 'aprovados_avaliacao_especifica', icon: Zap, color: 'text-cyan-600' },
                     { label: 'Entrevista', key: 'convocados_entrevista', icon: UserCheck, color: 'text-amber-600' },
                     { label: 'Aprovados', key: 'aprovados_finais', icon: CheckCircle, color: 'text-green-600' },
@@ -1211,12 +1215,33 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
                         </span>
                       </div>
                       {isHabilitada && (
-                        <Input 
-                          type="date" 
-                          value={cronograma[cronoKey] || ''} 
-                          onChange={(e) => setCronograma({ ...cronograma, [cronoKey]: e.target.value })}
-                          className="h-7 w-32 text-[10px] bg-white"
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                "h-8 w-32 justify-start text-left font-semibold border-slate-200 hover:bg-slate-50 transition-all rounded-lg shadow-sm text-[10px]",
+                              )}
+                            >
+                              <Calendar className="mr-2 h-3 w-3 text-primary" />
+                              {cronograma[cronoKey] ? format(new Date(cronograma[cronoKey]), "dd/MM/yyyy") : "Selecionar"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="end">
+                            <CalendarComponent
+                              mode="single"
+                              selected={cronograma[cronoKey] ? new Date(cronograma[cronoKey]) : undefined}
+                              onSelect={(date) => {
+                                if (date) {
+                                  setCronograma({ ...cronograma, [cronoKey]: date.toISOString().split('T')[0] });
+                                }
+                              }}
+                              initialFocus
+                              locale={ptBR}
+                            />
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </div>
                   );

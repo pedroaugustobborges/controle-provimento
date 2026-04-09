@@ -437,3 +437,27 @@ export const STATUS_EDITAL_COLORS: Record<StatusEdital, string> = {
   'Em andamento': 'bg-green-100 text-green-700 border-green-200',
   'Encerrada': 'bg-gray-100 text-gray-700 border-gray-200',
 };
+
+export const TODAS_AS_ETAPAS: EtapaEdital[] = [
+  'validacao_edital',
+  'inscricoes',
+  'triagem',
+  'resultado_da_triagem',
+  'avaliacao_especifica_online',
+  'resultado_preliminar_avaliacao_especifica_online',
+  'recurso_avaliacao_especifica_online',
+  'resultado_recurso_avaliacao_especifica_online',
+  'resultado_final_avaliacao_especifica_online',
+  'envio_certificados_titulos',
+  'declaracao_experiencia',
+  'analise_curricular_preliminar',
+  'recurso_analise_curricular',
+  'resultado_recurso_analise_curricular',
+  'analise_curricular_final',
+  'entrevistas',
+  'resultado_final',
+  'convocacao_do_edital',
+  'encerramento',
+  'banco_gerado',
+  'sem_exito'
+];

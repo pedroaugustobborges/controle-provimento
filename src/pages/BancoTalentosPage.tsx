@@ -557,7 +557,7 @@ export default function BancoTalentosPage() {
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Cadastro Reserva</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade CR</p>
                 <p className="text-2xl font-bold text-slate-900">
                   {/* SOMA AGRUPADA: Total de vagas/capacidade do banco (conforme auditoria) - Apenas bancos originais/não prorrogados */}
                   {groupedBancos
@@ -575,7 +575,7 @@ export default function BancoTalentosPage() {
                 <Users className="h-5 w-5 text-purple-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Convocados</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Pessoas Convocadas</p>
                 <p className="text-2xl font-bold text-slate-900">
                   {/* CONTAGEM DE LINHAS: Total de pessoas já convocadas */}
                   {bancos.filter(b => b.status === 'CONVOCADO').length}
@@ -609,7 +609,7 @@ export default function BancoTalentosPage() {
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Prorrogados</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade Prorrogada</p>
                 <p className="text-2xl font-bold text-slate-900">
                   {/* SOMA AGRUPADA: Capacidade informada nos grupos prorrogados (conforme auditoria) */}
                   {groupedBancos
@@ -627,7 +627,7 @@ export default function BancoTalentosPage() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Vencidos</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Pessoas Vencidas</p>
                 <p className="text-2xl font-bold text-slate-900">
                   {/* CONTAGEM DE LINHAS: Candidatos em bancos vencidos */}
                   {bancos.filter(b => b.status === 'VENCIDO').length}
@@ -643,7 +643,7 @@ export default function BancoTalentosPage() {
                 <Calendar className="h-5 w-5 text-slate-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Total Visível</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Banco Total</p>
                 <p className="text-2xl font-bold text-slate-900">
                   {/* SOMA TOTAL REAL: Soma de todas as capacidades informadas nos bancos */}
                   {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}

@@ -1,5 +1,4 @@
 import { 
-  Building2, 
   LayoutDashboard, 
   Briefcase, 
   Users, 
@@ -9,9 +8,11 @@ import {
   HelpCircle,
   Calendar,
   FileSpreadsheet,
-  Bell
+  Bell,
+  ChevronDown
 } from 'lucide-react';
 
+import logoAgir from '@/assets/logo-agir.png';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -19,8 +20,13 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
   SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton
 } from '@/components/ui/sidebar';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAdminStore } from '@/store/adminStore';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
@@ -48,7 +54,23 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { canImport, canAccessAdmin } = usePermissions();
+  const { currentUser, users } = useAdminStore();
   const location = useLocation();
+
+  const hasMultipleUnits = useMemo(() => {
+    if (!currentUser) return false;
+    return currentUser.visualiza_todas_unidades || currentUser.unidades_vinculadas.length > 1;
+  }, [currentUser]);
+
+  const availableUnits = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.visualiza_todas_unidades) {
+      const allUnits = new Set<string>();
+      users.forEach(u => u.unidades_vinculadas.forEach(un => allUnits.add(un)));
+      return Array.from(allUnits).sort();
+    }
+    return currentUser.unidades_vinculadas;
+  }, [currentUser, users]);
 
   const isUrlActive = (url: string) => {
     const currentUrl = location.pathname + location.search;
@@ -70,18 +92,33 @@ export function AppSidebar() {
   
   return (
     <Sidebar collapsible="icon" className="border-r border-white/5 bg-sidebar">
-      <SidebarHeader className="border-b border-white/5 py-6">
+      <SidebarHeader className="border-b border-white/5 py-4">
         <div className="flex items-center gap-3 px-3">
-          <div className="bg-blue-600/10 p-2 rounded-lg border border-blue-500/20">
-            <Building2 className="h-5 w-5 text-blue-500 shrink-0" />
-          </div>
+          <img src={logoAgir} alt="AGIR" className="h-8 w-8 shrink-0 rounded" />
           {!collapsed && (
             <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200">
               <span className="font-bold text-base text-white truncate leading-tight tracking-tight">AGIR</span>
-              <span className="text-[9px] text-white/40 truncate uppercase tracking-[0.15em] font-medium">Provimento Digital</span>
+              <span className="text-[9px] text-white/40 truncate uppercase tracking-[0.15em] font-medium">Provimento de Pessoal</span>
             </div>
           )}
         </div>
+
+        {/* Unit selector for multi-unit users */}
+        {hasMultipleUnits && !collapsed && (
+          <div className="px-3 pt-3 animate-in fade-in duration-200">
+            <Select defaultValue="all">
+              <SelectTrigger className="h-8 bg-white/5 border-white/10 text-white/70 text-[11px] font-semibold hover:bg-white/10 transition-colors">
+                <SelectValue placeholder="Todas as Unidades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs font-bold">Todas as Unidades</SelectItem>
+                {availableUnits.map(u => (
+                  <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="py-2">

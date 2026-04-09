@@ -135,6 +135,7 @@ export default function BancoTalentosPage() {
     const groups: Record<string, {
       id: string;
       edital: string;
+      processoSeletivo: string;
       unidade: string;
       cargo: string;
       cargoNormalizado: string;
@@ -147,27 +148,32 @@ export default function BancoTalentosPage() {
 
     filtered.forEach(b => {
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
-      const key = `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
+      // REGRA DE IDENTIFICAÇÃO DO BANCO (Item 4)
+      const key = b.numero_processo_seletivo 
+        ? `PS-${b.numero_processo_seletivo}`
+        : `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
 
       if (!groups[key]) {
         groups[key] = {
           id: b.id,
           edital: b.numero_edital,
+          processoSeletivo: b.numero_processo_seletivo || '',
           unidade: b.unidade,
           cargo: b.cargo,
           cargoNormalizado: cargoNorm,
           status: b.status,
           validade: b.nova_data_validade || b.data_validade,
           isProrrogado: b.is_prorrogado,
+          // REGRA DA QUANTIDADE DE BANCO (Item 5): não somar, pegar do nível do banco
           qtdBanco: b.quantidade_banco || 0,
           candidatos: []
         };
       }
       
-      // Keep the most recent valid status/dates for the group if needed
-      // But for simplicity, we use the first one found as representative
-      
       groups[key].candidatos.push(b);
+      
+      // Se algum candidato do grupo tiver status CONVOCADO, o banco pode refletir isso se necessário,
+      // mas o usuário pediu para separar no detalhe.
     });
 
     return Object.values(groups).sort((a, b) => a.cargo.localeCompare(b.cargo));
@@ -175,12 +181,20 @@ export default function BancoTalentosPage() {
 
   const selectedGroupCandidates = useMemo(() => {
     if (!selectedBanco) return [];
+    
     const cargoNorm = selectedBanco.cargo_normalizado || normalizeCargo(selectedBanco.cargo);
-    return filtered.filter(b => 
-      b.numero_edital === selectedBanco.numero_edital && 
-      b.unidade === selectedBanco.unidade && 
-      (b.cargo_normalizado || normalizeCargo(b.cargo)) === cargoNorm
-    ).sort((a, b) => {
+    const selectedKey = selectedBanco.numero_processo_seletivo
+      ? `PS-${selectedBanco.numero_processo_seletivo}`
+      : `${selectedBanco.numero_edital}-${selectedBanco.unidade}-${cargoNorm}`;
+
+    return filtered.filter(b => {
+      const bCargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
+      const bKey = b.numero_processo_seletivo
+        ? `PS-${b.numero_processo_seletivo}`
+        : `${b.numero_edital}-${b.unidade}-${bCargoNorm}`;
+      
+      return bKey === selectedKey;
+    }).sort((a, b) => {
       const classA = typeof a.classificacao === 'number' ? a.classificacao : parseInt(String(a.classificacao)) || 999;
       const classB = typeof b.classificacao === 'number' ? b.classificacao : parseInt(String(b.classificacao)) || 999;
       return classA - classB;

@@ -45,11 +45,6 @@ export const EQUIPE_POR_UNIDADE: EquipeResponsavel[] = [
     unidade: 'VITÓRIA',
     analista: 'Geovana Miranda',
     assistentes: ['Nara Rubia']
-  },
-  {
-    unidade: 'Teia Canedo',
-    analista: 'Geovana Miranda',
-    assistentes: ['Nara Rubia']
   }
 ];
 
@@ -74,8 +69,9 @@ export function getResponsavelPorUnidade(unidade: string, tipoVaga?: string) {
     };
   }
 
+  // Fallback para unidades fora de GO/ES
   return {
-    analista: 'Não definido',
+    analista: 'Beatriz Almeida Pontes',
     assistentes: []
   };
 }

@@ -940,6 +940,8 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
     }
   }, [autoUpdateEtapa]);
 
+  const { currentUser } = useAdminStore();
+
   const toggleEtapa = (etapa: EtapaEdital) => {
     const habilitadas = form.etapas_habilitadas || [];
     if (habilitadas.includes(etapa)) {
@@ -947,6 +949,44 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
     } else {
       setForm({ ...form, etapas_habilitadas: [...habilitadas, etapa] });
     }
+  };
+
+  const markStageAsCompleted = (etapa: EtapaEdital, dataReal: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toLocaleTimeString();
+    
+    // Check if on time (before 2pm on the scheduled date)
+    const scheduledDate = cronograma[CRONOGRAMA_KEYS[etapa]];
+    let noPrazo = true;
+    if (scheduledDate === today) {
+      const currentHour = new Date().getHours();
+      if (currentHour >= 14) {
+        noPrazo = false;
+      }
+    } else if (scheduledDate && scheduledDate < today) {
+       noPrazo = false;
+    }
+
+    const newHistory = [...(form.historico_etapas || [])];
+    const existingIndex = newHistory.findIndex((h: any) => h.etapa === etapa);
+    
+    const entry = {
+      etapa,
+      concluida: true,
+      data_conclusao: dataReal,
+      usuario_conclusao: currentUser?.nome_completo || 'Analista',
+      timestamp_conclusao: `${today} ${now}`,
+      no_prazo: noPrazo
+    };
+
+    if (existingIndex >= 0) {
+      newHistory[existingIndex] = entry;
+    } else {
+      newHistory.push(entry);
+    }
+
+    setForm({ ...form, historico_etapas: newHistory });
+    toast.success(`${ETAPA_LABELS[etapa]} marcada como concluída!`);
   };
 
   const applyTemplate = (type: 'comum' | 'especifico') => {
@@ -964,7 +1004,9 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
       total_inscritos: form.total_inscritos,
       aprovados_triagem: form.aprovados_triagem,
       aprovados_finais: form.aprovados_finais,
-      convocados_entrevista: form.convocados_entrevista
+      convocados_entrevista: form.convocados_entrevista,
+      // Update overall status to help with monitoring
+      status_edital: form.etapa_atual === 'encerramento' ? 'Encerrada' : 'Em andamento'
     });
     toast.success('Acompanhamento operacional atualizado com sucesso!');
   };

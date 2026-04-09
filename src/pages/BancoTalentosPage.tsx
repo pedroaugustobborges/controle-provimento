@@ -716,7 +716,7 @@ export default function BancoTalentosPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                   {groupedBancos.map((group) => (
+                   {filteredGroups.map((group) => (
                     <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
                       <TableCell className="text-xs font-semibold text-slate-600 italic">
@@ -761,10 +761,9 @@ export default function BancoTalentosPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {groupedBancos.length === 0 && (
-
+                  {filteredGroups.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">
+                      <TableCell colSpan={7} className="h-40 text-center text-slate-400 font-medium italic">
                         Nenhum banco de talentos encontrado para os filtros aplicados.
                       </TableCell>
                     </TableRow>

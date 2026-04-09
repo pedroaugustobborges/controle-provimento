@@ -154,14 +154,74 @@ export function getEtapaColor(etapa: EtapaEdital): string {
 }
 
 
-export function getPublicacaoColor(status: StatusPublicacao): string {
-  const map: Record<StatusPublicacao, string> = {
-    pendente: 'bg-amber-100 text-amber-800',
-    publicado: 'bg-green-100 text-green-800',
-    encerrado: 'bg-gray-100 text-gray-600',
+export function getAutoEtapa(vaga: Vaga): EtapaEdital {
+  if (!vaga.cronograma || !vaga.acompanhamento?.etapas_habilitadas) {
+    return (vaga.acompanhamento?.etapa_atual as EtapaEdital) || 'inscricoes';
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const habilitadas = vaga.acompanhamento.etapas_habilitadas;
+  
+  const cronoOrder: EtapaEdital[] = [
+    'validacao_edital',
+    'inscricoes',
+    'triagem',
+    'resultado_da_triagem',
+    'avaliacao_especifica_online',
+    'resultado_preliminar_avaliacao_especifica_online',
+    'recurso_avaliacao_especifica_online',
+    'resultado_recurso_avaliacao_especifica_online',
+    'resultado_final_avaliacao_especifica_online',
+    'envio_certificados_titulos',
+    'declaracao_experiencia',
+    'analise_curricular_preliminar',
+    'recurso_analise_curricular',
+    'resultado_recurso_analise_curricular',
+    'analise_curricular_final',
+    'entrevistas',
+    'resultado_final',
+    'convocacao_do_edital',
+    'encerramento'
+  ];
+
+  const cronoKeys: Record<string, keyof VagaCronograma> = {
+    validacao_edital: 'data_validacao_edital',
+    inscricoes: 'data_inscricao',
+    triagem: 'data_triagem',
+    resultado_da_triagem: 'data_resultado_triagem',
+    avaliacao_especifica_online: 'data_avaliacao_especifica_online',
+    resultado_preliminar_avaliacao_especifica_online: 'data_resultado_preliminar_avaliacao_especifica',
+    recurso_avaliacao_especifica_online: 'data_recurso_avaliacao_especifica',
+    resultado_recurso_avaliacao_especifica_online: 'data_resultado_recurso_avaliacao_especifica',
+    resultado_final_avaliacao_especifica_online: 'data_resultado_final_avaliacao_especifica',
+    envio_certificados_titulos: 'data_envio_certificados_titulos',
+    declaracao_experiencia: 'data_declaracao_experiencia',
+    analise_curricular_preliminar: 'data_analise_curricular_preliminar',
+    recurso_analise_curricular: 'data_recurso_analise_curricular',
+    resultado_recurso_analise_curricular: 'data_resultado_recurso_analise_curricular',
+    analise_curricular_final: 'data_analise_curricular_final',
+    entrevistas: 'data_entrevistas',
+    resultado_final: 'data_resultado_final',
+    convocacao_do_edital: 'data_convocacao',
+    encerramento: 'data_encerramento_processo',
   };
-  return map[status];
+
+  let current: EtapaEdital = (vaga.acompanhamento?.etapa_atual as EtapaEdital) || 'inscricoes';
+  
+  // Encontrar a última etapa cuja data já passou ou é hoje
+  for (const etapa of cronoOrder) {
+    if (habilitadas.includes(etapa)) {
+      const dateKey = cronoKeys[etapa];
+      const date = (vaga.cronograma as any)[dateKey];
+      if (date && date <= today) {
+        current = etapa;
+      }
+    }
+  }
+
+  return current;
 }
+
 
 export function calcDiasAberto(dataRecebimento: string, dataConclusao?: string): number {
   if (!dataRecebimento) return 0;

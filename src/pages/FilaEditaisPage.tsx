@@ -259,7 +259,7 @@ export default function FilaEditaisPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" title="Enviar para Validação" onClick={() => handleSendToValidation(v.id)}>
+                        <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Enviar para Analista do Edital" onClick={() => handleOpenSendModal(v)}>
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>

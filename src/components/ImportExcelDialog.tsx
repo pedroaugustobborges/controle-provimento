@@ -524,7 +524,7 @@ export function ImportExcelDialog({
         setSummary({
           type: 'banco',
           total: newBancos.length,
-          totalFound: data.length,
+          totalFound: totalRowsFound,
           fileName: selectedFile.name,
           sheetName: sheetUsed,
           manualType: chosenType,
@@ -534,7 +534,7 @@ export function ImportExcelDialog({
         addImportHistory({
           id: batchId,
           usuario: 'Sistema',
-          total_lidos: data.length,
+          total_lidos: totalRowsFound,
           total_novos: newBancos.length,
           total_atualizados: 0,
           total_ignorados: 0,

@@ -122,6 +122,7 @@ export default function DashboardPage() {
         groups[key] = {
           id: b.id,
           status: b.status,
+          isProrrogado: b.is_prorrogado,
           qtdBanco: qtd,
           candidatesCount: 0
         };
@@ -132,17 +133,24 @@ export default function DashboardPage() {
     return Object.values(groups);
   }, [bancos]);
 
-  // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR
+  // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR (não prorrogados)
   const totalCR = useMemo(() => {
     return groupedBancos
-      .filter(g => g.status === 'CADASTRO RESERVA')
+      .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
+      .reduce((sum, g) => sum + g.qtdBanco, 0);
+  }, [groupedBancos]);
+
+  // Card Prorrogados - Soma da quantidade de banco dos grupos prorrogados
+  const totalProrrogados = useMemo(() => {
+    return groupedBancos
+      .filter(g => g.isProrrogado || g.status === 'prorrogado')
       .reduce((sum, g) => sum + g.qtdBanco, 0);
   }, [groupedBancos]);
 
   // Card Com Banco Válido (Item 4) - Soma da quantidade de banco dos grupos com validade vigente
   const totalComBancoValido = useMemo(() => {
     return groupedBancos
-      .filter(g => g.status === 'CADASTRO RESERVA' || g.status === 'valido' || g.status === 'prorrogado')
+      .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
       .reduce((sum, g) => sum + g.qtdBanco, 0);
   }, [groupedBancos]);
 

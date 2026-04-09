@@ -230,12 +230,21 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           
           // RULE: ONLY Select "BANCO GERAL" sheet
           const targetSheetName = 'BANCO GERAL';
-          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.toUpperCase() === targetSheetName);
+          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.trim().toUpperCase() === targetSheetName);
+          
           if (bancoGeralIndex !== -1) {
-            setSelectedSheets([wb.SheetNames[bancoGeralIndex]]);
+            const finalName = wb.SheetNames[bancoGeralIndex];
+            setSelectedSheets([finalName]);
+            // Força linha 1 para BANCO GERAL
+            setHeaderRow(0);
           } else {
-            // Fallback selection to allow the user to see the sheet list if not found
-            setSelectedSheets([wb.SheetNames[0]]);
+            // Se não achar BANCO GERAL, tenta achar alguma que contenha BANCO
+            const anyBancoIndex = wb.SheetNames.findIndex(name => name.toUpperCase().includes('BANCO'));
+            if (anyBancoIndex !== -1) {
+              setSelectedSheets([wb.SheetNames[anyBancoIndex]]);
+            } else {
+              setSelectedSheets([wb.SheetNames[0]]);
+            }
           }
 
           toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);
@@ -837,9 +846,24 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {workbook.SheetNames.filter(name => name.toUpperCase() === 'BANCO GERAL').map(name => (
+                {workbook.SheetNames.filter(name => name.trim().toUpperCase() === 'BANCO GERAL').map(name => (
                   <button key={name} onClick={() => {
                     console.log("Aba selecionada:", name);
+                    setSelectedSheets([name]);
+                    setHeaderRow(0); // Forçar linha 1 para Banco Geral
+                  }} className={`p-4 border-2 rounded-xl flex flex-col items-start gap-2 transition-all hover:shadow-md ${selectedSheets.includes(name) ? 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-lg' : 'border-border bg-card'}`}>
+                    <div className="flex items-center justify-between w-full">
+                      <Layers className={`h-6 w-6 ${selectedSheets.includes(name) ? 'text-primary' : 'text-muted-foreground'}`} />
+                      {selectedSheets.includes(name) && <CheckCircle2 className="h-5 w-5 text-primary animate-in zoom-in" />}
+                    </div>
+                    <span className={`font-bold text-sm truncate w-full text-left ${selectedSheets.includes(name) ? 'text-primary' : ''}`}>{name}</span>
+                  </button>
+                ))}
+                {/* Fallback caso não ache BANCO GERAL - mostra todas que contém BANCO */}
+                {workbook.SheetNames.filter(name => name.trim().toUpperCase() === 'BANCO GERAL').length === 0 && 
+                 workbook.SheetNames.filter(name => name.toUpperCase().includes('BANCO')).map(name => (
+                  <button key={name} onClick={() => {
+                    console.log("Aba selecionada (fallback):", name);
                     setSelectedSheets([name]);
                   }} className={`p-4 border-2 rounded-xl flex flex-col items-start gap-2 transition-all hover:shadow-md ${selectedSheets.includes(name) ? 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-lg' : 'border-border bg-card'}`}>
                     <div className="flex items-center justify-between w-full">
@@ -850,7 +874,8 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                   </button>
                 ))}
               </div>
-              {workbook.SheetNames.filter(name => name.toUpperCase() === 'BANCO GERAL').length === 0 && (
+              {workbook.SheetNames.filter(name => name.trim().toUpperCase() === 'BANCO GERAL').length === 0 && 
+               workbook.SheetNames.filter(name => name.toUpperCase().includes('BANCO')).length === 0 && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Aba obrigatória não encontrada</AlertTitle>

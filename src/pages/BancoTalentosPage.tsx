@@ -737,7 +737,7 @@ export default function BancoTalentosPage() {
                     <TableHead >Unidade</TableHead>
                     <TableHead >Status</TableHead>
                     <TableHead >Qtd. Banco</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-right">Ações</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -846,11 +846,11 @@ export default function BancoTalentosPage() {
                       <TableHead >Nome</TableHead>
                       <TableHead >Cargo</TableHead>
                       <TableHead >Edital</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Class.</TableHead>
+                      <TableHead className="text-center">Class.</TableHead>
                       <TableHead >Data Conv.</TableHead>
                       <TableHead >Unid. Conv.</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">N° Chamada</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-right">Ações</TableHead>
+                      <TableHead className="text-center">N° Chamada</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -911,10 +911,10 @@ export default function BancoTalentosPage() {
                 <TableRow>
                   <TableHead >Data/Hora</TableHead>
                   <TableHead >Arquivo</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase text-center">Registros</TableHead>
+                  <TableHead className="text-center">Registros</TableHead>
                   <TableHead >Usuário</TableHead>
                   <TableHead >Status</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase text-right">Ações</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -976,16 +976,16 @@ export default function BancoTalentosPage() {
                 <Table>
                   <TableHeader className="bg-slate-100">
                     <TableRow>
-                      <TableHead className="text-[11px] font-bold uppercase whitespace-nowrap">Chave do Grupo</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Status</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Cands (Linhas)</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Qtd Banco (Lido)</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Válido?</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Prorrog?</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center bg-blue-50/50">Cad. Res.</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center bg-green-50/50">Bancos Vál.</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center bg-purple-50/50">Prorrogados</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center bg-slate-100">Total Visível</TableHead>
+                      <TableHead className="whitespace-nowrap">Chave do Grupo</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Cands (Linhas)</TableHead>
+                      <TableHead className="text-center">Qtd Banco (Lido)</TableHead>
+                      <TableHead className="text-center">Válido?</TableHead>
+                      <TableHead className="text-center">Prorrog?</TableHead>
+                      <TableHead className="text-center bg-blue-50/50">Cad. Res.</TableHead>
+                      <TableHead className="text-center bg-green-50/50">Bancos Vál.</TableHead>
+                      <TableHead className="text-center bg-purple-50/50">Prorrogados</TableHead>
+                      <TableHead className="text-center bg-slate-100">Total Visível</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

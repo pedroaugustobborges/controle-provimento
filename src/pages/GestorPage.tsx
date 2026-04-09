@@ -84,7 +84,7 @@ export default function GestorPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Por Unidade</CardTitle></CardHeader>
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Unidade</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {unidades.map(u => (
                   <div key={u} className="flex justify-between items-center text-xs">
@@ -97,7 +97,7 @@ export default function GestorPage() {
               </CardContent>
             </Card>
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Por Analista</CardTitle></CardHeader>
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Analista</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {[...new Set(vagas.map(v => v.analista_responsavel))].map(a => (
                   <div key={a} className="flex justify-between items-center text-xs">
@@ -108,7 +108,7 @@ export default function GestorPage() {
               </CardContent>
             </Card>
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Por Assistente</CardTitle></CardHeader>
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Assistente</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {[...new Set(vagas.flatMap(v => v.assistentes || []))].map(a => (
                   <div key={a} className="flex justify-between items-center text-xs">

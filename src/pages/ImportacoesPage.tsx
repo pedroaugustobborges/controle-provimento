@@ -278,12 +278,12 @@ export default function ImportacoesPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[11px] font-bold uppercase">Lote / Arquivo</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Tipo</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-center">Registros</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Status</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Data/Hora</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-right">Ações</TableHead>
+                    <TableHead >Lote / Arquivo</TableHead>
+                    <TableHead >Tipo</TableHead>
+                    <TableHead className="text-center">Registros</TableHead>
+                    <TableHead >Status</TableHead>
+                    <TableHead >Data/Hora</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -296,7 +296,7 @@ export default function ImportacoesPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[11px] font-bold uppercase tracking-wider bg-slate-50">
+                        <Badge variant="outline" className="bg-slate-50">
                           {h.tipo_importacao || 'vagas'}
                         </Badge>
                       </TableCell>
@@ -372,12 +372,12 @@ export default function ImportacoesPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[11px] font-bold uppercase">Nome do Arquivo</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Data de Upload</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Usuário</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Tamanho</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Status</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-right">Ações</TableHead>
+                    <TableHead >Nome do Arquivo</TableHead>
+                    <TableHead >Data de Upload</TableHead>
+                    <TableHead >Usuário</TableHead>
+                    <TableHead >Tamanho</TableHead>
+                    <TableHead >Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

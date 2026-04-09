@@ -157,11 +157,11 @@ export default function ValidacaoPage() {
           <Table>
             <TableHeader className="bg-slate-50/50">
               <TableRow>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider">Data/Hora</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider">Candidato</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider">Unidade / Cargo</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider">Requisição</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider">Status</TableHead>
+                <TableHead className="tracking-wider">Data/Hora</TableHead>
+                <TableHead className="tracking-wider">Candidato</TableHead>
+                <TableHead className="tracking-wider">Unidade / Cargo</TableHead>
+                <TableHead className="tracking-wider">Requisição</TableHead>
+                <TableHead className="tracking-wider">Status</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>

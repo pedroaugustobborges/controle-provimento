@@ -710,7 +710,7 @@ export default function VagaDetalhePage() {
                 <Badge variant={vaga.origem === 'manual' ? 'default' : 'outline'} >
                   {vaga.origem === 'manual' ? 'Origem Manual' : 'Origem Importada'}
                 </Badge>
-                <Badge variant="outline" className="text-[11px] font-bold uppercase bg-white">
+                <Badge variant="outline" className="bg-white">
                   Criado em: {formatDate(vaga.data_criacao || vaga.data_abertura)}
                 </Badge>
               </div>
@@ -1191,9 +1191,9 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="flex flex-wrap gap-2 mb-4">
-                <Button size="sm" variant="outline" onClick={() => applyTemplate('comum')} className="text-[11px] font-bold uppercase h-8 border-2">Template Comum</Button>
-                <Button size="sm" variant="outline" onClick={() => applyTemplate('especifico')} className="text-[11px] font-bold uppercase h-8 border-2">Template Saúde/Títulos</Button>
-                <Button size="sm" variant="ghost" onClick={() => setForm({ ...form, etapas_habilitadas: TODAS_AS_ETAPAS })} className="text-[11px] font-bold uppercase h-8 text-primary">Habilitar Todas</Button>
+                <Button size="sm" variant="outline" onClick={() => applyTemplate('comum')} className="h-8 border-2">Template Comum</Button>
+                <Button size="sm" variant="outline" onClick={() => applyTemplate('especifico')} className="h-8 border-2">Template Saúde/Títulos</Button>
+                <Button size="sm" variant="ghost" onClick={() => setForm({ ...form, etapas_habilitadas: TODAS_AS_ETAPAS })} className="h-8 text-primary">Habilitar Todas</Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -1568,7 +1568,7 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
               <TableRow>
                 <TableHead >Data/Hora</TableHead>
                 <TableHead >Candidato</TableHead>
-                <TableHead className="text-[11px] font-bold uppercase text-center">Class.</TableHead>
+                <TableHead className="text-center">Class.</TableHead>
                 <TableHead >Status</TableHead>
                 <TableHead >E-doc</TableHead>
                 <TableHead className="text-right"></TableHead>

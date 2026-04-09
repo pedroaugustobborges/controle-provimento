@@ -221,9 +221,9 @@ export default function ConvocacoesPage() {
                   <TableHead >Requisição</TableHead>
                   <TableHead >Cargo</TableHead>
                   <TableHead >Unidade</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Banco?</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Data Abertura</TableHead>
-                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-right">Ação</TableHead>
+                  <TableHead className="text-center">Banco?</TableHead>
+                  <TableHead className="text-center">Data Abertura</TableHead>
+                  <TableHead className="text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -322,10 +322,10 @@ export default function ConvocacoesPage() {
                   <TableRow>
                     <TableHead >Candidato</TableHead>
                     <TableHead >Vaga / Cargo</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Data/Hora</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Status</TableHead>
+                    <TableHead className="text-center">Data/Hora</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                     <TableHead >Unidade</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-right">Ações</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

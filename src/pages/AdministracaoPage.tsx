@@ -135,12 +135,12 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader className="bg-slate-50/50">
                     <TableRow>
-                      <TableHead className="text-[11px] font-bold uppercase">Nome / E-mail</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase">Perfil / Cargo</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Status</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Acesso Global</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase text-center">Pode Excluir</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase">Último Acesso</TableHead>
+                      <TableHead >Nome / E-mail</TableHead>
+                      <TableHead >Perfil / Cargo</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Acesso Global</TableHead>
+                      <TableHead className="text-center">Pode Excluir</TableHead>
+                      <TableHead >Último Acesso</TableHead>
                       <TableHead className="text-right pr-6"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -225,9 +225,9 @@ export default function AdministracaoPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[11px] font-bold uppercase pl-6">Usuário</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Unidades com Acesso</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-center">Ações Permitidas</TableHead>
+                    <TableHead className="pl-6">Usuário</TableHead>
+                    <TableHead >Unidades com Acesso</TableHead>
+                    <TableHead className="text-center">Ações Permitidas</TableHead>
                     <TableHead className="text-right pr-6"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -286,10 +286,10 @@ export default function AdministracaoPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[11px] font-bold uppercase pl-6">Região / Unidades</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Responsável</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase">Contato</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-center">Status</TableHead>
+                    <TableHead className="pl-6">Região / Unidades</TableHead>
+                    <TableHead >Responsável</TableHead>
+                    <TableHead >Contato</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                     <TableHead className="text-right pr-6">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -357,11 +357,11 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
                     <TableRow>
-                      <TableHead className="text-[11px] font-bold uppercase pl-6">Data / Hora</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase">Usuário</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase">Ação / Módulo</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase">Registro</TableHead>
-                      <TableHead className="text-[11px] font-bold uppercase">Alteração (De → Para)</TableHead>
+                      <TableHead className="pl-6">Data / Hora</TableHead>
+                      <TableHead >Usuário</TableHead>
+                      <TableHead >Ação / Módulo</TableHead>
+                      <TableHead >Registro</TableHead>
+                      <TableHead >Alteração (De → Para)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -546,8 +546,8 @@ export default function AdministracaoPage() {
                     <TableHeader className="bg-slate-50/50">
                       <TableRow>
                         <TableHead className="pl-6 text-[11px] font-bold uppercase">Data / Hora</TableHead>
-                        <TableHead className="text-[11px] font-bold uppercase text-center">Registros</TableHead>
-                        <TableHead className="text-[11px] font-bold uppercase text-center">Status</TableHead>
+                        <TableHead className="text-center">Registros</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                       </TableRow>
                     </TableHeader>

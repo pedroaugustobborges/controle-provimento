@@ -216,33 +216,46 @@ export function normalizeStatus(statusText: string): StatusVaga {
     return 'SEM STATUS' as StatusVaga;
   }
   
-  const text = removeAccents(statusText.toLowerCase().trim());
+  // Normalização rigorosa conforme item 3: ignorar acentos, caixa alta/baixa e espaços duplicados
+  const text = removeAccents(statusText.toLowerCase().trim().replace(/\s+/g, ' '));
   
-  // Mapping conforme solicitado:
-  if (text.includes('admissao efetivada')) return 'CONCLUÍDAS' as StatusVaga;
-  if (text.includes('admissao enviada')) return 'EM ANDAMENTO' as StatusVaga;
-  if (text.includes('em edital')) return 'EM ANDAMENTO' as StatusVaga;
-  if (text.includes('movimentacao interna')) return 'MOV. INTERNA' as StatusVaga;
+  // Mapeamento EXATO conforme item 4:
+  if (text === 'admissao efetivada') return 'CONCLUÍDAS' as StatusVaga;
+  
+  if (text === 'admissao enviada' || 
+      text === 'em edital' || 
+      text === 'em processo seletivo') {
+    return 'EM ANDAMENTO' as StatusVaga;
+  }
+  
+  if (text === 'movimentacao interna') return 'MOV. INTERNA' as StatusVaga;
+  
+  if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
   
   if (text === 'documentacao' || 
-      text.includes('documentacao ok e aso pendente') || 
-      text.includes('aso pendente')) {
+      text === 'documentacao ok e aso pendente' || 
+      text === 'aso pendente') {
     return 'DOCUMENTAÇÃO' as StatusVaga;
   }
   
-  if (text.includes('realizar convocacao')) return 'CONVOCAÇÕES' as StatusVaga;
-  if (text.includes('publicar novo edital') || text.includes('publicar edital')) return 'FILA DE EDITAIS' as StatusVaga;
-  if (text.includes('vaga suspensa')) return 'SUSPENSA' as StatusVaga;
-  if (text.includes('vaga pausada')) return 'PAUSADA' as StatusVaga;
-  if (text.includes('aguardando unidade') || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
-  if (text.includes('vaga de lideranca')) return 'ESTRATÉGICAS' as StatusVaga;
-  if (text.includes('em processo seletivo')) return 'EM ANDAMENTO' as StatusVaga;
-  if (text.includes('cancelada') || text.includes('cancelado')) return 'CANCELADAS' as StatusVaga;
+  if (text === 'realizar convocacao') return 'CONVOCAÇÕES' as StatusVaga;
   
-  // Broader keyword matches from previous version if needed, or stick to user's list
+  if (text === 'publicar novo edital' || 
+      text === 'publicar edital') {
+    return 'FILA DE EDITAIS' as StatusVaga;
+  }
+  
+  if (text === 'vaga suspensa' || text === 'suspensa') return 'SUSPENSA' as StatusVaga;
+  
+  if (text === 'vaga pausada' || text === 'pausada') return 'PAUSADA' as StatusVaga;
+  
+  if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
+  
+  if (text === 'cancelada' || text === 'cancelado') return 'CANCELADAS' as StatusVaga;
+  
+  // Fallback para manter compatibilidade com status parciais se necessário, 
+  // mas priorizando o mapeamento exato acima.
   if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'CONCLUÍDAS' as StatusVaga;
-  if (text.includes('triagem') || text.includes('entrevista')) return 'EM ANDAMENTO' as StatusVaga;
-  if (text.includes('aberta') || text.includes('aberto')) return 'EM ANDAMENTO' as StatusVaga;
   
   return 'SEM STATUS' as StatusVaga;
 }
@@ -308,12 +321,12 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
 }
 
 /**
- * Canonical filter to ensure parity between metrics, dashboards and tables.
- * Implements the spreadsheet rule: 
- * - Must have cargo (Column F in Excel)
- * - Unit filter (B4 in Excel)
- * - Month filter on data_abertura (B10 in Excel)
- */
+  * Canonical filter to ensure parity between metrics, dashboards and tables.
+  * Implements the spreadsheet rule: 
+  * - Must have cargo (Column E in the new Excel layout)
+  * - Unit filter
+  * - Month filter on data_abertura
+  */
 export function getValidVacancyBase(
   records: any[],
   selectedUnit?: string,
@@ -328,7 +341,7 @@ export function getValidVacancyBase(
     : 'TODOS';
 
   return records.filter((row) => {
-    // 1. Mandatory Cargo (Column F)
+    // 1. Mandatory Cargo
     const hasCargo = String(row.cargo ?? "").trim() !== "";
     if (!hasCargo) return false;
 

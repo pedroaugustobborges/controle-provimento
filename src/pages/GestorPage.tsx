@@ -234,29 +234,29 @@ export default function GestorPage() {
                           <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
                           <span className="text-xs font-mono text-slate-500 truncate max-w-[150px]">{h.nome_arquivo}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold">{h.total_lidos}</td>
-                      <td className="px-6 py-4 text-center text-green-600 font-bold">{h.total_novos}</td>
-                      <td className="px-6 py-4 text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</td>
-                      <td className="px-6 py-4 text-center text-red-600 font-bold">{h.total_erros}</td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-center font-bold">{h.total_lidos}</TableCell>
+                      <TableCell className="text-center text-green-600 font-bold">{h.total_novos}</TableCell>
+                      <TableCell className="text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</TableCell>
+                      <TableCell className="text-center text-red-600 font-bold">{h.total_erros}</TableCell>
+                      <TableCell className="text-right">
                         <Badge variant="outline" className={`bg-green-50 text-green-700 border-green-200 text-[11px] font-bold uppercase tracking-wider`}>
                           <CheckCircle2 className="h-3 w-3 mr-1" /> Concluído
                         </Badge>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )) : (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-20 text-center">
+                    <TableRow>
+                      <TableCell colSpan={8} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center justify-center gap-2 opacity-30">
                           <History className="h-10 w-10" />
                           <p className="font-medium">Nenhuma importação realizada até o momento.</p>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

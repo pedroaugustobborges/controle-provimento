@@ -67,16 +67,16 @@ export function AppSidebar() {
   ].filter(item => item.visible);
   
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar shadow-xl">
-      <SidebarHeader className="border-b border-sidebar-border/30 py-8">
+    <Sidebar collapsible="icon" className="border-r border-white/5 bg-sidebar">
+      <SidebarHeader className="border-b border-white/5 py-6">
         <div className="flex items-center gap-3 px-3">
-          <div className="bg-white/10 p-2.5 rounded-xl shadow-inner backdrop-blur-sm border border-white/5">
-            <Building2 className="h-6 w-6 text-white shrink-0" />
+          <div className="bg-blue-600/10 p-2 rounded-lg border border-blue-500/20">
+            <Building2 className="h-5 w-5 text-blue-500 shrink-0" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
-              <span className="font-extrabold text-lg text-white truncate leading-tight tracking-tight">AGIR</span>
-              <span className="text-[10px] text-white/60 truncate uppercase tracking-[0.2em] font-bold">Provimento Digital</span>
+            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200">
+              <span className="font-bold text-base text-white truncate leading-tight tracking-tight">AGIR</span>
+              <span className="text-[9px] text-white/40 truncate uppercase tracking-[0.15em] font-medium">Provimento Digital</span>
             </div>
           )}
         </div>

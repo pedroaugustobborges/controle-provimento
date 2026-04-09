@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useVagasStore } from '@/store/vagasStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -154,36 +155,36 @@ export default function GestorPage() {
             <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Listagem Consolidada</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      <th className="text-left px-6 py-4">Requisição</th>
-                      <th className="text-left px-6 py-4">Cargo</th>
-                      <th className="text-left px-6 py-4">Unidade</th>
-                      <th className="text-left px-6 py-4">Status</th>
-                      <th className="text-left px-6 py-4">Abertura</th>
-                      <th className="text-left px-6 py-4">Dias</th>
-                      <th className="text-left px-6 py-4">Analista</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Requisição</TableHead>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Unidade</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Abertura</TableHead>
+                      <TableHead>Dias</TableHead>
+                      <TableHead>Analista</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filtered.map((v) => (
-                      <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.numero_requisicao}</td>
-                        <td className="px-6 py-4 font-semibold text-slate-700">{v.cargo}</td>
-                        <td className="px-6 py-4 text-slate-500">{v.unidade}</td>
-                        <td className="px-6 py-4"><StatusBadge status={v.status_geral} /></td>
-                        <td className="px-6 py-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(v.data_abertura)}</td>
-                        <td className="px-6 py-4 text-center">
+                      <TableRow key={v.id}>
+                        <TableCell className="font-mono text-xs text-primary font-bold">{v.numero_requisicao}</TableCell>
+                        <TableCell className="font-semibold text-slate-700">{v.cargo}</TableCell>
+                        <TableCell className="text-slate-500">{v.unidade}</TableCell>
+                        <TableCell><StatusBadge status={v.status_geral} /></TableCell>
+                        <TableCell className="text-slate-500 text-xs whitespace-nowrap">{formatDate(v.data_abertura)}</TableCell>
+                        <TableCell className="text-center">
                           <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[11px]">
                             {calcDiasAberto(v.data_abertura, v.data_encerramento)}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 text-xs font-medium text-slate-500">{v.analista_responsavel}</td>
-                      </tr>
+                        </TableCell>
+                        <TableCell className="text-xs font-medium text-slate-500">{v.analista_responsavel}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
@@ -201,62 +202,62 @@ export default function GestorPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    <th className="text-left px-6 py-4">Data/Hora</th>
-                    <th className="text-left px-6 py-4">Usuário</th>
-                    <th className="text-left px-6 py-4">Arquivo</th>
-                    <th className="text-center px-6 py-4">Registros</th>
-                    <th className="text-center px-6 py-4">Novos</th>
-                    <th className="text-center px-6 py-4">Repetições</th>
-                    <th className="text-center px-6 py-4">Erros</th>
-                    <th className="text-right px-6 py-4">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data/Hora</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Arquivo</TableHead>
+                    <TableHead className="text-center">Registros</TableHead>
+                    <TableHead className="text-center">Novos</TableHead>
+                    <TableHead className="text-center">Repetições</TableHead>
+                    <TableHead className="text-center">Erros</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {importHistory.length > 0 ? importHistory.map((h) => (
-                    <tr key={h.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <TableRow key={h.id}>
+                      <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Clock className="h-3.5 w-3.5 text-slate-400" />
                           <span className="text-xs font-medium text-slate-700">{new Date(h.data).toLocaleString()}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
                           <User className="h-3.5 w-3.5 text-slate-400" />
                           <span className="text-xs font-semibold text-slate-600">{h.usuario}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
                           <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
                           <span className="text-xs font-mono text-slate-500 truncate max-w-[150px]">{h.nome_arquivo}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold">{h.total_lidos}</td>
-                      <td className="px-6 py-4 text-center text-green-600 font-bold">{h.total_novos}</td>
-                      <td className="px-6 py-4 text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</td>
-                      <td className="px-6 py-4 text-center text-red-600 font-bold">{h.total_erros}</td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-center font-bold">{h.total_lidos}</TableCell>
+                      <TableCell className="text-center text-green-600 font-bold">{h.total_novos}</TableCell>
+                      <TableCell className="text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</TableCell>
+                      <TableCell className="text-center text-red-600 font-bold">{h.total_erros}</TableCell>
+                      <TableCell className="text-right">
                         <Badge variant="outline" className={`bg-green-50 text-green-700 border-green-200 text-[11px] font-bold uppercase tracking-wider`}>
                           <CheckCircle2 className="h-3 w-3 mr-1" /> Concluído
                         </Badge>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )) : (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-20 text-center">
+                    <TableRow>
+                      <TableCell colSpan={8} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center justify-center gap-2 opacity-30">
                           <History className="h-10 w-10" />
                           <p className="font-medium">Nenhuma importação realizada até o momento.</p>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

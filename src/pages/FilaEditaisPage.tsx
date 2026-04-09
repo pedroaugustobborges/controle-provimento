@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -173,46 +174,46 @@ export default function FilaEditaisPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                  <th className="px-6 py-4 text-left">Requisição</th>
-                  <th className="px-6 py-4 text-left">Unidade</th>
-                  <th className="px-6 py-4 text-left">Cargo</th>
-                  <th className="px-6 py-4 text-left">Tipo</th>
-                  <th className="px-6 py-4 text-center">Vagas</th>
-                  <th className="px-6 py-4 text-left">Recebimento</th>
-                  <th className="px-6 py-4 text-center">Dias Aberto</th>
-                  <th className="px-6 py-4 text-left">Status Atual</th>
-                  <th className="px-6 py-4 text-left">Responsável</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Requisição</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-center">Vagas</TableHead>
+                  <TableHead>Recebimento</TableHead>
+                  <TableHead className="text-center">Dias Aberto</TableHead>
+                  <TableHead>Status Atual</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {pendingVagas.map((v) => (
-                  <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 font-mono text-xs text-primary font-bold">
+                  <TableRow key={v.id} className="group">
+                    <TableCell className="font-mono text-xs text-primary font-bold">
                       {v.requisicao || v.numero_requisicao}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <Building2 className="h-3.5 w-3.5 text-slate-400" />
                         <span className="font-medium text-slate-700">{v.unidade}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-slate-800">{v.cargo}</td>
-                    <td className="px-6 py-4 text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</td>
-                    <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
+                    <TableCell className="text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</TableCell>
+                    <TableCell className="text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</TableCell>
+                    <TableCell className="text-slate-500 whitespace-nowrap">
                       {formatDate(v.data_recebimento!)}
-                    </td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">
+                    </TableCell>
+                    <TableCell className="text-center font-bold text-slate-700">
                       {calcDiasAberto(v.data_recebimento || v.data_abertura)}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-medium text-slate-600">
+                    </TableCell>
+                    <TableCell className="text-xs font-medium text-slate-600">
                       {v.analista_responsavel}
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
                           <Edit className="h-4 w-4" />
@@ -221,21 +222,21 @@ export default function FilaEditaisPage() {
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {pendingVagas.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="px-6 py-20 text-center">
+                  <TableRow>
+                    <TableCell colSpan={10} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
                         <p className="text-slate-500 font-medium">Nenhuma pendência encontrada na fila de editais.</p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

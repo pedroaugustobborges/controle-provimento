@@ -545,35 +545,35 @@ export default function VagasPage() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50/50 whitespace-nowrap">
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Abertura</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Recebimento</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Requisição</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Cargo</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Tipo</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Unidade</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Seção</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Status</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-center">Vaga(s)</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Abertura</TableHead>
+                  <TableHead>Recebimento</TableHead>
+                  <TableHead>Requisição</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Seção</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Vaga(s)</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filtered.map((v) => (
-                  <tr
+                  <TableRow
                     key={v.id}
-                    className="border-b last:border-0 hover:bg-slate-50/50 transition-colors whitespace-nowrap group cursor-pointer"
+                    className="whitespace-nowrap cursor-pointer"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
+                    <TableCell className="text-slate-600 text-[11px] font-medium">
                       {v.data_abertura ? formatDate(v.data_abertura) : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
+                    </TableCell>
+                    <TableCell className="text-slate-600 text-[11px] font-medium">
                       {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-col gap-0.5">
                         <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
                           {v.requisicao || v.numero_requisicao || '-'}
@@ -582,8 +582,8 @@ export default function VagasPage() {
                           <span className="text-[9px] text-slate-400 ml-1">Linha {v.source_row_index}</span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-col">
                         <div className="font-semibold text-slate-800 truncate max-w-[200px] flex items-center gap-2" title={v.cargo}>
                           {v.cargo}
@@ -594,19 +594,19 @@ export default function VagasPage() {
                           )}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
+                    </TableCell>
+                    <TableCell className="text-slate-600 text-[11px] font-medium">
                       {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</TableCell>
+                    <TableCell className="text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</TableCell>
+                    <TableCell>
                       <StatusBadge status={v.status || v.status_geral} />
-                    </td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">
+                    </TableCell>
+                    <TableCell className="text-center font-bold text-slate-700">
                       {v.numero_vagas || v.quantidade || 0}
-                    </td>
-                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                    </TableCell>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
@@ -656,14 +656,18 @@ export default function VagasPage() {
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={9} className="px-6 py-20 text-center text-muted-foreground font-medium">Nenhuma vaga encontrada para os filtros aplicados.</td></tr>
+                  <TableRow>
+                    <TableCell colSpan={9} className="px-6 py-20 text-center text-muted-foreground font-medium">
+                      Nenhuma vaga encontrada para os filtros aplicados.
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
           <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex justify-between items-center">
             <span>Exibindo {filtered.length} de {vagas.length} registros</span>
@@ -777,39 +781,39 @@ function AcompanhamentoEditalList() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                  <th className="px-6 py-4 text-left">Unidade</th>
-                  <th className="px-6 py-4 text-left">Cargo</th>
-                  <th className="px-6 py-4 text-left">Nº Edital</th>
-                  <th className="px-6 py-4 text-left">Etapa Atual</th>
-                  <th className="px-6 py-4 text-center">Situação</th>
-                  <th className="px-6 py-4 text-center">Inscritos</th>
-                  <th className="px-6 py-4 text-center">Triagem</th>
-                  <th className="px-6 py-4 text-center">Avaliação</th>
-                  <th className="px-6 py-4 text-center">Entrevista</th>
-                  <th className="px-6 py-4 text-center">Final</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Nº Edital</TableHead>
+                  <TableHead>Etapa Atual</TableHead>
+                  <TableHead className="text-center">Situação</TableHead>
+                  <TableHead className="text-center">Inscritos</TableHead>
+                  <TableHead className="text-center">Triagem</TableHead>
+                  <TableHead className="text-center">Avaliação</TableHead>
+                  <TableHead className="text-center">Entrevista</TableHead>
+                  <TableHead className="text-center">Final</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {editaisEmAndamento.map((v) => {
                   const autoEtapa = getAutoEtapa(v);
                   const displayEtapa = v.acompanhamento?.etapa_atual || autoEtapa;
                   const isSync = v.acompanhamento?.etapa_atual === autoEtapa;
 
                   return (
-                    <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">{v.unidade}</td>
-                      <td className="px-6 py-4 font-semibold text-slate-800">
+                    <TableRow key={v.id} className="cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setSelectedVagaForAcompanhamento(v)}>
+                      <TableCell className="font-medium text-slate-700 whitespace-nowrap">{v.unidade}</TableCell>
+                      <TableCell className="font-semibold text-slate-800">
                         <div className="flex flex-col">
                           <span>{v.cargo}</span>
                           <span className="text-[11px] text-slate-400 font-mono">{v.requisicao || v.numero_requisicao}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell className="font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</TableCell>
+                      <TableCell>
                         <div 
                           className="flex flex-col gap-1 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => setSelectedVagaForAcompanhamento(v)}
@@ -819,8 +823,8 @@ function AcompanhamentoEditalList() {
                           </Badge>
                           {/* Removido sugestão conforme solicitado */}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
+                      </TableCell>
+                      <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className={`h-7 px-2 text-[11px] font-bold uppercase border-2 ${
@@ -840,29 +844,29 @@ function AcompanhamentoEditalList() {
                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-red-600">ATRASADO</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-700">{v.total_inscritos || v.acompanhamento?.total_inscritos || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-slate-700">{v.total_inscritos || v.acompanhamento?.total_inscritos || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-600">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => setSelectedVagaForAcompanhamento(v)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
                 {editaisEmAndamento.length === 0 && (
-                  <tr>
-                    <td colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                  <TableRow>
+                    <TableCell colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">
                       Nenhum edital em andamento visível para suas unidades.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

@@ -155,13 +155,13 @@ export default function ValidacaoPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/50">
+            <TableHeader>
               <TableRow>
-                <TableHead className="tracking-wider">Data/Hora</TableHead>
-                <TableHead className="tracking-wider">Candidato</TableHead>
-                <TableHead className="tracking-wider">Unidade / Cargo</TableHead>
-                <TableHead className="tracking-wider">Requisição</TableHead>
-                <TableHead className="tracking-wider">Status</TableHead>
+                <TableHead>Data/Hora</TableHead>
+                <TableHead>Candidato</TableHead>
+                <TableHead>Unidade / Cargo</TableHead>
+                <TableHead>Requisição</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>

@@ -782,19 +782,19 @@ function AcompanhamentoEditalList() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Nº Edital</TableHead>
-                  <TableHead>Etapa Atual</TableHead>
-                  <TableHead className="text-center">Situação</TableHead>
-                  <TableHead className="text-center">Inscritos</TableHead>
-                  <TableHead className="text-center">Triagem</TableHead>
-                  <TableHead className="text-center">Avaliação</TableHead>
-                  <TableHead className="text-center">Entrevista</TableHead>
-                  <TableHead className="text-center">Final</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+              <TableHeader className="bg-[#1a1738] border-none">
+                <TableRow className="hover:bg-[#1a1738] border-none transition-none">
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Unidade</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Cargo</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Nº Edital</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Etapa Atual</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Situação</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Inscritos</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Triagem</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Avaliação</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Entrevista</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Final</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

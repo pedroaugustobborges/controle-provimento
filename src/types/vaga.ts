@@ -87,7 +87,7 @@ export interface VagaAcompanhamento {
   quantidade_banco?: number;
   observacoes_etapa?: string;
   data_real_etapa?: string;
-  situacao_etapa?: 'pendente' | 'realizada' | 'atrasada';
+  situacao_etapa?: 'pendente' | 'em_andamento' | 'concluido' | 'atrasada';
 }
 
 export interface Vaga {

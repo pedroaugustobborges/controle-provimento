@@ -85,7 +85,7 @@ export default function BancoTalentosPage() {
         return false;
       }
       
-      // Exclude convocados from the main list as requested
+      // Exclude convocados from the main list
       if (b.status === 'CONVOCADO') return false;
       
       const normalizedSearch = normalizeCargo(search);
@@ -94,7 +94,21 @@ export default function BancoTalentosPage() {
         normalizeCargo(b.numero_edital).includes(normalizedSearch);
 
       const matchUnidade = unidadeFilter === 'todas' || b.unidade === unidadeFilter;
-      const matchStatus = statusFilter === 'todos' || b.status === statusFilter;
+      
+      // Corrigindo o filtro de status para ser mais flexível com case e variações
+      const statusLower = (b.status || '').toLowerCase();
+      const filterLower = statusFilter.toLowerCase();
+      
+      let matchStatus = statusFilter === 'todos';
+      if (!matchStatus) {
+        if (statusFilter === 'valido') {
+          matchStatus = statusLower === 'valido' || statusLower === 'cadastro reserva' || statusLower === 'prorrogado';
+        } else if (statusFilter === 'vencido') {
+          matchStatus = statusLower === 'vencido' || statusLower === 'vencida';
+        } else {
+          matchStatus = statusLower === filterLower;
+        }
+      }
         
       return matchSearch && matchUnidade && matchStatus;
     });

@@ -301,7 +301,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   const text = removeAccents(statusText.toLowerCase().trim().replace(/\s+/g, ' '));
   
   if (text === 'admissao efetivada') return 'CONCLUÍDAS' as StatusVaga;
-  if (text === 'publicar novo edital' || text === 'publicar edital') return 'FILA DE EDITAIS' as StatusVaga;
+  if (text === 'publicar novo edital' || text === 'publicar edital' || text.includes('fazer publicacao') || text.includes('fazer publicação') || text === 'aguardando edital' || text === 'aguardando processo e edital') return 'FILA DE EDITAIS' as StatusVaga;
   if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
   if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
   if (text === 'vaga suspensa' || text === 'suspensa') return 'SUSPENSA' as StatusVaga;

@@ -260,4 +260,4 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
 }
 
 // Add these to make it work
-import { Activity } from 'lucide-react';
+// Removed duplicate Activity import

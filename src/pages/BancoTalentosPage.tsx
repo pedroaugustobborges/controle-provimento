@@ -505,7 +505,9 @@ export default function BancoTalentosPage() {
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Bancos Válidos</p>
-                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'valido' || b.status === 'prorrogado').length}</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {groupedBancos.filter(g => g.status === 'CADASTRO RESERVA' || g.status === 'valido' || g.status === 'prorrogado').reduce((sum, g) => sum + g.qtdBanco, 0)}
+                </p>
               </div>
             </div>
           </CardContent>

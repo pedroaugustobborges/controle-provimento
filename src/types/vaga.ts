@@ -96,7 +96,7 @@ export interface VagaCronograma {
 }
 
 export interface VagaAcompanhamento {
-  etapa_atual: string;
+  etapa_atual: EtapaEdital | string;
   total_inscritos?: number;
   aprovados_triagem?: number;
   aprovados_avaliacao_especifica?: number;
@@ -107,6 +107,7 @@ export interface VagaAcompanhamento {
   observacoes_etapa?: string;
   data_real_etapa?: string;
   situacao_etapa?: 'pendente' | 'em_andamento' | 'concluido' | 'atrasada';
+  etapas_habilitadas?: EtapaEdital[];
 }
 
 export interface Vaga {

@@ -169,8 +169,10 @@ export default function BancoTalentosPage() {
       }
 
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
-      // REGRA DE IDENTIFICAÇÃO DO BANCO (Auditada: Edital + Unidade + Cargo)
-      const key = `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
+      // REGRA DE IDENTIFICAÇÃO DO BANCO (Auditada: PS ou Edital + Unidade + Cargo)
+      const key = b.numero_processo_seletivo 
+        ? `PS-${b.numero_processo_seletivo}` 
+        : `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
 
       if (!groups[key]) {
         let qtd = 0;
@@ -661,6 +663,11 @@ export default function BancoTalentosPage() {
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" /> Histórico de Importações
           </TabsTrigger>
+          {permissions.canViewAudit() && (
+            <TabsTrigger value="audit" className="gap-2 text-destructive font-bold">
+              <AlertCircle className="h-4 w-4" /> Auditoria de Grupos
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
@@ -925,6 +932,74 @@ export default function BancoTalentosPage() {
             </Table>
           </Card>
         </TabsContent>
+
+        {permissions.canViewAudit() && (
+          <TabsContent value="audit" className="space-y-6">
+            <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg space-y-3">
+              <h3 className="font-bold text-amber-800 flex items-center gap-2 text-sm">
+                <Info className="h-4 w-4" /> RESUMO TÉCNICO DA AUDITORIA (CONFERÊNCIA INTERNA)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="space-y-2">
+                  <p><strong>1. Cadastro Reserva:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> (sum de QNTD BANCO por grupo).</p>
+                  <p><strong>2. Bancos Válidos:</strong> Mesma lógica do Cadastro Reserva (<span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span>).</p>
+                  <p><strong>3. Prorrogados:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">CONTAGEM DE LINHAS</span> (quantas pessoas reais estão marcadas como prorrogadas).</p>
+                </div>
+                <div className="space-y-2">
+                  <p><strong>4. Total Visível:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> de todos os grupos identificados.</p>
+                  <p><strong>5. Chave de Agrupamento:</strong> Prioriza <span className="bg-amber-100 px-1 font-bold">Processo Seletivo</span>; se ausente, usa <span className="bg-amber-100 px-1 font-bold">Edital + Unidade + Cargo</span>.</p>
+                  <p><strong>6. Status Predominante:</strong> Reflete o status do primeiro registro encontrado no grupo.</p>
+                </div>
+              </div>
+            </div>
+
+            <Card className="border-slate-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-100">
+                    <TableRow>
+                      <TableHead className="text-[10px] font-bold uppercase whitespace-nowrap">Chave do Grupo</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Cands (Linhas)</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Qtd Banco (Lido)</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Válido?</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Prorrog?</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center bg-blue-50/50">Cad. Res.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center bg-green-50/50">Bancos Vál.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center bg-purple-50/50">Prorrogados</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center bg-slate-100">Total Visível</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {groupedBancos.map((group) => {
+                      const key = group.processoSeletivo ? `PS-${group.processoSeletivo}` : `${group.edital}-${group.unidade}-${group.cargoNormalizado}`;
+                      const isValid = group.status !== 'VENCIDO' && group.status !== 'CONVOCADO';
+                      const isProrrogado = group.candidatos.some(c => c.is_prorrogado) && group.status !== 'CONVOCADO';
+                      const inCadReserva = group.status === 'CADASTRO RESERVA';
+                      const inBancosValidos = isValid;
+                      const inProrrogados = isProrrogado; // No card real, é contagem de linhas, aqui mostramos se o GRUPO contribui
+                      
+                      return (
+                        <TableRow key={group.id} className="text-[11px] hover:bg-slate-50">
+                          <TableCell className="font-mono text-[9px] max-w-[200px] truncate" title={key}>{key}</TableCell>
+                          <TableCell className="text-center">{group.status}</TableCell>
+                          <TableCell className="text-center font-bold">{group.candidatos.length}</TableCell>
+                          <TableCell className="text-center font-bold text-primary">{group.qtdBanco}</TableCell>
+                          <TableCell className="text-center">{isValid ? '✅' : '❌'}</TableCell>
+                          <TableCell className="text-center">{isProrrogado ? '✅' : '❌'}</TableCell>
+                          <TableCell className="text-center bg-blue-50/30">{inCadReserva ? <span className="font-bold text-blue-600">+{group.qtdBanco}</span> : '—'}</TableCell>
+                          <TableCell className="text-center bg-green-50/30">{inBancosValidos ? <span className="font-bold text-green-600">+{group.qtdBanco}</span> : '—'}</TableCell>
+                          <TableCell className="text-center bg-purple-50/30">{inProrrogados ? <span className="font-bold text-purple-600">+{group.candidatos.filter(c => c.is_prorrogado).length}</span> : '—'}</TableCell>
+                          <TableCell className="text-center bg-slate-50 font-bold">+{group.qtdBanco}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

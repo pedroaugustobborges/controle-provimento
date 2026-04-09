@@ -213,34 +213,33 @@ export default function MonitoramentoAdminPage() {
                       <div className="flex flex-col">
                         <span className="font-mono text-[11px] text-primary font-bold">{v.numero_edital || v.numero_processo || v.requisicao}</span>
                         <span className="font-bold text-slate-700">{v.cargo}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <Building2 className="h-3.5 w-3.5 text-slate-400" />
                         <span className="text-slate-600">{v.unidade}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <User className="h-3.5 w-3.5 text-slate-400" />
                         <span className="text-slate-600">{v.analista_responsavel}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="outline" className="font-bold text-[11px] uppercase border-slate-200">
                         {v.etapaLabel}
                       </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="text-center">
                       <div className="flex flex-col items-center">
                         <span className={`text-xs font-bold ${v.isPrevistoHoje ? 'text-amber-600' : 'text-slate-500'}`}>
                           {v.dataPrevista ? formatDate(v.dataPrevista) : '—'}
                         </span>
                         {v.isPrevistoHoje && <span className="text-[9px] font-bold text-amber-500 uppercase">Hoje</span>}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="text-center">
                       {v.isConcluidoHoje ? (
                         <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-xs">
                           <CheckCircle2 className="h-4 w-4" />
@@ -259,8 +258,8 @@ export default function MonitoramentoAdminPage() {
                       ) : (
                         <span className="text-slate-400 text-xs">Em andamento</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -269,21 +268,21 @@ export default function MonitoramentoAdminPage() {
                       >
                         Ver Detalhes <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {monitoramentoItems.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-20 text-center">
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
                         <p className="text-slate-500 font-medium">Nenhum processo em acompanhamento ativo encontrado.</p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

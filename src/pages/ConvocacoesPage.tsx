@@ -20,6 +20,7 @@ import { formatDate, getCategoriaStatus } from '@/lib/vagaUtils';
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
+import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO } from '@/lib/convocacaoUtils';
 
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 

@@ -92,9 +92,22 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
     
     if (index >= 0) {
       newHistorico[index] = { ...newHistorico[index], [field]: value };
-      // If marking as concluded, maybe update the main "Current Etapa" if it matches
+      
+      // If marking as concluded, suggest moving to the next logical step
       if (field === 'concluida' && value === true) {
-        // Suggested behavior: moving to next step
+        const currentEtapa = newHistorico[index].etapa;
+        const nextIndex = TODAS_AS_ETAPAS.indexOf(currentEtapa as EtapaEdital) + 1;
+        if (nextIndex < TODAS_AS_ETAPAS.length) {
+          const nextEtapa = TODAS_AS_ETAPAS[nextIndex];
+          
+          toast(`Etapa "${ETAPA_LABELS[currentEtapa as EtapaEdital]}" concluída!`, {
+            description: `Deseja atualizar a Etapa Atual para "${ETAPA_LABELS[nextEtapa]}"?`,
+            action: {
+              label: "Atualizar",
+              onClick: () => setFormData(prev => ({ ...prev, etapa_atual: nextEtapa }))
+            },
+          });
+        }
       }
     } else {
       newHistorico.push({

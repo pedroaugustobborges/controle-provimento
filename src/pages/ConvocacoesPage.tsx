@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatDate } from '@/lib/vagaUtils';
+import { formatDate, getCategoriaStatus } from '@/lib/vagaUtils';
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -77,7 +77,7 @@ export default function ConvocacoesPage() {
   }, [vagas, currentUser]);
 
   const pendingVagas = useMemo(() => {
-    return filteredVagas.filter(v => v.status === 'realizar_convocacao');
+    return filteredVagas.filter(v => getCategoriaStatus(v, true) === 'convocacao');
   }, [filteredVagas]);
 
   const filteredConvocacoes = useMemo(() => {

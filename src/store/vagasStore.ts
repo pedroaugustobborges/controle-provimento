@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta } from '@/types/vaga';
 import { mockVagas, mockBancos, mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
-import { normalizeCargo } from '@/lib/vagaUtils';
+import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
 
 interface VagasState {
   vagas: Vaga[];
@@ -241,7 +241,7 @@ export const useVagasStore = create<VagasState>()(
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),
       getMatchingDiagnostic: () => {
         const state = get();
-        const pendingVagas = state.vagas.filter(v => !['encerrada', 'finalizada', 'admissao_efetivada'].includes(v.status || v.status_geral || ''));
+        const pendingVagas = state.vagas.filter(v => getCategoriaStatus(v) !== 'concluidas' && getCategoriaStatus(v) !== 'vagas_interrompidas');
         
         return pendingVagas.map(v => {
           const matchedBanco = get().getBancoByVaga(v.id);

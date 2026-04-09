@@ -26,7 +26,7 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital'],
+  fila_edital: ['publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital', 'FILA DE EDITAIS'],
   em_andamento: [
     'em_edital', 'em edital', 
     'em_processo_seletivo', 'em processo seletivo',
@@ -61,13 +61,13 @@ export function isConvocacaoByFields(row: any): boolean {
   );
 }
 
-export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
+export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = false): keyof typeof CATEGORIAS_STATUS {
   if (!row) return 'em_andamento';
   
   const status = typeof row === 'string' ? row : (row.status || row.status_geral);
   
   if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || String(status).trim() === '') {
-    if (typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
+    if (includeConvocacaoFields && typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
     return 'em_andamento';
   }
   
@@ -88,7 +88,7 @@ export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
 
   const cat = findCategory(s) || findCategory(sLow);
   
-  if (cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
+  if (includeConvocacaoFields && cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
     return 'convocacao';
   }
 
@@ -227,44 +227,52 @@ export function normalizeStatus(statusText: string): StatusVaga {
   // Normalização rigorosa conforme item 3: ignorar acentos, caixa alta/baixa e espaços duplicados
   const text = removeAccents(statusText.toLowerCase().trim().replace(/\s+/g, ' '));
   
-  // Mapeamento EXATO conforme item 4:
+  // Mapeamento EXATO conforme instruções do usuário:
+  
+  // 1. Concluídas
   if (text === 'admissao efetivada') return 'CONCLUÍDAS' as StatusVaga;
   
-  if (text === 'admissao enviada' || 
-      text === 'em edital' || 
-      text === 'em processo seletivo') {
-    return 'EM ANDAMENTO' as StatusVaga;
+  // 2. Fila de Editais
+  if (text === 'publicar novo edital' || text === 'publicar edital') {
+    return 'FILA DE EDITAIS' as StatusVaga;
   }
   
-  if (text === 'movimentacao interna') return 'MOV. INTERNA' as StatusVaga;
-  
+  // 3. Vagas de Liderança
   if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
   
+  // 4. Aguardando Unidade
+  if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
+  
+  // 5. Vagas Interrompidas
+  if (text === 'vaga suspensa' || text === 'suspensa') return 'SUSPENSA' as StatusVaga;
+  if (text === 'vaga pausada' || text === 'pausada') return 'PAUSADA' as StatusVaga;
+  if (text === 'cancelada' || text === 'cancelado') return 'CANCELADAS' as StatusVaga;
+  
+  // 6. Convocações
+  if (text === 'realizar convocacao') return 'CONVOCAÇÕES' as StatusVaga;
+  
+  // 7. Documentação
   if (text === 'documentacao' || 
       text === 'documentacao ok e aso pendente' || 
       text === 'aso pendente') {
     return 'DOCUMENTAÇÃO' as StatusVaga;
   }
   
-  if (text === 'realizar convocacao') return 'CONVOCAÇÕES' as StatusVaga;
-  
-  if (text === 'publicar novo edital' || 
-      text === 'publicar edital') {
-    return 'FILA DE EDITAIS' as StatusVaga;
+  // 8. Em Andamento (outros status que não se encaixam acima mas são considerados andamento)
+  if (text === 'admissao enviada' || 
+      text === 'em edital' || 
+      text === 'em processo seletivo' ||
+      text === 'em triagem' ||
+      text === 'entrevista' ||
+      text === 'movimentacao interna') {
+    return 'EM ANDAMENTO' as StatusVaga;
   }
   
-  if (text === 'vaga suspensa' || text === 'suspensa') return 'SUSPENSA' as StatusVaga;
-  
-  if (text === 'vaga pausada' || text === 'pausada') return 'PAUSADA' as StatusVaga;
-  
-  if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
-  
-  if (text === 'cancelada' || text === 'cancelado') return 'CANCELADAS' as StatusVaga;
-  
-  // Fallback para manter compatibilidade com status parciais se necessário, 
-  // mas priorizando o mapeamento exato acima.
-  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'CONCLUÍDAS' as StatusVaga;
-  
+  // Fallback seguro mas restrito: se contém termos de andamento
+  if (text.includes('andamento') || text.includes('processo') || text.includes('edital')) {
+    return 'EM ANDAMENTO' as StatusVaga;
+  }
+
   return 'SEM STATUS' as StatusVaga;
 }
 

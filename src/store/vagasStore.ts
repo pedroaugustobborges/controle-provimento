@@ -49,6 +49,7 @@ interface VagasState {
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
   getMatchingDiagnostic: () => any[];
+  fixWrongImportBatches: () => void;
 }
 
 export const useVagasStore = create<VagasState>()(

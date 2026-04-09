@@ -89,51 +89,58 @@ export function ImportExcelDialog({
             if (!sheet) return;
 
             const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-            let unitName = UNIT_MAPPING[sheetName] || sheetName.replace('Vagas - ', '');
+            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
             
-            for (let i = 3; i < rawRows.length; i++) {
+            for (let i = 2; i < rawRows.length; i++) { // Dados iniciam na linha 3 (index 2)
               const row = rawRows[i];
               if (!row) continue;
 
-              const cargo = String(row[4] || '').trim(); // Coluna E (index 4) - Se estiver em branco, ignorar
+              const cargo = String(row[4] || '').trim(); // Coluna E (index 4)
               if (!cargo) continue;
 
               totalProcessed++;
 
-              // Refinement for VITÓRIA sheet which contains SÃO PEDRO and SUÁ
-              let finalUnit = unitName;
-              if (sheetName === 'Vagas - VITÓRIA') {
-                const rowString = JSON.stringify(row).toUpperCase();
-                if (rowString.includes('SUÁ') || rowString.includes('SUA')) {
-                  finalUnit = 'SUÁ';
-                } else {
-                  finalUnit = 'SÃO PEDRO';
-                }
-              }
-
-              // Mapeamento correto conforme revisão da base real:
-              // 0: Abertura (A)
-              // 1: Recebimento (B)
-              // 2: Requisição (C)
-              // 3: Seção (D)
-              // 4: Cargo (E)
-              // 5: Tipo (F)
-              // 6: Quantidade (G)
-              // 7: Analista (H)
-              // 8: Status (I)
-              // 9: Vaga ID (J)
-              // 10: Obs (K)
+              // Novo mapeamento conforme Item 1 e 6:
+              // 0: ABERTURA (A)
+              // 1: RECEBIMENTO (B)
+              // 2: UNIDADE (C)
+              // 3: REQUISIÇÃO (D)
+              // 4: CARGO (E)
+              // 5: TIPO (F)
+              // 6: VAGAS (G)
+              // 7: STATUS (H)
+              // 8: DATA CONVOCAÇÃO (I)
+              // 9: HORÁRIO CONVOCAÇÃO (J)
+              // 10: CANDIDATO CONVOCADO CONVOCAÇÃO (K)
+              // 11: CLASSIFICAÇÃO CONVOCAÇÃO (L)
+              // 12: FORMA CONVOCAÇÃO (M)
+              // 13: STATUS OITIVA CONVOCAÇÃO (N)
+              // 14: SEÇÃO (O)
+              // 15: ADMISSÃO ENVIADA - ACOMPANHAMENTO (P)
+              // 16: ADMISSÃO EFETIVADA - ACOMPANHAMENTO (Q)
+              // 17: DETALHES - ACOMPANHAMENTO (R)
+              // 18: OBSERVAÇÃO - ACOMPANHAMENTO (S)
 
               const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : '';
               const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
-              const requisicao = String(row[2] || '');
-              const secao = String(row[3] || '');
+              const unitInRow = String(row[2] || '').trim();
+              const requisicao = String(row[3] || '');
               const rawTipo = String(row[5] || '').toLowerCase();
               const numVagas = Number(row[6]) || 1;
-              const analista = String(row[7] || '');
-              const statusRaw = String(row[8] || '');
-              const vagaId = String(row[9] || '');
-              const obs = String(row[10] || '');
+              const statusRaw = String(row[7] || '');
+              
+              const dataConv = row[8] ? convertDateValue(row[8], 'auto').formatted : '';
+              const horaConv = String(row[9] || '');
+              const candConv = String(row[10] || '');
+              const classConv = String(row[11] || '');
+              const formaConv = String(row[12] || '');
+              const oitivaConv = String(row[13] || '');
+              const secao = String(row[14] || '');
+              
+              const admEnviada = String(row[15] || '');
+              const admEfetivada = String(row[16] || '');
+              const detalhesAcomp = String(row[17] || '');
+              const obsAcomp = String(row[18] || '');
 
               // Normalização do Tipo de Vaga
               let tipoVaga: TipoVaga = 'substituicao';
@@ -145,11 +152,11 @@ export function ImportExcelDialog({
               else if (rawTipo.includes('edital')) tipoVaga = 'edital';
 
               const statusNormalized = normalizeStatus(statusRaw);
-              const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(finalUnit, tipoVaga);
+              const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
 
               newVagas.push({
                 id: `vaga-${batchId}-${totalProcessed}`,
-                unidade: finalUnit,
+                unidade: unitInRow,
                 cargo,
                 requisicao,
                 numero_requisicao: requisicao,
@@ -161,10 +168,9 @@ export function ImportExcelDialog({
                 tipo_vaga: tipoVaga,
                 status: statusNormalized,
                 status_geral: statusNormalized,
-                analista_responsavel: analista || defaultAnalista,
+                analista_responsavel: defaultAnalista,
                 assistentes: assistentes,
-                vaga: vagaId,
-                observacoes_internas: obs,
+                observacoes_internas: obsAcomp,
                 origem_importacao: selectedFile.name,
                 data_importacao: now,
                 lote_importacao: batchId,
@@ -172,10 +178,23 @@ export function ImportExcelDialog({
                 source_sheet: sheetName,
                 source_row_index: i + 1,
                 tem_banco_valido: false,
+                
+                // Campos complementares
+                data_convocacao_planilha: dataConv,
+                horario_convocacao_planilha: horaConv,
+                candidato_convocado_planilha: candConv,
+                classificacao_convocacao_planilha: classConv,
+                forma_convocacao_planilha: formaConv,
+                status_oitiva_convocacao_planilha: oitivaConv,
+                
+                admissao_enviada_acompanhamento: admEnviada,
+                admissao_efetivada_acompanhamento: admEfetivada,
+                detalhes_acompanhamento: detalhesAcomp,
+                
                 historico: [{
                   id: `h-${Date.now()}-${totalProcessed}`,
                   data: now.split('T')[0],
-                  descricao: 'Importado do arquivo Proposta de Gestão de Vagas',
+                  descricao: 'Importado da nova Base Geral de Vagas',
                   usuario: 'Sistema'
                 }]
               });

@@ -44,7 +44,10 @@ export default function ValidacaoEditaisPage() {
 
   const pendingEditais = useMemo(() => {
     return vagas.filter(v => {
-      if (v.status_validacao !== 'pendente') return false;
+      // Regra de filtro: status de validação pendente ou status de fluxo correto
+      if (v.status_validacao !== 'pendente' && v.status_fluxo_edital !== 'enviado_validacao') {
+        return false;
+      }
       
       if (!currentUser?.visualiza_todas_unidades) {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
@@ -62,6 +65,7 @@ export default function ValidacaoEditaisPage() {
       return true;
     });
   }, [vagas, currentUser, search]);
+
 
   const handleAction = (vagaId: string, status: 'aprovado' | 'reprovado') => {
     const vaga = vagas.find(v => v.id === vagaId);

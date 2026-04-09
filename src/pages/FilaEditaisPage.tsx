@@ -45,26 +45,8 @@ export default function FilaEditaisPage() {
         }
       }
 
-      // Regra: Fila de Edital - Filtro por status real da vaga
-      const statusValue = (v.status || v.status_geral || '').toLowerCase();
-      const editalStatuses = [
-        'publicar edital',
-        'publicar novo edital',
-        'fazer publicação do edital',
-        'fila de editais',
-        'aguardando edital',
-        'aguardando processo e edital',
-        'sem status',
-        'sem_status'
-      ];
-      
-      const isFilaEdital = editalStatuses.some(s => 
-        statusValue === s || 
-        statusValue.includes('publicar edital') || 
-        statusValue.includes('novo edital') ||
-        statusValue === 'fila de editais'
-      );
-      
+      // Regra: Fila de Edital - Filtrar por categoria do status real
+      const isFilaEdital = getCategoriaStatus(v) === 'fila_edital';
       if (!isFilaEdital) return false;
 
       const searchTerm = search.toLowerCase();

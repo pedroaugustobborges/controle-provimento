@@ -44,7 +44,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
 
   useEffect(() => {
     if (vaga) {
-      const acompanhamento = vaga.acompanhamento || {};
+      const acompanhamento = (vaga.acompanhamento || {}) as any;
       setFormData({
         ...formData,
         ...acompanhamento,

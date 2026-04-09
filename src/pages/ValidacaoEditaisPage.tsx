@@ -148,9 +148,10 @@ export default function ValidacaoEditaisPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Unidade</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Nº Edital / Processo</TableHead>
-                <TableHead>Redigido por</TableHead>
+                <TableHead>Cargo / REQ</TableHead>
+                <TableHead>Edital / Processo</TableHead>
+                <TableHead>Obs. Unidade</TableHead>
+                <TableHead>Obs. Analista</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -163,11 +164,14 @@ export default function ValidacaoEditaisPage() {
                     <div className="text-[11px] text-slate-400">{v.requisicao}</div>
                   </TableCell>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-bold text-primary">{v.numero_edital}</div>
-                    <div className="text-[11px] text-slate-500">{v.numero_processo}</div>
+                    <div className="text-sm font-bold text-primary">{v.numero_edital || '-'}</div>
+                    <div className="text-[11px] text-slate-500">{v.numero_processo || '-'}</div>
                   </td>
-                  <td className="px-6 py-4 text-xs text-slate-600">
-                    {v.historico[v.historico.length - 1]?.usuario || 'Analista'}
+                  <td className="px-6 py-4 max-w-[150px]">
+                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
+                  </td>
+                  <td className="px-6 py-4 max-w-[150px]">
+                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">

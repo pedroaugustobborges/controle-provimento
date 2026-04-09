@@ -67,22 +67,24 @@ export default function ValidacaoEditaisPage() {
   }, [vagas, currentUser, search]);
 
 
-  const handleAction = (vagaId: string, status: 'aprovado' | 'reprovado') => {
+  const handleAction = (vagaId: string, actionStatus: 'aprovado' | 'reprovado') => {
     const vaga = vagas.find(v => v.id === vagaId);
     if (!vaga) return;
 
-    const newStatus = status === 'aprovado' ? 'em_edital' : 'publicar_novo_edital';
+    // Se aprovado, volta para o analista do edital com status aprovado
+    // Se reprovado, volta para o analista do edital com status em redação (para correção)
+    const newFluxoStatus = actionStatus === 'aprovado' ? 'aprovado_administrativo' : 'em_redacao';
     
     updateVaga(vagaId, {
-      status: newStatus as any,
-      status_validacao: status,
+      status_validacao: actionStatus,
+      status_fluxo_edital: newFluxoStatus,
       validado_por: currentUser?.nome_completo,
       data_validacao: new Date().toISOString(),
       observacoes_validacao: obs,
       historico: [...vaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Edital ${status} por ${currentUser?.nome_completo}. Obs: ${obs}`,
+        descricao: `Edital ${actionStatus === 'aprovado' ? 'APROVADO' : 'REPROVADO'} por ${currentUser?.nome_completo}. Obs: ${obs}`,
         usuario: currentUser?.nome_completo || 'Admin'
       }]
     });

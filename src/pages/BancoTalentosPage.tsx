@@ -974,7 +974,7 @@ export default function BancoTalentosPage() {
             <Card className="border-slate-200 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-slate-100">
+                  <TableHeader>
                     <TableRow>
                       <TableHead className="whitespace-nowrap">Chave do Grupo</TableHead>
                       <TableHead className="text-center">Status</TableHead>
@@ -982,10 +982,10 @@ export default function BancoTalentosPage() {
                       <TableHead className="text-center">Qtd Banco (Lido)</TableHead>
                       <TableHead className="text-center">Válido?</TableHead>
                       <TableHead className="text-center">Prorrog?</TableHead>
-                      <TableHead className="text-center bg-blue-50/50">Cad. Res.</TableHead>
-                      <TableHead className="text-center bg-green-50/50">Bancos Vál.</TableHead>
-                      <TableHead className="text-center bg-purple-50/50">Prorrogados</TableHead>
-                      <TableHead className="text-center bg-slate-100">Total Visível</TableHead>
+                      <TableHead className="text-center">Cad. Res.</TableHead>
+                      <TableHead className="text-center">Bancos Vál.</TableHead>
+                      <TableHead className="text-center">Prorrogados</TableHead>
+                      <TableHead className="text-center">Total Visível</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

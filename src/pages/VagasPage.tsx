@@ -850,19 +850,19 @@ function AcompanhamentoEditalList() {
                         <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => setSelectedVagaForAcompanhamento(v)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
                 {editaisEmAndamento.length === 0 && (
-                  <tr>
-                    <td colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                  <TableRow>
+                    <TableCell colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">
                       Nenhum edital em andamento visível para suas unidades.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

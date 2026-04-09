@@ -15,7 +15,7 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
   ({ className, ...props }, ref) => (
     <thead 
       ref={ref} 
-      className={cn("bg-slate-50 border-b-2 border-slate-200 transition-colors", className)} 
+      className={cn("bg-[#f8fafc] border-b-2 border-slate-200 transition-colors shadow-sm", className)} 
       {...props} 
     />
   ),
@@ -52,7 +52,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        "h-14 px-6 text-left align-middle font-bold text-slate-800 uppercase tracking-widest text-[11px] whitespace-nowrap transition-colors [&:has([role=checkbox])]:pr-0",
+        "h-14 px-6 text-left align-middle font-bold text-slate-900 uppercase tracking-[0.1em] text-[11px] whitespace-nowrap transition-colors [&:has([role=checkbox])]:pr-0",
         className,
       )}
       {...props}

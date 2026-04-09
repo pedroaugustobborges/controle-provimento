@@ -37,8 +37,8 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/PageHeader';
 
-export default function DashboardPage() {
   const { 
     vagas: allVagas = [], 
     getBancoByVaga,
@@ -233,27 +233,23 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-      {/* Header Section */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Operacional</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Visão Geral de Provimento</h1>
-          <p className="text-slate-500 mt-2 max-w-2xl text-sm font-medium">
-            Monitoramento em tempo real dos processos seletivos e fluxo de contratações AGIR.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="text-xs font-bold h-10 px-5 border-slate-200 hover:bg-slate-50 text-slate-600 transition-all rounded-xl shadow-sm">
-            Relatórios Detalhados
-          </Button>
-          <Button className="text-xs font-bold h-10 px-5 bg-primary hover:bg-primary/90 text-white transition-all rounded-xl shadow-lg shadow-primary/20">
-            Novo Processo Seletivo
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Visão Geral de Provimento"
+        subtitle="Monitoramento estratégico em tempo real dos processos seletivos e fluxo de contratações AGIR."
+        badge="Painel Operacional"
+        withBackground={true}
+        actions={
+          <>
+            <Button variant="outline" className="text-xs font-bold h-10 px-5 border-slate-200 hover:bg-slate-50 text-slate-600 transition-all rounded-xl shadow-sm">
+              Relatórios Detalhados
+            </Button>
+            <Button className="text-xs font-bold h-10 px-5 bg-primary hover:bg-primary/90 text-white transition-all rounded-xl shadow-lg shadow-primary/20">
+              Novo Processo Seletivo
+            </Button>
+          </>
+        }
+      />
+
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">

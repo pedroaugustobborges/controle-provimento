@@ -99,6 +99,7 @@ export default function DashboardPage() {
     const groups: Record<string, {
       id: string;
       status: string;
+      isProrrogado: boolean;
       qtdBanco: number;
       candidatesCount: number;
     }> = {};
@@ -122,6 +123,7 @@ export default function DashboardPage() {
         groups[key] = {
           id: b.id,
           status: b.status,
+          isProrrogado: b.is_prorrogado,
           qtdBanco: qtd,
           candidatesCount: 0
         };
@@ -132,17 +134,24 @@ export default function DashboardPage() {
     return Object.values(groups);
   }, [bancos]);
 
-  // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR
+  // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR (não prorrogados)
   const totalCR = useMemo(() => {
     return groupedBancos
-      .filter(g => g.status === 'CADASTRO RESERVA')
+      .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
+      .reduce((sum, g) => sum + g.qtdBanco, 0);
+  }, [groupedBancos]);
+
+  // Card Prorrogados - Soma da quantidade de banco dos grupos prorrogados
+  const totalProrrogados = useMemo(() => {
+    return groupedBancos
+      .filter(g => g.isProrrogado || g.status === 'prorrogado')
       .reduce((sum, g) => sum + g.qtdBanco, 0);
   }, [groupedBancos]);
 
   // Card Com Banco Válido (Item 4) - Soma da quantidade de banco dos grupos com validade vigente
   const totalComBancoValido = useMemo(() => {
     return groupedBancos
-      .filter(g => g.status === 'CADASTRO RESERVA' || g.status === 'valido' || g.status === 'prorrogado')
+      .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
       .reduce((sum, g) => sum + g.qtdBanco, 0);
   }, [groupedBancos]);
 
@@ -169,12 +178,13 @@ export default function DashboardPage() {
     { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Com Banco Válido', value: totalComBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Capacidade Vigente', value: totalComBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Canceladas', value: counts.cancelada, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Dispensa', value: counts.dispensa, icon: RefreshCw, color: 'text-slate-600', bg: 'bg-slate-50' },
     { label: 'Etapas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50' },
-  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalComBancoValido, totalTarefasPendentes]);
+  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalComBancoValido, totalProrrogados, totalTarefasPendentes]);
 
   const chartData = useMemo(() => {
     const groupedMap = new Map<string, { total: number, abertas: number }>();

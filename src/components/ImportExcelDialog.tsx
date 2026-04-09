@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { normalizeStatus, getValidVacancyBase } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 
-type Step = 'select' | 'processing' | 'summary';
+type Step = 'select' | 'confirm' | 'processing' | 'summary';
 
 const VAGA_SHEETS = [
   'VAGAS - BASE GERAL'
@@ -50,6 +50,9 @@ export function ImportExcelDialog({
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<any>(null);
+  const [detectedType, setDetectedType] = useState<'vagas' | 'banco' | null>(null);
+  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
+  const [confidence, setConfidence] = useState<'high' | 'low'>('low');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -57,17 +60,20 @@ export function ImportExcelDialog({
     setFile(null);
     setSummary(null);
     setIsProcessing(false);
+    setDetectedType(null);
+    setWorkbook(null);
+    setConfidence('low');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      processFile(selectedFile);
+      detectImportType(selectedFile);
     }
   };
 
-  const processFile = async (selectedFile: File) => {
+  const detectImportType = async (selectedFile: File) => {
     setIsProcessing(true);
     setStep('processing');
 
@@ -76,295 +82,71 @@ export function ImportExcelDialog({
       try {
         const data = evt.target?.result;
         const wb = XLSX.read(data, { type: 'array' });
-        const fileName = selectedFile.name.toLowerCase();
-        const now = new Date().toISOString();
-        const batchId = `IMPORT-${Date.now()}`;
+        setWorkbook(wb);
 
+        const fileName = selectedFile.name.toLowerCase();
         const sheetNames = wb.SheetNames;
+        
         const hasVagaSheet = sheetNames.some(name => VAGA_SHEETS.includes(name));
         const hasBancoSheet = sheetNames.includes('BANCO GERAL');
-        
-        let importType: 'vagas' | 'banco' | null = null;
-        
+
+        let type: 'vagas' | 'banco' | null = null;
+        let conf: 'high' | 'low' = 'low';
+        let criteria = [];
+
+        // Detecção por Planilhas
         if (hasVagaSheet) {
-          importType = 'vagas';
-        } else if (hasBancoSheet) {
-          importType = 'banco';
-        } else if (fileName.includes('vagas')) {
-          importType = 'vagas';
-        } else if (fileName.includes('banco')) {
-          importType = 'banco';
-        } else if (fileName.endsWith('.xlsm')) {
-          importType = 'vagas';
-        } else if (fileName.endsWith('.xlsx')) {
-          importType = 'banco';
-        }
-
-        if (importType === 'vagas') {
-          const newVagas: Vaga[] = [];
-          let totalProcessed = 0;
-
-          VAGA_SHEETS.forEach(sheetName => {
-            const sheet = wb.Sheets[sheetName];
-            if (!sheet) return;
-
-            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-            
-            for (let i = 2; i < rawRows.length; i++) { // Dados iniciam na linha 3 (index 2)
-              const row = rawRows[i];
-              if (!row) continue;
-
-              const cargo = String(row[4] || '').trim(); // Coluna E (index 4)
-              if (!cargo) continue;
-
-              totalProcessed++;
-
-              // Novo mapeamento conforme Item 1 e 6:
-              // 0: ABERTURA (A)
-              // 1: RECEBIMENTO (B)
-              // 2: UNIDADE (C)
-              // 3: REQUISIÇÃO (D)
-              // 4: CARGO (E)
-              // 5: TIPO (F)
-              // 6: VAGAS (G)
-              // 7: STATUS (H)
-              // 8: DATA CONVOCAÇÃO (I)
-              // 9: HORÁRIO CONVOCAÇÃO (J)
-              // 10: CANDIDATO CONVOCADO CONVOCAÇÃO (K)
-              // 11: CLASSIFICAÇÃO CONVOCAÇÃO (L)
-              // 12: FORMA CONVOCAÇÃO (M)
-              // 13: STATUS OITIVA CONVOCAÇÃO (N)
-              // 14: SEÇÃO (O)
-              // 15: ADMISSÃO ENVIADA - ACOMPANHAMENTO (P)
-              // 16: ADMISSÃO EFETIVADA - ACOMPANHAMENTO (Q)
-              // 17: DETALHES - ACOMPANHAMENTO (R)
-              // 18: OBSERVAÇÃO - ACOMPANHAMENTO (S)
-
-              const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : '';
-              const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
-              const unitInRow = String(row[2] || '').trim();
-              const requisicao = String(row[3] || '');
-              const rawTipo = String(row[5] || '').toLowerCase();
-              const numVagas = Number(row[6]) || 1;
-              const statusRaw = String(row[7] || '');
-              
-              const dataConv = row[8] ? convertDateValue(row[8], 'auto').formatted : '';
-              const horaConv = String(row[9] || '');
-              const candConv = String(row[10] || '');
-              const classConv = String(row[11] || '');
-              const formaConv = String(row[12] || '');
-              const oitivaConv = String(row[13] || '');
-              const secao = String(row[14] || '');
-              
-              const admEnviada = String(row[15] || '');
-              const admEfetivada = String(row[16] || '');
-              const detalhesAcomp = String(row[17] || '');
-              const obsAcomp = String(row[18] || '');
-
-              // Normalização do Tipo de Vaga
-              let tipoVaga: TipoVaga = 'substituicao';
-              if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
-              else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
-              else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
-              else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
-              else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
-              else if (rawTipo.includes('edital')) tipoVaga = 'edital';
-
-              const statusNormalized = normalizeStatus(statusRaw);
-              const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
-
-              newVagas.push({
-                id: `vaga-${batchId}-${totalProcessed}`,
-                unidade: unitInRow,
-                cargo,
-                requisicao,
-                numero_requisicao: requisicao,
-                data_abertura: dataAbertura,
-                data_recebimento: dataRecebimento,
-                numero_vagas: numVagas,
-                quantidade: numVagas,
-                secao,
-                tipo_vaga: tipoVaga,
-                status: statusNormalized,
-                status_geral: statusNormalized,
-                analista_responsavel: defaultAnalista,
-                assistentes: assistentes,
-                observacoes_internas: obsAcomp,
-                origem_importacao: selectedFile.name,
-                data_importacao: now,
-                lote_importacao: batchId,
-                import_batch_id: batchId,
-                source_sheet: sheetName,
-                source_row_index: i + 1,
-                tem_banco_valido: false,
-                
-                // Campos complementares
-                data_convocacao_planilha: dataConv,
-                horario_convocacao_planilha: horaConv,
-                candidato_convocado_planilha: candConv,
-                classificacao_convocacao_planilha: classConv,
-                forma_convocacao_planilha: formaConv,
-                status_oitiva_convocacao_planilha: oitivaConv,
-                
-                admissao_enviada_acompanhamento: admEnviada,
-                admissao_efetivada_acompanhamento: admEfetivada,
-                detalhes_acompanhamento: detalhesAcomp,
-                
-                historico: [{
-                  id: `h-${Date.now()}-${totalProcessed}`,
-                  data: now.split('T')[0],
-                  descricao: 'Importado da nova Base Geral de Vagas',
-                  usuario: 'Sistema'
-                }]
-              });
-            }
-          });
-
-          // Regra de Ouro: SUBSTITUIÇÃO TOTAL - Feito de forma atômica
-          const totalAntigoVagas = useVagasStore.getState().vagas.length;
-          
-          // Use a single set to avoid inconsistent states
-          useVagasStore.setState({ vagas: newVagas });
-          
-          const totalNovoVagas = useVagasStore.getState().vagas.length;
-          
-          // Auditoria por Unidade para o Resumo
-          const byUnit: Record<string, number> = {};
-          newVagas.forEach(v => {
-            byUnit[v.unidade] = (byUnit[v.unidade] || 0) + 1;
-          });
-
-          // Log detalhado conforme solicitado
-          console.log(`[IMPORT VAGAS] Processo concluído.`);
-          console.log(`- Registros antigos apagados: ${totalAntigoVagas}`);
-          console.log(`- Registros lidos do arquivo: ${totalProcessed}`);
-          console.log(`- Registros válidos inseridos: ${newVagas.length}`);
-          console.log(`- Total final na base: ${totalNovoVagas}`);
-          
-          // Métrica específica solicitada para conferência
-          const totalVagasDashboard = getValidVacancyBase(newVagas, 'TODOS', 'TODOS').length;
-          console.log(`- TOTAL VAGAS (DASHBOARD): ${totalVagasDashboard}`);
-
-          setSummary({
-            type: 'vagas',
-            total: newVagas.length,
-            dashboardTotal: totalVagasDashboard,
-            fileName: selectedFile.name,
-            byUnit
-          });
-          
-          addImportHistory({
-            id: batchId,
-            usuario: 'Sistema',
-            total_lidos: totalProcessed,
-            total_novos: newVagas.length,
-            total_atualizados: 0,
-            total_ignorados: 0,
-            total_erros: 0,
-            status: 'concluido',
-            tipo_importacao: 'vagas',
-            arquivo: selectedFile.name,
-            data_hora: now
-          });
-          
-          toast.success(`Importação de Vagas: ${newVagas.length} registros inseridos em modo substituição.`);
-
-        } else if (importType === 'banco') {
-          const sheet = wb.Sheets['BANCO GERAL'];
-          if (!sheet) {
-            toast.error("Aba 'BANCO GERAL' não encontrada.");
-            reset();
-            return;
+          const sheet = wb.Sheets[VAGA_SHEETS.find(name => sheetNames.includes(name))!];
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:Z10');
+          const firstRow = [];
+          for (let col = range.s.c; col <= Math.min(range.e.c, 10); col++) {
+            const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+            if (cell) firstRow.push(String(cell.v).toUpperCase());
           }
-
-          const data = XLSX.utils.sheet_to_json<any>(sheet);
-          const newBancos: BancoTalentos[] = [];
           
-          let countCR = 0;
-          let countConv = 0;
-          let countVenc = 0;
-
-          data.forEach((row, i) => {
-            const statusRaw = String(row['STATUS'] || row['status'] || '').toUpperCase().trim();
-            let status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum' = 'nenhum';
-
-            if (statusRaw === 'CADASTRO RESERVA') {
-              status = 'CADASTRO RESERVA';
-              countCR++;
-            } else if (statusRaw === 'CONVOCADO') {
-              status = 'CONVOCADO';
-              countConv++;
-            } else if (statusRaw === 'VENCIDO') {
-              status = 'VENCIDO';
-              countVenc++;
-            }
-
-            newBancos.push({
-              id: `banco-${batchId}-${i}`,
-              cargo: String(row['CARGO'] || row['cargo'] || ''),
-              unidade: String(row['UNIDADE'] || row['unidade'] || ''),
-              status: status,
-              numero_edital: String(row['EDITAL'] || row['edital'] || ''),
-              data_abertura_edital: now.split('T')[0],
-              data_validade: row['VALIDADE'] ? convertDateValue(row['VALIDADE'], 'auto').formatted : '',
-              is_prorrogado: false,
-              observacoes: '',
-              status_import: statusRaw,
-              import_batch_id: batchId,
-              data_importacao: now,
-              origem_importacao: selectedFile.name,
-            });
-          });
-
-          // Regra de Ouro: SUBSTITUIÇÃO TOTAL
-          const totalAntigoBanco = useVagasStore.getState().bancos.length;
-          clearBancos();
-          addBancos(newBancos);
-          const totalNovoBanco = useVagasStore.getState().bancos.length;
-          
-          // Log detalhado conforme solicitado
-          console.log(`[IMPORT BANCO] Processo concluído.`);
-          console.log(`- Registros antigos apagados: ${totalAntigoBanco}`);
-          console.log(`- Registros lidos do arquivo: ${data.length}`);
-          console.log(`- Registros válidos inseridos: ${newBancos.length}`);
-          console.log(`- Total final na base: ${totalNovoBanco}`);
-          console.log(`  * Cadastro Reserva: ${countCR}`);
-          console.log(`  * Convocados: ${countConv}`);
-          console.log(`  * Vencidos: ${countVenc}`);
-
-          setSummary({
-            type: 'banco',
-            total: newBancos.length,
-            cr: countCR,
-            conv: countConv,
-            venc: countVenc,
-            fileName: selectedFile.name
-          });
-
-          addImportHistory({
-            id: batchId,
-            usuario: 'Sistema',
-            total_lidos: data.length,
-            total_novos: newBancos.length,
-            total_atualizados: 0,
-            total_ignorados: 0,
-            total_erros: 0,
-            status: 'concluido',
-            tipo_importacao: 'banco',
-            arquivo: selectedFile.name,
-            data_hora: now
-          });
-
-          toast.success(`Importação de Banco: ${newBancos.length} registros inseridos em modo substituição.`);
-        } else {
-          toast.error("Formato de arquivo não suportado para esta operação.");
-          reset();
+          const hasVagaHeaders = firstRow.includes('ABERTURA') || firstRow.includes('CARGO') || firstRow.includes('UNIDADE');
+          if (hasVagaHeaders) {
+            type = 'vagas';
+            conf = 'high';
+          } else {
+            type = 'vagas';
+            conf = 'low';
+          }
+        } else if (hasBancoSheet) {
+          const sheet = wb.Sheets['BANCO GERAL'];
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:Z10');
+          const firstRow = [];
+          for (let col = range.s.c; col <= Math.min(range.e.c, 10); col++) {
+            const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+            if (cell) firstRow.push(String(cell.v).toUpperCase());
+          }
+          const hasBancoHeaders = firstRow.includes('CARGO') && firstRow.includes('STATUS');
+          if (hasBancoHeaders) {
+            type = 'banco';
+            conf = 'high';
+          } else {
+            type = 'banco';
+            conf = 'low';
+          }
+        } 
+        
+        // Refinamento por nome de arquivo se necessário
+        if (!type) {
+          if (fileName.includes('vagas') || fileName.includes('proposta') || fileName.endsWith('.xlsm')) {
+            type = 'vagas';
+            conf = 'low';
+          } else if (fileName.includes('banco') || fileName.includes('talentos') || fileName.endsWith('.xlsx')) {
+            type = 'banco';
+            conf = 'low';
+          }
         }
 
-        setStep('summary');
+        setDetectedType(type);
+        setConfidence(conf);
+        setStep('confirm');
       } catch (error) {
         console.error(error);
-        toast.error("Erro ao processar o arquivo.");
+        toast.error("Erro ao ler o arquivo.");
         reset();
       } finally {
         setIsProcessing(false);
@@ -373,11 +155,223 @@ export function ImportExcelDialog({
     reader.readAsArrayBuffer(selectedFile);
   };
 
+  const processFile = async (importType: 'vagas' | 'banco') => {
+    if (!workbook || !file) return;
+
+    setIsProcessing(true);
+    setStep('processing');
+
+    try {
+      const wb = workbook;
+      const selectedFile = file;
+      const now = new Date().toISOString();
+      const batchId = `IMPORT-${Date.now()}`;
+
+      if (importType === 'vagas') {
+        const newVagas: Vaga[] = [];
+        let totalProcessed = 0;
+
+        VAGA_SHEETS.forEach(sheetName => {
+          const sheet = wb.Sheets[sheetName];
+          if (!sheet) return;
+
+          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+          
+          for (let i = 2; i < rawRows.length; i++) {
+            const row = rawRows[i];
+            if (!row) continue;
+
+            const cargo = String(row[4] || '').trim();
+            if (!cargo) continue;
+
+            totalProcessed++;
+
+            const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : '';
+            const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
+            const unitInRow = String(row[2] || '').trim();
+            const requisicao = String(row[3] || '');
+            const rawTipo = String(row[5] || '').toLowerCase();
+            const numVagas = Number(row[6]) || 1;
+            const statusRaw = String(row[7] || '');
+            
+            const dataConv = row[8] ? convertDateValue(row[8], 'auto').formatted : '';
+            const horaConv = String(row[9] || '');
+            const candConv = String(row[10] || '');
+            const classConv = String(row[11] || '');
+            const formaConv = String(row[12] || '');
+            const oitivaConv = String(row[13] || '');
+            const secao = String(row[14] || '');
+            
+            const admEnviada = String(row[15] || '');
+            const admEfetivada = String(row[16] || '');
+            const detalhesAcomp = String(row[17] || '');
+            const obsAcomp = String(row[18] || '');
+
+            let tipoVaga: TipoVaga = 'substituicao';
+            if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
+            else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
+            else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
+            else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
+            else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
+            else if (rawTipo.includes('edital')) tipoVaga = 'edital';
+
+            const statusNormalized = normalizeStatus(statusRaw);
+            const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
+
+            newVagas.push({
+              id: `vaga-${batchId}-${totalProcessed}`,
+              unidade: unitInRow,
+              cargo,
+              requisicao,
+              numero_requisicao: requisicao,
+              data_abertura: dataAbertura,
+              data_recebimento: dataRecebimento,
+              numero_vagas: numVagas,
+              quantidade: numVagas,
+              secao,
+              tipo_vaga: tipoVaga,
+              status: statusNormalized,
+              status_geral: statusNormalized,
+              analista_responsavel: defaultAnalista,
+              assistentes: assistentes,
+              observacoes_internas: obsAcomp,
+              origem_importacao: selectedFile.name,
+              data_importacao: now,
+              lote_importacao: batchId,
+              import_batch_id: batchId,
+              source_sheet: sheetName,
+              source_row_index: i + 1,
+              tem_banco_valido: false,
+              data_convocacao_planilha: dataConv,
+              horario_convocacao_planilha: horaConv,
+              candidato_convocado_planilha: candConv,
+              classificacao_convocacao_planilha: classConv,
+              forma_convocacao_planilha: formaConv,
+              status_oitiva_convocacao_planilha: oitivaConv,
+              admissao_enviada_acompanhamento: admEnviada,
+              admissao_efetivada_acompanhamento: admEfetivada,
+              detalhes_acompanhamento: detalhesAcomp,
+              historico: [{
+                id: `h-${Date.now()}-${totalProcessed}`,
+                data: now.split('T')[0],
+                descricao: 'Importado da nova Base Geral de Vagas',
+                usuario: 'Sistema'
+              }]
+            });
+          }
+        });
+
+        useVagasStore.setState({ vagas: newVagas });
+        const byUnit: Record<string, number> = {};
+        newVagas.forEach(v => {
+          byUnit[v.unidade] = (byUnit[v.unidade] || 0) + 1;
+        });
+
+        const totalVagasDashboard = getValidVacancyBase(newVagas, 'TODOS', 'TODOS').length;
+        setSummary({
+          type: 'vagas',
+          total: newVagas.length,
+          dashboardTotal: totalVagasDashboard,
+          fileName: selectedFile.name,
+          byUnit
+        });
+        
+        addImportHistory({
+          id: batchId,
+          usuario: 'Sistema',
+          total_lidos: totalProcessed,
+          total_novos: newVagas.length,
+          total_atualizados: 0,
+          total_ignorados: 0,
+          total_erros: 0,
+          status: 'concluido',
+          tipo_importacao: 'vagas',
+          arquivo: selectedFile.name,
+          data_hora: now
+        });
+        
+        toast.success(`Importação de Vagas: ${newVagas.length} registros inseridos.`);
+
+      } else if (importType === 'banco') {
+        const sheet = wb.Sheets['BANCO GERAL'];
+        if (!sheet) {
+          toast.error("Aba 'BANCO GERAL' não encontrada.");
+          reset();
+          return;
+        }
+
+        const data = XLSX.utils.sheet_to_json<any>(sheet);
+        const newBancos: BancoTalentos[] = [];
+        let countCR = 0, countConv = 0, countVenc = 0;
+
+        data.forEach((row, i) => {
+          const statusRaw = String(row['STATUS'] || row['status'] || '').toUpperCase().trim();
+          let status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum' = 'nenhum';
+
+          if (statusRaw === 'CADASTRO RESERVA') { status = 'CADASTRO RESERVA'; countCR++; }
+          else if (statusRaw === 'CONVOCADO') { status = 'CONVOCADO'; countConv++; }
+          else if (statusRaw === 'VENCIDO') { status = 'VENCIDO'; countVenc++; }
+
+          newBancos.push({
+            id: `banco-${batchId}-${i}`,
+            cargo: String(row['CARGO'] || row['cargo'] || ''),
+            unidade: String(row['UNIDADE'] || row['unidade'] || ''),
+            status: status,
+            numero_edital: String(row['EDITAL'] || row['edital'] || ''),
+            data_abertura_edital: now.split('T')[0],
+            data_validade: row['VALIDADE'] ? convertDateValue(row['VALIDADE'], 'auto').formatted : '',
+            is_prorrogado: false,
+            observacoes: '',
+            status_import: statusRaw,
+            import_batch_id: batchId,
+            data_importacao: now,
+            origem_importacao: selectedFile.name,
+          });
+        });
+
+        clearBancos();
+        addBancos(newBancos);
+        setSummary({
+          type: 'banco',
+          total: newBancos.length,
+          cr: countCR,
+          conv: countConv,
+          venc: countVenc,
+          fileName: selectedFile.name
+        });
+
+        addImportHistory({
+          id: batchId,
+          usuario: 'Sistema',
+          total_lidos: data.length,
+          total_novos: newBancos.length,
+          total_atualizados: 0,
+          total_ignorados: 0,
+          total_erros: 0,
+          status: 'concluido',
+          tipo_importacao: 'banco',
+          arquivo: selectedFile.name,
+          data_hora: now
+        });
+
+        toast.success(`Importação de Banco: ${newBancos.length} registros inseridos.`);
+      }
+
+      setStep('summary');
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao processar o arquivo.");
+      reset();
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) reset(); onOpenChange(val); }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Importação de Dados (Nova Lógica)</DialogTitle>
+          <DialogTitle>Importação de Dados</DialogTitle>
           <DialogDescription>
             Importação simplificada e rigorosa conforme requisitos.
           </DialogDescription>
@@ -399,6 +393,68 @@ export function ImportExcelDialog({
               <Upload className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold">Clique para selecionar o arquivo</h3>
               <p className="text-sm text-muted-foreground mt-2">Arraste Proposta de Gestão (.xlsm) ou Banco de Dados (.xlsx)</p>
+            </div>
+          )}
+
+          {step === 'confirm' && (
+            <div className="flex flex-col items-center space-y-6">
+              <div className="p-6 bg-muted/30 rounded-xl border border-border w-full text-center">
+                <FileSpreadsheet className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h3 className="text-lg font-bold mb-2">Arquivo: {file?.name}</h3>
+                
+                {detectedType ? (
+                  <div className="space-y-4">
+                    <p className="text-sm">
+                      Tipo detectado automaticamente: 
+                      <Badge variant={confidence === 'high' ? 'default' : 'secondary'} className="ml-2 uppercase">
+                        {detectedType === 'vagas' ? 'Vagas (Proposta)' : 'Banco de Talentos'}
+                      </Badge>
+                    </p>
+                    {confidence === 'low' && (
+                      <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs">
+                        <Info className="h-4 w-4 shrink-0" />
+                        <p>A detecção automática tem baixa confiança. Por favor, confirme se o tipo está correto.</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                    <X className="h-4 w-4 shrink-0" />
+                    <p>Não foi possível identificar o tipo do arquivo automaticamente.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <Button 
+                  variant={detectedType === 'vagas' ? 'default' : 'outline'}
+                  className="h-24 flex flex-col gap-2"
+                  onClick={() => setDetectedType('vagas')}
+                >
+                  <Layers className="h-6 w-6" />
+                  <span>Vagas (Proposta)</span>
+                </Button>
+                <Button 
+                  variant={detectedType === 'banco' ? 'default' : 'outline'}
+                  className="h-24 flex flex-col gap-2"
+                  onClick={() => setDetectedType('banco')}
+                >
+                  <Database className="h-6 w-6" />
+                  <span>Banco de Talentos</span>
+                </Button>
+              </div>
+
+              <div className="flex justify-end gap-3 w-full pt-4">
+                <Button variant="ghost" onClick={reset}>Cancelar</Button>
+                <Button 
+                  disabled={!detectedType} 
+                  onClick={() => processFile(detectedType!)}
+                  className="px-8"
+                >
+                  Confirmar e Importar
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 

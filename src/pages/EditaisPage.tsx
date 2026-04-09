@@ -8,6 +8,7 @@ import { getEtapaColor, getPublicacaoColor, formatDate } from '@/lib/vagaUtils';
 import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
 export default function EditaisPage() {

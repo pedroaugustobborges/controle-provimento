@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta } from '@/types/vaga';
 import { mockVagas, mockBancos, mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
-import { normalizeCargo } from '@/lib/vagaUtils';
+import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
 
 interface VagasState {
   vagas: Vaga[];

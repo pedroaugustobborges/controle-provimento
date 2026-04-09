@@ -442,33 +442,82 @@ export function ImportExcelDialog({
         
         toast.success(`Importação de Vagas concluída: ${newVagas.length} registros.`);
       } else if (chosenType === 'banco') {
-        const data = XLSX.utils.sheet_to_json<any>(sheet, { range: headerRowUsed });
+        const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
+        const mapping = {
+          cargo: headers.indexOf('CARGO'),
+          unidade: headers.indexOf('UNIDADE'),
+          status: headers.indexOf('STATUS'),
+          edital: headers.indexOf('EDITAL'),
+          processoSeletivo: headers.indexOf('PROCESSO SELETIVO'),
+          validade: headers.indexOf('VALIDADE'),
+          prorrogacao: headers.indexOf('PRORROGAÇÃO'),
+          nome: headers.indexOf('NOME'),
+          classificacao: headers.indexOf('CLASSIFICAÇÃO'),
+          quantidadeBanco: headers.indexOf('QUANTIDADE DE BANCO'),
+          chamada: headers.indexOf('NÚMERO DE CHAMADA'),
+          vagasAproveitamento: headers.indexOf('NÚMERO DE VAGAS DE APROVEITAMENTO'),
+          dataConvocacao: headers.indexOf('DATA DE CONVOCAÇÃO'),
+          unidadeConvocacao: headers.indexOf('UNIDADE DE CONVOCAÇÃO'),
+        };
+
         const newBancos: BancoTalentos[] = [];
+        let totalRowsFound = 0;
 
-        data.forEach((row, i) => {
-          const statusRaw = String(row['STATUS'] || row['status'] || row['Situação'] || '').toUpperCase().trim();
+        for (let i = headerRowUsed + 1; i < rawRows.length; i++) {
+          const row = rawRows[i];
+          if (!row || (Array.isArray(row) && row.length === 0)) continue;
+          
+          totalRowsFound++;
+          const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
+          if (!cargo) continue;
+
+          const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '').toUpperCase().trim() : '';
           let status: any = 'nenhum';
-
           if (statusRaw.includes('RESERVA')) status = 'CADASTRO RESERVA';
           else if (statusRaw.includes('CONVOC')) status = 'CONVOCADO';
           else if (statusRaw.includes('VENCID')) status = 'VENCIDO';
 
+          const prorrogacaoRaw = mapping.prorrogacao !== -1 ? String(row[mapping.prorrogacao] || '').toUpperCase().trim() : '';
+          const isProrrogado = prorrogacaoRaw === 'SIM';
+          
+          const validadeOriginal = mapping.validade !== -1 && row[mapping.validade] 
+            ? convertDateValue(row[mapping.validade], 'auto').formatted 
+            : '';
+          
+          let novaDataValidade = '';
+          if (validadeOriginal && isProrrogado) {
+            const date = new Date(validadeOriginal);
+            if (!isNaN(date.getTime())) {
+              date.setMonth(date.getMonth() + 6);
+              novaDataValidade = date.toISOString().split('T')[0];
+            }
+          }
+
           newBancos.push({
-            id: `banco-${batchId}-${i}`,
-            cargo: String(row['CARGO'] || row['cargo'] || ''),
-            unidade: String(row['UNIDADE'] || row['unidade'] || ''),
-            status: status,
-            numero_edital: String(row['EDITAL'] || row['edital'] || ''),
+            id: `banco-${batchId}-${newBancos.length}`,
+            cargo,
+            unidade: mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : '',
+            status,
+            numero_edital: mapping.edital !== -1 ? String(row[mapping.edital] || '').trim() : '',
+            numero_processo_seletivo: mapping.processoSeletivo !== -1 ? String(row[mapping.processoSeletivo] || '').trim() : '',
             data_abertura_edital: now.split('T')[0],
-            data_validade: (row['VALIDADE'] || row['Validade']) ? convertDateValue(row['VALIDADE'] || row['Validade'], 'auto').formatted : '',
-            is_prorrogado: false,
+            data_validade: validadeOriginal,
+            is_prorrogado: isProrrogado,
+            nova_data_validade: novaDataValidade,
+            nome: mapping.nome !== -1 ? String(row[mapping.nome] || '').trim() : '',
+            classificacao: mapping.classificacao !== -1 ? row[mapping.classificacao] : '',
+            quantidade_banco: mapping.quantidadeBanco !== -1 ? row[mapping.quantidadeBanco] : '',
+            numero_chamada: mapping.chamada !== -1 ? String(row[mapping.chamada] || '') : '',
+            numero_vaga_aproveitamento: mapping.vagasAproveitamento !== -1 ? String(row[mapping.vagasAproveitamento] || '') : '',
+            data_convocacao: mapping.dataConvocacao !== -1 && row[mapping.dataConvocacao] ? convertDateValue(row[mapping.dataConvocacao], 'auto').formatted : '',
+            unidade_convocacao: mapping.unidadeConvocacao !== -1 ? String(row[mapping.unidadeConvocacao] || '').trim() : '',
             observacoes: '',
             status_import: statusRaw,
             import_batch_id: batchId,
             data_importacao: now,
             origem_importacao: selectedFile.name,
           });
-        });
+        }
 
         addBancos(newBancos);
         

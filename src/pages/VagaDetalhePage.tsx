@@ -1028,9 +1028,6 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Forçar Etapa Atual (Manual)</label>
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Acompanhamento de Etapas</h4>

@@ -232,10 +232,16 @@ export function ImportExcelDialog({
         let targetSheetName = fileMetadata.targetSheet;
         let headerRow = type === 'vagas' ? 1 : 0;
         
-        // Se for Banco, tentar achar aba que contenha BANCO GERAL ou similar
+        // Se for Banco, priorizar BANCO GERAL
         if (type === 'banco') {
-          const bancoSheetName = wb.SheetNames.find(n => n.toUpperCase().includes('BANCO'));
-          if (bancoSheetName) targetSheetName = bancoSheetName;
+          const exactMatch = wb.SheetNames.find(n => n.toUpperCase() === 'BANCO GERAL');
+          if (exactMatch) {
+            targetSheetName = exactMatch;
+            headerRow = 0; // Garantir linha 1 (index 0) para Banco Geral
+          } else {
+            const bancoSheetName = wb.SheetNames.find(n => n.toUpperCase().includes('BANCO'));
+            if (bancoSheetName) targetSheetName = bancoSheetName;
+          }
         }
 
         const sheet = wb.Sheets[targetSheetName];

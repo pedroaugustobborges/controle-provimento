@@ -134,7 +134,14 @@ export default function VagasPage() {
       const matchStatus = filterStatus === 'all' || 
         v.status === filterStatus || 
         v.status_geral === filterStatus ||
-        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao');
+        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') ||
+        (filterStatus === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') ||
+        (filterStatus === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') ||
+        (filterStatus === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') ||
+        (filterStatus === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') ||
+        (filterStatus === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') ||
+        (filterStatus === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') ||
+        (filterStatus === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade');
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
       const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);

@@ -176,15 +176,15 @@ export default function VagasPage() {
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countExcecoes = useMemo(() => {
+  const countVagasInterrompidas = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.excecoes.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.vagas_interrompidas.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countEstrategicas = useMemo(() => {
+  const countVagasLideranca = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.estrategicas.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.vagas_lideranca.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 

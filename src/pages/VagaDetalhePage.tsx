@@ -424,6 +424,48 @@ export default function VagaDetalhePage() {
         ))}
       </div>
 
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
+          <h3 className="font-bold text-slate-800">Ações Operacionais Rápidas</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button 
+            onClick={handleQuickConvocacao}
+            className="h-auto py-4 px-6 justify-between border-2 border-primary/10 hover:border-primary/30 hover:bg-primary/5 bg-white text-primary group transition-all"
+            variant="outline"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
+                <UserCheck className="h-6 w-6" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-base">Realizar convocação</p>
+                <p className="text-xs text-slate-500 font-medium">Usar banco de talentos vinculado para esta vaga</p>
+              </div>
+            </div>
+            <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+          </Button>
+
+          <Button 
+            onClick={handlePublicarEdital}
+            className="h-auto py-4 px-6 justify-between border-2 border-rose-100 hover:border-rose-200 hover:bg-rose-50 bg-white text-rose-600 group transition-all"
+            variant="outline"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-rose-100 p-2 rounded-lg group-hover:bg-rose-200 transition-colors">
+                <Send className="h-6 w-6" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-base">Publicar no edital</p>
+                <p className="text-xs text-slate-500 font-medium">Encaminhar para fila de novos editais/publicações</p>
+              </div>
+            </div>
+            <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+          </Button>
+        </div>
+      </div>
+
       <Tabs defaultValue="dados" className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>

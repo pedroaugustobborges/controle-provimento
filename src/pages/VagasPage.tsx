@@ -804,7 +804,7 @@ function AcompanhamentoEditalList() {
                   const isSync = v.acompanhamento?.etapa_atual === autoEtapa;
 
                   return (
-                    <TableRow key={v.id} className="cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setSelectedVagaForAcompanhamento(v)}>
+                    <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell className="font-medium text-slate-700 whitespace-nowrap">{v.unidade}</TableCell>
                       <TableCell className="font-semibold text-slate-800">
                         <div className="flex flex-col">

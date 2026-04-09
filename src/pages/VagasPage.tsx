@@ -569,11 +569,11 @@ export default function VagasPage() {
                   >
                     <TableCell className="text-slate-600 text-[11px] font-medium">
                       {v.data_abertura ? formatDate(v.data_abertura) : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
+                    </TableCell>
+                    <TableCell className="text-slate-600 text-[11px] font-medium">
                       {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-col gap-0.5">
                         <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
                           {v.requisicao || v.numero_requisicao || '-'}
@@ -582,8 +582,8 @@ export default function VagasPage() {
                           <span className="text-[9px] text-slate-400 ml-1">Linha {v.source_row_index}</span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-col">
                         <div className="font-semibold text-slate-800 truncate max-w-[200px] flex items-center gap-2" title={v.cargo}>
                           {v.cargo}
@@ -594,19 +594,19 @@ export default function VagasPage() {
                           )}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
+                    </TableCell>
+                    <TableCell className="text-slate-600 text-[11px] font-medium">
                       {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</TableCell>
+                    <TableCell className="text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</TableCell>
+                    <TableCell>
                       <StatusBadge status={v.status || v.status_geral} />
-                    </td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">
+                    </TableCell>
+                    <TableCell className="text-center font-bold text-slate-700">
                       {v.numero_vagas || v.quantidade || 0}
-                    </td>
-                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                    </TableCell>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">

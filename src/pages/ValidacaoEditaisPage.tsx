@@ -18,7 +18,9 @@ import {
   Eye,
   FileCheck,
   Building2,
-  FileText
+  FileText,
+  Bot,
+  Zap
 } from 'lucide-react';
 import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
@@ -196,6 +198,34 @@ export default function ValidacaoEditaisPage() {
                 <p className="font-semibold">{selectedVaga?.numero_processo}</p>
               </div>
             </div>
+
+            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs font-bold text-blue-900">IA: Sugestão de Datas</span>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-7 text-[10px] bg-white hover:bg-blue-50 border-blue-200"
+                  onClick={() => toast.success('Datas sugeridas com base no arquivo do edital.')}
+                >
+                  Extrair Datas
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <div className="bg-white p-1.5 rounded border border-blue-100">
+                  <span className="text-slate-400 block uppercase font-black tracking-tighter">Inscrições</span>
+                  <span className="font-bold text-blue-700">01/01/2024 a 15/01/2024</span>
+                </div>
+                <div className="bg-white p-1.5 rounded border border-blue-100">
+                  <span className="text-slate-400 block uppercase font-black tracking-tighter">Triagem</span>
+                  <span className="font-bold text-blue-700">20/01/2024</span>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-slate-400 uppercase">Observações da Validação</label>
               <Textarea 

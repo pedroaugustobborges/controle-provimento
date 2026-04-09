@@ -96,12 +96,14 @@ export interface VagaCronograma {
 }
 
 export interface EtapaStatus {
-  etapa: EtapaEdital;
+  etapa: EtapaEdital | string;
   concluida: boolean;
-  data_conclusao?: string; // Data real informada pelo analista
+  data_prevista?: string;
+  data_realizada?: string;
   usuario_conclusao?: string;
-  timestamp_conclusao?: string; // Momento que marcou
+  timestamp_conclusao?: string; 
   no_prazo?: boolean;
+  observacoes?: string;
 }
 
 export interface VagaAcompanhamento {

@@ -169,66 +169,6 @@ export function ImportExcelDialog({
 
       if (importType === 'vagas') {
         const newVagas: Vaga[] = [];
-          let totalProcessed = 0;
-
-          VAGA_SHEETS.forEach(sheetName => {
-            const sheet = wb.Sheets[sheetName];
-            if (!sheet) return;
-
-            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-            
-            for (let i = 2; i < rawRows.length; i++) { // Dados iniciam na linha 3 (index 2)
-              const row = rawRows[i];
-              if (!row) continue;
-
-              const cargo = String(row[4] || '').trim(); // Coluna E (index 4)
-              if (!cargo) continue;
-
-              totalProcessed++;
-
-              // Novo mapeamento conforme Item 1 e 6:
-              // 0: ABERTURA (A)
-              // 1: RECEBIMENTO (B)
-              // 2: UNIDADE (C)
-              // 3: REQUISIÇÃO (D)
-              // 4: CARGO (E)
-              // 5: TIPO (F)
-              // 6: VAGAS (G)
-              // 7: STATUS (H)
-              // 8: DATA CONVOCAÇÃO (I)
-              // 9: HORÁRIO CONVOCAÇÃO (J)
-              // 10: CANDIDATO CONVOCADO CONVOCAÇÃO (K)
-              // 11: CLASSIFICAÇÃO CONVOCAÇÃO (L)
-              // 12: FORMA CONVOCAÇÃO (M)
-              // 13: STATUS OITIVA CONVOCAÇÃO (N)
-              // 14: SEÇÃO (O)
-              // 15: ADMISSÃO ENVIADA - ACOMPANHAMENTO (P)
-              // 16: ADMISSÃO EFETIVADA - ACOMPANHAMENTO (Q)
-              // 17: DETALHES - ACOMPANHAMENTO (R)
-              // 18: OBSERVAÇÃO - ACOMPANHAMENTO (S)
-
-              const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : '';
-              const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
-              const unitInRow = String(row[2] || '').trim();
-              const requisicao = String(row[3] || '');
-              const rawTipo = String(row[5] || '').toLowerCase();
-              const numVagas = Number(row[6]) || 1;
-              const statusRaw = String(row[7] || '');
-              
-  const processFile = async (importType: 'vagas' | 'banco') => {
-    if (!workbook || !file) return;
-
-    setIsProcessing(true);
-    setStep('processing');
-
-    try {
-      const wb = workbook;
-      const selectedFile = file;
-      const now = new Date().toISOString();
-      const batchId = `IMPORT-${Date.now()}`;
-
-      if (importType === 'vagas') {
-        const newVagas: Vaga[] = [];
         let totalProcessed = 0;
 
         VAGA_SHEETS.forEach(sheetName => {
@@ -431,7 +371,7 @@ export function ImportExcelDialog({
     <Dialog open={open} onOpenChange={(val) => { if (!val) reset(); onOpenChange(val); }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Importação de Dados (Nova Lógica)</DialogTitle>
+          <DialogTitle>Importação de Dados</DialogTitle>
           <DialogDescription>
             Importação simplificada e rigorosa conforme requisitos.
           </DialogDescription>
@@ -453,6 +393,68 @@ export function ImportExcelDialog({
               <Upload className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold">Clique para selecionar o arquivo</h3>
               <p className="text-sm text-muted-foreground mt-2">Arraste Proposta de Gestão (.xlsm) ou Banco de Dados (.xlsx)</p>
+            </div>
+          )}
+
+          {step === 'confirm' && (
+            <div className="flex flex-col items-center space-y-6">
+              <div className="p-6 bg-muted/30 rounded-xl border border-border w-full text-center">
+                <FileSpreadsheet className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h3 className="text-lg font-bold mb-2">Arquivo: {file?.name}</h3>
+                
+                {detectedType ? (
+                  <div className="space-y-4">
+                    <p className="text-sm">
+                      Tipo detectado automaticamente: 
+                      <Badge variant={confidence === 'high' ? 'default' : 'secondary'} className="ml-2 uppercase">
+                        {detectedType === 'vagas' ? 'Vagas (Proposta)' : 'Banco de Talentos'}
+                      </Badge>
+                    </p>
+                    {confidence === 'low' && (
+                      <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs">
+                        <Info className="h-4 w-4 shrink-0" />
+                        <p>A detecção automática tem baixa confiança. Por favor, confirme se o tipo está correto.</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                    <X className="h-4 w-4 shrink-0" />
+                    <p>Não foi possível identificar o tipo do arquivo automaticamente.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <Button 
+                  variant={detectedType === 'vagas' ? 'default' : 'outline'}
+                  className="h-24 flex flex-col gap-2"
+                  onClick={() => setDetectedType('vagas')}
+                >
+                  <Layers className="h-6 w-6" />
+                  <span>Vagas (Proposta)</span>
+                </Button>
+                <Button 
+                  variant={detectedType === 'banco' ? 'default' : 'outline'}
+                  className="h-24 flex flex-col gap-2"
+                  onClick={() => setDetectedType('banco')}
+                >
+                  <Database className="h-6 w-6" />
+                  <span>Banco de Talentos</span>
+                </Button>
+              </div>
+
+              <div className="flex justify-end gap-3 w-full pt-4">
+                <Button variant="ghost" onClick={reset}>Cancelar</Button>
+                <Button 
+                  disabled={!detectedType} 
+                  onClick={() => processFile(detectedType!)}
+                  className="px-8"
+                >
+                  Confirmar e Importar
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 

@@ -241,7 +241,7 @@ export const useVagasStore = create<VagasState>()(
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),
       getMatchingDiagnostic: () => {
         const state = get();
-        const pendingVagas = state.vagas.filter(v => !['encerrada', 'finalizada', 'admissao_efetivada'].includes(v.status || v.status_geral || ''));
+        const pendingVagas = state.vagas.filter(v => getCategoriaStatus(v) !== 'concluidas' && getCategoriaStatus(v) !== 'vagas_interrompidas');
         
         return pendingVagas.map(v => {
           const matchedBanco = get().getBancoByVaga(v.id);

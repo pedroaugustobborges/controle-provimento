@@ -18,6 +18,8 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { formatDate, getCategoriaStatus } from '@/lib/vagaUtils';
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/PageHeader';
+
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger 
@@ -125,56 +127,58 @@ export default function ConvocacoesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Convocações</h1>
-          <p className="text-muted-foreground text-sm font-medium">Controle centralizado do fluxo de admissão e históricos de convocações.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shadow-sm">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-              onClick={() => handleViewChange('diaria')}
-            >
-              <Calendar className="h-3.5 w-3.5" /> Diária
+      <PageHeader 
+        title="Convocações"
+        subtitle="Controle centralizado do fluxo de admissão, aceite de candidatos e histórico operacional de convocações."
+        badge="Fluxo Admissional"
+        actions={
+          <>
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                onClick={() => handleViewChange('diaria')}
+              >
+                <Calendar className="h-3.5 w-3.5 mr-1" /> Diária
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                onClick={() => handleViewChange('kanban')}
+              >
+                <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Quadro
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                onClick={() => handleViewChange('list')}
+              >
+                <List className="h-3.5 w-3.5 mr-1" /> Histórico
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'pending' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                onClick={() => handleViewChange('pending')}
+              >
+                <AlertCircle className="h-3.5 w-3.5 mr-1" /> Pendentes
+                {pendingVagas.length > 0 && (
+                  <Badge variant="destructive" className="ml-1 px-1.5 h-4 min-w-[16px] flex items-center justify-center text-[8px] font-black rounded-full">
+                    {pendingVagas.length}
+                  </Badge>
+                )}
+              </Button>
+            </div>
+            <Button onClick={() => handleNewConvocacao()} className="h-10 gap-2 text-xs font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white rounded-xl transition-all px-4">
+              <Plus className="h-4 w-4" /> Nova Convocação
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-              onClick={() => handleViewChange('kanban')}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" /> Quadro
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-              onClick={() => handleViewChange('list')}
-            >
-              <List className="h-3.5 w-3.5" /> Histórico
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`h-8 px-3 text-xs font-bold gap-2 transition-all ${view === 'pending' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-              onClick={() => handleViewChange('pending')}
-            >
-              <AlertCircle className="h-3.5 w-3.5" /> Pendentes
-              {pendingVagas.length > 0 && (
-                <Badge variant="destructive" className="ml-1 px-1.5 h-4 min-w-[16px] flex items-center justify-center text-[9px] font-bold rounded-full">
-                  {pendingVagas.length}
-                </Badge>
-              )}
-            </Button>
-          </div>
-          <Button onClick={() => handleNewConvocacao()} className="h-9 gap-2 text-xs font-bold shadow-md shadow-primary/20 bg-primary">
-            <Plus className="h-4 w-4" /> Nova Convocação
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
+
 
       <div className="flex flex-col md:flex-row items-center gap-3 bg-white/50 p-3 rounded-xl border border-slate-200/50 backdrop-blur-sm shadow-sm">
         <div className="relative flex-1 w-full">

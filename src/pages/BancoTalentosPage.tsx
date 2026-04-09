@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
+
 import { formatDate, normalizeCargo } from '@/lib/vagaUtils';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -289,29 +291,31 @@ export default function BancoTalentosPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Banco de Talentos</h1>
-          <p className="text-slate-500 mt-1">Gestão de validade e disponibilidade de candidatos aprovados.</p>
-        </div>
-        <div className="flex gap-2">
-          {permissions.canImport() && (
+      <PageHeader 
+        title="Banco de Talentos"
+        subtitle="Gestão estratégica de validade e disponibilidade de candidatos aprovados nos processos seletivos."
+        badge="Recursos Humanos"
+        actions={
+          <>
+            {permissions.canImport() && (
+              <Button 
+                variant="outline" 
+                className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
+                onClick={() => setIsImportOpen(true)}
+              >
+                <FileSpreadsheet className="h-4 w-4 text-primary" /> Importar Excel
+              </Button>
+            )}
             <Button 
-              variant="outline" 
-              className="gap-2 border-primary/20 text-primary hover:bg-primary/5 shadow-sm"
-              onClick={() => setIsImportOpen(true)}
+              className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 px-4 transition-all rounded-xl font-bold"
+              onClick={() => setIsFormOpen(true)}
             >
-              <FileSpreadsheet className="h-4 w-4" /> Importar Excel
+              <Plus className="h-4 w-4" /> Novo Banco
             </Button>
-          )}
-          <Button 
-            className="gap-2 bg-primary shadow-md shadow-primary/20"
-            onClick={() => setIsFormOpen(true)}
-          >
-            <Plus className="h-4 w-4" /> Novo Banco
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
+
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl">

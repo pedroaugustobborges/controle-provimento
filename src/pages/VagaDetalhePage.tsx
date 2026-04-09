@@ -1031,31 +1031,87 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Forçar Etapa Atual (Manual)</label>
-                  <Select value={form.etapa_atual} onValueChange={(v) => setForm({ ...form, etapa_atual: v })}>
-                    <SelectTrigger className="bg-white border-slate-200 h-10"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => (
-                        <SelectItem key={e} value={e}>{ETAPA_LABELS[e]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-slate-400 italic">A etapa é atualizada automaticamente com base nas datas do cronograma.</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Acompanhamento de Etapas</h4>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">Marque a conclusão para atualizar o fluxo</div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Situação da Etapa</label>
-                  <Select value={form.situacao_etapa} onValueChange={(v: any) => setForm({ ...form, situacao_etapa: v })}>
-                    <SelectTrigger className="bg-white border-slate-200 h-10"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pendente">Pendente</SelectItem>
-                      <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                      <SelectItem value="concluido">Concluído</SelectItem>
-                      <SelectItem value="atrasada">Atrasada</SelectItem>
-                    </SelectContent>
-                  </Select>
+                
+                <div className="space-y-3">
+                  {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => {
+                    const status = (form.historico_etapas || []).find((h: any) => h.etapa === e);
+                    const isCompleted = status?.concluida;
+                    const isCurrent = form.etapa_atual === e;
+                    const scheduledDate = cronograma[CRONOGRAMA_KEYS[e]];
+                    
+                    return (
+                      <div 
+                        key={e} 
+                        className={`p-4 rounded-xl border transition-all ${
+                          isCompleted ? 'bg-green-50/30 border-green-100' : 
+                          isCurrent ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10' : 
+                          'bg-white border-slate-100'
+                        }`}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                              isCompleted ? 'bg-green-500 text-white' : 
+                              isCurrent ? 'bg-primary text-white animate-pulse' : 
+                              'bg-slate-100 text-slate-400'
+                            }`}>
+                              {isCompleted ? <Check className="h-4 w-4" /> : TODAS_AS_ETAPAS.indexOf(e) + 1}
+                            </div>
+                            <div>
+                              <p className={`font-bold text-sm ${isCompleted ? 'text-green-700' : isCurrent ? 'text-primary' : 'text-slate-700'}`}>
+                                {ETAPA_LABELS[e]}
+                              </p>
+                              {scheduledDate && (
+                                <p className="text-[10px] text-slate-400 font-medium uppercase">
+                                  Previsto: {formatDate(scheduledDate)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            {isCompleted ? (
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold text-green-600 uppercase">Concluído em: {status.data_conclusao}</p>
+                                <p className="text-[9px] text-slate-400">Por: {status.usuario_conclusao}</p>
+                                {status.no_prazo === false && (
+                                  <Badge className="bg-red-50 text-red-600 border-red-100 text-[8px] h-4 mt-0.5">ATRASO</Badge>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <Input 
+                                  type="date" 
+                                  className="h-8 w-32 text-[10px] bg-white" 
+                                  defaultValue={new Date().toISOString().split('T')[0]}
+                                  id={`date-${e}`}
+                                />
+                                <Button 
+                                  size="sm" 
+                                  className="h-8 text-[10px] font-bold uppercase bg-primary hover:bg-primary/90"
+                                  onClick={() => {
+                                    const dateInput = document.getElementById(`date-${e}`) as HTMLInputElement;
+                                    markStageAsCompleted(e, dateInput.value || new Date().toISOString().split('T')[0]);
+                                  }}
+                                >
+                                  Marcar Concluída
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 pt-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Indicadores de Funil</h4>
                   <div className="text-[10px] font-bold text-slate-400 uppercase">Preenchimento operacional</div>

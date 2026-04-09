@@ -47,8 +47,15 @@ import { ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DatabaseService } from '@/services/databaseService';
 
+import { useEffect } from 'react';
+
 export default function ImportacoesPage() {
-  const { importHistory, importedFiles, deleteImportedFile, clearAllData } = useVagasStore();
+  const { importHistory, importedFiles, deleteImportedFile, clearAllData, fixWrongImportBatches } = useVagasStore();
+  
+  useEffect(() => {
+    // Run fix logic once on mount
+    fixWrongImportBatches();
+  }, [fixWrongImportBatches]);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [reprocessFile, setReprocessFile] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);

@@ -7,6 +7,8 @@ import { ETAPA_LABELS } from '@/types/vaga';
 import { getEtapaColor, getPublicacaoColor, formatDate } from '@/lib/vagaUtils';
 import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
+import { PageHeader } from '@/components/PageHeader';
+
 
 export default function EditaisPage() {
   const { vagas, editais } = useVagasStore();
@@ -29,8 +31,12 @@ export default function EditaisPage() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-3xl font-bold tracking-tight text-foreground/90">Editais e Publicações</h2>
-      <p className="text-muted-foreground text-sm font-medium">Gerencie o fluxo de editais de seleção e publicações.</p>
+      <PageHeader 
+        title="Editais e Publicações"
+        subtitle="Gestão centralizada do fluxo de editais de seleção e status de publicações AGIR."
+        badge="Gestão de Editais"
+      />
+
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">

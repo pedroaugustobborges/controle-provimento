@@ -15,6 +15,8 @@ import {
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
   HardDrive, Info, Shield, Check, X
 } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EQUIPE_POR_UNIDADE, RESPONSAVEL_LIDERANCA } from '@/data/equipe';
 import { getCategoriaStatus } from '@/lib/vagaUtils';
@@ -80,12 +82,12 @@ export default function AdministracaoPage() {
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Administração</h1>
-          <p className="text-slate-500 mt-1">Gestão de usuários, permissões, auditoria e configurações do sistema.</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Configurações do Sistema"
+        subtitle="Gerenciamento de usuários, níveis de acesso, auditoria completa e parâmetros globais do sistema."
+        badge="Administração"
+      />
+
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-slate-100 p-1 flex-wrap h-auto">

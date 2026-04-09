@@ -29,6 +29,8 @@ import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
 import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
+import { PageHeader } from '@/components/PageHeader';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -268,53 +270,47 @@ export default function VagasPage() {
         <AcompanhamentoEditalList />
       ) : (
         <>
-          <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Controle de Provimento</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gerenciamento centralizado de vagas, editais e convocações.</p>
-        </div>
-        <div className="flex gap-2">
-          {permissions.canViewAudit() && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`text-[10px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary'}`}
-              onClick={() => setIsDebugOpen(!isDebugOpen)}
-            >
-              <Bug className="h-3 w-3" /> Audit
-            </Button>
-          )}
-          {permissions.canViewDiagnostics() && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-[10px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
-              onClick={() => {
-                const diag = getMatchingDiagnostic();
-                console.log('Matching Diagnostic:', diag);
-                toast.info(`${diag.length} vagas sem banco encontradas. Veja o console para detalhes.`);
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(diag, null, 2));
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", "diagnostico_matching.json");
-                document.body.appendChild(downloadAnchorNode);
-                downloadAnchorNode.click();
-                downloadAnchorNode.remove();
-              }}
-            >
-              <Database className="h-3 w-3" /> Diagnóstico
-            </Button>
-          )}
-          {permissions.canImport() && (
-            <Button variant="outline" className="gap-2 border-primary/20 hover:bg-primary/5 text-primary font-bold shadow-sm" onClick={() => setIsImportOpen(true)}>
-              <FileSpreadsheet className="h-4 w-4" /> Importar Excel
-            </Button>
-          )}
-          <Button className="gap-2 shadow-md shadow-primary/20 bg-primary" onClick={() => setIsAddVagaOpen(true)}>
-            <Plus className="h-4 w-4" /> Nova Vaga
-          </Button>
-        </div>
-      </div>
+          <PageHeader 
+            title="Controle de Provimento"
+            subtitle="Gerenciamento estratégico e centralizado de vagas, editais e fluxo de convocações AGIR."
+            badge="Gestão de Vagas"
+            actions={
+              <>
+                {permissions.canViewAudit() && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`text-[10px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary'}`}
+                    onClick={() => setIsDebugOpen(!isDebugOpen)}
+                  >
+                    <Bug className="h-3 w-3" /> Audit
+                  </Button>
+                )}
+                {permissions.canViewDiagnostics() && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-[10px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
+                    onClick={() => {
+                      const diag = getMatchingDiagnostic();
+                      toast.info(`${diag.length} vagas sem banco encontradas.`);
+                    }}
+                  >
+                    <Database className="h-3 w-3" /> Diagnóstico
+                  </Button>
+                )}
+                {permissions.canImport() && (
+                  <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-4 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
+                    <FileSpreadsheet className="h-4 w-4 text-primary" /> Importar Excel
+                  </Button>
+                )}
+                <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-4 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
+                  <Plus className="h-4 w-4" /> Nova Vaga
+                </Button>
+              </>
+            }
+          />
+
 
       {isDebugOpen && (
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-4">
@@ -362,6 +358,7 @@ export default function VagasPage() {
               {parityAudit.mismatches.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="text-[9px]">
+
                     <TableHeader>
                       <TableRow className="h-8 hover:bg-transparent border-amber-200">
                         <TableHead className="h-8 text-amber-800 font-bold">Record ID</TableHead>
@@ -770,12 +767,12 @@ function AcompanhamentoEditalList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Acompanhamento do Edital</h1>
-          <p className="text-slate-500 mt-1">Acompanhamento operacional das etapas dos editais publicados.</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Acompanhamento do Edital"
+        subtitle="Monitoramento operacional detalhado das etapas e indicadores dos editais publicados."
+        badge="Gestão de Processos"
+      />
+
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">

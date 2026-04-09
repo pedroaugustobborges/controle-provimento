@@ -7,6 +7,8 @@ import { Bell, CheckCircle2, Clock, AlertTriangle, User, ArrowRight, MessageSqua
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/vagaUtils';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/PageHeader';
+
 
 export default function AlertasTarefasPage() {
   const { alertas, tarefas, updateAlerta, updateTarefa } = useVagasStore();
@@ -24,12 +26,12 @@ export default function AlertasTarefasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Alertas e Tarefas</h1>
-          <p className="text-slate-500 mt-1">Monitore pendências, atrasos e atividades operacionais.</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Alertas e Tarefas"
+        subtitle="Monitoramento operacional de pendências críticas, atrasos e atividades delegadas à equipe."
+        badge="Operacional"
+      />
+
 
       <Tabs defaultValue="tarefas" className="space-y-4">
         <TabsList className="bg-slate-100 p-1">

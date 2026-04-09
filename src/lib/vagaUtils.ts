@@ -321,12 +321,12 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
 }
 
 /**
- * Canonical filter to ensure parity between metrics, dashboards and tables.
- * Implements the spreadsheet rule: 
- * - Must have cargo (Column F in Excel)
- * - Unit filter (B4 in Excel)
- * - Month filter on data_abertura (B10 in Excel)
- */
+  * Canonical filter to ensure parity between metrics, dashboards and tables.
+  * Implements the spreadsheet rule: 
+  * - Must have cargo (Column E in the new Excel layout)
+  * - Unit filter
+  * - Month filter on data_abertura
+  */
 export function getValidVacancyBase(
   records: any[],
   selectedUnit?: string,
@@ -341,7 +341,7 @@ export function getValidVacancyBase(
     : 'TODOS';
 
   return records.filter((row) => {
-    // 1. Mandatory Cargo (Column F)
+    // 1. Mandatory Cargo
     const hasCargo = String(row.cargo ?? "").trim() !== "";
     if (!hasCargo) return false;
 

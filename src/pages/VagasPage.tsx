@@ -545,29 +545,29 @@ export default function VagasPage() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50/50 whitespace-nowrap">
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Abertura</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Recebimento</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Requisição</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Cargo</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Tipo</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Unidade</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Seção</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Status</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-center">Vaga(s)</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Abertura</TableHead>
+                  <TableHead>Recebimento</TableHead>
+                  <TableHead>Requisição</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Seção</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Vaga(s)</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filtered.map((v) => (
-                  <tr
+                  <TableRow
                     key={v.id}
-                    className="border-b last:border-0 hover:bg-slate-50/50 transition-colors whitespace-nowrap group cursor-pointer"
+                    className="whitespace-nowrap cursor-pointer"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
+                    <TableCell className="text-slate-600 text-[11px] font-medium">
                       {v.data_abertura ? formatDate(v.data_abertura) : '-'}
                     </td>
                     <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">

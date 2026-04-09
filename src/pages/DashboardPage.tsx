@@ -155,6 +155,14 @@ export default function DashboardPage() {
       .reduce((sum, g) => sum + g.qtdBanco, 0);
   }, [groupedBancos]);
 
+  const totalConvocados = useMemo(() => 
+    bancos.filter(b => b.status === 'CONVOCADO').length
+  , [bancos]);
+
+  const totalVencidos = useMemo(() => 
+    bancos.filter(b => b.status === 'VENCIDO').length
+  , [bancos]);
+
   const totalBancoTotal = useMemo(() => 
     groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)
   , [groupedBancos]);

@@ -754,8 +754,9 @@ function AcompanhamentoEditalList() {
 
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
-      const isAndamento = getCategoriaStatus(v) === 'em_andamento';
-      if (!isAndamento) return false;
+      const cat = getCategoriaStatus(v);
+      const isAcompanhamento = ['em_andamento', 'fila_edital', 'convocacao', 'documentacao'].includes(cat);
+      if (!isAcompanhamento) return false;
 
       if (!currentUser?.visualiza_todas_unidades) {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));

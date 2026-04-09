@@ -176,15 +176,15 @@ export default function VagasPage() {
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countExcecoes = useMemo(() => {
+  const countVagasInterrompidas = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.excecoes.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.vagas_interrompidas.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
-  const countEstrategicas = useMemo(() => {
+  const countVagasLideranca = useMemo(() => {
     return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.estrategicas.includes(status.toLowerCase()))
+      .filter(([status]) => CATEGORIAS_STATUS.vagas_lideranca.includes(status.toLowerCase()))
       .reduce((acc, [_, count]) => acc + count, 0);
   }, [vacancyStats.byStatus]);
 
@@ -436,8 +436,8 @@ export default function VagasPage() {
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-indigo-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estratégicas</p>
-            <p className="text-2xl font-bold text-indigo-600">{countEstrategicas}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vagas de Liderança</p>
+            <p className="text-2xl font-bold text-indigo-600">{countVagasLideranca}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-violet-500">
@@ -448,8 +448,8 @@ export default function VagasPage() {
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-rose-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Exceções</p>
-            <p className="text-2xl font-bold text-rose-600">{countExcecoes}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vagas Interrompidas</p>
+            <p className="text-2xl font-bold text-rose-600">{countVagasInterrompidas}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-emerald-500">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EQUIPE_POR_UNIDADE, RESPONSAVEL_LIDERANCA } from '@/data/equipe';
+import { getCategoriaStatus } from '@/lib/vagaUtils';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -100,6 +101,9 @@ export default function AdministracaoPage() {
           </TabsTrigger>
           <TabsTrigger value="backup" className="gap-2 font-bold px-4 py-2">
             <HardDrive className="h-4 w-4" /> Backup
+          </TabsTrigger>
+          <TabsTrigger value="conferencia" className="gap-2 font-bold px-4 py-2">
+            <Database className="h-4 w-4" /> Conferência de Status
           </TabsTrigger>
           <TabsTrigger value="parametros" className="gap-2 font-bold px-4 py-2">
             <Settings className="h-4 w-4" /> Configurações Gerais
@@ -387,6 +391,83 @@ export default function AdministracaoPage() {
                   </TableBody>
                 </Table>
               </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* CONFERÊNCIA DE STATUS */}
+        <TabsContent value="conferencia">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="border-b bg-blue-50/30">
+              <div className="flex items-center gap-2.5">
+                <Database className="h-5 w-5 text-blue-600" />
+                <div>
+                  <CardTitle className="text-lg font-bold text-slate-800">Conferência de Status (Dados Reais)</CardTitle>
+                  <CardDescription className="text-xs font-medium text-slate-400">Validação objetiva de como cada registro original está sendo classificado.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 overflow-auto max-h-[600px]">
+              <Table>
+                <TableHeader className="bg-slate-50/80 sticky top-0 z-10 border-b">
+                  <TableRow>
+                    <TableHead className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider">Status Original Importado</TableHead>
+                    <TableHead className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider text-center">Quantidade</TableHead>
+                    <TableHead className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider">Grupo/Card de Destino</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-slate-50 font-medium">
+                  {useMemo(() => {
+                    const distribution = new Map<string, { count: number, group: string }>();
+                    
+                    vagas.forEach(v => {
+                      const status = (v.status || v.status_geral || 'SEM STATUS') as string;
+                      const groupKey = getCategoriaStatus(status);
+                      
+                      const groupLabelMap: Record<string, string> = {
+                        fila_edital: 'Fila de Editais',
+                        em_andamento: 'Em Andamento',
+                        concluidas: 'Concluídas',
+                        vagas_interrompidas: 'Vagas Interrompidas',
+                        vagas_lideranca: 'Vagas de Liderança',
+                        convocacao: 'Convocações',
+                        aguardando_unidade: 'Aguardando Unidade'
+                      };
+                      const groupLabel = groupLabelMap[groupKey] || groupKey;
+                      
+                      const current = distribution.get(status) || { count: 0, group: groupLabel };
+                      current.count++;
+                      distribution.set(status, current);
+                    });
+                    
+                    return Array.from(distribution.entries())
+                      .sort((a, b) => b[1].count - a[1].count)
+                      .map(([status, data]) => (
+                        <TableRow key={status} className="hover:bg-slate-50/50 transition-colors h-14">
+                          <TableCell className="px-6 py-4 text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
+                          <TableCell className="px-6 py-4 text-center">
+                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-black text-xs">
+                              {data.count}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className={`h-2 w-2 rounded-full ${
+                                data.group.includes('Fila') ? 'bg-amber-400' : 
+                                data.group.includes('Concluídas') ? 'bg-green-500' : 
+                                data.group.includes('Interrompidas') ? 'bg-red-500' : 
+                                data.group.includes('Liderança') ? 'bg-rose-500' :
+                                data.group.includes('Aguardando') ? 'bg-yellow-500' :
+                                'bg-blue-400'
+                              }`}></div>
+                              <span className="text-slate-500 font-bold uppercase text-[10px] tracking-tight">{data.group}</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ));
+                  }, [vagas])}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

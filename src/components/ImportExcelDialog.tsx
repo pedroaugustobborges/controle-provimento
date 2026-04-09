@@ -472,7 +472,13 @@ export function ImportExcelDialog({
           prorrogacao: headers.indexOf('PRORROGAÇÃO'),
           nome: headers.indexOf('NOME'),
           classificacao: headers.indexOf('CLASSIFICAÇÃO'),
-          quantidadeBanco: headers.indexOf('QUANTIDADE DE BANCO'),
+          quantidadeBanco: headers.findIndex(h => 
+            h === 'QUANTIDADE DE BANCO' || 
+            h === 'QNTD BANCO' || 
+            h === 'QTD BANCO' || 
+            h === 'QUANTIDADE BANCO' ||
+            h === 'QTD. BANCO'
+          ),
           chamada: headers.indexOf('NÚMERO DE CHAMADA'),
           vagasAproveitamento: headers.indexOf('NÚMERO DE VAGAS DE APROVEITAMENTO'),
           dataConvocacao: headers.indexOf('DATA DE CONVOCAÇÃO'),

@@ -66,6 +66,11 @@ export default function ConvocacoesPage() {
   const [search, setSearch] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [selectedUnidade, setSelectedUnidade] = useState<string>('all');
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -87,15 +92,33 @@ export default function ConvocacoesPage() {
     }
   };
 
+  const unidades = useMemo(() => {
+    const u = new Set<string>();
+    vagas.forEach(v => {
+      if (v.unidade) u.add(v.unidade);
+    });
+    convocacoes.forEach(c => {
+      if (c.unidade) u.add(c.unidade);
+    });
+    bancos.forEach(b => {
+      if (b.unidade) u.add(b.unidade);
+      if (b.unidade_convocacao) u.add(b.unidade_convocacao);
+    });
+    return Array.from(u).sort();
+  }, [vagas, convocacoes, bancos]);
+
   // Unit filtering
   const filteredVagas = useMemo(() => {
     return vagas.filter(v => {
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
         return false;
       }
+      if (selectedUnidade !== 'all' && v.unidade !== selectedUnidade) {
+        return false;
+      }
       return true;
     });
-  }, [vagas, currentUser]);
+  }, [vagas, currentUser, selectedUnidade]);
 
   const pendingVagas = useMemo(() => {
     return filteredVagas.filter(v => getCategoriaStatus(v, true) === 'convocacao');
@@ -128,6 +151,22 @@ export default function ConvocacoesPage() {
         if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) {
           return false;
         }
+
+        if (selectedUnidade !== 'all' && c.unidade !== selectedUnidade) {
+          return false;
+        }
+
+        if (dateRange.from) {
+          const convDate = parseISO(c.data_convocacao);
+          const range = {
+            start: startOfDay(dateRange.from),
+            end: endOfDay(dateRange.to || dateRange.from)
+          };
+          if (!isWithinInterval(convDate, range)) {
+            return false;
+          }
+        }
+
         if (search) {
           const s = search.toLowerCase();
           return c.nome_candidato.toLowerCase().includes(s) || 
@@ -137,7 +176,7 @@ export default function ConvocacoesPage() {
         return true;
       })
       .sort((a, b) => new Date(b.data_convocacao).getTime() - new Date(a.data_convocacao).getTime());
-  }, [convocacoes, bancos, currentUser, search]);
+  }, [convocacoes, bancos, currentUser, search, selectedUnidade, dateRange]);
 
   const handleNewConvocacao = (vaga?: any) => {
     setSelectedVaga(vaga || null);

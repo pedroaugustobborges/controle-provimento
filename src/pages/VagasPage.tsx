@@ -8,7 +8,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
-  normalizeUnitName, countVacancies, getStatusSummary, 
+  normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity 
 } from '@/lib/vagaUtils';
 import { Calendar, Bug, ChevronDown, ChevronUp, Info } from 'lucide-react';
@@ -141,62 +141,43 @@ export default function VagasPage() {
     });
   }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
 
-  // 3. Vacancy summary - strictly using the same canonical base
-  const vacancyStats = useMemo(() => {
-    const summary: Record<string, number> = {};
-    canonicalBase.forEach(row => {
-      const status = (row.status || row.status_geral || 'SEM_STATUS').toUpperCase().trim();
-      summary[status] = (summary[status] || 0) + 1;
-    });
-    return {
-      total: canonicalBase.length,
-      byStatus: summary
+  // 3. Vacancy summary - strictly using the same canonical base and unified logic as Dashboard
+  const counts = useMemo(() => {
+    const acc = {
+      fila_edital: 0,
+      em_andamento: 0,
+      concluidas: 0,
+      vagas_interrompidas: 0,
+      vagas_lideranca: 0,
+      convocacao: 0,
+      aguardando_unidade: 0,
+      com_banco_valido: 0
     };
-  }, [canonicalBase]);
+    
+    canonicalBase.forEach(v => {
+      const statusRaw = (v.status || v.status_geral || 'SEM STATUS') as string;
+      const cat = getCategoriaStatus(statusRaw);
+      
+      if (acc[cat] !== undefined) {
+        acc[cat]++;
+      }
 
-  const totalVagas = vacancyStats.total;
-  
-  // Status summary groupings mapped to dashboard cards
-  // Note: These must follow the "independent from status" rule for the base total
-  const countFilaEdital = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.fila_edital.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countEmAndamento = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.em_andamento.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countConcluidas = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.concluidas.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countVagasInterrompidas = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.vagas_interrompidas.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countVagasLideranca = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.vagas_lideranca.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countConvocacao = useMemo(() => {
-    return Object.entries(vacancyStats.byStatus)
-      .filter(([status]) => CATEGORIAS_STATUS.convocacao.includes(status.toLowerCase()))
-      .reduce((acc, [_, count]) => acc + count, 0);
-  }, [vacancyStats.byStatus]);
-
-  const countComBanco = useMemo(() => {
-    return canonicalBase.filter(v => getBancoByVaga(v.id)).length;
+      if (getBancoByVaga(v.id)) {
+        acc.com_banco_valido++;
+      }
+    });
+    
+    return acc;
   }, [canonicalBase, getBancoByVaga]);
+
+  const countFilaEdital = counts.fila_edital;
+  const countEmAndamento = counts.em_andamento;
+  const countConcluidas = counts.concluidas;
+  const countVagasInterrompidas = counts.vagas_interrompidas;
+  const countVagasLideranca = counts.vagas_lideranca;
+  const countConvocacao = counts.convocacao;
+  const countComBanco = counts.com_banco_valido;
+
 
   // 4. Parity Debug Audit - forensic row-level check
   const parityAudit = useMemo(() => {
@@ -664,9 +645,9 @@ function AcompanhamentoEditalList() {
 
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
-      const status = (v.status || v.status_geral || '').toLowerCase();
+      const status = (v.status || v.status_geral || '');
       // Regra 4.2: Grupo: edital em andamento
-      const isAndamento = ['em_edital', 'em_documentacao', 'documentacao_ok_azul_pendente', 'documentacao_pendente_azul_ok', 'em_admissao', 'admissao_enviada'].includes(status);
+      const isAndamento = getCategoriaStatus(status) === 'em_andamento';
       
       if (!isAndamento) return false;
 

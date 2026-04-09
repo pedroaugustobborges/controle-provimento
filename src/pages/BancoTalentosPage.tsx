@@ -244,7 +244,7 @@ export default function BancoTalentosPage() {
         </DialogContent>
       </Dialog>
 
-      <ImportBancoTalentosDialog 
+      <ImportExcelDialog 
         open={isImportOpen} 
         onOpenChange={setIsImportOpen} 
       />

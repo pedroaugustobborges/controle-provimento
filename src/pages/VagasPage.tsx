@@ -155,8 +155,7 @@ export default function VagasPage() {
     };
     
     canonicalBase.forEach(v => {
-      const statusRaw = (v.status || v.status_geral || 'SEM STATUS') as string;
-      const cat = getCategoriaStatus(statusRaw);
+      const cat = getCategoriaStatus(v);
       
       if (acc[cat] !== undefined) {
         acc[cat]++;

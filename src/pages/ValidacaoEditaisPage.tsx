@@ -132,23 +132,23 @@ export default function ValidacaoEditaisPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/50">
+            <TableHeader>
               <TableRow>
-                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider">Unidade</th>
-                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider">Cargo</th>
-                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider">Nº Edital / Processo</th>
-                <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider">Redigido por</th>
-                <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-wider">Ações</th>
+                <TableHead>Unidade</TableHead>
+                <TableHead>Cargo</TableHead>
+                <TableHead>Nº Edital / Processo</TableHead>
+                <TableHead>Redigido por</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pendingEditais.map((v) => (
-                <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4 font-medium text-slate-700">{v.unidade}</td>
-                  <td className="px-6 py-4">
+                <TableRow key={v.id} className="group">
+                  <TableCell className="font-medium text-slate-700">{v.unidade}</TableCell>
+                  <TableCell>
                     <div className="font-semibold text-slate-800">{v.cargo}</div>
                     <div className="text-[11px] text-slate-400">{v.requisicao}</div>
-                  </td>
+                  </TableCell>
                   <td className="px-6 py-4">
                     <div className="text-sm font-bold text-primary">{v.numero_edital}</div>
                     <div className="text-[11px] text-slate-500">{v.numero_processo}</div>

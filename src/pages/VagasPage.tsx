@@ -560,6 +560,7 @@ export default function VagasPage() {
                       {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
                     </td>
                     <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={v.status || v.status_geral} />
                     </td>

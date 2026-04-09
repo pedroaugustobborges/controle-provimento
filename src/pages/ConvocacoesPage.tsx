@@ -2,7 +2,7 @@ import { KanbanBoard } from '@/components/KanbanBoard';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, Search, Filter, Download, LayoutGrid, List, 
-  Calendar, MapPin, Building2, User, CheckCircle2, 
+  Calendar as CalendarIcon, MapPin, Building2, User, CheckCircle2, 
   AlertCircle, ArrowRight, Database, MoreVertical,
   History, Eye, Edit, Trash2, X, Clock
 } from 'lucide-react';
@@ -21,6 +21,21 @@ import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO } from '@/lib/convocacaoUtils';
+import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 

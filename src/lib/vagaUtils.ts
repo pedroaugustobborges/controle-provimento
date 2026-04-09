@@ -95,8 +95,6 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
   return cat || 'em_andamento';
 }
 
-
-
 export function getStatusColor(status: string): string {
   if (!status) return 'bg-gray-100 text-gray-600';
   
@@ -153,6 +151,14 @@ export function getEtapaColor(etapa: EtapaEdital): string {
   return map[etapa] || 'bg-gray-100 text-gray-600';
 }
 
+export function getPublicacaoColor(status: StatusPublicacao): string {
+  const map: Record<StatusPublicacao, string> = {
+    pendente: 'bg-amber-100 text-amber-800',
+    publicado: 'bg-green-100 text-green-800',
+    encerrado: 'bg-gray-100 text-gray-600',
+  };
+  return map[status];
+}
 
 export function getAutoEtapa(vaga: Vaga): EtapaEdital {
   if (!vaga.cronograma || !vaga.acompanhamento?.etapas_habilitadas) {
@@ -208,7 +214,6 @@ export function getAutoEtapa(vaga: Vaga): EtapaEdital {
 
   let current: EtapaEdital = (vaga.acompanhamento?.etapa_atual as EtapaEdital) || 'inscricoes';
   
-  // Encontrar a última etapa cuja data já passou ou é hoje
   for (const etapa of cronoOrder) {
     if (habilitadas.includes(etapa)) {
       const dateKey = cronoKeys[etapa];
@@ -221,7 +226,6 @@ export function getAutoEtapa(vaga: Vaga): EtapaEdital {
 
   return current;
 }
-
 
 export function calcDiasAberto(dataRecebimento: string, dataConclusao?: string): number {
   if (!dataRecebimento) return 0;
@@ -257,8 +261,6 @@ export function calcDiasUteis(dataRecebimento: string, dataConclusao?: string): 
 export function formatDate(dateStr: string): string {
   if (!dateStr || dateStr.trim() === '' || dateStr === '—') return '—';
   
-  // Try to parse ISO date first
-  // Se a string estiver no formato YYYY-MM-DD, parse manualmente para evitar deslocamento de fuso horário
   let date: Date;
   if (dateStr.includes('-') && dateStr.length === 10) {
     const [year, month, day] = dateStr.split('-').map(Number);
@@ -267,8 +269,6 @@ export function formatDate(dateStr: string): string {
     date = new Date(dateStr);
   }
   if (isNaN(date.getTime())) {
-    // If it's not a valid date, just return the string or a placeholder
-    // This prevents "Invalid Date" from appearing in the UI
     return dateStr.length > 20 ? dateStr.substring(0, 20) + '...' : dateStr;
   }
   
@@ -293,165 +293,73 @@ export function normalizeStatus(statusText: string): StatusVaga {
     return 'SEM STATUS' as StatusVaga;
   }
   
-  // Normalização rigorosa conforme item 3: ignorar acentos, caixa alta/baixa e espaços duplicados
   const text = removeAccents(statusText.toLowerCase().trim().replace(/\s+/g, ' '));
   
-  // Mapeamento EXATO conforme instruções do usuário:
-  
-  // 1. Concluídas
   if (text === 'admissao efetivada') return 'CONCLUÍDAS' as StatusVaga;
-  
-  // 2. Fila de Editais
-  if (text === 'publicar novo edital' || text === 'publicar edital') {
-    return 'FILA DE EDITAIS' as StatusVaga;
-  }
-  
-  // 3. Vagas de Liderança
+  if (text === 'publicar novo edital' || text === 'publicar edital') return 'FILA DE EDITAIS' as StatusVaga;
   if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
-  
-  // 4. Aguardando Unidade
   if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
-  
-  // 5. Vagas Interrompidas
   if (text === 'vaga suspensa' || text === 'suspensa') return 'SUSPENSA' as StatusVaga;
   if (text === 'vaga pausada' || text === 'pausada') return 'PAUSADA' as StatusVaga;
   if (text === 'cancelada' || text === 'cancelado') return 'CANCELADAS' as StatusVaga;
-  
-  // 6. Convocações
   if (text === 'realizar convocacao') return 'CONVOCAÇÕES' as StatusVaga;
-  
-  // 7. Documentação
-  if (text === 'documentacao' || 
-      text === 'documentacao ok e aso pendente' || 
-      text === 'aso pendente') {
-    return 'DOCUMENTAÇÃO' as StatusVaga;
-  }
-  
-  // 8. Em Andamento (outros status que não se encaixam acima mas são considerados andamento)
-  if (text === 'admissao enviada' || 
-      text === 'em edital' || 
-      text === 'em processo seletivo' ||
-      text === 'em triagem' ||
-      text === 'entrevista' ||
-      text === 'movimentacao interna') {
-    return 'EM ANDAMENTO' as StatusVaga;
-  }
-  
-  // Fallback seguro mas restrito: se contém termos de andamento
-  if (text.includes('andamento') || text.includes('processo') || text.includes('edital')) {
-    return 'EM ANDAMENTO' as StatusVaga;
-  }
+  if (text === 'documentacao' || text === 'documentacao ok e aso pendente' || text === 'aso pendente') return 'DOCUMENTAÇÃO' as StatusVaga;
+  if (text === 'admissao enviada' || text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista' || text === 'movimentacao interna') return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('andamento') || text.includes('processo') || text.includes('edital')) return 'EM ANDAMENTO' as StatusVaga;
 
   return 'SEM STATUS' as StatusVaga;
 }
 
-
-
 export function normalizeUnitName(name: string): string {
   if (!name) return '';
-  
-  // New conservative normalization for Excel parity
-  // Focus on exact match after trimming and uppercasing
-  return name
-    .toUpperCase()
-    .trim()
-    .replace(/\s+/g, ' '); // collapse multiple spaces
+  return name.toUpperCase().trim().replace(/\s+/g, ' ');
 }
 
 export function parseSpreadsheetDate(value: any): Date | null {
   if (!value) return null;
-  
-  // If it's already a Date
   if (value instanceof Date) return value;
-  
-  // If it's a number (Excel serial date)
-  if (typeof value === 'number') {
-    // Excel base date is 1899-12-30
-    return new Date((value - 25569) * 86400 * 1000);
-  }
-  
+  if (typeof value === 'number') return new Date((value - 25569) * 86400 * 1000);
   if (typeof value !== 'string') return null;
-  
   const trimmed = value.trim();
   if (!trimmed) return null;
-  
-  // Try dd/mm/yyyy
   if (trimmed.includes('/')) {
     const parts = trimmed.split('/');
     if (parts.length === 3) {
       const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // 0-indexed
+      const month = parseInt(parts[1], 10) - 1;
       const year = parseInt(parts[2], 10);
       const date = new Date(year, month, day);
       if (!isNaN(date.getTime())) return date;
     }
   }
-  
-  // Try ISO or other formats
   const date = new Date(trimmed);
   if (!isNaN(date.getTime())) return date;
-  
   return null;
 }
 
 export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number): string {
   if (!dateValue) return "";
-
   const date = parseSpreadsheetDate(dateValue);
   if (!date || isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("pt-BR", { month: "long" })
-    .format(date)
-    .toUpperCase();
+  return new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date).toUpperCase();
 }
 
-/**
-  * Canonical filter to ensure parity between metrics, dashboards and tables.
-  * Implements the spreadsheet rule: 
-  * - Must have cargo (Column E in the new Excel layout)
-  * - Unit filter
-  * - Month filter on data_abertura
-  */
-export function getValidVacancyBase(
-  records: any[],
-  selectedUnit?: string,
-  selectedMonth?: string
-): any[] {
-  const normUnit = selectedUnit && selectedUnit !== 'all' && selectedUnit !== 'TODOS' 
-    ? normalizeUnitName(selectedUnit) 
-    : 'TODOS';
-    
-  const normMonth = selectedMonth && selectedMonth !== 'all' && selectedMonth !== 'TODOS' 
-    ? selectedMonth.toUpperCase().trim() 
-    : 'TODOS';
-
+export function getValidVacancyBase(records: any[], selectedUnit?: string, selectedMonth?: string): any[] {
+  const normUnit = selectedUnit && selectedUnit !== 'all' && selectedUnit !== 'TODOS' ? normalizeUnitName(selectedUnit) : 'TODOS';
+  const normMonth = selectedMonth && selectedMonth !== 'all' && selectedMonth !== 'TODOS' ? selectedMonth.toUpperCase().trim() : 'TODOS';
   return records.filter((row) => {
-    // 1. Mandatory Cargo
     const hasCargo = String(row.cargo ?? "").trim() !== "";
     if (!hasCargo) return false;
-
-    // 2. Unit Filter (Sheet name or unidade field)
     const rowUnit = normalizeUnitName(row.unidade);
     const passesUnit = normUnit === 'TODOS' || rowUnit === normUnit;
     if (!passesUnit) return false;
-
-    // 3. Month Filter (Column B)
     if (normMonth === 'TODOS') return true;
-    
     const aberturaMonth = getMonthNamePtBrUpper(row.data_abertura);
     return aberturaMonth === normMonth;
   });
 }
 
-export function countVacancies({
-  records,
-  selectedUnit,
-  selectedMonth,
-}: {
-  records: any[];
-  selectedUnit: string;
-  selectedMonth?: string;
-}) {
+export function countVacancies({ records, selectedUnit, selectedMonth }: { records: any[]; selectedUnit: string; selectedMonth?: string; }) {
   return getValidVacancyBase(records, selectedUnit, selectedMonth).length;
 }
 
@@ -471,32 +379,20 @@ export type VacancyEligibilityResult = {
   rejectionReason?: string;
 };
 
-export function checkVacancyParity(
-  row: any,
-  selectedUnit: string,
-  selectedMonth: string
-): VacancyEligibilityResult {
+export function checkVacancyParity(row: any, selectedUnit: string, selectedMonth: string): VacancyEligibilityResult {
   const normSelectedUnit = selectedUnit === 'all' || selectedUnit === 'TODOS' ? 'TODOS' : normalizeUnitName(selectedUnit);
   const normSelectedMonth = selectedMonth === 'all' || selectedMonth === 'TODOS' ? 'TODOS' : selectedMonth.toUpperCase();
-  
   const hasCargo = String(row.cargo ?? "").trim() !== "";
   const rowUnitNorm = normalizeUnitName(row.unidade);
   const unitMatches = normSelectedUnit === 'TODOS' || rowUnitNorm === normSelectedUnit;
-  
   const parsedMonth = getMonthNamePtBrUpper(row.data_abertura);
   const monthMatches = normSelectedMonth === 'TODOS' || parsedMonth === normSelectedMonth;
-  
   const includedByExcelParity = hasCargo && unitMatches && monthMatches;
-  
-  // For now, includedByApp is the same as Excel Parity, 
-  // but this is where we'd find if the App has extra filters
   const includedByApp = includedByExcelParity; 
-
   let rejectionReason = "";
   if (!hasCargo) rejectionReason = "Cargo vazio (Coluna F)";
   else if (!unitMatches) rejectionReason = `Unidade não coincide (${rowUnitNorm} vs ${normSelectedUnit})`;
   else if (!monthMatches) rejectionReason = `Mês não coincide (${parsedMonth} vs ${normSelectedMonth})`;
-
   return {
     id: row.id,
     source_row_index: row.source_row_index,
@@ -516,15 +412,10 @@ export function checkVacancyParity(
 
 export function getStatusSummary(records: any[], selectedUnit: string, selectedMonth?: string) {
   const validVacancies = getValidVacancyBase(records, selectedUnit, selectedMonth);
-
   const summary: Record<string, number> = {};
   validVacancies.forEach(row => {
     const status = (row.status || row.status_geral || 'SEM STATUS').toUpperCase().trim();
     summary[status] = (summary[status] || 0) + 1;
   });
-
-  return {
-    total: validVacancies.length,
-    byStatus: summary
-  };
+  return { total: validVacancies.length, byStatus: summary };
 }

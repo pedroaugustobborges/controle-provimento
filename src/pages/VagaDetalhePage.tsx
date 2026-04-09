@@ -11,8 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital } from '@/types/vaga';
-import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma } from '@/types/vaga';
+import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
@@ -842,6 +842,54 @@ export default function VagaDetalhePage() {
   );
 }
 
+const TODAS_AS_ETAPAS: EtapaEdital[] = [
+  'validacao_edital',
+  'inscricoes',
+  'triagem',
+  'resultado_da_triagem',
+  'avaliacao_especifica_online',
+  'resultado_preliminar_avaliacao_especifica_online',
+  'recurso_avaliacao_especifica_online',
+  'resultado_recurso_avaliacao_especifica_online',
+  'resultado_final_avaliacao_especifica_online',
+  'envio_certificados_titulos',
+  'declaracao_experiencia',
+  'analise_curricular_preliminar',
+  'recurso_analise_curricular',
+  'resultado_recurso_analise_curricular',
+  'analise_curricular_final',
+  'entrevistas',
+  'resultado_final',
+  'convocacao_do_edital',
+  'encerramento'
+];
+
+const CRONOGRAMA_KEYS: Record<EtapaEdital, keyof VagaCronograma> = {
+  validacao_edital: 'data_validacao_edital',
+  inscricoes: 'data_inscricao',
+  triagem: 'data_triagem',
+  resultado_da_triagem: 'data_resultado_triagem',
+  avaliacao_especifica_online: 'data_avaliacao_especifica_online',
+  resultado_preliminar_avaliacao_especifica_online: 'data_resultado_preliminar_avaliacao_especifica',
+  recurso_avaliacao_especifica_online: 'data_recurso_avaliacao_especifica',
+  resultado_recurso_avaliacao_especifica_online: 'data_resultado_recurso_avaliacao_especifica',
+  resultado_final_avaliacao_especifica_online: 'data_resultado_final_avaliacao_especifica',
+  envio_certificados_titulos: 'data_envio_certificados_titulos',
+  declaracao_experiencia: 'data_declaracao_experiencia',
+  analise_curricular_preliminar: 'data_analise_curricular_preliminar',
+  recurso_analise_curricular: 'data_recurso_analise_curricular',
+  resultado_recurso_analise_curricular: 'data_resultado_recurso_analise_curricular',
+  analise_curricular_final: 'data_analise_curricular_final',
+  entrevistas: 'data_entrevistas',
+  resultado_final: 'data_resultado_final',
+  convocacao_do_edital: 'data_convocacao',
+  encerramento: 'data_encerramento_processo',
+  banco_gerado: 'data_encerramento_processo',
+  sem_exito: 'data_encerramento_processo',
+  aguardar_anuencia: 'data_encerramento_processo',
+  publicar_novo_edital: 'data_encerramento_processo',
+};
+
 function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
   const { updateVaga } = useVagasStore();
   const [form, setForm] = useState<any>(vaga.acompanhamento || {
@@ -854,11 +902,53 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
     gerou_banco: false,
     quantidade_banco: 0,
     situacao_etapa: 'pendente',
-    observacoes_etapa: ''
+    observacoes_etapa: '',
+    etapas_habilitadas: ['validacao_edital', 'inscricoes', 'triagem', 'resultado_da_triagem', 'entrevistas', 'resultado_final']
   });
 
+  const [cronograma, setCronograma] = useState<any>(vaga.cronograma || {});
 
-  const [cronograma, setCronograma] = useState(vaga.cronograma || {});
+  const autoUpdateEtapa = useMemo(() => {
+    if (!cronograma) return form.etapa_atual;
+    const today = new Date().toISOString().split('T')[0];
+    
+    let current = form.etapa_atual;
+    const habilitadas = form.etapas_habilitadas || [];
+    
+    const sortedHabilitadas = TODAS_AS_ETAPAS.filter(e => habilitadas.includes(e));
+    
+    for (const etapa of sortedHabilitadas) {
+      const dateKey = CRONOGRAMA_KEYS[etapa];
+      const date = cronograma[dateKey];
+      if (date && date <= today) {
+        current = etapa;
+      }
+    }
+    return current;
+  }, [cronograma, form.etapas_habilitadas, form.etapa_atual]);
+
+  useEffect(() => {
+    if (autoUpdateEtapa !== form.etapa_atual) {
+      setForm(prev => ({ ...prev, etapa_atual: autoUpdateEtapa }));
+    }
+  }, [autoUpdateEtapa]);
+
+  const toggleEtapa = (etapa: EtapaEdital) => {
+    const habilitadas = form.etapas_habilitadas || [];
+    if (habilitadas.includes(etapa)) {
+      setForm({ ...form, etapas_habilitadas: habilitadas.filter(e => e !== etapa) });
+    } else {
+      setForm({ ...form, etapas_habilitadas: [...habilitadas, etapa] });
+    }
+  };
+
+  const applyTemplate = (type: 'comum' | 'especifico') => {
+    if (type === 'comum') {
+      setForm({ ...form, etapas_habilitadas: ['validacao_edital', 'inscricoes', 'triagem', 'resultado_da_triagem', 'avaliacao_especifica_online', 'resultado_final_avaliacao_especifica_online', 'entrevistas', 'resultado_final'] });
+    } else {
+      setForm({ ...form, etapas_habilitadas: ['validacao_edital', 'inscricoes', 'triagem', 'envio_certificados_titulos', 'declaracao_experiencia', 'analise_curricular_preliminar', 'recurso_analise_curricular', 'analise_curricular_final', 'entrevistas', 'resultado_final'] });
+    }
+  };
 
   const save = () => {
     updateVaga(vaga.id, { 
@@ -869,106 +959,218 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
       aprovados_finais: form.aprovados_finais,
       convocados_entrevista: form.convocados_entrevista
     });
-    toast.success('Acompanhamento atualizado!');
+    toast.success('Acompanhamento operacional atualizado com sucesso!');
   };
 
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="pt-6 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest border-b pb-2">Etapa Atual e Situação</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500">Etapa Atual</label>
-                <Select value={form.etapa_atual} onValueChange={(v) => setForm({ ...form, etapa_atual: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(ETAPA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b py-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Painel Operacional do Edital
+                </CardTitle>
+                <Badge className={`${getEtapaColor(form.etapa_atual)} font-bold px-3 py-1`}>
+                  Etapa: {ETAPA_LABELS[form.etapa_atual as EtapaEdital] || form.etapa_atual}
+                </Badge>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500">Situação</label>
-                <Select value={form.situacao_etapa} onValueChange={(v: any) => setForm({ ...form, situacao_etapa: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="realizada">Realizada</SelectItem>
-                    <SelectItem value="atrasada">Atrasada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500">Observações da Etapa</label>
-              <Textarea 
-                value={form.observacoes_etapa} 
-                onChange={(e) => setForm({ ...form, observacoes_etapa: e.target.value })} 
-                placeholder="Ex: Aguardando retorno da banca..."
-              />
-            </div>
-
-
-            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest border-b pb-2 pt-4">Indicadores Quantitativos</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Total Inscritos</label>
-                <Input type="number" value={form.total_inscritos} onChange={(e) => setForm({ ...form, total_inscritos: +e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Aprov. Triagem</label>
-                <Input type="number" value={form.aprovados_triagem} onChange={(e) => setForm({ ...form, aprovados_triagem: +e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Aprov. Online</label>
-                <Input type="number" value={form.aprovados_avaliacao_especifica} onChange={(e) => setForm({ ...form, aprovados_avaliacao_especifica: +e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Conv. Entrevista</label>
-                <Input type="number" value={form.convocados_entrevista} onChange={(e) => setForm({ ...form, convocados_entrevista: +e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Aprov. Finais</label>
-                <Input type="number" value={form.aprovados_finais} onChange={(e) => setForm({ ...form, aprovados_finais: +e.target.value })} />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6 bg-slate-50/50 p-6 rounded-xl border border-slate-100">
-            <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest border-b pb-2">Cronograma do Edital</h4>
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { label: 'Inscrição', key: 'data_inscricao' },
-                { label: 'Triagem', key: 'data_triagem' },
-                { label: 'Avaliação Curricular', key: 'data_avaliacao_curricular' },
-                { label: 'Avaliação Específica Online', key: 'data_avaliacao_especifica_online' },
-                { label: 'Res. Aval. Online', key: 'data_resultado_avaliacao_especifica_online' },
-                { label: 'Entrevistas', key: 'data_entrevistas' },
-                { label: 'Resultado Final', key: 'data_resultado_final' },
-                { label: 'Convocação', key: 'data_convocacao' },
-                { label: 'Encerramento', key: 'data_encerramento_processo' },
-              ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between gap-4">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase">{item.label}</label>
-                  <Input 
-                    type="date" 
-                    value={cronograma[item.key as keyof typeof cronograma] || ''} 
-                    onChange={(e) => setCronograma({ ...cronograma, [item.key]: e.target.value })}
-                    className="w-40 bg-white"
-                  />
+            </CardHeader>
+            <CardContent className="pt-6 space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Forçar Etapa Atual (Manual)</label>
+                  <Select value={form.etapa_atual} onValueChange={(v) => setForm({ ...form, etapa_atual: v })}>
+                    <SelectTrigger className="bg-white border-slate-200 h-10"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => (
+                        <SelectItem key={e} value={e}>{ETAPA_LABELS[e]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-slate-400 italic">A etapa é atualizada automaticamente com base nas datas do cronograma.</p>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Situação da Etapa</label>
+                  <Select value={form.situacao_etapa} onValueChange={(v: any) => setForm({ ...form, situacao_etapa: v })}>
+                    <SelectTrigger className="bg-white border-slate-200 h-10"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pendente">Pendente</SelectItem>
+                      <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                      <SelectItem value="concluido">Concluído</SelectItem>
+                      <SelectItem value="atrasada">Atrasada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Indicadores de Funil</h4>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">Preenchimento operacional</div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                  {[
+                    { label: 'Inscritos', key: 'total_inscritos', icon: User, color: 'text-blue-600' },
+                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: Search, color: 'text-purple-600' },
+                    { label: 'Avaliação OK', key: 'aprovados_avaliacao_especifica', icon: Zap, color: 'text-cyan-600' },
+                    { label: 'Entrevista', key: 'convocados_entrevista', icon: UserCheck, color: 'text-amber-600' },
+                    { label: 'Aprovados', key: 'aprovados_finais', icon: CheckCircle, color: 'text-green-600' },
+                  ].map((item) => (
+                    <div key={item.key} className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">{item.label}</label>
+                      </div>
+                      <Input 
+                        type="number" 
+                        value={form[item.key] || 0} 
+                        onChange={(e) => setForm({ ...form, [item.key]: +e.target.value })} 
+                        className="h-8 bg-white border-slate-200 font-bold text-slate-700"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Observações Operacionais / Próximos Passos</label>
+                <Textarea 
+                  value={form.observacoes_etapa} 
+                  onChange={(e) => setForm({ ...form, observacoes_etapa: e.target.value })} 
+                  placeholder="Registre aqui detalhes sobre o andamento, problemas encontrados ou decisões tomadas nesta etapa..."
+                  className="min-h-[100px] bg-white border-slate-200"
+                />
+              </div>
+
+              <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <FileSpreadsheet className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-amber-800">Geração de Banco de Talentos</p>
+                  <p className="text-[10px] text-amber-700 font-medium italic">Marque se este edital resultou em um banco para cadastro reserva.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="checkbox" 
+                    checked={form.gerou_banco} 
+                    onChange={(e) => setForm({ ...form, gerou_banco: e.target.checked })}
+                    className="h-5 w-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                  />
+                  {form.gerou_banco && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-amber-700 uppercase">Qtd:</span>
+                      <Input 
+                        type="number" 
+                        value={form.quantidade_banco} 
+                        onChange={(e) => setForm({ ...form, quantidade_banco: +e.target.value })} 
+                        className="h-8 w-16 bg-white border-amber-200 font-bold"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="bg-slate-50 border-b py-4">
+              <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                Configuração e Cronograma
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Button size="sm" variant="outline" onClick={() => applyTemplate('comum')} className="text-[10px] font-bold uppercase h-8 border-2">Template Comum</Button>
+                <Button size="sm" variant="outline" onClick={() => applyTemplate('especifico')} className="text-[10px] font-bold uppercase h-8 border-2">Template Saúde/Títulos</Button>
+                <Button size="sm" variant="ghost" onClick={() => setForm({ ...form, etapas_habilitadas: TODAS_AS_ETAPAS })} className="text-[10px] font-bold uppercase h-8 text-primary">Habilitar Todas</Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                {TODAS_AS_ETAPAS.map((etapa) => {
+                  const isHabilitada = (form.etapas_habilitadas || []).includes(etapa);
+                  const cronoKey = CRONOGRAMA_KEYS[etapa];
+                  
+                  return (
+                    <div key={etapa} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isHabilitada ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50/50 border-dashed border-slate-200 opacity-60'}`}>
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox" 
+                          checked={isHabilitada} 
+                          onChange={() => toggleEtapa(etapa)}
+                          className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+                        />
+                        <span className={`text-xs font-bold ${isHabilitada ? 'text-slate-700' : 'text-slate-400'}`}>
+                          {ETAPA_LABELS[etapa]}
+                        </span>
+                      </div>
+                      {isHabilitada && (
+                        <Input 
+                          type="date" 
+                          value={cronograma[cronoKey] || ''} 
+                          onChange={(e) => setCronograma({ ...cronograma, [cronoKey]: e.target.value })}
+                          className="h-7 w-32 text-[10px] bg-white"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-slate-100">
-          <Button onClick={save} className="bg-primary px-12 font-bold">Salvar Acompanhamento</Button>
+        <div className="space-y-6">
+          <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-white to-slate-50">
+            <CardHeader className="border-b py-4">
+              <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-widest">Resumo Visual</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="relative pl-6 border-l-2 border-slate-200 space-y-8">
+                {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => {
+                  const isCurrent = form.etapa_atual === e;
+                  const cronoKey = CRONOGRAMA_KEYS[e];
+                  const date = cronograma[cronoKey];
+                  const isPast = date && date < new Date().toISOString().split('T')[0];
+                  
+                  return (
+                    <div key={e} className="relative">
+                      <div className={`absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 bg-white transition-all ${
+                        isCurrent ? 'border-primary scale-125 shadow-[0_0_8px_rgba(var(--primary),0.5)]' : 
+                        isPast ? 'border-green-500 bg-green-500' : 'border-slate-300'
+                      }`} />
+                      <div className="flex flex-col">
+                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isPast ? 'text-green-600' : 'text-slate-500'}`}>
+                          {ETAPA_LABELS[e]}
+                        </span>
+                        {date && <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{formatDate(date)}</span>}
+                        {isCurrent && (
+                          <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/10">
+                            <p className="text-[9px] font-bold text-primary uppercase">Etapa em andamento</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-4">
+            <h4 className="text-sm font-black text-primary uppercase tracking-wider">Ações</h4>
+            <Button onClick={save} className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold h-12">
+              Salvar Acompanhamento
+            </Button>
+            <p className="text-[10px] text-center text-slate-400 font-medium">As alterações serão registradas no histórico da vaga.</p>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

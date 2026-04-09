@@ -48,12 +48,21 @@ export type StatusEdital = 'Nova vaga' | 'Aguardando processo' | 'Aguardando edi
 export type StatusPublicacao = 'pendente' | 'publicado' | 'encerrado';
 export type StatusValidacao = 'pendente' | 'aprovado' | 'reprovado';
 export type EtapaEdital = 
+  | 'validacao_edital'
   | 'inscricoes' 
   | 'triagem' 
   | 'resultado_da_triagem'
-  | 'avaliacao_curricular'
   | 'avaliacao_especifica_online'
-  | 'resultado_da_avaliacao_especifica_online'
+  | 'resultado_preliminar_avaliacao_especifica_online'
+  | 'recurso_avaliacao_especifica_online'
+  | 'resultado_recurso_avaliacao_especifica_online'
+  | 'resultado_final_avaliacao_especifica_online'
+  | 'envio_certificados_titulos'
+  | 'declaracao_experiencia'
+  | 'analise_curricular_preliminar'
+  | 'recurso_analise_curricular'
+  | 'resultado_recurso_analise_curricular'
+  | 'analise_curricular_final'
   | 'entrevistas' 
   | 'resultado_final' 
   | 'convocacao_do_edital'
@@ -65,11 +74,21 @@ export type EtapaEdital =
 
 
 export interface VagaCronograma {
+  data_validacao_edital?: string;
   data_inscricao?: string;
   data_triagem?: string;
-  data_avaliacao_curricular?: string;
+  data_resultado_triagem?: string;
   data_avaliacao_especifica_online?: string;
-  data_resultado_avaliacao_especifica_online?: string;
+  data_resultado_preliminar_avaliacao_especifica?: string;
+  data_recurso_avaliacao_especifica?: string;
+  data_resultado_recurso_avaliacao_especifica?: string;
+  data_resultado_final_avaliacao_especifica?: string;
+  data_envio_certificados_titulos?: string;
+  data_declaracao_experiencia?: string;
+  data_analise_curricular_preliminar?: string;
+  data_recurso_analise_curricular?: string;
+  data_resultado_recurso_analise_curricular?: string;
+  data_analise_curricular_final?: string;
   data_entrevistas?: string;
   data_resultado_final?: string;
   data_convocacao?: string;
@@ -77,7 +96,7 @@ export interface VagaCronograma {
 }
 
 export interface VagaAcompanhamento {
-  etapa_atual: string;
+  etapa_atual: EtapaEdital | string;
   total_inscritos?: number;
   aprovados_triagem?: number;
   aprovados_avaliacao_especifica?: number;
@@ -88,6 +107,7 @@ export interface VagaAcompanhamento {
   observacoes_etapa?: string;
   data_real_etapa?: string;
   situacao_etapa?: 'pendente' | 'em_andamento' | 'concluido' | 'atrasada';
+  etapas_habilitadas?: EtapaEdital[];
 }
 
 export interface Vaga {
@@ -373,14 +393,23 @@ export const STATUS_CONVOCACAO_LABELS: Record<StatusConvocacao, string> = {
 };
 
 export const ETAPA_LABELS: Record<EtapaEdital, string> = {
+  validacao_edital: 'Validação do Edital',
   inscricoes: 'Inscrições',
   triagem: 'Triagem',
   resultado_da_triagem: 'Resultado da Triagem',
-  avaliacao_curricular: 'Avaliação Curricular',
   avaliacao_especifica_online: 'Avaliação Específica Online',
-  resultado_da_avaliacao_especifica_online: 'Res. Aval. Específica Online',
+  resultado_preliminar_avaliacao_especifica_online: 'Res. Preliminar Avaliação Online',
+  recurso_avaliacao_especifica_online: 'Recurso Avaliação Online',
+  resultado_recurso_avaliacao_especifica_online: 'Resultado Recurso Avaliação Online',
+  resultado_final_avaliacao_especifica_online: 'Resultado Final Avaliação Online',
+  envio_certificados_titulos: 'Envio de Certificados e Títulos',
+  declaracao_experiencia: 'Declaração de Experiência',
+  analise_curricular_preliminar: 'Análise Curricular Preliminar',
+  recurso_analise_curricular: 'Recurso Análise Curricular',
+  resultado_recurso_analise_curricular: 'Res. Recurso Análise Curricular',
+  analise_curricular_final: 'Análise Curricular Final',
   entrevistas: 'Entrevistas',
-  resultado_final: 'Resultado Final',
+  resultado_final: 'Resultado Final do Seletivo',
   convocacao_do_edital: 'Convocação do Edital',
   encerramento: 'Encerramento',
   banco_gerado: 'Banco Gerado',

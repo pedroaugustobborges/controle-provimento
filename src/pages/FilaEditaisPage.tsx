@@ -175,7 +175,7 @@ export default function FilaEditaisPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr className="border-b bg-slate-50/50 text-slate-500 font-black uppercase tracking-widest text-[11px]">
                   <th className="px-6 py-4 text-left">Requisição</th>
                   <th className="px-6 py-4 text-left">Unidade</th>
                   <th className="px-6 py-4 text-left">Cargo</th>

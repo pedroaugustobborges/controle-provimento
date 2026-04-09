@@ -108,7 +108,7 @@ export default function ValidacaoEditaisPage() {
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm">
           <CardContent className="pt-6 pb-6 text-center">
             <Clock className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-            <p className="text-xs font-bold text-amber-600 uppercase tracking-widest">Aguardando Validação</p>
+            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Aguardando Validação</p>
             <p className="text-3xl font-bold text-amber-700">{pendingEditais.length}</p>
           </CardContent>
         </Card>
@@ -132,26 +132,26 @@ export default function ValidacaoEditaisPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/80">
+            <TableHeader>
               <TableRow>
-                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider">Unidade</th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider">Cargo</th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider">Nº Edital / Processo</th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider">Redigido por</th>
-                <th className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wider">Ações</th>
+                <TableHead>Unidade</TableHead>
+                <TableHead>Cargo</TableHead>
+                <TableHead>Nº Edital / Processo</TableHead>
+                <TableHead>Redigido por</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pendingEditais.map((v) => (
-                <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4 font-medium text-slate-700">{v.unidade}</td>
-                  <td className="px-6 py-4">
+                <TableRow key={v.id} className="group">
+                  <TableCell className="font-medium text-slate-700">{v.unidade}</TableCell>
+                  <TableCell>
                     <div className="font-semibold text-slate-800">{v.cargo}</div>
-                    <div className="text-[10px] text-slate-400">{v.requisicao}</div>
-                  </td>
+                    <div className="text-[11px] text-slate-400">{v.requisicao}</div>
+                  </TableCell>
                   <td className="px-6 py-4">
                     <div className="text-sm font-bold text-primary">{v.numero_edital}</div>
-                    <div className="text-[10px] text-slate-500">{v.numero_processo}</div>
+                    <div className="text-[11px] text-slate-500">{v.numero_processo}</div>
                   </td>
                   <td className="px-6 py-4 text-xs text-slate-600">
                     {v.historico[v.historico.length - 1]?.usuario || 'Analista'}
@@ -188,16 +188,16 @@ export default function ValidacaoEditaisPage() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Nº Edital</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Edital</p>
                 <p className="font-semibold">{selectedVaga?.numero_edital}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Nº Processo</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Processo</p>
                 <p className="font-semibold">{selectedVaga?.numero_processo}</p>
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase">Observações da Validação</label>
+              <label className="text-[11px] font-bold text-slate-400 uppercase">Observações da Validação</label>
               <Textarea 
                 placeholder="Informe o motivo da reprovação ou observações da aprovação..." 
                 value={obs}

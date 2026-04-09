@@ -119,7 +119,7 @@ export default function MonitoramentoAdminPage() {
         <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
           <Calendar className="h-4 w-4 text-primary" />
           <span className="text-sm font-bold text-slate-700">{formatDate(today)}</span>
-          <Badge variant="outline" className="ml-2 font-bold text-[10px] uppercase">
+          <Badge variant="outline" className="ml-2 font-bold text-[11px] uppercase">
             {isAfterLimit ? 'Horário Limite Excedido (14h)' : 'Dentro do Horário Limite'}
           </Badge>
         </div>
@@ -194,7 +194,7 @@ export default function MonitoramentoAdminPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="px-6 py-4 text-left">Processo / Cargo</th>
                   <th className="px-6 py-4 text-left">Unidade</th>
                   <th className="px-6 py-4 text-left">Analista Responsável</th>
@@ -209,7 +209,7 @@ export default function MonitoramentoAdminPage() {
                   <tr key={v.id} className={`border-b last:border-0 hover:bg-slate-50/50 transition-colors ${v.isAtrasado ? 'bg-red-50/20' : ''}`}>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-mono text-[10px] text-primary font-bold">{v.numero_edital || v.numero_processo || v.requisicao}</span>
+                        <span className="font-mono text-[11px] text-primary font-bold">{v.numero_edital || v.numero_processo || v.requisicao}</span>
                         <span className="font-bold text-slate-700">{v.cargo}</span>
                       </div>
                     </td>
@@ -226,7 +226,7 @@ export default function MonitoramentoAdminPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline" className="font-bold text-[10px] uppercase border-slate-200">
+                      <Badge variant="outline" className="font-bold text-[11px] uppercase border-slate-200">
                         {v.etapaLabel}
                       </Badge>
                     </td>
@@ -235,7 +235,7 @@ export default function MonitoramentoAdminPage() {
                         <span className={`text-xs font-bold ${v.isPrevistoHoje ? 'text-amber-600' : 'text-slate-500'}`}>
                           {v.dataPrevista ? formatDate(v.dataPrevista) : '—'}
                         </span>
-                        {v.isPrevistoHoje && <span className="text-[9px] font-black text-amber-500 uppercase">Hoje</span>}
+                        {v.isPrevistoHoje && <span className="text-[9px] font-bold text-amber-500 uppercase">Hoje</span>}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">

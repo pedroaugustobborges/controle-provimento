@@ -198,7 +198,7 @@ export default function ImportacoesPage() {
                 <FileText className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Arquivos Enviados</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Arquivos Enviados</p>
                 <p className="text-2xl font-bold text-slate-800">{importedFiles.length}</p>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function ImportacoesPage() {
                 <FileCheck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
                 <p className="text-2xl font-bold text-slate-800">
                   {importHistory.filter(h => h.status === 'concluido').length}
                 </p>
@@ -226,7 +226,7 @@ export default function ImportacoesPage() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Com Erro</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Com Erro</p>
                 <p className="text-2xl font-bold text-slate-800">
                   {importHistory.filter(h => h.status === 'erro').length}
                 </p>
@@ -241,7 +241,7 @@ export default function ImportacoesPage() {
                 <History className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Último Upload</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Último Upload</p>
                 <p className="text-sm font-bold text-slate-800 truncate max-w-[120px]">
                   {importedFiles[0]?.nome_original || 'Nenhum'}
                 </p>
@@ -263,7 +263,7 @@ export default function ImportacoesPage() {
 
         <TabsContent value="historico">
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/30">
+            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <History className="h-5 w-5 text-slate-400" />
                 <CardTitle className="text-lg font-bold text-slate-800">Log de Processamento</CardTitle>
@@ -278,12 +278,12 @@ export default function ImportacoesPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase">Lote / Arquivo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Tipo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Registros</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Data/Hora</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+                    <TableHead >Lote / Arquivo</TableHead>
+                    <TableHead >Tipo</TableHead>
+                    <TableHead className="text-center">Registros</TableHead>
+                    <TableHead >Status</TableHead>
+                    <TableHead >Data/Hora</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,11 +292,11 @@ export default function ImportacoesPage() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-slate-700">{h.arquivo || h.nome_arquivo}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">{h.id}</span>
+                          <span className="text-[11px] text-slate-400 font-mono">{h.id}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50">
+                        <Badge variant="outline" className="bg-slate-50">
                           {h.tipo_importacao || 'vagas'}
                         </Badge>
                       </TableCell>
@@ -359,7 +359,7 @@ export default function ImportacoesPage() {
 
         <TabsContent value="arquivos">
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/30">
+            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-slate-400" />
                 <CardTitle className="text-lg font-bold text-slate-800">Repositório de Arquivos</CardTitle>
@@ -372,12 +372,12 @@ export default function ImportacoesPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase">Nome do Arquivo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Data de Upload</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Usuário</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Tamanho</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+                    <TableHead >Nome do Arquivo</TableHead>
+                    <TableHead >Data de Upload</TableHead>
+                    <TableHead >Usuário</TableHead>
+                    <TableHead >Tamanho</TableHead>
+                    <TableHead >Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

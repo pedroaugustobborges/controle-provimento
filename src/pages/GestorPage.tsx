@@ -51,13 +51,13 @@ export default function GestorPage() {
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">
               <button 
                 onClick={() => setActiveTab('stats')}
-                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${activeTab === 'stats' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded-lg transition-all ${activeTab === 'stats' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Indicadores
               </button>
               <button 
                 onClick={() => setActiveTab('history')}
-                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${activeTab === 'history' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded-lg transition-all ${activeTab === 'history' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Histórico
               </button>
@@ -84,7 +84,7 @@ export default function GestorPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Por Unidade</CardTitle></CardHeader>
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Unidade</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {unidades.map(u => (
                   <div key={u} className="flex justify-between items-center text-xs">
@@ -97,7 +97,7 @@ export default function GestorPage() {
               </CardContent>
             </Card>
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Por Analista</CardTitle></CardHeader>
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Analista</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {[...new Set(vagas.map(v => v.analista_responsavel))].map(a => (
                   <div key={a} className="flex justify-between items-center text-xs">
@@ -108,7 +108,7 @@ export default function GestorPage() {
               </CardContent>
             </Card>
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Por Assistente</CardTitle></CardHeader>
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Assistente</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {[...new Set(vagas.flatMap(v => v.assistentes || []))].map(a => (
                   <div key={a} className="flex justify-between items-center text-xs">
@@ -122,7 +122,7 @@ export default function GestorPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Distribuição por Status</CardTitle></CardHeader>
+              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Distribuição por Status</CardTitle></CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
@@ -135,7 +135,7 @@ export default function GestorPage() {
               </CardContent>
             </Card>
             <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Distribuição por Tipo</CardTitle></CardHeader>
+              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Distribuição por Tipo</CardTitle></CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={tipoData}>
@@ -151,12 +151,12 @@ export default function GestorPage() {
           </div>
 
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Listagem Consolidada</CardTitle></CardHeader>
+            <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Listagem Consolidada</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-slate-50/30 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    <tr className="border-b bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       <th className="text-left px-6 py-4">Requisição</th>
                       <th className="text-left px-6 py-4">Cargo</th>
                       <th className="text-left px-6 py-4">Unidade</th>
@@ -175,7 +175,7 @@ export default function GestorPage() {
                         <td className="px-6 py-4"><StatusBadge status={v.status_geral} /></td>
                         <td className="px-6 py-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(v.data_abertura)}</td>
                         <td className="px-6 py-4 text-center">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[10px]">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[11px]">
                             {calcDiasAberto(v.data_abertura, v.data_encerramento)}
                           </span>
                         </td>
@@ -203,7 +203,7 @@ export default function GestorPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-slate-50/30 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  <tr className="border-b bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="text-left px-6 py-4">Data/Hora</th>
                     <th className="text-left px-6 py-4">Usuário</th>
                     <th className="text-left px-6 py-4">Arquivo</th>
@@ -240,7 +240,7 @@ export default function GestorPage() {
                       <td className="px-6 py-4 text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</td>
                       <td className="px-6 py-4 text-center text-red-600 font-bold">{h.total_erros}</td>
                       <td className="px-6 py-4 text-right">
-                        <Badge variant="outline" className={`bg-green-50 text-green-700 border-green-200 text-[10px] font-bold uppercase tracking-wider`}>
+                        <Badge variant="outline" className={`bg-green-50 text-green-700 border-green-200 text-[11px] font-bold uppercase tracking-wider`}>
                           <CheckCircle2 className="h-3 w-3 mr-1" /> Concluído
                         </Badge>
                       </td>

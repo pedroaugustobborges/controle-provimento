@@ -175,7 +175,7 @@ export default function FilaEditaisPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-slate-50/50 text-slate-500 font-black uppercase tracking-widest text-[11px]">
+                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="px-6 py-4 text-left">Requisição</th>
                   <th className="px-6 py-4 text-left">Unidade</th>
                   <th className="px-6 py-4 text-left">Cargo</th>
@@ -201,7 +201,7 @@ export default function FilaEditaisPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 font-semibold text-slate-800">{v.cargo}</td>
-                    <td className="px-6 py-4 text-[10px] font-bold uppercase text-slate-500">{v.tipo_vaga}</td>
+                    <td className="px-6 py-4 text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</td>
                     <td className="px-6 py-4 text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</td>
                     <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
                       {formatDate(v.data_recebimento!)}

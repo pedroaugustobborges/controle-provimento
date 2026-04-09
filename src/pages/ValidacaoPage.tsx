@@ -98,7 +98,7 @@ export default function ValidacaoPage() {
                 <Clock className="h-6 w-6 text-amber-600" />
               </div>
               <div>
-                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Aguardando Validação</p>
+                <p className="text-[11px] text-amber-600 font-bold uppercase tracking-wider">Aguardando Validação</p>
                 <p className="text-3xl font-bold text-amber-700">{pendentes.length}</p>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function ValidacaoPage() {
                 <FileCheck className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-[10px] text-green-600 font-bold uppercase tracking-widest">Validadas (Total)</p>
+                <p className="text-[11px] text-green-600 font-bold uppercase tracking-wider">Validadas (Total)</p>
                 <p className="text-3xl font-bold text-green-700">{validadas.length}</p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function ValidacaoPage() {
                 <Calendar className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Total Visível</p>
+                <p className="text-[11px] text-blue-600 font-bold uppercase tracking-wider">Total Visível</p>
                 <p className="text-3xl font-bold text-blue-700">{filteredConvocacoes.length}</p>
               </div>
             </div>
@@ -155,13 +155,13 @@ export default function ValidacaoPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/80">
+            <TableHeader className="bg-slate-50/50">
               <TableRow>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider">Data/Hora</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider">Candidato</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider">Unidade / Cargo</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider">Requisição</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase tracking-wider">Status</TableHead>
+                <TableHead className="tracking-wider">Data/Hora</TableHead>
+                <TableHead className="tracking-wider">Candidato</TableHead>
+                <TableHead className="tracking-wider">Unidade / Cargo</TableHead>
+                <TableHead className="tracking-wider">Requisição</TableHead>
+                <TableHead className="tracking-wider">Status</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -171,30 +171,30 @@ export default function ValidacaoPage() {
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
-                      <span className="text-[10px] text-slate-400 font-medium">{c.horario}</span>
+                      <span className="text-[11px] text-slate-400 font-medium">{c.horario}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-700">{c.nome_candidato}</span>
-                      <span className="text-[10px] text-slate-400 font-medium">Class: {c.classificacao}º</span>
+                      <span className="text-[11px] text-slate-400 font-medium">Class: {c.classificacao}º</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-slate-600">{c.unidade}</span>
-                      <span className="text-[10px] text-slate-400 font-medium truncate max-w-[150px]">{c.cargo}</span>
+                      <span className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{c.cargo}</span>
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs text-primary font-bold">{c.requisicao}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-bold">
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[11px] font-bold">
                       {STATUS_CONVOCACAO_LABELS[c.status]}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="sm" className="h-8 px-3 text-[10px] font-bold bg-primary hover:bg-primary/90">
+                      <Button size="sm" className="h-8 px-3 text-[11px] font-bold bg-primary hover:bg-primary/90">
                         Validar Registro
                       </Button>
                       <DropdownMenu>

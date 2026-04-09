@@ -280,7 +280,7 @@ export default function VagasPage() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className={`text-[10px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary'}`}
+                    className={`text-[11px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary'}`}
                     onClick={() => setIsDebugOpen(!isDebugOpen)}
                   >
                     <Bug className="h-3 w-3" /> Audit
@@ -290,7 +290,7 @@ export default function VagasPage() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="text-[10px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
+                    className="text-[11px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
                     onClick={() => {
                       const diag = getMatchingDiagnostic();
                       toast.info(`${diag.length} vagas sem banco encontradas.`);
@@ -300,11 +300,11 @@ export default function VagasPage() {
                   </Button>
                 )}
                 {permissions.canImport() && (
-                  <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-4 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
+                  <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
                     <FileSpreadsheet className="h-4 w-4 text-primary" /> Importar Excel
                   </Button>
                 )}
-                <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-4 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
+                <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-6 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
                   <Plus className="h-4 w-4" /> Nova Vaga
                 </Button>
               </>
@@ -314,12 +314,12 @@ export default function VagasPage() {
 
       {isDebugOpen && (
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-4">
-          <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="py-4 px-6 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-xs font-bold text-amber-800 uppercase flex items-center gap-2">
                 <Bug className="h-3 w-3" /> Diagnóstico de Paridade Excel (Audit)
               </CardTitle>
-              <CardDescription className="text-[10px] text-amber-600 font-medium">
+              <CardDescription className="text-[11px] text-amber-600 font-medium">
                 Comparação entre dados importados e regras de negócio de contagem.
               </CardDescription>
             </div>
@@ -327,17 +327,17 @@ export default function VagasPage() {
               <X className="h-3 w-3" />
             </Button>
           </CardHeader>
-          <CardContent className="px-4 pb-4 pt-0">
+          <CardContent className="px-6 pb-4 pt-0">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="space-y-1">
-                <p className="text-[10px] text-amber-700 font-bold uppercase">Escopo Selecionado</p>
+                <p className="text-[11px] text-amber-700 font-bold uppercase">Escopo Selecionado</p>
                 <div className="flex gap-2">
                   <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">Unidade: {parityAudit.selUnit}</Badge>
                   <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">Mês: {parityAudit.selMonth}</Badge>
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] text-amber-700 font-bold uppercase">Contagem de Paridade</p>
+                <p className="text-[11px] text-amber-700 font-bold uppercase">Contagem de Paridade</p>
                 <div className="text-[11px] font-mono text-amber-900 leading-tight">
                   <p>Excel Parity Count: <span className="font-bold">{parityAudit.excelCount}</span></p>
                   <p>App Card Count: <span className="font-bold">{parityAudit.appCount}</span></p>
@@ -345,7 +345,7 @@ export default function VagasPage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] text-amber-700 font-bold uppercase">Status de Dados</p>
+                <p className="text-[11px] text-amber-700 font-bold uppercase">Status de Dados</p>
                 <div className="text-[11px] font-mono text-amber-900 leading-tight">
                   <p>Linhas na Tabela: {parityAudit.tableCount}</p>
                   <p>Total de Vagas (Card): {parityAudit.appCount}</p>
@@ -354,7 +354,7 @@ export default function VagasPage() {
             </div>
             
             <div className="mt-4 border-t border-amber-200 pt-3">
-              <p className="text-[10px] text-amber-700 font-bold uppercase mb-2">Relatório de Divergência (Row-level)</p>
+              <p className="text-[11px] text-amber-700 font-bold uppercase mb-2">Relatório de Divergência (Row-level)</p>
               {parityAudit.mismatches.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="text-[9px]">
@@ -395,7 +395,7 @@ export default function VagasPage() {
               ) : (
                 <div className="flex items-center gap-2 text-green-700 bg-green-50 p-2 rounded border border-green-100">
                   <CheckCircle2 className="h-4 w-4" />
-                  <p className="text-[10px] font-bold">Paridade 100% confirmada entre regra Excel e App para os filtros atuais.</p>
+                  <p className="text-[11px] font-bold">Paridade 100% confirmada entre regra Excel e App para os filtros atuais.</p>
                 </div>
               )}
             </div>
@@ -403,8 +403,8 @@ export default function VagasPage() {
             {(parityAudit.appCount !== parityAudit.tableCount) && (
               <Alert className="bg-amber-100 border-amber-300 py-2 mt-4">
                 <Info className="h-3 w-3 text-amber-700" />
-                <AlertTitle className="text-[10px] font-bold text-amber-800 uppercase">Informação: Filtros de Visualização Ativos</AlertTitle>
-                <AlertDescription className="text-[10px] text-amber-700">
+                <AlertTitle className="text-[11px] font-bold text-amber-800 uppercase">Informação: Filtros de Visualização Ativos</AlertTitle>
+                <AlertDescription className="text-[11px] text-amber-700">
                   A tabela ({parityAudit.tableCount}) exibe menos linhas que o total calculado ({parityAudit.appCount}) 
                   porque filtros de pesquisa ou status estão aplicados. O Total de Vagas ignora estes filtros de busca.
                 </AlertDescription>
@@ -417,63 +417,63 @@ export default function VagasPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-10 gap-3">
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
             <p className="text-2xl font-bold text-slate-800">{parityAudit.appCount}</p>
-            <p className="text-[10px] text-slate-400">Regra Excel (Cargo + Mes)</p>
+            <p className="text-[11px] text-slate-400">Regra Excel (Cargo + Mes)</p>
           </CardContent>
         </Card>
 
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-amber-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fila de Editais</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fila de Editais</p>
             <p className="text-2xl font-bold text-amber-600">{countFilaEdital}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Em Andamento</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Em Andamento</p>
             <p className="text-2xl font-bold text-blue-600">{countEmAndamento}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
             <p className="text-2xl font-bold text-green-600">{countConcluidas}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-indigo-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vagas de Liderança</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Vagas de Liderança</p>
             <p className="text-2xl font-bold text-indigo-600">{countVagasLideranca}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-violet-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Convocações</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Convocações</p>
             <p className="text-2xl font-bold text-violet-600">{countConvocacao}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-rose-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vagas Interrompidas</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Vagas Interrompidas</p>
             <p className="text-2xl font-bold text-rose-600">{countVagasInterrompidas}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-orange-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Documentação</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Documentação</p>
             <p className="text-2xl font-bold text-orange-600">{countDocumentacao}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-yellow-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Unidade</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Unidade</p>
             <p className="text-2xl font-bold text-yellow-600">{countAguardandoUnidade}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-emerald-500">
           <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
             <p className="text-2xl font-bold text-emerald-600">{countComBanco}</p>
           </CardContent>
         </Card>
@@ -547,17 +547,17 @@ export default function VagasPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-slate-50/80 whitespace-nowrap">
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Abertura</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Recebimento</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Requisição</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Cargo</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Tipo</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Unidade</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Seção</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-left">Status</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-center">Vaga(s)</th>
-                  <th className="px-4 py-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider text-right">Ações</th>
+                <tr className="border-b bg-slate-50/50 whitespace-nowrap">
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Abertura</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Recebimento</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Requisição</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Cargo</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Tipo</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Unidade</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Seção</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-left">Status</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-center">Vaga(s)</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 text-[11px] uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -567,13 +567,13 @@ export default function VagasPage() {
                     className="border-b last:border-0 hover:bg-slate-50/50 transition-colors whitespace-nowrap group cursor-pointer"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
-                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
                       {v.data_abertura ? formatDate(v.data_abertura) : '-'}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
                       {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4">
                       <div className="flex flex-col gap-0.5">
                         <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
                           {v.requisicao || v.numero_requisicao || '-'}
@@ -583,30 +583,30 @@ export default function VagasPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <div className="font-semibold text-slate-800 truncate max-w-[200px] flex items-center gap-2" title={v.cargo}>
                           {v.cargo}
                           {v.origem === 'manual' && v.data_criacao && (new Date().getTime() - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000 && (
-                            <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-black uppercase">
+                            <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase">
                               <Sparkles className="h-2 w-2 mr-0.5" /> Nova Vaga
                             </Badge>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium">
                       {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
-                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4 text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</td>
+                    <td className="px-6 py-4 text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</td>
+                    <td className="px-6 py-4">
                       <StatusBadge status={v.status || v.status_geral} />
                     </td>
-                    <td className="px-4 py-3 text-center font-bold text-slate-700">
+                    <td className="px-6 py-4 text-center font-bold text-slate-700">
                       {v.numero_vagas || v.quantidade || 0}
                     </td>
-                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
@@ -614,7 +614,7 @@ export default function VagasPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel className="text-[10px] uppercase font-bold text-slate-400">Ações da Vaga</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-[11px] uppercase font-bold text-slate-400">Ações da Vaga</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                             <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
                           </DropdownMenuItem>
@@ -665,7 +665,7 @@ export default function VagasPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3 border-t text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex justify-between items-center">
+          <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex justify-between items-center">
             <span>Exibindo {filtered.length} de {vagas.length} registros</span>
             <div className="flex gap-4">
               <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500"></div> Banco Válido</span>
@@ -779,7 +779,7 @@ function AcompanhamentoEditalList() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                   <th className="px-6 py-4 text-left">Unidade</th>
                   <th className="px-6 py-4 text-left">Cargo</th>
                   <th className="px-6 py-4 text-left">Nº Edital</th>
@@ -805,7 +805,7 @@ function AcompanhamentoEditalList() {
                       <td className="px-6 py-4 font-semibold text-slate-800">
                         <div className="flex flex-col">
                           <span>{v.cargo}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">{v.requisicao || v.numero_requisicao}</span>
+                          <span className="text-[11px] text-slate-400 font-mono">{v.requisicao || v.numero_requisicao}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</td>
@@ -814,7 +814,7 @@ function AcompanhamentoEditalList() {
                           className="flex flex-col gap-1 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => setSelectedVagaForAcompanhamento(v)}
                         >
-                          <Badge className={`${getEtapaColor(displayEtapa as EtapaEdital)} font-bold text-[10px] uppercase py-0.5 px-2 w-fit`}>
+                          <Badge className={`${getEtapaColor(displayEtapa as EtapaEdital)} font-bold text-[11px] uppercase py-0.5 px-2 w-fit`}>
                             {ETAPA_LABELS[displayEtapa as EtapaEdital] || displayEtapa}
                           </Badge>
                           {/* Removido sugestão conforme solicitado */}
@@ -823,7 +823,7 @@ function AcompanhamentoEditalList() {
                       <td className="px-6 py-4 text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className={`h-7 px-2 text-[10px] font-bold uppercase border-2 ${
+                            <Button variant="outline" size="sm" className={`h-7 px-2 text-[11px] font-bold uppercase border-2 ${
                               v.acompanhamento?.situacao_etapa === 'atrasada' ? 'bg-red-50 text-red-700 border-red-100' :
                               v.acompanhamento?.situacao_etapa === 'concluido' ? 'bg-green-50 text-green-700 border-green-100' :
                               (v.acompanhamento?.situacao_etapa === 'em_andamento' || !v.acompanhamento?.situacao_etapa) ? 'bg-blue-50 text-blue-700 border-blue-100' :

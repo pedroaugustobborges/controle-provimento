@@ -258,7 +258,7 @@ export default function DashboardPage() {
               </div>
               <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
               <div className="flex flex-col gap-0.5">
-                <p className="text-2xl font-black text-slate-900 tracking-tighter">{stat.value}</p>
+                <p className="text-2xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
                 {stat.description && (
                   <p className="text-[9px] font-bold text-slate-400 italic leading-none">{stat.description}</p>
                 )}
@@ -273,7 +273,7 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2 border-none shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">
             <div>
-              <CardTitle className="text-lg font-black text-slate-800 flex items-center gap-2.5">
+              <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Building2 className="h-4 w-4 text-primary" />
                 </div>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
                 <div className="h-2 w-2 rounded-full bg-primary"></div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Abertas</span>
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Abertas</span>
               </div>
             </div>
           </CardHeader>
@@ -350,9 +350,9 @@ export default function DashboardPage() {
                 <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                 </div>
-                <CardTitle className="text-lg font-black text-slate-800">Alertas Ativos</CardTitle>
+                <CardTitle className="text-lg font-bold text-slate-800">Alertas Ativos</CardTitle>
               </div>
-              <span className="bg-amber-100 text-amber-700 text-[9px] font-black px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm">
+              <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm">
                 {alerts.length} Pendências
               </span>
             </div>
@@ -361,12 +361,12 @@ export default function DashboardPage() {
             {alerts.length > 0 ? (
               <div className="divide-y divide-slate-50">
                 {alerts.slice(0, 5).map((v) => (
-                  <div key={v.id} className="p-5 hover:bg-slate-50/80 transition-all cursor-pointer group flex items-start gap-4">
+                  <div key={v.id} className="p-5 hover:bg-slate-50/50 transition-all cursor-pointer group flex items-start gap-4">
                     <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-2 shrink-0 group-hover:scale-150 transition-transform"></div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-[10px] font-mono font-black text-slate-300 group-hover:text-primary/40 transition-colors uppercase">#{v.requisicao || v.numero_requisicao}</span>
-                        <span className="text-[10px] font-black text-amber-600 flex items-center gap-1 uppercase bg-white border border-amber-100 px-2 py-0.5 rounded-md">
+                        <span className="text-[11px] font-mono font-bold text-slate-300 group-hover:text-primary/40 transition-colors uppercase">#{v.requisicao || v.numero_requisicao}</span>
+                        <span className="text-[11px] font-bold text-amber-600 flex items-center gap-1 uppercase bg-white border border-amber-100 px-2 py-0.5 rounded-md">
                           <Clock className="h-3 w-3" /> {calcDiasAberto(v.historico?.[v.historico.length - 1]?.data || v.data_recebimento || v.data_abertura)}d
                         </span>
                       </div>
@@ -389,7 +389,7 @@ export default function DashboardPage() {
             )}
           </CardContent>
           <div className="p-4 bg-slate-50/50 border-t border-slate-100">
-            <Button variant="ghost" className="w-full text-[10px] font-black text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all">
+            <Button variant="ghost" className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all">
               Gestão de Gargalos <ChevronRight className="ml-1 h-3 w-3" />
             </Button>
           </div>

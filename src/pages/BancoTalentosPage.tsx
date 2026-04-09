@@ -359,7 +359,7 @@ export default function BancoTalentosPage() {
             <div className="space-y-6">
               {/* Candidatos */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2"><User className="h-3 w-3" /> Candidatos Classificados ({selectedGroupCandidates.length})</div>
                 </h3>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
@@ -372,7 +372,7 @@ export default function BancoTalentosPage() {
                           </div>
                           <div>
                             <p className="text-sm font-bold text-slate-800">{c.nome || "Não identificado"}</p>
-                            <p className="text-[10px] text-slate-400 font-medium uppercase">Candidato</p>
+                            <p className="text-[11px] text-slate-400 font-medium uppercase">Candidato</p>
                           </div>
                         </div>
                         {getStatusBadge(c.status)}
@@ -409,16 +409,16 @@ export default function BancoTalentosPage() {
 
               {/* Identificação do Grupo */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Building className="h-3 w-3" /> Unidade e Cargo
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade</p>
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Unidade</p>
                     <p className="text-sm font-semibold text-slate-800">{selectedBanco?.unidade}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Cargo</p>
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Cargo</p>
                     <p className="text-sm font-semibold text-slate-800">{selectedBanco?.cargo}</p>
                   </div>
                 </div>
@@ -429,20 +429,20 @@ export default function BancoTalentosPage() {
 
               {/* Edital */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <FileText className="h-3 w-3" /> Edital e Processo
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Número Edital</p>
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Número Edital</p>
                     <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_edital}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Número Processo</p>
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Número Processo</p>
                     <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_processo || "Não informado"}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Classificação</p>
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Classificação</p>
                     <p className="text-sm font-semibold text-slate-800">{selectedBanco.classificacao || "Não informado"}</p>
                   </div>
                 </div>
@@ -452,27 +452,27 @@ export default function BancoTalentosPage() {
 
               {/* Datas */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Calendar className="h-3 w-3" /> Datas Importantes
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Publicação</p>
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Publicação</p>
                     <p className="text-sm font-semibold text-slate-800">{formatDate(selectedBanco.data_abertura_edital)}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Validade Original</p>
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Validade Original</p>
                     <p className="text-sm font-semibold text-slate-800">{formatDate(selectedBanco.data_validade)}</p>
                   </div>
                   {selectedBanco.nova_data_validade && (
                     <div className="space-y-1">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Validade Prorrogada</p>
+                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Validade Prorrogada</p>
                       <p className="text-sm font-semibold text-blue-600 font-bold">{formatDate(selectedBanco.nova_data_validade)}</p>
                     </div>
                   )}
                   {selectedBanco.data_convocacao && (
                     <div className="space-y-1">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
+                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
                       <p className="text-sm font-semibold text-green-600 font-bold">{formatDate(selectedBanco.data_convocacao)}</p>
                     </div>
                   )}
@@ -485,31 +485,31 @@ export default function BancoTalentosPage() {
               {(selectedBanco.data_convocacao || selectedBanco.status === 'CONVOCADO') && (
                 <>
                   <section>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                       <ClipboardList className="h-3 w-3" /> Detalhes da Convocação
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       {selectedBanco.unidade_convocacao && (
                         <div className="space-y-1">
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade de Convocação</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Unidade de Convocação</p>
                           <p className="text-sm font-semibold text-slate-800">{selectedBanco.unidade_convocacao}</p>
                         </div>
                       )}
                       {selectedBanco.numero_chamada && (
                         <div className="space-y-1">
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Número da Chamada</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Número da Chamada</p>
                           <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_chamada}</p>
                         </div>
                       )}
                       {selectedBanco.numero_processo_seletivo && (
                         <div className="space-y-1">
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Proc. Seletivo</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Proc. Seletivo</p>
                           <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_processo_seletivo}</p>
                         </div>
                       )}
                       {selectedBanco.numero_vaga_aproveitamento && (
                         <div className="space-y-1">
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Vaga Aproveitamento</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Vaga Aproveitamento</p>
                           <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_vaga_aproveitamento}</p>
                         </div>
                       )}
@@ -522,7 +522,7 @@ export default function BancoTalentosPage() {
               {/* Observações */}
               {selectedBanco.observacoes && (
                 <section>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Info className="h-3 w-3" /> Observações
                   </h3>
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -561,7 +561,7 @@ export default function BancoTalentosPage() {
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Cadastro Reserva</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
                     {groupedBancos
@@ -581,7 +581,7 @@ export default function BancoTalentosPage() {
                 <Users className="h-5 w-5 text-purple-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Convocados</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Convocados</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
                     {bancos.filter(b => b.status === 'CONVOCADO').length}
@@ -599,7 +599,7 @@ export default function BancoTalentosPage() {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade Vigente</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Capacidade Vigente</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
                     {groupedBancos
@@ -619,7 +619,7 @@ export default function BancoTalentosPage() {
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Prorrogados</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
                     {groupedBancos
@@ -639,7 +639,7 @@ export default function BancoTalentosPage() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Vencidos</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
                     {bancos.filter(b => b.status === 'VENCIDO').length}
@@ -657,7 +657,7 @@ export default function BancoTalentosPage() {
                 <Calendar className="h-5 w-5 text-slate-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Banco Total</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Banco Total</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
                     {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
@@ -729,15 +729,15 @@ export default function BancoTalentosPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50/80">
+                <TableHeader >
                   <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Proc. Seletivo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Unidade</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Qtd. Banco</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+                    <TableHead >Edital</TableHead>
+                    <TableHead >Proc. Seletivo</TableHead>
+                    <TableHead >Cargo</TableHead>
+                    <TableHead >Unidade</TableHead>
+                    <TableHead >Status</TableHead>
+                    <TableHead >Qtd. Banco</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -749,7 +749,7 @@ export default function BancoTalentosPage() {
                       </TableCell>
                       <TableCell>
                         <div className="font-semibold text-slate-800">{group.cargo}</div>
-                        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
+                        <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
                       <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
                       <TableCell>{getStatusBadge(group.status)}</TableCell>
@@ -841,16 +841,16 @@ export default function BancoTalentosPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-slate-50/80">
+                  <TableHeader >
                     <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase">Nome</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Class.</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Data Conv.</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Unid. Conv.</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">N° Chamada</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+                      <TableHead >Nome</TableHead>
+                      <TableHead >Cargo</TableHead>
+                      <TableHead >Edital</TableHead>
+                      <TableHead className="text-center">Class.</TableHead>
+                      <TableHead >Data Conv.</TableHead>
+                      <TableHead >Unid. Conv.</TableHead>
+                      <TableHead className="text-center">N° Chamada</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -907,14 +907,14 @@ export default function BancoTalentosPage() {
         <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>
-              <TableHeader className="bg-slate-50/80">
+              <TableHeader >
                 <TableRow>
-                  <TableHead className="text-[10px] font-bold uppercase">Data/Hora</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase">Arquivo</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-center">Registros</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase">Usuário</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
+                  <TableHead >Data/Hora</TableHead>
+                  <TableHead >Arquivo</TableHead>
+                  <TableHead className="text-center">Registros</TableHead>
+                  <TableHead >Usuário</TableHead>
+                  <TableHead >Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -930,7 +930,7 @@ export default function BancoTalentosPage() {
                     <TableCell className="text-xs text-center font-bold">{h.total_novos}</TableCell>
                     <TableCell className="text-xs text-slate-500">{h.usuario}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px]">Concluído</Badge>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">Concluído</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -976,16 +976,16 @@ export default function BancoTalentosPage() {
                 <Table>
                   <TableHeader className="bg-slate-100">
                     <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase whitespace-nowrap">Chave do Grupo</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Cands (Linhas)</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Qtd Banco (Lido)</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Válido?</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Prorrog?</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center bg-blue-50/50">Cad. Res.</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center bg-green-50/50">Bancos Vál.</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center bg-purple-50/50">Prorrogados</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center bg-slate-100">Total Visível</TableHead>
+                      <TableHead className="whitespace-nowrap">Chave do Grupo</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Cands (Linhas)</TableHead>
+                      <TableHead className="text-center">Qtd Banco (Lido)</TableHead>
+                      <TableHead className="text-center">Válido?</TableHead>
+                      <TableHead className="text-center">Prorrog?</TableHead>
+                      <TableHead className="text-center bg-blue-50/50">Cad. Res.</TableHead>
+                      <TableHead className="text-center bg-green-50/50">Bancos Vál.</TableHead>
+                      <TableHead className="text-center bg-purple-50/50">Prorrogados</TableHead>
+                      <TableHead className="text-center bg-slate-100">Total Visível</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

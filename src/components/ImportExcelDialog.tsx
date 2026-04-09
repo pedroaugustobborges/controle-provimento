@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Upload, FileSpreadsheet, CheckCircle2, ArrowRight, 
-  Database, Layers, Check, X, Info
+  Database, Layers, Check, X, Info, AlertCircle
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
 import { Vaga, StatusVaga, TipoVaga, BancoTalentos } from '@/types/vaga';
@@ -19,7 +19,12 @@ import { convertDateValue } from '@/lib/dateImportUtils';
 type Step = 'select' | 'confirm' | 'processing' | 'summary';
 
 const VAGA_SHEETS = [
-  'VAGAS - BASE GERAL'
+  'VAGAS - BASE GERAL',
+  'VAGAS (PROPOSTA)',
+  'VAGAS',
+  'BASE GERAL',
+  'Planilha1',
+  'Sheet1'
 ];
 
 const UNIT_MAPPING: Record<string, string> = {
@@ -169,97 +174,188 @@ export function ImportExcelDialog({
 
       if (importType === 'vagas') {
         const newVagas: Vaga[] = [];
-        let totalProcessed = 0;
+        let totalRowsFound = 0;
+        let discardedCargoEmpty = 0;
+        let discardedOther = 0;
+        let sheetFoundName = '';
 
-        VAGA_SHEETS.forEach(sheetName => {
-          const sheet = wb.Sheets[sheetName];
-          if (!sheet) return;
-
-          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-          
-          for (let i = 2; i < rawRows.length; i++) {
-            const row = rawRows[i];
-            if (!row) continue;
-
-            const cargo = String(row[4] || '').trim();
-            if (!cargo) continue;
-
-            totalProcessed++;
-
-            const dataAbertura = row[0] ? convertDateValue(row[0], 'auto').formatted : '';
-            const dataRecebimento = row[1] ? convertDateValue(row[1], 'auto').formatted : '';
-            const unitInRow = String(row[2] || '').trim();
-            const requisicao = String(row[3] || '');
-            const rawTipo = String(row[5] || '').toLowerCase();
-            const numVagas = Number(row[6]) || 1;
-            const statusRaw = String(row[7] || '');
-            
-            const dataConv = row[8] ? convertDateValue(row[8], 'auto').formatted : '';
-            const horaConv = String(row[9] || '');
-            const candConv = String(row[10] || '');
-            const classConv = String(row[11] || '');
-            const formaConv = String(row[12] || '');
-            const oitivaConv = String(row[13] || '');
-            const secao = String(row[14] || '');
-            
-            const admEnviada = String(row[15] || '');
-            const admEfetivada = String(row[16] || '');
-            const detalhesAcomp = String(row[17] || '');
-            const obsAcomp = String(row[18] || '');
-
-            let tipoVaga: TipoVaga = 'substituicao';
-            if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
-            else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
-            else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
-            else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
-            else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
-            else if (rawTipo.includes('edital')) tipoVaga = 'edital';
-
-            const statusNormalized = normalizeStatus(statusRaw);
-            const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
-
-            newVagas.push({
-              id: `vaga-${batchId}-${totalProcessed}`,
-              unidade: unitInRow,
-              cargo,
-              requisicao,
-              numero_requisicao: requisicao,
-              data_abertura: dataAbertura,
-              data_recebimento: dataRecebimento,
-              numero_vagas: numVagas,
-              quantidade: numVagas,
-              secao,
-              tipo_vaga: tipoVaga,
-              status: statusNormalized,
-              status_geral: statusNormalized,
-              analista_responsavel: defaultAnalista,
-              assistentes: assistentes,
-              observacoes_internas: obsAcomp,
-              origem_importacao: selectedFile.name,
-              data_importacao: now,
-              lote_importacao: batchId,
-              import_batch_id: batchId,
-              source_sheet: sheetName,
-              source_row_index: i + 1,
-              tem_banco_valido: false,
-              data_convocacao_planilha: dataConv,
-              horario_convocacao_planilha: horaConv,
-              candidato_convocado_planilha: candConv,
-              classificacao_convocacao_planilha: classConv,
-              forma_convocacao_planilha: formaConv,
-              status_oitiva_convocacao_planilha: oitivaConv,
-              admissao_enviada_acompanhamento: admEnviada,
-              admissao_efetivada_acompanhamento: admEfetivada,
-              detalhes_acompanhamento: detalhesAcomp,
-              historico: [{
-                id: `h-${Date.now()}-${totalProcessed}`,
-                data: now.split('T')[0],
-                descricao: 'Importado da nova Base Geral de Vagas',
-                usuario: 'Sistema'
-              }]
-            });
+        // Try to find the best sheet
+        let sheetToProcess = null;
+        for (const name of VAGA_SHEETS) {
+          if (wb.SheetNames.includes(name)) {
+            sheetToProcess = wb.Sheets[name];
+            sheetFoundName = name;
+            break;
           }
-        });
+        }
+
+        // If not found in defaults, search for any sheet containing "VAGA" or "BASE GERAL" or "PROPOSTA"
+        if (!sheetToProcess) {
+          const fallbackName = wb.SheetNames.find(n => 
+            n.toUpperCase().includes('VAGA') || 
+            n.toUpperCase().includes('BASE GERAL') || 
+            n.toUpperCase().includes('PROPOSTA')
+          );
+          if (fallbackName) {
+            sheetToProcess = wb.Sheets[fallbackName];
+            sheetFoundName = fallbackName;
+          }
+        }
+
+        if (!sheetToProcess) {
+          setSummary({
+            type: 'error',
+            message: 'Nenhuma aba de VAGAS compatível encontrada no arquivo.',
+            fileName: selectedFile.name,
+            sheetsAvailable: wb.SheetNames
+          });
+          setStep('summary');
+          return;
+        }
+
+        const rawRows = XLSX.utils.sheet_to_json<any[]>(sheetToProcess, { header: 1 });
+        
+        // Find header row and mapping
+        let headerRowIndex = 1; // Default fallback
+        let mapping = {
+          abertura: 0, recebimento: 1, unidade: 2, requisicao: 3, cargo: 4,
+          tipo: 5, vagas: 6, status: 7, dataConv: 8, horaConv: 9,
+          candidato: 10, classificacao: 11, forma: 12, oitiva: 13,
+          secao: 14, admEnviada: 15, admEfetivada: 16, detalhes: 17, obs: 18
+        };
+
+        // Try to find real headers in first 10 rows
+        for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
+          const row = rawRows[i];
+          if (!row || !Array.isArray(row)) continue;
+          const rowStr = row.map(c => String(c || '').toUpperCase());
+          if (rowStr.includes('CARGO') && (rowStr.includes('UNIDADE') || rowStr.includes('ABERTURA'))) {
+            headerRowIndex = i;
+            mapping = {
+              abertura: rowStr.findIndex(c => c.includes('ABERTURA')),
+              recebimento: rowStr.findIndex(c => c.includes('RECEBIMENTO')),
+              unidade: rowStr.findIndex(c => c.includes('UNIDADE')),
+              requisicao: rowStr.findIndex(c => c.includes('REQUISIÇÃO') || c.includes('REQUISICAO') || c.includes('Nº')),
+              cargo: rowStr.findIndex(c => c.includes('CARGO')),
+              tipo: rowStr.findIndex(c => c.includes('TIPO')),
+              vagas: rowStr.findIndex(c => c.includes('VAGAS') || c.includes('QTDE') || c.includes('QUANTIDADE')),
+              status: rowStr.findIndex(c => c.includes('STATUS')),
+              dataConv: rowStr.findIndex(c => c.includes('DATA CONV')),
+              horaConv: rowStr.findIndex(c => c.includes('HORA CONV')),
+              candidato: rowStr.findIndex(c => c.includes('CANDIDATO')),
+              classificacao: rowStr.findIndex(c => c.includes('CLASSIFICAÇÃO') || c.includes('CLASSIFICACAO')),
+              forma: rowStr.findIndex(c => c.includes('FORMA CONV')),
+              oitiva: rowStr.findIndex(c => c.includes('OITIVA')),
+              secao: rowStr.findIndex(c => c.includes('SEÇÃO') || c.includes('SECAO') || c.includes('SETOR')),
+              admEnviada: rowStr.findIndex(c => c.includes('ADM ENVIADA')),
+              admEfetivada: rowStr.findIndex(c => c.includes('ADM EFETIVADA')),
+              detalhes: rowStr.findIndex(c => c.includes('DETALHES')),
+              obs: rowStr.findIndex(c => c.includes('OBS')),
+            };
+            break;
+          }
+        }
+
+        for (let i = headerRowIndex + 1; i < rawRows.length; i++) {
+          const row = rawRows[i];
+          if (!row || (Array.isArray(row) && row.length === 0)) continue;
+          
+          totalRowsFound++;
+
+          const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
+          if (!cargo) {
+            discardedCargoEmpty++;
+            continue;
+          }
+
+          const unitInRow = mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : 'NÃO INFORMADA';
+          const requisicao = mapping.requisicao !== -1 ? String(row[mapping.requisicao] || '') : '';
+          const rawTipo = mapping.tipo !== -1 ? String(row[mapping.tipo] || '').toLowerCase() : '';
+          const numVagas = mapping.vagas !== -1 ? (Number(row[mapping.vagas]) || 1) : 1;
+          const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '') : '';
+          
+          const dataAbertura = mapping.abertura !== -1 && row[mapping.abertura] ? convertDateValue(row[mapping.abertura], 'auto').formatted : '';
+          const dataRecebimento = mapping.recebimento !== -1 && row[mapping.recebimento] ? convertDateValue(row[mapping.recebimento], 'auto').formatted : '';
+          
+          const dataConv = mapping.dataConv !== -1 && row[mapping.dataConv] ? convertDateValue(row[mapping.dataConv], 'auto').formatted : '';
+          const horaConv = mapping.horaConv !== -1 ? String(row[mapping.horaConv] || '') : '';
+          const candConv = mapping.candidato !== -1 ? String(row[mapping.candidato] || '') : '';
+          const classConv = mapping.classificacao !== -1 ? String(row[mapping.classificacao] || '') : '';
+          const formaConv = mapping.forma !== -1 ? String(row[mapping.forma] || '') : '';
+          const oitivaConv = mapping.oitiva !== -1 ? String(row[mapping.oitiva] || '') : '';
+          const secao = mapping.secao !== -1 ? String(row[mapping.secao] || '') : '';
+          
+          const admEnviada = mapping.admEnviada !== -1 ? String(row[mapping.admEnviada] || '') : '';
+          const admEfetivada = mapping.admEfetivada !== -1 ? String(row[mapping.admEfetivada] || '') : '';
+          const detalhesAcomp = mapping.detalhes !== -1 ? String(row[mapping.detalhes] || '') : '';
+          const obsAcomp = mapping.obs !== -1 ? String(row[mapping.obs] || '') : '';
+
+          let tipoVaga: TipoVaga = 'substituicao';
+          if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
+          else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
+          else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
+          else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
+          else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
+          else if (rawTipo.includes('edital')) tipoVaga = 'edital';
+
+          const statusNormalized = normalizeStatus(statusRaw);
+          const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
+
+          newVagas.push({
+            id: `vaga-${batchId}-${newVagas.length + 1}`,
+            unidade: unitInRow,
+            cargo,
+            requisicao,
+            numero_requisicao: requisicao,
+            data_abertura: dataAbertura,
+            data_recebimento: dataRecebimento,
+            numero_vagas: numVagas,
+            quantidade: numVagas,
+            secao,
+            tipo_vaga: tipoVaga,
+            status: statusNormalized,
+            status_geral: statusNormalized,
+            analista_responsavel: defaultAnalista,
+            assistentes: assistentes,
+            observacoes_internas: obsAcomp,
+            origem_importacao: selectedFile.name,
+            data_importacao: now,
+            lote_importacao: batchId,
+            import_batch_id: batchId,
+            source_sheet: sheetFoundName,
+            source_row_index: i + 1,
+            tem_banco_valido: false,
+            data_convocacao_planilha: dataConv,
+            horario_convocacao_planilha: horaConv,
+            candidato_convocado_planilha: candConv,
+            classificacao_convocacao_planilha: classConv,
+            forma_convocacao_planilha: formaConv,
+            status_oitiva_convocacao_planilha: oitivaConv,
+            admissao_enviada_acompanhamento: admEnviada,
+            admissao_efetivada_acompanhamento: admEfetivada,
+            detalhes_acompanhamento: detalhesAcomp,
+            historico: [{
+              id: `h-${Date.now()}-${newVagas.length + 1}`,
+              data: now.split('T')[0],
+              descricao: 'Importado da nova Base Geral de Vagas',
+              usuario: 'Sistema'
+            }]
+          });
+        }
+
+        if (newVagas.length === 0) {
+          setSummary({
+            type: 'warning',
+            totalFound: totalRowsFound,
+            discardedEmpty: discardedCargoEmpty,
+            message: 'Nenhum registro válido foi encontrado para importar.',
+            fileName: selectedFile.name,
+            sheetName: sheetFoundName,
+            headerFound: headerRowIndex !== -1
+          });
+          setStep('summary');
+          return;
+        }
 
         useVagasStore.setState({ vagas: newVagas });
         const byUnit: Record<string, number> = {};
@@ -271,18 +367,21 @@ export function ImportExcelDialog({
         setSummary({
           type: 'vagas',
           total: newVagas.length,
+          totalFound: totalRowsFound,
+          discardedEmpty: discardedCargoEmpty,
           dashboardTotal: totalVagasDashboard,
           fileName: selectedFile.name,
+          sheetName: sheetFoundName,
           byUnit
         });
         
         addImportHistory({
           id: batchId,
           usuario: 'Sistema',
-          total_lidos: totalProcessed,
+          total_lidos: totalRowsFound,
           total_novos: newVagas.length,
           total_atualizados: 0,
-          total_ignorados: 0,
+          total_ignorados: discardedCargoEmpty,
           total_erros: 0,
           status: 'concluido',
           tipo_importacao: 'vagas',
@@ -293,9 +392,9 @@ export function ImportExcelDialog({
         toast.success(`Importação de Vagas: ${newVagas.length} registros inseridos.`);
 
       } else if (importType === 'banco') {
-        const sheet = wb.Sheets['BANCO GERAL'];
+        const sheet = wb.Sheets['BANCO GERAL'] || wb.Sheets['BANCO'] || wb.Sheets[wb.SheetNames[0]];
         if (!sheet) {
-          toast.error("Aba 'BANCO GERAL' não encontrada.");
+          toast.error("Nenhuma aba compatível para Banco de Talentos encontrada.");
           reset();
           return;
         }
@@ -305,21 +404,21 @@ export function ImportExcelDialog({
         let countCR = 0, countConv = 0, countVenc = 0;
 
         data.forEach((row, i) => {
-          const statusRaw = String(row['STATUS'] || row['status'] || '').toUpperCase().trim();
+          const statusRaw = String(row['STATUS'] || row['status'] || row['Situação'] || '').toUpperCase().trim();
           let status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum' = 'nenhum';
 
-          if (statusRaw === 'CADASTRO RESERVA') { status = 'CADASTRO RESERVA'; countCR++; }
-          else if (statusRaw === 'CONVOCADO') { status = 'CONVOCADO'; countConv++; }
-          else if (statusRaw === 'VENCIDO') { status = 'VENCIDO'; countVenc++; }
+          if (statusRaw === 'CADASTRO RESERVA' || statusRaw.includes('RESERVA')) { status = 'CADASTRO RESERVA'; countCR++; }
+          else if (statusRaw === 'CONVOCADO' || statusRaw.includes('CONVOC')) { status = 'CONVOCADO'; countConv++; }
+          else if (statusRaw === 'VENCIDO' || statusRaw.includes('VENCID')) { status = 'VENCIDO'; countVenc++; }
 
           newBancos.push({
             id: `banco-${batchId}-${i}`,
-            cargo: String(row['CARGO'] || row['cargo'] || ''),
-            unidade: String(row['UNIDADE'] || row['unidade'] || ''),
+            cargo: String(row['CARGO'] || row['cargo'] || row['Cargo'] || ''),
+            unidade: String(row['UNIDADE'] || row['unidade'] || row['Unidade'] || ''),
             status: status,
-            numero_edital: String(row['EDITAL'] || row['edital'] || ''),
+            numero_edital: String(row['EDITAL'] || row['edital'] || row['Edital'] || row['Processo'] || ''),
             data_abertura_edital: now.split('T')[0],
-            data_validade: row['VALIDADE'] ? convertDateValue(row['VALIDADE'], 'auto').formatted : '',
+            data_validade: (row['VALIDADE'] || row['Validade']) ? convertDateValue(row['VALIDADE'] || row['Validade'], 'auto').formatted : '',
             is_prorrogado: false,
             observacoes: '',
             status_import: statusRaw,
@@ -328,6 +427,12 @@ export function ImportExcelDialog({
             origem_importacao: selectedFile.name,
           });
         });
+
+        if (newBancos.length === 0) {
+          toast.warning("Nenhum registro encontrado para importar no Banco de Talentos.");
+          reset();
+          return;
+        }
 
         clearBancos();
         addBancos(newBancos);
@@ -468,48 +573,101 @@ export function ImportExcelDialog({
 
           {step === 'summary' && summary && (
             <div className="space-y-6">
-              <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 flex flex-col items-center text-center">
-                <CheckCircle2 className="h-12 w-12 text-primary mb-4" />
-                <h3 className="text-xl font-bold text-primary">Importação Concluída!</h3>
-                <p className="text-sm text-muted-foreground mt-1">{summary.fileName}</p>
-                
-                <div className="mt-6 grid grid-cols-1 gap-4 w-full max-w-sm">
-                  <div className="bg-background p-4 rounded-lg border border-border shadow-sm flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Total de Registros:</span>
-                    <span className="text-xl font-bold">{summary.total}</span>
-                  </div>
-                  
-                  {summary.type === 'banco' && (
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Reserva</span>
-                        <span className="text-lg font-bold text-blue-600">{summary.cr}</span>
-                      </div>
-                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Convoc.</span>
-                        <span className="text-lg font-bold text-green-600">{summary.conv}</span>
-                      </div>
-                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Vencido</span>
-                        <span className="text-lg font-bold text-red-600">{summary.venc}</span>
-                      </div>
+              {summary.type === 'error' ? (
+                <div className="bg-destructive/5 border border-destructive/10 rounded-xl p-6 flex flex-col items-center text-center">
+                  <X className="h-12 w-12 text-destructive mb-4" />
+                  <h3 className="text-xl font-bold text-destructive">Falha na Importação</h3>
+                  <p className="text-sm text-muted-foreground mt-2">{summary.message}</p>
+                  <div className="mt-4 p-3 bg-muted rounded-lg text-xs text-left w-full">
+                    <p className="font-bold mb-1">Abas encontradas no arquivo:</p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {summary.sheetsAvailable?.map((s: string) => (
+                        <Badge key={s} variant="outline">{s}</Badge>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                  <div className="mt-8 flex gap-3">
+                    <Button variant="outline" onClick={reset}>Tentar novamente</Button>
+                    <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  </div>
                 </div>
+              ) : summary.type === 'warning' ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex flex-col items-center text-center">
+                  <AlertCircle className="h-12 w-12 text-amber-500 mb-4" />
+                  <h3 className="text-xl font-bold text-amber-700">Atenção: 0 Registros</h3>
+                  <p className="text-sm text-amber-600 mt-2">{summary.message}</p>
+                  
+                  <div className="mt-6 grid grid-cols-2 gap-4 w-full text-xs">
+                    <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
+                      <p className="text-muted-foreground">Linhas encontradas</p>
+                      <p className="text-lg font-bold">{summary.totalFound}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm text-red-600">
+                      <p className="text-muted-foreground">Cargo vazio (puladas)</p>
+                      <p className="text-lg font-bold">{summary.discardedEmpty}</p>
+                    </div>
+                  </div>
 
-                <div className="mt-8 flex gap-3">
-                  <Button variant="outline" onClick={reset}>Importar outro</Button>
-                  <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  <div className="mt-4 p-3 bg-white/50 border border-amber-100 rounded-lg text-left w-full text-[10px] space-y-1">
+                    <p><strong>Aba lida:</strong> {summary.sheetName}</p>
+                    <p><strong>Cabeçalho identificado:</strong> {summary.headerFound ? 'Sim' : 'Não'}</p>
+                    <p className="mt-2 text-amber-800">Dica: Verifique se a coluna 'CARGO' está preenchida nas linhas de dados.</p>
+                  </div>
+
+                  <div className="mt-8 flex gap-3">
+                    <Button variant="outline" onClick={reset}>Tentar outro arquivo</Button>
+                    <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 flex flex-col items-center text-center">
+                  <CheckCircle2 className="h-12 w-12 text-primary mb-4" />
+                  <h3 className="text-xl font-bold text-primary">Importação Concluída!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{summary.fileName}</p>
+                  
+                  <div className="mt-6 grid grid-cols-1 gap-4 w-full max-w-sm">
+                    <div className="bg-background p-4 rounded-lg border border-border shadow-sm flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Total de Registros Salvos:</span>
+                      <span className="text-xl font-bold">{summary.total}</span>
+                    </div>
+                    
+                    {summary.type === 'banco' && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">Reserva</span>
+                          <span className="text-lg font-bold text-blue-600">{summary.cr}</span>
+                        </div>
+                        <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">Convoc.</span>
+                          <span className="text-lg font-bold text-green-600">{summary.conv}</span>
+                        </div>
+                        <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">Vencido</span>
+                          <span className="text-lg font-bold text-red-600">{summary.venc}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-8 flex gap-3">
+                    <Button variant="outline" onClick={reset}>Importar outro</Button>
+                    <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  </div>
+                </div>
+              )}
               
-              {summary.type === 'vagas' && (
+              {summary.type === 'vagas' && summary.total > 0 && (
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col gap-3">
                   <div className="flex gap-3">
                     <Info className="h-5 w-5 text-emerald-500 shrink-0" />
-                    <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">
-                      Auditoria de Importação - Registros por Unidade
-                    </p>
+                    <div className="flex flex-col">
+                      <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">
+                        Auditoria de Importação - Detalhes
+                      </p>
+                      <p className="text-[10px] text-emerald-600">
+                        Aba: <strong>{summary.sheetName}</strong> | Linhas brutas: {summary.totalFound} | Puladas: {summary.discardedEmpty}
+                      </p>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-8">
                     {Object.entries(summary.byUnit || {}).map(([unit, count]) => (
@@ -519,9 +677,6 @@ export function ImportExcelDialog({
                       </div>
                     ))}
                   </div>
-                  <p className="text-[9px] text-emerald-600 mt-1 italic text-center">
-                    * Todos os registros acima possuem cargo preenchido e foram integrados à base operacional.
-                  </p>
                 </div>
               )}
             </div>

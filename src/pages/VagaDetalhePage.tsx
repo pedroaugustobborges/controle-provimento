@@ -909,23 +909,30 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
   const [cronograma, setCronograma] = useState<any>(vaga.cronograma || {});
 
   const autoUpdateEtapa = useMemo(() => {
-    if (!cronograma) return form.etapa_atual;
-    const today = new Date().toISOString().split('T')[0];
+    if (!form.historico_etapas || form.historico_etapas.length === 0) return form.etapa_atual;
     
-    let current = form.etapa_atual;
     const habilitadas = form.etapas_habilitadas || [];
-    
     const sortedHabilitadas = TODAS_AS_ETAPAS.filter(e => habilitadas.includes(e));
     
-    for (const etapa of sortedHabilitadas) {
-      const dateKey = CRONOGRAMA_KEYS[etapa];
-      const date = cronograma[dateKey];
-      if (date && date <= today) {
-        current = etapa;
+    // Find the last completed stage in the sequence
+    let lastCompletedIndex = -1;
+    for (let i = 0; i < sortedHabilitadas.length; i++) {
+      const etapa = sortedHabilitadas[i];
+      const status = form.historico_etapas.find((h: any) => h.etapa === etapa);
+      if (status?.concluida) {
+        lastCompletedIndex = i;
+      } else {
+        break; // Sequence broken
       }
     }
-    return current;
-  }, [cronograma, form.etapas_habilitadas, form.etapa_atual]);
+    
+    // The current stage is the one after the last completed one
+    if (lastCompletedIndex + 1 < sortedHabilitadas.length) {
+      return sortedHabilitadas[lastCompletedIndex + 1];
+    }
+    
+    return sortedHabilitadas[sortedHabilitadas.length - 1];
+  }, [form.historico_etapas, form.etapas_habilitadas]);
 
   useEffect(() => {
     if (autoUpdateEtapa !== form.etapa_atual) {

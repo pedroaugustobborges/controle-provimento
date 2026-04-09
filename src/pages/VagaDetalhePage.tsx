@@ -769,6 +769,8 @@ export default function VagaDetalhePage() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isQuickConvocacaoOpen} onOpenChange={setIsQuickConvocacaoOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

@@ -121,15 +121,18 @@ export function AppSidebar() {
                                     <NavLink
                                       to={sub.url}
                                       className={cn(
-                                        "text-xs py-2 px-3 rounded-md transition-all duration-200 block relative",
+                                        "text-xs py-2.5 px-4 rounded-md transition-all duration-200 block relative overflow-hidden group/sub",
                                         subActive 
-                                          ? "text-white font-bold bg-white/5 shadow-inner" 
+                                          ? "text-white font-extrabold bg-blue-600 shadow-[0_4px_12px_rgba(37,99,235,0.4)] border border-white/20" 
                                           : "text-white/40 hover:text-white hover:bg-white/5"
                                       )}
                                     >
-                                      {sub.title}
+                                      <span className="relative z-10">{sub.title}</span>
                                       {subActive && (
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_5px_white] animate-pulse" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-500 opacity-80" />
+                                      )}
+                                      {subActive && (
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow-[0_0_10px_white] z-20" />
                                       )}
                                     </NavLink>
                                   </SidebarMenuSubButton>

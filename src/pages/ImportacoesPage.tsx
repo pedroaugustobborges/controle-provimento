@@ -276,7 +276,7 @@ export default function ImportacoesPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader>
                   <TableRow>
                     <TableHead >Lote / Arquivo</TableHead>
                     <TableHead >Tipo</TableHead>
@@ -370,7 +370,7 @@ export default function ImportacoesPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader>
                   <TableRow>
                     <TableHead >Nome do Arquivo</TableHead>
                     <TableHead >Data de Upload</TableHead>

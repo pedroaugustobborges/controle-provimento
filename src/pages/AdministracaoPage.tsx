@@ -133,7 +133,7 @@ export default function AdministracaoPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-slate-50/50">
+                  <TableHeader>
                     <TableRow>
                       <TableHead >Nome / E-mail</TableHead>
                       <TableHead >Perfil / Cargo</TableHead>
@@ -223,7 +223,7 @@ export default function AdministracaoPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader>
                   <TableRow>
                     <TableHead className="pl-6">Usuário</TableHead>
                     <TableHead >Unidades com Acesso</TableHead>
@@ -284,7 +284,7 @@ export default function AdministracaoPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader>
                   <TableRow>
                     <TableHead className="pl-6">Região / Unidades</TableHead>
                     <TableHead >Responsável</TableHead>
@@ -355,7 +355,7 @@ export default function AdministracaoPage() {
             <CardContent className="p-0">
               <ScrollArea className="h-[500px]">
                 <Table>
-                  <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
+                  <TableHeader className="sticky top-0 z-10">
                     <TableRow>
                       <TableHead className="pl-6">Data / Hora</TableHead>
                       <TableHead >Usuário</TableHead>
@@ -417,7 +417,7 @@ export default function AdministracaoPage() {
             </CardHeader>
             <CardContent className="p-0 overflow-auto max-h-[600px]">
               <Table>
-                <TableHeader className="bg-slate-50/50 sticky top-0 z-10 border-b">
+                <TableHeader className="sticky top-0 z-10">
                   <TableRow>
                     <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider">Status Original Importado</TableHead>
                     <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider text-center">Quantidade</TableHead>
@@ -543,7 +543,7 @@ export default function AdministracaoPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader className="bg-slate-50/50">
+                    <TableHeader>
                       <TableRow>
                         <TableHead className="pl-6 text-[11px] font-bold uppercase">Data / Hora</TableHead>
                         <TableHead className="text-center">Registros</TableHead>

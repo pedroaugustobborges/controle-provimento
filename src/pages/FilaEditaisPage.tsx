@@ -114,13 +114,13 @@ export default function FilaEditaisPage() {
       historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Vaga encaminhada para a analista do edital. Obs: ${obsUnidade || 'Sem observações'}`,
+        descricao: `Vaga encaminhada para redação e publicação do edital. Obs: ${obsUnidade || 'Sem observações'}`,
         usuario: currentUser?.nome_completo || 'Analista da Unidade'
       }]
     });
 
     setIsSendModalOpen(false);
-    toast.success('Vaga encaminhada com sucesso para a analista do edital!');
+    toast.success('Vaga encaminhada com sucesso para a redação do edital!');
   };
 
 
@@ -259,7 +259,7 @@ export default function FilaEditaisPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Enviar para Analista do Edital" onClick={() => handleOpenSendModal(v)}>
+                        <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
@@ -289,7 +289,7 @@ export default function FilaEditaisPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-primary">
               <Send className="h-5 w-5" />
-              Enviar para Fila de Edital
+              Encaminhar para Redação do Edital
             </DialogTitle>
             <DialogDescription>
               Confirme as informações validadas com a unidade antes de encaminhar a vaga para a redação do edital.
@@ -343,7 +343,7 @@ export default function FilaEditaisPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="obs" className="text-sm font-semibold text-slate-800">Observações para Analista do Edital</Label>
+                <Label htmlFor="obs" className="text-sm font-semibold text-slate-800">Observações para Redação/Publicação</Label>
                 <Textarea 
                   id="obs" 
                   placeholder="Instruções sobre salário, carga horária, urgência ou perfil da vaga..."

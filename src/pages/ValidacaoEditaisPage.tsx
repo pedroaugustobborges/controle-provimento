@@ -67,22 +67,24 @@ export default function ValidacaoEditaisPage() {
   }, [vagas, currentUser, search]);
 
 
-  const handleAction = (vagaId: string, status: 'aprovado' | 'reprovado') => {
+  const handleAction = (vagaId: string, actionStatus: 'aprovado' | 'reprovado') => {
     const vaga = vagas.find(v => v.id === vagaId);
     if (!vaga) return;
 
-    const newStatus = status === 'aprovado' ? 'em_edital' : 'publicar_novo_edital';
+    // Se aprovado, volta para o analista do edital com status aprovado
+    // Se reprovado, volta para o analista do edital com status em redação (para correção)
+    const newFluxoStatus = actionStatus === 'aprovado' ? 'aprovado_administrativo' : 'em_redacao';
     
     updateVaga(vagaId, {
-      status: newStatus as any,
-      status_validacao: status,
+      status_validacao: actionStatus,
+      status_fluxo_edital: newFluxoStatus,
       validado_por: currentUser?.nome_completo,
       data_validacao: new Date().toISOString(),
       observacoes_validacao: obs,
       historico: [...vaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Edital ${status} por ${currentUser?.nome_completo}. Obs: ${obs}`,
+        descricao: `Edital ${actionStatus === 'aprovado' ? 'APROVADO' : 'REPROVADO'} por ${currentUser?.nome_completo}. Obs: ${obs}`,
         usuario: currentUser?.nome_completo || 'Admin'
       }]
     });
@@ -93,14 +95,14 @@ export default function ValidacaoEditaisPage() {
       perfil: currentUser?.perfil || 'Admin',
       data: new Date().toISOString().split('T')[0],
       hora: new Date().toLocaleTimeString(),
-      acao: `Validação de Edital: ${status.toUpperCase()}`,
+      acao: `Validação de Edital: ${actionStatus.toUpperCase()}`,
       modulo: 'Editais',
       registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
-      valor_novo: status
+      valor_novo: actionStatus
     });
 
 
-    toast.success(`Edital ${status === 'aprovado' ? 'validado' : 'reprovado'} com sucesso.`);
+    toast.success(`Edital ${actionStatus === 'aprovado' ? 'validado' : 'reprovado'} com sucesso.`);
     setIsModalOpen(false);
     setSelectedVaga(null);
     setObs('');
@@ -146,9 +148,10 @@ export default function ValidacaoEditaisPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Unidade</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Nº Edital / Processo</TableHead>
-                <TableHead>Redigido por</TableHead>
+                <TableHead>Cargo / REQ</TableHead>
+                <TableHead>Edital / Processo</TableHead>
+                <TableHead>Obs. Unidade</TableHead>
+                <TableHead>Obs. Analista</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -161,11 +164,14 @@ export default function ValidacaoEditaisPage() {
                     <div className="text-[11px] text-slate-400">{v.requisicao}</div>
                   </TableCell>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-bold text-primary">{v.numero_edital}</div>
-                    <div className="text-[11px] text-slate-500">{v.numero_processo}</div>
+                    <div className="text-sm font-bold text-primary">{v.numero_edital || '-'}</div>
+                    <div className="text-[11px] text-slate-500">{v.numero_processo || '-'}</div>
                   </td>
-                  <td className="px-6 py-4 text-xs text-slate-600">
-                    {v.historico[v.historico.length - 1]?.usuario || 'Analista'}
+                  <td className="px-6 py-4 max-w-[150px]">
+                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
+                  </td>
+                  <td className="px-6 py-4 max-w-[150px]">
+                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">

@@ -11,7 +11,7 @@ import {
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
-  FileUp, CheckSquare, MessageSquare, Upload, FileDown
+  FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
@@ -40,6 +40,22 @@ export default function FilaAnalistaEditalPage() {
   const [numeroEdital, setNumeroEdital] = useState('');
   const [numeroProcesso, setNumeroProcesso] = useState('');
 
+  // Modal de Publicação / Cronograma
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [cronograma, setCronograma] = useState<any>({
+    data_publicacao_edital: '',
+    data_inicio_inscricao: '',
+    data_fim_inscricao: '',
+    data_triagem: '',
+    data_avaliacao_especifica_online: '',
+    data_resultado_preliminar_avaliacao_especifica: '',
+    data_recurso_avaliacao_especifica: '',
+    data_resultado_recurso_avaliacao_especifica: '',
+    data_resultado_final_avaliacao_especifica: '',
+    data_entrevistas: '',
+    data_resultado_final_seletivo: ''
+  });
+
   const editalVagas = useMemo(() => {
     return vagas.filter(v => {
       const vUnitNormalized = normalizeUnitName(v.unidade);
@@ -52,9 +68,16 @@ export default function FilaAnalistaEditalPage() {
         }
       }
 
-      // Regra: Mostrar apenas vagas encaminhadas para o edital
-      const isEncaminhada = v.status_fluxo_edital === 'encaminhado_edital' || v.status_fluxo_edital === 'em_redacao';
-      if (!isEncaminhada) return false;
+      // Regra: Mostrar vagas em redação, enviadas para validação ou aprovadas
+      const showInThisFlow = [
+        'encaminhado_edital', 
+        'em_redacao', 
+        'enviado_validacao', 
+        'aprovado_administrativo',
+        'publicado'
+      ].includes(v.status_fluxo_edital || '');
+      
+      if (!showInThisFlow) return false;
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -122,6 +145,46 @@ export default function FilaAnalistaEditalPage() {
 
     setIsEditModalOpen(false);
     toast.success('Edital enviado com sucesso para validação administrativa!');
+  };
+
+  const handleOpenPublishModal = (vaga: Vaga) => {
+    setSelectedVaga(vaga);
+    setCronograma({
+      data_publicacao_edital: vaga.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+      data_inicio_inscricao: vaga.cronograma?.data_inicio_inscricao || '',
+      data_fim_inscricao: vaga.cronograma?.data_fim_inscricao || '',
+      data_triagem: vaga.cronograma?.data_triagem || '',
+      data_avaliacao_especifica_online: vaga.cronograma?.data_avaliacao_especifica_online || '',
+      data_resultado_preliminar_avaliacao_especifica: vaga.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+      data_recurso_avaliacao_especifica: vaga.cronograma?.data_recurso_avaliacao_especifica || '',
+      data_resultado_recurso_avaliacao_especifica: vaga.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+      data_resultado_final_avaliacao_especifica: vaga.cronograma?.data_resultado_final_avaliacao_especifica || '',
+      data_entrevistas: vaga.cronograma?.data_entrevistas || '',
+      data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
+    });
+    setIsPublishModalOpen(true);
+  };
+
+  const handleFinalizePublication = () => {
+    if (!selectedVaga) return;
+
+    updateVaga(selectedVaga.id, {
+      status_fluxo_edital: 'publicado',
+      status: 'EM ANDAMENTO', // Muda o status principal da vaga para "Em Andamento" após publicar
+      cronograma: {
+        ...selectedVaga.cronograma,
+        ...cronograma
+      },
+      historico: [...selectedVaga.historico, {
+        id: `h-${Date.now()}`,
+        data: new Date().toISOString().split('T')[0],
+        descricao: `Edital PUBLICADO. Cronograma preenchido.`,
+        usuario: currentUser?.nome_completo || 'Analista do Edital'
+      }]
+    });
+
+    setIsPublishModalOpen(false);
+    toast.success('Edital publicado e cronograma salvo com sucesso!');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,14 +287,35 @@ export default function FilaAnalistaEditalPage() {
                       {formatDate(v.data_recebimento!)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`text-[10px] uppercase font-bold ${v.status_fluxo_edital === 'em_redacao' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
-                        {v.status_fluxo_edital === 'em_redacao' ? 'Em Redação' : 'Aguardando'}
-                      </Badge>
+                      {v.status_fluxo_edital === 'enviado_validacao' ? (
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold bg-purple-50 text-purple-600 border-purple-200">
+                          Em Validação
+                        </Badge>
+                      ) : v.status_fluxo_edital === 'aprovado_administrativo' ? (
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold bg-green-50 text-green-600 border-green-200">
+                          Aprovado
+                        </Badge>
+                      ) : v.status_fluxo_edital === 'publicado' ? (
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold bg-blue-600 text-white border-blue-700">
+                          Publicado
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className={`text-[10px] uppercase font-bold ${v.status_fluxo_edital === 'em_redacao' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
+                          {v.status_fluxo_edital === 'em_redacao' ? 'Em Redação' : 'Aguardando'}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="text-primary" title="Preparar Edital" onClick={() => handleOpenEditModal(v)}>
-                          <Edit className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-primary" 
+                          title={v.status_fluxo_edital === 'aprovado_administrativo' ? "Publicar Edital" : "Preparar Edital"} 
+                          onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' || v.status_fluxo_edital === 'publicado' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}
+                          disabled={v.status_fluxo_edital === 'enviado_validacao'}
+                        >
+                          {v.status_fluxo_edital === 'aprovado_administrativo' || v.status_fluxo_edital === 'publicado' ? <Rocket className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
                         </Button>
                       </div>
                     </TableCell>
@@ -356,6 +440,142 @@ export default function FilaAnalistaEditalPage() {
                 Enviar p/ Validação
               </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isPublishModalOpen} onOpenChange={setIsPublishModalOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary text-xl">
+              <Rocket className="h-6 w-6" />
+              Finalizar Publicação e Cronograma
+            </DialogTitle>
+            <DialogDescription>
+              O edital foi aprovado! Agora preencha as datas oficiais para acompanhamento.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedVaga && (
+            <div className="space-y-6 py-4">
+              <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex items-start gap-3">
+                <div className="bg-green-100 p-2 rounded-lg text-green-700">
+                  <Check className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-green-900 text-sm">Edital Aprovado</h4>
+                  <p className="text-xs text-green-700 mt-0.5">Validado por: {selectedVaga.validado_por} em {formatDate(selectedVaga.data_validacao!)}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Data de Publicação</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_publicacao_edital} 
+                    onChange={(e) => setCronograma({...cronograma, data_publicacao_edital: e.target.value})}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-500 uppercase">Início Inscrições</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_inicio_inscricao} 
+                      onChange={(e) => setCronograma({...cronograma, data_inicio_inscricao: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-500 uppercase">Fim Inscrições</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_fim_inscricao} 
+                      onChange={(e) => setCronograma({...cronograma, data_fim_inscricao: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Data da Triagem</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_triagem} 
+                    onChange={(e) => setCronograma({...cronograma, data_triagem: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Avaliação Específica Online</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_avaliacao_especifica_online} 
+                    onChange={(e) => setCronograma({...cronograma, data_avaliacao_especifica_online: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Resultado Preliminar</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_resultado_preliminar_avaliacao_especifica} 
+                    onChange={(e) => setCronograma({...cronograma, data_resultado_preliminar_avaliacao_especifica: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Prazo para Recurso</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_recurso_avaliacao_especifica} 
+                    onChange={(e) => setCronograma({...cronograma, data_recurso_avaliacao_especifica: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Resultado do Recurso</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_resultado_recurso_avaliacao_especifica} 
+                    onChange={(e) => setCronograma({...cronograma, data_resultado_recurso_avaliacao_especifica: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Resultado Final Avaliação</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_resultado_final_avaliacao_especifica} 
+                    onChange={(e) => setCronograma({...cronograma, data_resultado_final_avaliacao_especifica: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Data da Entrevista</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_entrevistas} 
+                    onChange={(e) => setCronograma({...cronograma, data_entrevistas: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">Res. Final Processo Seletivo</Label>
+                  <Input 
+                    type="date" 
+                    value={cronograma.data_resultado_final_seletivo} 
+                    onChange={(e) => setCronograma({...cronograma, data_resultado_final_seletivo: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPublishModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleFinalizePublication} className="bg-primary hover:bg-primary/90">
+              {selectedVaga?.status_fluxo_edital === 'publicado' ? 'Atualizar Cronograma' : 'Publicar Edital'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -75,7 +75,10 @@ export type EtapaEdital =
 
 export interface VagaCronograma {
   data_validacao_edital?: string;
-  data_inscricao?: string;
+  data_publicacao_edital?: string;
+  data_inscricao?: string; // Mantido para compatibilidade
+  data_inicio_inscricao?: string;
+  data_fim_inscricao?: string;
   data_triagem?: string;
   data_resultado_triagem?: string;
   data_avaliacao_especifica_online?: string;
@@ -90,7 +93,8 @@ export interface VagaCronograma {
   data_resultado_recurso_analise_curricular?: string;
   data_analise_curricular_final?: string;
   data_entrevistas?: string;
-  data_resultado_final?: string;
+  data_resultado_final?: string; // Mantido para compatibilidade
+  data_resultado_final_seletivo?: string;
   data_convocacao?: string;
   data_encerramento_processo?: string;
 }
@@ -157,7 +161,7 @@ export interface Vaga {
   salario_validado?: boolean;
   observacoes_unidade?: string;
   observacoes_edital?: string;
-  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao';
+  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao' | 'aprovado_administrativo' | 'publicado';
 
   historico: HistoricoItem[];
   origem: 'manual' | 'importada';

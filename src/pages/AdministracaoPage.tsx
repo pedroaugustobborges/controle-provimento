@@ -135,12 +135,12 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader className="bg-slate-50/50">
                     <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase">Nome / E-mail</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Perfil / Cargo</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Acesso Global</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-center">Pode Excluir</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Último Acesso</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase">Nome / E-mail</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase">Perfil / Cargo</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase text-center">Status</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase text-center">Acesso Global</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase text-center">Pode Excluir</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase">Último Acesso</TableHead>
                       <TableHead className="text-right pr-6"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -155,19 +155,19 @@ export default function AdministracaoPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            <Badge variant="outline" className="w-fit text-[10px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100">{user.perfil}</Badge>
-                            <span className="text-[10px] text-slate-500 font-medium">{user.cargo}</span>
+                            <Badge variant="outline" className="w-fit text-[11px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100">{user.perfil}</Badge>
+                            <span className="text-[11px] text-slate-500 font-medium">{user.cargo}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge className={`${user.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'} font-bold text-[10px] uppercase border-0`}>
+                          <Badge className={`${user.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'} font-bold text-[11px] uppercase border-0`}>
                             {user.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center">
                           {user.visualiza_todas_unidades ? 
-                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px]">Sim</Badge> : 
-                            <span className="text-[10px] text-slate-400 font-bold">Não</span>
+                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Sim</Badge> : 
+                            <span className="text-[11px] text-slate-400 font-bold">Não</span>
                           }
                         </TableCell>
                         <TableCell className="text-center">
@@ -225,9 +225,9 @@ export default function AdministracaoPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase pl-6">Usuário</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Unidades com Acesso</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Ações Permitidas</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase pl-6">Usuário</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase">Unidades com Acesso</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-center">Ações Permitidas</TableHead>
                     <TableHead className="text-right pr-6"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -242,14 +242,14 @@ export default function AdministracaoPage() {
                       </TableCell>
                       <TableCell>
                         {user.visualiza_todas_unidades ? (
-                          <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px]">Todas as Unidades</Badge>
+                          <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Todas as Unidades</Badge>
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-[400px]">
                             {user.unidades_vinculadas.length > 0 ? 
                               user.unidades_vinculadas.map(u => (
-                                <Badge key={u} variant="secondary" className="text-[10px] bg-slate-100">{u}</Badge>
+                                <Badge key={u} variant="secondary" className="text-[11px] bg-slate-100">{u}</Badge>
                               )) : 
-                              <span className="text-[10px] text-slate-400 italic">Nenhuma unidade vinculada</span>
+                              <span className="text-[11px] text-slate-400 italic">Nenhuma unidade vinculada</span>
                             }
                           </div>
                         )}
@@ -286,10 +286,10 @@ export default function AdministracaoPage() {
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase pl-6">Região / Unidades</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Responsável</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Contato</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase pl-6">Região / Unidades</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase">Responsável</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase">Contato</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-center">Status</TableHead>
                     <TableHead className="text-right pr-6">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -299,7 +299,7 @@ export default function AdministracaoPage() {
                       <TableCell className="pl-6 py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-700">{config.regiao}</span>
-                          <span className="text-[10px] text-slate-400 mt-1">{config.unidades.join(', ')}</span>
+                          <span className="text-[11px] text-slate-400 mt-1">{config.unidades.join(', ')}</span>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-slate-600">{config.responsavel}</TableCell>
@@ -310,14 +310,14 @@ export default function AdministracaoPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge className="bg-green-100 text-green-700 font-bold text-[10px]">Ativo</Badge>
+                        <Badge className="bg-green-100 text-green-700 font-bold text-[11px]">Ativo</Badge>
                       </TableCell>
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="h-8 gap-1.5 text-[10px] font-bold"
+                            className="h-8 gap-1.5 text-[11px] font-bold"
                             onClick={() => handleTestEmail(config.id)}
                             disabled={testEmailLoading === config.id}
                           >
@@ -357,11 +357,11 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
                     <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase pl-6">Data / Hora</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Usuário</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Ação / Módulo</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Registro</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Alteração (De → Para)</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase pl-6">Data / Hora</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase">Usuário</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase">Ação / Módulo</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase">Registro</TableHead>
+                      <TableHead className="text-[11px] font-bold uppercase">Alteração (De → Para)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -373,13 +373,13 @@ export default function AdministracaoPage() {
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-bold text-slate-700">{log.usuario_nome}</span>
-                            <span className="text-[10px] text-slate-400">{log.perfil}</span>
+                            <span className="text-[11px] text-slate-400">{log.perfil}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-bold text-primary">{log.acao}</span>
-                            <span className="text-[10px] text-slate-400 uppercase font-bold">{log.modulo}</span>
+                            <span className="text-[11px] text-slate-400 uppercase font-bold">{log.modulo}</span>
                           </div>
                         </TableCell>
                         <TableCell className="font-medium text-slate-600">{log.registro_afetado}</TableCell>
@@ -417,11 +417,11 @@ export default function AdministracaoPage() {
             </CardHeader>
             <CardContent className="p-0 overflow-auto max-h-[600px]">
               <Table>
-                <TableHeader className="bg-slate-50/80 sticky top-0 z-10 border-b">
+                <TableHeader className="bg-slate-50/50 sticky top-0 z-10 border-b">
                   <TableRow>
-                    <TableHead className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider">Status Original Importado</TableHead>
-                    <TableHead className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider text-center">Quantidade</TableHead>
-                    <TableHead className="px-6 py-4 font-black text-[10px] text-slate-400 uppercase tracking-wider">Grupo/Card de Destino</TableHead>
+                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider">Status Original Importado</TableHead>
+                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider text-center">Quantidade</TableHead>
+                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider">Grupo/Card de Destino</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-slate-50 font-medium">
@@ -453,7 +453,7 @@ export default function AdministracaoPage() {
                         <TableRow key={status} className="hover:bg-slate-50/50 transition-colors h-14">
                           <TableCell className="px-6 py-4 text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
                           <TableCell className="px-6 py-4 text-center">
-                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-black text-xs">
+                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold text-xs">
                               {data.count}
                             </span>
                           </TableCell>
@@ -467,7 +467,7 @@ export default function AdministracaoPage() {
                                 data.group.includes('Aguardando') ? 'bg-yellow-500' :
                                 'bg-blue-400'
                               }`}></div>
-                              <span className="text-slate-500 font-bold uppercase text-[10px] tracking-tight">{data.group}</span>
+                              <span className="text-slate-500 font-bold uppercase text-[11px] tracking-tight">{data.group}</span>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -489,7 +489,7 @@ export default function AdministracaoPage() {
                     <div className="bg-primary/10 p-2 rounded-lg"><HardDrive className="h-5 w-5 text-primary" /></div>
                     <div>
                       <h3 className="font-bold text-slate-800">Status do Backup</h3>
-                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Automático (30 em 30 min)</p>
+                      <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Automático (30 em 30 min)</p>
                     </div>
                   </div>
                 </div>
@@ -545,9 +545,9 @@ export default function AdministracaoPage() {
                   <Table>
                     <TableHeader className="bg-slate-50/50">
                       <TableRow>
-                        <TableHead className="pl-6 text-[10px] font-bold uppercase">Data / Hora</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase text-center">Registros</TableHead>
-                        <TableHead className="text-[10px] font-bold uppercase text-center">Status</TableHead>
+                        <TableHead className="pl-6 text-[11px] font-bold uppercase">Data / Hora</TableHead>
+                        <TableHead className="text-[11px] font-bold uppercase text-center">Registros</TableHead>
+                        <TableHead className="text-[11px] font-bold uppercase text-center">Status</TableHead>
                         <TableHead className="text-right pr-6">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -557,7 +557,7 @@ export default function AdministracaoPage() {
                           <TableCell className="pl-6 font-mono text-xs">{b.data_hora}</TableCell>
                           <TableCell className="text-center font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
                           <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[10px]">
+                            <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[11px]">
                               <CheckCircle className="h-3 w-3" /> Sucesso
                             </div>
                           </TableCell>
@@ -687,7 +687,7 @@ export default function AdministracaoPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-bold">Visualizar todas as unidades</Label>
-                  <p className="text-[10px] text-slate-500">O usuário terá acesso a todos os registros do sistema.</p>
+                  <p className="text-[11px] text-slate-500">O usuário terá acesso a todos os registros do sistema.</p>
                 </div>
                 <Switch />
               </div>
@@ -698,7 +698,7 @@ export default function AdministracaoPage() {
                   {unidades.map(u => (
                     <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-slate-50 transition-colors">
                       <input type="checkbox" id={`unit-${u}`} className="h-3 w-3 rounded border-slate-300" />
-                      <label htmlFor={`unit-${u}`} className="text-[10px] font-bold text-slate-600 cursor-pointer">{u}</label>
+                      <label htmlFor={`unit-${u}`} className="text-[11px] font-bold text-slate-600 cursor-pointer">{u}</label>
                     </div>
                   ))}
                 </div>

@@ -137,7 +137,7 @@ export default function ConvocacoesPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('diaria')}
               >
                 <Calendar className="h-3.5 w-3.5 mr-1" /> Diária
@@ -145,7 +145,7 @@ export default function ConvocacoesPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('kanban')}
               >
                 <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Quadro
@@ -153,7 +153,7 @@ export default function ConvocacoesPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('list')}
               >
                 <List className="h-3.5 w-3.5 mr-1" /> Histórico
@@ -161,12 +161,12 @@ export default function ConvocacoesPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`h-8 px-3 text-[10px] font-black uppercase transition-all rounded-lg ${view === 'pending' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'pending' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('pending')}
               >
                 <AlertCircle className="h-3.5 w-3.5 mr-1" /> Pendentes
                 {pendingVagas.length > 0 && (
-                  <Badge variant="destructive" className="ml-1 px-1.5 h-4 min-w-[16px] flex items-center justify-center text-[8px] font-black rounded-full">
+                  <Badge variant="destructive" className="ml-1 px-1.5 h-4 min-w-[16px] flex items-center justify-center text-[8px] font-bold rounded-full">
                     {pendingVagas.length}
                   </Badge>
                 )}
@@ -221,9 +221,9 @@ export default function ConvocacoesPage() {
                   <TableHead >Requisição</TableHead>
                   <TableHead >Cargo</TableHead>
                   <TableHead >Unidade</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Banco?</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Data Abertura</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-right">Ação</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Banco?</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Data Abertura</TableHead>
+                  <TableHead className="text-[11px] font-bold uppercase tracking-wider text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,12 +236,12 @@ export default function ConvocacoesPage() {
                       {getBancoByVaga(v.id) ? (
                         <div className="flex items-center justify-center gap-1.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 mx-auto w-fit">
                           <Database className="h-3 w-3" />
-                          <span className="text-[10px] font-bold">Válido</span>
+                          <span className="text-[11px] font-bold">Válido</span>
                         </div>
                       ) : (
                         <div className="flex items-center justify-center gap-1.5 text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 mx-auto w-fit">
                           <X className="h-3 w-3" />
-                          <span className="text-[10px] font-bold">Sem Banco</span>
+                          <span className="text-[11px] font-bold">Sem Banco</span>
                         </div>
                       )}
                     </TableCell>
@@ -250,7 +250,7 @@ export default function ConvocacoesPage() {
                       <Button 
                         size="sm" 
                         onClick={() => handleNewConvocacao(v)}
-                        className="h-8 gap-1.5 text-[10px] font-bold bg-green-600 hover:bg-green-700 shadow-sm"
+                        className="h-8 gap-1.5 text-[11px] font-bold bg-green-600 hover:bg-green-700 shadow-sm"
                       >
                         Realizar Convocação <ArrowRight className="h-3 w-3" />
                       </Button>
@@ -277,7 +277,7 @@ export default function ConvocacoesPage() {
               <Card key={c.id} className="border-l-4 border-l-primary shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <Badge className="bg-primary/10 text-primary border-none text-[10px] font-bold uppercase">{c.status}</Badge>
+                    <Badge className="bg-primary/10 text-primary border-none text-[11px] font-bold uppercase">{c.status}</Badge>
                     <span className="text-xs font-mono font-bold text-slate-400">#{c.requisicao}</span>
                   </div>
                   <CardTitle className="text-lg font-bold text-slate-800 mt-2">{c.nome_candidato}</CardTitle>
@@ -322,10 +322,10 @@ export default function ConvocacoesPage() {
                   <TableRow>
                     <TableHead >Candidato</TableHead>
                     <TableHead >Vaga / Cargo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Data/Hora</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Status</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Data/Hora</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Status</TableHead>
                     <TableHead >Unidade</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider text-right">Ações</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -334,7 +334,7 @@ export default function ConvocacoesPage() {
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-800">{c.nome_candidato}</span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Classif: {c.classificacao}º</span>
+                          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Classif: {c.classificacao}º</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -346,11 +346,11 @@ export default function ConvocacoesPage() {
                       <TableCell className="text-center">
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
-                          <span className="text-[10px] text-slate-400">{c.horario || '—'}</span>
+                          <span className="text-[11px] text-slate-400">{c.horario || '—'}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[10px] font-bold bg-slate-50 border-slate-200">
+                        <Badge variant="outline" className="text-[11px] font-bold bg-slate-50 border-slate-200">
                           {STATUS_CONVOCACAO_LABELS[c.status] || c.status}
                         </Badge>
                       </TableCell>

@@ -38,7 +38,7 @@ export default function AlertasTarefasPage() {
           <TabsTrigger value="tarefas" className="gap-2">
             <ClipboardList className="h-4 w-4" /> Minhas Tarefas
             {tarefas.filter(t => t.status === 'pendente').length > 0 && (
-              <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[10px]">
+              <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
                 {tarefas.filter(t => t.status === 'pendente').length}
               </Badge>
             )}
@@ -46,7 +46,7 @@ export default function AlertasTarefasPage() {
           <TabsTrigger value="alertas" className="gap-2">
             <Bell className="h-4 w-4" /> Alertas Operacionais
             {alertas.filter(a => a.status === 'nao_lido').length > 0 && (
-              <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[10px]">
+              <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
                 {alertas.filter(a => a.status === 'nao_lido').length}
               </Badge>
             )}
@@ -59,21 +59,21 @@ export default function AlertasTarefasPage() {
               <Card key={tarefa.id} className={`border-l-4 ${tarefa.status === 'concluida' ? 'border-l-green-500 opacity-60' : 'border-l-amber-500 shadow-sm'}`}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <Badge variant={tarefa.prioridade === 'alta' ? 'destructive' : 'outline'} className="text-[10px] uppercase font-bold">
+                    <Badge variant={tarefa.prioridade === 'alta' ? 'destructive' : 'outline'} className="text-[11px] uppercase font-bold">
                       {tarefa.prioridade}
                     </Badge>
-                    <span className="text-[10px] text-slate-400 font-medium">{formatDate(tarefa.data_criacao)}</span>
+                    <span className="text-[11px] text-slate-400 font-medium">{formatDate(tarefa.data_criacao)}</span>
                   </div>
                   <CardTitle className="text-base font-bold mt-2">{tarefa.titulo}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-slate-600 mb-4 line-clamp-2">{tarefa.descricao}</p>
                   <div className="flex items-center justify-between mt-auto">
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase">
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-bold uppercase">
                       <User className="h-3.5 w-3.5" /> {tarefa.atribuido_a}
                     </div>
                     {tarefa.status === 'pendente' && (
-                      <Button size="sm" onClick={() => handleCompleteTarefa(tarefa.id)} className="h-8 gap-1.5 text-[10px] font-bold">
+                      <Button size="sm" onClick={() => handleCompleteTarefa(tarefa.id)} className="h-8 gap-1.5 text-[11px] font-bold">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Concluir
                       </Button>
                     )}
@@ -107,22 +107,22 @@ export default function AlertasTarefasPage() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="text-sm font-bold text-slate-800">{alerta.titulo}</h4>
-                        <span className="text-[10px] text-slate-400 font-medium">{formatDate(alerta.data_criacao)}</span>
+                        <span className="text-[11px] text-slate-400 font-medium">{formatDate(alerta.data_criacao)}</span>
                       </div>
                       <p className="text-xs text-slate-600 mb-3">{alerta.mensagem}</p>
                       <div className="flex items-center gap-2">
                         {alerta.link && (
-                          <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1">
+                          <Button variant="outline" size="sm" className="h-7 text-[11px] font-bold gap-1">
                             Acessar Registro <ArrowRight className="h-3 w-3" />
                           </Button>
                         )}
                         {permissions.isAdminAnalyst() && (
-                          <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold gap-1 text-primary">
+                          <Button variant="ghost" size="sm" className="h-7 text-[11px] font-bold gap-1 text-primary">
                             <MessageSquare className="h-3 w-3" /> Enviar Lembrete
                           </Button>
                         )}
                         {alerta.status !== 'resolvido' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleResolveAlerta(alerta.id)} className="h-7 text-[10px] font-bold gap-1 ml-auto">
+                          <Button variant="ghost" size="sm" onClick={() => handleResolveAlerta(alerta.id)} className="h-7 text-[11px] font-bold gap-1 ml-auto">
                             <CheckCircle2 className="h-3 w-3" /> Marcar Lido
                           </Button>
                         )}

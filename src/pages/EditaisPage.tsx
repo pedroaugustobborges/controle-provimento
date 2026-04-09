@@ -63,16 +63,16 @@ export default function EditaisPage() {
                   >
                     <TableCell>
                       <div className="font-semibold text-slate-800">{e.vaga?.cargo || '—'}</div>
-                      <div className="text-[10px] text-slate-500">{e.vaga?.unidade || '—'}</div>
+                      <div className="text-[11px] text-slate-500">{e.vaga?.unidade || '—'}</div>
                     </TableCell>
                     <TableCell className="font-mono text-xs text-slate-700">{e.numero_processo || '—'}</TableCell>
                     <TableCell className="font-mono text-xs text-primary font-bold">{e.numero_edital || '—'}</TableCell>
                     <TableCell className="text-xs text-slate-600">{formatDate(e.data_abertura_edital)}</TableCell>
                     <TableCell>
-                      <Badge className={`${getEtapaColor(e.etapa_atual)} font-bold text-[10px]`}>{ETAPA_LABELS[e.etapa_atual]}</Badge>
+                      <Badge className={`${getEtapaColor(e.etapa_atual)} font-bold text-[11px]`}>{ETAPA_LABELS[e.etapa_atual]}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={`${getPublicacaoColor(e.status_publicacao)} font-bold text-[10px]`}>
+                      <Badge className={`${getPublicacaoColor(e.status_publicacao)} font-bold text-[11px]`}>
                         {e.status_publicacao === 'pendente' ? 'Pendente' : e.status_publicacao === 'publicado' ? 'Publicado' : 'Encerrado'}
                       </Badge>
                     </TableCell>

@@ -17,6 +17,7 @@ import ImportacoesPage from "@/pages/ImportacoesPage";
 import ValidacaoEditaisPage from "@/pages/ValidacaoEditaisPage";
 import AdministracaoPage from "@/pages/AdministracaoPage";
 import AlertasTarefasPage from "@/pages/AlertasTarefasPage";
+import MonitoramentoAdminPage from "@/pages/MonitoramentoAdminPage";
 import NotFound from "./pages/NotFound.tsx";
 
 

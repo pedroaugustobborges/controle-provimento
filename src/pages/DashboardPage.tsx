@@ -112,10 +112,11 @@ export default function DashboardPage() {
       if (!groups[key]) {
         // Quantidade do banco daquela vaga/grupo
         let qtd = 0;
-        if (typeof b.quantidade_banco === 'number') {
-          qtd = b.quantidade_banco;
-        } else {
-          qtd = parseInt(String(b.quantidade_banco || '0')) || 0;
+        const rawQtd = b.quantidade_banco;
+        if (typeof rawQtd === 'number') {
+          qtd = rawQtd;
+        } else if (rawQtd) {
+          qtd = parseInt(String(rawQtd).replace(/[^\d]/g, '')) || 0;
         }
 
         groups[key] = {

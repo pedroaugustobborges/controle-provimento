@@ -11,18 +11,26 @@ import {
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
-  FileUp
+  FileUp, CheckSquare
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
-import { STATUS_EDITAL_COLORS, StatusEdital } from '@/types/vaga';
+import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, 
+  DialogFooter, DialogDescription 
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+
 
 export default function FilaEditaisPage() {
   const navigate = useNavigate();

@@ -116,7 +116,7 @@ export function AppSidebar() {
                           </NavLink>
                         </SidebarMenuButton>
                         {!collapsed && (
-                          <SidebarMenuSub className="ml-4 mt-2 border-l border-white/5 space-y-1.5 pb-2">
+                          <SidebarMenuSub className="ml-4.5 mt-1 border-l border-white/10 space-y-1 pb-2">
                             {item.subMenu.map((sub) => {
                               const subActive = isUrlActive(sub.url);
                               return (
@@ -125,20 +125,13 @@ export function AppSidebar() {
                                     <NavLink
                                       to={sub.url}
                                       className={cn(
-                                        "text-sm py-2.5 px-4 rounded-lg transition-all duration-300 block relative overflow-hidden group/sub select-none",
+                                        "text-[13px] py-1.5 px-3.5 rounded-md transition-all duration-200 block relative select-none",
                                         subActive 
-                                          ? "text-white font-bold bg-[#2563EB] shadow-[0_4px_20px_rgba(37,99,235,0.5)] border border-white/10 ring-1 ring-white/20" 
-                                          : "text-white/50 hover:text-white hover:bg-white/10"
+                                          ? "text-white font-semibold bg-[#2563EB]" 
+                                          : "text-white/40 hover:text-white/80 hover:bg-white/[0.05]"
                                       )}
                                     >
                                       <span className="relative z-10 block leading-tight">{sub.title}</span>
-                                      {subActive && (
-                                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                                      )}
-                                      <div className={cn(
-                                        "absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full transition-transform duration-300 ease-out",
-                                        subActive ? "scale-y-100" : "scale-y-0"
-                                      )} />
                                     </NavLink>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>

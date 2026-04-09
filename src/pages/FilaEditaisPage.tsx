@@ -283,6 +283,86 @@ export default function FilaEditaisPage() {
       </Card>
 
       <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+
+      <Dialog open={isSendModalOpen} onOpenChange={setIsSendModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Send className="h-5 w-5" />
+              Enviar para Fila de Edital
+            </DialogTitle>
+            <DialogDescription>
+              Confirme as informações validadas com a unidade antes de encaminhar a vaga para a redação do edital.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedVaga && (
+            <div className="space-y-6 py-4">
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500 font-medium">Unidade:</span>
+                  <span className="font-bold text-slate-700">{selectedVaga.unidade}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500 font-medium">Cargo:</span>
+                  <span className="font-bold text-slate-700">{selectedVaga.cargo}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-primary" />
+                  Validações Obrigatórias
+                </h4>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setCargoValidado(!cargoValidado)}>
+                    <Checkbox id="cargo" checked={cargoValidado} onCheckedChange={(checked) => setCargoValidado(checked as boolean)} />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="cargo" className="text-sm font-medium cursor-pointer">Cargo validado com a unidade</Label>
+                      <p className="text-xs text-slate-500">Confirmo que a nomenclatura do cargo está correta.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setCargaValidada(!cargaValidada)}>
+                    <Checkbox id="carga" checked={cargaValidada} onCheckedChange={(checked) => setCargaValidada(checked as boolean)} />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="carga" className="text-sm font-medium cursor-pointer">Carga horária validada com a unidade</Label>
+                      <p className="text-xs text-slate-500">Confirmo que a jornada semanal está correta.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setSalarioValidado(!salarioValidado)}>
+                    <Checkbox id="salario" checked={salarioValidado} onCheckedChange={(checked) => setSalarioValidado(checked as boolean)} />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="salario" className="text-sm font-medium cursor-pointer">Salário validado com a unidade</Label>
+                      <p className="text-xs text-slate-500">Confirmo que a remuneração está atualizada.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="obs" className="text-sm font-semibold text-slate-800">Observações para Analista do Edital</Label>
+                <Textarea 
+                  id="obs" 
+                  placeholder="Instruções sobre salário, carga horária, urgência ou perfil da vaga..."
+                  className="min-h-[100px] resize-none"
+                  value={obsUnidade}
+                  onChange={(e) => setObsUnidade(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSendModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleConfirmSend} className="bg-primary hover:bg-primary/90">
+              Confirmar e Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

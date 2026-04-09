@@ -382,6 +382,7 @@ export function ImportExcelDialog({
             analista_responsavel: defaultAnalista,
             assistentes: assistentes,
             observacoes_internas: obsAcomp,
+            origem: 'importada',
             origem_importacao: selectedFile.name,
             data_importacao: now,
             lote_importacao: batchId,
@@ -401,7 +402,7 @@ export function ImportExcelDialog({
             historico: [{
               id: `h-${Date.now()}-${newVagas.length + 1}`,
               data: now.split('T')[0],
-              descricao: 'Importado via fluxo reformulado',
+              descricao: 'Vaga importada via planilha',
               usuario: 'Sistema'
             }]
           });

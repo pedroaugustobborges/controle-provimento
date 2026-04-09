@@ -484,6 +484,14 @@ export default function ConvocacoesPage() {
         vaga={selectedVaga}
       />
 
+      {selectedConvocacao && (
+        <DevolutivaDialog 
+          open={isDevolutivaOpen} 
+          onOpenChange={setIsDevolutivaOpen} 
+          convocacao={selectedConvocacao} 
+        />
+      )}
+
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

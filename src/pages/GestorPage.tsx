@@ -8,6 +8,8 @@ import { TIPO_VAGA_LABELS, STATUS_LABELS, ETAPA_LABELS } from '@/types/vaga';
 import { calcDiasAberto, formatDate, getEtapaColor, isVitoriaUnit } from '@/lib/vagaUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Clock, History, FileSpreadsheet, User, CheckCircle2, AlertCircle } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
+
 
 const PIE_COLORS = ['hsl(213,70%,45%)', 'hsl(38,92%,50%)', 'hsl(280,50%,55%)', 'hsl(199,89%,48%)', 'hsl(142,60%,42%)', 'hsl(0,0%,70%)', 'hsl(0,65%,55%)'];
 
@@ -40,35 +42,37 @@ export default function GestorPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-800">Administração e Gestão</h2>
-          <p className="text-slate-500 mt-1">Indicadores de performance e histórico operacional do sistema.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex bg-slate-100 p-1 rounded-lg">
-            <button 
-              onClick={() => setActiveTab('stats')}
-              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'stats' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              Indicadores
-            </button>
-            <button 
-              onClick={() => setActiveTab('history')}
-              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'history' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              Histórico
-            </button>
-          </div>
-          <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-            <SelectTrigger className="w-[200px] bg-white border-slate-200"><SelectValue placeholder="Todas Unidades" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas Unidades</SelectItem>
-              {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <PageHeader 
+        title="Administração e Gestão"
+        subtitle="Painel consolidado de indicadores de performance, produtividade e histórico operacional do sistema AGIR."
+        badge="Business Intelligence"
+        actions={
+          <>
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">
+              <button 
+                onClick={() => setActiveTab('stats')}
+                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${activeTab === 'stats' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Indicadores
+              </button>
+              <button 
+                onClick={() => setActiveTab('history')}
+                className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${activeTab === 'history' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Histórico
+              </button>
+            </div>
+            <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+              <SelectTrigger className="w-[200px] bg-white border-slate-200 h-10 rounded-xl font-bold text-xs"><SelectValue placeholder="Todas Unidades" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas Unidades</SelectItem>
+                {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </>
+        }
+      />
+
 
       {activeTab === 'stats' ? (
         <>

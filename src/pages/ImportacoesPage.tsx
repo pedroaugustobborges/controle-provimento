@@ -46,8 +46,9 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DatabaseService } from '@/services/databaseService';
-
+import { PageHeader } from '@/components/PageHeader';
 import { useEffect } from 'react';
+
 
 export default function ImportacoesPage() {
   const { importHistory, importedFiles, deleteImportedFile, clearAllData, fixWrongImportBatches } = useVagasStore();
@@ -168,24 +169,26 @@ export default function ImportacoesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Importações</h1>
-          <p className="text-slate-500 mt-1">Gerencie a migração inicial e a entrada de dados em massa.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-            onClick={() => setIsClearAllDialogOpen(true)}
-          >
-            <Trash2 className="h-4 w-4" /> Limpar Todos os Dados
-          </Button>
-          <Button className="gap-2 bg-primary" onClick={() => { setReprocessFile(null); setIsImportOpen(true); }}>
-            <Upload className="h-4 w-4" /> Nova Importação
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Importações de Dados"
+        subtitle="Central de migração inicial e atualização em massa de registros via planilhas estruturadas."
+        badge="Data Management"
+        actions={
+          <>
+            <Button 
+              variant="outline" 
+              className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 h-10 px-4 rounded-xl font-bold"
+              onClick={() => setIsClearAllDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Limpar Dados
+            </Button>
+            <Button className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 px-4 rounded-xl font-bold" onClick={() => { setReprocessFile(null); setIsImportOpen(true); }}>
+              <Upload className="h-4 w-4" /> Nova Importação
+            </Button>
+          </>
+        }
+      />
+
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-slate-200 shadow-sm bg-white">

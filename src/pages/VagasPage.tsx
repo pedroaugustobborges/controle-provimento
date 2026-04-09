@@ -29,6 +29,8 @@ import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
 import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
+import { PageHeader } from '@/components/PageHeader';
+
 import {
   DropdownMenu,
   DropdownMenuContent,

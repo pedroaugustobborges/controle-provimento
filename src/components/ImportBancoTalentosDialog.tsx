@@ -465,7 +465,14 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
 
           mappings.forEach(m => {
             if (m.excel && m.excel !== 'no_mapping') {
-              const colIndex = headers.indexOf(m.excel);
+              // Normalize headers for matching
+              const normalizedHeaders = headers.map(h => 
+                (h !== null && h !== undefined) 
+                  ? String(h).trim().replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ')
+                  : ''
+              );
+              const colIndex = normalizedHeaders.indexOf(m.excel);
+              
               if (colIndex !== -1) {
                 const rawVal = row[colIndex];
                 if (m.isDate) {
@@ -475,6 +482,11 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                   const val = String(rawVal || '').toLowerCase();
                   const isSim = val === 'sim' || val === 's' || val === 'true' || val === '1' || val === 'checked';
                   mapped[m.system] = isSim;
+                } else if (m.system === 'quantidade_banco') {
+                  // Handle quantity as a number if possible
+                  const val = String(rawVal || '').trim();
+                  const num = parseInt(val);
+                  mapped[m.system] = isNaN(num) ? val : num;
                 } else {
                   mapped[m.system] = String(rawVal || '').trim();
                 }

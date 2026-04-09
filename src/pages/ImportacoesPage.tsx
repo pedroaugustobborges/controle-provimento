@@ -47,10 +47,24 @@ import { ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DatabaseService } from '@/services/databaseService';
 
+import { useEffect } from 'react';
+
 export default function ImportacoesPage() {
-  const { importHistory, importedFiles, deleteImportedFile, clearAllData } = useVagasStore();
+  const { importHistory, importedFiles, deleteImportedFile, clearAllData, fixWrongImportBatches } = useVagasStore();
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [reprocessFile, setReprocessFile] = useState<any>(null);
+
+  useEffect(() => {
+    // Run fix logic once on mount
+    const wrongBatches = importHistory.filter(h => 
+      h.tipo_importacao === 'banco' && 
+      (h.arquivo || h.nome_arquivo || '').toLowerCase().includes('vagas')
+    );
+    if (wrongBatches.length > 0) {
+      fixWrongImportBatches();
+      toast.info(`Identificamos ${wrongBatches.length} lote(s) de importação de Vagas que foram salvos como Banco indevidamente. Foram removidos para re-importação correta.`);
+    }
+  }, [fixWrongImportBatches, importHistory]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);

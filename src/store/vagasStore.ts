@@ -49,6 +49,7 @@ interface VagasState {
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
   getMatchingDiagnostic: () => any[];
+  fixWrongImportBatches: () => void;
 }
 
 export const useVagasStore = create<VagasState>()(
@@ -265,6 +266,25 @@ export const useVagasStore = create<VagasState>()(
             }))
           };
         }).filter(Boolean);
+      },
+      fixWrongImportBatches: () => {
+        const state = get();
+        // Identify batches that are BANCO but should be VAGAS based on filename
+        const wrongBatches = state.importHistory.filter(h => 
+          h.tipo_importacao === 'banco' && 
+          (h.arquivo || h.nome_arquivo || '').toLowerCase().includes('vagas')
+        );
+
+        if (wrongBatches.length > 0) {
+          console.log(`[FIX] Encontrados ${wrongBatches.length} lotes de importação incorretos.`);
+          
+          wrongBatches.forEach(batch => {
+            console.log(`- Removendo lote ${batch.id} (${batch.arquivo}) do tipo BANCO...`);
+            // We can't automatically convert because the data structure is incompatible,
+            // so we delete them to allow a clean re-import with the new logic.
+            get().deleteImportBatch(batch.id);
+          });
+        }
       },
     }),
     {

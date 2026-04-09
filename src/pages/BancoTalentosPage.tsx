@@ -155,10 +155,11 @@ export default function BancoTalentosPage() {
 
       if (!groups[key]) {
         let qtd = 0;
-        if (typeof b.quantidade_banco === 'number') {
-          qtd = b.quantidade_banco;
-        } else {
-          qtd = parseInt(String(b.quantidade_banco || '0')) || 0;
+        const rawQtd = b.quantidade_banco;
+        if (typeof rawQtd === 'number') {
+          qtd = rawQtd;
+        } else if (rawQtd) {
+          qtd = parseInt(String(rawQtd).replace(/[^\d]/g, '')) || 0;
         }
 
         groups[key] = {
@@ -479,7 +480,9 @@ export default function BancoTalentosPage() {
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cadastro Reserva</p>
-                <p className="text-2xl font-bold text-slate-900">{filtered.length}</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {groupedBancos.filter(g => g.status === 'CADASTRO RESERVA').reduce((sum, g) => sum + g.qtdBanco, 0)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -546,7 +549,9 @@ export default function BancoTalentosPage() {
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Visível</p>
-                <p className="text-2xl font-bold text-slate-900">{filtered.length}</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
+                </p>
               </div>
             </div>
           </CardContent>

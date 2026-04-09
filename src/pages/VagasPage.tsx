@@ -131,7 +131,10 @@ export default function VagasPage() {
         (v.unidade || '').toLowerCase().includes(searchTerm) ||
         (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-      const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
+      const matchStatus = filterStatus === 'all' || 
+        v.status === filterStatus || 
+        v.status_geral === filterStatus ||
+        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao');
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
       const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);

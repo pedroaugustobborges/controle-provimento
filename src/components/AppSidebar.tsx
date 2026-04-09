@@ -174,7 +174,7 @@ export function AppSidebar() {
 
         {secondaryItems.length > 0 && (
           <SidebarGroup className="mt-4">
-            <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Apoio Administrativo</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-4 text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-4">Apoio Administrativo</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {secondaryItems.map((item) => {

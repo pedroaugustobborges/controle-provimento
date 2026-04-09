@@ -729,14 +729,14 @@ export default function BancoTalentosPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50/80">
+                <TableHeader >
                   <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Proc. Seletivo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Unidade</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Qtd. Banco</TableHead>
+                    <TableHead >Edital</TableHead>
+                    <TableHead >Proc. Seletivo</TableHead>
+                    <TableHead >Cargo</TableHead>
+                    <TableHead >Unidade</TableHead>
+                    <TableHead >Status</TableHead>
+                    <TableHead >Qtd. Banco</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -841,14 +841,14 @@ export default function BancoTalentosPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-slate-50/80">
+                  <TableHeader >
                     <TableRow>
-                      <TableHead className="text-[10px] font-bold uppercase">Nome</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
+                      <TableHead >Nome</TableHead>
+                      <TableHead >Cargo</TableHead>
+                      <TableHead >Edital</TableHead>
                       <TableHead className="text-[10px] font-bold uppercase text-center">Class.</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Data Conv.</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase">Unid. Conv.</TableHead>
+                      <TableHead >Data Conv.</TableHead>
+                      <TableHead >Unid. Conv.</TableHead>
                       <TableHead className="text-[10px] font-bold uppercase text-center">N° Chamada</TableHead>
                       <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
                     </TableRow>
@@ -907,13 +907,13 @@ export default function BancoTalentosPage() {
         <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>
-              <TableHeader className="bg-slate-50/80">
+              <TableHeader >
                 <TableRow>
-                  <TableHead className="text-[10px] font-bold uppercase">Data/Hora</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase">Arquivo</TableHead>
+                  <TableHead >Data/Hora</TableHead>
+                  <TableHead >Arquivo</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-center">Registros</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase">Usuário</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
+                  <TableHead >Usuário</TableHead>
+                  <TableHead >Status</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>

@@ -216,11 +216,11 @@ export default function ConvocacoesPage() {
           </CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50/30">
+              <TableHeader >
                 <TableRow>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider">Requisição</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider">Cargo</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider">Unidade</TableHead>
+                  <TableHead >Requisição</TableHead>
+                  <TableHead >Cargo</TableHead>
+                  <TableHead >Unidade</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Banco?</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Data Abertura</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-wider text-right">Ação</TableHead>
@@ -318,13 +318,13 @@ export default function ConvocacoesPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50/30">
+                <TableHeader >
                   <TableRow>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider">Candidato</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider">Vaga / Cargo</TableHead>
+                    <TableHead >Candidato</TableHead>
+                    <TableHead >Vaga / Cargo</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Data/Hora</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-wider">Unidade</TableHead>
+                    <TableHead >Unidade</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase tracking-wider text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>

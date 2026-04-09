@@ -707,7 +707,7 @@ export default function VagaDetalhePage() {
             <CardHeader className="pb-2 border-b bg-slate-50/50 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Linha do Tempo</CardTitle>
               <div className="flex gap-2">
-                <Badge variant={vaga.origem === 'manual' ? 'default' : 'outline'} className="text-[10px] font-bold uppercase">
+                <Badge variant={vaga.origem === 'manual' ? 'default' : 'outline'} >
                   {vaga.origem === 'manual' ? 'Origem Manual' : 'Origem Importada'}
                 </Badge>
                 <Badge variant="outline" className="text-[10px] font-bold uppercase bg-white">
@@ -1564,13 +1564,13 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/50">
+            <TableHeader >
               <TableRow>
-                <TableHead className="text-[10px] font-bold uppercase">Data/Hora</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase">Candidato</TableHead>
+                <TableHead >Data/Hora</TableHead>
+                <TableHead >Candidato</TableHead>
                 <TableHead className="text-[10px] font-bold uppercase text-center">Class.</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
-                <TableHead className="text-[10px] font-bold uppercase">E-doc</TableHead>
+                <TableHead >Status</TableHead>
+                <TableHead >E-doc</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>

@@ -69,11 +69,11 @@ export function ImportExcelDialog({
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      processFile(selectedFile);
+      detectImportType(selectedFile);
     }
   };
 
-  const processFile = async (selectedFile: File) => {
+  const detectImportType = async (selectedFile: File) => {
     setIsProcessing(true);
     setStep('processing');
 
@@ -82,32 +82,93 @@ export function ImportExcelDialog({
       try {
         const data = evt.target?.result;
         const wb = XLSX.read(data, { type: 'array' });
-        const fileName = selectedFile.name.toLowerCase();
-        const now = new Date().toISOString();
-        const batchId = `IMPORT-${Date.now()}`;
+        setWorkbook(wb);
 
+        const fileName = selectedFile.name.toLowerCase();
         const sheetNames = wb.SheetNames;
+        
         const hasVagaSheet = sheetNames.some(name => VAGA_SHEETS.includes(name));
         const hasBancoSheet = sheetNames.includes('BANCO GERAL');
-        
-        let importType: 'vagas' | 'banco' | null = null;
-        
+
+        let type: 'vagas' | 'banco' | null = null;
+        let conf: 'high' | 'low' = 'low';
+        let criteria = [];
+
+        // Detecção por Planilhas
         if (hasVagaSheet) {
-          importType = 'vagas';
+          const sheet = wb.Sheets[VAGA_SHEETS.find(name => sheetNames.includes(name))!];
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:Z10');
+          const firstRow = [];
+          for (let col = range.s.c; col <= Math.min(range.e.c, 10); col++) {
+            const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+            if (cell) firstRow.push(String(cell.v).toUpperCase());
+          }
+          
+          const hasVagaHeaders = firstRow.includes('ABERTURA') || firstRow.includes('CARGO') || firstRow.includes('UNIDADE');
+          if (hasVagaHeaders) {
+            type = 'vagas';
+            conf = 'high';
+          } else {
+            type = 'vagas';
+            conf = 'low';
+          }
         } else if (hasBancoSheet) {
-          importType = 'banco';
-        } else if (fileName.includes('vagas')) {
-          importType = 'vagas';
-        } else if (fileName.includes('banco')) {
-          importType = 'banco';
-        } else if (fileName.endsWith('.xlsm')) {
-          importType = 'vagas';
-        } else if (fileName.endsWith('.xlsx')) {
-          importType = 'banco';
+          const sheet = wb.Sheets['BANCO GERAL'];
+          const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:Z10');
+          const firstRow = [];
+          for (let col = range.s.c; col <= Math.min(range.e.c, 10); col++) {
+            const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+            if (cell) firstRow.push(String(cell.v).toUpperCase());
+          }
+          const hasBancoHeaders = firstRow.includes('CARGO') && firstRow.includes('STATUS');
+          if (hasBancoHeaders) {
+            type = 'banco';
+            conf = 'high';
+          } else {
+            type = 'banco';
+            conf = 'low';
+          }
+        } 
+        
+        // Refinamento por nome de arquivo se necessário
+        if (!type) {
+          if (fileName.includes('vagas') || fileName.includes('proposta') || fileName.endsWith('.xlsm')) {
+            type = 'vagas';
+            conf = 'low';
+          } else if (fileName.includes('banco') || fileName.includes('talentos') || fileName.endsWith('.xlsx')) {
+            type = 'banco';
+            conf = 'low';
+          }
         }
 
-        if (importType === 'vagas') {
-          const newVagas: Vaga[] = [];
+        setDetectedType(type);
+        setConfidence(conf);
+        setStep('confirm');
+      } catch (error) {
+        console.error(error);
+        toast.error("Erro ao ler o arquivo.");
+        reset();
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    reader.readAsArrayBuffer(selectedFile);
+  };
+
+  const processFile = async (importType: 'vagas' | 'banco') => {
+    if (!workbook || !file) return;
+
+    setIsProcessing(true);
+    setStep('processing');
+
+    try {
+      const wb = workbook;
+      const selectedFile = file;
+      const now = new Date().toISOString();
+      const batchId = `IMPORT-${Date.now()}`;
+
+      if (importType === 'vagas') {
+        const newVagas: Vaga[] = [];
           let totalProcessed = 0;
 
           VAGA_SHEETS.forEach(sheetName => {

@@ -28,6 +28,7 @@ const mainItems = [
     { title: 'Todas as Vagas', url: '/vagas' },
     { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
     { title: 'Fila de Editais', url: '/fila-editais' },
+    { title: 'Redação do Edital', url: '/fila-analista-edital' },
   ] },
   { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users, subMenu: [
     { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },

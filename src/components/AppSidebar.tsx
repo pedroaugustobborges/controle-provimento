@@ -60,6 +60,7 @@ export function AppSidebar() {
   };
 
   const secondaryItems = [
+    { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: true },
     { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle, visible: true },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: canImport() },
     { title: 'Administração', url: '/gestor', icon: Settings, visible: canAccessAdmin() },

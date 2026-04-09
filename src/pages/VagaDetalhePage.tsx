@@ -301,11 +301,16 @@ export default function VagaDetalhePage() {
       addEdital({
         id: `e-${Date.now()}`,
         vaga_id: vaga.id,
-        status: 'Fila de Publicação' as any,
-        unidade: vaga.unidade,
-        cargo: vaga.cargo,
-        data_solicitacao: today,
-        prioridade: 'media'
+        numero_processo: vaga.numero_processo || '',
+        numero_edital: vaga.numero_edital || '',
+        data_abertura_edital: today,
+        etapa_atual: 'inscricoes',
+        total_inscritos: 0,
+        aprovados_triagem: 0,
+        convocados_entrevista: 0,
+        aprovados_finais: 0,
+        possui_banco_talentos: false,
+        status_publicacao: 'pendente'
       });
     }
 

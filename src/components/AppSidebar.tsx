@@ -13,12 +13,14 @@ import {
 } from 'lucide-react';
 
 import { NavLink } from '@/components/NavLink';
+import { useLocation } from 'react-router-dom';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
   SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/hooks/usePermissions';
+import { cn } from '@/lib/utils';
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },

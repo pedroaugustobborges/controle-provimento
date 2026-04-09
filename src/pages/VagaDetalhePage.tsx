@@ -12,7 +12,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS } from '@/types/vaga';
-import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check, Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle } from 'lucide-react';
+import { 
+  ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, 
+  FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check, 
+  Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
+  AlertTriangle, ArrowRightCircle, ExternalLink
+} from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -40,16 +45,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Zap, 
-  UserCheck, 
-  Send, 
-  Search, 
-  CheckCircle, 
-  AlertTriangle,
-  ArrowRightCircle,
-  ExternalLink
-} from 'lucide-react';
 
 
 export default function VagaDetalhePage() {

@@ -291,20 +291,40 @@ export default function BancoTalentosPage() {
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2"><User className="h-3 w-3" /> Candidatos Classificados ({selectedGroupCandidates.length})</div>
                 </h3>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {selectedGroupCandidates.map((c, idx) => (
-                    <div key={c.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-7 w-7 bg-white border border-slate-200 rounded-full flex items-center justify-center text-[10px] font-bold text-primary shadow-sm">
-                          {c.classificacao}°
+                    <div key={c.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-primary shadow-sm">
+                            {c.classificacao}°
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{c.nome || "Não identificado"}</p>
+                            <p className="text-[10px] text-slate-400 font-medium uppercase">Candidato</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-800">{c.nome || "Não identificado"}</p>
-                          <p className="text-[10px] text-slate-400 font-medium">Classificação original</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
                         {getStatusBadge(c.status)}
+                      </div>
+
+                      {/* Dados de Convocação e Detalhes */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-slate-200/50">
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Chamada</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{c.numero_chamada || "—"}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Vagas Aproveitamento</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{c.numero_vaga_aproveitamento || "—"}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
+                          <p className="text-[11px] font-semibold text-green-600">{c.data_convocacao ? formatDate(c.data_convocacao) : "—"}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Unidade Convocação</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{c.unidade_convocacao || "—"}</p>
+                        </div>
                       </div>
                     </div>
                   ))}

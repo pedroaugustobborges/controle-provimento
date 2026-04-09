@@ -89,7 +89,6 @@ export function ImportExcelDialog({
             if (!sheet) return;
 
             const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
             
             for (let i = 2; i < rawRows.length; i++) { // Dados iniciam na linha 3 (index 2)
               const row = rawRows[i];

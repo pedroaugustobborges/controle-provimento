@@ -42,6 +42,7 @@ const App = () => (
             <Route path="/validacao-editais" element={<ValidacaoEditaisPage />} />
             <Route path="/gestor" element={<AdministracaoPage />} />
             <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
+            <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

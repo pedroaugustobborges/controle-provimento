@@ -85,18 +85,36 @@ export const AgieChat = () => {
             className="mb-4 w-[380px] h-[550px] bg-white rounded-2xl shadow-2xl border flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-primary p-4 text-white flex items-center justify-between">
+            <div className="bg-primary p-4 text-white flex items-center justify-between shadow-lg">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative">
-                  <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md relative overflow-hidden group">
+                  {/* Agie Face inside the chat */}
+                  <motion.div 
+                    animate={{ y: [0, -1, 1, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="flex flex-col items-center justify-center gap-1"
+                  >
+                    <div className="flex gap-1.5">
+                      <motion.div 
+                        animate={{ height: [2, 2, 0, 2] }}
+                        transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }}
+                        className="w-1.5 h-1.5 bg-white rounded-full" 
+                      />
+                      <motion.div 
+                        animate={{ height: [2, 2, 0, 2] }}
+                        transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }}
+                        className="w-1.5 h-1.5 bg-white rounded-full" 
+                      />
+                    </div>
+                  </motion.div>
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-primary rounded-full" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm leading-tight">Agie</h3>
-                  <p className="text-[10px] text-white/70 uppercase tracking-wider font-semibold">Assistente Interno</p>
+                  <h3 className="font-bold text-sm leading-tight tracking-tight">Agie</h3>
+                  <p className="text-[10px] text-white/70 uppercase tracking-widest font-black">Assistente AG Saúde</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full" onClick={() => setIsOpen(false)}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -265,28 +283,55 @@ export const AgieChat = () => {
 
         <motion.div
           animate={{
-            y: [0, -6, 0],
-            rotate: [0, -1, 1, 0]
+            y: [0, -8, 0],
+            scale: [1, 1.02, 1]
           }}
           transition={{
-            duration: 4,
+            duration: 6,
             repeat: Infinity,
             ease: "easeInOut"
           }}
           className={cn(
-            "w-16 h-16 rounded-full flex items-center justify-center shadow-xl border-4 border-white transition-all duration-500",
-            isOpen ? "bg-slate-200 rotate-90" : "bg-primary hover:shadow-primary/20"
+            "w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-2xl border-4 transition-all duration-500 overflow-hidden",
+            isOpen 
+              ? "bg-white border-primary rotate-90" 
+              : "bg-primary border-white hover:shadow-primary/40"
           )}
         >
           {isOpen ? (
-            <X className="w-8 h-8 text-primary" />
+            <X className="w-8 h-8 text-primary -rotate-90" />
           ) : (
-            <div className="relative">
-              <Sparkles className="w-8 h-8 text-white animate-pulse" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-1.5 opacity-0 hover:opacity-100 transition-opacity">
-                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
-                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce delay-75" />
+            <div className="flex flex-col items-center gap-1">
+              {/* Agie Animated Face */}
+              <div className="flex gap-2 mb-0.5">
+                <motion.div 
+                  animate={{ 
+                    scaleY: [1, 1, 0.1, 1],
+                  }}
+                  transition={{ 
+                    duration: 4, 
+                    repeat: Infinity,
+                    times: [0, 0.9, 0.92, 1]
+                  }}
+                  className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+                />
+                <motion.div 
+                  animate={{ 
+                    scaleY: [1, 1, 0.1, 1],
+                  }}
+                  transition={{ 
+                    duration: 4, 
+                    repeat: Infinity,
+                    times: [0, 0.9, 0.92, 1]
+                  }}
+                  className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+                />
               </div>
+              <motion.div 
+                animate={{ width: [8, 12, 8] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="h-1 bg-white/40 rounded-full" 
+              />
             </div>
           )}
         </motion.div>

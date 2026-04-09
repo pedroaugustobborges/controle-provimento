@@ -96,7 +96,7 @@ export interface VagaCronograma {
 }
 
 export interface EtapaStatus {
-  etapa: EtapaEdital;
+  etapa: EtapaEdital | string;
   concluida: boolean;
   data_prevista?: string;
   data_realizada?: string;

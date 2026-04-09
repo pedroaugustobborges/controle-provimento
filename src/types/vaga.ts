@@ -252,7 +252,9 @@ export interface ImportHistory {
   nome_arquivo?: string;
   tipo_importacao?: 'vagas' | 'banco' | 'convocacoes';
   planilha_aba?: string;
+  aba_utilizada?: string;
   linha_cabecalho?: number;
+  colunas_reconhecidas?: string;
   total_lidos: number;
   total_novos: number;
   total_atualizados: number;

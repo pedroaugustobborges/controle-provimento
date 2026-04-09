@@ -173,25 +173,25 @@ export default function FilaEditaisPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                  <th className="px-6 py-4 text-left">Requisição</th>
-                  <th className="px-6 py-4 text-left">Unidade</th>
-                  <th className="px-6 py-4 text-left">Cargo</th>
-                  <th className="px-6 py-4 text-left">Tipo</th>
-                  <th className="px-6 py-4 text-center">Vagas</th>
-                  <th className="px-6 py-4 text-left">Recebimento</th>
-                  <th className="px-6 py-4 text-center">Dias Aberto</th>
-                  <th className="px-6 py-4 text-left">Status Atual</th>
-                  <th className="px-6 py-4 text-left">Responsável</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Requisição</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-center">Vagas</TableHead>
+                  <TableHead>Recebimento</TableHead>
+                  <TableHead className="text-center">Dias Aberto</TableHead>
+                  <TableHead>Status Atual</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {pendingVagas.map((v) => (
-                  <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 font-mono text-xs text-primary font-bold">
+                  <TableRow key={v.id} className="group">
+                    <TableCell className="font-mono text-xs text-primary font-bold">
                       {v.requisicao || v.numero_requisicao}
                     </td>
                     <td className="px-6 py-4">

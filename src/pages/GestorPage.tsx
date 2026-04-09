@@ -154,25 +154,25 @@ export default function GestorPage() {
             <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Listagem Consolidada</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      <th className="text-left px-6 py-4">Requisição</th>
-                      <th className="text-left px-6 py-4">Cargo</th>
-                      <th className="text-left px-6 py-4">Unidade</th>
-                      <th className="text-left px-6 py-4">Status</th>
-                      <th className="text-left px-6 py-4">Abertura</th>
-                      <th className="text-left px-6 py-4">Dias</th>
-                      <th className="text-left px-6 py-4">Analista</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Requisição</TableHead>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Unidade</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Abertura</TableHead>
+                      <TableHead>Dias</TableHead>
+                      <TableHead>Analista</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filtered.map((v) => (
-                      <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-4 font-mono text-xs text-primary font-bold">{v.numero_requisicao}</td>
-                        <td className="px-6 py-4 font-semibold text-slate-700">{v.cargo}</td>
-                        <td className="px-6 py-4 text-slate-500">{v.unidade}</td>
-                        <td className="px-6 py-4"><StatusBadge status={v.status_geral} /></td>
+                      <TableRow key={v.id}>
+                        <TableCell className="font-mono text-xs text-primary font-bold">{v.numero_requisicao}</TableCell>
+                        <TableCell className="font-semibold text-slate-700">{v.cargo}</TableCell>
+                        <TableCell className="text-slate-500">{v.unidade}</TableCell>
+                        <TableCell><StatusBadge status={v.status_geral} /></TableCell>
                         <td className="px-6 py-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(v.data_abertura)}</td>
                         <td className="px-6 py-4 text-center">
                           <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[11px]">

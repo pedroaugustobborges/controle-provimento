@@ -13,6 +13,8 @@ import { formatDate } from '@/lib/vagaUtils';
 import { ETAPA_LABELS, EtapaEdital } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 export default function MonitoramentoAdminPage() {
   const navigate = useNavigate();
   const { vagas } = useVagasStore();
@@ -192,22 +194,22 @@ export default function MonitoramentoAdminPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                  <th className="px-6 py-4 text-left">Processo / Cargo</th>
-                  <th className="px-6 py-4 text-left">Unidade</th>
-                  <th className="px-6 py-4 text-left">Analista Responsável</th>
-                  <th className="px-6 py-4 text-left">Etapa Atual</th>
-                  <th className="px-6 py-4 text-center">Data Prevista</th>
-                  <th className="px-6 py-4 text-center">Status Hoje</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Processo / Cargo</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Analista Responsável</TableHead>
+                  <TableHead>Etapa Atual</TableHead>
+                  <TableHead className="text-center">Data Prevista</TableHead>
+                  <TableHead className="text-center">Status Hoje</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {monitoramentoItems.map((v) => (
-                  <tr key={v.id} className={`border-b last:border-0 hover:bg-slate-50/50 transition-colors ${v.isAtrasado ? 'bg-red-50/20' : ''}`}>
-                    <td className="px-6 py-4">
+                  <TableRow key={v.id} className={`${v.isAtrasado ? 'bg-red-50/20' : ''}`}>
+                    <TableCell>
                       <div className="flex flex-col">
                         <span className="font-mono text-[11px] text-primary font-bold">{v.numero_edital || v.numero_processo || v.requisicao}</span>
                         <span className="font-bold text-slate-700">{v.cargo}</span>

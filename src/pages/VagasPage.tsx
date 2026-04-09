@@ -851,7 +851,7 @@ function AcompanhamentoEditalList() {
                       <TableCell className="text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</TableCell>
                       <TableCell className="text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => setSelectedVagaForAcompanhamento(v)}>
+                        <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => navigate(`/vagas/${v.id}`)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
                       </TableCell>

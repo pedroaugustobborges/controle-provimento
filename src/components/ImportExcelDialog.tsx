@@ -19,7 +19,12 @@ import { convertDateValue } from '@/lib/dateImportUtils';
 type Step = 'select' | 'confirm' | 'processing' | 'summary';
 
 const VAGA_SHEETS = [
-  'VAGAS - BASE GERAL'
+  'VAGAS - BASE GERAL',
+  'VAGAS (PROPOSTA)',
+  'VAGAS',
+  'BASE GERAL',
+  'Planilha1',
+  'Sheet1'
 ];
 
 const UNIT_MAPPING: Record<string, string> = {

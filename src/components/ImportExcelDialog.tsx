@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Upload, FileSpreadsheet, CheckCircle2, ArrowRight, 
-  Database, Layers, Check, X, Info
+  Database, Layers, Check, X, Info, AlertCircle
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
 import { Vaga, StatusVaga, TipoVaga, BancoTalentos } from '@/types/vaga';

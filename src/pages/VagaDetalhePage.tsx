@@ -204,6 +204,125 @@ export default function VagaDetalhePage() {
     setPendingStatus(null);
   };
 
+  const handleQuickConvocacao = () => {
+    const bancoFound = getBancoByVaga(vaga.id);
+    if (bancoFound) {
+      setMatchedBanco(bancoFound);
+      setIsQuickConvocacaoOpen(true);
+    } else {
+      toast.error('Nenhum banco de talentos disponível para esta vaga no momento.', {
+        description: 'É necessário ter um edital vigente ou cadastro reserva para realizar convocações.',
+        action: {
+          label: 'Criar Edital',
+          onClick: () => handlePublicarEdital()
+        }
+      });
+    }
+  };
+
+  const confirmQuickConvocacao = () => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 1. Register convocacao
+    const novaConvocacao = {
+      id: `c-${Date.now()}`,
+      vaga_id: vaga.id,
+      banco_id: matchedBanco.id,
+      data_convocacao: today,
+      status: 'pendente' as const,
+      prioridade: 'media' as const,
+      candidato_nome: `Pendente (Banco: ${matchedBanco.numero_edital})`,
+      telefone: '-',
+      email: '-'
+    };
+    
+    addConvocacao(novaConvocacao);
+
+    // 2. Update vaga status
+    const updateData = {
+      status: 'convocacao' as StatusVaga,
+      historico: [...vaga.historico, { 
+        id: `h-${Date.now()}`, 
+        data: today, 
+        descricao: `Convocação iniciada via Ação Rápida. Banco vinculado: ${matchedBanco.numero_edital}`, 
+        usuario: currentUser?.nome_completo || 'Analista' 
+      }],
+      tem_banco_valido: true,
+      banco_id: matchedBanco.id
+    };
+    
+    updateVaga(vaga.id, updateData);
+
+    // 3. Add audit log
+    addAuditLog({
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || 'sistema@sistema.com',
+      perfil: currentUser?.perfil || 'Sistema',
+      data: today,
+      hora: new Date().toLocaleTimeString(),
+      acao: 'Realizar Convocação (Ação Rápida)',
+      modulo: 'Vagas',
+      registro_afetado: vaga.requisicao || vaga.id,
+      valor_novo: 'convocacao'
+    });
+
+    toast.success('Convocação iniciada com sucesso!');
+    setIsQuickConvocacaoOpen(false);
+    
+    // 4. Redirect to daily convocations tab
+    setTimeout(() => {
+      navigate('/convocacoes?tab=diaria');
+    }, 1500);
+  };
+
+  const handlePublicarEdital = () => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const updateData = {
+      status: 'publicar_novo_edital' as StatusVaga,
+      status_edital: 'Fila de Publicação' as any,
+      historico: [...vaga.historico, { 
+        id: `h-${Date.now()}`, 
+        data: today, 
+        descricao: 'Encaminhado para publicação de edital via Ação Rápida', 
+        usuario: currentUser?.nome_completo || 'Analista' 
+      }],
+    };
+
+    updateVaga(vaga.id, updateData);
+    
+    // Add to editais store if not exists
+    if (!edital) {
+      addEdital({
+        id: `e-${Date.now()}`,
+        vaga_id: vaga.id,
+        status: 'Fila de Publicação' as any,
+        unidade: vaga.unidade,
+        cargo: vaga.cargo,
+        data_solicitacao: today,
+        prioridade: 'media'
+      });
+    }
+
+    addAuditLog({
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || 'sistema@sistema.com',
+      perfil: currentUser?.perfil || 'Sistema',
+      data: today,
+      hora: new Date().toLocaleTimeString(),
+      acao: 'Publicar no Edital (Ação Rápida)',
+      modulo: 'Vagas',
+      registro_afetado: vaga.requisicao || vaga.id,
+      valor_novo: 'publicar_novo_edital'
+    });
+
+    toast.success('Vaga encaminhada para Fila de Editais');
+    
+    setTimeout(() => {
+      navigate('/fila-editais');
+    }, 1500);
+  };
+
   const handleSaveIndicators = () => {
     updateVaga(vaga.id, indicators);
     setIsEditingIndicators(false);

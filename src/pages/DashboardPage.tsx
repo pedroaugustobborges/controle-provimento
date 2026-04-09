@@ -134,7 +134,7 @@ export default function DashboardPage() {
   // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR
   const totalCR = useMemo(() => {
     return groupedBancos
-      .filter(g => g.status === 'CADASTRO RESERVA' || g.status === 'valido')
+      .filter(g => g.status === 'CADASTRO RESERVA')
       .reduce((sum, g) => sum + g.qtdBanco, 0);
   }, [groupedBancos]);
 

@@ -146,21 +146,21 @@ export function AppSidebar() {
                           to={item.url}
                           end={item.url === '/'}
                           className={cn(
-                            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                            "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group relative select-none",
                             active 
-                              ? "bg-white/10 text-white font-bold shadow-lg ring-1 ring-white/10" 
-                              : "text-white/60 hover:bg-white/5 hover:text-white"
+                              ? "bg-white/5 text-white font-semibold" 
+                              : "text-white/50 hover:bg-white/[0.03] hover:text-white"
                           )}
                         >
                           <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-all duration-300",
+                            "h-5 w-5 shrink-0 transition-colors duration-200",
                             active 
-                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" 
-                              : "text-white/40 group-hover:text-white group-hover:scale-105"
+                              ? "text-blue-500" 
+                              : "text-white/30 group-hover:text-white/70"
                           )} />
-                          {!collapsed && <span className="text-sm font-medium tracking-wide">{item.title}</span>}
+                          {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
                           {active && !collapsed && (
-                            <div className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
+                            <div className="absolute left-0 w-1 h-5 bg-blue-500/50 rounded-r-full" />
                           )}
                         </NavLink>
                       </SidebarMenuButton>

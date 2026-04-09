@@ -713,31 +713,19 @@ function AcompanhamentoEditalList() {
   const { currentUser } = useAdminStore();
   const navigate = useNavigate();
   const [selectedVagaForAcompanhamento, setSelectedVagaForAcompanhamento] = useState<Vaga | null>(null);
+  const [filterUnidade, setFilterUnidade] = useState('all');
 
   const handleSaveAcompanhamento = (vagaId: string, data: any) => {
     const vaga = vagas.find(v => v.id === vagaId);
     if (vaga) {
       updateVaga(vagaId, { 
         acompanhamento: data,
-        // Sync root level fields if present in data
         total_inscritos: data.total_inscritos,
         aprovados_triagem: data.aprovados_triagem,
         convocados_entrevista: data.convocados_entrevista,
         aprovados_finais: data.aprovados_finais
       });
       toast.success('Acompanhamento atualizado com sucesso');
-    }
-  };
-
-  const handleUpdateEtapa = (vagaId: string, etapa: string) => {
-    const vaga = vagas.find(v => v.id === vagaId);
-    if (vaga) {
-      const updatedAcompanhamento = {
-        ...(vaga.acompanhamento || { etapa_atual: '' }),
-        etapa_atual: etapa
-      };
-      updateVaga(vagaId, { acompanhamento: updatedAcompanhamento });
-      toast.success('Etapa atualizada com sucesso');
     }
   };
 
@@ -753,6 +741,29 @@ function AcompanhamentoEditalList() {
     }
   };
 
+  const canFilterByUnit = useMemo(() => {
+    return currentUser?.perfil === 'Admin' || 
+           currentUser?.perfil === 'Gestão' || 
+           currentUser?.perfil === 'Analista do edital' ||
+           currentUser?.visualiza_todas_unidades;
+  }, [currentUser]);
+
+  const allUnidades = useMemo(() => {
+    const relevantVagas = vagas.filter(v => {
+      const cat = getCategoriaStatus(v);
+      return ['em_andamento', 'fila_edital', 'convocacao', 'documentacao'].includes(cat);
+    });
+    
+    let units = [...new Set(relevantVagas.map(v => normalizeUnitName(v.unidade)))].filter(Boolean).sort();
+    
+    if (!currentUser?.visualiza_todas_unidades) {
+      const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+      units = units.filter(u => userUnidades.includes(u));
+    }
+    
+    return units;
+  }, [vagas, currentUser]);
+
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
       const cat = getCategoriaStatus(v);
@@ -765,17 +776,42 @@ function AcompanhamentoEditalList() {
           return false;
         }
       }
+
+      if (filterUnidade !== 'all' && normalizeUnitName(v.unidade) !== normalizeUnitName(filterUnidade)) {
+        return false;
+      }
+
       return true;
     });
-  }, [vagas, currentUser]);
+  }, [vagas, currentUser, filterUnidade]);
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Acompanhamento do Edital"
-        subtitle="Monitoramento operacional detalhado das etapas e indicadores dos editais publicados."
-        badge="Gestão de Processos"
-      />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <PageHeader 
+          title="Acompanhamento do Edital"
+          subtitle="Monitoramento operacional detalhado das etapas e indicadores dos editais publicados."
+          badge="Gestão de Processos"
+        />
+
+        {canFilterByUnit && (
+          <div className="flex items-center gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+            <Building2 className="h-4 w-4 text-slate-400 ml-2" />
+            <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+              <SelectTrigger className="w-[200px] border-none shadow-none focus:ring-0 font-bold text-slate-600">
+                <SelectValue placeholder="Filtrar por Unidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="font-bold">Todas as Unidades</SelectItem>
+                {allUnidades.map(u => (
+                  <SelectItem key={u} value={u} className="font-medium">{u}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+
 
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">

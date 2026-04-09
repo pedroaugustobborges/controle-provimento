@@ -80,7 +80,27 @@ export function ImportExcelDialog({
         const now = new Date().toISOString();
         const batchId = `IMPORT-${Date.now()}`;
 
-        if (fileName.endsWith('.xlsm')) {
+        const sheetNames = wb.SheetNames;
+        const hasVagaSheet = sheetNames.some(name => VAGA_SHEETS.includes(name));
+        const hasBancoSheet = sheetNames.includes('BANCO GERAL');
+        
+        let importType: 'vagas' | 'banco' | null = null;
+        
+        if (hasVagaSheet) {
+          importType = 'vagas';
+        } else if (hasBancoSheet) {
+          importType = 'banco';
+        } else if (fileName.includes('vagas')) {
+          importType = 'vagas';
+        } else if (fileName.includes('banco')) {
+          importType = 'banco';
+        } else if (fileName.endsWith('.xlsm')) {
+          importType = 'vagas';
+        } else if (fileName.endsWith('.xlsx')) {
+          importType = 'banco';
+        }
+
+        if (importType === 'vagas') {
           const newVagas: Vaga[] = [];
           let totalProcessed = 0;
 

@@ -95,14 +95,14 @@ export default function ValidacaoEditaisPage() {
       perfil: currentUser?.perfil || 'Admin',
       data: new Date().toISOString().split('T')[0],
       hora: new Date().toLocaleTimeString(),
-      acao: `Validação de Edital: ${status.toUpperCase()}`,
+      acao: `Validação de Edital: ${actionStatus.toUpperCase()}`,
       modulo: 'Editais',
       registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
-      valor_novo: status
+      valor_novo: actionStatus
     });
 
 
-    toast.success(`Edital ${status === 'aprovado' ? 'validado' : 'reprovado'} com sucesso.`);
+    toast.success(`Edital ${actionStatus === 'aprovado' ? 'validado' : 'reprovado'} com sucesso.`);
     setIsModalOpen(false);
     setSelectedVaga(null);
     setObs('');

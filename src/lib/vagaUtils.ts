@@ -26,7 +26,7 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['sem_status', 'publicar_novo_edital', 'aberta'],
+  fila_edital: ['sem_status', 'publicar_novo_edital', 'aberta', 'FILA DE EDITAIS', 'SEM STATUS'],
   em_andamento: [
     'em_edital', 
     'em_documentacao', 
@@ -36,34 +36,52 @@ export const CATEGORIAS_STATUS = {
     'admissao_enviada',
     'aguardar_unidade',
     'em_triagem',
-    'entrevista'
+    'entrevista',
+    'EM ANDAMENTO',
+    'DOCUMENTAÇÃO',
+    'AGUARDANDO UNIDADE'
   ],
-  concluidas: ['admissao_efetivada', 'finalizada', 'encerrada'],
-  excecoes: ['dispensa', 'cancelada', 'aguardar_anuencia'],
-  estrategicas: ['movimentacao_interna', 'vaga_lideranca'],
-  convocacao: ['realizar_convocacao']
+  concluidas: ['admissao_efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
+  excecoes: ['dispensa', 'cancelada', 'aguardar_anuencia', 'CANCELADAS', 'SUSPENSA', 'PAUSADA'],
+  estrategicas: ['movimentacao_interna', 'vaga_lideranca', 'MOV. INTERNA', 'ESTRATÉGICAS'],
+  convocacao: ['realizar_convocacao', 'CONVOCAÇÕES']
 };
 
 export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
-  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') return 'em_andamento';
+  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || status === 'SEM STATUS') return 'em_andamento';
   
-  const s = status.toLowerCase().trim();
+  const s = status.trim(); 
   
-  if (CATEGORIAS_STATUS.fila_edital.includes(s)) return 'fila_edital';
-  if (CATEGORIAS_STATUS.em_andamento.includes(s)) return 'em_andamento';
-  if (CATEGORIAS_STATUS.concluidas.includes(s)) return 'concluidas';
-  if (CATEGORIAS_STATUS.excecoes.includes(s)) return 'excecoes';
-  if (CATEGORIAS_STATUS.estrategicas.includes(s)) return 'estrategicas';
-  if (CATEGORIAS_STATUS.convocacao.includes(s)) return 'convocacao';
-  
-  // Se não mapeado, assumimos em andamento para não inflar exceções erroneamente
-  return 'em_andamento';
+  const findCategory = (statusVal: string) => {
+    if (CATEGORIAS_STATUS.fila_edital.includes(statusVal)) return 'fila_edital';
+    if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
+    if (CATEGORIAS_STATUS.concluidas.includes(statusVal)) return 'concluidas';
+    if (CATEGORIAS_STATUS.excecoes.includes(statusVal)) return 'excecoes';
+    if (CATEGORIAS_STATUS.estrategicas.includes(statusVal)) return 'estrategicas';
+    if (CATEGORIAS_STATUS.convocacao.includes(statusVal)) return 'convocacao';
+    return null;
+  };
+
+  const cat = findCategory(s) || findCategory(s.toLowerCase());
+  return cat || 'em_andamento';
 }
 
 
 
 export function getStatusColor(status: StatusVaga): string {
   const map: Record<StatusVaga, string> = {
+    'CONCLUÍDAS': 'bg-green-100 text-green-700 border-green-200',
+    'EM ANDAMENTO': 'bg-blue-100 text-blue-700 border-blue-200',
+    'MOV. INTERNA': 'bg-blue-100 text-blue-700 border-blue-200',
+    'DOCUMENTAÇÃO': 'bg-orange-100 text-orange-700 border-orange-200',
+    'CONVOCAÇÕES': 'bg-violet-100 text-violet-700 border-violet-200',
+    'FILA DE EDITAIS': 'bg-blue-100 text-blue-700 border-blue-200',
+    'SUSPENSA': 'bg-gray-100 text-gray-700 border-gray-200',
+    'PAUSADA': 'bg-amber-100 text-amber-700 border-amber-200',
+    'AGUARDANDO UNIDADE': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    'ESTRATÉGICAS': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    'CANCELADAS': 'bg-red-100 text-red-700 border-red-200',
+    'SEM STATUS': 'bg-gray-100 text-gray-600',
     sem_status: 'bg-gray-100 text-gray-600',
     publicar_novo_edital: 'bg-blue-100 text-blue-700 border-blue-200',
     em_edital: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -194,39 +212,41 @@ export function normalizeCargo(cargo: string): string {
 }
 
 export function normalizeStatus(statusText: string): StatusVaga {
-  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan' || statusText === '0') return 'sem_status';
+  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan' || statusText === '0') {
+    return 'SEM STATUS' as StatusVaga;
+  }
   
-  const text = statusText.toLowerCase().trim();
+  const text = removeAccents(statusText.toLowerCase().trim());
   
-  // Exact or very close matches for the requested statuses
-  if (text === 'admissao efetivada' || text === 'admissão efetivada' || text === 'admissao_efetivada') return 'admissao_efetivada';
-  if (text === 'dispensa' || text.includes('dispensa')) return 'dispensa';
-  if (text === 'cancelada' || text.includes('cancelada') || text.includes('cancelado')) return 'cancelada';
-  if (text.includes('anuencia') || text.includes('anuência')) return 'aguardar_anuencia';
-  if (text.includes('publicar') && text.includes('edital')) return 'publicar_novo_edital';
-  if (text.includes('movimentacao interna') || text.includes('movimentação interna') || text === 'movimentacao_interna') return 'movimentacao_interna';
-  if (text.includes('lideranca') || text.includes('liderança') || text === 'vaga_lideranca') return 'vaga_lideranca';
-  if (text.includes('realizar convocacao') || text.includes('realizar convocação') || text === 'realizar_convocacao') return 'realizar_convocacao';
+  // Mapping conforme solicitado:
+  if (text.includes('admissao efetivada')) return 'CONCLUÍDAS' as StatusVaga;
+  if (text.includes('admissao enviada')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('em edital')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('movimentacao interna')) return 'MOV. INTERNA' as StatusVaga;
   
-  // Broader keyword matches
-  if (text.includes('em edital')) return 'em_edital';
-  if ((text.includes('documentacao ok') || text.includes('documentação ok')) && (text.includes('azul pendente') || text.includes('aso pendente'))) return 'documentacao_ok_azul_pendente';
-  if ((text.includes('documentacao pendente') || text.includes('documentação pendente')) && (text.includes('azul ok') || text.includes('aso ok'))) return 'documentacao_pendente_azul_ok';
-  if (text.includes('document')) return 'em_documentacao';
-  if (text.includes('admissao enviada') || text.includes('admissão enviada')) return 'admissao_enviada';
-  if (text.includes('admissao') || text.includes('admissão')) return 'em_admissao';
-  if (text.includes('unidade') && text.includes('aguardar')) return 'aguardar_unidade';
+  if (text === 'documentacao' || 
+      text.includes('documentacao ok e aso pendente') || 
+      text.includes('aso pendente')) {
+    return 'DOCUMENTAÇÃO' as StatusVaga;
+  }
   
-  // Legacy or generic mappings
-  if (text.includes('triagem')) return 'em_triagem'; 
-  if (text.includes('entrevista')) return 'entrevista';
-  if (text.includes('finaliz') || text.includes('concluid') || text.includes('concluíd') || text.includes('encerrad')) return 'admissao_efetivada';
+  if (text.includes('realizar convocacao')) return 'CONVOCAÇÕES' as StatusVaga;
+  if (text.includes('publicar novo edital') || text.includes('publicar edital')) return 'FILA DE EDITAIS' as StatusVaga;
+  if (text.includes('vaga suspensa')) return 'SUSPENSA' as StatusVaga;
+  if (text.includes('vaga pausada')) return 'PAUSADA' as StatusVaga;
+  if (text.includes('aguardando unidade') || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
+  if (text.includes('vaga de lideranca')) return 'ESTRATÉGICAS' as StatusVaga;
+  if (text.includes('em processo seletivo')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('cancelada') || text.includes('cancelado')) return 'CANCELADAS' as StatusVaga;
   
-  // Default to sem_status if it looks like a placeholder or is very short/unrecognized
-  if (text.length < 3 || text === 'aberta' || text === 'aberto') return 'aberta';
+  // Broader keyword matches from previous version if needed, or stick to user's list
+  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'CONCLUÍDAS' as StatusVaga;
+  if (text.includes('triagem') || text.includes('entrevista')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('aberta') || text.includes('aberto')) return 'EM ANDAMENTO' as StatusVaga;
   
-  return 'sem_status';
+  return 'SEM STATUS' as StatusVaga;
 }
+
 
 
 export function normalizeUnitName(name: string): string {
@@ -401,7 +421,7 @@ export function getStatusSummary(records: any[], selectedUnit: string, selectedM
 
   const summary: Record<string, number> = {};
   validVacancies.forEach(row => {
-    const status = (row.status || row.status_geral || 'SEM_STATUS').toUpperCase().trim();
+    const status = (row.status || row.status_geral || 'SEM STATUS').toUpperCase().trim();
     summary[status] = (summary[status] || 0) + 1;
   });
 

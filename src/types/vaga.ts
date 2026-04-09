@@ -1,22 +1,38 @@
 export type TipoVaga = 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
 export type StatusVaga = 
-  | 'sem_status'
-  | 'publicar_novo_edital'
-  | 'em_edital'
-  | 'em_documentacao'
-  | 'documentacao_ok_azul_pendente'
-  | 'documentacao_pendente_azul_ok'
-  | 'em_admissao'
-  | 'admissao_enviada'
-  | 'admissao_efetivada'
-  | 'dispensa'
-  | 'cancelada'
-  | 'aguardar_anuencia'
-  | 'aguardar_unidade'
-  | 'movimentacao_interna'
-  | 'vaga_lideranca'
-  | 'realizar_convocacao'
-  | 'aberta' | 'em_triagem' | 'entrevista' | 'finalizada' | 'encerrada';
+  | 'CONCLUÍDAS'
+  | 'EM ANDAMENTO'
+  | 'MOV. INTERNA'
+  | 'DOCUMENTAÇÃO'
+  | 'CONVOCAÇÕES'
+  | 'FILA DE EDITAIS'
+  | 'SUSPENSA'
+  | 'PAUSADA'
+  | 'AGUARDANDO UNIDADE'
+  | 'ESTRATÉGICAS'
+  | 'CANCELADAS'
+  | 'SEM STATUS'
+  | 'sem_status' 
+  | 'publicar_novo_edital' 
+  | 'em_edital' 
+  | 'em_documentacao' 
+  | 'documentacao_ok_azul_pendente' 
+  | 'documentacao_pendente_azul_ok' 
+  | 'em_admissao' 
+  | 'admissao_enviada' 
+  | 'admissao_efetivada' 
+  | 'dispensa' 
+  | 'cancelada' 
+  | 'aguardar_anuencia' 
+  | 'aguardar_unidade' 
+  | 'movimentacao_interna' 
+  | 'vaga_lideranca' 
+  | 'realizar_convocacao' 
+  | 'aberta' 
+  | 'em_triagem' 
+  | 'entrevista' 
+  | 'finalizada' 
+  | 'encerrada';
 
 export type StatusGeral = StatusVaga;
 export type StatusConvocacao = 
@@ -292,6 +308,18 @@ export const TIPO_VAGA_LABELS: Record<TipoVaga, string> = {
 };
 
 export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
+  'CONCLUÍDAS': 'Concluídas',
+  'EM ANDAMENTO': 'Em Andamento',
+  'MOV. INTERNA': 'Mov. Interna',
+  'DOCUMENTAÇÃO': 'Documentação',
+  'CONVOCAÇÕES': 'Convocações',
+  'FILA DE EDITAIS': 'Fila de Editais',
+  'SUSPENSA': 'Suspensa',
+  'PAUSADA': 'Pausada',
+  'AGUARDANDO UNIDADE': 'Aguardando Unidade',
+  'ESTRATÉGICAS': 'Estratégicas',
+  'CANCELADAS': 'Canceladas',
+  'SEM STATUS': 'Sem Status',
   sem_status: 'Sem Status',
   publicar_novo_edital: 'Publicar Novo Edital',
   em_edital: 'Em Edital',

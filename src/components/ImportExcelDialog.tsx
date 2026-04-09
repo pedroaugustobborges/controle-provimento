@@ -131,14 +131,27 @@ export function ImportExcelDialog({
         let rowCount = 0;
         let headerRow = 0;
 
-        // Tentar encontrar uma aba de Vagas primeiro
+        // PRIORIDADE 1: BANCO GERAL
+        const bancoGeralSheet = sheetNames.find(name => name.toUpperCase() === 'BANCO GERAL');
+        
+        // PRIORIDADE 2: VAGAS
         const vagaSheetName = sheetNames.find(name => 
           VAGA_SHEETS.includes(name.toUpperCase()) || 
           name.toUpperCase().includes('VAGA') || 
           name.toUpperCase().includes('BASE GERAL')
         );
 
-        if (vagaSheetName) {
+        if (bancoGeralSheet) {
+          targetSheet = bancoGeralSheet;
+          const sheet = wb.Sheets[bancoGeralSheet];
+          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+          headerRow = 0; // Para Banco Geral a linha de cabeçalho é 1 (index 0)
+          const headerData = rawRows[headerRow];
+          if (headerData) {
+            headers = headerData.map(c => String(c || '').toUpperCase().trim());
+          }
+          rowCount = Math.max(0, rawRows.length - (headerRow + 1));
+        } else if (vagaSheetName) {
           targetSheet = vagaSheetName;
           const sheet = wb.Sheets[vagaSheetName];
           const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });

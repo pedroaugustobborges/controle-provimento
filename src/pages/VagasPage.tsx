@@ -526,6 +526,17 @@ export default function VagasPage() {
                 {Object.entries(TIPO_VAGA_LABELS).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>)}
               </SelectContent>
             </Select>
+
+            <Button 
+              variant={filterVagasNovas ? "default" : "outline"} 
+              size="sm" 
+              className={`h-9 text-[11px] font-bold gap-2 ${filterVagasNovas ? 'bg-blue-600' : 'border-slate-200 text-slate-600 bg-white'}`}
+              onClick={() => setFilterVagasNovas(!filterVagasNovas)}
+            >
+              <Sparkles className={`h-3.5 w-3.5 ${filterVagasNovas ? 'text-white' : 'text-blue-500'}`} />
+              Vagas Novas (24h)
+            </Button>
+
             {hasFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-slate-500 hover:text-slate-800"><X className="h-4 w-4 mr-1" /> Limpar Filtros</Button>
             )}

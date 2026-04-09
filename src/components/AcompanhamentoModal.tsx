@@ -351,6 +351,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                           <TableHead className="w-[30%] text-[10px] font-black text-slate-500 uppercase tracking-tighter">Etapa do Edital</TableHead>
                           <TableHead className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Prevista</TableHead>
                           <TableHead className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Realizada</TableHead>
+                          <TableHead className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Observação</TableHead>
                           <TableHead className="w-[60px] text-center text-[10px] font-black text-slate-500 uppercase tracking-tighter">OK</TableHead>
                         </TableRow>
                       </TableHeader>

@@ -45,7 +45,9 @@ export default function ConvocacoesPage() {
   const { currentUser } = useAdminStore();
   const [view, setView] = useState<'kanban' | 'list' | 'pending' | 'diaria'>('kanban');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDevolutivaOpen, setIsDevolutivaOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
+  const [selectedConvocacao, setSelectedConvocacao] = useState<any>(null);
   const [search, setSearch] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);

@@ -8,7 +8,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
-  normalizeUnitName, countVacancies, getStatusSummary, 
+  normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity 
 } from '@/lib/vagaUtils';
 import { Calendar, Bug, ChevronDown, ChevronUp, Info } from 'lucide-react';

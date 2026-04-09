@@ -656,14 +656,18 @@ export default function VagasPage() {
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={9} className="px-6 py-20 text-center text-muted-foreground font-medium">Nenhuma vaga encontrada para os filtros aplicados.</td></tr>
+                  <TableRow>
+                    <TableCell colSpan={9} className="px-6 py-20 text-center text-muted-foreground font-medium">
+                      Nenhuma vaga encontrada para os filtros aplicados.
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
           <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex justify-between items-center">
             <span>Exibindo {filtered.length} de {vagas.length} registros</span>

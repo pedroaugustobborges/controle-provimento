@@ -591,9 +591,9 @@ export default function BancoTalentosPage() {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Bancos Válidos</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade Vigente</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Capacidade total de todos os bancos que não venceram */}
+                  {/* SOMA AGRUPADA: Capacidade total de todos os bancos que não venceram (Cadastro Reserva + Prorrogados) */}
                   {groupedBancos
                     .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
                     .reduce((sum, g) => sum + g.qtdBanco, 0)}
@@ -611,8 +611,10 @@ export default function BancoTalentosPage() {
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Prorrogados</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  {/* CONTAGEM DE LINHAS: Candidatos em bancos prorrogados */}
-                  {bancos.filter(b => b.is_prorrogado && b.status !== 'CONVOCADO').length}
+                  {/* SOMA AGRUPADA: Capacidade informada nos grupos prorrogados (conforme auditoria) */}
+                  {groupedBancos
+                    .filter(g => g.isProrrogado || g.status === 'prorrogado')
+                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
                 </p>
               </div>
             </div>

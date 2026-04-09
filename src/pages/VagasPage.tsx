@@ -782,19 +782,19 @@ function AcompanhamentoEditalList() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Nº Edital</TableHead>
-                  <TableHead>Etapa Atual</TableHead>
-                  <TableHead className="text-center">Situação</TableHead>
-                  <TableHead className="text-center">Inscritos</TableHead>
-                  <TableHead className="text-center">Triagem</TableHead>
-                  <TableHead className="text-center">Avaliação</TableHead>
-                  <TableHead className="text-center">Entrevista</TableHead>
-                  <TableHead className="text-center">Final</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+              <TableHeader className="bg-[#1a1738] border-none">
+                <TableRow className="hover:bg-[#1a1738] border-none transition-none">
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Unidade</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Cargo</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Nº Edital</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Etapa Atual</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Situação</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Inscritos</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Triagem</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Avaliação</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Entrevista</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Final</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -804,7 +804,7 @@ function AcompanhamentoEditalList() {
                   const isSync = v.acompanhamento?.etapa_atual === autoEtapa;
 
                   return (
-                    <TableRow key={v.id} className="cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setSelectedVagaForAcompanhamento(v)}>
+                    <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell className="font-medium text-slate-700 whitespace-nowrap">{v.unidade}</TableCell>
                       <TableCell className="font-semibold text-slate-800">
                         <div className="flex flex-col">
@@ -851,7 +851,7 @@ function AcompanhamentoEditalList() {
                       <TableCell className="text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</TableCell>
                       <TableCell className="text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => setSelectedVagaForAcompanhamento(v)}>
+                        <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => navigate(`/vagas/${v.id}`)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
                       </TableCell>

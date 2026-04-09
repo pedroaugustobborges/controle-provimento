@@ -777,39 +777,39 @@ function AcompanhamentoEditalList() {
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-slate-50/50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                  <th className="px-6 py-4 text-left">Unidade</th>
-                  <th className="px-6 py-4 text-left">Cargo</th>
-                  <th className="px-6 py-4 text-left">Nº Edital</th>
-                  <th className="px-6 py-4 text-left">Etapa Atual</th>
-                  <th className="px-6 py-4 text-center">Situação</th>
-                  <th className="px-6 py-4 text-center">Inscritos</th>
-                  <th className="px-6 py-4 text-center">Triagem</th>
-                  <th className="px-6 py-4 text-center">Avaliação</th>
-                  <th className="px-6 py-4 text-center">Entrevista</th>
-                  <th className="px-6 py-4 text-center">Final</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Nº Edital</TableHead>
+                  <TableHead>Etapa Atual</TableHead>
+                  <TableHead className="text-center">Situação</TableHead>
+                  <TableHead className="text-center">Inscritos</TableHead>
+                  <TableHead className="text-center">Triagem</TableHead>
+                  <TableHead className="text-center">Avaliação</TableHead>
+                  <TableHead className="text-center">Entrevista</TableHead>
+                  <TableHead className="text-center">Final</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {editaisEmAndamento.map((v) => {
                   const autoEtapa = getAutoEtapa(v);
                   const displayEtapa = v.acompanhamento?.etapa_atual || autoEtapa;
                   const isSync = v.acompanhamento?.etapa_atual === autoEtapa;
 
                   return (
-                    <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">{v.unidade}</td>
-                      <td className="px-6 py-4 font-semibold text-slate-800">
+                    <TableRow key={v.id} className="cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setSelectedVagaForAcompanhamento(v)}>
+                      <TableCell className="font-medium text-slate-700 whitespace-nowrap">{v.unidade}</TableCell>
+                      <TableCell className="font-semibold text-slate-800">
                         <div className="flex flex-col">
                           <span>{v.cargo}</span>
                           <span className="text-[11px] text-slate-400 font-mono">{v.requisicao || v.numero_requisicao}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</td>
-                      <td className="px-6 py-4">
+                      <TableCell className="font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</TableCell>
+                      <TableCell>
                         <div 
                           className="flex flex-col gap-1 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => setSelectedVagaForAcompanhamento(v)}
@@ -819,8 +819,8 @@ function AcompanhamentoEditalList() {
                           </Badge>
                           {/* Removido sugestão conforme solicitado */}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
+                      </TableCell>
+                      <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className={`h-7 px-2 text-[11px] font-bold uppercase border-2 ${
@@ -840,13 +840,13 @@ function AcompanhamentoEditalList() {
                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-red-600">ATRASADO</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-700">{v.total_inscritos || v.acompanhamento?.total_inscritos || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</td>
-                      <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</td>
-                      <td className="px-6 py-4 text-right">
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-slate-700">{v.total_inscritos || v.acompanhamento?.total_inscritos || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-600">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => setSelectedVagaForAcompanhamento(v)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />
                         </Button>

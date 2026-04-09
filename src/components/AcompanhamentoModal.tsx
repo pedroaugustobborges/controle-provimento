@@ -38,21 +38,23 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
     situacao_etapa: 'pendente',
     observacoes_etapa: '',
     data_real_etapa: new Date().toISOString().split('T')[0],
-    concluido: false,
+    concluida: false,
+    historico_etapas: [] as EtapaStatus[],
   });
 
   useEffect(() => {
-    if (vaga && vaga.acompanhamento) {
+    if (vaga) {
+      const acompanhamento = vaga.acompanhamento || {};
       setFormData({
         ...formData,
-        ...vaga.acompanhamento,
-        // Ensure numbers are numbers
-        total_inscritos: vaga.total_inscritos || vaga.acompanhamento.total_inscritos || 0,
-        aprovados_triagem: vaga.aprovados_triagem || vaga.acompanhamento.aprovados_triagem || 0,
-        aprovados_avaliacao_especifica: vaga.acompanhamento.aprovados_avaliacao_especifica || 0,
-        convocados_entrevista: vaga.convocados_entrevista || vaga.acompanhamento.convocados_entrevista || 0,
-        aprovados_finais: vaga.aprovados_finais || vaga.acompanhamento.aprovados_finais || 0,
-        concluido: vaga.acompanhamento.situacao_etapa === 'concluido',
+        ...acompanhamento,
+        total_inscritos: vaga.total_inscritos || acompanhamento.total_inscritos || 0,
+        aprovados_triagem: vaga.aprovados_triagem || acompanhamento.aprovados_triagem || 0,
+        aprovados_avaliacao_especifica: acompanhamento.aprovados_avaliacao_especifica || 0,
+        convocados_entrevista: vaga.convocados_entrevista || acompanhamento.convocados_entrevista || 0,
+        aprovados_finais: vaga.aprovados_finais || acompanhamento.aprovados_finais || 0,
+        concluida: acompanhamento.situacao_etapa === 'concluido',
+        historico_etapas: acompanhamento.historico_etapas || [],
       });
     }
   }, [vaga, isOpen]);
@@ -60,10 +62,49 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
   const handleSave = () => {
     const finalData = {
       ...formData,
-      situacao_etapa: formData.concluido ? 'concluido' : formData.situacao_etapa === 'concluido' ? 'em_andamento' : formData.situacao_etapa,
+      situacao_etapa: formData.concluida ? 'concluido' : formData.situacao_etapa === 'concluido' ? 'em_andamento' : formData.situacao_etapa,
     };
     onSave(vaga.id, finalData);
     onClose();
+  };
+
+  const handleAutoFillDates = () => {
+    const today = new Date();
+    const mockEtapas: EtapaStatus[] = [
+      { etapa: 'validacao_edital', data_prevista: format(addDays(today, -5), 'yyyy-MM-dd'), data_realizada: format(addDays(today, -4), 'yyyy-MM-dd'), concluida: true },
+      { etapa: 'inscricoes', data_prevista: format(addDays(today, 0), 'yyyy-MM-dd'), data_realizada: '', concluida: false },
+      { etapa: 'triagem', data_prevista: format(addDays(today, 7), 'yyyy-MM-dd'), data_realizada: '', concluida: false },
+      { etapa: 'entrevistas', data_prevista: format(addDays(today, 15), 'yyyy-MM-dd'), data_realizada: '', concluida: false },
+      { etapa: 'resultado_final', data_prevista: format(addDays(today, 25), 'yyyy-MM-dd'), data_realizada: '', concluida: false },
+    ];
+    
+    setFormData({
+      ...formData,
+      historico_etapas: mockEtapas
+    });
+    
+    toast.success('Datas extraídas do edital com sucesso!');
+  };
+
+  const updateEtapaHistorico = (etapa: EtapaEdital, field: keyof EtapaStatus, value: any) => {
+    const newHistorico = [...(formData.historico_etapas || [])];
+    const index = newHistorico.findIndex(h => h.etapa === etapa);
+    
+    if (index >= 0) {
+      newHistorico[index] = { ...newHistorico[index], [field]: value };
+      // If marking as concluded, maybe update the main "Current Etapa" if it matches
+      if (field === 'concluida' && value === true) {
+        // Suggested behavior: moving to next step
+      }
+    } else {
+      newHistorico.push({
+        etapa,
+        concluida: field === 'concluida' ? value : false,
+        [field]: value
+      });
+    }
+    
+    setFormData({ ...formData, historico_etapas: newHistorico });
   };
 
   const DatePicker = ({ value, onChange, label }: { value: string, onChange: (date: string) => void, label: string }) => {

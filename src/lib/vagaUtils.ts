@@ -46,10 +46,30 @@ export const CATEGORIAS_STATUS = {
   aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando']
 };
 
-export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
-  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') return 'fila_edital';
+export function isConvocacaoByFields(row: any): boolean {
+  if (!row) return false;
+  return !!(
+    (row.data_convocacao_planilha && String(row.data_convocacao_planilha).trim() !== '') ||
+    (row.horario_convocacao_planilha && String(row.horario_convocacao_planilha).trim() !== '') ||
+    (row.candidato_convocado_planilha && String(row.candidato_convocado_planilha).trim() !== '') ||
+    (row.classificacao_convocacao_planilha && String(row.classificacao_convocacao_planilha).trim() !== '') ||
+    (row.forma_convocacao_planilha && String(row.forma_convocacao_planilha).trim() !== '') ||
+    (row.status_oitiva_convocacao_planilha && String(row.status_oitiva_convocacao_planilha).trim() !== '')
+  );
+}
+
+export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
+  if (!row) return 'fila_edital';
   
-  const s = status.trim(); 
+  // Se for uma string (legado/casos simples), extraímos o status
+  const status = typeof row === 'string' ? row : (row.status || row.status_geral || 'SEM STATUS');
+  
+  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') {
+    if (typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
+    return 'fila_edital';
+  }
+  
+  const s = String(status).trim(); 
   
   const findCategory = (statusVal: string) => {
     if (CATEGORIAS_STATUS.fila_edital.includes(statusVal)) return 'fila_edital';
@@ -63,6 +83,14 @@ export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STAT
   };
 
   const cat = findCategory(s) || findCategory(s.toLowerCase()) || findCategory(s.toUpperCase());
+  
+  // Regra especial: se houver campos de convocação preenchidos, SEMPRE cai em convocação
+  // a menos que já esteja em concluídas ou interrompidas (opcional, mas o usuário disse "quando houver evidência")
+  // Vou seguir a regra do usuário: "Considerar como convocação quando: o status for “realizar convocação” OU houver preenchimento em campos da seção de convocação"
+  if (cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
+    return 'convocacao';
+  }
+
   return cat || 'fila_edital';
 }
 

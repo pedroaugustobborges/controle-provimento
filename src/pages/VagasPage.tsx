@@ -131,7 +131,10 @@ export default function VagasPage() {
         (v.unidade || '').toLowerCase().includes(searchTerm) ||
         (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-      const matchStatus = filterStatus === 'all' || v.status === filterStatus || v.status_geral === filterStatus;
+      const matchStatus = filterStatus === 'all' || 
+        v.status === filterStatus || 
+        v.status_geral === filterStatus ||
+        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao');
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
       const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
@@ -155,8 +158,7 @@ export default function VagasPage() {
     };
     
     canonicalBase.forEach(v => {
-      const statusRaw = (v.status || v.status_geral || 'SEM STATUS') as string;
-      const cat = getCategoriaStatus(statusRaw);
+      const cat = getCategoriaStatus(v);
       
       if (acc[cat] !== undefined) {
         acc[cat]++;
@@ -645,9 +647,8 @@ function AcompanhamentoEditalList() {
 
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
-      const status = (v.status || v.status_geral || '');
       // Regra 4.2: Grupo: edital em andamento
-      const isAndamento = getCategoriaStatus(status) === 'em_andamento';
+      const isAndamento = getCategoriaStatus(v) === 'em_andamento';
       
       if (!isAndamento) return false;
 

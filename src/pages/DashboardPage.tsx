@@ -55,8 +55,7 @@ export default function DashboardPage() {
     };
     
     vagas.forEach(v => {
-      const statusRaw = (v.status || v.status_geral || 'SEM STATUS') as string;
-      const cat = getCategoriaStatus(statusRaw);
+      const cat = getCategoriaStatus(v);
       
       if (acc[cat] !== undefined) {
         acc[cat]++;
@@ -92,8 +91,7 @@ export default function DashboardPage() {
       if (!normalizedName) return;
 
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
-      const status = (v.status || v.status_geral || '').toLowerCase();
-      const categoria = getCategoriaStatus(status);
+      const categoria = getCategoriaStatus(v);
       
       current.total += 1;
       

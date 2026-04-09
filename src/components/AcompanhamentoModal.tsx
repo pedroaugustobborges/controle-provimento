@@ -7,15 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS, Vaga } from '@/types/vaga';
+import { ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS, Vaga, EtapaStatus } from '@/types/vaga';
 import { getEtapaColor } from '@/lib/vagaUtils';
-import { Calendar as CalendarIcon, Users, Search, Zap, UserCheck, CheckCircle, Info, Save, X, Calendar } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Search, Zap, UserCheck, CheckCircle, Info, Save, X, Calendar, Activity, Bot, ChevronRight, CheckSquare, Clock } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AcompanhamentoModalProps {
   isOpen: boolean;

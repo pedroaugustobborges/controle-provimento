@@ -5,7 +5,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, ETAPA_LABELS } from '@/types/vaga';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
@@ -707,15 +707,37 @@ export default function VagasPage() {
 }
 
 function AcompanhamentoEditalList() {
-  const { vagas } = useVagasStore();
+  const { vagas, updateVaga } = useVagasStore();
   const { currentUser } = useAdminStore();
   const navigate = useNavigate();
 
+  const handleUpdateEtapa = (vagaId: string, etapa: string) => {
+    const vaga = vagas.find(v => v.id === vagaId);
+    if (vaga) {
+      const updatedAcompanhamento = {
+        ...(vaga.acompanhamento || { etapa_atual: '' }),
+        etapa_atual: etapa
+      };
+      updateVaga(vagaId, { acompanhamento: updatedAcompanhamento });
+      toast.success('Etapa atualizada com sucesso');
+    }
+  };
+
+  const handleUpdateSituacao = (vagaId: string, situacao: any) => {
+    const vaga = vagas.find(v => v.id === vagaId);
+    if (vaga) {
+      const updatedAcompanhamento = {
+        ...(vaga.acompanhamento || { etapa_atual: '' }),
+        situacao_etapa: situacao
+      };
+      updateVaga(vagaId, { acompanhamento: updatedAcompanhamento });
+      toast.success('Situação atualizada com sucesso');
+    }
+  };
+
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
-      // Regra 4.2: Grupo: edital em andamento
       const isAndamento = getCategoriaStatus(v) === 'em_andamento';
-      
       if (!isAndamento) return false;
 
       if (!currentUser?.visualiza_todas_unidades) {
@@ -749,34 +771,63 @@ function AcompanhamentoEditalList() {
                   <th className="px-6 py-4 text-left">Etapa Atual</th>
                   <th className="px-6 py-4 text-center">Situação</th>
                   <th className="px-6 py-4 text-center">Inscritos</th>
-                  <th className="px-6 py-4 text-center">Aprovados</th>
+                  <th className="px-6 py-4 text-center">Triagem</th>
+                  <th className="px-6 py-4 text-center">Avaliação</th>
+                  <th className="px-6 py-4 text-center">Entrevista</th>
+                  <th className="px-6 py-4 text-center">Final</th>
                   <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {editaisEmAndamento.map((v) => (
                   <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-700">{v.unidade}</td>
+                    <td className="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">{v.unidade}</td>
                     <td className="px-6 py-4 font-semibold text-slate-800">{v.cargo}</td>
-                    <td className="px-6 py-4 font-bold text-primary">{v.numero_edital || '—'}</td>
+                    <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-bold">
-                        {v.acompanhamento?.etapa_atual || 'Não informada'}
-                      </Badge>
+                      <Select 
+                        value={v.acompanhamento?.etapa_atual || ''} 
+                        onValueChange={(value) => handleUpdateEtapa(v.id, value)}
+                      >
+                        <SelectTrigger className="h-8 w-[180px] text-[11px] font-bold bg-blue-50/50 border-blue-100 text-blue-700">
+                          <SelectValue placeholder="Selecione a etapa" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(ETAPA_LABELS).map(([key, label]) => (
+                            <SelectItem key={key} value={key} className="text-[11px]">
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="px-6 py-4 text-center">
-                       {v.acompanhamento?.situacao_etapa === 'atrasada' ? (
-                         <Badge className="bg-red-100 text-red-700 border-red-200 font-bold">ATRASADA</Badge>
-                       ) : v.acompanhamento?.situacao_etapa === 'realizada' ? (
-                         <Badge className="bg-green-100 text-green-700 border-green-200 font-bold">REALIZADA</Badge>
-                       ) : (
-                         <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold">PENDENTE</Badge>
-                       )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className={`h-7 px-2 text-[10px] font-bold uppercase border-2 ${
+                            v.acompanhamento?.situacao_etapa === 'atrasada' ? 'bg-red-50 text-red-700 border-red-100' :
+                            v.acompanhamento?.situacao_etapa === 'concluido' ? 'bg-green-50 text-green-700 border-green-100' :
+                            v.acompanhamento?.situacao_etapa === 'em_andamento' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                            'bg-amber-50 text-amber-700 border-amber-100'
+                          }`}>
+                            {v.acompanhamento?.situacao_etapa?.replace('_', ' ') || 'PENDENTE'}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="min-w-[120px]">
+                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-amber-600">PENDENTE</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-green-600">CONCLUÍDO</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-red-600">ATRASADO</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                     <td className="px-6 py-4 text-center font-bold text-slate-700">{v.total_inscritos || 0}</td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-600">{v.aprovados_triagem || 0}</td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-600">{v.convocados_entrevista || 0}</td>
                     <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || 0}</td>
                     <td className="px-6 py-4 text-right">
-                      <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => navigate(`/vagas/${v.id}?tab=acompanhamento`)}>
+                      <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2" onClick={() => navigate(`/vagas/${v.id}?tab=acompanhamento`)}>
                         Atualizar <ArrowRight className="h-3.5 w-3.5 ml-1" />
                       </Button>
                     </td>
@@ -784,7 +835,7 @@ function AcompanhamentoEditalList() {
                 ))}
                 {editaisEmAndamento.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                    <td colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">
                       Nenhum edital em andamento visível para suas unidades.
                     </td>
                   </tr>

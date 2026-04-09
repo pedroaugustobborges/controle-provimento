@@ -421,8 +421,7 @@ export default function AdministracaoPage() {
                     const distribution = new Map<string, { count: number, group: string }>();
                     
                     vagas.forEach(v => {
-                      const status = (v.status || v.status_geral || 'SEM STATUS') as string;
-                      const groupKey = getCategoriaStatus(status);
+                      const groupKey = getCategoriaStatus(v);
                       
                       const groupLabelMap: Record<string, string> = {
                         fila_edital: 'Fila de Editais',

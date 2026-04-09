@@ -644,9 +644,8 @@ function AcompanhamentoEditalList() {
 
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
-      const status = (v.status || v.status_geral || '');
       // Regra 4.2: Grupo: edital em andamento
-      const isAndamento = getCategoriaStatus(status) === 'em_andamento';
+      const isAndamento = getCategoriaStatus(v) === 'em_andamento';
       
       if (!isAndamento) return false;
 

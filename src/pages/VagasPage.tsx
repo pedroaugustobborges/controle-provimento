@@ -5,11 +5,11 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, ETAPA_LABELS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, ETAPA_LABELS, EtapaEdital } from '@/types/vaga';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
-  getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity 
+  getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa 
 } from '@/lib/vagaUtils';
 import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles } from 'lucide-react';
 

@@ -1,0 +1,364 @@
+import React, { useState, useMemo } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Search, Filter, Edit, FileText, Send, MoreHorizontal, 
+  Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
+  Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
+  FileUp, CheckSquare, MessageSquare, Upload, FileDown
+} from 'lucide-react';
+import { StatusBadge } from '@/components/StatusBadge';
+import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, 
+  DialogFooter, DialogDescription 
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+
+export default function FilaAnalistaEditalPage() {
+  const navigate = useNavigate();
+  const { vagas, updateVaga } = useVagasStore();
+  const { currentUser } = useAdminStore();
+  const [search, setSearch] = useState('');
+  const [filterUnidade, setFilterUnidade] = useState('all');
+
+  // Modal de Redação/Envio para Validação
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+  const [obsEdital, setObsEdital] = useState('');
+  const [nomeArquivo, setNomeArquivo] = useState('');
+  const [numeroEdital, setNumeroEdital] = useState('');
+  const [numeroProcesso, setNumeroProcesso] = useState('');
+
+  const editalVagas = useMemo(() => {
+    return vagas.filter(v => {
+      const vUnitNormalized = normalizeUnitName(v.unidade);
+      
+      // Unit access restriction
+      if (!currentUser?.visualiza_todas_unidades) {
+        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+        if (!userUnidades.includes(vUnitNormalized)) {
+          return false;
+        }
+      }
+
+      // Regra: Mostrar apenas vagas encaminhadas para o edital
+      const isEncaminhada = v.status_fluxo_edital === 'encaminhado_edital' || v.status_fluxo_edital === 'em_redacao';
+      if (!isEncaminhada) return false;
+
+      const searchTerm = search.toLowerCase();
+      const matchSearch = !search || 
+        v.cargo.toLowerCase().includes(searchTerm) || 
+        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);
+      
+      const matchUnidade = filterUnidade === 'all' || vUnitNormalized === filterUnidade;
+
+      return matchSearch && matchUnidade;
+    });
+  }, [vagas, currentUser, search, filterUnidade]);
+
+  const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
+
+  const handleOpenEditModal = (vaga: Vaga) => {
+    setSelectedVaga(vaga);
+    setObsEdital(vaga.observacoes_edital || '');
+    setNumeroEdital(vaga.numero_edital || '');
+    setNumeroProcesso(vaga.numero_processo || '');
+    setNomeArquivo(vaga.arquivo_edital || '');
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveDraft = () => {
+    if (!selectedVaga) return;
+
+    updateVaga(selectedVaga.id, { 
+      status_fluxo_edital: 'em_redacao',
+      observacoes_edital: obsEdital,
+      numero_edital: numeroEdital,
+      numero_processo: numeroProcesso,
+      arquivo_edital: nomeArquivo,
+    });
+
+    toast.success('Rascunho do edital salvo com sucesso!');
+  };
+
+  const handleSendToValidation = () => {
+    if (!selectedVaga) return;
+
+    if (!nomeArquivo) {
+      toast.error('É necessário carregar o arquivo Word do edital antes de enviar.');
+      return;
+    }
+
+    if (!numeroEdital || !numeroProcesso) {
+      toast.error('É necessário informar o número do edital e do processo.');
+      return;
+    }
+
+    updateVaga(selectedVaga.id, { 
+      status_fluxo_edital: 'enviado_validacao',
+      status_validacao: 'pendente',
+      observacoes_edital: obsEdital,
+      numero_edital: numeroEdital,
+      numero_processo: numeroProcesso,
+      arquivo_edital: nomeArquivo,
+      historico: [...selectedVaga.historico, {
+        id: `h-${Date.now()}`,
+        data: new Date().toISOString().split('T')[0],
+        descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}`,
+        usuario: currentUser?.nome_completo || 'Analista do Edital'
+      }]
+    });
+
+    setIsEditModalOpen(false);
+    toast.success('Edital enviado com sucesso para validação administrativa!');
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setNomeArquivo(e.target.files[0].name);
+    }
+  };
+
+  const hasFilters = search !== '' || filterUnidade !== 'all';
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Fila do Edital (Redação)</h1>
+          <p className="text-slate-500 mt-1">Vagas recebidas da unidade para redação e preparo do edital.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-blue-50/50 border-blue-100 shadow-sm">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-blue-600" /></div>
+              <div>
+                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Aguardando Redação</p>
+                <p className="text-2xl font-bold text-slate-800">{editalVagas.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="shadow-sm border-slate-200 overflow-hidden">
+        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <ListFilter className="h-5 w-5 text-primary" />
+            Vagas para Edital
+          </CardTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+              <Input 
+                placeholder="Buscar cargo ou REQ..." 
+                className="pl-9 w-[250px] bg-white" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+              <SelectTrigger className="w-[180px] bg-white">
+                <Building2 className="h-4 w-4 mr-2 text-slate-400" />
+                <SelectValue placeholder="Unidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas Unidades</SelectItem>
+                {unidades.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {hasFilters && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterUnidade('all'); }}>
+                <X className="h-4 w-4 mr-1" /> Limpar
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Requisição</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Obs. Unidade</TableHead>
+                  <TableHead>Recebimento</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {editalVagas.map((v) => (
+                  <TableRow key={v.id} className="group">
+                    <TableCell className="font-mono text-xs text-primary font-bold">
+                      {v.requisicao || v.numero_requisicao}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="font-medium text-slate-700">{v.unidade}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
+                    <TableCell className="max-w-[200px]">
+                      <p className="text-xs text-slate-500 truncate" title={v.observacoes_unidade}>
+                        {v.observacoes_unidade || 'Sem observações'}
+                      </p>
+                    </TableCell>
+                    <TableCell className="text-slate-500 whitespace-nowrap text-xs">
+                      {formatDate(v.data_recebimento!)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`text-[10px] uppercase font-bold ${v.status_fluxo_edital === 'em_redacao' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
+                        {v.status_fluxo_edital === 'em_redacao' ? 'Em Redação' : 'Aguardando'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="text-primary" title="Preparar Edital" onClick={() => handleOpenEditModal(v)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {editalVagas.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-6 py-20 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <CheckCircle2 className="h-10 w-10 text-slate-200" />
+                        <p className="text-slate-500 font-medium">Nenhuma vaga encaminhada para o edital.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <FileText className="h-5 w-5" />
+              Preparar Edital
+            </DialogTitle>
+            <DialogDescription>
+              Redija o edital, anexe o arquivo e envie para a validação administrativa.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedVaga && (
+            <div className="space-y-6 py-4">
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Informações Recebidas da Unidade</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargo</p>
+                    <p className="text-sm font-bold text-slate-700">{selectedVaga.cargo}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
+                    <p className="text-sm font-bold text-slate-700">{selectedVaga.unidade}</p>
+                  </div>
+                </div>
+                <div className="space-y-1 pt-2 border-t border-slate-200">
+                  <p className="text-[10px] text-slate-500 uppercase font-semibold flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" /> Observações da Unidade
+                  </p>
+                  <p className="text-sm text-slate-600 bg-white p-2 rounded border border-slate-100 italic">
+                    {selectedVaga.observacoes_unidade || 'Nenhuma observação informada.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="numEdital" className="text-sm font-semibold">Número do Edital</Label>
+                  <Input 
+                    id="numEdital" 
+                    placeholder="Ex: 001/2024" 
+                    value={numeroEdital}
+                    onChange={(e) => setNumeroEdital(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="numProcesso" className="text-sm font-semibold">Número do Processo</Label>
+                  <Input 
+                    id="numProcesso" 
+                    placeholder="Ex: 2024.0001" 
+                    value={numeroProcesso}
+                    onChange={(e) => setNumeroProcesso(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Edital (Arquivo Word)</Label>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" className="w-full relative overflow-hidden h-20 border-dashed" asChild>
+                    <label className="cursor-pointer flex flex-col items-center justify-center gap-1">
+                      <Upload className="h-5 w-5 text-slate-400" />
+                      <span className="text-xs text-slate-500">Clique para carregar o arquivo .doc ou .docx</span>
+                      <input type="file" className="hidden" accept=".doc,.docx" onChange={handleFileChange} />
+                    </label>
+                  </Button>
+                </div>
+                {nomeArquivo && (
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 text-blue-700 rounded-md border border-blue-100 text-sm">
+                    <FileDown className="h-4 w-4" />
+                    <span className="font-medium truncate flex-1">{nomeArquivo}</span>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-blue-700 hover:text-blue-800" onClick={() => setNomeArquivo('')}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="obsAnalista" className="text-sm font-semibold">Observações do Analista do Edital</Label>
+                <Textarea 
+                  id="obsAnalista" 
+                  placeholder="Informações adicionais sobre o preparo do edital..."
+                  className="min-h-[80px] resize-none"
+                  value={obsEdital}
+                  onChange={(e) => setObsEdital(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancelar</Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={handleSaveDraft}>
+                Salvar Rascunho
+              </Button>
+              <Button onClick={handleSendToValidation} className="bg-primary hover:bg-primary/90">
+                <Send className="h-4 w-4 mr-2" />
+                Enviar p/ Validação
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

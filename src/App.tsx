@@ -18,7 +18,9 @@ import ValidacaoEditaisPage from "@/pages/ValidacaoEditaisPage";
 import AdministracaoPage from "@/pages/AdministracaoPage";
 import AlertasTarefasPage from "@/pages/AlertasTarefasPage";
 import MonitoramentoAdminPage from "@/pages/MonitoramentoAdminPage";
+import FilaAnalistaEditalPage from "@/pages/FilaAnalistaEditalPage";
 import NotFound from "./pages/NotFound.tsx";
+
 
 
 const queryClient = new QueryClient();

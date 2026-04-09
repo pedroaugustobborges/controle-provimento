@@ -199,25 +199,42 @@ export const AgieChat = () => {
                     </div>
                   )}
 
-                  {step === 'BY_PERSON' && selectedUnit && (
+                  {(step === 'BY_PERSON') && (selectedUnit || selectedRole) && (
                     <div className="pt-8 space-y-4">
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Quem deseja contatar?</p>
-                      <div className="space-y-2">
-                        <p className="text-[11px] text-slate-400 font-bold px-1 uppercase">Analistas</p>
-                        {selectedUnit.analysts.map(a => (
-                          <Button key={a} variant="outline" className="w-full justify-start h-12 bg-white gap-3" onClick={() => { setSelectedRecipient(a); setStep('CONVERSATION'); }}>
-                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700">{a.charAt(0)}</div>
-                            <div className="text-left"><p className="text-sm font-bold">{a}</p><p className="text-[10px] text-slate-500">Analista da Unidade</p></div>
-                          </Button>
-                        ))}
-                        <p className="text-[11px] text-slate-400 font-bold px-1 uppercase pt-2">Assistentes</p>
-                        {selectedUnit.assistants.map(a => (
-                          <Button key={a} variant="outline" className="w-full justify-start h-12 bg-white gap-3" onClick={() => { setSelectedRecipient(a); setStep('CONVERSATION'); }}>
-                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-[10px] font-bold text-green-700">{a.charAt(0)}</div>
-                            <div className="text-left"><p className="text-sm font-bold">{a}</p><p className="text-[10px] text-slate-500">Assistente da Unidade</p></div>
-                          </Button>
-                        ))}
-                      </div>
+                      
+                      {selectedUnit ? (
+                        <div className="space-y-2">
+                          <p className="text-[11px] text-slate-400 font-bold px-1 uppercase">Analistas</p>
+                          {selectedUnit.analysts.map(a => (
+                            <Button key={a} variant="outline" className="w-full justify-start h-12 bg-white gap-3" onClick={() => { setSelectedRecipient(a); setStep('CONVERSATION'); }}>
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700">{a.charAt(0)}</div>
+                              <div className="text-left"><p className="text-sm font-bold">{a}</p><p className="text-[10px] text-slate-500">Analista da Unidade</p></div>
+                            </Button>
+                          ))}
+                          {selectedUnit.assistants.length > 0 && (
+                            <>
+                              <p className="text-[11px] text-slate-400 font-bold px-1 uppercase pt-2">Assistentes</p>
+                              {selectedUnit.assistants.map(a => (
+                                <Button key={a} variant="outline" className="w-full justify-start h-12 bg-white gap-3" onClick={() => { setSelectedRecipient(a); setStep('CONVERSATION'); }}>
+                                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-[10px] font-bold text-green-700">{a.charAt(0)}</div>
+                                  <div className="text-left"><p className="text-sm font-bold">{a}</p><p className="text-[10px] text-slate-500">Assistente da Unidade</p></div>
+                                </Button>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      ) : selectedRole ? (
+                        <div className="space-y-2">
+                          <p className="text-[11px] text-slate-400 font-bold px-1 uppercase">{selectedRole.label}</p>
+                          {selectedRole.users.map(u => (
+                            <Button key={u} variant="outline" className="w-full justify-start h-12 bg-white gap-3" onClick={() => { setSelectedRecipient(u); setStep('CONVERSATION'); }}>
+                              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-700">{u.charAt(0)}</div>
+                              <div className="text-left"><p className="text-sm font-bold">{u}</p><p className="text-[10px] text-slate-500">{selectedRole.label}</p></div>
+                            </Button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   )}
 
@@ -226,7 +243,7 @@ export const AgieChat = () => {
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Selecione o Cargo</p>
                       <div className="grid grid-cols-1 gap-2">
                         {ROLES.map(role => (
-                          <Button key={role.id} variant="outline" className="w-full justify-start h-12 bg-white gap-3 px-4" onClick={() => { setSelectedRole(role); setSelectedRecipient(role.label); setStep('CONVERSATION'); }}>
+                          <Button key={role.id} variant="outline" className="w-full justify-start h-12 bg-white gap-3 px-4" onClick={() => { setSelectedRole(role); setSelectedUnit(null); setStep('BY_PERSON'); }}>
                             <div className="text-left font-bold text-sm">{role.label}</div>
                           </Button>
                         ))}

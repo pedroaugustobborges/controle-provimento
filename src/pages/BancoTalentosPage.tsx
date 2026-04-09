@@ -160,12 +160,17 @@ export default function BancoTalentosPage() {
       candidatos: BancoTalentos[];
     }> = {};
 
-    filtered.forEach(b => {
+    // Use ALL bancos for grouping calculations to ensure cards are accurate
+    // regardless of the list filter (which excludes Convocados)
+    bancos.forEach(b => {
+      // Restricted access check
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
+        return;
+      }
+
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
-      // REGRA DE IDENTIFICAÇÃO DO BANCO (Item 4)
-      const key = b.numero_processo_seletivo 
-        ? `PS-${b.numero_processo_seletivo}`
-        : `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
+      // REGRA DE IDENTIFICAÇÃO DO BANCO (Auditada: Edital + Unidade + Cargo)
+      const key = `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
 
       if (!groups[key]) {
         let qtd = 0;
@@ -179,24 +184,65 @@ export default function BancoTalentosPage() {
         groups[key] = {
           id: b.id,
           edital: b.numero_edital,
-          processoSeletivo: b.numero_processo_seletivo || '',
+          processoSeletivo: b.numero_processo_seletivo || b.numero_processo || '',
           unidade: b.unidade,
           cargo: b.cargo,
           cargoNormalizado: cargoNorm,
           status: b.status,
           validade: b.nova_data_validade || b.data_validade,
           isProrrogado: b.is_prorrogado,
-          // REGRA DA QUANTIDADE DE BANCO (Item 5): não somar, pegar do nível do banco
+          // QNTD BANCO: Pegamos a maior quantidade informada para este grupo para evitar erro de leitura
           qtdBanco: qtd,
           candidatos: []
         };
+      } else {
+        // Se encontrarmos uma quantidade maior em outra linha do mesmo banco, atualizamos
+        const rawQtd = b.quantidade_banco;
+        let currentQtd = 0;
+        if (typeof rawQtd === 'number') currentQtd = rawQtd;
+        else if (rawQtd) currentQtd = parseInt(String(rawQtd).replace(/[^\d]/g, '')) || 0;
+        
+        if (currentQtd > groups[key].qtdBanco) {
+          groups[key].qtdBanco = currentQtd;
+        }
       }
       
       groups[key].candidatos.push(b);
     });
 
     return Object.values(groups).sort((a, b) => a.cargo.localeCompare(b.cargo));
-  }, [filtered]);
+  }, [bancos, currentUser]);
+
+  // filteredGroups for the list display
+  const filteredGroups = useMemo(() => {
+    return groupedBancos.filter(group => {
+      // Exclude convocados from the main list view tab
+      if (group.status === 'CONVOCADO') return false;
+      
+      const normalizedSearch = normalizeCargo(search);
+      const matchSearch = normalizeCargo(group.cargo).includes(normalizedSearch) || 
+        normalizeCargo(group.unidade).includes(normalizedSearch) ||
+        normalizeCargo(group.edital).includes(normalizedSearch);
+
+      const matchUnidade = unidadeFilter === 'todas' || group.unidade === unidadeFilter;
+      
+      const statusLower = (group.status || '').toLowerCase();
+      const filterLower = statusFilter.toLowerCase();
+      
+      let matchStatus = statusFilter === 'todos';
+      if (!matchStatus) {
+        if (statusFilter === 'valido') {
+          matchStatus = statusLower === 'valido' || statusLower === 'cadastro reserva' || statusLower === 'prorrogado';
+        } else if (statusFilter === 'vencido') {
+          matchStatus = statusLower === 'vencido' || statusLower === 'vencida';
+        } else {
+          matchStatus = statusLower === filterLower;
+        }
+      }
+        
+      return matchSearch && matchUnidade && matchStatus;
+    });
+  }, [groupedBancos, search, unidadeFilter, statusFilter]);
 
   const selectedGroupCandidates = useMemo(() => {
     if (!selectedBanco) return [];

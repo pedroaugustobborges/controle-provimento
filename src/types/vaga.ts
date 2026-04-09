@@ -74,11 +74,21 @@ export type EtapaEdital =
 
 
 export interface VagaCronograma {
+  data_validacao_edital?: string;
   data_inscricao?: string;
   data_triagem?: string;
-  data_avaliacao_curricular?: string;
+  data_resultado_triagem?: string;
   data_avaliacao_especifica_online?: string;
-  data_resultado_avaliacao_especifica_online?: string;
+  data_resultado_preliminar_avaliacao_especifica?: string;
+  data_recurso_avaliacao_especifica?: string;
+  data_resultado_recurso_avaliacao_especifica?: string;
+  data_resultado_final_avaliacao_especifica?: string;
+  data_envio_certificados_titulos?: string;
+  data_declaracao_experiencia?: string;
+  data_analise_curricular_preliminar?: string;
+  data_recurso_analise_curricular?: string;
+  data_resultado_recurso_analise_curricular?: string;
+  data_analise_curricular_final?: string;
   data_entrevistas?: string;
   data_resultado_final?: string;
   data_convocacao?: string;

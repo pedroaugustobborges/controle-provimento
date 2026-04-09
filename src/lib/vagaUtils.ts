@@ -194,39 +194,41 @@ export function normalizeCargo(cargo: string): string {
 }
 
 export function normalizeStatus(statusText: string): StatusVaga {
-  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan' || statusText === '0') return 'sem_status';
+  if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan' || statusText === '0') {
+    return 'SEM STATUS' as StatusVaga;
+  }
   
-  const text = statusText.toLowerCase().trim();
+  const text = removeAccents(statusText.toLowerCase().trim());
   
-  // Exact or very close matches for the requested statuses
-  if (text === 'admissao efetivada' || text === 'admissão efetivada' || text === 'admissao_efetivada') return 'admissao_efetivada';
-  if (text === 'dispensa' || text.includes('dispensa')) return 'dispensa';
-  if (text === 'cancelada' || text.includes('cancelada') || text.includes('cancelado')) return 'cancelada';
-  if (text.includes('anuencia') || text.includes('anuência')) return 'aguardar_anuencia';
-  if (text.includes('publicar') && text.includes('edital')) return 'publicar_novo_edital';
-  if (text.includes('movimentacao interna') || text.includes('movimentação interna') || text === 'movimentacao_interna') return 'movimentacao_interna';
-  if (text.includes('lideranca') || text.includes('liderança') || text === 'vaga_lideranca') return 'vaga_lideranca';
-  if (text.includes('realizar convocacao') || text.includes('realizar convocação') || text === 'realizar_convocacao') return 'realizar_convocacao';
+  // Mapping conforme solicitado:
+  if (text.includes('admissao efetivada')) return 'CONCLUÍDAS' as StatusVaga;
+  if (text.includes('admissao enviada')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('em edital')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('movimentacao interna')) return 'MOV. INTERNA' as StatusVaga;
   
-  // Broader keyword matches
-  if (text.includes('em edital')) return 'em_edital';
-  if ((text.includes('documentacao ok') || text.includes('documentação ok')) && (text.includes('azul pendente') || text.includes('aso pendente'))) return 'documentacao_ok_azul_pendente';
-  if ((text.includes('documentacao pendente') || text.includes('documentação pendente')) && (text.includes('azul ok') || text.includes('aso ok'))) return 'documentacao_pendente_azul_ok';
-  if (text.includes('document')) return 'em_documentacao';
-  if (text.includes('admissao enviada') || text.includes('admissão enviada')) return 'admissao_enviada';
-  if (text.includes('admissao') || text.includes('admissão')) return 'em_admissao';
-  if (text.includes('unidade') && text.includes('aguardar')) return 'aguardar_unidade';
+  if (text === 'documentacao' || 
+      text.includes('documentacao ok e aso pendente') || 
+      text.includes('aso pendente')) {
+    return 'DOCUMENTAÇÃO' as StatusVaga;
+  }
   
-  // Legacy or generic mappings
-  if (text.includes('triagem')) return 'em_triagem'; 
-  if (text.includes('entrevista')) return 'entrevista';
-  if (text.includes('finaliz') || text.includes('concluid') || text.includes('concluíd') || text.includes('encerrad')) return 'admissao_efetivada';
+  if (text.includes('realizar convocacao')) return 'CONVOCAÇÕES' as StatusVaga;
+  if (text.includes('publicar novo edital') || text.includes('publicar edital')) return 'FILA DE EDITAIS' as StatusVaga;
+  if (text.includes('vaga suspensa')) return 'SUSPENSA' as StatusVaga;
+  if (text.includes('vaga pausada')) return 'PAUSADA' as StatusVaga;
+  if (text.includes('aguardando unidade') || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
+  if (text.includes('vaga de lideranca')) return 'ESTRATÉGICAS' as StatusVaga;
+  if (text.includes('em processo seletivo')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('cancelada') || text.includes('cancelado')) return 'CANCELADAS' as StatusVaga;
   
-  // Default to sem_status if it looks like a placeholder or is very short/unrecognized
-  if (text.length < 3 || text === 'aberta' || text === 'aberto') return 'aberta';
+  // Broader keyword matches from previous version if needed, or stick to user's list
+  if (text.includes('finaliz') || text.includes('concluid') || text.includes('encerrad')) return 'CONCLUÍDAS' as StatusVaga;
+  if (text.includes('triagem') || text.includes('entrevista')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('aberta') || text.includes('aberto')) return 'EM ANDAMENTO' as StatusVaga;
   
-  return 'sem_status';
+  return 'SEM STATUS' as StatusVaga;
 }
+
 
 
 export function normalizeUnitName(name: string): string {

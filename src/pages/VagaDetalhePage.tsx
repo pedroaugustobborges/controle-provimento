@@ -842,27 +842,7 @@ export default function VagaDetalhePage() {
   );
 }
 
-const TODAS_AS_ETAPAS: EtapaEdital[] = [
-  'validacao_edital',
-  'inscricoes',
-  'triagem',
-  'resultado_da_triagem',
-  'avaliacao_especifica_online',
-  'resultado_preliminar_avaliacao_especifica_online',
-  'recurso_avaliacao_especifica_online',
-  'resultado_recurso_avaliacao_especifica_online',
-  'resultado_final_avaliacao_especifica_online',
-  'envio_certificados_titulos',
-  'declaracao_experiencia',
-  'analise_curricular_preliminar',
-  'recurso_analise_curricular',
-  'resultado_recurso_analise_curricular',
-  'analise_curricular_final',
-  'entrevistas',
-  'resultado_final',
-  'convocacao_do_edital',
-  'encerramento'
-];
+// TODAS_AS_ETAPAS is now imported from @/types/vaga
 
 const CRONOGRAMA_KEYS: Record<EtapaEdital, keyof VagaCronograma> = {
   validacao_edital: 'data_validacao_edital',

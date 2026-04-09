@@ -704,14 +704,22 @@ export default function VagaDetalhePage() {
 
         <TabsContent value="historico">
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-2 border-b bg-slate-50/50">
+            <CardHeader className="pb-2 border-b bg-slate-50/50 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-500">Linha do Tempo</CardTitle>
+              <div className="flex gap-2">
+                <Badge variant={vaga.origem === 'manual' ? 'default' : 'outline'} className="text-[10px] font-bold uppercase">
+                  {vaga.origem === 'manual' ? 'Origem Manual' : 'Origem Importada'}
+                </Badge>
+                <Badge variant="outline" className="text-[10px] font-bold uppercase bg-white">
+                  Criado em: {formatDate(vaga.data_criacao || vaga.data_abertura)}
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-6 relative before:absolute before:inset-0 before:left-2 before:w-0.5 before:bg-slate-100">
-                {vaga.historico.map((h, idx) => (
+                {vaga.historico.slice().reverse().map((h, idx) => (
                   <div key={h.id} className="flex gap-4 items-start relative pl-8">
-                    <div className={`absolute left-0 w-4 h-4 rounded-full border-2 border-white shadow-sm z-10 ${idx === 0 ? 'bg-primary' : 'bg-slate-300'}`} />
+                    <div className={`absolute left-0 w-4 h-4 rounded-full border-2 border-white shadow-sm z-10 ${idx === 0 ? 'bg-primary ring-4 ring-primary/10' : 'bg-slate-300'}`} />
                     <div className="flex-1 pb-4 border-b last:border-0 border-slate-50">
                       <p className="text-sm font-semibold text-slate-700">{h.descricao}</p>
                       <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider">

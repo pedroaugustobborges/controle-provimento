@@ -94,6 +94,7 @@ export interface Vaga {
   id: string;
   data_abertura: string;
   data_recebimento?: string;
+  data_criacao: string; // ISO string for precise 24h check
   unidade: string;
   requisicao: string;
   numero_requisicao?: string; 
@@ -118,6 +119,7 @@ export interface Vaga {
   observacoes_validacao?: string;
   status_validacao?: StatusValidacao;
   historico: HistoricoItem[];
+  origem: 'manual' | 'importada';
   
   // Acompanhamento do Edital
   cronograma?: VagaCronograma;

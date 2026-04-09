@@ -97,43 +97,22 @@ export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
 
 
 
-export function getStatusColor(status: StatusVaga): string {
-  const map: Record<StatusVaga, string> = {
-    'CONCLUÍDAS': 'bg-green-100 text-green-700 border-green-200',
-    'EM ANDAMENTO': 'bg-blue-100 text-blue-700 border-blue-200',
-    'MOV. INTERNA': 'bg-blue-100 text-blue-700 border-blue-200',
-    'DOCUMENTAÇÃO': 'bg-orange-100 text-orange-700 border-orange-200',
-    'CONVOCAÇÕES': 'bg-violet-100 text-violet-700 border-violet-200',
-    'FILA DE EDITAIS': 'bg-blue-100 text-blue-700 border-blue-200',
-    'SUSPENSA': 'bg-gray-100 text-gray-700 border-gray-200',
-    'PAUSADA': 'bg-amber-100 text-amber-700 border-amber-200',
-    'AGUARDANDO UNIDADE': 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    'ESTRATÉGICAS': 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    'CANCELADAS': 'bg-red-100 text-red-700 border-red-200',
-    'SEM STATUS': 'bg-gray-100 text-gray-600',
-    sem_status: 'bg-gray-100 text-gray-600',
-    publicar_novo_edital: 'bg-blue-100 text-blue-700 border-blue-200',
-    em_edital: 'bg-amber-100 text-amber-700 border-amber-200',
-    em_documentacao: 'bg-orange-100 text-orange-700 border-orange-200',
-    documentacao_ok_azul_pendente: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    documentacao_pendente_azul_ok: 'bg-rose-100 text-rose-700 border-rose-200',
-    aguardar_unidade: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    em_admissao: 'bg-sky-100 text-sky-700 border-sky-200',
-    admissao_enviada: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-    admissao_efetivada: 'bg-green-100 text-green-700 border-green-200',
-    dispensa: 'bg-slate-100 text-slate-700 border-slate-200',
-    cancelada: 'bg-red-100 text-red-700 border-red-200',
-    aguardar_anuencia: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    movimentacao_interna: 'bg-blue-100 text-blue-700 border-blue-200',
-    vaga_lideranca: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    realizar_convocacao: 'bg-violet-100 text-violet-700 border-violet-200',
-    aberta: 'bg-blue-100 text-blue-700',
-    em_triagem: 'bg-purple-100 text-purple-700',
-    entrevista: 'bg-indigo-100 text-indigo-700',
-    finalizada: 'bg-green-100 text-green-700',
-    encerrada: 'bg-gray-100 text-gray-600',
-  };
-  return map[status] || 'bg-gray-100 text-gray-600';
+export function getStatusColor(status: string): string {
+  if (!status) return 'bg-gray-100 text-gray-600';
+  
+  const s = String(status).trim().toLowerCase();
+  
+  // Categorized colors
+  if (CATEGORIAS_STATUS.concluidas.includes(s)) return 'bg-green-100 text-green-700 border-green-200';
+  if (CATEGORIAS_STATUS.fila_edital.includes(s)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.vagas_interrompidas.includes(s) || s.includes('cancelada') || s.includes('cancelado')) return 'bg-red-100 text-red-700 border-red-200';
+  if (CATEGORIAS_STATUS.vagas_lideranca.includes(s)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+  if (CATEGORIAS_STATUS.convocacao.includes(s)) return 'bg-violet-100 text-violet-700 border-violet-200';
+  if (CATEGORIAS_STATUS.documentacao.includes(s) || s.includes('documentacao') || s.includes('documentação')) return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (CATEGORIAS_STATUS.aguardando_unidade.includes(s)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  
+  // Default color for Em Andamento and others
+  return 'bg-blue-100 text-blue-700 border-blue-200';
 }
 
 export function getValidacaoColor(status: StatusValidacao): string {

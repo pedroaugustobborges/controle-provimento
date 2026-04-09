@@ -268,11 +268,47 @@ export default function VagasPage() {
         <AcompanhamentoEditalList />
       ) : (
         <>
-          <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground/90">Controle de Provimento</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gerenciamento centralizado de vagas, editais e convocações.</p>
-        </div>
+          <PageHeader 
+            title="Controle de Provimento"
+            subtitle="Gerenciamento estratégico e centralizado de vagas, editais e fluxo de convocações AGIR."
+            badge="Gestão de Vagas"
+            actions={
+              <>
+                {permissions.canViewAudit() && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`text-[10px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary'}`}
+                    onClick={() => setIsDebugOpen(!isDebugOpen)}
+                  >
+                    <Bug className="h-3 w-3" /> Audit
+                  </Button>
+                )}
+                {permissions.canViewDiagnostics() && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-[10px] text-slate-500 hover:text-primary h-8 gap-1 font-bold"
+                    onClick={() => {
+                      const diag = getMatchingDiagnostic();
+                      toast.info(`${diag.length} vagas sem banco encontradas.`);
+                    }}
+                  >
+                    <Database className="h-3 w-3" /> Diagnóstico
+                  </Button>
+                )}
+                {permissions.canImport() && (
+                  <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-4 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
+                    <FileSpreadsheet className="h-4 w-4 text-primary" /> Importar Excel
+                  </Button>
+                )}
+                <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-4 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
+                  <Plus className="h-4 w-4" /> Nova Vaga
+                </Button>
+              </>
+            }
+          />
+
         <div className="flex gap-2">
           {permissions.canViewAudit() && (
             <Button 

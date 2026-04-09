@@ -50,14 +50,18 @@ import {
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
+  const permissions = usePermissions();
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConvocacaoDialogOpen, setIsConvocacaoDialogOpen] = useState(false);
   const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
+  const [matchedBanco, setMatchedBanco] = useState<any>(null);
+  
   const [indicators, setIndicators] = useState({
     total_inscritos: 0,
     aprovados_triagem: 0,

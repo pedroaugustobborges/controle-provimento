@@ -142,7 +142,7 @@ export default function BancoTalentosPage() {
       status: string;
       validade: string;
       isProrrogado: boolean;
-      qtdBanco: string | number;
+      qtdBanco: number;
       candidatos: BancoTalentos[];
     }> = {};
 
@@ -154,6 +154,13 @@ export default function BancoTalentosPage() {
         : `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
 
       if (!groups[key]) {
+        let qtd = 0;
+        if (typeof b.quantidade_banco === 'number') {
+          qtd = b.quantidade_banco;
+        } else {
+          qtd = parseInt(String(b.quantidade_banco || '0')) || 0;
+        }
+
         groups[key] = {
           id: b.id,
           edital: b.numero_edital,
@@ -165,15 +172,12 @@ export default function BancoTalentosPage() {
           validade: b.nova_data_validade || b.data_validade,
           isProrrogado: b.is_prorrogado,
           // REGRA DA QUANTIDADE DE BANCO (Item 5): não somar, pegar do nível do banco
-          qtdBanco: b.quantidade_banco || 0,
+          qtdBanco: qtd,
           candidatos: []
         };
       }
       
       groups[key].candidatos.push(b);
-      
-      // Se algum candidato do grupo tiver status CONVOCADO, o banco pode refletir isso se necessário,
-      // mas o usuário pediu para separar no detalhe.
     });
 
     return Object.values(groups).sort((a, b) => a.cargo.localeCompare(b.cargo));

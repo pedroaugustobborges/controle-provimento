@@ -193,26 +193,26 @@ export default function FilaEditaisPage() {
                   <TableRow key={v.id} className="group">
                     <TableCell className="font-mono text-xs text-primary font-bold">
                       {v.requisicao || v.numero_requisicao}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <Building2 className="h-3.5 w-3.5 text-slate-400" />
                         <span className="font-medium text-slate-700">{v.unidade}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-slate-800">{v.cargo}</td>
-                    <td className="px-6 py-4 text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</td>
-                    <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
+                    <TableCell className="text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</TableCell>
+                    <TableCell className="text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</TableCell>
+                    <TableCell className="text-slate-500 whitespace-nowrap">
                       {formatDate(v.data_recebimento!)}
-                    </td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">
+                    </TableCell>
+                    <TableCell className="text-center font-bold text-slate-700">
                       {calcDiasAberto(v.data_recebimento || v.data_abertura)}
-                    </td>
-                    <td className="px-6 py-4 text-xs font-medium text-slate-600">
+                    </TableCell>
+                    <TableCell className="text-xs font-medium text-slate-600">
                       {v.analista_responsavel}
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
                           <Edit className="h-4 w-4" />
@@ -221,21 +221,21 @@ export default function FilaEditaisPage() {
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {pendingVagas.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="px-6 py-20 text-center">
+                  <TableRow>
+                    <TableCell colSpan={10} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
                         <p className="text-slate-500 font-medium">Nenhuma pendência encontrada na fila de editais.</p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

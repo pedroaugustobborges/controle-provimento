@@ -663,6 +663,11 @@ export default function BancoTalentosPage() {
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" /> Histórico de Importações
           </TabsTrigger>
+          {permissions.isAdmin() && (
+            <TabsTrigger value="audit" className="gap-2 text-destructive font-bold">
+              <AlertCircle className="h-4 w-4" /> Auditoria de Grupos
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">

@@ -213,6 +213,7 @@ export default function MonitoramentoAdminPage() {
                       <div className="flex flex-col">
                         <span className="font-mono text-[11px] text-primary font-bold">{v.numero_edital || v.numero_processo || v.requisicao}</span>
                         <span className="font-bold text-slate-700">{v.cargo}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

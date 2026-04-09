@@ -77,7 +77,7 @@ export default function ConvocacoesPage() {
   }, [vagas, currentUser]);
 
   const pendingVagas = useMemo(() => {
-    return filteredVagas.filter(v => v.status === 'realizar_convocacao');
+    return filteredVagas.filter(v => getCategoriaStatus(v, true) === 'convocacao');
   }, [filteredVagas]);
 
   const filteredConvocacoes = useMemo(() => {

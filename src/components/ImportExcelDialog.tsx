@@ -50,6 +50,9 @@ export function ImportExcelDialog({
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<any>(null);
+  const [detectedType, setDetectedType] = useState<'vagas' | 'banco' | null>(null);
+  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
+  const [confidence, setConfidence] = useState<'high' | 'low'>('low');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -57,6 +60,9 @@ export function ImportExcelDialog({
     setFile(null);
     setSummary(null);
     setIsProcessing(false);
+    setDetectedType(null);
+    setWorkbook(null);
+    setConfidence('low');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

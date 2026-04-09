@@ -45,9 +45,25 @@ export default function FilaEditaisPage() {
         }
       }
 
-      // Regra 4.1: Grupo: fila de edital / início de processo
-      const status = (v.status || v.status_geral || 'sem_status').toLowerCase();
-      const isFilaEdital = status === 'sem_status' || status === 'publicar_novo_edital';
+      // Regra: Fila de Edital - Filtro por status real da vaga
+      const statusValue = (v.status || v.status_geral || '').toLowerCase();
+      const editalStatuses = [
+        'publicar edital',
+        'publicar novo edital',
+        'fazer publicação do edital',
+        'fila de editais',
+        'aguardando edital',
+        'aguardando processo e edital',
+        'sem status',
+        'sem_status'
+      ];
+      
+      const isFilaEdital = editalStatuses.some(s => 
+        statusValue === s || 
+        statusValue.includes('publicar edital') || 
+        statusValue.includes('novo edital') ||
+        statusValue === 'fila de editais'
+      );
       
       if (!isFilaEdital) return false;
 

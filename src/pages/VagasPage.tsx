@@ -819,9 +819,7 @@ function AcompanhamentoEditalList() {
                           <Badge className={`${getEtapaColor(displayEtapa as EtapaEdital)} font-bold text-[10px] uppercase py-0.5 px-2 w-fit`}>
                             {ETAPA_LABELS[displayEtapa as EtapaEdital] || displayEtapa}
                           </Badge>
-                          {!isSync && (
-                            <span className="text-[9px] text-amber-600 font-bold animate-pulse uppercase">Sugerido: {ETAPA_LABELS[autoEtapa as EtapaEdital]}</span>
-                          )}
+                          {/* Removido sugestão conforme solicitado */}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
@@ -830,13 +828,14 @@ function AcompanhamentoEditalList() {
                             <Button variant="outline" size="sm" className={`h-7 px-2 text-[10px] font-bold uppercase border-2 ${
                               v.acompanhamento?.situacao_etapa === 'atrasada' ? 'bg-red-50 text-red-700 border-red-100' :
                               v.acompanhamento?.situacao_etapa === 'concluido' ? 'bg-green-50 text-green-700 border-green-100' :
-                              v.acompanhamento?.situacao_etapa === 'em_andamento' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                              (v.acompanhamento?.situacao_etapa === 'em_andamento' || !v.acompanhamento?.situacao_etapa) ? 'bg-blue-50 text-blue-700 border-blue-100' :
                               'bg-amber-50 text-amber-700 border-amber-100'
                             }`}>
-                              {v.acompanhamento?.situacao_etapa?.replace('_', ' ') || 'PENDENTE'}
+                              {v.acompanhamento?.situacao_etapa ? v.acompanhamento.situacao_etapa.replace('_', ' ') : 'EM ANDAMENTO'}
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="center" className="min-w-[120px]">
+                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-amber-600">PENDENTE</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-green-600">CONCLUÍDO</DropdownMenuItem>

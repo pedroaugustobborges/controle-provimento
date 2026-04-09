@@ -1,4 +1,4 @@
-import { StatusVaga, StatusValidacao, EtapaEdital, StatusPublicacao } from '@/types/vaga';
+import { StatusVaga, StatusValidacao, EtapaEdital, StatusPublicacao, Vaga, VagaCronograma } from '@/types/vaga';
 
 export const VITORIA_SUB_UNIDADES = [
   'sao pedro', 'suá', 'sua', 'bento ferreira', 'jardim da penha', 

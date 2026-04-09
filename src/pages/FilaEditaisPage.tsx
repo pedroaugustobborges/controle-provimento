@@ -11,18 +11,26 @@ import {
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
-  FileUp
+  FileUp, CheckSquare
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
-import { STATUS_EDITAL_COLORS, StatusEdital } from '@/types/vaga';
+import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, 
+  DialogFooter, DialogDescription 
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+
 
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
@@ -32,6 +40,14 @@ export default function FilaEditaisPage() {
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  
+  // Modal de envio
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+  const [cargoValidado, setCargoValidado] = useState(false);
+  const [cargaValidada, setCargaValidada] = useState(false);
+  const [salarioValidado, setSalarioValidado] = useState(false);
+  const [obsUnidade, setObsUnidade] = useState('');
 
   const pendingVagas = useMemo(() => {
     return vagas.filter(v => {
@@ -48,6 +64,11 @@ export default function FilaEditaisPage() {
       // Regra: Fila de Edital - Filtrar por categoria do status real
       const isFilaEdital = getCategoriaStatus(v) === 'fila_edital';
       if (!isFilaEdital) return false;
+
+      // Se já foi encaminhado para edital, remove da fila da unidade
+      if (v.status_fluxo_edital === 'encaminhado_edital' || v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'enviado_validacao') {
+        return false;
+      }
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -67,24 +88,41 @@ export default function FilaEditaisPage() {
     'Aguardando processo e edital', 'Em andamento', 'Encerrada'
   ];
 
-  const handleSendToValidation = (vagaId: string) => {
-    const vaga = vagas.find(v => v.id === vagaId);
-    if (!vaga?.numero_edital || !vaga?.numero_processo) {
-      toast.error('Informe o número do edital e do processo antes de enviar para validação.');
+  const handleOpenSendModal = (vaga: Vaga) => {
+    setSelectedVaga(vaga);
+    setCargoValidado(false);
+    setCargaValidada(false);
+    setSalarioValidado(false);
+    setObsUnidade('');
+    setIsSendModalOpen(true);
+  };
+
+  const handleConfirmSend = () => {
+    if (!selectedVaga) return;
+
+    if (!cargoValidado || !cargaValidada || !salarioValidado) {
+      toast.error('É necessário validar cargo, carga horária e salário com a unidade antes de enviar.');
       return;
     }
 
-    updateVaga(vagaId, { 
-      status_validacao: 'pendente',
-      historico: [...vaga.historico, {
+    updateVaga(selectedVaga.id, { 
+      status_fluxo_edital: 'encaminhado_edital',
+      cargo_validado: true,
+      carga_horaria_validada: true,
+      salario_validado: true,
+      observacoes_unidade: obsUnidade,
+      historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: 'Edital enviado para validação administrativa',
-        usuario: currentUser?.nome_completo || 'Analista'
+        descricao: `Vaga encaminhada para a analista do edital. Obs: ${obsUnidade || 'Sem observações'}`,
+        usuario: currentUser?.nome_completo || 'Analista da Unidade'
       }]
     });
-    toast.success('Edital enviado para validação administrativa!');
+
+    setIsSendModalOpen(false);
+    toast.success('Vaga encaminhada com sucesso para a analista do edital!');
   };
+
 
   const hasFilters = search !== '' || filterUnidade !== 'all' || filterStatus !== 'all';
 
@@ -221,7 +259,7 @@ export default function FilaEditaisPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" title="Enviar para Validação" onClick={() => handleSendToValidation(v.id)}>
+                        <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Enviar para Analista do Edital" onClick={() => handleOpenSendModal(v)}>
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
@@ -245,6 +283,86 @@ export default function FilaEditaisPage() {
       </Card>
 
       <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+
+      <Dialog open={isSendModalOpen} onOpenChange={setIsSendModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Send className="h-5 w-5" />
+              Enviar para Fila de Edital
+            </DialogTitle>
+            <DialogDescription>
+              Confirme as informações validadas com a unidade antes de encaminhar a vaga para a redação do edital.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedVaga && (
+            <div className="space-y-6 py-4">
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500 font-medium">Unidade:</span>
+                  <span className="font-bold text-slate-700">{selectedVaga.unidade}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500 font-medium">Cargo:</span>
+                  <span className="font-bold text-slate-700">{selectedVaga.cargo}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-primary" />
+                  Validações Obrigatórias
+                </h4>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setCargoValidado(!cargoValidado)}>
+                    <Checkbox id="cargo" checked={cargoValidado} onCheckedChange={(checked) => setCargoValidado(checked as boolean)} />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="cargo" className="text-sm font-medium cursor-pointer">Cargo validado com a unidade</Label>
+                      <p className="text-xs text-slate-500">Confirmo que a nomenclatura do cargo está correta.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setCargaValidada(!cargaValidada)}>
+                    <Checkbox id="carga" checked={cargaValidada} onCheckedChange={(checked) => setCargaValidada(checked as boolean)} />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="carga" className="text-sm font-medium cursor-pointer">Carga horária validada com a unidade</Label>
+                      <p className="text-xs text-slate-500">Confirmo que a jornada semanal está correta.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setSalarioValidado(!salarioValidado)}>
+                    <Checkbox id="salario" checked={salarioValidado} onCheckedChange={(checked) => setSalarioValidado(checked as boolean)} />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="salario" className="text-sm font-medium cursor-pointer">Salário validado com a unidade</Label>
+                      <p className="text-xs text-slate-500">Confirmo que a remuneração está atualizada.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="obs" className="text-sm font-semibold text-slate-800">Observações para Analista do Edital</Label>
+                <Textarea 
+                  id="obs" 
+                  placeholder="Instruções sobre salário, carga horária, urgência ou perfil da vaga..."
+                  className="min-h-[100px] resize-none"
+                  value={obsUnidade}
+                  onChange={(e) => setObsUnidade(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSendModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleConfirmSend} className="bg-primary hover:bg-primary/90">
+              Confirmar e Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -18,7 +18,9 @@ import ValidacaoEditaisPage from "@/pages/ValidacaoEditaisPage";
 import AdministracaoPage from "@/pages/AdministracaoPage";
 import AlertasTarefasPage from "@/pages/AlertasTarefasPage";
 import MonitoramentoAdminPage from "@/pages/MonitoramentoAdminPage";
+import FilaAnalistaEditalPage from "@/pages/FilaAnalistaEditalPage";
 import NotFound from "./pages/NotFound.tsx";
+
 
 
 const queryClient = new QueryClient();
@@ -36,6 +38,7 @@ const App = () => (
             <Route path="/vagas/:id" element={<VagaDetalhePage />} />
             <Route path="/banco-talentos" element={<BancoTalentosPage />} />
             <Route path="/fila-editais" element={<FilaEditaisPage />} />
+            <Route path="/fila-analista-edital" element={<FilaAnalistaEditalPage />} />
             <Route path="/convocacoes" element={<ConvocacoesPage />} />
             <Route path="/validacao" element={<ValidacaoPage />} />
             <Route path="/importacoes" element={<ImportacoesPage />} />

@@ -20,7 +20,11 @@ import {
   Building2,
   FileText,
   Bot,
-  Zap
+  Zap,
+  MessageSquare,
+  FileDown,
+  User,
+  ExternalLink
 } from 'lucide-react';
 import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
@@ -28,6 +32,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription 
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+
 
 export default function ValidacaoEditaisPage() {
   const { vagas, updateVaga } = useVagasStore();
@@ -39,7 +44,10 @@ export default function ValidacaoEditaisPage() {
 
   const pendingEditais = useMemo(() => {
     return vagas.filter(v => {
-      if (v.status_validacao !== 'pendente') return false;
+      // Regra de filtro: status de validação pendente ou status de fluxo correto
+      if (v.status_validacao !== 'pendente' && v.status_fluxo_edital !== 'enviado_validacao') {
+        return false;
+      }
       
       if (!currentUser?.visualiza_todas_unidades) {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
@@ -57,6 +65,7 @@ export default function ValidacaoEditaisPage() {
       return true;
     });
   }, [vagas, currentUser, search]);
+
 
   const handleAction = (vagaId: string, status: 'aprovado' | 'reprovado') => {
     const vaga = vagas.find(v => v.id === vagaId);
@@ -180,26 +189,97 @@ export default function ValidacaoEditaisPage() {
       </Card>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Validar Edital</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5 text-primary" />
+              Validar Edital
+            </DialogTitle>
             <DialogDescription>
-              Analise os dados do edital para a vaga {selectedVaga?.cargo}.
+              Analise os dados e o arquivo do edital para a vaga {selectedVaga?.cargo}.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+          
+          <div className="space-y-6 py-4">
+            {/* Resumo da Vaga */}
+            <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100">
               <div>
                 <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Edital</p>
-                <p className="font-semibold">{selectedVaga?.numero_edital}</p>
+                <p className="font-bold text-slate-800">{selectedVaga?.numero_edital}</p>
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Processo</p>
-                <p className="font-semibold">{selectedVaga?.numero_processo}</p>
+                <p className="font-bold text-slate-800">{selectedVaga?.numero_processo}</p>
               </div>
             </div>
 
-            <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
+            {/* Arquivo do Edital */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <FileText className="h-4 w-4" /> Arquivo do Edital
+              </h4>
+              {selectedVaga?.arquivo_edital ? (
+                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-lg group">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-600 p-2 rounded text-white">
+                      <FileDown className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-blue-900">{selectedVaga.arquivo_edital}</p>
+                      <p className="text-[10px] text-blue-600">Documento Word (.docx)</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800 hover:bg-blue-100">
+                    <ExternalLink className="h-4 w-4 mr-1" /> Abrir
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-4 border border-dashed border-slate-200 rounded-lg text-center">
+                  <p className="text-sm text-slate-400 italic">Nenhum arquivo anexado.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Fluxo de Observações */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" /> Fluxo de Observações
+              </h4>
+              
+              <div className="space-y-3">
+                {/* Unidade */}
+                <div className="relative pl-6 pb-2 border-l-2 border-slate-100">
+                  <div className="absolute left-[-9px] top-0 bg-white p-0.5">
+                    <div className="bg-amber-100 p-1 rounded-full"><Building2 className="h-3 w-3 text-amber-600" /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Analista da Unidade</span>
+                    </div>
+                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
+                      {selectedVaga?.observacoes_unidade || 'Nenhuma observação informada pela unidade.'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Edital */}
+                <div className="relative pl-6 border-l-2 border-slate-100">
+                  <div className="absolute left-[-9px] top-0 bg-white p-0.5">
+                    <div className="bg-blue-100 p-1 rounded-full"><User className="h-3 w-3 text-blue-600" /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Analista do Edital</span>
+                    </div>
+                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
+                      {selectedVaga?.observacoes_edital || 'Nenhuma observação informada pelo analista do edital.'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-blue-50/30 rounded-xl border border-blue-100/50 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bot className="h-4 w-4 text-blue-600" />
@@ -227,16 +307,17 @@ export default function ValidacaoEditaisPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-400 uppercase">Observações da Validação</label>
+              <label className="text-[11px] font-bold text-slate-400 uppercase">Observações da Validação Final</label>
               <Textarea 
                 placeholder="Informe o motivo da reprovação ou observações da aprovação..." 
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] resize-none"
               />
             </div>
           </div>
-          <DialogFooter className="gap-2">
+
+          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
             <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleAction(selectedVaga.id, 'reprovado')}>
               <XCircle className="h-4 w-4 mr-2" /> Reprovar
             </Button>

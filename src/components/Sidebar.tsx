@@ -21,6 +21,7 @@ const navigation = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
   { name: 'Vagas', icon: Briefcase, href: '/vagas' },
   { name: 'Fila de Editais', icon: PlusCircle, href: '/fila-editais' },
+  { name: 'Redação do Edital', icon: FileText, href: '/fila-analista-edital' },
   { name: 'Editais', icon: FileText, href: '/editais' },
   { name: 'Acompanhamento', icon: FileSearch, href: '/acompanhamento' },
   { name: 'Banco / Reserva', icon: Users, href: '/banco' },

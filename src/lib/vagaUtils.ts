@@ -126,12 +126,21 @@ export function getValidacaoColor(status: StatusValidacao): string {
 
 export function getEtapaColor(etapa: EtapaEdital): string {
   const map: Record<EtapaEdital, string> = {
+    validacao_edital: 'bg-slate-100 text-slate-800',
     inscricoes: 'bg-blue-100 text-blue-800',
     triagem: 'bg-purple-100 text-purple-800',
     resultado_da_triagem: 'bg-purple-50 text-purple-700',
-    avaliacao_curricular: 'bg-indigo-50 text-indigo-700',
     avaliacao_especifica_online: 'bg-cyan-100 text-cyan-800',
-    resultado_da_avaliacao_especifica_online: 'bg-cyan-50 text-cyan-700',
+    resultado_preliminar_avaliacao_especifica_online: 'bg-cyan-50 text-cyan-600',
+    recurso_avaliacao_especifica_online: 'bg-orange-50 text-orange-600',
+    resultado_recurso_avaliacao_especifica_online: 'bg-orange-100 text-orange-700',
+    resultado_final_avaliacao_especifica_online: 'bg-cyan-100 text-cyan-900',
+    envio_certificados_titulos: 'bg-indigo-100 text-indigo-800',
+    declaracao_experiencia: 'bg-indigo-50 text-indigo-700',
+    analise_curricular_preliminar: 'bg-violet-50 text-violet-700',
+    recurso_analise_curricular: 'bg-amber-50 text-amber-600',
+    resultado_recurso_analise_curricular: 'bg-amber-100 text-amber-700',
+    analise_curricular_final: 'bg-violet-100 text-violet-800',
     entrevistas: 'bg-amber-100 text-amber-800',
     resultado_final: 'bg-green-100 text-green-800',
     convocacao_do_edital: 'bg-emerald-100 text-emerald-800',

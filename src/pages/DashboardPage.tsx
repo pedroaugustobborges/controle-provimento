@@ -51,6 +51,7 @@ export default function DashboardPage() {
       vagas_lideranca: 0,
       convocacao: 0,
       aguardando_unidade: 0,
+      documentacao: 0,
       com_banco_valido: 0
     };
     
@@ -78,6 +79,7 @@ export default function DashboardPage() {
     { label: 'Convocações', value: counts.convocacao, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Vagas Interrompidas', value: counts.vagas_interrompidas, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
     { label: 'Aguardando Unidade', value: counts.aguardando_unidade, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { label: 'Documentação', value: counts.documentacao, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Com Banco Válido', value: counts.com_banco_valido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ], [totalVagas, counts]);
 
@@ -138,7 +140,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-10 gap-4">
         {stats.map((stat, idx) => (
           <Card key={idx} className="border-none shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden bg-white">
             <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>

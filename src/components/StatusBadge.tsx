@@ -13,7 +13,7 @@ export function StatusBadge({ status }: { status: StatusGeral }) {
 
   return (
     <span className={`status-badge ${getStatusColor(status)}`}>
-      {STATUS_LABELS[status] || 'Sem Status'}
+      {STATUS_LABELS[status] || status || 'Sem Status'}
     </span>
   );
 }

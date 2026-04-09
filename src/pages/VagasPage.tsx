@@ -134,7 +134,14 @@ export default function VagasPage() {
       const matchStatus = filterStatus === 'all' || 
         v.status === filterStatus || 
         v.status_geral === filterStatus ||
-        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao');
+        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') ||
+        (filterStatus === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') ||
+        (filterStatus === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') ||
+        (filterStatus === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') ||
+        (filterStatus === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') ||
+        (filterStatus === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') ||
+        (filterStatus === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') ||
+        (filterStatus === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade');
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
       const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
@@ -154,6 +161,7 @@ export default function VagasPage() {
       vagas_lideranca: 0,
       convocacao: 0,
       aguardando_unidade: 0,
+      documentacao: 0,
       com_banco_valido: 0
     };
     
@@ -162,6 +170,9 @@ export default function VagasPage() {
       
       if (acc[cat] !== undefined) {
         acc[cat]++;
+      } else {
+        // Fallback para qualquer status não mapeado explicitamente
+        acc.em_andamento++;
       }
 
       if (getBancoByVaga(v.id)) {
@@ -178,6 +189,8 @@ export default function VagasPage() {
   const countVagasInterrompidas = counts.vagas_interrompidas;
   const countVagasLideranca = counts.vagas_lideranca;
   const countConvocacao = counts.convocacao;
+  const countAguardandoUnidade = counts.aguardando_unidade;
+  const countDocumentacao = counts.documentacao;
   const countComBanco = counts.com_banco_valido;
 
 
@@ -390,7 +403,7 @@ export default function VagasPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-10 gap-3">
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
@@ -433,6 +446,18 @@ export default function VagasPage() {
           <CardContent className="p-4 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vagas Interrompidas</p>
             <p className="text-2xl font-bold text-rose-600">{countVagasInterrompidas}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-orange-500">
+          <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Documentação</p>
+            <p className="text-2xl font-bold text-orange-600">{countDocumentacao}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-yellow-500">
+          <CardContent className="p-4 flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Unidade</p>
+            <p className="text-2xl font-bold text-yellow-600">{countAguardandoUnidade}</p>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-emerald-500">

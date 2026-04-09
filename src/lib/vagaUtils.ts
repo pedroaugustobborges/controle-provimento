@@ -26,24 +26,27 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['sem_status', 'publicar_novo_edital', 'aberta', 'FILA DE EDITAIS', 'SEM STATUS'],
+  fila_edital: ['publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital'],
   em_andamento: [
-    'em_edital', 
-    'em_documentacao', 
-    'documentacao_ok_azul_pendente', 
-    'documentacao_pendente_azul_ok', 
-    'em_admissao', 
-    'admissao_enviada',
-    'em_triagem',
+    'em_edital', 'em edital', 
+    'em_processo_seletivo', 'em processo seletivo',
+    'admissao_enviada', 'admissao enviada',
+    'em_admissao', 'em admissao',
+    'em_triagem', 'em triagem',
     'entrevista',
-    'EM ANDAMENTO',
-    'DOCUMENTAÇÃO'
+    'EM ANDAMENTO'
   ],
-  concluidas: ['admissao_efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
-  vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada'],
-  vagas_lideranca: ['movimentacao_interna', 'vaga_lideranca', 'MOV. INTERNA', 'ESTRATÉGICAS'],
-  convocacao: ['realizar_convocacao', 'CONVOCAÇÕES'],
-  aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando']
+  concluidas: ['admissao_efetivada', 'admissao efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
+  vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada', 'cancelado'],
+  vagas_lideranca: ['vaga_lideranca', 'vaga de lideranca', 'ESTRATÉGICAS'],
+  convocacao: ['realizar_convocacao', 'realizar convocacao', 'CONVOCAÇÕES'],
+  documentacao: [
+    'documentacao', 'documentacao ok e aso pendente', 'aso pendente', 
+    'documentacao ok', 'documentacao pendente', 'documentação', 
+    'documentação ok e aso pendente', 'aso pendente', 'documentação ok', 
+    'documentação pendente', 'DOCUMENTAÇÃO'
+  ],
+  aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando', 'aguardando unidade']
 };
 
 export function isConvocacaoByFields(row: any): boolean {
@@ -59,80 +62,57 @@ export function isConvocacaoByFields(row: any): boolean {
 }
 
 export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
-  if (!row) return 'fila_edital';
+  if (!row) return 'em_andamento';
   
-  // Se for uma string (legado/casos simples), extraímos o status
-  const status = typeof row === 'string' ? row : (row.status || row.status_geral || 'SEM STATUS');
+  const status = typeof row === 'string' ? row : (row.status || row.status_geral);
   
-  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') {
+  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || String(status).trim() === '') {
     if (typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
-    return 'fila_edital';
+    return 'em_andamento';
   }
   
-  const s = String(status).trim(); 
+  const s = String(status).trim();
+  const sLow = s.toLowerCase();
   
-  const findCategory = (statusVal: string) => {
+  const findCategory = (statusVal: string): keyof typeof CATEGORIAS_STATUS | null => {
     if (CATEGORIAS_STATUS.fila_edital.includes(statusVal)) return 'fila_edital';
-    if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
     if (CATEGORIAS_STATUS.concluidas.includes(statusVal)) return 'concluidas';
     if (CATEGORIAS_STATUS.vagas_interrompidas.includes(statusVal)) return 'vagas_interrompidas';
     if (CATEGORIAS_STATUS.vagas_lideranca.includes(statusVal)) return 'vagas_lideranca';
     if (CATEGORIAS_STATUS.convocacao.includes(statusVal)) return 'convocacao';
+    if (CATEGORIAS_STATUS.documentacao.includes(statusVal)) return 'documentacao';
     if (CATEGORIAS_STATUS.aguardando_unidade.includes(statusVal)) return 'aguardando_unidade';
+    if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
     return null;
   };
 
-  const cat = findCategory(s) || findCategory(s.toLowerCase()) || findCategory(s.toUpperCase());
+  const cat = findCategory(s) || findCategory(sLow);
   
-  // Regra especial: se houver campos de convocação preenchidos, SEMPRE cai em convocação
-  // a menos que já esteja em concluídas ou interrompidas (opcional, mas o usuário disse "quando houver evidência")
-  // Vou seguir a regra do usuário: "Considerar como convocação quando: o status for “realizar convocação” OU houver preenchimento em campos da seção de convocação"
   if (cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
     return 'convocacao';
   }
 
-  return cat || 'fila_edital';
+  return cat || 'em_andamento';
 }
 
 
 
-export function getStatusColor(status: StatusVaga): string {
-  const map: Record<StatusVaga, string> = {
-    'CONCLUÍDAS': 'bg-green-100 text-green-700 border-green-200',
-    'EM ANDAMENTO': 'bg-blue-100 text-blue-700 border-blue-200',
-    'MOV. INTERNA': 'bg-blue-100 text-blue-700 border-blue-200',
-    'DOCUMENTAÇÃO': 'bg-orange-100 text-orange-700 border-orange-200',
-    'CONVOCAÇÕES': 'bg-violet-100 text-violet-700 border-violet-200',
-    'FILA DE EDITAIS': 'bg-blue-100 text-blue-700 border-blue-200',
-    'SUSPENSA': 'bg-gray-100 text-gray-700 border-gray-200',
-    'PAUSADA': 'bg-amber-100 text-amber-700 border-amber-200',
-    'AGUARDANDO UNIDADE': 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    'ESTRATÉGICAS': 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    'CANCELADAS': 'bg-red-100 text-red-700 border-red-200',
-    'SEM STATUS': 'bg-gray-100 text-gray-600',
-    sem_status: 'bg-gray-100 text-gray-600',
-    publicar_novo_edital: 'bg-blue-100 text-blue-700 border-blue-200',
-    em_edital: 'bg-amber-100 text-amber-700 border-amber-200',
-    em_documentacao: 'bg-orange-100 text-orange-700 border-orange-200',
-    documentacao_ok_azul_pendente: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    documentacao_pendente_azul_ok: 'bg-rose-100 text-rose-700 border-rose-200',
-    aguardar_unidade: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    em_admissao: 'bg-sky-100 text-sky-700 border-sky-200',
-    admissao_enviada: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-    admissao_efetivada: 'bg-green-100 text-green-700 border-green-200',
-    dispensa: 'bg-slate-100 text-slate-700 border-slate-200',
-    cancelada: 'bg-red-100 text-red-700 border-red-200',
-    aguardar_anuencia: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    movimentacao_interna: 'bg-blue-100 text-blue-700 border-blue-200',
-    vaga_lideranca: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    realizar_convocacao: 'bg-violet-100 text-violet-700 border-violet-200',
-    aberta: 'bg-blue-100 text-blue-700',
-    em_triagem: 'bg-purple-100 text-purple-700',
-    entrevista: 'bg-indigo-100 text-indigo-700',
-    finalizada: 'bg-green-100 text-green-700',
-    encerrada: 'bg-gray-100 text-gray-600',
-  };
-  return map[status] || 'bg-gray-100 text-gray-600';
+export function getStatusColor(status: string): string {
+  if (!status) return 'bg-gray-100 text-gray-600';
+  
+  const s = String(status).trim().toLowerCase();
+  
+  // Categorized colors
+  if (CATEGORIAS_STATUS.concluidas.includes(s)) return 'bg-green-100 text-green-700 border-green-200';
+  if (CATEGORIAS_STATUS.fila_edital.includes(s)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.vagas_interrompidas.includes(s) || s.includes('cancelada') || s.includes('cancelado')) return 'bg-red-100 text-red-700 border-red-200';
+  if (CATEGORIAS_STATUS.vagas_lideranca.includes(s)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+  if (CATEGORIAS_STATUS.convocacao.includes(s)) return 'bg-violet-100 text-violet-700 border-violet-200';
+  if (CATEGORIAS_STATUS.documentacao.includes(s) || s.includes('documentacao') || s.includes('documentação')) return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (CATEGORIAS_STATUS.aguardando_unidade.includes(s)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  
+  // Default color for Em Andamento and others
+  return 'bg-blue-100 text-blue-700 border-blue-200';
 }
 
 export function getValidacaoColor(status: StatusValidacao): string {

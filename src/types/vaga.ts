@@ -95,6 +95,15 @@ export interface VagaCronograma {
   data_encerramento_processo?: string;
 }
 
+export interface EtapaStatus {
+  etapa: EtapaEdital;
+  concluida: boolean;
+  data_conclusao?: string; // Data real informada pelo analista
+  usuario_conclusao?: string;
+  timestamp_conclusao?: string; // Momento que marcou
+  no_prazo?: boolean;
+}
+
 export interface VagaAcompanhamento {
   etapa_atual: EtapaEdital | string;
   total_inscritos?: number;
@@ -108,6 +117,7 @@ export interface VagaAcompanhamento {
   data_real_etapa?: string;
   situacao_etapa?: 'pendente' | 'em_andamento' | 'concluido' | 'atrasada';
   etapas_habilitadas?: EtapaEdital[];
+  historico_etapas?: EtapaStatus[];
 }
 
 export interface Vaga {

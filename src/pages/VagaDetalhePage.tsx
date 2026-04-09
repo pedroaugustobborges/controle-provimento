@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma } from '@/types/vaga';
-import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity } from 'lucide-react';
+import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
@@ -909,29 +909,38 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
   const [cronograma, setCronograma] = useState<any>(vaga.cronograma || {});
 
   const autoUpdateEtapa = useMemo(() => {
-    if (!cronograma) return form.etapa_atual;
-    const today = new Date().toISOString().split('T')[0];
+    if (!form.historico_etapas || form.historico_etapas.length === 0) return form.etapa_atual;
     
-    let current = form.etapa_atual;
     const habilitadas = form.etapas_habilitadas || [];
-    
     const sortedHabilitadas = TODAS_AS_ETAPAS.filter(e => habilitadas.includes(e));
     
-    for (const etapa of sortedHabilitadas) {
-      const dateKey = CRONOGRAMA_KEYS[etapa];
-      const date = cronograma[dateKey];
-      if (date && date <= today) {
-        current = etapa;
+    // Find the last completed stage in the sequence
+    let lastCompletedIndex = -1;
+    for (let i = 0; i < sortedHabilitadas.length; i++) {
+      const etapa = sortedHabilitadas[i];
+      const status = form.historico_etapas.find((h: any) => h.etapa === etapa);
+      if (status?.concluida) {
+        lastCompletedIndex = i;
+      } else {
+        break; // Sequence broken
       }
     }
-    return current;
-  }, [cronograma, form.etapas_habilitadas, form.etapa_atual]);
+    
+    // The current stage is the one after the last completed one
+    if (lastCompletedIndex + 1 < sortedHabilitadas.length) {
+      return sortedHabilitadas[lastCompletedIndex + 1];
+    }
+    
+    return sortedHabilitadas[sortedHabilitadas.length - 1];
+  }, [form.historico_etapas, form.etapas_habilitadas]);
 
   useEffect(() => {
     if (autoUpdateEtapa !== form.etapa_atual) {
       setForm(prev => ({ ...prev, etapa_atual: autoUpdateEtapa }));
     }
   }, [autoUpdateEtapa]);
+
+  const { currentUser } = useAdminStore();
 
   const toggleEtapa = (etapa: EtapaEdital) => {
     const habilitadas = form.etapas_habilitadas || [];
@@ -940,6 +949,44 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
     } else {
       setForm({ ...form, etapas_habilitadas: [...habilitadas, etapa] });
     }
+  };
+
+  const markStageAsCompleted = (etapa: EtapaEdital, dataReal: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toLocaleTimeString();
+    
+    // Check if on time (before 2pm on the scheduled date)
+    const scheduledDate = cronograma[CRONOGRAMA_KEYS[etapa]];
+    let noPrazo = true;
+    if (scheduledDate === today) {
+      const currentHour = new Date().getHours();
+      if (currentHour >= 14) {
+        noPrazo = false;
+      }
+    } else if (scheduledDate && scheduledDate < today) {
+       noPrazo = false;
+    }
+
+    const newHistory = [...(form.historico_etapas || [])];
+    const existingIndex = newHistory.findIndex((h: any) => h.etapa === etapa);
+    
+    const entry = {
+      etapa,
+      concluida: true,
+      data_conclusao: dataReal,
+      usuario_conclusao: currentUser?.nome_completo || 'Analista',
+      timestamp_conclusao: `${today} ${now}`,
+      no_prazo: noPrazo
+    };
+
+    if (existingIndex >= 0) {
+      newHistory[existingIndex] = entry;
+    } else {
+      newHistory.push(entry);
+    }
+
+    setForm({ ...form, historico_etapas: newHistory });
+    toast.success(`${ETAPA_LABELS[etapa]} marcada como concluída!`);
   };
 
   const applyTemplate = (type: 'comum' | 'especifico') => {
@@ -957,7 +1004,9 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
       total_inscritos: form.total_inscritos,
       aprovados_triagem: form.aprovados_triagem,
       aprovados_finais: form.aprovados_finais,
-      convocados_entrevista: form.convocados_entrevista
+      convocados_entrevista: form.convocados_entrevista,
+      // Update overall status to help with monitoring
+      status_edital: form.etapa_atual === 'encerramento' ? 'Encerrada' : 'Em andamento'
     });
     toast.success('Acompanhamento operacional atualizado com sucesso!');
   };
@@ -979,34 +1028,87 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
               </div>
             </CardHeader>
             <CardContent className="pt-6 space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Forçar Etapa Atual (Manual)</label>
-                  <Select value={form.etapa_atual} onValueChange={(v) => setForm({ ...form, etapa_atual: v })}>
-                    <SelectTrigger className="bg-white border-slate-200 h-10"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => (
-                        <SelectItem key={e} value={e}>{ETAPA_LABELS[e]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-slate-400 italic">A etapa é atualizada automaticamente com base nas datas do cronograma.</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Acompanhamento de Etapas</h4>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">Marque a conclusão para atualizar o fluxo</div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Situação da Etapa</label>
-                  <Select value={form.situacao_etapa} onValueChange={(v: any) => setForm({ ...form, situacao_etapa: v })}>
-                    <SelectTrigger className="bg-white border-slate-200 h-10"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pendente">Pendente</SelectItem>
-                      <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                      <SelectItem value="concluido">Concluído</SelectItem>
-                      <SelectItem value="atrasada">Atrasada</SelectItem>
-                    </SelectContent>
-                  </Select>
+                
+                <div className="space-y-3">
+                  {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => {
+                    const status = (form.historico_etapas || []).find((h: any) => h.etapa === e);
+                    const isCompleted = status?.concluida;
+                    const isCurrent = form.etapa_atual === e;
+                    const scheduledDate = cronograma[CRONOGRAMA_KEYS[e]];
+                    
+                    return (
+                      <div 
+                        key={e} 
+                        className={`p-4 rounded-xl border transition-all ${
+                          isCompleted ? 'bg-green-50/30 border-green-100' : 
+                          isCurrent ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10' : 
+                          'bg-white border-slate-100'
+                        }`}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                              isCompleted ? 'bg-green-500 text-white' : 
+                              isCurrent ? 'bg-primary text-white animate-pulse' : 
+                              'bg-slate-100 text-slate-400'
+                            }`}>
+                              {isCompleted ? <Check className="h-4 w-4" /> : TODAS_AS_ETAPAS.indexOf(e) + 1}
+                            </div>
+                            <div>
+                              <p className={`font-bold text-sm ${isCompleted ? 'text-green-700' : isCurrent ? 'text-primary' : 'text-slate-700'}`}>
+                                {ETAPA_LABELS[e]}
+                              </p>
+                              {scheduledDate && (
+                                <p className="text-[10px] text-slate-400 font-medium uppercase">
+                                  Previsto: {formatDate(scheduledDate)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            {isCompleted ? (
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold text-green-600 uppercase">Concluído em: {status.data_conclusao}</p>
+                                <p className="text-[9px] text-slate-400">Por: {status.usuario_conclusao}</p>
+                                {status.no_prazo === false && (
+                                  <Badge className="bg-red-50 text-red-600 border-red-100 text-[8px] h-4 mt-0.5">ATRASO</Badge>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <Input 
+                                  type="date" 
+                                  className="h-8 w-32 text-[10px] bg-white" 
+                                  defaultValue={new Date().toISOString().split('T')[0]}
+                                  id={`date-${e}`}
+                                />
+                                <Button 
+                                  size="sm" 
+                                  className="h-8 text-[10px] font-bold uppercase bg-primary hover:bg-primary/90"
+                                  onClick={() => {
+                                    const dateInput = document.getElementById(`date-${e}`) as HTMLInputElement;
+                                    markStageAsCompleted(e, dateInput.value || new Date().toISOString().split('T')[0]);
+                                  }}
+                                >
+                                  Marcar Concluída
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 pt-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest">Indicadores de Funil</h4>
                   <div className="text-[10px] font-bold text-slate-400 uppercase">Preenchimento operacional</div>
@@ -1132,22 +1234,24 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
             <CardContent className="pt-6">
               <div className="relative pl-6 border-l-2 border-slate-200 space-y-8">
                 {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => {
+                  const status = (form.historico_etapas || []).find((h: any) => h.etapa === e);
+                  const isCompleted = status?.concluida;
                   const isCurrent = form.etapa_atual === e;
                   const cronoKey = CRONOGRAMA_KEYS[e];
                   const date = cronograma[cronoKey];
-                  const isPast = date && date < new Date().toISOString().split('T')[0];
                   
                   return (
                     <div key={e} className="relative">
                       <div className={`absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 bg-white transition-all ${
                         isCurrent ? 'border-primary scale-125 shadow-[0_0_8px_rgba(var(--primary),0.5)]' : 
-                        isPast ? 'border-green-500 bg-green-500' : 'border-slate-300'
+                        isCompleted ? 'border-green-500 bg-green-500' : 'border-slate-300'
                       }`} />
                       <div className="flex flex-col">
-                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isPast ? 'text-green-600' : 'text-slate-500'}`}>
+                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-slate-500'}`}>
                           {ETAPA_LABELS[e]}
                         </span>
-                        {date && <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{formatDate(date)}</span>}
+                        {date && <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">Previsto: {formatDate(date)}</span>}
+                        {isCompleted && status.data_conclusao && <span className="text-[9px] text-green-600 font-bold uppercase">Realizado: {formatDate(status.data_conclusao)}</span>}
                         {isCurrent && (
                           <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/10">
                             <p className="text-[9px] font-bold text-primary uppercase">Etapa em andamento</p>

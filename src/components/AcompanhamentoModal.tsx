@@ -159,23 +159,26 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                 </Select>
               </div>
 
-              <div className="flex items-end gap-3">
+              <div className="space-y-4 pt-2">
                 <DatePicker
                   label="Data da Etapa"
                   value={formData.data_real_etapa}
                   onChange={(val) => setFormData({ ...formData, data_real_etapa: val })}
                 />
                 
-                <div className="flex items-center gap-2 h-10 px-4 bg-slate-50 rounded-lg border border-slate-200 shadow-sm mb-0.5">
+                <div className="flex items-center gap-3 p-4 bg-slate-50/80 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-100/50">
                   <Checkbox
                     id="concluido"
                     checked={formData.concluido}
                     onCheckedChange={(val) => setFormData({ ...formData, concluido: val as boolean })}
-                    className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                    className="h-5 w-5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                   />
-                  <Label htmlFor="concluido" className="text-[10px] font-bold text-slate-600 uppercase cursor-pointer select-none">
-                    Concluída / Publicada
-                  </Label>
+                  <div className="flex flex-col">
+                    <Label htmlFor="concluido" className="text-[11px] font-bold text-slate-700 uppercase cursor-pointer select-none">
+                      Concluída / Publicada
+                    </Label>
+                    <span className="text-[9px] text-slate-500 font-medium">Marque se esta etapa já foi finalizada ou o edital publicado</span>
+                  </div>
                 </div>
               </div>
             </div>

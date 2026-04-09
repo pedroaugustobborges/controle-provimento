@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link } from 'react-router-dom';
 import { Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, Upload, LayoutDashboard } from 'lucide-react';
-import { AIAssistant } from './AIAssistant';
+import { AgieChat } from './chat/AgieChat';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
 import {
@@ -230,7 +230,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <main ref={mainRef} className="flex-1 overflow-auto p-8 max-w-[1600px] mx-auto w-full">
             {children}
           </main>
-          <AIAssistant />
+          <AgieChat />
         </div>
       </div>
     </SidebarProvider>

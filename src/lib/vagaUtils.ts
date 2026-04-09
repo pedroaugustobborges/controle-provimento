@@ -34,21 +34,20 @@ export const CATEGORIAS_STATUS = {
     'documentacao_pendente_azul_ok', 
     'em_admissao', 
     'admissao_enviada',
-    'aguardar_unidade',
     'em_triagem',
     'entrevista',
     'EM ANDAMENTO',
-    'DOCUMENTAÇÃO',
-    'AGUARDANDO UNIDADE'
+    'DOCUMENTAÇÃO'
   ],
   concluidas: ['admissao_efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
-  excecoes: ['dispensa', 'cancelada', 'aguardar_anuencia', 'CANCELADAS', 'SUSPENSA', 'PAUSADA'],
-  estrategicas: ['movimentacao_interna', 'vaga_lideranca', 'MOV. INTERNA', 'ESTRATÉGICAS'],
-  convocacao: ['realizar_convocacao', 'CONVOCAÇÕES']
+  vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada'],
+  vagas_lideranca: ['movimentacao_interna', 'vaga_lideranca', 'MOV. INTERNA', 'ESTRATÉGICAS'],
+  convocacao: ['realizar_convocacao', 'CONVOCAÇÕES'],
+  aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando']
 };
 
 export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STATUS {
-  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || status === 'SEM STATUS') return 'em_andamento';
+  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') return 'fila_edital';
   
   const s = status.trim(); 
   
@@ -56,14 +55,15 @@ export function getCategoriaStatus(status: string): keyof typeof CATEGORIAS_STAT
     if (CATEGORIAS_STATUS.fila_edital.includes(statusVal)) return 'fila_edital';
     if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
     if (CATEGORIAS_STATUS.concluidas.includes(statusVal)) return 'concluidas';
-    if (CATEGORIAS_STATUS.excecoes.includes(statusVal)) return 'excecoes';
-    if (CATEGORIAS_STATUS.estrategicas.includes(statusVal)) return 'estrategicas';
+    if (CATEGORIAS_STATUS.vagas_interrompidas.includes(statusVal)) return 'vagas_interrompidas';
+    if (CATEGORIAS_STATUS.vagas_lideranca.includes(statusVal)) return 'vagas_lideranca';
     if (CATEGORIAS_STATUS.convocacao.includes(statusVal)) return 'convocacao';
+    if (CATEGORIAS_STATUS.aguardando_unidade.includes(statusVal)) return 'aguardando_unidade';
     return null;
   };
 
-  const cat = findCategory(s) || findCategory(s.toLowerCase());
-  return cat || 'em_andamento';
+  const cat = findCategory(s) || findCategory(s.toLowerCase()) || findCategory(s.toUpperCase());
+  return cat || 'fila_edital';
 }
 
 

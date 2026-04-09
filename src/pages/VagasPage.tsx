@@ -5,13 +5,13 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga } from '@/types/vaga';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity 
 } from '@/lib/vagaUtils';
-import { Calendar, Bug, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import { AddVagaDialog } from '@/components/AddVagaDialog';
+import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,8 +70,12 @@ export default function VagasPage() {
   const [filterAnalista, setFilterAnalista] = useState('all');
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
+  const [filterVagasNovas, setFilterVagasNovas] = useState(false);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isAddVagaOpen, setIsAddVagaOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [selectedVagaForHistory, setSelectedVagaForHistory] = useState<Vaga | null>(null);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -123,6 +129,7 @@ export default function VagasPage() {
 
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {
+    const now = new Date().getTime();
     return canonicalBase.filter((v) => {
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -147,9 +154,12 @@ export default function VagasPage() {
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
       const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
       
-      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca;
+      const isNew = v.origem === 'manual' && v.data_criacao && (now - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000;
+      const matchVagasNovas = !filterVagasNovas || isNew;
+      
+      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
-  }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca]);
+  }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
 
   // 3. Vacancy summary - strictly using the same canonical base and unified logic as Dashboard
   const counts = useMemo(() => {
@@ -245,9 +255,10 @@ export default function VagasPage() {
     setFilterAnalista('all');
     setFilterAssistente('all');
     setFilterLideranca('all');
+    setFilterVagasNovas(false);
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all';
+  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas;
 
 
   return (
@@ -298,7 +309,7 @@ export default function VagasPage() {
               <FileSpreadsheet className="h-4 w-4" /> Importar Excel
             </Button>
           )}
-          <Button className="gap-2 shadow-md shadow-primary/20 bg-primary">
+          <Button className="gap-2 shadow-md shadow-primary/20 bg-primary" onClick={() => setIsAddVagaOpen(true)}>
             <Plus className="h-4 w-4" /> Nova Vaga
           </Button>
         </div>
@@ -564,7 +575,16 @@ export default function VagasPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-800 truncate max-w-[200px]" title={v.cargo}>{v.cargo}</div>
+                      <div className="flex flex-col">
+                        <div className="font-semibold text-slate-800 truncate max-w-[200px] flex items-center gap-2" title={v.cargo}>
+                          {v.cargo}
+                          {v.origem === 'manual' && v.data_criacao && (new Date().getTime() - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000 && (
+                            <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-black uppercase">
+                              <Sparkles className="h-2 w-2 mr-0.5" /> Nova Vaga
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
                       {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
@@ -602,7 +622,13 @@ export default function VagasPage() {
                               </DropdownMenuItem>
                             </>
                           )}
-                          <DropdownMenuItem className="gap-2">
+                          <DropdownMenuItem 
+                            className="gap-2"
+                            onClick={() => {
+                              setSelectedVagaForHistory(v);
+                              setIsHistoryOpen(true);
+                            }}
+                          >
                             <History className="h-4 w-4 text-slate-500" /> Histórico Completo
                           </DropdownMenuItem>
                           {canDelete && (
@@ -641,6 +667,8 @@ export default function VagasPage() {
       </Card>
 
       <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+      <AddVagaDialog open={isAddVagaOpen} onOpenChange={setIsAddVagaOpen} />
+      <VagaHistoryDialog vaga={selectedVagaForHistory} open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

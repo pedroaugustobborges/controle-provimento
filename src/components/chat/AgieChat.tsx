@@ -137,7 +137,10 @@ export const AgieChat = () => {
                   {/* Step Logic */}
                   {step === 'INITIAL' && (
                     <div className="pt-4 animate-in fade-in slide-in-from-bottom-4">
-                      <p className="text-sm text-slate-600 mb-4 font-medium">Olá! Como posso ajudar você hoje?</p>
+                      <div className="mb-6">
+                        <h2 className="text-xl font-bold text-slate-800">Olá! Eu sou a Agie. 👋</h2>
+                        <p className="text-sm text-slate-500 mt-1">Sua ponte de comunicação interna na AG Saúde. Como posso te conectar hoje?</p>
+                      </div>
                       <div className="grid gap-3">
                         <Button 
                           variant="outline" 

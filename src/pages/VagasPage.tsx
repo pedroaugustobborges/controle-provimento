@@ -779,60 +779,64 @@ function AcompanhamentoEditalList() {
                 </tr>
               </thead>
               <tbody>
-                {editaisEmAndamento.map((v) => (
-                  <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">{v.unidade}</td>
-                    <td className="px-6 py-4 font-semibold text-slate-800">{v.cargo}</td>
-                    <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</td>
-                    <td className="px-6 py-4">
-                      <Select 
-                        value={v.acompanhamento?.etapa_atual || ''} 
-                        onValueChange={(value) => handleUpdateEtapa(v.id, value)}
-                      >
-                        <SelectTrigger className="h-8 w-[180px] text-[11px] font-bold bg-blue-50/50 border-blue-100 text-blue-700">
-                          <SelectValue placeholder="Selecione a etapa" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(ETAPA_LABELS).map(([key, label]) => (
-                            <SelectItem key={key} value={key} className="text-[11px]">
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className={`h-7 px-2 text-[10px] font-bold uppercase border-2 ${
-                            v.acompanhamento?.situacao_etapa === 'atrasada' ? 'bg-red-50 text-red-700 border-red-100' :
-                            v.acompanhamento?.situacao_etapa === 'concluido' ? 'bg-green-50 text-green-700 border-green-100' :
-                            v.acompanhamento?.situacao_etapa === 'em_andamento' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                            'bg-amber-50 text-amber-700 border-amber-100'
-                          }`}>
-                            {v.acompanhamento?.situacao_etapa?.replace('_', ' ') || 'PENDENTE'}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center" className="min-w-[120px]">
-                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-amber-600">PENDENTE</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-green-600">CONCLUÍDO</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-red-600">ATRASADO</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-700">{v.total_inscritos || 0}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-600">{v.aprovados_triagem || 0}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</td>
-                    <td className="px-6 py-4 text-center font-bold text-slate-600">{v.convocados_entrevista || 0}</td>
-                    <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || 0}</td>
-                    <td className="px-6 py-4 text-right">
-                      <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2" onClick={() => navigate(`/vagas/${v.id}?tab=acompanhamento`)}>
-                        Atualizar <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {editaisEmAndamento.map((v) => {
+                  const autoEtapa = getAutoEtapa(v);
+                  const displayEtapa = v.acompanhamento?.etapa_atual || autoEtapa;
+                  const isSync = v.acompanhamento?.etapa_atual === autoEtapa;
+
+                  return (
+                    <tr key={v.id} className="border-b last:border-0 hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">{v.unidade}</td>
+                      <td className="px-6 py-4 font-semibold text-slate-800">
+                        <div className="flex flex-col">
+                          <span>{v.cargo}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{v.requisicao || v.numero_requisicao}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <Badge className={`${getEtapaColor(displayEtapa as EtapaEdital)} font-bold text-[10px] uppercase py-0.5 px-2 w-fit`}>
+                            {ETAPA_LABELS[displayEtapa as EtapaEdital] || displayEtapa}
+                          </Badge>
+                          {!isSync && (
+                            <span className="text-[9px] text-amber-600 font-bold animate-pulse uppercase">Sugerido: {ETAPA_LABELS[autoEtapa as EtapaEdital]}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className={`h-7 px-2 text-[10px] font-bold uppercase border-2 ${
+                              v.acompanhamento?.situacao_etapa === 'atrasada' ? 'bg-red-50 text-red-700 border-red-100' :
+                              v.acompanhamento?.situacao_etapa === 'concluido' ? 'bg-green-50 text-green-700 border-green-100' :
+                              v.acompanhamento?.situacao_etapa === 'em_andamento' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                              'bg-amber-50 text-amber-700 border-amber-100'
+                            }`}>
+                              {v.acompanhamento?.situacao_etapa?.replace('_', ' ') || 'PENDENTE'}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="center" className="min-w-[120px]">
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-amber-600">PENDENTE</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-green-600">CONCLUÍDO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-red-600">ATRASADO</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                      <td className="px-6 py-4 text-center font-bold text-slate-700">{v.total_inscritos || v.acompanhamento?.total_inscritos || 0}</td>
+                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</td>
+                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</td>
+                      <td className="px-6 py-4 text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</td>
+                      <td className="px-6 py-4 text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</td>
+                      <td className="px-6 py-4 text-right">
+                        <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => navigate(`/vagas/${v.id}?tab=acompanhamento`)}>
+                          Atualizar <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {editaisEmAndamento.length === 0 && (
                   <tr>
                     <td colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">

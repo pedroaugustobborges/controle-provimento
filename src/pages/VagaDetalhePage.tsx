@@ -224,16 +224,21 @@ export default function VagaDetalhePage() {
     const today = new Date().toISOString().split('T')[0];
     
     // 1. Register convocacao
-    const novaConvocacao = {
+    const novaConvocacao: Convocacao = {
       id: `c-${Date.now()}`,
       vaga_id: vaga.id,
-      banco_id: matchedBanco.id,
+      banco_relacionado: matchedBanco.id,
       data_convocacao: today,
+      horario: '08:00',
+      nome_candidato: `Pendente (Banco: ${matchedBanco.numero_edital})`,
+      classificacao: 1,
+      tipo_convocacao: 'Telefone/E-mail',
+      cargo: vaga.cargo,
+      unidade: vaga.unidade,
+      requisicao: vaga.requisicao || vaga.id,
       status: 'pendente' as const,
-      prioridade: 'media' as const,
-      candidato_nome: `Pendente (Banco: ${matchedBanco.numero_edital})`,
-      telefone: '-',
-      email: '-'
+      responsavel: currentUser?.nome_completo || 'Analista',
+      observacoes: 'Convocação iniciada via Ação Rápida'
     };
     
     addConvocacao(novaConvocacao);

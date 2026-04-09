@@ -84,7 +84,7 @@ export function AppSidebar() {
 
       <SidebarContent className="py-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Fluxo de Provimento</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-4">Fluxo de Provimento</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => {

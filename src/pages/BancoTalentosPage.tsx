@@ -559,9 +559,9 @@ export default function BancoTalentosPage() {
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Cadastro Reserva</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Total de vagas/capacidade do banco (conforme auditoria) */}
+                  {/* SOMA AGRUPADA: Total de vagas/capacidade do banco (conforme auditoria) - Apenas bancos originais/não prorrogados */}
                   {groupedBancos
-                    .filter(g => g.status === 'CADASTRO RESERVA')
+                    .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
                     .reduce((sum, g) => sum + g.qtdBanco, 0)}
                 </p>
               </div>

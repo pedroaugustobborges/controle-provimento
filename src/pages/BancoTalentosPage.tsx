@@ -596,18 +596,15 @@ export default function BancoTalentosPage() {
                    {groupedBancos.map((group) => (
                     <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
+                      <TableCell className="text-xs font-semibold text-slate-600 italic">
+                        {group.processoSeletivo || "—"}
+                      </TableCell>
                       <TableCell>
                         <div className="font-semibold text-slate-800">{group.cargo}</div>
                         <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
                       <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
                       <TableCell>{getStatusBadge(group.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-700">{formatDate(group.validade)}</span>
-                          {group.isProrrogado && <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Prorrogado</span>}
-                        </div>
-                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="font-bold bg-slate-50">{group.qtdBanco}</Badge>
                       </TableCell>

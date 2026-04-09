@@ -170,6 +170,9 @@ export default function VagasPage() {
       
       if (acc[cat] !== undefined) {
         acc[cat]++;
+      } else {
+        // Fallback para qualquer status não mapeado explicitamente
+        acc.em_andamento++;
       }
 
       if (getBancoByVaga(v.id)) {

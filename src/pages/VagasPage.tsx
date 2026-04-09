@@ -331,6 +331,26 @@ export default function VagasPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="space-y-1">
                 <p className="text-[10px] text-amber-700 font-bold uppercase">Escopo Selecionado</p>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">Unidade: {parityAudit.selUnit}</Badge>
+                  <Badge variant="outline" className="text-[9px] bg-white border-amber-200 text-amber-800">Mês: {parityAudit.selMonth}</Badge>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Contagem de Paridade</p>
+                <div className="text-[11px] font-mono text-amber-900 leading-tight">
+                  <p>Excel Parity Count: <span className="font-bold">{parityAudit.excelCount}</span></p>
+                  <p>App Card Count: <span className="font-bold">{parityAudit.appCount}</span></p>
+                  <p>Diferença: <span className={`font-bold ${parityAudit.difference !== 0 ? 'text-red-600' : 'text-green-600'}`}>{parityAudit.difference}</span></p>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-amber-700 font-bold uppercase">Status de Dados</p>
+                <div className="text-[11px] font-mono text-amber-900 leading-tight">
+                  <p>Linhas na Tabela: {parityAudit.tableCount}</p>
+                  <p>Total de Vagas (Card): {parityAudit.appCount}</p>
+                </div>
+              </div>
             </div>
             
             <div className="mt-4 border-t border-amber-200 pt-3">
@@ -338,6 +358,7 @@ export default function VagasPage() {
               {parityAudit.mismatches.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table className="text-[9px]">
+
                     <TableHeader>
                       <TableRow className="h-8 hover:bg-transparent border-amber-200">
                         <TableHead className="h-8 text-amber-800 font-bold">Record ID</TableHead>

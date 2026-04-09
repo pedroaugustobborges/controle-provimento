@@ -190,8 +190,8 @@ export const useVagasStore = create<VagasState>()(
         const vagaTokens = getCargoTokens(vaga.cargo);
 
         // Specific units for matching as requested
-        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds'];
-        const vitoriaUnits = ['vitoria', 'sao pedro', 'sua', 'suá'];
+        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds', 'agir'];
+        const upaUnits = ['vitoria', 'sao pedro', 'sua', 'suá'];
 
         const found = state.bancos.find(b => {
           const normalizedBancoUnidade = normalizeCargo(b.unidade || '');
@@ -199,16 +199,14 @@ export const useVagasStore = create<VagasState>()(
           const normalizedBancoCargo = normalizeCargo(b.cargo || '');
           const normalizedVagaCargo = normalizeCargo(vaga.cargo || '');
 
-          // --- Unit Matching ---
+          // --- Unit Matching conforme Item 8 ---
           let unitMatch = false;
 
           if (normalizedBancoUnidade === normalizedVagaUnidade) {
             unitMatch = true;
           } else if (normalizedBancoUnidade === 'goiania' && goianiaUnits.includes(normalizedVagaUnidade)) {
             unitMatch = true;
-          } else if (normalizedBancoUnidade === 'upa' && vitoriaUnits.includes(normalizedVagaUnidade)) {
-            unitMatch = true;
-          } else if (normalizedBancoUnidade === 'vitoria' && vitoriaUnits.includes(normalizedVagaUnidade)) {
+          } else if (normalizedBancoUnidade === 'upa' && upaUnits.includes(normalizedVagaUnidade)) {
             unitMatch = true;
           } else if (normalizedBancoUnidade.includes('jatai') && normalizedVagaUnidade.includes('jatai')) {
             unitMatch = true;

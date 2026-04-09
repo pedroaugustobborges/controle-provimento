@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { normalizeStatus, getValidVacancyBase } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 
-type Step = 'select' | 'processing' | 'summary';
+type Step = 'select' | 'confirm' | 'processing' | 'summary';
 
 const VAGA_SHEETS = [
   'VAGAS - BASE GERAL'

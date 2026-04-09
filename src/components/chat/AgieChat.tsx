@@ -191,7 +191,7 @@ export const AgieChat = () => {
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Selecione a Unidade</p>
                       <div className="grid grid-cols-1 gap-2">
                         {UNITS.filter(u => u.region === selectedRegion).map(unit => (
-                          <Button key={unit.id} variant="outline" className="w-full justify-start h-10 bg-white text-sm" onClick={() => { setSelectedUnit(unit); setStep('BY_PERSON'); }}>
+                          <Button key={unit.id} variant="outline" className="w-full justify-start h-10 bg-white text-sm" onClick={() => { setSelectedUnit(unit); setSelectedRole(null); setStep('BY_PERSON'); }}>
                             {unit.name}
                           </Button>
                         ))}

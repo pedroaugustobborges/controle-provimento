@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
 } from '@/components/ui/dialog';
@@ -13,6 +13,8 @@ import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Vaga, Convocacao, STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { toast } from 'sonner';
+import { getHorariosDisponiveis, getBaseForUnidade } from '@/lib/convocacaoUtils';
+import { Clock, Info, MapPin } from 'lucide-react';
 
 interface ConvocacaoDialogProps {
   open: boolean;
@@ -22,7 +24,7 @@ interface ConvocacaoDialogProps {
 }
 
 export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }: ConvocacaoDialogProps) {
-  const { addConvocacao, updateConvocacao, updateVaga, updateBanco, addAlerta, addTarefa } = useVagasStore();
+  const { addConvocacao, updateConvocacao, updateVaga, updateBanco, addAlerta, convocacoes } = useVagasStore();
   const { currentUser } = useAdminStore();
   
   const [formData, setFormData] = useState<Partial<Convocacao>>({
@@ -34,6 +36,10 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
     status: 'pendente',
     observacoes: '',
     edoc: '',
+    secao: '',
+    carga_horaria: '',
+    horario_trabalho: '',
+    unidade_alternativa: '',
     responsavel: currentUser?.nome_completo || 'Analista'
   });
 
@@ -47,93 +53,59 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
         vaga_id: vaga.id,
         cargo: vaga.cargo,
         unidade: vaga.unidade,
-        requisicao: vaga.requisicao || vaga.numero_requisicao,
+        secao: vaga.secao || '',
+        requisicao: vaga.requisicao || vaga.numero_requisicao || '',
         edital_relacionado: matchedBanco?.numero_edital || vaga.numero_edital || '',
         banco_relacionado: matchedBanco?.id || vaga.banco_id || ''
       }));
     }
   }, [vaga, convocacaoToEdit, open]);
 
+  // Lógica de horários disponíveis
+  const horariosDisponiveis = useMemo(() => {
+    if (!formData.data_convocacao || !formData.unidade) return [];
+    
+    // Se estiver editando, o próprio horário da convocação deve estar disponível
+    const disponiveis = getHorariosDisponiveis(
+      formData.data_convocacao, 
+      formData.unidade, 
+      convocacoes.filter(c => c.id !== convocacaoToEdit?.id)
+    );
+
+    return disponiveis;
+  }, [formData.data_convocacao, formData.unidade, convocacoes, convocacaoToEdit]);
+
+  const baseName = useMemo(() => {
+    if (!formData.unidade) return '';
+    return getBaseForUnidade(formData.unidade);
+  }, [formData.unidade]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nome_candidato || !formData.data_convocacao) {
-      toast.error('Preencha os campos obrigatórios');
+    if (!formData.nome_candidato || !formData.data_convocacao || !formData.horario) {
+      toast.error('Preencha os campos obrigatórios (Nome, Data e Horário)');
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
     const convocacaoId = convocacaoToEdit ? convocacaoToEdit.id : `conv-${Date.now()}`;
-    const status = formData.status as string;
 
     if (convocacaoToEdit) {
       updateConvocacao(convocacaoToEdit.id, formData);
+      toast.success('Convocação atualizada com sucesso');
     } else {
       const newConvocacao: Convocacao = {
         ...formData as Convocacao,
         id: convocacaoId,
+        status: 'pendente'
       };
       addConvocacao(newConvocacao);
-    }
-
-    // Section 10.5: Aceite e Recusa Logic
-    if (vaga) {
-      if (status === 'aceite') {
-        // Aceitou: sinalizar ao analista da unidade e permitir fechamento
-        addAlerta({
-          id: `a-acc-${Date.now()}`,
-          titulo: 'Convocação ACEITA',
-          mensagem: `O candidato ${formData.nome_candidato} aceitou a convocação para a vaga ${vaga.cargo} (${vaga.requisicao}).`,
-          tipo: 'informativo',
-          status: 'nao_lido',
-          data_criacao: today,
-          destinatario: vaga.analista_responsavel,
-          link: `/vagas/${vaga.id}`
-        });
-
-        // Mudar status no banco para CONVOCADO e remover disponibilidade
-        if (formData.banco_relacionado) {
-          updateBanco(formData.banco_relacionado, { 
-            status: 'CONVOCADO', 
-            data_convocacao: today, 
-            unidade_convocacao: vaga.unidade 
-          });
-        }
-
-        // Permitir que a vaga siga para fechamento (mudar para documentação ou admissão)
-        updateVaga(vaga.id, { status: 'em_documentacao' });
-        toast.success('Convocação ACEITA. Vaga movida para "Em Documentação".');
-
-      } else if (['recusa_plantao', 'recusa_unidade', 'recusa_horario', 'desistiu', 'faltou'].includes(status)) {
-        // Recusou: registrar recusa
-        toast.warning('Convocação RECUSADA registrada.');
-        
-        // Verificar se ainda há banco disponível
-        const matchedBanco = useVagasStore.getState().getBancoByVaga(vaga.id);
-        if (!matchedBanco || !matchedBanco.quantidade_banco || Number(matchedBanco.quantidade_banco) <= 0) {
-          // Se não houver banco, habilitar flag para publicar novo edital
-          updateVaga(vaga.id, { status: 'publicar_novo_edital' });
-          addAlerta({
-            id: `a-new-ed-${Date.now()}`,
-            titulo: 'Necessidade de Novo Edital',
-            mensagem: `Candidato recusou convocação para a vaga ${vaga.cargo} e não há mais banco disponível.`,
-            tipo: 'critico',
-            status: 'nao_lido',
-            data_criacao: today,
-            destinatario: 'Analista do edital',
-            link: `/vagas/${vaga.id}`
-          });
-          toast.info('Sem banco disponível. Vaga marcada para "Publicar Novo Edital".');
-        } else {
-          toast.info('Ainda há candidatos no banco disponível.');
-        }
+      toast.success('Convocação criada e enviada para o módulo diário');
+      
+      // Se tiver vaga vinculada, opcionalmente atualizar status
+      if (vaga) {
+        updateVaga(vaga.id, { status: 'CONVOCAÇÕES' });
       }
-    }
-    
-    if (convocacaoToEdit) {
-      toast.success('Convocação atualizada');
-    } else {
-      toast.success('Convocação registrada com sucesso');
     }
     
     onOpenChange(false);
@@ -141,125 +113,176 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{convocacaoToEdit ? 'Editar Convocação' : 'Nova Convocação'}</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-primary flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            {convocacaoToEdit ? 'Editar Agendamento' : 'Criar Novo Agendamento de Convocação'}
+          </DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para registrar a convocação do candidato.
+            A convocação preenchida será enviada para o painel de <strong>Convocações Diárias</strong> para devolutiva final.
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="data_convocacao">Data da Convocação *</Label>
-              <Input 
-                id="data_convocacao" 
-                type="date" 
-                value={formData.data_convocacao} 
-                onChange={e => setFormData({...formData, data_convocacao: e.target.value})}
-                required
-              />
+        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+          {/* Informações da Vaga (Somente leitura para contexto) */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Cargo</span>
+              <p className="text-sm font-bold text-slate-700">{formData.cargo}</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="horario">Horário</Label>
-              <Input 
-                id="horario" 
-                type="time" 
-                value={formData.horario} 
-                onChange={e => setFormData({...formData, horario: e.target.value})}
-              />
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Unidade Origem</span>
+              <p className="text-sm font-bold text-slate-700">{formData.unidade}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Requisição</span>
+              <p className="text-sm font-bold text-slate-700">{formData.requisicao}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Esquerda: Dados da Agenda */}
+            <div className="space-y-4">
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-4">
+                <h3 className="text-sm font-bold text-primary flex items-center gap-2">
+                  <Clock className="h-4 w-4" /> Agendamento
+                </h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="data_convocacao">Data da Convocação *</Label>
+                  <Input 
+                    id="data_convocacao" 
+                    type="date" 
+                    value={formData.data_convocacao} 
+                    onChange={e => setFormData({...formData, data_convocacao: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="horario">Horários Disponíveis ({baseName}) *</Label>
+                  <Select 
+                    value={formData.horario} 
+                    onValueChange={v => setFormData({...formData, horario: v})}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Selecione um horário vago" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {horariosDisponiveis.length > 0 ? (
+                        horariosDisponiveis.map(h => (
+                          <SelectItem key={h} value={h}>{h}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="none" disabled>Nenhum horário disponível para esta data/base</SelectItem>
+                      )}
+                      {convocacaoToEdit && !horariosDisponiveis.includes(convocacaoToEdit.horario) && (
+                        <SelectItem value={convocacaoToEdit.horario}>{convocacaoToEdit.horario} (Atual)</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-slate-500 italic">
+                    <Info className="h-3 w-3 inline mr-1" />
+                    Horários compartilhados com a base {baseName}.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="unidade_alternativa">Unidade Alternativa (Opcional)</Label>
+                <Input 
+                  id="unidade_alternativa" 
+                  value={formData.unidade_alternativa || ''} 
+                  onChange={e => setFormData({...formData, unidade_alternativa: e.target.value})}
+                  placeholder="Ex: Suá, São Pedro..."
+                />
+                <p className="text-[10px] text-slate-400">Use este campo se a convocação for para uma variação da unidade principal.</p>
+              </div>
+            </div>
+
+            {/* Direita: Dados do Candidato e Vaga */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome_candidato">Nome do Candidato *</Label>
+                <Input 
+                  id="nome_candidato" 
+                  value={formData.nome_candidato} 
+                  onChange={e => setFormData({...formData, nome_candidato: e.target.value})}
+                  placeholder="Nome completo do candidato"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="secao">Seção</Label>
+                  <Input 
+                    id="secao" 
+                    value={formData.secao || ''} 
+                    onChange={e => setFormData({...formData, secao: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="classificacao">Classificação</Label>
+                  <Input 
+                    id="classificacao" 
+                    type="number" 
+                    value={formData.classificacao} 
+                    onChange={e => setFormData({...formData, classificacao: Number(e.target.value)})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="carga_horaria">Carga Horária</Label>
+                  <Input 
+                    id="carga_horaria" 
+                    value={formData.carga_horaria || ''} 
+                    onChange={e => setFormData({...formData, carga_horaria: e.target.value})}
+                    placeholder="Ex: 44h/semana"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="horario_trabalho">Horário de Trabalho</Label>
+                  <Input 
+                    id="horario_trabalho" 
+                    value={formData.horario_trabalho || ''} 
+                    onChange={e => setFormData({...formData, horario_trabalho: e.target.value})}
+                    placeholder="Ex: 08:00 às 18:00"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edoc">Nº EDOC</Label>
+                <Input 
+                  id="edoc" 
+                  value={formData.edoc || ''} 
+                  onChange={e => setFormData({...formData, edoc: e.target.value})}
+                  placeholder="Nº do processo eletrônico"
+                />
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="nome_candidato">Nome do Candidato *</Label>
-            <Input 
-              id="nome_candidato" 
-              value={formData.nome_candidato} 
-              onChange={e => setFormData({...formData, nome_candidato: e.target.value})}
-              placeholder="Nome completo"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="classificacao">Classificação</Label>
-              <Input 
-                id="classificacao" 
-                type="number" 
-                value={formData.classificacao} 
-                onChange={e => setFormData({...formData, classificacao: Number(e.target.value)})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tipo_convocacao">Tipo/Forma</Label>
-              <Select 
-                value={formData.tipo_convocacao} 
-                onValueChange={v => setFormData({...formData, tipo_convocacao: v})}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Presencial">Presencial</SelectItem>
-                  <SelectItem value="Telefone">Telefone</SelectItem>
-                  <SelectItem value="E-mail">E-mail</SelectItem>
-                  <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Unidade</Label>
-              <Input value={formData.unidade || ''} readOnly className="bg-slate-50" />
-            </div>
-            <div className="space-y-2">
-              <Label>Cargo</Label>
-              <Input value={formData.cargo || ''} readOnly className="bg-slate-50" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edoc">E-doc</Label>
-              <Input 
-                id="edoc" 
-                value={formData.edoc || ''} 
-                onChange={e => setFormData({...formData, edoc: e.target.value})}
-                placeholder="Nº do processo eletrônico"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={v => setFormData({...formData, status: v as any})}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(STATUS_CONVOCACAO_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações</Label>
+            <Label htmlFor="observacoes">Observações Adicionais</Label>
             <Textarea 
               id="observacoes" 
               value={formData.observacoes} 
               onChange={e => setFormData({...formData, observacoes: e.target.value})}
-              placeholder="Detalhes da convocação, recusa ou outros pontos importantes..."
+              placeholder="Detalhes relevantes sobre a vaga ou o candidato..."
+              className="min-h-[80px]"
             />
           </div>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-6 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit">Salvar Convocação</Button>
+            <Button type="submit" className="px-8 font-bold">
+              {convocacaoToEdit ? 'Salvar Alterações' : 'Confirmar e Criar Convocação'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

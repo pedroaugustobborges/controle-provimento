@@ -557,13 +557,15 @@ export default function BancoTalentosPage() {
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade CR</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Total de vagas/capacidade do banco (conforme auditoria) - Apenas bancos originais/não prorrogados */}
-                  {groupedBancos
-                    .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
-                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Cadastro Reserva</p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos
+                      .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
+                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade de vagas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -575,11 +577,13 @@ export default function BancoTalentosPage() {
                 <Users className="h-5 w-5 text-purple-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Pessoas Convocadas</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* CONTAGEM DE LINHAS: Total de pessoas já convocadas */}
-                  {bancos.filter(b => b.status === 'CONVOCADO').length}
-                </p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Convocados</p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {bancos.filter(b => b.status === 'CONVOCADO').length}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -592,12 +596,14 @@ export default function BancoTalentosPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade Vigente</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Capacidade total de todos os bancos que não venceram (Cadastro Reserva + Prorrogados) */}
-                  {groupedBancos
-                    .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
-                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos
+                      .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
+                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Válidos + Prorrogados</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -609,13 +615,15 @@ export default function BancoTalentosPage() {
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade Prorrogada</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Capacidade informada nos grupos prorrogados (conforme auditoria) */}
-                  {groupedBancos
-                    .filter(g => g.isProrrogado || g.status === 'prorrogado')
-                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Prorrogados</p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos
+                      .filter(g => g.isProrrogado || g.status === 'prorrogado')
+                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade de vagas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -627,11 +635,13 @@ export default function BancoTalentosPage() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Pessoas Vencidas</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* CONTAGEM DE LINHAS: Candidatos em bancos vencidos */}
-                  {bancos.filter(b => b.status === 'VENCIDO').length}
-                </p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Vencidos</p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {bancos.filter(b => b.status === 'VENCIDO').length}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -644,10 +654,12 @@ export default function BancoTalentosPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Banco Total</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA TOTAL REAL: Soma de todas as capacidades informadas nos bancos */}
-                  {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade total</p>
+                </div>
               </div>
             </div>
           </CardContent>

@@ -956,11 +956,11 @@ export default function BancoTalentosPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="space-y-2">
                   <p><strong>1. Cadastro Reserva:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> (sum de QNTD BANCO por grupo).</p>
-                  <p><strong>2. Bancos Válidos:</strong> Mesma lógica do Cadastro Reserva (<span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span>).</p>
-                  <p><strong>3. Prorrogados:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">CONTAGEM DE LINHAS</span> (quantas pessoas reais estão marcadas como prorrogadas).</p>
+                  <p><strong>2. Capacidade Vigente:</strong> Mesma lógica do Cadastro Reserva (<span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span>).</p>
+                  <p><strong>3. Prorrogados:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> da capacidade de grupos prorrogados.</p>
                 </div>
                 <div className="space-y-2">
-                  <p><strong>4. Total Visível:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> de todos os grupos identificados.</p>
+                  <p><strong>4. Banco Total:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> de todos os grupos identificados.</p>
                   <p><strong>5. Chave de Agrupamento:</strong> Prioriza <span className="bg-amber-100 px-1 font-bold">Processo Seletivo</span>; se ausente, usa <span className="bg-amber-100 px-1 font-bold">Edital + Unidade + Cargo</span>.</p>
                   <p><strong>6. Status Predominante:</strong> Reflete o status do primeiro registro encontrado no grupo.</p>
                 </div>

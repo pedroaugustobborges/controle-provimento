@@ -531,85 +531,117 @@ export default function BancoTalentosPage() {
         </SheetContent>
       </Sheet>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Seção de Auditoria Real (Item 1) */}
+      {useMemo(() => {
+        const stats = bancos.reduce((acc, b) => {
+          const s = (b.status || 'NENHUM').toUpperCase();
+          acc[s] = (acc[s] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        console.log('--- AUDITORIA BANCO DE TALENTOS ---');
+        console.log('Status encontrados na base:', Object.keys(stats));
+        console.log('Quantidade por status (linhas):', stats);
+        console.log('Total de bancos (agrupados):', groupedBancos.length);
+        console.log('---------------------------------');
+        return null;
+      }, [bancos, groupedBancos])}
+
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4 pb-4">
             <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-2.5 rounded-lg">
+              <div className="bg-primary/10 p-2.5 rounded-lg shrink-0">
                 <User className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Cadastro Reserva</p>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Cadastro Reserva</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  {groupedBancos.filter(g => g.status === 'CADASTRO RESERVA').reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  {/* SOMA AGRUPADA: Total de vagas/capacidade do banco (conforme auditoria) */}
+                  {groupedBancos
+                    .filter(g => g.status === 'CADASTRO RESERVA')
+                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4 pb-4">
             <div className="flex items-center gap-3">
-              <div className="bg-purple-100 p-2.5 rounded-lg">
+              <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
                 <Users className="h-5 w-5 text-purple-600" />
               </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Convocados</p>
-                <p className="text-2xl font-bold text-slate-900">{bancos.filter(b => b.status === 'CONVOCADO' || (b as any).status === 'convocado').length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-green-100 p-2.5 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Bancos Válidos</p>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Convocados</p>
                 <p className="text-2xl font-bold text-slate-900">
-                  {groupedBancos.filter(g => g.status === 'CADASTRO RESERVA' || g.status === 'valido' || g.status === 'prorrogado').reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  {/* CONTAGEM DE LINHAS: Total de pessoas já convocadas */}
+                  {bancos.filter(b => b.status === 'CONVOCADO').length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
-          <CardContent className="pt-6">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
+          <CardContent className="pt-6 px-4 pb-4">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2.5 rounded-lg">
+              <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Bancos Válidos</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {/* SOMA AGRUPADA: Capacidade total de todos os bancos que não venceram */}
+                  {groupedBancos
+                    .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
+                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
+          <CardContent className="pt-6 px-4 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2.5 rounded-lg shrink-0">
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Prorrogados</p>
-                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'prorrogado').length}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Prorrogados</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {/* CONTAGEM DE LINHAS: Candidatos em bancos prorrogados */}
+                  {bancos.filter(b => b.is_prorrogado && b.status !== 'CONVOCADO').length}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
-          <CardContent className="pt-6">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
+          <CardContent className="pt-6 px-4 pb-4">
             <div className="flex items-center gap-3">
-              <div className="bg-red-100 p-2.5 rounded-lg">
+              <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Vencidos</p>
-                <p className="text-2xl font-bold text-slate-900">{filtered.filter(b => b.status === 'VENCIDO' || (b as any).status === 'vencido').length}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Vencidos</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {/* CONTAGEM DE LINHAS: Candidatos em bancos vencidos */}
+                  {bancos.filter(b => b.status === 'VENCIDO').length}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 shadow-sm bg-white">
-          <CardContent className="pt-6">
+        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
+          <CardContent className="pt-6 px-4 pb-4">
             <div className="flex items-center gap-3">
-              <div className="bg-slate-100 p-2.5 rounded-lg">
+              <div className="bg-slate-100 p-2.5 rounded-lg shrink-0">
                 <Calendar className="h-5 w-5 text-slate-600" />
               </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total Visível</p>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Total Visível</p>
                 <p className="text-2xl font-bold text-slate-900">
+                  {/* SOMA TOTAL REAL: Soma de todas as capacidades informadas nos bancos */}
                   {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
                 </p>
               </div>

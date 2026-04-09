@@ -26,7 +26,12 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital', 'FILA DE EDITAIS'],
+  fila_edital: [
+    'publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital', 
+    'fazer publicação do edital', 'fazer publicacao do edital', 'fila de editais', 
+    'FILA DE EDITAIS', 'aguardando edital', 'aguardando processo e edital',
+    'sem status', 'sem_status'
+  ],
   em_andamento: [
     'em_edital', 'em edital', 
     'em_processo_seletivo', 'em processo seletivo',

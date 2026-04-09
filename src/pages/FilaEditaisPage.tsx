@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
@@ -45,10 +45,8 @@ export default function FilaEditaisPage() {
         }
       }
 
-      // Regra 4.1: Grupo: fila de edital / início de processo
-      const status = (v.status || v.status_geral || 'sem_status').toLowerCase();
-      const isFilaEdital = status === 'sem_status' || status === 'publicar_novo_edital';
-      
+      // Regra: Fila de Edital - Filtrar por categoria do status real
+      const isFilaEdital = getCategoriaStatus(v) === 'fila_edital';
       if (!isFilaEdital) return false;
 
       const searchTerm = search.toLowerCase();
@@ -209,6 +207,11 @@ export default function FilaEditaisPage() {
                     </TableCell>
                     <TableCell className="text-center font-bold text-slate-700">
                       {calcDiasAberto(v.data_recebimento || v.data_abertura)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-200">
+                        {v.status || v.status_geral || 'Sem Status'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-xs font-medium text-slate-600">
                       {v.analista_responsavel}

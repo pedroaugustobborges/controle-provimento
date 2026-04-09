@@ -26,7 +26,12 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital', 'FILA DE EDITAIS'],
+  fila_edital: [
+    'publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital', 
+    'fazer publicação do edital', 'fazer publicacao do edital', 'fila de editais', 
+    'FILA DE EDITAIS', 'aguardando edital', 'aguardando processo e edital',
+    'sem status', 'sem_status'
+  ],
   em_andamento: [
     'em_edital', 'em edital', 
     'em_processo_seletivo', 'em processo seletivo',
@@ -296,7 +301,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   const text = removeAccents(statusText.toLowerCase().trim().replace(/\s+/g, ' '));
   
   if (text === 'admissao efetivada') return 'CONCLUÍDAS' as StatusVaga;
-  if (text === 'publicar novo edital' || text === 'publicar edital') return 'FILA DE EDITAIS' as StatusVaga;
+  if (text === 'publicar novo edital' || text === 'publicar edital' || text.includes('fazer publicacao') || text.includes('fazer publicação') || text === 'aguardando edital' || text === 'aguardando processo e edital') return 'FILA DE EDITAIS' as StatusVaga;
   if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
   if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
   if (text === 'vaga suspensa' || text === 'suspensa') return 'SUSPENSA' as StatusVaga;

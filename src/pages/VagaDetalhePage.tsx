@@ -1119,8 +1119,8 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                   {[
-                    { label: 'Inscritos', key: 'total_inscritos', icon: User, color: 'text-blue-600' },
-                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: Search, color: 'text-purple-600' },
+                    { label: 'Inscritos', key: 'total_inscritos', icon: Users, color: 'text-blue-600' },
+                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: SearchIcon, color: 'text-purple-600' },
                     { label: 'Avaliação OK', key: 'aprovados_avaliacao_especifica', icon: Zap, color: 'text-cyan-600' },
                     { label: 'Entrevista', key: 'convocados_entrevista', icon: UserCheck, color: 'text-amber-600' },
                     { label: 'Aprovados', key: 'aprovados_finais', icon: CheckCircle, color: 'text-green-600' },

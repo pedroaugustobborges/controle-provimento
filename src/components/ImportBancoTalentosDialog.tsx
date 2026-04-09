@@ -940,7 +940,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               </div>
               <div className="border rounded-xl overflow-hidden bg-card">
                 <Table>
-                  <TableHeader className="bg-muted/50">
+                  <TableHeader>
                     <TableRow>
                       <TableHead className="w-[300px]">Campo do Sistema</TableHead>
                       <TableHead>Coluna no Excel</TableHead>
@@ -1046,7 +1046,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
               <div className="border rounded-xl overflow-hidden bg-card">
                 <ScrollArea className="h-[400px]">
                   <Table>
-                    <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                    <TableHeader className="sticky top-0 z-10">
                       <TableRow>
                         <TableHead>Cargo / Candidato</TableHead>
                         <TableHead>Unidade / Seção</TableHead>
@@ -1193,7 +1193,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                   </div>
                   <div className="border rounded-xl overflow-hidden bg-white max-h-[250px] overflow-y-auto shadow-sm">
                     <Table>
-                      <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                      <TableHeader className="sticky top-0 z-10">
                         <TableRow>
                           <TableHead className="w-[80px]">Linha</TableHead>
                           <TableHead>Campo</TableHead>

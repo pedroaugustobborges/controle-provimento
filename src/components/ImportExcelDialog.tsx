@@ -373,6 +373,7 @@ export function ImportExcelDialog({
             numero_requisicao: requisicao,
             data_abertura: dataAbertura,
             data_recebimento: dataRecebimento,
+            data_criacao: now,
             numero_vagas: numVagas,
             quantidade: numVagas,
             secao,

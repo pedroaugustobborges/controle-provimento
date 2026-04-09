@@ -169,8 +169,10 @@ export default function BancoTalentosPage() {
       }
 
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
-      // REGRA DE IDENTIFICAÇÃO DO BANCO (Auditada: Edital + Unidade + Cargo)
-      const key = `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
+      // REGRA DE IDENTIFICAÇÃO DO BANCO (Auditada: PS ou Edital + Unidade + Cargo)
+      const key = b.numero_processo_seletivo 
+        ? `PS-${b.numero_processo_seletivo}` 
+        : `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
 
       if (!groups[key]) {
         let qtd = 0;

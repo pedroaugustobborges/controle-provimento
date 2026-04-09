@@ -18,7 +18,9 @@ import {
   Eye,
   FileCheck,
   Building2,
-  FileText
+  FileText,
+  Bot,
+  Zap
 } from 'lucide-react';
 import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';

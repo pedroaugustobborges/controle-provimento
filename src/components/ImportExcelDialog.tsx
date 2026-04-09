@@ -269,7 +269,7 @@ export function ImportExcelDialog({
           
           toast.success(`Importação de Vagas: ${newVagas.length} registros inseridos em modo substituição.`);
 
-        } else if (fileName.endsWith('.xlsx')) {
+        } else if (importType === 'banco') {
           const sheet = wb.Sheets['BANCO GERAL'];
           if (!sheet) {
             toast.error("Aba 'BANCO GERAL' não encontrada.");

@@ -150,6 +150,15 @@ export interface Vaga {
   data_validacao?: string;
   observacoes_validacao?: string;
   status_validacao?: StatusValidacao;
+  
+  // Novos campos para fluxo de edital
+  cargo_validado?: boolean;
+  carga_horaria_validada?: boolean;
+  salario_validado?: boolean;
+  observacoes_unidade?: string;
+  observacoes_edital?: string;
+  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao';
+
   historico: HistoricoItem[];
   origem: 'manual' | 'importada';
   

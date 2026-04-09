@@ -135,6 +135,7 @@ export default function BancoTalentosPage() {
     const groups: Record<string, {
       id: string;
       edital: string;
+      processoSeletivo: string;
       unidade: string;
       cargo: string;
       cargoNormalizado: string;
@@ -147,27 +148,32 @@ export default function BancoTalentosPage() {
 
     filtered.forEach(b => {
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
-      const key = `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
+      // REGRA DE IDENTIFICAÇÃO DO BANCO (Item 4)
+      const key = b.numero_processo_seletivo 
+        ? `PS-${b.numero_processo_seletivo}`
+        : `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
 
       if (!groups[key]) {
         groups[key] = {
           id: b.id,
           edital: b.numero_edital,
+          processoSeletivo: b.numero_processo_seletivo || '',
           unidade: b.unidade,
           cargo: b.cargo,
           cargoNormalizado: cargoNorm,
           status: b.status,
           validade: b.nova_data_validade || b.data_validade,
           isProrrogado: b.is_prorrogado,
+          // REGRA DA QUANTIDADE DE BANCO (Item 5): não somar, pegar do nível do banco
           qtdBanco: b.quantidade_banco || 0,
           candidatos: []
         };
       }
       
-      // Keep the most recent valid status/dates for the group if needed
-      // But for simplicity, we use the first one found as representative
-      
       groups[key].candidatos.push(b);
+      
+      // Se algum candidato do grupo tiver status CONVOCADO, o banco pode refletir isso se necessário,
+      // mas o usuário pediu para separar no detalhe.
     });
 
     return Object.values(groups).sort((a, b) => a.cargo.localeCompare(b.cargo));
@@ -175,12 +181,20 @@ export default function BancoTalentosPage() {
 
   const selectedGroupCandidates = useMemo(() => {
     if (!selectedBanco) return [];
+    
     const cargoNorm = selectedBanco.cargo_normalizado || normalizeCargo(selectedBanco.cargo);
-    return filtered.filter(b => 
-      b.numero_edital === selectedBanco.numero_edital && 
-      b.unidade === selectedBanco.unidade && 
-      (b.cargo_normalizado || normalizeCargo(b.cargo)) === cargoNorm
-    ).sort((a, b) => {
+    const selectedKey = selectedBanco.numero_processo_seletivo
+      ? `PS-${selectedBanco.numero_processo_seletivo}`
+      : `${selectedBanco.numero_edital}-${selectedBanco.unidade}-${cargoNorm}`;
+
+    return filtered.filter(b => {
+      const bCargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
+      const bKey = b.numero_processo_seletivo
+        ? `PS-${b.numero_processo_seletivo}`
+        : `${b.numero_edital}-${b.unidade}-${bCargoNorm}`;
+      
+      return bKey === selectedKey;
+    }).sort((a, b) => {
       const classA = typeof a.classificacao === 'number' ? a.classificacao : parseInt(String(a.classificacao)) || 999;
       const classB = typeof b.classificacao === 'number' ? b.classificacao : parseInt(String(b.classificacao)) || 999;
       return classA - classB;
@@ -277,20 +291,40 @@ export default function BancoTalentosPage() {
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2"><User className="h-3 w-3" /> Candidatos Classificados ({selectedGroupCandidates.length})</div>
                 </h3>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {selectedGroupCandidates.map((c, idx) => (
-                    <div key={c.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-7 w-7 bg-white border border-slate-200 rounded-full flex items-center justify-center text-[10px] font-bold text-primary shadow-sm">
-                          {c.classificacao}°
+                    <div key={c.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-primary shadow-sm">
+                            {c.classificacao}°
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{c.nome || "Não identificado"}</p>
+                            <p className="text-[10px] text-slate-400 font-medium uppercase">Candidato</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-800">{c.nome || "Não identificado"}</p>
-                          <p className="text-[10px] text-slate-400 font-medium">Classificação original</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
                         {getStatusBadge(c.status)}
+                      </div>
+
+                      {/* Dados de Convocação e Detalhes */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-slate-200/50">
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Chamada</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{c.numero_chamada || "—"}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Vagas Aproveitamento</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{c.numero_vaga_aproveitamento || "—"}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
+                          <p className="text-[11px] font-semibold text-green-600">{c.data_convocacao ? formatDate(c.data_convocacao) : "—"}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Unidade Convocação</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{c.unidade_convocacao || "—"}</p>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -570,31 +604,27 @@ export default function BancoTalentosPage() {
                 <TableHeader className="bg-slate-50/80">
                   <TableRow>
                     <TableHead className="text-[10px] font-bold uppercase">Edital</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase">Proc. Seletivo</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Cargo</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Unidade</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Status</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase">Validade</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase">Qtd. Banco</TableHead>
                     <TableHead className="text-[10px] font-bold uppercase text-right">Ações</TableHead>
-
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                    {groupedBancos.map((group) => (
                     <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
+                      <TableCell className="text-xs font-semibold text-slate-600 italic">
+                        {group.processoSeletivo || "—"}
+                      </TableCell>
                       <TableCell>
                         <div className="font-semibold text-slate-800">{group.cargo}</div>
                         <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
                       <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
                       <TableCell>{getStatusBadge(group.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-700">{formatDate(group.validade)}</span>
-                          {group.isProrrogado && <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Prorrogado</span>}
-                        </div>
-                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="font-bold bg-slate-50">{group.qtdBanco}</Badge>
                       </TableCell>

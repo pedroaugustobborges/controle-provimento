@@ -807,7 +807,7 @@ function AcompanhamentoEditalList() {
                           <span>{v.cargo}</span>
                           <span className="text-[11px] text-slate-400 font-mono">{v.requisicao || v.numero_requisicao}</span>
                         </div>
-                      </td>
+                      </TableCell>
                       <TableCell className="font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</TableCell>
                       <TableCell>
                         <div 

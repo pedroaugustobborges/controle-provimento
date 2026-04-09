@@ -769,7 +769,65 @@ export default function VagaDetalhePage() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={isQuickConvocacaoOpen} onOpenChange={setIsQuickConvocacaoOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <UserCheck className="h-5 w-5" />
+              Confirmar Convocação Operacional
+            </DialogTitle>
+            <DialogDescription>
+              O sistema identificou um banco de talentos compatível para esta vaga.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {matchedBanco && (
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Banco Identificado</p>
+                  <p className="font-bold text-slate-700">{matchedBanco.numero_edital}</p>
+                </div>
+                <Badge className="bg-green-100 text-green-700 border-green-200 font-bold text-[10px] uppercase">
+                  {matchedBanco.status}
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200/60">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cargo do Banco</p>
+                  <p className="text-xs font-semibold text-slate-600 truncate">{matchedBanco.cargo}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Validade</p>
+                  <p className="text-xs font-semibold text-slate-600">{formatDate(matchedBanco.data_validade)}</p>
+                </div>
+              </div>
+              
+              <div className="pt-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unidade Origem</p>
+                <p className="text-xs font-semibold text-slate-600">{matchedBanco.unidade}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4 pt-2">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+              <div className="text-xs text-blue-700 leading-relaxed">
+                Ao confirmar, o status da vaga será alterado para <span className="font-bold">Convocações</span> e uma nova convocação pendente será registrada no sistema.
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setIsQuickConvocacaoOpen(false)}>Cancelar</Button>
+            <Button onClick={confirmQuickConvocacao} className="gap-2 bg-primary">
+              <CheckCircle className="h-4 w-4" /> Iniciar Convocação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

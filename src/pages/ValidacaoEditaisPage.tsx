@@ -20,7 +20,11 @@ import {
   Building2,
   FileText,
   Bot,
-  Zap
+  Zap,
+  MessageSquare,
+  FileDown,
+  User,
+  ExternalLink
 } from 'lucide-react';
 import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
@@ -28,6 +32,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription 
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+
 
 export default function ValidacaoEditaisPage() {
   const { vagas, updateVaga } = useVagasStore();

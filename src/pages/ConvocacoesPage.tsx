@@ -245,14 +245,70 @@ export default function ConvocacoesPage() {
             type="text" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Pesquisar por candidato, cargo ou unidade..." 
+            placeholder="Pesquisar por candidato, cargo..." 
             className="w-full pl-10 pr-4 h-10 text-sm rounded-lg bg-white border border-slate-200/80 focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all outline-none"
           />
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Button variant="outline" className="h-10 px-4 gap-2 text-xs font-bold text-slate-600 bg-white border-slate-200 hover:bg-slate-50">
-            <Filter className="h-3.5 w-3.5" /> Filtrar Período
-          </Button>
+        
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+            <SelectTrigger className="h-10 w-[180px] bg-white border-slate-200 text-xs font-bold text-slate-600">
+              <Building2 className="h-3.5 w-3.5 mr-2" />
+              <SelectValue placeholder="Filtrar Unidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Unidades</SelectItem>
+              {unidades.map(u => (
+                <SelectItem key={u} value={u}>{u}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={`h-10 px-4 gap-2 text-xs font-bold bg-white border-slate-200 hover:bg-slate-50 ${dateRange.from ? 'text-primary border-primary/30' : 'text-slate-600'}`}
+              >
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {dateRange.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "dd/MM/yy")} - {format(dateRange.to, "dd/MM/yy")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yy")
+                  )
+                ) : (
+                  "Filtrar Período"
+                )}
+                {dateRange.from && (
+                  <X 
+                    className="ml-1 h-3 w-3 hover:text-destructive" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDateRange({ from: undefined, to: undefined });
+                    }} 
+                  />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange.from}
+                selected={{
+                  from: dateRange.from,
+                  to: dateRange.to
+                }}
+                onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
+                numberOfMonths={2}
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
+
           <Button variant="outline" className="h-10 px-4 gap-2 text-xs font-bold text-slate-600 bg-white border-slate-200 hover:bg-slate-50">
             <Download className="h-3.5 w-3.5" /> Exportar Relatório
           </Button>

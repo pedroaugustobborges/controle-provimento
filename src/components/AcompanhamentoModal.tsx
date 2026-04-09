@@ -355,7 +355,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {TODAS_AS_ETAPAS.slice(0, 10).map((etapaKey) => {
+                        {TODAS_AS_ETAPAS.map((etapaKey) => {
                           const item = formData.historico_etapas?.find(h => h.etapa === etapaKey) || {
                             etapa: etapaKey,
                             data_prevista: '',

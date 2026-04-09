@@ -226,6 +226,11 @@ export default function FilaEditaisPage() {
                     <TableCell className="text-center font-bold text-slate-700">
                       {calcDiasAberto(v.data_recebimento || v.data_abertura)}
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-200">
+                        {v.status || v.status_geral || 'Sem Status'}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-xs font-medium text-slate-600">
                       {v.analista_responsavel}
                     </TableCell>

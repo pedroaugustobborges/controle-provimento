@@ -11,11 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital } from '@/types/vaga';
 import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,19 +27,41 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { 
+  Zap, 
+  UserCheck, 
+  Send, 
+  Search, 
+  CheckCircle, 
+  AlertTriangle,
+  ArrowRightCircle,
+  ExternalLink
+} from 'lucide-react';
 
 
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
+  const permissions = usePermissions();
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConvocacaoDialogOpen, setIsConvocacaoDialogOpen] = useState(false);
   const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
+  const [matchedBanco, setMatchedBanco] = useState<any>(null);
+  
   const [indicators, setIndicators] = useState({
     total_inscritos: 0,
     aprovados_triagem: 0,
@@ -181,6 +204,135 @@ export default function VagaDetalhePage() {
     setPendingStatus(null);
   };
 
+  const handleQuickConvocacao = () => {
+    const bancoFound = getBancoByVaga(vaga.id);
+    if (bancoFound) {
+      setMatchedBanco(bancoFound);
+      setIsQuickConvocacaoOpen(true);
+    } else {
+      toast.error('Nenhum banco de talentos disponível para esta vaga no momento.', {
+        description: 'É necessário ter um edital vigente ou cadastro reserva para realizar convocações.',
+        action: {
+          label: 'Criar Edital',
+          onClick: () => handlePublicarEdital()
+        }
+      });
+    }
+  };
+
+  const confirmQuickConvocacao = () => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 1. Register convocacao
+    const novaConvocacao: Convocacao = {
+      id: `c-${Date.now()}`,
+      vaga_id: vaga.id,
+      banco_relacionado: matchedBanco.id,
+      data_convocacao: today,
+      horario: '08:00',
+      nome_candidato: `Pendente (Banco: ${matchedBanco.numero_edital})`,
+      classificacao: 1,
+      tipo_convocacao: 'Telefone/E-mail',
+      cargo: vaga.cargo,
+      unidade: vaga.unidade,
+      requisicao: vaga.requisicao || vaga.id,
+      status: 'pendente' as const,
+      responsavel: currentUser?.nome_completo || 'Analista',
+      observacoes: 'Convocação iniciada via Ação Rápida'
+    };
+    
+    addConvocacao(novaConvocacao);
+
+    // 2. Update vaga status
+    const updateData = {
+      status: 'convocacao' as StatusVaga,
+      historico: [...vaga.historico, { 
+        id: `h-${Date.now()}`, 
+        data: today, 
+        descricao: `Convocação iniciada via Ação Rápida. Banco vinculado: ${matchedBanco.numero_edital}`, 
+        usuario: currentUser?.nome_completo || 'Analista' 
+      }],
+      tem_banco_valido: true,
+      banco_id: matchedBanco.id
+    };
+    
+    updateVaga(vaga.id, updateData);
+
+    // 3. Add audit log
+    addAuditLog({
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || 'sistema@sistema.com',
+      perfil: currentUser?.perfil || 'Sistema',
+      data: today,
+      hora: new Date().toLocaleTimeString(),
+      acao: 'Realizar Convocação (Ação Rápida)',
+      modulo: 'Vagas',
+      registro_afetado: vaga.requisicao || vaga.id,
+      valor_novo: 'convocacao'
+    });
+
+    toast.success('Convocação iniciada com sucesso!');
+    setIsQuickConvocacaoOpen(false);
+    
+    // 4. Redirect to daily convocations tab
+    setTimeout(() => {
+      navigate('/convocacoes?tab=diaria');
+    }, 1500);
+  };
+
+  const handlePublicarEdital = () => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const updateData = {
+      status: 'publicar_novo_edital' as StatusVaga,
+      status_edital: 'Fila de Publicação' as any,
+      historico: [...vaga.historico, { 
+        id: `h-${Date.now()}`, 
+        data: today, 
+        descricao: 'Encaminhado para publicação de edital via Ação Rápida', 
+        usuario: currentUser?.nome_completo || 'Analista' 
+      }],
+    };
+
+    updateVaga(vaga.id, updateData);
+    
+    // Add to editais store if not exists
+    if (!edital) {
+      addEdital({
+        id: `e-${Date.now()}`,
+        vaga_id: vaga.id,
+        numero_processo: vaga.numero_processo || '',
+        numero_edital: vaga.numero_edital || '',
+        data_abertura_edital: today,
+        etapa_atual: 'inscricoes',
+        total_inscritos: 0,
+        aprovados_triagem: 0,
+        convocados_entrevista: 0,
+        aprovados_finais: 0,
+        possui_banco_talentos: false,
+        status_publicacao: 'pendente'
+      });
+    }
+
+    addAuditLog({
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || 'sistema@sistema.com',
+      perfil: currentUser?.perfil || 'Sistema',
+      data: today,
+      hora: new Date().toLocaleTimeString(),
+      acao: 'Publicar no Edital (Ação Rápida)',
+      modulo: 'Vagas',
+      registro_afetado: vaga.requisicao || vaga.id,
+      valor_novo: 'publicar_novo_edital'
+    });
+
+    toast.success('Vaga encaminhada para Fila de Editais');
+    
+    setTimeout(() => {
+      navigate('/fila-editais');
+    }, 1500);
+  };
+
   const handleSaveIndicators = () => {
     updateVaga(vaga.id, indicators);
     setIsEditingIndicators(false);
@@ -270,6 +422,48 @@ export default function VagaDetalhePage() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
+          <h3 className="font-bold text-slate-800">Ações Operacionais Rápidas</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button 
+            onClick={handleQuickConvocacao}
+            className="h-auto py-4 px-6 justify-between border-2 border-primary/10 hover:border-primary/30 hover:bg-primary/5 bg-white text-primary group transition-all"
+            variant="outline"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
+                <UserCheck className="h-6 w-6" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-base">Realizar convocação</p>
+                <p className="text-xs text-slate-500 font-medium">Usar banco de talentos vinculado para esta vaga</p>
+              </div>
+            </div>
+            <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+          </Button>
+
+          <Button 
+            onClick={handlePublicarEdital}
+            className="h-auto py-4 px-6 justify-between border-2 border-rose-100 hover:border-rose-200 hover:bg-rose-50 bg-white text-rose-600 group transition-all"
+            variant="outline"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-rose-100 p-2 rounded-lg group-hover:bg-rose-200 transition-colors">
+                <Send className="h-6 w-6" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-base">Publicar no edital</p>
+                <p className="text-xs text-slate-500 font-medium">Encaminhar para fila de novos editais/publicações</p>
+              </div>
+            </div>
+            <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="dados" className="space-y-4">
@@ -576,6 +770,66 @@ export default function VagaDetalhePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isQuickConvocacaoOpen} onOpenChange={setIsQuickConvocacaoOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <UserCheck className="h-5 w-5" />
+              Confirmar Convocação Operacional
+            </DialogTitle>
+            <DialogDescription>
+              O sistema identificou um banco de talentos compatível para esta vaga.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {matchedBanco && (
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Banco Identificado</p>
+                  <p className="font-bold text-slate-700">{matchedBanco.numero_edital}</p>
+                </div>
+                <Badge className="bg-green-100 text-green-700 border-green-200 font-bold text-[10px] uppercase">
+                  {matchedBanco.status}
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200/60">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cargo do Banco</p>
+                  <p className="text-xs font-semibold text-slate-600 truncate">{matchedBanco.cargo}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Validade</p>
+                  <p className="text-xs font-semibold text-slate-600">{formatDate(matchedBanco.data_validade)}</p>
+                </div>
+              </div>
+              
+              <div className="pt-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unidade Origem</p>
+                <p className="text-xs font-semibold text-slate-600">{matchedBanco.unidade}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4 pt-2">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+              <div className="text-xs text-blue-700 leading-relaxed">
+                Ao confirmar, o status da vaga será alterado para <span className="font-bold">Convocações</span> e uma nova convocação pendente será registrada no sistema.
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setIsQuickConvocacaoOpen(false)}>Cancelar</Button>
+            <Button onClick={confirmQuickConvocacao} className="gap-2 bg-primary">
+              <CheckCircle className="h-4 w-4" /> Iniciar Convocação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -13,12 +13,14 @@ import {
 } from 'lucide-react';
 
 import { NavLink } from '@/components/NavLink';
+import { useLocation } from 'react-router-dom';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
   SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/hooks/usePermissions';
+import { cn } from '@/lib/utils';
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
@@ -44,6 +46,18 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { canImport, canAccessAdmin } = usePermissions();
+  const location = useLocation();
+
+  const isUrlActive = (url: string) => {
+    const currentUrl = location.pathname + location.search;
+    if (url === '/') return currentUrl === '/';
+    return currentUrl === url || currentUrl.startsWith(url + '?') || currentUrl.startsWith(url + '/');
+  };
+
+  const isParentActive = (item: any) => {
+    if (isUrlActive(item.url)) return true;
+    return item.subMenu?.some((sub: any) => isUrlActive(sub.url));
+  };
 
   const secondaryItems = [
     { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle, visible: true },
@@ -72,53 +86,82 @@ export function AppSidebar() {
           <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Fluxo de Provimento</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  {item.subMenu ? (
-                    <>
+              {mainItems.map((item) => {
+                const active = isParentActive(item);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    {item.subMenu ? (
+                      <>
+                        <SidebarMenuButton asChild tooltip={item.title}>
+                          <NavLink
+                            to={item.url}
+                            className={cn(
+                              "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 group relative",
+                              active ? "bg-white/10 text-white font-bold shadow-lg" : "text-white/70 hover:bg-white/5 hover:text-white"
+                            )}
+                          >
+                            <item.icon className={cn(
+                              "h-5 w-5 shrink-0 transition-all duration-300",
+                              active ? "text-primary-foreground scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/50 group-hover:text-white"
+                            )} />
+                            {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                            {active && !collapsed && (
+                              <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full shadow-[0_0_10px_white]" />
+                            )}
+                          </NavLink>
+                        </SidebarMenuButton>
+                        {!collapsed && (
+                          <SidebarMenuSub className="ml-4 mt-1 border-l border-white/10 space-y-1">
+                            {item.subMenu.map((sub) => {
+                              const subActive = isUrlActive(sub.url);
+                              return (
+                                <SidebarMenuSubItem key={sub.title}>
+                                  <SidebarMenuSubButton asChild>
+                                    <NavLink
+                                      to={sub.url}
+                                      className={cn(
+                                        "text-xs py-2 px-3 rounded-md transition-all duration-200 block relative",
+                                        subActive 
+                                          ? "text-white font-bold bg-white/5 shadow-inner" 
+                                          : "text-white/40 hover:text-white hover:bg-white/5"
+                                      )}
+                                    >
+                                      {sub.title}
+                                      {subActive && (
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_5px_white] animate-pulse" />
+                                      )}
+                                    </NavLink>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
+                          </SidebarMenuSub>
+                        )}
+                      </>
+                    ) : (
                       <SidebarMenuButton asChild tooltip={item.title}>
                         <NavLink
                           to={item.url}
-                          className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
-                          activeClassName="bg-white/10 text-white font-bold shadow-md"
+                          end={item.url === '/'}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 group relative",
+                            active ? "bg-white/10 text-white font-bold shadow-lg" : "text-white/70 hover:bg-white/5 hover:text-white"
+                          )}
                         >
-                          <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
+                          <item.icon className={cn(
+                            "h-5 w-5 shrink-0 transition-all duration-300",
+                            active ? "text-primary-foreground scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/50 group-hover:text-white"
+                          )} />
                           {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                          {active && !collapsed && (
+                            <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full shadow-[0_0_10px_white]" />
+                          )}
                         </NavLink>
                       </SidebarMenuButton>
-                      {!collapsed && (
-                        <SidebarMenuSub>
-                          {item.subMenu.map((sub) => (
-                            <SidebarMenuSubItem key={sub.title}>
-                              <SidebarMenuSubButton asChild>
-                                <NavLink
-                                  to={sub.url}
-                                  className="text-white/60 hover:text-white text-[11px] py-1"
-                                  activeClassName="text-white font-bold"
-                                >
-                                  {sub.title}
-                                </NavLink>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      )}
-                    </>
-                  ) : (
-                    <SidebarMenuButton asChild tooltip={item.title}>
-                      <NavLink
-                        to={item.url}
-                        end={item.url === '/'}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
-                        activeClassName="bg-white/10 text-white font-bold shadow-md"
-                      >
-                        <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
-                        {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
-              ))}
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -128,20 +171,31 @@ export function AppSidebar() {
             <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 mb-4">Apoio Administrativo</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {secondaryItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild tooltip={item.title}>
-                      <NavLink
-                        to={item.url}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 group text-white/80"
-                        activeClassName="bg-white/10 text-white font-bold shadow-md"
-                      >
-                        <item.icon className="h-4.5 w-4.5 shrink-0 transition-colors group-hover:text-white" />
-                        {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {secondaryItems.map((item) => {
+                  const active = isParentActive(item);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title}>
+                        <NavLink
+                          to={item.url}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 group relative",
+                            active ? "bg-white/10 text-white font-bold shadow-lg" : "text-white/70 hover:bg-white/5 hover:text-white"
+                          )}
+                        >
+                          <item.icon className={cn(
+                            "h-5 w-5 shrink-0 transition-all duration-300",
+                            active ? "text-primary-foreground scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/50 group-hover:text-white"
+                          )} />
+                          {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                          {active && !collapsed && (
+                            <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full shadow-[0_0_10px_white]" />
+                          )}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

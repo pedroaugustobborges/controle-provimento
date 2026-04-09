@@ -4,6 +4,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,6 +53,7 @@ export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
   const { users, auditLogs, supportConfigs, backups, addUser, updateUser, generateBackup } = useAdminStore();
   const { vagas } = useVagasStore();
+  const permissions = usePermissions();
   
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
@@ -96,15 +98,19 @@ export default function AdministracaoPage() {
           <TabsTrigger value="suporte" className="gap-2 font-bold px-4 py-2">
             <Bell className="h-4 w-4" /> Suporte
           </TabsTrigger>
-          <TabsTrigger value="auditoria" className="gap-2 font-bold px-4 py-2">
-            <History className="h-4 w-4" /> Auditoria
-          </TabsTrigger>
+          {permissions.canViewAudit() && (
+            <TabsTrigger value="auditoria" className="gap-2 font-bold px-4 py-2">
+              <History className="h-4 w-4" /> Auditoria
+            </TabsTrigger>
+          )}
           <TabsTrigger value="backup" className="gap-2 font-bold px-4 py-2">
             <HardDrive className="h-4 w-4" /> Backup
           </TabsTrigger>
-          <TabsTrigger value="conferencia" className="gap-2 font-bold px-4 py-2">
-            <Database className="h-4 w-4" /> Conferência de Status
-          </TabsTrigger>
+          {permissions.canViewDiagnostics() && (
+            <TabsTrigger value="conferencia" className="gap-2 font-bold px-4 py-2">
+              <Database className="h-4 w-4" /> Conferência de Status
+            </TabsTrigger>
+          )}
           <TabsTrigger value="parametros" className="gap-2 font-bold px-4 py-2">
             <Settings className="h-4 w-4" /> Configurações Gerais
           </TabsTrigger>

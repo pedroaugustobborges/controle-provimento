@@ -7,6 +7,8 @@ export function usePermissions() {
 
   return {
     canImport: () => isAdmin || perfil === 'Analista administrativo' || (userData?.pode_incluir_registros ?? false),
+    canViewAudit: () => isAdmin,
+    canViewDiagnostics: () => isAdmin,
     canManageUsers: () => isAdmin || (userData?.pode_gerenciar_usuarios ?? false),
     canDeleteRecords: () => isAdmin || (userData?.pode_excluir_requisicoes ?? false),
     canEditSettings: () => isAdmin || (userData?.pode_editar_configuracoes ?? false),

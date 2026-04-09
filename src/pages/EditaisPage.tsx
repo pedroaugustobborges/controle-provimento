@@ -37,14 +37,14 @@ export default function EditaisPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-slate-50/80 whitespace-nowrap">
-                  <th className="text-left p-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider">Cargo / Unidade</th>
-                  <th className="text-left p-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider">Nº Processo</th>
-                  <th className="text-left p-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider">Nº Edital</th>
-                  <th className="text-left p-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider">Abertura</th>
-                  <th className="text-left p-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider">Etapa</th>
-                  <th className="text-left p-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider">Publicação</th>
-                  <th className="text-right p-3 font-bold text-slate-500 text-[10px] uppercase tracking-wider">Ações</th>
+                <tr className="border-b bg-slate-50/50 whitespace-nowrap">
+                  <th className="text-left p-4 font-black text-slate-500 text-[11px] uppercase tracking-widest">Cargo / Unidade</th>
+                  <th className="text-left p-4 font-black text-slate-500 text-[11px] uppercase tracking-widest">Nº Processo</th>
+                  <th className="text-left p-4 font-black text-slate-500 text-[11px] uppercase tracking-widest">Nº Edital</th>
+                  <th className="text-left p-4 font-black text-slate-500 text-[11px] uppercase tracking-widest">Abertura</th>
+                  <th className="text-left p-4 font-black text-slate-500 text-[11px] uppercase tracking-widest">Etapa</th>
+                  <th className="text-left p-4 font-black text-slate-500 text-[11px] uppercase tracking-widest">Publicação</th>
+                  <th className="text-right p-4 font-black text-slate-500 text-[11px] uppercase tracking-widest">Ações</th>
                 </tr>
               </thead>
               <tbody>

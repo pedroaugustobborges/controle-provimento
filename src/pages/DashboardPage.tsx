@@ -99,6 +99,7 @@ export default function DashboardPage() {
     const groups: Record<string, {
       id: string;
       status: string;
+      isProrrogado: boolean;
       qtdBanco: number;
       candidatesCount: number;
     }> = {};

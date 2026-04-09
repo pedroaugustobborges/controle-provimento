@@ -8,7 +8,6 @@ import {
 import { 
   Briefcase, 
   FileText, 
-  CheckCircle2, 
   Clock, 
   Activity,
   Users,
@@ -32,13 +31,13 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  Cell,
   LabelList
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 
+export default function DashboardPage() {
   const { 
     vagas: allVagas = [], 
     getBancoByVaga,
@@ -167,9 +166,7 @@ import { PageHeader } from '@/components/PageHeader';
     groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)
   , [groupedBancos]);
 
-  const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
-  const totalConvRealizadas = convocacoes.length;
 
   const stats = useMemo(() => [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
@@ -249,7 +246,6 @@ import { PageHeader } from '@/components/PageHeader';
           </>
         }
       />
-
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">

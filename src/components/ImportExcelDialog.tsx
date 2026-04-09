@@ -573,48 +573,101 @@ export function ImportExcelDialog({
 
           {step === 'summary' && summary && (
             <div className="space-y-6">
-              <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 flex flex-col items-center text-center">
-                <CheckCircle2 className="h-12 w-12 text-primary mb-4" />
-                <h3 className="text-xl font-bold text-primary">Importação Concluída!</h3>
-                <p className="text-sm text-muted-foreground mt-1">{summary.fileName}</p>
-                
-                <div className="mt-6 grid grid-cols-1 gap-4 w-full max-w-sm">
-                  <div className="bg-background p-4 rounded-lg border border-border shadow-sm flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Total de Registros:</span>
-                    <span className="text-xl font-bold">{summary.total}</span>
-                  </div>
-                  
-                  {summary.type === 'banco' && (
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Reserva</span>
-                        <span className="text-lg font-bold text-blue-600">{summary.cr}</span>
-                      </div>
-                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Convoc.</span>
-                        <span className="text-lg font-bold text-green-600">{summary.conv}</span>
-                      </div>
-                      <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Vencido</span>
-                        <span className="text-lg font-bold text-red-600">{summary.venc}</span>
-                      </div>
+              {summary.type === 'error' ? (
+                <div className="bg-destructive/5 border border-destructive/10 rounded-xl p-6 flex flex-col items-center text-center">
+                  <X className="h-12 w-12 text-destructive mb-4" />
+                  <h3 className="text-xl font-bold text-destructive">Falha na Importação</h3>
+                  <p className="text-sm text-muted-foreground mt-2">{summary.message}</p>
+                  <div className="mt-4 p-3 bg-muted rounded-lg text-xs text-left w-full">
+                    <p className="font-bold mb-1">Abas encontradas no arquivo:</p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {summary.sheetsAvailable?.map((s: string) => (
+                        <Badge key={s} variant="outline">{s}</Badge>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                  <div className="mt-8 flex gap-3">
+                    <Button variant="outline" onClick={reset}>Tentar novamente</Button>
+                    <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  </div>
                 </div>
+              ) : summary.type === 'warning' ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex flex-col items-center text-center">
+                  <AlertCircle className="h-12 w-12 text-amber-500 mb-4" />
+                  <h3 className="text-xl font-bold text-amber-700">Atenção: 0 Registros</h3>
+                  <p className="text-sm text-amber-600 mt-2">{summary.message}</p>
+                  
+                  <div className="mt-6 grid grid-cols-2 gap-4 w-full text-xs">
+                    <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm">
+                      <p className="text-muted-foreground">Linhas encontradas</p>
+                      <p className="text-lg font-bold">{summary.totalFound}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm text-red-600">
+                      <p className="text-muted-foreground">Cargo vazio (puladas)</p>
+                      <p className="text-lg font-bold">{summary.discardedEmpty}</p>
+                    </div>
+                  </div>
 
-                <div className="mt-8 flex gap-3">
-                  <Button variant="outline" onClick={reset}>Importar outro</Button>
-                  <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  <div className="mt-4 p-3 bg-white/50 border border-amber-100 rounded-lg text-left w-full text-[10px] space-y-1">
+                    <p><strong>Aba lida:</strong> {summary.sheetName}</p>
+                    <p><strong>Cabeçalho identificado:</strong> {summary.headerFound ? 'Sim' : 'Não'}</p>
+                    <p className="mt-2 text-amber-800">Dica: Verifique se a coluna 'CARGO' está preenchida nas linhas de dados.</p>
+                  </div>
+
+                  <div className="mt-8 flex gap-3">
+                    <Button variant="outline" onClick={reset}>Tentar outro arquivo</Button>
+                    <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 flex flex-col items-center text-center">
+                  <CheckCircle2 className="h-12 w-12 text-primary mb-4" />
+                  <h3 className="text-xl font-bold text-primary">Importação Concluída!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{summary.fileName}</p>
+                  
+                  <div className="mt-6 grid grid-cols-1 gap-4 w-full max-w-sm">
+                    <div className="bg-background p-4 rounded-lg border border-border shadow-sm flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Total de Registros Salvos:</span>
+                      <span className="text-xl font-bold">{summary.total}</span>
+                    </div>
+                    
+                    {summary.type === 'banco' && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">Reserva</span>
+                          <span className="text-lg font-bold text-blue-600">{summary.cr}</span>
+                        </div>
+                        <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">Convoc.</span>
+                          <span className="text-lg font-bold text-green-600">{summary.conv}</span>
+                        </div>
+                        <div className="bg-background p-3 rounded-lg border border-border shadow-sm flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">Vencido</span>
+                          <span className="text-lg font-bold text-red-600">{summary.venc}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-8 flex gap-3">
+                    <Button variant="outline" onClick={reset}>Importar outro</Button>
+                    <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+                  </div>
+                </div>
+              )}
               
-              {summary.type === 'vagas' && (
+              {summary.type === 'vagas' && summary.total > 0 && (
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col gap-3">
                   <div className="flex gap-3">
                     <Info className="h-5 w-5 text-emerald-500 shrink-0" />
-                    <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">
-                      Auditoria de Importação - Registros por Unidade
-                    </p>
+                    <div className="flex flex-col">
+                      <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">
+                        Auditoria de Importação - Detalhes
+                      </p>
+                      <p className="text-[10px] text-emerald-600">
+                        Aba: <strong>{summary.sheetName}</strong> | Linhas brutas: {summary.totalFound} | Puladas: {summary.discardedEmpty}
+                      </p>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-8">
                     {Object.entries(summary.byUnit || {}).map(([unit, count]) => (
@@ -624,9 +677,6 @@ export function ImportExcelDialog({
                       </div>
                     ))}
                   </div>
-                  <p className="text-[9px] text-emerald-600 mt-1 italic text-center">
-                    * Todos os registros acima possuem cargo preenchido e foram integrados à base operacional.
-                  </p>
                 </div>
               )}
             </div>

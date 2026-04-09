@@ -61,13 +61,13 @@ export function isConvocacaoByFields(row: any): boolean {
   );
 }
 
-export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
+export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = false): keyof typeof CATEGORIAS_STATUS {
   if (!row) return 'em_andamento';
   
   const status = typeof row === 'string' ? row : (row.status || row.status_geral);
   
   if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || String(status).trim() === '') {
-    if (typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
+    if (includeConvocacaoFields && typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
     return 'em_andamento';
   }
   
@@ -88,7 +88,7 @@ export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
 
   const cat = findCategory(s) || findCategory(sLow);
   
-  if (cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
+  if (includeConvocacaoFields && cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
     return 'convocacao';
   }
 

@@ -125,13 +125,13 @@ export function AppSidebar() {
                                     <NavLink
                                       to={sub.url}
                                       className={cn(
-                                        "text-[13px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative overflow-hidden group/sub select-none",
+                                        "text-sm py-2.5 px-4 rounded-lg transition-all duration-300 block relative overflow-hidden group/sub select-none",
                                         subActive 
                                           ? "text-white font-bold bg-[#2563EB] shadow-[0_4px_20px_rgba(37,99,235,0.5)] border border-white/10 ring-1 ring-white/20" 
                                           : "text-white/50 hover:text-white hover:bg-white/10"
                                       )}
                                     >
-                                      <span className="relative z-10 block truncate">{sub.title}</span>
+                                      <span className="relative z-10 block leading-tight">{sub.title}</span>
                                       {subActive && (
                                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
                                       )}

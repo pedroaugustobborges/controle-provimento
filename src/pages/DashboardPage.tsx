@@ -155,7 +155,6 @@ export default function DashboardPage() {
       .reduce((sum, g) => sum + g.qtdBanco, 0);
   }, [groupedBancos]);
 
-  // Convocados e Vencidos continuam contando candidatos (linhas) conforme Item 1 do pedido
   const totalConvocados = useMemo(() => 
     bancos.filter(b => b.status === 'CONVOCADO').length
   , [bancos]);
@@ -163,6 +162,10 @@ export default function DashboardPage() {
   const totalVencidos = useMemo(() => 
     bancos.filter(b => b.status === 'VENCIDO').length
   , [bancos]);
+
+  const totalBancoTotal = useMemo(() => 
+    groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)
+  , [groupedBancos]);
 
   const emValidacao = validacoes.filter((v) => v.status_validacao === 'pendente').length;
   const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
@@ -175,11 +178,12 @@ export default function DashboardPage() {
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Capacidade Vigente', value: totalComBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Capacidade de vagas' },
+    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Número de pessoas' },
+    { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Número de pessoas' },
+    { label: 'Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Capacidade de vagas' },
+    { label: 'Capacidade Vigente', value: totalComBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Válidos + Prorrogados' },
+    { label: 'Banco Total', value: totalBancoTotal, icon: Database, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Soma total de bancos' },
     { label: 'Canceladas', value: counts.cancelada, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Dispensa', value: counts.dispensa, icon: RefreshCw, color: 'text-slate-600', bg: 'bg-slate-50' },
     { label: 'Etapas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -261,8 +265,11 @@ export default function DashboardPage() {
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
               <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
-              <div className="flex items-baseline gap-1.5">
+              <div className="flex flex-col gap-0.5">
                 <p className="text-2xl font-black text-slate-900 tracking-tighter">{stat.value}</p>
+                {stat.description && (
+                  <p className="text-[9px] font-bold text-slate-400 italic leading-none">{stat.description}</p>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -558,12 +558,14 @@ export default function BancoTalentosPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Cadastro Reserva</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Total de vagas/capacidade do banco (conforme auditoria) - Apenas bancos originais/não prorrogados */}
-                  {groupedBancos
-                    .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
-                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos
+                      .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
+                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade de vagas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -576,10 +578,12 @@ export default function BancoTalentosPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Convocados</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* CONTAGEM DE LINHAS: Total de pessoas já convocadas */}
-                  {bancos.filter(b => b.status === 'CONVOCADO').length}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {bancos.filter(b => b.status === 'CONVOCADO').length}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -592,12 +596,14 @@ export default function BancoTalentosPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Capacidade Vigente</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Capacidade total de todos os bancos que não venceram (Cadastro Reserva + Prorrogados) */}
-                  {groupedBancos
-                    .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
-                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos
+                      .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
+                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Válidos + Prorrogados</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -610,12 +616,14 @@ export default function BancoTalentosPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Prorrogados</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA AGRUPADA: Capacidade informada nos grupos prorrogados (conforme auditoria) */}
-                  {groupedBancos
-                    .filter(g => g.isProrrogado || g.status === 'prorrogado')
-                    .reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos
+                      .filter(g => g.isProrrogado || g.status === 'prorrogado')
+                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade de vagas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -628,10 +636,12 @@ export default function BancoTalentosPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Vencidos</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* CONTAGEM DE LINHAS: Candidatos em bancos vencidos */}
-                  {bancos.filter(b => b.status === 'VENCIDO').length}
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {bancos.filter(b => b.status === 'VENCIDO').length}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -643,11 +653,13 @@ export default function BancoTalentosPage() {
                 <Calendar className="h-5 w-5 text-slate-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Total Visível</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {/* SOMA TOTAL REAL: Soma de todas as capacidades informadas nos bancos */}
-                  {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
-                </p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">Banco Total</p>
+                <div className="flex flex-col">
+                  <p className="text-2xl font-bold text-slate-900 leading-none">
+                    {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
+                  </p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade total</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -944,11 +956,11 @@ export default function BancoTalentosPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="space-y-2">
                   <p><strong>1. Cadastro Reserva:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> (sum de QNTD BANCO por grupo).</p>
-                  <p><strong>2. Bancos Válidos:</strong> Mesma lógica do Cadastro Reserva (<span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span>).</p>
-                  <p><strong>3. Prorrogados:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">CONTAGEM DE LINHAS</span> (quantas pessoas reais estão marcadas como prorrogadas).</p>
+                  <p><strong>2. Capacidade Vigente:</strong> Mesma lógica do Cadastro Reserva (<span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span>).</p>
+                  <p><strong>3. Prorrogados:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> da capacidade de grupos prorrogados.</p>
                 </div>
                 <div className="space-y-2">
-                  <p><strong>4. Total Visível:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> de todos os grupos identificados.</p>
+                  <p><strong>4. Banco Total:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> de todos os grupos identificados.</p>
                   <p><strong>5. Chave de Agrupamento:</strong> Prioriza <span className="bg-amber-100 px-1 font-bold">Processo Seletivo</span>; se ausente, usa <span className="bg-amber-100 px-1 font-bold">Edital + Unidade + Cargo</span>.</p>
                   <p><strong>6. Status Predominante:</strong> Reflete o status do primeiro registro encontrado no grupo.</p>
                 </div>

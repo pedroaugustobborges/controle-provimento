@@ -40,6 +40,14 @@ export default function FilaEditaisPage() {
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
+  
+  // Modal de envio
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+  const [cargoValidado, setCargoValidado] = useState(false);
+  const [cargaValidada, setCargaValidada] = useState(false);
+  const [salarioValidado, setSalarioValidado] = useState(false);
+  const [obsUnidade, setObsUnidade] = useState('');
 
   const pendingVagas = useMemo(() => {
     return vagas.filter(v => {
@@ -56,6 +64,11 @@ export default function FilaEditaisPage() {
       // Regra: Fila de Edital - Filtrar por categoria do status real
       const isFilaEdital = getCategoriaStatus(v) === 'fila_edital';
       if (!isFilaEdital) return false;
+
+      // Se já foi encaminhado para edital, remove da fila da unidade
+      if (v.status_fluxo_edital === 'encaminhado_edital' || v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'enviado_validacao') {
+        return false;
+      }
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -75,24 +88,41 @@ export default function FilaEditaisPage() {
     'Aguardando processo e edital', 'Em andamento', 'Encerrada'
   ];
 
-  const handleSendToValidation = (vagaId: string) => {
-    const vaga = vagas.find(v => v.id === vagaId);
-    if (!vaga?.numero_edital || !vaga?.numero_processo) {
-      toast.error('Informe o número do edital e do processo antes de enviar para validação.');
+  const handleOpenSendModal = (vaga: Vaga) => {
+    setSelectedVaga(vaga);
+    setCargoValidado(false);
+    setCargaValidada(false);
+    setSalarioValidado(false);
+    setObsUnidade('');
+    setIsSendModalOpen(true);
+  };
+
+  const handleConfirmSend = () => {
+    if (!selectedVaga) return;
+
+    if (!cargoValidado || !cargaValidada || !salarioValidado) {
+      toast.error('É necessário validar cargo, carga horária e salário com a unidade antes de enviar.');
       return;
     }
 
-    updateVaga(vagaId, { 
-      status_validacao: 'pendente',
-      historico: [...vaga.historico, {
+    updateVaga(selectedVaga.id, { 
+      status_fluxo_edital: 'encaminhado_edital',
+      cargo_validado: true,
+      carga_horaria_validada: true,
+      salario_validado: true,
+      observacoes_unidade: obsUnidade,
+      historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: 'Edital enviado para validação administrativa',
-        usuario: currentUser?.nome_completo || 'Analista'
+        descricao: `Vaga encaminhada para a analista do edital. Obs: ${obsUnidade || 'Sem observações'}`,
+        usuario: currentUser?.nome_completo || 'Analista da Unidade'
       }]
     });
-    toast.success('Edital enviado para validação administrativa!');
+
+    setIsSendModalOpen(false);
+    toast.success('Vaga encaminhada com sucesso para a analista do edital!');
   };
+
 
   const hasFilters = search !== '' || filterUnidade !== 'all' || filterStatus !== 'all';
 

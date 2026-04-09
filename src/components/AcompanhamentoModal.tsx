@@ -67,8 +67,8 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
     const dateValue = value ? new Date(value) : undefined;
     
     return (
-      <div className="space-y-1.5 flex-1">
-        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</Label>
+      <div className="space-y-2 flex-1">
+        <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">{label}</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -101,10 +101,10 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
   };
 
   const InputField = ({ icon: Icon, label, value, onChange, color, type = "number" }: any) => (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 border-l-2 border-primary/30 pl-2 mb-1">
         <Icon className={cn("h-3.5 w-3.5", color)} />
-        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</Label>
+        <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest">{label}</Label>
       </div>
       <Input
         type={type}
@@ -140,8 +140,8 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
         <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Etapa Atual</Label>
+              <div className="space-y-2">
+                <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">Etapa Atual</Label>
                 <Select
                   value={formData.etapa_atual}
                   onValueChange={(val) => setFormData({ ...formData, etapa_atual: val })}
@@ -184,9 +184,11 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
             </div>
 
             <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Info className="h-4 w-4 text-primary" />
-                <h4 className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Resumo Operacional</h4>
+              <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                <div className="bg-primary/10 p-1.5 rounded-lg">
+                  <Info className="h-4 w-4 text-primary" />
+                </div>
+                <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Resumo Operacional</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <InputField
@@ -228,8 +230,8 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="space-y-3">
+            <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">
               Observações Operacionais
             </Label>
             <Textarea

@@ -26,24 +26,27 @@ export function isVitoriaUnit(unidade: string): boolean {
 
 
 export const CATEGORIAS_STATUS = {
-  fila_edital: ['sem_status', 'publicar_novo_edital', 'aberta', 'FILA DE EDITAIS', 'SEM STATUS'],
+  fila_edital: ['publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital'],
   em_andamento: [
-    'em_edital', 
-    'em_documentacao', 
-    'documentacao_ok_azul_pendente', 
-    'documentacao_pendente_azul_ok', 
-    'em_admissao', 
-    'admissao_enviada',
-    'em_triagem',
+    'em_edital', 'em edital', 
+    'em_processo_seletivo', 'em processo seletivo',
+    'admissao_enviada', 'admissao enviada',
+    'em_admissao', 'em admissao',
+    'em_triagem', 'em triagem',
     'entrevista',
-    'EM ANDAMENTO',
-    'DOCUMENTAÇÃO'
+    'EM ANDAMENTO'
   ],
-  concluidas: ['admissao_efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
-  vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada'],
-  vagas_lideranca: ['movimentacao_interna', 'vaga_lideranca', 'MOV. INTERNA', 'ESTRATÉGICAS'],
-  convocacao: ['realizar_convocacao', 'CONVOCAÇÕES'],
-  aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando']
+  concluidas: ['admissao_efetivada', 'admissao efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
+  vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada', 'cancelado'],
+  vagas_lideranca: ['vaga_lideranca', 'vaga de lideranca', 'ESTRATÉGICAS'],
+  convocacao: ['realizar_convocacao', 'realizar convocacao', 'CONVOCAÇÕES'],
+  documentacao: [
+    'documentacao', 'documentacao ok e aso pendente', 'aso pendente', 
+    'documentacao ok', 'documentacao pendente', 'documentação', 
+    'documentação ok e aso pendente', 'aso pendente', 'documentação ok', 
+    'documentação pendente', 'DOCUMENTAÇÃO'
+  ],
+  aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando', 'aguardando unidade']
 };
 
 export function isConvocacaoByFields(row: any): boolean {
@@ -59,39 +62,37 @@ export function isConvocacaoByFields(row: any): boolean {
 }
 
 export function getCategoriaStatus(row: any): keyof typeof CATEGORIAS_STATUS {
-  if (!row) return 'fila_edital';
+  if (!row) return 'em_andamento';
   
-  // Se for uma string (legado/casos simples), extraímos o status
-  const status = typeof row === 'string' ? row : (row.status || row.status_geral || 'SEM STATUS');
+  const status = typeof row === 'string' ? row : (row.status || row.status_geral);
   
-  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined') {
+  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || String(status).trim() === '') {
     if (typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
-    return 'fila_edital';
+    return 'em_andamento';
   }
   
-  const s = String(status).trim(); 
+  const s = String(status).trim();
+  const sLow = s.toLowerCase();
   
-  const findCategory = (statusVal: string) => {
+  const findCategory = (statusVal: string): keyof typeof CATEGORIAS_STATUS | null => {
     if (CATEGORIAS_STATUS.fila_edital.includes(statusVal)) return 'fila_edital';
-    if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
     if (CATEGORIAS_STATUS.concluidas.includes(statusVal)) return 'concluidas';
     if (CATEGORIAS_STATUS.vagas_interrompidas.includes(statusVal)) return 'vagas_interrompidas';
     if (CATEGORIAS_STATUS.vagas_lideranca.includes(statusVal)) return 'vagas_lideranca';
     if (CATEGORIAS_STATUS.convocacao.includes(statusVal)) return 'convocacao';
+    if (CATEGORIAS_STATUS.documentacao.includes(statusVal)) return 'documentacao';
     if (CATEGORIAS_STATUS.aguardando_unidade.includes(statusVal)) return 'aguardando_unidade';
+    if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
     return null;
   };
 
-  const cat = findCategory(s) || findCategory(s.toLowerCase()) || findCategory(s.toUpperCase());
+  const cat = findCategory(s) || findCategory(sLow);
   
-  // Regra especial: se houver campos de convocação preenchidos, SEMPRE cai em convocação
-  // a menos que já esteja em concluídas ou interrompidas (opcional, mas o usuário disse "quando houver evidência")
-  // Vou seguir a regra do usuário: "Considerar como convocação quando: o status for “realizar convocação” OU houver preenchimento em campos da seção de convocação"
   if (cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
     return 'convocacao';
   }
 
-  return cat || 'fila_edital';
+  return cat || 'em_andamento';
 }
 
 

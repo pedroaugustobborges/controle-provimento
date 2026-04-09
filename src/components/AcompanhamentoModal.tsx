@@ -390,6 +390,14 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                                   className="h-8 text-[11px] font-semibold p-1 border-slate-200"
                                 />
                               </TableCell>
+                              <TableCell className="py-2">
+                                <Input 
+                                  placeholder="Obs..."
+                                  value={item.observacoes || ''}
+                                  onChange={(e) => updateEtapaHistorico(etapaKey, 'observacoes', e.target.value)}
+                                  className="h-8 text-[10px] font-medium p-1 border-slate-200"
+                                />
+                              </TableCell>
                               <TableCell className="py-2 text-center">
                                 <Checkbox 
                                   checked={item.concluida}

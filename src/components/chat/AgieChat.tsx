@@ -35,11 +35,13 @@ export const AgieChat = () => {
   const handleBack = () => {
     if (step === 'BY_REGION') setStep('INITIAL');
     if (step === 'BY_UNIT') setStep('BY_REGION');
-    if (step === 'BY_PERSON') setStep('BY_UNIT');
+    if (step === 'BY_PERSON') {
+      if (selectedUnit) setStep('BY_UNIT');
+      else if (selectedRole) setStep('BY_ROLE');
+    }
     if (step === 'BY_ROLE') setStep('INITIAL');
     if (step === 'CONVERSATION') {
-      if (selectedUnit) setStep('BY_PERSON');
-      else setStep('BY_ROLE');
+      setStep('BY_PERSON');
     }
   };
 

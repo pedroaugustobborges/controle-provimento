@@ -16,6 +16,7 @@ import { ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, 
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { 
+  Zap, 
+  UserCheck, 
+  Send, 
+  Search, 
+  CheckCircle, 
+  AlertTriangle,
+  ArrowRightCircle,
+  ExternalLink
+} from 'lucide-react';
 
 
 export default function VagaDetalhePage() {

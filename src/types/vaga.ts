@@ -118,6 +118,7 @@ export interface Vaga {
   observacoes_validacao?: string;
   status_validacao?: StatusValidacao;
   historico: HistoricoItem[];
+  origem: 'manual' | 'importada';
   
   // Acompanhamento do Edital
   cronograma?: VagaCronograma;

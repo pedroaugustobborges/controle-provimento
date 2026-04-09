@@ -230,12 +230,21 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           
           // RULE: ONLY Select "BANCO GERAL" sheet
           const targetSheetName = 'BANCO GERAL';
-          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.toUpperCase() === targetSheetName);
+          const bancoGeralIndex = wb.SheetNames.findIndex(name => name.trim().toUpperCase() === targetSheetName);
+          
           if (bancoGeralIndex !== -1) {
-            setSelectedSheets([wb.SheetNames[bancoGeralIndex]]);
+            const finalName = wb.SheetNames[bancoGeralIndex];
+            setSelectedSheets([finalName]);
+            // Força linha 1 para BANCO GERAL
+            setHeaderRow(0);
           } else {
-            // Fallback selection to allow the user to see the sheet list if not found
-            setSelectedSheets([wb.SheetNames[0]]);
+            // Se não achar BANCO GERAL, tenta achar alguma que contenha BANCO
+            const anyBancoIndex = wb.SheetNames.findIndex(name => name.toUpperCase().includes('BANCO'));
+            if (anyBancoIndex !== -1) {
+              setSelectedSheets([wb.SheetNames[anyBancoIndex]]);
+            } else {
+              setSelectedSheets([wb.SheetNames[0]]);
+            }
           }
 
           toast.success(`Arquivo "${selectedFile.name}" carregado com sucesso.`);

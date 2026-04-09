@@ -1234,22 +1234,24 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
             <CardContent className="pt-6">
               <div className="relative pl-6 border-l-2 border-slate-200 space-y-8">
                 {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => {
+                  const status = (form.historico_etapas || []).find((h: any) => h.etapa === e);
+                  const isCompleted = status?.concluida;
                   const isCurrent = form.etapa_atual === e;
                   const cronoKey = CRONOGRAMA_KEYS[e];
                   const date = cronograma[cronoKey];
-                  const isPast = date && date < new Date().toISOString().split('T')[0];
                   
                   return (
                     <div key={e} className="relative">
                       <div className={`absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 bg-white transition-all ${
                         isCurrent ? 'border-primary scale-125 shadow-[0_0_8px_rgba(var(--primary),0.5)]' : 
-                        isPast ? 'border-green-500 bg-green-500' : 'border-slate-300'
+                        isCompleted ? 'border-green-500 bg-green-500' : 'border-slate-300'
                       }`} />
                       <div className="flex flex-col">
-                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isPast ? 'text-green-600' : 'text-slate-500'}`}>
+                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-slate-500'}`}>
                           {ETAPA_LABELS[e]}
                         </span>
-                        {date && <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{formatDate(date)}</span>}
+                        {date && <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">Previsto: {formatDate(date)}</span>}
+                        {isCompleted && status.data_conclusao && <span className="text-[9px] text-green-600 font-bold uppercase">Realizado: {formatDate(status.data_conclusao)}</span>}
                         {isCurrent && (
                           <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/10">
                             <p className="text-[9px] font-bold text-primary uppercase">Etapa em andamento</p>

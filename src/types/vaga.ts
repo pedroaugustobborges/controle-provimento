@@ -48,12 +48,21 @@ export type StatusEdital = 'Nova vaga' | 'Aguardando processo' | 'Aguardando edi
 export type StatusPublicacao = 'pendente' | 'publicado' | 'encerrado';
 export type StatusValidacao = 'pendente' | 'aprovado' | 'reprovado';
 export type EtapaEdital = 
+  | 'validacao_edital'
   | 'inscricoes' 
   | 'triagem' 
   | 'resultado_da_triagem'
-  | 'avaliacao_curricular'
   | 'avaliacao_especifica_online'
-  | 'resultado_da_avaliacao_especifica_online'
+  | 'resultado_preliminar_avaliacao_especifica_online'
+  | 'recurso_avaliacao_especifica_online'
+  | 'resultado_recurso_avaliacao_especifica_online'
+  | 'resultado_final_avaliacao_especifica_online'
+  | 'envio_certificados_titulos'
+  | 'declaracao_experiencia'
+  | 'analise_curricular_preliminar'
+  | 'recurso_analise_curricular'
+  | 'resultado_recurso_analise_curricular'
+  | 'analise_curricular_final'
   | 'entrevistas' 
   | 'resultado_final' 
   | 'convocacao_do_edital'

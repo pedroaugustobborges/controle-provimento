@@ -86,6 +86,13 @@ export function ImportExcelDialog({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  React.useEffect(() => {
+    if (open && reprocessFile && !file) {
+      setFile(reprocessFile);
+      analyzeFile(reprocessFile);
+    }
+  }, [open, reprocessFile]);
+
   const reset = () => {
     setStep('select');
     setFile(null);

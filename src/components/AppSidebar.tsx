@@ -188,17 +188,21 @@ export function AppSidebar() {
                         <NavLink
                           to={item.url}
                           className={cn(
-                            "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 group relative",
-                            active ? "bg-white/10 text-white font-bold shadow-lg" : "text-white/70 hover:bg-white/5 hover:text-white"
+                            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                            active 
+                              ? "bg-white/10 text-white font-bold shadow-lg ring-1 ring-white/10" 
+                              : "text-white/60 hover:bg-white/5 hover:text-white"
                           )}
                         >
                           <item.icon className={cn(
                             "h-5 w-5 shrink-0 transition-all duration-300",
-                            active ? "text-primary-foreground scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/50 group-hover:text-white"
+                            active 
+                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" 
+                              : "text-white/40 group-hover:text-white group-hover:scale-105"
                           )} />
-                          {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                          {!collapsed && <span className="text-sm font-medium tracking-wide">{item.title}</span>}
                           {active && !collapsed && (
-                            <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full shadow-[0_0_10px_white]" />
+                            <div className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
                           )}
                         </NavLink>
                       </SidebarMenuButton>

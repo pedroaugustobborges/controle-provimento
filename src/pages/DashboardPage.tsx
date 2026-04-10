@@ -50,6 +50,7 @@ export default function DashboardPage() {
     fetchVagas,
     fetchBancos
   } = useVagasStore();
+  const { selectedRegion, selectedUnit } = useAdminStore();
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -386,7 +386,7 @@ export type VacancyEligibilityResult = {
 
 export function checkVacancyParity(row: any, selectedUnit: string, selectedMonth: string): VacancyEligibilityResult {
   const normSelectedUnit = selectedUnit === 'all' || selectedUnit === 'TODOS' ? 'TODOS' : normalizeUnitName(selectedUnit);
-  const normSelectedMonth = selectedMonth === 'all' || selectedMonth === 'TODOS' ? 'TODOS' : selectedMonth.toUpperCase();
+  const normSelectedMonth = (selectedMonth === 'all' || selectedMonth === 'TODOS' || !selectedMonth) ? 'TODOS' : String(selectedMonth).toUpperCase();
   const hasCargo = String(row.cargo ?? "").trim() !== "";
   const rowUnitNorm = normalizeUnitName(row.unidade);
   const unitMatches = normSelectedUnit === 'TODOS' || rowUnitNorm === normSelectedUnit;

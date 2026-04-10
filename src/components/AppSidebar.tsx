@@ -36,7 +36,16 @@ const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Demais Unidades': ['Hospital Central (GO)', 'Hospital das Clínicas']
 };
 
-  const mainItems = [
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === 'collapsed';
+  const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst } = usePermissions();
+  const { currentUser, users } = useAdminStore();
+  const location = useLocation();
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
+  const [selectedUnit, setSelectedUnit] = useState<string>('all');
+
+  const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
     { 
       title: 'Vagas', 
@@ -87,16 +96,7 @@ const UNIDADES_POR_REGIAO: Record<string, string[]> = {
         { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
       ] 
     },
-  ];
-
-export function AppSidebar() {
-  const { state } = useSidebar();
-  const collapsed = state === 'collapsed';
-  const { canImport, canAccessAdmin } = usePermissions();
-  const { currentUser, users } = useAdminStore();
-  const location = useLocation();
-  const [selectedRegion, setSelectedRegion] = useState<string>('all');
-  const [selectedUnit, setSelectedUnit] = useState<string>('all');
+  ], [isManagement, isAdminAnalyst, isEditalAnalyst]);
 
   const hasMultipleUnits = useMemo(() => {
     if (!currentUser) return false;
@@ -183,7 +183,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5">
-              {mainItems.map((item) => {
+              {mainItems.filter(item => item.visible !== false).map((item) => {
                 const active = isParentActive(item);
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -235,7 +235,7 @@ export function AppSidebar() {
                                         subActive 
                                           ? "text-white font-bold bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
                                           : hasPassed
-                                            ? "text-emerald-400 font-medium bg-emerald-500/5 hover:bg-emerald-500/10"
+                                            ? "text-[#275ac5] font-medium bg-[#275ac5]/5 hover:bg-[#275ac5]/10"
                                             : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
                                       )}
                                     >
@@ -243,10 +243,13 @@ export function AppSidebar() {
                                         <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
                                       )}
                                       {hasPassed && (
-                                        <div className="absolute left-0 top-0 h-full w-1 bg-emerald-500/50" />
+                                        <div className="absolute left-0 top-0 h-full w-1 bg-[#275ac5]/50" />
                                       )}
                                       <span className="relative z-10 flex items-center gap-2 leading-tight">
-                                        {hasPassed && <CheckCircle className="h-3 w-3" />}
+                                        <CornerDownRight className={cn(
+                                          "h-3 w-3",
+                                          subActive ? "text-white" : hasPassed ? "text-[#275ac5]" : "text-slate-600"
+                                        )} />
                                         {sub.title}
                                       </span>
                                     </NavLink>

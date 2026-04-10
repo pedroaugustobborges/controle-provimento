@@ -78,7 +78,7 @@ export default function BancoTalentosPage() {
   };
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['list', 'convocados', 'history'].includes(tabParam)) {
+    if (tabParam && ['list', 'convocados', 'vencidos', 'history', 'audit'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     

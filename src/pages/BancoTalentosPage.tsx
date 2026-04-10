@@ -718,7 +718,7 @@ export default function BancoTalentosPage() {
                       <SelectItem value="HEAPA">HEAPA</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-[140px] h-9 bg-white text-xs">
                       <SelectValue placeholder="Situação" />
                     </SelectTrigger>
@@ -727,6 +727,16 @@ export default function BancoTalentosPage() {
                       <SelectItem value="valido">Válidos</SelectItem>
                       <SelectItem value="vencido">Vencidos</SelectItem>
                       <SelectItem value="prorrogado">Prorrogados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={regiaoFilter} onValueChange={setRegiaoFilter}>
+                    <SelectTrigger className="w-[140px] h-9 bg-white text-xs">
+                      <SelectValue placeholder="Região" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas Regiões</SelectItem>
+                      <SelectItem value="GO_ES">GO e ES</SelectItem>
+                      <SelectItem value="OUTRAS_UNIDADES">Outras Unidades</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

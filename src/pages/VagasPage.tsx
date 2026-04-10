@@ -98,6 +98,7 @@ export default function VagasPage() {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [vagaParaEditar, setVagaParaEditar] = useState<Vaga | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
 

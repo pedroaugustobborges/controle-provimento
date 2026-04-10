@@ -62,9 +62,9 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             </button>
           </div>
 
-          <div className="p-7">
+          <div className="p-8 py-10">
             {phase === 'loading' ? (
-              <div className="flex flex-col items-center justify-center py-12 animate-[fadeIn_0.3s_ease-out]">
+              <div className="flex flex-col items-center justify-center py-16 animate-[fadeIn_0.3s_ease-out]">
                 <div className="relative">
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30 animate-pulse">
                     <img src={logoWhite} alt="" className="h-9 w-9 object-contain brightness-110" />
@@ -88,13 +88,13 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                   <p className="text-sm text-[hsl(210,20%,50%)]">Entre com as suas credenciais</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">E-mail</Label>
                     <div className="relative group">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
                       <input type="email" placeholder="seu.email@agir.org.br" value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="w-full h-11 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="email" />
+                        className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="email" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
@@ -102,14 +102,14 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                     <div className="relative group">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
                       <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                        className="w-full h-11 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="current-password" />
+                        className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="current-password" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,40%)] hover:text-white/70 transition-colors">
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
                   <button type="submit"
-                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,30%)]/30 active:scale-[0.98]">
+                    className="w-full h-12 rounded-xl bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,30%)]/30 active:scale-[0.98] mt-2">
                     <LogIn className="h-4 w-4" /> Entrar
                   </button>
                 </form>
@@ -320,7 +320,7 @@ export default function LoginPage() {
             <div className="hidden lg:flex flex-1 items-center justify-center max-w-[520px]">
               <div className="relative">
                 <div className="absolute inset-0 bg-[hsl(200,70%,40%)]/8 rounded-full blur-[80px] scale-110" />
-                <img src={mapaNobg} alt="Presença AGIR no Brasil" className="relative w-[420px] h-auto opacity-90 drop-shadow-2xl contrast-[1.15] brightness-110" />
+                <img src={mapaNobg} alt="Presença AGIR no Brasil" className="relative w-[420px] h-auto drop-shadow-2xl contrast-[1.3] brightness-125 saturate-[1.2]" />
               </div>
             </div>
           </div>

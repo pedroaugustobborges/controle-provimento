@@ -73,15 +73,6 @@ export function AppSidebar() {
     return currentUser.visualiza_todas_unidades || currentUser.unidades_vinculadas.length > 1;
   }, [currentUser]);
 
-  const availableUnits = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.visualiza_todas_unidades) {
-      const allUnits = new Set<string>();
-      users.forEach(u => u.unidades_vinculadas.forEach(un => allUnits.add(un)));
-      return Array.from(allUnits).sort();
-    }
-    return currentUser.unidades_vinculadas;
-  }, [currentUser, users]);
 
   const isUrlActive = (url: string) => {
     const currentUrl = location.pathname + location.search;

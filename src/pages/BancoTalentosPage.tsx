@@ -303,8 +303,6 @@ export default function BancoTalentosPage() {
     });
   }, [selectedBanco, filtered]);
 
-  const historyBT = useMemo(() => {
-
   const [vencidosSearch, setVencidosSearch] = useState('');
   const [prorrogandoId, setProrrogandoId] = useState<string | null>(null);
 
@@ -334,14 +332,11 @@ export default function BancoTalentosPage() {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Calculate new validity: publication date + 12 months (6 months original + 6 months prorrogation)
       let newValidade = '';
       if (banco.data_validade) {
-        // Parse the current validity date and add 6 months
         const parts = banco.data_validade.split(/[-\/]/);
         let dateObj: Date | null = null;
         if (parts.length >= 3) {
-          // Try YYYY-MM-DD or DD/MM/YYYY
           if (parts[0].length === 4) {
             dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
           } else {
@@ -371,7 +366,6 @@ export default function BancoTalentosPage() {
 
       if (error) throw error;
 
-      // Update local state
       const { updateBanco } = useVagasStore.getState();
       updateBanco(banco.id, {
         is_prorrogado: true,
@@ -380,7 +374,6 @@ export default function BancoTalentosPage() {
         observacoes: updateData.observacao,
       });
 
-      // Log audit
       try {
         await supabase.from('audit_logs').insert({
           usuario_id: currentUser.id,
@@ -406,7 +399,7 @@ export default function BancoTalentosPage() {
     }
   };
 
-
+  const historyBT = useMemo(() => {
     return importHistory.filter(h => h.tipo_importacao === 'banco');
   }, [importHistory]);
 

@@ -172,7 +172,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       <User className="h-4 w-4" />
                       Meu Perfil
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 cursor-pointer">
+                    <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => navigate('/gestor')}>
                       <Settings className="h-4 w-4" />
                       Configurações
                     </DropdownMenuItem>

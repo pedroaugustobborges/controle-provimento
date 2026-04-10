@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { UNITS, ROLES } from "@/data/chatData";
 import { ChatStep, Unit, Role, Message } from "@/types/chat";
+import { useVagasStore } from "@/store/vagasStore";
 
 export const AgieChat = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,19 +18,23 @@ export const AgieChat = memo(() => {
   const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
-  const [hasNewMessage, setHasNewMessage] = useState(false);
+  
+  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
+  const hasNewMessage = temNovasMensagens;
 
-  // Mock initial notification after 3 seconds
+  // Keep notifications alive
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isOpen) setHasNewMessage(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [isOpen]);
+    if (!temNovasMensagens) {
+      const timer = setTimeout(() => {
+        if (!isOpen) setTemNovasMensagens(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, temNovasMensagens, setTemNovasMensagens]);
 
   const handleOpen = () => {
     setIsOpen(true);
-    setHasNewMessage(false);
+    setTemNovasMensagens(false);
   };
 
   const handleBack = () => {
@@ -295,11 +300,19 @@ export const AgieChat = memo(() => {
       >
         <AnimatePresence>
           {hasNewMessage && !isOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-4 border-slate-50 rounded-full z-10"
-            />
+            <>
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-4 border-slate-50 rounded-full z-10"
+              />
+              <motion.div
+                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="absolute inset-0 rounded-full bg-red-500/30 z-0"
+              />
+            </>
           )}
         </AnimatePresence>
 
@@ -317,42 +330,60 @@ export const AgieChat = memo(() => {
             "w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-2xl border-4 transition-all duration-500 overflow-hidden",
             isOpen 
               ? "bg-white border-primary rotate-90" 
-              : "bg-primary border-white hover:shadow-primary/40"
+              : hasNewMessage
+                ? "bg-red-600 border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
+                : "bg-primary border-white hover:shadow-primary/40"
           )}
         >
           {isOpen ? (
             <X className="w-8 h-8 text-primary -rotate-90" />
           ) : (
             <div className="flex flex-col items-center gap-1">
-              {/* Agie Animated Face */}
-              <div className="flex gap-2 mb-0.5">
+              {/* Agie Animated Face - eyes go wide when there are notifications */}
+              <div className={cn("flex mb-0.5", hasNewMessage ? "gap-3" : "gap-2")}>
                 <motion.div 
-                  animate={{ 
-                    scaleY: [1, 1, 0.1, 1],
-                  }}
-                  transition={{ 
-                    duration: 4, 
-                    repeat: Infinity,
-                    times: [0, 0.9, 0.92, 1]
-                  }}
-                  className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+                  animate={hasNewMessage 
+                    ? { scale: [1, 1.5, 1.2, 1.5, 1], scaleY: 1 }
+                    : { scaleY: [1, 1, 0.1, 1] }
+                  }
+                  transition={hasNewMessage 
+                    ? { duration: 0.8, repeat: Infinity }
+                    : { duration: 4, repeat: Infinity, times: [0, 0.9, 0.92, 1] }
+                  }
+                  className={cn(
+                    "bg-white rounded-full",
+                    hasNewMessage 
+                      ? "w-3 h-3 shadow-[0_0_12px_rgba(255,255,255,1)]" 
+                      : "w-2 h-2 shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                  )} 
                 />
                 <motion.div 
-                  animate={{ 
-                    scaleY: [1, 1, 0.1, 1],
-                  }}
-                  transition={{ 
-                    duration: 4, 
-                    repeat: Infinity,
-                    times: [0, 0.9, 0.92, 1]
-                  }}
-                  className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+                  animate={hasNewMessage 
+                    ? { scale: [1, 1.5, 1.2, 1.5, 1], scaleY: 1 }
+                    : { scaleY: [1, 1, 0.1, 1] }
+                  }
+                  transition={hasNewMessage 
+                    ? { duration: 0.8, repeat: Infinity, delay: 0.1 }
+                    : { duration: 4, repeat: Infinity, times: [0, 0.9, 0.92, 1] }
+                  }
+                  className={cn(
+                    "bg-white rounded-full",
+                    hasNewMessage 
+                      ? "w-3 h-3 shadow-[0_0_12px_rgba(255,255,255,1)]" 
+                      : "w-2 h-2 shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                  )} 
                 />
               </div>
               <motion.div 
-                animate={{ width: [8, 12, 8] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="h-1 bg-white/40 rounded-full" 
+                animate={hasNewMessage 
+                  ? { width: [8, 14, 8], height: [4, 6, 4] }
+                  : { width: [8, 12, 8] }
+                }
+                transition={{ duration: hasNewMessage ? 0.6 : 4, repeat: Infinity }}
+                className={cn(
+                  "rounded-full",
+                  hasNewMessage ? "h-1.5 bg-white/80" : "h-1 bg-white/40"
+                )}
               />
             </div>
           )}

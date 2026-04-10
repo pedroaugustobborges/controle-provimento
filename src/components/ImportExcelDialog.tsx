@@ -443,12 +443,7 @@ export function ImportExcelDialog({
               admissao_enviada_acompanhamento: admEnviada,
               admissao_efetivada_acompanhamento: admEfetivada,
               detalhes_acompanhamento: detalhesAcomp,
-              historico: [{
-                id: `h-${Date.now()}-${newVagas.length + 1}`,
-                data: now.split('T')[0],
-                descricao: 'Vaga importada via planilha',
-                usuario: 'Sistema'
-              }]
+              historico: []
             });
           }
 

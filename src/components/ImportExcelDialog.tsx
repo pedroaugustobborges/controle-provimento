@@ -94,6 +94,17 @@ export function ImportExcelDialog({
     }
   }, [open, reprocessFile]);
 
+  React.useEffect(() => {
+    if (file && chosenType === 'banco') {
+      const name = file.name.toUpperCase();
+      if (name.includes('GO') || name.includes('ES')) {
+        setSelectedRegion('GO_ES');
+      } else if (name.includes('OUTRAS') || name.includes('BASE') || name.includes('GERAL')) {
+        setSelectedRegion('OUTRAS_UNIDADES');
+      }
+    }
+  }, [file, chosenType]);
+
   const reset = () => {
     setStep('select');
     setFile(null);

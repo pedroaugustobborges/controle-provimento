@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import avatarDefault from '@/assets/avatar-izac.jpeg';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { 
@@ -161,10 +162,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className={`rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-bold text-xs shadow-lg shadow-primary/15 ring-2 ring-white transition-all duration-300 hover:scale-105 focus:outline-none ${
+                    <button className={`rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/15 ring-2 ring-white transition-all duration-300 hover:scale-105 focus:outline-none ${
                       isCompact ? 'h-8 w-8' : 'h-10 w-10'
                     }`}>
-                      {initials}
+                      <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">

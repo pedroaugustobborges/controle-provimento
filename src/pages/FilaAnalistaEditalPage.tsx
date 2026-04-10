@@ -90,6 +90,8 @@ export default function FilaAnalistaEditalPage() {
     });
   }, [vagas, currentUser, search, filterUnidade]);
 
+  const devolvidos = useMemo(() => editalVagas.filter(v => v.status_fluxo_edital === 'em_redacao' && v.observacoes_validacao), [editalVagas]);
+
   const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
 
   const handleOpenEditModal = (vaga: Vaga) => {

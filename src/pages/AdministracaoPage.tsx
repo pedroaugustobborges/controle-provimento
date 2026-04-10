@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
-  HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send
+  HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send, Eye, EyeOff
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 

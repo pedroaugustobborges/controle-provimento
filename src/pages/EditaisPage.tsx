@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ETAPA_LABELS } from '@/types/vaga';
-import { getEtapaColor, getPublicacaoColor, formatDate } from '@/lib/vagaUtils';
+import { getEtapaColor, getPublicacaoColor, formatDate, filterByRegionAndUnit } from '@/lib/vagaUtils';
 import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
@@ -13,22 +13,28 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 export default function EditaisPage() {
   const { vagas, editais } = useVagasStore();
-  const { currentUser } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnit } = useAdminStore();
   const navigate = useNavigate();
 
   const editaisComVaga = useMemo(() => {
-    return editais.map((e) => ({
-      ...e,
-      vaga: vagas.find((v) => v.id === e.vaga_id),
-    })).filter(e => {
-      // Unit access restriction
-      if (!e.vaga) return false;
-      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(e.vaga.unidade)) {
-        return false;
-      }
-      return true;
-    });
-  }, [editais, vagas, currentUser]);
+    const filteredVagas = filterByRegionAndUnit(vagas, selectedRegion, selectedUnit);
+    const filteredVagaIds = new Set(filteredVagas.map(v => v.id));
+    
+    return editais
+      .filter(e => filteredVagaIds.has(e.vaga_id))
+      .map((e) => ({
+        ...e,
+        vaga: filteredVagas.find((v) => v.id === e.vaga_id),
+      }))
+      .filter(e => {
+        // Unit access restriction
+        if (!e.vaga) return false;
+        if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(e.vaga.unidade)) {
+          return false;
+        }
+        return true;
+      });
+  }, [editais, vagas, currentUser, selectedRegion, selectedUnit]);
 
   return (
     <div className="space-y-4">

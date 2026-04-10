@@ -34,7 +34,13 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function BancoTalentosPage() {
-  const { bancos, importHistory, importedFiles, deleteBanco } = useVagasStore();
+  const { bancos, importHistory, importedFiles, deleteBanco, fetchBancos } = useVagasStore();
+  
+  useEffect(() => {
+    if (bancos.length === 0 || (bancos.length > 0 && bancos[0].id.startsWith('mock-'))) {
+      fetchBancos();
+    }
+  }, [bancos.length, fetchBancos]);
   const { currentUser } = useAdminStore();
   const permissions = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();

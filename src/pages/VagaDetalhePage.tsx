@@ -16,7 +16,7 @@ import {
   ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, 
   FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check, 
   Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
-  AlertTriangle, ArrowRightCircle, ExternalLink
+  AlertTriangle, ArrowRightCircle, ExternalLink, Edit
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
+import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   AlertDialog,
@@ -59,6 +60,7 @@ export default function VagaDetalhePage() {
   const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [isEditVagaOpen, setIsEditVagaOpen] = useState(false);
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
   
@@ -210,7 +212,7 @@ export default function VagaDetalhePage() {
       setMatchedBanco(bancoFound);
       setIsQuickConvocacaoOpen(true);
     } else {
-      toast.error('Nenhum banco de talentos disponível para esta vaga no momento.', {
+      toast.error(`Banco não encontrado para a vaga ${vaga.cargo}, unidade ${vaga.unidade}`, {
         description: 'É necessário ter um edital vigente ou cadastro reserva para realizar convocações.',
         action: {
           label: 'Criar Edital',
@@ -391,6 +393,15 @@ export default function VagaDetalhePage() {
             )}
             <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
           </div>
+          {canEdit && (
+            <Button 
+              variant="outline" 
+              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
+              onClick={() => setIsEditVagaOpen(true)}
+            >
+              <Edit className="h-4 w-4" /> Editar Registro
+            </Button>
+          )}
           {canDelete && (
             <Button 
               variant="outline" 
@@ -686,7 +697,7 @@ export default function VagaDetalhePage() {
         </TabsContent>
         
         <TabsContent value="acompanhamento">
-          <AcompanhamentoTab vaga={vaga} />
+          <AcompanhamentoTab vaga={vaga} onEditVaga={() => setIsEditVagaOpen(true)} />
         </TabsContent>
         
         <TabsContent value="banco">
@@ -838,6 +849,11 @@ export default function VagaDetalhePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AddVagaDialog 
+        open={isEditVagaOpen} 
+        onOpenChange={setIsEditVagaOpen} 
+        vaga={vaga}
+      />
     </div>
   );
 }
@@ -870,7 +886,7 @@ const CRONOGRAMA_KEYS: Record<EtapaEdital, keyof VagaCronograma> = {
   publicar_novo_edital: 'data_encerramento_processo',
 };
 
-function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
+function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () => void }) {
   const { updateVaga } = useVagasStore();
   const [form, setForm] = useState<any>(vaga.acompanhamento || {
     etapa_atual: 'inscricoes',
@@ -1292,9 +1308,19 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
 
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-4">
             <h4 className="text-sm font-bold text-primary uppercase tracking-wider">Ações</h4>
-            <Button onClick={save} className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold h-12">
-              Salvar Acompanhamento
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button onClick={save} className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold h-12">
+                Salvar Acompanhamento
+              </Button>
+              <Button 
+                variant="outline" 
+                type="button"
+                onClick={onEditVaga}
+                className="w-full text-amber-600 border-amber-200 hover:bg-amber-50 font-bold h-12"
+              >
+                <Edit className="h-4 w-4 mr-2" /> Editar Registro
+              </Button>
+            </div>
             <p className="text-[11px] text-center text-slate-400 font-medium">As alterações serão registradas no histórico da vaga.</p>
           </div>
         </div>

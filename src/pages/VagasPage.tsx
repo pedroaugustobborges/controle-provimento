@@ -21,10 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
   Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle,
-  Database, CheckCircle2, ArrowRight
+  Database, CheckCircle2, ArrowRight, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
@@ -82,7 +84,7 @@ export default function VagasPage() {
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterMes, setFilterMes] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
   const [filterAssistente, setFilterAssistente] = useState('all');
@@ -96,6 +98,7 @@ export default function VagasPage() {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [vagaParaEditar, setVagaParaEditar] = useState<Vaga | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
 
@@ -168,17 +171,18 @@ export default function VagasPage() {
         (v.unidade || '').toLowerCase().includes(searchTerm) ||
         (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-      const matchStatus = filterStatus === 'all' || 
-        v.status === filterStatus || 
-        v.status_geral === filterStatus ||
-        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') ||
-        (filterStatus === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') ||
-        (filterStatus === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') ||
-        (filterStatus === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') ||
-        (filterStatus === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') ||
-        (filterStatus === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') ||
-        (filterStatus === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') ||
-        (filterStatus === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade');
+      const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
+        if (s === v.status || s === v.status_geral) return true;
+        if (s === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') return true;
+        if (s === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') return true;
+        if (s === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') return true;
+        if (s === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') return true;
+        if (s === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') return true;
+        if (s === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') return true;
+        if (s === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') return true;
+        if (s === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade') return true;
+        return false;
+      });
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
       const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
@@ -189,11 +193,11 @@ export default function VagasPage() {
       
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
-  }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -291,7 +295,7 @@ export default function VagasPage() {
     setSearch('');
     setFilterUnidade('all');
     setFilterMes('all');
-    setFilterStatus('all');
+    setFilterStatuses([]);
     setFilterTipo('all');
     setFilterAnalista('all');
     setFilterAssistente('all');
@@ -299,7 +303,7 @@ export default function VagasPage() {
     setFilterVagasNovas(false);
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas;
+  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas;
 
 
   return (
@@ -548,13 +552,48 @@ export default function VagasPage() {
               </SelectContent>
             </Select>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos Status</SelectItem>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[160px] bg-white text-xs h-9 justify-between font-normal">
+                  <span className="truncate">
+                    {filterStatuses.length === 0 ? "Status" : `${filterStatuses.length} selecionado(s)`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0" align="start">
+                <div className="p-2 space-y-1">
+                  <div className="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded-md cursor-pointer" onClick={() => setFilterStatuses([])}>
+                    <div className={`w-4 h-4 border rounded flex items-center justify-center ${filterStatuses.length === 0 ? 'bg-primary border-primary' : 'border-slate-300'}`}>
+                      {filterStatuses.length === 0 && <Check className="h-3 w-3 text-white" />}
+                    </div>
+                    <span className="text-xs font-medium">Todos Status</span>
+                  </div>
+                  <div className="h-px bg-slate-100 my-1" />
+                  <div className="max-h-[300px] overflow-y-auto space-y-1">
+                    {Object.entries(STATUS_LABELS).map(([k, v]) => {
+                      const isSelected = filterStatuses.includes(k);
+                      return (
+                        <div 
+                          key={k} 
+                          className="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded-md cursor-pointer"
+                          onClick={() => {
+                            if (isSelected) {
+                              setFilterStatuses(filterStatuses.filter(s => s !== k));
+                            } else {
+                              setFilterStatuses([...filterStatuses, k]);
+                            }
+                          }}
+                        >
+                          <Checkbox checked={isSelected} onCheckedChange={() => {}} className="pointer-events-none" />
+                          <span className="text-xs">{v}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Select value={filterTipo} onValueChange={setFilterTipo}>
               <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Tipo de Vaga" /></SelectTrigger>
               <SelectContent>
@@ -595,6 +634,7 @@ export default function VagasPage() {
                   <TableHead>Seção</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-center">Vaga(s)</TableHead>
+                  <TableHead className="text-center">Ação Rápida</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -644,6 +684,29 @@ export default function VagasPage() {
                     <TableCell className="text-center font-bold text-slate-700">
                       {v.numero_vagas || v.quantidade || 0}
                     </TableCell>
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                      {getBancoByVaga(v.id) ? (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700" 
+                          title="Realizar Convocação"
+                          onClick={() => navigate(`/convocacoes/nova?vagaId=${v.id}`)}
+                        >
+                          <CheckCircle2 className="h-5 w-5" />
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-300 hover:bg-slate-50" 
+                          title="Banco não encontrado"
+                          onClick={() => toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`)}
+                        >
+                          <CheckCircle2 className="h-5 w-5 opacity-40" />
+                        </Button>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -656,7 +719,10 @@ export default function VagasPage() {
                           <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                             <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
+                          <DropdownMenuItem onClick={() => {
+                            setVagaParaEditar(v);
+                            setIsAddVagaOpen(true);
+                          }} className="gap-2">
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
                           </DropdownMenuItem>
                           <DropdownMenuItem 
@@ -668,15 +734,23 @@ export default function VagasPage() {
                           >
                             <FileText className="h-4 w-4" /> Enviar para Fila de Editais
                           </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              const bancoFound = getBancoByVaga(v.id);
+                              if (bancoFound) {
+                                navigate(`/convocacoes/nova?vagaId=${v.id}`);
+                              } else {
+                                toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
+                              }
+                            }} 
+                            className="gap-2 font-bold text-green-600"
+                          >
+                            <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
+                          </DropdownMenuItem>
                           {getBancoByVaga(v.id) && (
-                            <>
-                              <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
-                                <Database className="h-4 w-4" /> Ver Banco de Talentos
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/convocacoes/nova?vagaId=${v.id}`)} className="gap-2 font-bold text-green-600">
-                                <CheckCircle2 className="h-4 w-4" /> Ir para Convocação
-                              </DropdownMenuItem>
-                            </>
+                            <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
+                              <Database className="h-4 w-4" /> Ver Banco de Talentos
+                            </DropdownMenuItem>
                           )}
                           <DropdownMenuItem 
                             className="gap-2"
@@ -778,7 +852,10 @@ export default function VagasPage() {
       </Card>
 
       <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
-      <AddVagaDialog open={isAddVagaOpen} onOpenChange={setIsAddVagaOpen} />
+      <AddVagaDialog open={isAddVagaOpen} onOpenChange={(open) => {
+        setIsAddVagaOpen(open);
+        if (!open) setVagaParaEditar(null);
+      }} vaga={vagaParaEditar} />
       <VagaHistoryDialog vaga={selectedVagaForHistory} open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -928,6 +1005,7 @@ function AcompanhamentoEditalList() {
                   <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Avaliação</TableHead>
                   <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Entrevista</TableHead>
                   <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Final</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Ação Rápida</TableHead>
                   <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>

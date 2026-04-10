@@ -212,7 +212,7 @@ export default function VagaDetalhePage() {
       setMatchedBanco(bancoFound);
       setIsQuickConvocacaoOpen(true);
     } else {
-      toast.error('Nenhum banco de talentos disponível para esta vaga no momento.', {
+      toast.error(`Banco não encontrado para a vaga ${vaga.cargo}, unidade ${vaga.unidade}`, {
         description: 'É necessário ter um edital vigente ou cadastro reserva para realizar convocações.',
         action: {
           label: 'Criar Edital',
@@ -393,6 +393,15 @@ export default function VagaDetalhePage() {
             )}
             <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
           </div>
+          {canEdit && (
+            <Button 
+              variant="outline" 
+              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
+              onClick={() => setIsEditVagaOpen(true)}
+            >
+              <Edit className="h-4 w-4" /> Editar Registro
+            </Button>
+          )}
           {canDelete && (
             <Button 
               variant="outline" 

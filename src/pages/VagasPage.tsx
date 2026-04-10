@@ -33,6 +33,8 @@ import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import { PageHeader } from '@/components/PageHeader';
+import { HelpGuide } from '@/components/HelpGuide';
+
 
 import {
   DropdownMenu,

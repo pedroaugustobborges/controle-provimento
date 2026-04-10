@@ -127,7 +127,7 @@ export class DatabaseService {
     try {
       // Step 1: Count existing
       onProgress?.(5, "Analisando base atual...");
-      const { count: countBefore, error: countError } = await this.withRetry(async () => {
+      const { data: countBefore, error: countError } = await this.withRetry(async () => {
         const { count, error } = await supabase.from(tableName).select('*', { count: 'exact', head: true });
         return { data: count, error };
       });

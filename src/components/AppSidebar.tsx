@@ -28,7 +28,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
-const UNIDADES_POR_REGIAO = {
+const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Goiás': ['CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO'],
   'Espírito Santo': ['SÃO PEDRO', 'SUÁ', 'BENTO FERREIRA', 'SERRA'],
   'Demais Unidades': ['Hospital Central (GO)', 'Hospital das Clínicas']

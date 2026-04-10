@@ -542,9 +542,13 @@ export function ImportExcelDialog({
             import_batch_id: batchId,
             data_importacao: now,
             origem_importacao: selectedFile.name,
+            regiao: selectedRegion || undefined
           });
         }
 
+        if (selectedRegion) {
+          clearBancosPorRegiao(selectedRegion);
+        }
         addBancos(newBancos);
         
         setSummary({

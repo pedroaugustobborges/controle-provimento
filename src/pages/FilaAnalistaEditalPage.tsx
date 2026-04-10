@@ -14,6 +14,8 @@ import {
   FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
+import { PageHeader } from '@/components/PageHeader';
+import { HelpGuide } from '@/components/HelpGuide';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
@@ -199,12 +201,12 @@ export default function FilaAnalistaEditalPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Fila do Edital (Redação)</h1>
-          <p className="text-slate-500 mt-1">Vagas recebidas da unidade para redação e preparo do edital.</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Fila do Edital (Redação)"
+        subtitle="Vagas recebidas da unidade para redação e preparo do edital."
+        badge="Redação de Editais"
+        actions={<HelpGuide />}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-blue-50/50 border-blue-100 shadow-sm">

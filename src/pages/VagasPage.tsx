@@ -33,6 +33,8 @@ import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import { PageHeader } from '@/components/PageHeader';
+import { HelpGuide } from '@/components/HelpGuide';
+
 
 import {
   DropdownMenu,
@@ -318,6 +320,7 @@ export default function VagasPage() {
             badge="Gestão de Vagas"
             actions={
               <>
+                <HelpGuide />
                 {permissions.canViewAudit() && (
                   <Button 
                     variant="ghost" 
@@ -967,6 +970,7 @@ function AcompanhamentoEditalList() {
           title="Acompanhamento do Edital"
           subtitle="Monitoramento operacional detalhado das etapas e indicadores dos editais publicados."
           badge="Gestão de Processos"
+          actions={<HelpGuide />}
         />
 
         {canFilterByUnit && (
@@ -1033,7 +1037,6 @@ function AcompanhamentoEditalList() {
                           <Badge className={`${getEtapaColor(displayEtapa as EtapaEdital)} font-bold text-[11px] uppercase py-0.5 px-2 w-fit`}>
                             {ETAPA_LABELS[displayEtapa as EtapaEdital] || displayEtapa}
                           </Badge>
-                          {/* Removido sugestão conforme solicitado */}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">

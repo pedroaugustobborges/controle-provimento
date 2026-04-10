@@ -209,7 +209,7 @@ export default function BancoTalentosPage() {
           edital: b.numero_edital,
           processoSeletivo: b.numero_processo_seletivo || b.numero_processo || '',
           unidade: b.unidade,
-          regiao: b.regiao,
+          regiao: b.regiao || getRegiaoFromUnit(b.unidade),
           cargo: b.cargo,
           cargoNormalizado: cargoNorm,
           status: b.status,

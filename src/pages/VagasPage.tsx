@@ -661,7 +661,7 @@ export default function VagasPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => {
-                              updateVaga(v.id, { status: 'FILA DE EDITAIS', etapa: 'fila_editais' });
+                              updateVaga(v.id, { status: 'FILA DE EDITAIS' });
                               toast.success('Vaga enviada para Fila de Editais');
                             }} 
                             className="gap-2 text-amber-600 font-bold"

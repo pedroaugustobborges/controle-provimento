@@ -3,11 +3,11 @@ import { Unit, Role } from "@/types/chat";
 export const UNITS: Unit[] = [
   // GOIAS E VITÓRIA
   { 
-    id: 'hugol', 
-    name: 'HUGOL', 
+    id: 'hecad', 
+    name: 'HECAD', 
     region: 'GO_VIT', 
-    analysts: ['Sannya Laryssa'], 
-    assistants: ['Eduarda Oliveira', 'Flavia Vaz'] 
+    analysts: ['Thays Silva'], 
+    assistants: ['Ana Julia'] 
   },
   { 
     id: 'crer', 
@@ -17,18 +17,18 @@ export const UNITS: Unit[] = [
     assistants: ['Ana Caroline'] 
   },
   { 
-    id: 'hecad', 
-    name: 'HECAD', 
-    region: 'GO_VIT', 
-    analysts: ['Thays Silva'], 
-    assistants: ['Ana Julia'] 
-  },
-  { 
-    id: 'corporativo', 
-    name: 'CORPORATIVO', 
+    id: 'agir', 
+    name: 'AGIR', 
     region: 'GO_VIT', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
+  },
+  { 
+    id: 'hugol', 
+    name: 'HUGOL', 
+    region: 'GO_VIT', 
+    analysts: ['Sannya Laryssa'], 
+    assistants: ['Eduarda Oliveira', 'Flavia Vaz'] 
   },
   { 
     id: 'hds', 
@@ -53,10 +53,38 @@ export const UNITS: Unit[] = [
   },
   { 
     id: 'vitoria', 
-    name: 'VITÓRIA', 
+    name: 'VITÓRIA (SÃO PEDRO/SUÁ)', 
     region: 'GO_VIT', 
     analysts: ['Geovana Miranda'], 
     assistants: ['Nara Rubia'] 
+  },
+  { 
+    id: 'teia-anapolis', 
+    name: 'TEIA ANAPOLIS', 
+    region: 'GO_VIT', 
+    analysts: ['Julyana Marçal'], 
+    assistants: ['Karielly Alves'] 
+  },
+  { 
+    id: 'teia-canedo', 
+    name: 'TEIA CANEDO', 
+    region: 'GO_VIT', 
+    analysts: ['Julyana Marçal'], 
+    assistants: ['Karielly Alves'] 
+  },
+  { 
+    id: 'teia-aparecida', 
+    name: 'TEIA APARECIDA', 
+    region: 'GO_VIT', 
+    analysts: ['Julyana Marçal'], 
+    assistants: ['Karielly Alves'] 
+  },
+  { 
+    id: 'teia-goiania', 
+    name: 'TEIA GOIÂNIA', 
+    region: 'GO_VIT', 
+    analysts: ['Julyana Marçal'], 
+    assistants: ['Karielly Alves'] 
   },
   
   // OUTRAS UNIDADES (FORA)

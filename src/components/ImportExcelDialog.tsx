@@ -132,105 +132,107 @@ export function ImportExcelDialog({
   const analyzeFile = async (selectedFile: File) => {
     setIsProcessing(true);
     setStep('processing');
+    setProgress(10);
+    setProgressLabel("Lendo arquivo...");
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      try {
-        const data = evt.target?.result;
-        const wb = XLSX.read(data, { type: 'array' });
-        setWorkbook(wb);
+      // Pequeno timeout para garantir que o UI renderize o estado de processamento
+      setTimeout(() => {
+        try {
+          const data = evt.target?.result;
+          const wb = XLSX.read(data, { type: 'array', cellDates: true, cellNF: false, cellText: false });
+          setWorkbook(wb);
+          setProgress(50);
+          setProgressLabel("Analisando abas e colunas...");
 
-        const sheetNames = wb.SheetNames;
-        let targetSheet = sheetNames[0];
-        let headers: string[] = [];
-        let rowCount = 0;
-        let headerRow = 0;
+          const sheetNames = wb.SheetNames;
+          let targetSheet = sheetNames[0];
+          let headers: string[] = [];
+          let rowCount = 0;
+          let headerRow = 0;
 
-        // PRIORIDADE 1: BANCO GERAL
-        const bancoGeralSheet = sheetNames.find(name => name.toUpperCase() === 'BANCO GERAL');
-        
-        // PRIORIDADE 2: VAGAS
-        const vagaSheetName = sheetNames.find(name => 
-          VAGA_SHEETS.includes(name.toUpperCase()) || 
-          name.toUpperCase().includes('VAGA') || 
-          name.toUpperCase().includes('BASE GERAL')
-        );
+          const bancoGeralSheet = sheetNames.find(name => name.toUpperCase() === 'BANCO GERAL');
+          const vagaSheetName = sheetNames.find(name => 
+            VAGA_SHEETS.includes(name.toUpperCase()) || 
+            name.toUpperCase().includes('VAGA') || 
+            name.toUpperCase().includes('BASE GERAL')
+          );
 
-        if (bancoGeralSheet) {
-          targetSheet = bancoGeralSheet;
-          const sheet = wb.Sheets[bancoGeralSheet];
-          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-          headerRow = 0; // Para Banco Geral a linha de cabeçalho é 1 (index 0)
-          const headerData = rawRows[headerRow];
-          if (headerData) {
-            headers = headerData.map(c => String(c || '').toUpperCase().trim());
+          if (bancoGeralSheet) {
+            targetSheet = bancoGeralSheet;
+            const sheet = wb.Sheets[bancoGeralSheet];
+            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+            headerRow = 0;
+            const headerData = rawRows[headerRow];
+            if (headerData) {
+              headers = headerData.map(c => String(c || '').toUpperCase().trim());
+            }
+            rowCount = Math.max(0, rawRows.length - (headerRow + 1));
+          } else if (vagaSheetName) {
+            targetSheet = vagaSheetName;
+            const sheet = wb.Sheets[vagaSheetName];
+            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+            headerRow = 1;
+            const headerData = rawRows[headerRow];
+            if (headerData) {
+              headers = headerData.map(c => String(c || '').toUpperCase().trim());
+            }
+            rowCount = Math.max(0, rawRows.length - (headerRow + 1));
+          } else {
+            const sheet = wb.Sheets[targetSheet];
+            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+            headerRow = 0;
+            const headerData = rawRows[headerRow];
+            if (headerData) {
+              headers = headerData.map(c => String(c || '').toUpperCase().trim());
+            }
+            rowCount = Math.max(0, rawRows.length - (headerRow + 1));
           }
-          rowCount = Math.max(0, rawRows.length - (headerRow + 1));
-        } else if (vagaSheetName) {
-          targetSheet = vagaSheetName;
-          const sheet = wb.Sheets[vagaSheetName];
-          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-          
-          // Para Vagas, o cabeçalho é na linha 2 (index 1)
-          headerRow = 1;
-          const headerData = rawRows[headerRow];
-          if (headerData) {
-            headers = headerData.map(c => String(c || '').toUpperCase().trim());
+
+          let type: 'vagas' | 'banco' | null = null;
+          let conf: 'high' | 'low' = 'low';
+
+          const hasVagaHeaders = VAGA_REQUIRED_COLUMNS.every(col => headers.includes(col));
+          const hasSomeVagaHeaders = VAGA_REQUIRED_COLUMNS.filter(col => headers.includes(col)).length >= 4;
+          const hasBancoHeaders = BANCO_REQUIRED_COLUMNS.every(col => headers.includes(col));
+
+          if (hasVagaHeaders) {
+            type = 'vagas';
+            conf = 'high';
+          } else if (hasBancoHeaders) {
+            type = 'banco';
+            conf = 'high';
+          } else if (hasSomeVagaHeaders || targetSheet.toUpperCase().includes('VAGA')) {
+            type = 'vagas';
+            conf = 'low';
+          } else if (targetSheet.toUpperCase().includes('BANCO')) {
+            type = 'banco';
+            conf = 'low';
           }
-          rowCount = Math.max(0, rawRows.length - (headerRow + 1));
-        } else {
-          // Fallback para a primeira aba
-          const sheet = wb.Sheets[targetSheet];
-          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-          headerRow = 0;
-          const headerData = rawRows[headerRow];
-          if (headerData) {
-            headers = headerData.map(c => String(c || '').toUpperCase().trim());
-          }
-          rowCount = Math.max(0, rawRows.length - (headerRow + 1));
+
+          setFileMetadata({
+            name: selectedFile.name,
+            sheets: sheetNames,
+            headers,
+            rowCount,
+            targetSheet,
+            headerRow
+          });
+
+          setSuggestedType(type);
+          setConfidence(conf);
+          setProgress(100);
+          setStep('analysis');
+        } catch (error) {
+          console.error(error);
+          toast.error("Erro ao analisar o arquivo.");
+          reset();
+        } finally {
+          setIsProcessing(false);
+          setProgress(0);
         }
-
-        // Sugestão de tipo
-        let type: 'vagas' | 'banco' | null = null;
-        let conf: 'high' | 'low' = 'low';
-
-        const hasVagaHeaders = VAGA_REQUIRED_COLUMNS.every(col => headers.includes(col));
-        const hasSomeVagaHeaders = VAGA_REQUIRED_COLUMNS.filter(col => headers.includes(col)).length >= 4;
-        const hasBancoHeaders = BANCO_REQUIRED_COLUMNS.every(col => headers.includes(col));
-
-        if (hasVagaHeaders) {
-          type = 'vagas';
-          conf = 'high';
-        } else if (hasBancoHeaders) {
-          type = 'banco';
-          conf = 'high';
-        } else if (hasSomeVagaHeaders || targetSheet.toUpperCase().includes('VAGA')) {
-          type = 'vagas';
-          conf = 'low';
-        } else if (targetSheet.toUpperCase().includes('BANCO')) {
-          type = 'banco';
-          conf = 'low';
-        }
-
-        setFileMetadata({
-          name: selectedFile.name,
-          sheets: sheetNames,
-          headers,
-          rowCount,
-          targetSheet,
-          headerRow
-        });
-
-        setSuggestedType(type);
-        setConfidence(conf);
-        setStep('analysis');
-      } catch (error) {
-        console.error(error);
-        toast.error("Erro ao analisar o arquivo.");
-        reset();
-      } finally {
-        setIsProcessing(false);
-      }
+      }, 100);
     };
     reader.readAsArrayBuffer(selectedFile);
   };

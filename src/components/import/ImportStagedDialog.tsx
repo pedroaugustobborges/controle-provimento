@@ -89,23 +89,38 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       // Smart sheet selection
       let defaultSheet = sheetNames[0];
       const keywords = importType === 'vagas' ? ['VAGA', 'GERAL', 'BASE'] : ['BANCO', 'GERAL', 'RESERVA'];
-      const matched = sheetNames.find(name => keywords.some(k => name.toUpperCase().includes(k)));
+      const matched = sheetNames.find(name => {
+        const nameStr = String(name || '').toUpperCase();
+        return keywords.some(k => nameStr.includes(k.toUpperCase()));
+      });
       if (matched) defaultSheet = matched;
       
       setSelectedSheet(defaultSheet);
-      setSampleData(sampleData[defaultSheet] || []);
+      const sheetData = sampleData[defaultSheet];
+      if (!sheetData || !Array.isArray(sheetData) || sheetData.length === 0) {
+        throw new Error(`A aba "${defaultSheet}" selecionada parece estar vazia.`);
+      }
+      setSampleData(sheetData);
       
       // Detect header row (first row with data usually)
-      const detectedHeaderIndex = detectHeaderRow(sampleData[defaultSheet] || []);
+      const detectedHeaderIndex = detectHeaderRow(sheetData);
       setHeaderRow(detectedHeaderIndex);
       
       // Auto mapping
-      const headers = (sampleData[defaultSheet][detectedHeaderIndex] || []).map((c: any) => String(c || '').trim());
+      const headers = (sheetData[detectedHeaderIndex] || [])
+        .map((c: any) => String(c || '').trim())
+        .filter((h: string) => h !== ''); // Filter out empty columns
+      
+      if (headers.length === 0) {
+        throw new Error(`Não foi possível identificar o cabeçalho na aba "${defaultSheet}". Revise a linha de cabeçalho.`);
+      }
+
       setMappings(autoMapColumns(headers, importType));
       
       setStep('mapping');
     } catch (err: any) {
-      toast.error(`Erro ao ler arquivo: ${err.message}`);
+      toast.error(`Falha na leitura do arquivo: ${err.message || 'Erro desconhecido'}`);
+      console.error("Erro na leitura da estrutura:", err);
     }
   };
 

@@ -969,6 +969,7 @@ function AcompanhamentoEditalList() {
           title="Acompanhamento do Edital"
           subtitle="Monitoramento operacional detalhado das etapas e indicadores dos editais publicados."
           badge="Gestão de Processos"
+          actions={<HelpGuide />}
         />
 
         {canFilterByUnit && (

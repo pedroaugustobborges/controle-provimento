@@ -16,7 +16,7 @@ import {
   ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, 
   FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check, 
   Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
-  AlertTriangle, ArrowRightCircle, ExternalLink
+  AlertTriangle, ArrowRightCircle, ExternalLink, Edit
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';

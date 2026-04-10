@@ -1427,7 +1427,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
       addValidacao(updatedForm);
     }
 
-    const vagaRef = vaga?.requisicao || vaga?.numero_processo_seletivo || vagaId;
+    const vagaRef = vaga?.requisicao || vaga?.numero_processo || vagaId;
     const cargoRef = vaga?.cargo || 'não informado';
     const unidadeRef = vaga?.unidade || 'não informada';
     const usuario = currentUser?.nome_completo || 'Sistema';

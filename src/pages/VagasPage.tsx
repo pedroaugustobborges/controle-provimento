@@ -320,7 +320,6 @@ export default function VagasPage() {
             badge="Gestão de Vagas"
             actions={
               <>
-                <HelpGuide />
                 {permissions.canViewAudit() && (
                   <Button 
                     variant="ghost" 
@@ -355,7 +354,7 @@ export default function VagasPage() {
               </>
             }
           />
-
+          <HelpGuide />
 
       {isDebugOpen && (
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-4">

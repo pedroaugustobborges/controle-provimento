@@ -26,7 +26,7 @@ export const BANCO_OPTIONAL_COLUMNS = [
   { key: 'numero_processo_seletivo', label: 'Processo', aliases: ['PROCESSO', 'Nº PROCESSO', 'PROTOCOLO', 'PROCESSO SELETIVO', 'PROC. SELETIVO', 'PS', 'N° PROCESSO'] },
   { key: 'unidade_convocacao', label: 'Unidade Convocação', aliases: ['UNIDADE CONVOCAÇÃO', 'UNIDADE_CONVOCACAO', 'UNIDADE CONVOCADA', 'UNID. CONVOCAÇÃO', 'UNID CONVOCAÇÃO', 'LOCAL CONVOCAÇÃO'] },
   { key: 'numero_chamada', label: 'Nº Chamada', aliases: ['NUMERO CHAMADA', 'Nº CHAMADA', 'N° CHAMADA', 'NUM CHAMADA', 'CHAMADA', 'NR CHAMADA', 'NUMERO DA CHAMADA', 'Nº DA CHAMADA'] },
-  { key: 'is_prorrogado', label: 'Prorrogação', aliases: ['PRORROGAÇÃO', 'PRORROGACAO', 'PRORROGADO', 'PRORROG', 'PRORROG.'] },
+  { key: 'is_prorrogado', label: 'Prorrogação', aliases: ['PRORROGAÇÃO', 'PRORROGACAO', 'PRORROGADO', 'PRORROG', 'PRORROG.', 'COLUNA L', 'L', 'PRORROGACAO (L)'] },
   { key: 'quantidade_banco', label: 'Qtd. Banco', aliases: ['QUANTIDADE BANCO', 'QTD BANCO', 'QTD. BANCO', 'QUANTIDADE', 'QTD', 'QTDE', 'QTDE BANCO', 'NUMERO BANCO', 'Nº BANCO'] },
   { key: 'observacao', label: 'Observações', aliases: ['OBSERVAÇÕES', 'OBSERVACAO', 'OBS', 'NOTAS', 'OBS.', 'OBSERVAÇÃO'] },
   { key: 'email', label: 'E-mail', aliases: ['EMAIL', 'E-MAIL', 'CORREIO', 'E MAIL', 'CONTATO EMAIL'] },
@@ -85,6 +85,14 @@ export function autoMapColumns(headers: string[], type: 'vagas' | 'banco'): Colu
           return normH.includes(alias) || alias.includes(normH);
         });
       });
+    }
+
+    // Special case for Prorrogação (Column L is common)
+    if (!foundHeader && field.key === 'is_prorrogado' && headers.length >= 12) {
+      const colL = headers[11];
+      if (colL && (normalizeHeader(colL) === '' || normalizeHeader(colL).includes('L') || normalizeHeader(colL).includes('PRORROG'))) {
+        foundHeader = colL;
+      }
     }
 
     if (foundHeader) {

@@ -378,6 +378,14 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                       <p className="text-xs text-slate-500 mt-1">
                         Não é necessário mapear manualmente. O sistema usa o padrão fixo da planilha e reconhece os cabeçalhos automaticamente.
                       </p>
+                      {importType === 'banco' && (
+                        <div className="mt-2 flex items-center gap-2 px-2 py-1 bg-blue-50/50 border border-blue-100 rounded-lg">
+                          <Info className="h-3 w-3 text-blue-500" />
+                          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">
+                            Revalidação ativa: Coluna L (12ª) verificada para Prorrogação ("Sim")
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-3">

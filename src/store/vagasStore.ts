@@ -80,7 +80,27 @@ export const useVagasStore = create<VagasState>()(
       temNovasMensagens: true,
       
       setVagas: (vagas) => set({ vagas }),
-      addVagas: (newVagas) => set((s) => ({ vagas: [...s.vagas, ...newVagas] })),
+      fetchVagas: async () => {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data, error } = await supabase.from('vagas').select('*').order('created_at', { ascending: false });
+          if (error) throw error;
+          if (data) set({ vagas: data as Vaga[] });
+        } catch (err) {
+          console.error('Error fetching vagas:', err);
+        }
+      },
+      fetchBancos: async () => {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data, error } = await supabase.from('banco_candidatos').select('*').order('created_at', { ascending: false });
+          if (error) throw error;
+          if (data) set({ bancos: data as BancoTalentos[] });
+        } catch (err) {
+          console.error('Error fetching bancos:', err);
+        }
+      },
+      addVagas: (newVagas) => set((s) => ({ vagas: [...newVagas, ...s.vagas] })),
       updateVaga: (id, data) => set((s) => ({
         vagas: s.vagas.map((v) => v.id === id ? { ...v, ...data } : v),
       })),

@@ -3,16 +3,24 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, CheckCircle2, Clock, AlertTriangle, User, ArrowRight, MessageSquare, ClipboardList } from 'lucide-react';
+import { Bell, CheckCircle2, Clock, AlertTriangle, User, ArrowRight, MessageSquare, ClipboardList, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/vagaUtils';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/PageHeader';
+import { useSearchParams } from 'react-router-dom';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+
 
 
 export default function AlertasTarefasPage() {
-  const { alertas, tarefas, updateAlerta, updateTarefa } = useVagasStore();
+  const { alertas, tarefas, historicoMensagens, updateAlerta, updateTarefa, marcarMensagemLida } = useVagasStore();
   const permissions = usePermissions();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'tarefas';
+
 
   const handleResolveAlerta = (id: string) => {
     updateAlerta(id, { status: 'resolvido' });
@@ -24,6 +32,15 @@ export default function AlertasTarefasPage() {
     toast.success('Tarefa concluída com sucesso.');
   };
 
+  const groupedMessages = historicoMensagens.reduce((groups: { [key: string]: any[] }, message) => {
+    const date = format(parseISO(message.data), 'yyyy-MM-dd');
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(message);
+    return groups;
+  }, {});
+
+  const sortedDates = Object.keys(groupedMessages).sort((a, b) => b.localeCompare(a));
+
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -33,7 +50,8 @@ export default function AlertasTarefasPage() {
       />
 
 
-      <Tabs defaultValue="tarefas" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val })} className="space-y-4">
+
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="tarefas" className="gap-2">
             <ClipboardList className="h-4 w-4" /> Minhas Tarefas
@@ -48,6 +66,14 @@ export default function AlertasTarefasPage() {
             {alertas.filter(a => a.status === 'nao_lido').length > 0 && (
               <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
                 {alertas.filter(a => a.status === 'nao_lido').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="gap-2">
+            <History className="h-4 w-4" /> Histórico de Mensagens
+            {historicoMensagens.filter(m => !m.lida).length > 0 && (
+              <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
+                {historicoMensagens.filter(m => !m.lida).length}
               </Badge>
             )}
           </TabsTrigger>
@@ -138,6 +164,65 @@ export default function AlertasTarefasPage() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="historico" className="space-y-6">
+          {sortedDates.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 italic bg-white rounded-lg border border-dashed">
+              Nenhum histórico de mensagens encontrado.
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sortedDates.map((date) => (
+                <div key={date} className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-slate-200"></div>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                      {format(parseISO(date), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                    </span>
+                    <div className="h-px flex-1 bg-slate-200"></div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {groupedMessages[date].map((msg) => (
+                      <Card key={msg.id} className={cn(
+                        "transition-all duration-200 border-l-4",
+                        msg.lida ? "border-l-slate-200 opacity-80" : "border-l-blue-500 shadow-md ring-1 ring-blue-500/10"
+                      )}>
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-start">
+                            <Badge variant="outline" className={cn(
+                              "text-[10px] uppercase font-bold",
+                              msg.remetente === 'Aide' ? "bg-purple-50 text-purple-600 border-purple-200" : "bg-blue-50 text-blue-600 border-blue-200"
+                            )}>
+                              {msg.remetente}
+                            </Badge>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {format(parseISO(msg.data), 'HH:mm')}
+                            </span>
+                          </div>
+                          <CardTitle className="text-sm font-bold mt-2">Mensagem recebida</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-xs text-slate-600 leading-relaxed mb-4">{msg.conteudo}</p>
+                          {!msg.lida && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => marcarMensagemLida(msg.id)}
+                              className="w-full h-8 text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-600"
+                            >
+                              <CheckCircle2 className="h-3 w-3 mr-1.5" /> Marcar como lida
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

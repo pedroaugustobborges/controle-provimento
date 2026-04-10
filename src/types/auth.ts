@@ -76,6 +76,8 @@ export interface AuditLog {
   usuario_nome: string;
   usuario_email?: string;
   perfil?: string;
+  data?: string;
+  hora?: string;
   acao: string;
   modulo: string;
   registro_afetado: string;

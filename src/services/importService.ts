@@ -425,9 +425,15 @@ export class ImportService {
       data.cargo_normalizado = normalizeCargo(data.cargo);
 
       // Handle is_prorrogado: convert "sim"/"yes"/"s" → true
-      if (data.is_prorrogado !== undefined) {
+      // Explicitly check Column L (index 11) as requested by the user if not mapped
+      if (data.is_prorrogado === undefined && row[11] !== undefined) {
+        const colLValue = String(row[11]).trim().toLowerCase();
+        data.is_prorrogado = ['sim', 'yes', 's', 'true', '1', 'x'].includes(colLValue);
+      } else if (data.is_prorrogado !== undefined) {
         const prorVal = String(data.is_prorrogado).trim().toLowerCase();
         data.is_prorrogado = ['sim', 'yes', 's', 'true', '1', 'x'].includes(prorVal);
+      } else {
+        data.is_prorrogado = false; // Default to false
       }
 
       // Handle quantidade_banco as number

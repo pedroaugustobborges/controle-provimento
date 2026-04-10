@@ -1263,6 +1263,11 @@ export default function BancoTalentosPage() {
                 <span className="mx-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-bold">3. Prorrogação "SIM"</span>
                 <span className="mx-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-bold">4. Validade Normal</span>.
               </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(() => {
+                const stats = calculateStats(bancos);
                 const auditItems = [
                   { label: 'Cadastro Reserva', value: stats['Cadastro Reserva'], color: 'text-primary', description: 'Vigente pela validade normal' },
                   { label: 'Convocados', value: stats['Convocados'], color: 'text-purple-600', description: 'Status final de convocação' },

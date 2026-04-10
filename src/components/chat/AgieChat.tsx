@@ -22,17 +22,19 @@ export const AgieChat = memo(() => {
   const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
   const hasNewMessage = temNovasMensagens;
 
-  // Mock initial notification after 3 seconds
+  // Keep notifications alive
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isOpen) setHasNewMessage(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [isOpen]);
+    if (!temNovasMensagens) {
+      const timer = setTimeout(() => {
+        if (!isOpen) setTemNovasMensagens(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, temNovasMensagens, setTemNovasMensagens]);
 
   const handleOpen = () => {
     setIsOpen(true);
-    setHasNewMessage(false);
+    setTemNovasMensagens(false);
   };
 
   const handleBack = () => {

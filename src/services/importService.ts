@@ -79,10 +79,13 @@ export class ImportService {
       mappings: ColumnMapping[];
       options?: ImportExecutionOptions;
       userId: string;
+      fileName?: string;
+      userName?: string;
+      userEmail?: string;
       onProgress: (progress: ImportProgress) => void;
     }
   ) {
-    const { type, workbook, sheetName, headerRow, mappings, options, userId, onProgress } = params;
+    const { type, workbook, sheetName, headerRow, mappings, options, userId, fileName, userName, userEmail, onProgress } = params;
     
     try {
       const sheet = workbook.Sheets[sheetName];
@@ -117,6 +120,8 @@ export class ImportService {
       const chunkSize = 200;
       const errors: string[] = [];
       let deletedCount = 0;
+      let ignoredCount = 0;
+      let updatedCount = 0;
       
       onProgress({
         phase: 'processing',
@@ -128,14 +133,46 @@ export class ImportService {
       });
 
       // Step 1: Record start in importacoes table
-      const { data: logData } = await supabase.from('importacoes').insert({
+      const importMode = type === 'vagas'
+        ? 'substituir_todas_as_vagas'
+        : resolvedOptions.bancoModo === 'adicionar'
+          ? 'adicionar_ao_banco'
+          : 'substituir_escopo_do_banco';
+      const importOrigin = type === 'vagas'
+        ? 'planilha_de_vagas'
+        : resolvedOptions.bancoTipo === 'geral'
+          ? `banco_geral_${resolvedOptions.bancoEscopo || 'nao_informado'}`
+          : 'banco_por_unidades_da_planilha';
+
+      const { data: logData, error: logError } = await supabase.from('importacoes').insert({
         tipo: type,
         usuario_id: userId,
         status: 'em_processamento',
         quantidade_apagada: 0,
+        quantidade_processada: totalRows,
+        quantidade_inserida: 0,
+        quantidade_atualizada: 0,
+        quantidade_ignorada: 0,
+        quantidade_erro: 0,
+        quantidade_confirmada: 0,
         arquivo: batchId,
+        nome_arquivo: fileName || batchId,
         observacoes: importObservation || null,
+        modo_importacao: importMode,
+        origem_base: importOrigin,
+        tabela_destino: tableName,
+        aba_planilha: sheetName,
+        linha_cabecalho: headerRow + 1,
+        detalhes: {
+          usuario_nome: userName || null,
+          usuario_email: userEmail || null,
+          mapeamento: normalizedMappings.map(({ excel, system, isDate, format }) => ({ excel, system, isDate, format })),
+        },
       }).select().single();
+
+      if (logError || !logData?.id) {
+        throw new Error(`Não foi possível registrar o histórico da importação: ${logError?.message || 'registro não criado'}`);
+      }
 
       const logId = logData?.id;
 
@@ -197,12 +234,17 @@ export class ImportService {
         const transformedChunk: any[] = [];
 
         for (const row of chunk) {
-          if (!row || (Array.isArray(row) && row.every(c => c === null || c === ''))) continue;
+          if (!row || (Array.isArray(row) && row.every(c => c === null || c === ''))) {
+            ignoredCount += 1;
+            continue;
+          }
           
           try {
             const item = this.transformRow(row, headers, normalizedMappings, type, batchId, userId, resolvedOptions);
             if (item) transformedChunk.push(item);
+            else ignoredCount += 1;
           } catch (err: any) {
+            ignoredCount += 1;
             errors.push(`Erro na linha ${i + processedCount + headerRow + 2}: ${err.message}`);
           }
         }
@@ -211,11 +253,13 @@ export class ImportService {
           try {
             const { error: insertError } = await supabase.from(tableName).insert(transformedChunk);
             if (insertError) {
+              ignoredCount += transformedChunk.length;
               errors.push(`Erro Supabase no lote ${Math.floor(i/chunkSize) + 1}: ${insertError.message || JSON.stringify(insertError)}`);
             } else {
               insertedCount += transformedChunk.length;
             }
           } catch (fetchErr: any) {
+            ignoredCount += transformedChunk.length;
             console.error("Fetch error during insert:", fetchErr);
             errors.push(`Erro de conexão (Failed to fetch) no lote ${Math.floor(i/chunkSize) + 1}. Verifique sua internet ou tente lotes menores.`);
           }
@@ -272,16 +316,26 @@ export class ImportService {
         : 'Nenhum registro confirmado no banco.';
 
       if (logId) {
-        await supabase.from('importacoes').update({
+        const { error: historyError } = await supabase.from('importacoes').update({
           status: confirmedCount === 0 ? 'erro' : (errors.length > 0 ? 'concluido_alertas' : 'concluido'),
           quantidade_apagada: deletedCount,
           quantidade_inserida: confirmedCount,
+          quantidade_atualizada: updatedCount,
+          quantidade_ignorada: ignoredCount,
+          quantidade_erro: errors.length,
+          quantidade_confirmada: confirmedCount,
+          quantidade_processada: totalRows,
           observacoes: [
             importObservation,
             persistenceNote,
             errors.length > 0 ? `${errors.length} alertas. Ex: ${errors[0].substring(0, 100)}` : ''
           ].filter(Boolean).join(' • ')
         }).eq('id', logId);
+
+        if (historyError) {
+          finalStatus = 'error';
+          errors.push(`Histórico não pôde ser atualizado: ${historyError.message}`);
+        }
       }
 
       onProgress({

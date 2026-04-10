@@ -211,14 +211,17 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
         mappings,
         options: importType === 'banco' ? importOptions : undefined,
         userId: currentUser.id,
+        fileName: file?.name,
+        userName: currentUser.nome_completo,
+        userEmail: currentUser.email,
         onProgress: (p) => {
           setImportProgress(p);
           if (p.phase === 'success' || p.phase === 'error') {
             setStep('result');
-            // Refresh stores
-            if (importType === 'vagas') fetchVagas();
-            else fetchBancos();
-            fetchImportHistory();
+            void Promise.all([
+              importType === 'vagas' ? fetchVagas() : fetchBancos(),
+              fetchImportHistory(),
+            ]);
           }
         }
       });
@@ -557,7 +560,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                 <Card className="border-slate-100 bg-slate-50/50">
                   <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
                     <span className="text-3xl font-black text-blue-600">{importProgress.processedRows}</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inseridos com Sucesso</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confirmados no banco</span>
                   </CardContent>
                 </Card>
                 <Card className="border-slate-100 bg-slate-50/50">

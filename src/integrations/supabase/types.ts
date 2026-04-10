@@ -142,36 +142,75 @@ export type Database = {
       }
       importacoes: {
         Row: {
+          aba_planilha: string | null
           arquivo: string | null
           created_at: string
+          detalhes: Json
           id: string
+          linha_cabecalho: number | null
+          modo_importacao: string | null
+          nome_arquivo: string | null
           observacoes: string | null
+          origem_base: string | null
           quantidade_apagada: number | null
+          quantidade_atualizada: number
+          quantidade_confirmada: number
+          quantidade_erro: number
+          quantidade_ignorada: number
           quantidade_inserida: number | null
+          quantidade_processada: number
           status: string | null
+          tabela_destino: string | null
           tipo: string | null
+          updated_at: string
           usuario_id: string | null
         }
         Insert: {
+          aba_planilha?: string | null
           arquivo?: string | null
           created_at?: string
+          detalhes?: Json
           id?: string
+          linha_cabecalho?: number | null
+          modo_importacao?: string | null
+          nome_arquivo?: string | null
           observacoes?: string | null
+          origem_base?: string | null
           quantidade_apagada?: number | null
+          quantidade_atualizada?: number
+          quantidade_confirmada?: number
+          quantidade_erro?: number
+          quantidade_ignorada?: number
           quantidade_inserida?: number | null
+          quantidade_processada?: number
           status?: string | null
+          tabela_destino?: string | null
           tipo?: string | null
+          updated_at?: string
           usuario_id?: string | null
         }
         Update: {
+          aba_planilha?: string | null
           arquivo?: string | null
           created_at?: string
+          detalhes?: Json
           id?: string
+          linha_cabecalho?: number | null
+          modo_importacao?: string | null
+          nome_arquivo?: string | null
           observacoes?: string | null
+          origem_base?: string | null
           quantidade_apagada?: number | null
+          quantidade_atualizada?: number
+          quantidade_confirmada?: number
+          quantidade_erro?: number
+          quantidade_ignorada?: number
           quantidade_inserida?: number | null
+          quantidade_processada?: number
           status?: string | null
+          tabela_destino?: string | null
           tipo?: string | null
+          updated_at?: string
           usuario_id?: string | null
         }
         Relationships: []
@@ -358,6 +397,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_recruitment_data: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      can_view_recruitment_data: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

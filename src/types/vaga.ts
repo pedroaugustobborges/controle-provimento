@@ -300,6 +300,7 @@ export interface ImportHistory {
   id: string;
   data_hora?: string;
   data?: string;
+  usuario_id?: string;
   usuario: string;
   email_usuario?: string;
   arquivo?: string;
@@ -315,6 +316,10 @@ export interface ImportHistory {
   total_ignorados: number;
   total_erros: number;
   repeticoes_tratadas?: number;
+  quantidade_confirmada?: number;
+  modo_importacao?: string;
+  origem_base?: string;
+  tabela_destino?: string;
   status: 'concluido' | 'concluido_alertas' | 'erro' | 'em_processamento' | 'cancelado' | 'reprocessado';
   observacoes?: string;
   referencia_arquivo?: string;

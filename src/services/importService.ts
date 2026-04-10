@@ -238,20 +238,48 @@ export class ImportService {
 
       // Step 4: Finalize
       let finalStatus: ImportPhase = 'success';
-      if (insertedCount === 0) {
-        finalStatus = 'error';
-      } else if (errors.length > 0) {
-        finalStatus = 'success'; // Still success but with errors is handled by UI
+
+      // Step 4a: Verify persistence - count actual records in the database
+      let confirmedCount = 0;
+      try {
+        const { count, error: countError } = await supabase
+          .from(tableName)
+          .select('*', { count: 'exact', head: true })
+          .eq('import_batch_id', batchId);
+        
+        if (countError) {
+          console.warn('Erro ao verificar contagem no banco:', countError);
+          errors.push(`Aviso: Não foi possível confirmar a persistência dos dados: ${countError.message}`);
+          confirmedCount = insertedCount; // Fallback to optimistic count
+        } else {
+          confirmedCount = count || 0;
+        }
+      } catch (verifyErr: any) {
+        console.warn('Erro na verificação pós-importação:', verifyErr);
+        confirmedCount = insertedCount;
       }
+
+      if (confirmedCount === 0 && insertedCount > 0) {
+        finalStatus = 'error';
+        errors.push(`ATENÇÃO: O sistema reportou ${insertedCount} inserções, mas a verificação no banco retornou 0 registros. Os dados podem não ter sido salvos.`);
+        confirmedCount = 0;
+      } else if (confirmedCount === 0) {
+        finalStatus = 'error';
+      }
+
+      const persistenceNote = confirmedCount > 0
+        ? `Verificado: ${confirmedCount} registros confirmados na tabela ${tableName}.`
+        : 'Nenhum registro confirmado no banco.';
 
       if (logId) {
         await supabase.from('importacoes').update({
-          status: insertedCount === 0 ? 'erro' : (errors.length > 0 ? 'concluido_alertas' : 'concluido'),
+          status: confirmedCount === 0 ? 'erro' : (errors.length > 0 ? 'concluido_alertas' : 'concluido'),
           quantidade_apagada: deletedCount,
-          quantidade_inserida: insertedCount,
+          quantidade_inserida: confirmedCount,
           observacoes: [
             importObservation,
-            errors.length > 0 ? `Processado com ${errors.length} alertas. Ex: ${errors[0].substring(0, 100)}` : 'Sucesso'
+            persistenceNote,
+            errors.length > 0 ? `${errors.length} alertas. Ex: ${errors[0].substring(0, 100)}` : ''
           ].filter(Boolean).join(' • ')
         }).eq('id', logId);
       }
@@ -260,9 +288,11 @@ export class ImportService {
         phase: finalStatus,
         percentage: 100,
         label: finalStatus === 'success' 
-          ? (errors.length > 0 ? 'Importação concluída parcialmente!' : 'Importação concluída com sucesso!')
-          : 'Falha na Importação: Nenhum registro salvo.',
-        processedRows: insertedCount,
+          ? (errors.length > 0
+            ? `Importação concluída parcialmente! ${confirmedCount} registros confirmados no banco.`
+            : `Importação concluída com sucesso! ${confirmedCount} registros confirmados no banco.`)
+          : `Falha na Importação: ${confirmedCount > 0 ? confirmedCount + ' registros salvos.' : 'Nenhum registro salvo.'}`,
+        processedRows: confirmedCount,
         totalRows,
         errors
       });

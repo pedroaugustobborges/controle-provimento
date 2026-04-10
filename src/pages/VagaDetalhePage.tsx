@@ -1395,7 +1395,8 @@ function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
 }
 
 function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any }) {
-  const { updateValidacao, addValidacao } = useVagasStore();
+  const { updateValidacao, addValidacao, addMensagem, getVaga } = useVagasStore();
+  const { currentUser } = useAdminStore();
   const [form, setForm] = useState(validacao || {
     id: `v-${Date.now()}`, vaga_id: vagaId,
     precisa_validacao: true,
@@ -1406,6 +1407,8 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
     status_validacao: 'pendente',
   });
 
+  const vaga = getVaga(vagaId);
+
   const save = () => {
     if (validacao) {
       updateValidacao(validacao.id, form);
@@ -1413,6 +1416,37 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
       addValidacao(form);
     }
     toast.success('Validação salva!');
+  };
+
+  const handleDecisao = (decisao: 'aprovado' | 'reprovado') => {
+    const updatedForm = { ...form, status_validacao: decisao, etapa_finalizada: true };
+    setForm(updatedForm);
+    if (validacao) {
+      updateValidacao(validacao.id, updatedForm);
+    } else {
+      addValidacao(updatedForm);
+    }
+
+    const vagaRef = vaga?.requisicao || vaga?.numero_processo_seletivo || vagaId;
+    const cargoRef = vaga?.cargo || 'não informado';
+    const unidadeRef = vaga?.unidade || 'não informada';
+    const usuario = currentUser?.nome_completo || 'Sistema';
+
+    const mensagemTexto = decisao === 'aprovado'
+      ? `✅ A validação da vaga ${vagaRef} (${cargoRef} - ${unidadeRef}) foi APROVADA por ${usuario}. A vaga pode prosseguir para as próximas etapas.`
+      : `❌ A validação da vaga ${vagaRef} (${cargoRef} - ${unidadeRef}) foi REPROVADA por ${usuario}. Motivo: ${form.observacao || 'Não informado'}. Verifique as pendências antes de reenviar.`;
+
+    addMensagem({
+      id: `msg-val-${Date.now()}`,
+      data: new Date().toISOString(),
+      remetente: 'Aide',
+      conteudo: mensagemTexto,
+      lida: false,
+    });
+
+    toast.success(decisao === 'aprovado' 
+      ? 'Validação aprovada! Notificação enviada à AGIE.' 
+      : 'Validação reprovada! Notificação enviada à AGIE.');
   };
 
   const getIcon = (val: boolean) => {
@@ -1462,7 +1496,30 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
           <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="bg-white border-slate-200 min-h-[120px]" placeholder="Descreva os detalhes da validação..." />
         </div>
 
-        <div className="flex justify-end">
+        {form.status_validacao !== 'pendente' && (
+          <div className={`p-4 rounded-xl border ${form.status_validacao === 'aprovado' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            <p className={`text-sm font-bold ${form.status_validacao === 'aprovado' ? 'text-green-700' : 'text-red-700'}`}>
+              {form.status_validacao === 'aprovado' ? '✅ Validação Aprovada' : '❌ Validação Reprovada'}
+            </p>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center gap-3">
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => handleDecisao('aprovado')} 
+              className="bg-green-600 hover:bg-green-700 text-white shadow-md px-6 gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" /> Aprovar
+            </Button>
+            <Button 
+              onClick={() => handleDecisao('reprovado')} 
+              variant="destructive"
+              className="shadow-md px-6 gap-2"
+            >
+              <XCircle className="h-4 w-4" /> Reprovar
+            </Button>
+          </div>
           <Button onClick={save} className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 px-8">Salvar Validação</Button>
         </div>
       </CardContent>

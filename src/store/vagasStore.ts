@@ -21,6 +21,7 @@ interface VagasState {
   setVagas: (vagas: Vaga[]) => void;
   fetchVagas: () => Promise<void>;
   fetchBancos: () => Promise<void>;
+  fetchImportHistory: () => Promise<void>;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
   deleteVaga: (id: string) => void;
@@ -98,6 +99,35 @@ export const useVagasStore = create<VagasState>()(
           if (data) set({ bancos: data as BancoTalentos[] });
         } catch (err) {
           console.error('Error fetching bancos:', err);
+        }
+      },
+      fetchImportHistory: async () => {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data, error } = await supabase
+            .from('importacoes')
+            .select('*')
+            .order('data_hora', { ascending: false });
+          if (error) throw error;
+          if (data) {
+            // Mapear os campos do banco para o tipo ImportHistory usado no store
+            const mapped = data.map(item => ({
+              id: item.id,
+              usuario: item.usuario_id, // Idealmente deveríamos fazer join com profiles
+              total_lidos: item.quantidade_apagada + item.quantidade_inserida,
+              total_novos: item.quantidade_inserida,
+              total_atualizados: 0,
+              total_erros: item.status === 'erro' ? 1 : 0,
+              status: item.status,
+              tipo_importacao: item.tipo,
+              arquivo: item.arquivo || `Importação ${item.id.slice(0,8)}`,
+              data_hora: item.data_hora || item.created_at,
+              observacoes: item.observacoes
+            }));
+            set({ importHistory: mapped as any[] });
+          }
+        } catch (err) {
+          console.error('Error fetching import history:', err);
         }
       },
       addVagas: (newVagas) => set((s) => ({ vagas: [...newVagas, ...s.vagas] })),

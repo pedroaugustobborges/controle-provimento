@@ -61,12 +61,13 @@ export function ImportExcelDialog({
   onOpenChange,
   reprocessFile 
 }: ImportExcelDialogProps) {
-  const { addVagas, addBancos, addImportHistory, clearBancosPorRegiao, setVagas, clearBancos } = useVagasStore();
+  const { addVagas, addBancos, addImportHistory, clearBancosPorRegiao, setVagas, clearBancos, fetchImportHistory } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [suggestedType, setSuggestedType] = useState<'vagas' | 'banco' | null>(null);
   const [chosenType, setChosenType] = useState<'vagas' | 'banco' | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<'GO_ES' | 'OUTRAS_UNIDADES' | null>(null);
@@ -115,6 +116,7 @@ export function ImportExcelDialog({
     setStep('select');
     setFile(null);
     setSummary(null);
+    setError(null);
     setIsProcessing(false);
     setSuggestedType(null);
     setChosenType(null);
@@ -582,12 +584,15 @@ export function ImportExcelDialog({
       });
 
       toast.success(`Importação concluída com sucesso! ${result.count} registros inseridos.`);
+      fetchImportHistory(); // Sync background history
       setStep('summary');
 
-    } catch (error: any) {
-      console.error(error);
-      toast.error(`Falha na importação: ${error.message || "Erro técnico"}`);
-      reset();
+    } catch (err: any) {
+      console.error(err);
+      const friendlyMsg = err.message || "Erro técnico ao processar a importação.";
+      setError(friendlyMsg);
+      toast.error(`Falha na importação: ${friendlyMsg}`);
+      // Do not reset() here to allow user to see what happened and maybe retry if we implement it.
     } finally {
       setIsProcessing(false);
     }
@@ -628,21 +633,37 @@ export function ImportExcelDialog({
 
           {step === 'processing' && (
             <div className="flex flex-col items-center justify-center py-12 space-y-6">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
-                {progress > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary">
-                    {progress}%
+              {!error ? (
+                <>
+                  <div className="relative">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+                    {progress > 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary">
+                        {progress}%
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="w-full max-w-xs space-y-2 text-center">
-                <p className="text-sm font-medium text-gray-700">{progressLabel || "Processando e analisando o arquivo..."}</p>
-                <Progress value={progress} className="h-2" />
-                <p className="text-xs text-gray-500 italic">
-                  Isso pode levar alguns instantes para arquivos grandes.
-                </p>
-              </div>
+                  <div className="w-full max-w-xs space-y-2 text-center">
+                    <p className="text-sm font-medium text-gray-700">{progressLabel || "Processando e analisando o arquivo..."}</p>
+                    <Progress value={progress} className="h-2" />
+                    <p className="text-xs text-gray-500 italic">
+                      Isso pode levar alguns instantes para arquivos grandes.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="w-full max-w-md bg-red-50 border border-red-200 rounded-xl p-8 text-center animate-in fade-in zoom-in duration-300">
+                  <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="h-8 w-8 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-red-900 mb-2">Ops! Algo deu errado</h3>
+                  <p className="text-sm text-red-700 mb-6">{error}</p>
+                  <div className="flex gap-3 justify-center">
+                    <Button variant="outline" onClick={reset}>Tentar com outro arquivo</Button>
+                    <Button variant="destructive" onClick={() => { setError(null); processImport(); }}>Tentar novamente</Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

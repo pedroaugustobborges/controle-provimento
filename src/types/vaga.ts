@@ -336,6 +336,15 @@ export interface ImportedFile {
   content?: string; // Armazenar o conteúdo base64 ou similar para reprocessamento
 }
 
+export interface MensagemHistorico {
+  id: string;
+  data: string;
+  remetente: string;
+  conteudo: string;
+  lida: boolean;
+}
+
+
 export interface Edital {
   id: string;
   vaga_id: string;

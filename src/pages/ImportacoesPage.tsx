@@ -56,19 +56,22 @@ export default function ImportacoesPage() {
   const [reprocessFile, setReprocessFile] = useState<any>(null);
 
   useEffect(() => {
-    // Carregar histórico do banco de dados ao montar a página
     fetchImportHistory();
+  }, [fetchImportHistory]);
 
-    // Run fix logic once on mount
-    const wrongBatches = importHistory.filter(h => 
-      h.tipo_importacao === 'banco' && 
-      (h.arquivo || h.nome_arquivo || '').toLowerCase().includes('vagas')
-    );
-    if (wrongBatches.length > 0) {
-      fixWrongImportBatches();
-      toast.info(`Identificamos ${wrongBatches.length} lote(s) de importação de Vagas que foram salvos como Banco indevidamente. Foram removidos para re-importação correta.`);
+  useEffect(() => {
+    // Run fix logic only if we have data and it's not a fresh install
+    if (importHistory.length > 0) {
+      const wrongBatches = importHistory.filter(h => 
+        h.tipo_importacao === 'banco' && 
+        (h.arquivo || h.nome_arquivo || '').toLowerCase().includes('vagas')
+      );
+      if (wrongBatches.length > 0) {
+        fixWrongImportBatches();
+        toast.info(`Identificamos ${wrongBatches.length} lote(s) de importação de Vagas que foram salvos como Banco indevidamente. Foram removidos para re-importação correta.`);
+      }
     }
-  }, [fixWrongImportBatches, importHistory, fetchImportHistory]);
+  }, [fixWrongImportBatches, importHistory.length]); // Somente quando o tamanho mudar
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);

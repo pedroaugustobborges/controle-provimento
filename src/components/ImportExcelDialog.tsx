@@ -61,7 +61,7 @@ export function ImportExcelDialog({
   onOpenChange,
   reprocessFile 
 }: ImportExcelDialogProps) {
-  const { addVagas, addBancos, addImportHistory, clearBancosPorRegiao, setVagas, clearBancos } = useVagasStore();
+  const { addVagas, addBancos, addImportHistory, clearBancosPorRegiao, setVagas, clearBancos, fetchImportHistory } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);

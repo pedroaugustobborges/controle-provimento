@@ -21,12 +21,18 @@ import {
   SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue
 } from '@/components/ui/select';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminStore } from '@/store/adminStore';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
+const UNIDADES_POR_REGIAO: Record<string, string[]> = {
+  'Goiás': ['CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO'],
+  'Espírito Santo': ['SÃO PEDRO', 'SUÁ', 'BENTO FERREIRA', 'SERRA'],
+  'Demais Unidades': ['Hospital Central (GO)', 'Hospital das Clínicas']
+};
 
 const mainItems = [
   { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
@@ -59,21 +65,14 @@ export function AppSidebar() {
   const { canImport, canAccessAdmin } = usePermissions();
   const { currentUser, users } = useAdminStore();
   const location = useLocation();
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
+  const [selectedUnit, setSelectedUnit] = useState<string>('all');
 
   const hasMultipleUnits = useMemo(() => {
     if (!currentUser) return false;
     return currentUser.visualiza_todas_unidades || currentUser.unidades_vinculadas.length > 1;
   }, [currentUser]);
 
-  const availableUnits = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.visualiza_todas_unidades) {
-      const allUnits = new Set<string>();
-      users.forEach(u => u.unidades_vinculadas.forEach(un => allUnits.add(un)));
-      return Array.from(allUnits).sort();
-    }
-    return currentUser.unidades_vinculadas;
-  }, [currentUser, users]);
 
   const isUrlActive = (url: string) => {
     const currentUrl = location.pathname + location.search;
@@ -116,18 +115,32 @@ export function AppSidebar() {
 
         {/* Unit selector for multi-unit users */}
         {hasMultipleUnits && !collapsed && (
-          <div className="mt-6 animate-in fade-in slide-in-from-top-2 duration-500">
-            <Select defaultValue="all">
+          <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnit('all'); }}>
               <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
                 <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
               <SelectContent className="bg-[#112240] border-white/10 text-white">
                 <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
-                {availableUnits.map(u => (
-                  <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
-                ))}
+                <SelectItem value="Goiás" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás</SelectItem>
+                <SelectItem value="Espírito Santo" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Espírito Santo</SelectItem>
+                <SelectItem value="Demais Unidades" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Demais Unidades</SelectItem>
               </SelectContent>
             </Select>
+
+            {selectedRegion !== 'all' && (
+              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
+                <SelectTrigger className="h-8 bg-blue-500/5 border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/10 hover:border-blue-500/30 transition-all animate-in zoom-in-95 duration-300">
+                  <SelectValue placeholder="Selecionar Unidade" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#112240] border-white/10 text-white max-h-[250px]">
+                  <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</SelectItem>
+                  {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
+                    <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         )}
       </SidebarHeader>
@@ -177,8 +190,11 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                         {!collapsed && (
                           <SidebarMenuSub className="ml-5 mt-1 border-l-2 border-blue-500/10 space-y-1.5 py-2 pl-4">
-                            {item.subMenu.map((sub) => {
+                            {item.subMenu.map((sub, idx) => {
                               const subActive = isUrlActive(sub.url);
+                              const activeIndex = item.subMenu.findIndex(s => isUrlActive(s.url));
+                              const hasPassed = activeIndex !== -1 && idx < activeIndex;
+                              
                               return (
                                 <SidebarMenuSubItem key={sub.title}>
                                   <SidebarMenuSubButton asChild>
@@ -188,13 +204,21 @@ export function AppSidebar() {
                                         "text-[12.5px] py-2 px-4 rounded-lg transition-all duration-300 block relative select-none overflow-hidden group/sub",
                                         subActive 
                                           ? "text-white font-bold bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
-                                          : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
+                                          : hasPassed
+                                            ? "text-emerald-400 font-medium bg-emerald-500/5 hover:bg-emerald-500/10"
+                                            : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
                                       )}
                                     >
                                       {subActive && (
                                         <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
                                       )}
-                                      <span className="relative z-10 block leading-tight">{sub.title}</span>
+                                      {hasPassed && (
+                                        <div className="absolute left-0 top-0 h-full w-1 bg-emerald-500/50" />
+                                      )}
+                                      <span className="relative z-10 flex items-center gap-2 leading-tight">
+                                        {hasPassed && <CheckCircle className="h-3 w-3" />}
+                                        {sub.title}
+                                      </span>
                                     </NavLink>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>

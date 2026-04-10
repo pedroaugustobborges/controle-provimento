@@ -695,7 +695,10 @@ export default function VagasPage() {
                           <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                             <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
+                          <DropdownMenuItem onClick={() => {
+                            setVagaParaEditar(v);
+                            setIsAddVagaOpen(true);
+                          }} className="gap-2">
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
                           </DropdownMenuItem>
                           <DropdownMenuItem 
@@ -707,15 +710,23 @@ export default function VagasPage() {
                           >
                             <FileText className="h-4 w-4" /> Enviar para Fila de Editais
                           </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              const bancoFound = getBancoByVaga(v.id);
+                              if (bancoFound) {
+                                navigate(`/convocacoes/nova?vagaId=${v.id}`);
+                              } else {
+                                toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
+                              }
+                            }} 
+                            className="gap-2 font-bold text-green-600"
+                          >
+                            <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
+                          </DropdownMenuItem>
                           {getBancoByVaga(v.id) && (
-                            <>
-                              <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
-                                <Database className="h-4 w-4" /> Ver Banco de Talentos
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/convocacoes/nova?vagaId=${v.id}`)} className="gap-2 font-bold text-green-600">
-                                <CheckCircle2 className="h-4 w-4" /> Ir para Convocação
-                              </DropdownMenuItem>
-                            </>
+                            <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
+                              <Database className="h-4 w-4" /> Ver Banco de Talentos
+                            </DropdownMenuItem>
                           )}
                           <DropdownMenuItem 
                             className="gap-2"

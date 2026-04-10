@@ -47,7 +47,10 @@ const mainItems = [
     { title: 'Histórico', url: '/convocacoes?tab=list' },
     { title: 'Pendentes', url: '/convocacoes?tab=pending' },
   ] },
-  { title: 'Alertas e Tarefas', url: '/alertas-tarefas', icon: Bell },
+  { title: 'Alertas e Tarefas', url: '/alertas-tarefas', icon: Bell, subMenu: [
+    { title: 'Painel de Alertas', url: '/alertas-tarefas' },
+    { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
+  ] },
 ];
 
 export function AppSidebar() {

@@ -587,10 +587,12 @@ export function ImportExcelDialog({
       fetchImportHistory(); // Sync background history
       setStep('summary');
 
-    } catch (error: any) {
-      console.error(error);
-      toast.error(`Falha na importação: ${error.message || "Erro técnico"}`);
-      reset();
+    } catch (err: any) {
+      console.error(err);
+      const friendlyMsg = err.message || "Erro técnico ao processar a importação.";
+      setError(friendlyMsg);
+      toast.error(`Falha na importação: ${friendlyMsg}`);
+      // Do not reset() here to allow user to see what happened and maybe retry if we implement it.
     } finally {
       setIsProcessing(false);
     }

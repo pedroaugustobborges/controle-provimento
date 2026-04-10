@@ -1,4 +1,14 @@
 export type UserProfile = 
+  | 'Analista de RH'
+  | 'Assistente de RH'
+  | 'Analista Administrativo'
+  | 'Analista de Edital'
+  | 'Analista das Convocações'
+  | 'Supervisão'
+  | 'Coordenação'
+  | 'Administrador'
+  | 'Visualizador'
+  // Legacy compatibility
   | 'Analista da unidade' 
   | 'Analista do edital' 
   | 'Analista administrativo' 
@@ -6,8 +16,32 @@ export type UserProfile =
   | 'Analista de convocações' 
   | 'Gestão' 
   | 'Gerência'
-  | 'Administrador'
-  | 'Analista' | 'Supervisão' | 'Coordenação' | 'Admin';
+  | 'Analista' | 'Admin';
+
+export const PERFIS_ACESSO: { value: string; label: string }[] = [
+  { value: 'Administrador', label: 'Administrador' },
+  { value: 'Analista de RH', label: 'Analista de RH' },
+  { value: 'Assistente de RH', label: 'Assistente de RH' },
+  { value: 'Analista Administrativo', label: 'Analista Administrativo' },
+  { value: 'Analista de Edital', label: 'Analista de Edital' },
+  { value: 'Analista das Convocações', label: 'Analista das Convocações' },
+  { value: 'Supervisão', label: 'Supervisão' },
+  { value: 'Coordenação', label: 'Coordenação' },
+  { value: 'Visualizador', label: 'Visualizador' },
+];
+
+export const CARGOS_HIERARQUICOS: string[] = [
+  'Analista de RH',
+  'Assistente de RH',
+  'Analista Administrativo',
+  'Analista de Edital',
+  'Analista das Convocações',
+  'Supervisor(a)',
+  'Coordenador(a)',
+  'Gerente',
+  'Diretor(a)',
+  'Administrador do Sistema',
+];
 
 export interface Permissions {
   canRead: boolean;
@@ -33,6 +67,7 @@ export interface User {
   pode_gerenciar_usuarios: boolean;
   ultimo_acesso?: string;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuditLog {
@@ -41,8 +76,6 @@ export interface AuditLog {
   usuario_nome: string;
   usuario_email?: string;
   perfil?: string;
-  data?: string;
-  hora?: string;
   acao: string;
   modulo: string;
   registro_afetado: string;

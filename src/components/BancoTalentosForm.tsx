@@ -125,13 +125,28 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
                       <SelectValue placeholder="Selecione a unidade" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="HGG">HGG</SelectItem>
-                    <SelectItem value="HUGO">HUGO</SelectItem>
-                    <SelectItem value="HEAPA">HEAPA</SelectItem>
-                    <SelectItem value="HDS">HDS</SelectItem>
-                    <SelectItem value="CEALCON">CEALCON</SelectItem>
+                  <SelectContent className="max-h-[300px]">
+                    <SelectItem value="HECAD">HECAD</SelectItem>
+                    <SelectItem value="CRER">CRER</SelectItem>
                     <SelectItem value="AGIR">AGIR</SelectItem>
+                    <SelectItem value="HUGOL">HUGOL</SelectItem>
+                    <SelectItem value="HDS">HDS</SelectItem>
+                    <SelectItem value="POLICLÍNICA">POLICLÍNICA</SelectItem>
+                    <SelectItem value="JATAÍ">JATAÍ</SelectItem>
+                    <SelectItem value="VITÓRIA (SÃO PEDRO/SUÁ)">VITÓRIA (SÃO PEDRO/SUÁ)</SelectItem>
+                    <SelectItem value="TEIA ANAPOLIS">TEIA ANAPOLIS</SelectItem>
+                    <SelectItem value="TEIA CANEDO">TEIA CANEDO</SelectItem>
+                    <SelectItem value="TEIA APARECIDA">TEIA APARECIDA</SelectItem>
+                    <SelectItem value="TEIA GOIÂNIA">TEIA GOIÂNIA</SelectItem>
+                    <SelectItem value="DOURADOS">DOURADOS</SelectItem>
+                    <SelectItem value="CHS">CHS</SelectItem>
+                    <SelectItem value="HMSA">HMSA</SelectItem>
+                    <SelectItem value="HRCAC">HRCAC</SelectItem>
+                    <SelectItem value="TEIA CEN">TEIA CEN</SelectItem>
+                    <SelectItem value="TEIA PIN">TEIA PIN</SelectItem>
+                    <SelectItem value="TEIA MAN">TEIA MAN</SelectItem>
+                    <SelectItem value="TEIA MAN 2">TEIA MAN 2</SelectItem>
+                    <SelectItem value="TEIA MAN 3">TEIA MAN 3</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

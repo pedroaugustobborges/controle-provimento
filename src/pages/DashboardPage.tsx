@@ -62,10 +62,16 @@ export default function DashboardPage() {
     }
   }, [allVagas.length, bancos.length, fetchVagas, fetchBancos]);
 
-  // Canonical base for dashboard - using the same parity rule as Excel
+  // Canonical base for dashboard - using the same parity rule as Excel + Region/Unit filters
   const vagas = useMemo(() => {
-    return getValidVacancyBase(allVagas, 'TODOS', 'TODOS');
-  }, [allVagas]);
+    const base = filterByRegionAndUnit(allVagas, selectedRegion, selectedUnit);
+    return getValidVacancyBase(base, 'TODOS', 'TODOS');
+  }, [allVagas, selectedRegion, selectedUnit]);
+
+  // Filter bancos by region/unit as well
+  const filteredBancos = useMemo(() => {
+    return filterByRegionAndUnit(bancos, selectedRegion, selectedUnit);
+  }, [bancos, selectedRegion, selectedUnit]);
 
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 

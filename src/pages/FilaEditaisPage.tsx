@@ -83,7 +83,14 @@ export default function FilaEditaisPage() {
     });
   }, [vagas, currentUser, search, filterUnidade, filterStatus]);
 
-  const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
+  const unidades = useMemo(() => {
+    const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort();
+    if (selectedRegion !== 'all') {
+      const regionUnits = (UNIDADES_POR_REGIAO[selectedRegion] || []).map(u => normalizeUnitName(u));
+      return allUnidades.filter(u => regionUnits.includes(u));
+    }
+    return allUnidades;
+  }, [vagas, selectedRegion]);
   const statusOptions: StatusEdital[] = [
     'Nova vaga', 'Aguardando processo', 'Aguardando edital', 
     'Aguardando processo e edital', 'Em andamento', 'Encerrada'

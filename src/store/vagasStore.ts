@@ -47,6 +47,7 @@ interface VagasState {
   deleteImportBatch: (batchId: string) => void;
   clearVagas: () => void;
   clearBancos: () => void;
+  clearBancosPorRegiao: (regiao: 'GO_ES' | 'OUTRAS_UNIDADES') => void;
   clearAllData: () => void;
   getVaga: (id: string) => Vaga | undefined;
   getEditalByVaga: (vagaId: string) => Edital | undefined;

@@ -10,6 +10,7 @@ import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangl
 import { PageHeader } from '@/components/PageHeader';
 
 import { formatDate, normalizeCargo, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normalizeUnitName } from '@/lib/vagaUtils';
+import { calculateBancoStatus, calculateStats } from '@/lib/bancoTalentosUtils';
 import { useState, useMemo, useEffect } from 'react';
 
 const getRegiaoFromUnit = (unidade: string): string | undefined => {
@@ -199,6 +200,9 @@ export default function BancoTalentosPage() {
         return;
       }
 
+      const calculation = calculateBancoStatus(b);
+      const bStatus = calculation.status;
+
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
       // REGRA DE IDENTIFICAÇÃO DO BANCO (Auditada: PS ou Edital + Unidade + Cargo)
       const key = b.numero_processo_seletivo 
@@ -222,9 +226,9 @@ export default function BancoTalentosPage() {
           regiao: b.regiao || getRegiaoFromUnit(b.unidade),
           cargo: b.cargo,
           cargoNormalizado: cargoNorm,
-          status: b.status,
-          validade: b.nova_data_validade || b.data_validade,
-          isProrrogado: b.is_prorrogado,
+          status: bStatus,
+          validade: calculation.dataReferencia,
+          isProrrogado: bStatus === 'prorrogado',
           // QNTD BANCO: Pegamos a maior quantidade informada para este grupo para evitar erro de leitura
           qtdBanco: qtd,
           candidatos: []
@@ -414,15 +418,14 @@ export default function BancoTalentosPage() {
   }, [importHistory]);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const s = (status || '').toUpperCase();
+    switch (s) {
       case 'CADASTRO RESERVA': 
-      case 'valido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200 text-[10px] whitespace-nowrap">Cad. Reserva</Badge>;
-      case 'VENCIDO':
-      case 'vencido': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200 text-[10px] whitespace-nowrap">Vencido</Badge>;
-      case 'prorrogado': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200 text-[10px] whitespace-nowrap">Prorrogado</Badge>;
-      case 'CONVOCADO':
-      case 'convocado': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200 text-[10px] whitespace-nowrap">Convocado</Badge>;
-      default: return <Badge variant="outline" className="text-[10px] whitespace-nowrap">Indeterminado</Badge>;
+      case 'VALIDO': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200 text-[10px] whitespace-nowrap">Cad. Reserva</Badge>;
+      case 'VENCIDO': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200 text-[10px] whitespace-nowrap">Vencido</Badge>;
+      case 'PRORROGADO': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200 text-[10px] whitespace-nowrap">Prorrogado</Badge>;
+      case 'CONVOCADO': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200 text-[10px] whitespace-nowrap">Convocado</Badge>;
+      default: return <Badge variant="outline" className="text-[10px] whitespace-nowrap">{status || 'Indeterminado'}</Badge>;
     }
   };
 
@@ -675,165 +678,128 @@ export default function BancoTalentosPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Dynamic status computation based on data_validade */}
+      {/* Dynamic status computation based on business logic */}
       {useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const stats = { cadastroReserva: 0, convocados: 0, prorrogados: 0, vencidos: 0 };
-        bancos.forEach(b => {
-          const s = (b.status || '').toUpperCase();
-          if (s === 'CONVOCADO') { stats.convocados++; return; }
-          if (b.data_validade) {
-            const valDate = new Date(b.data_validade);
-            if (!isNaN(valDate.getTime())) {
-              if (valDate < today) { stats.vencidos++; return; }
-            }
-          }
-          if (b.is_prorrogado || s === 'PRORROGADO') { stats.prorrogados++; return; }
-          stats.cadastroReserva++;
-        });
-        console.log('--- AUDITORIA BANCO ---', stats, 'Total:', bancos.length);
+        const stats = calculateStats(bancos);
+        console.log('--- AUDITORIA BANCO (Lógica de Negócio) ---', stats);
         return null;
       }, [bancos])}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-2.5 rounded-lg shrink-0">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (b.is_prorrogado || (b.status || '').toUpperCase() === 'PRORROGADO') return false;
-                      if (b.data_validade) {
-                        const d = new Date(b.data_validade);
-                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
-                      }
-                      return true;
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
+      {(() => {
+        const stats = calculateStats(bancos);
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 p-2.5 rounded-lg shrink-0">
+                    <User className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Cadastro Reserva']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Vigente (Normal)</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
-                <Users className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Convocados</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.status === 'CONVOCADO').length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
+                    <Users className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Convocados</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Convocados']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Status Convocado</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva Disponível</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (b.data_validade) {
-                        const d = new Date(b.data_validade);
-                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
-                      }
-                      return true;
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Não vencidos e não convocados</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 p-2.5 rounded-lg shrink-0">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Prorrogados']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">SIM ou Data Manual</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2.5 rounded-lg shrink-0">
-                <Clock className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (!b.is_prorrogado && (b.status || '').toUpperCase() !== 'PRORROGADO') return false;
-                      if (b.data_validade) {
-                        const d = new Date(b.data_validade);
-                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
-                      }
-                      return true;
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Vencidos']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Validade Expirada</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (!b.data_validade) return false;
-                      const d = new Date(b.data_validade);
-                      return !isNaN(d.getTime()) && d < new Date(new Date().toDateString());
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Total Vigentes</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Cadastro Reserva'] + stats['Total Prorrogados']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Disponíveis para uso</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-slate-100 p-2.5 rounded-lg shrink-0">
-                <Calendar className="h-5 w-5 text-slate-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Banco Total</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Total de candidatos</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-100 p-2.5 rounded-lg shrink-0">
+                    <Calendar className="h-5 w-5 text-slate-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Banco Total</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {bancos.length}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Base completa</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-4">
@@ -1285,65 +1251,101 @@ export default function BancoTalentosPage() {
 
         {permissions.canViewAudit() && (
           <TabsContent value="audit" className="space-y-6">
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg space-y-3">
-              <h3 className="font-bold text-amber-800 flex items-center gap-2 text-sm">
-                <Info className="h-4 w-4" /> RESUMO TÉCNICO DA AUDITORIA (CONFERÊNCIA INTERNA)
+            <div className="bg-slate-50 border border-slate-200 p-6 rounded-xl space-y-4 shadow-sm">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
+                <CheckCircle2 className="h-5 w-5 text-green-600" /> RESUMO FINAL DA AUDITORIA (STATUS CALCULADO)
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div className="space-y-2">
-                  <p><strong>1. Cadastro Reserva:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> (sum de QNTD BANCO por grupo).</p>
-                  <p><strong>2. Capacidade Vigente:</strong> Mesma lógica do Cadastro Reserva (<span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span>).</p>
-                  <p><strong>3. Prorrogados:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> da capacidade de grupos prorrogados.</p>
-                </div>
-                <div className="space-y-2">
-                  <p><strong>4. Banco Total:</strong> Usa <span className="bg-amber-100 px-1 font-bold italic">SOMA AGRUPADA</span> de todos os grupos identificados.</p>
-                  <p><strong>5. Chave de Agrupamento:</strong> Prioriza <span className="bg-amber-100 px-1 font-bold">Processo Seletivo</span>; se ausente, usa <span className="bg-amber-100 px-1 font-bold">Edital + Unidade + Cargo</span>.</p>
-                  <p><strong>6. Status Predominante:</strong> Reflete o status do primeiro registro encontrado no grupo.</p>
-                </div>
-              </div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Este painel reflete o <strong>Status Calculado</strong> em tempo real, aplicando as regras de prioridade: 
+                <span className="mx-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded font-bold">1. Convocado</span>
+                <span className="mx-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded font-bold">2. Prorrogação Manual</span>
+                <span className="mx-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-bold">3. Prorrogação "SIM"</span>
+                <span className="mx-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-bold">4. Validade Normal</span>.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(() => {
+                const stats = calculateStats(bancos);
+                const auditItems = [
+                  { label: 'Cadastro Reserva', value: stats['Cadastro Reserva'], color: 'text-primary', description: 'Vigente pela validade normal' },
+                  { label: 'Convocados', value: stats['Convocados'], color: 'text-purple-600', description: 'Status final de convocação' },
+                  { label: 'Prorrogados por "SIM"', value: stats['Prorrogados por "SIM"'], color: 'text-blue-600', description: 'Prorrogação de 1 ano (SIM)' },
+                  { label: 'Prorrogados por Data', value: stats['Prorrogados por data manual'], color: 'text-indigo-600', description: 'Prorrogação por data manual' },
+                  { label: 'Vencidos (Validade)', value: stats['Vencidos por validade normal'], color: 'text-red-500', description: 'Vencido pela validade original' },
+                  { label: 'Vencidos (Prorrog.)', value: stats['Vencidos por prorrogação expirada'], color: 'text-red-700', description: 'Vencido após prorrogação' },
+                ];
+                
+                return auditItems.map((item, i) => (
+                  <Card key={i} className="border-slate-200 shadow-sm">
+                    <CardContent className="pt-4 px-4 pb-4 flex flex-col items-center justify-center text-center">
+                      <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
+                      <p className="text-xs font-bold text-slate-800 uppercase tracking-tighter mt-1">{item.label}</p>
+                      <p className="text-[10px] text-slate-400 italic mt-0.5">{item.description}</p>
+                    </CardContent>
+                  </Card>
+                ));
+              })()}
             </div>
 
             <Card className="border-slate-200 shadow-sm overflow-hidden">
+              <CardHeader className="bg-slate-50 border-b py-3 px-4">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-primary" /> 
+                  Detalhamento de Cálculo por Registro
+                </CardTitle>
+              </CardHeader>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="whitespace-nowrap">Chave do Grupo</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-center">Cands (Linhas)</TableHead>
-                      <TableHead className="text-center">Qtd Banco (Lido)</TableHead>
-                      <TableHead className="text-center">Válido?</TableHead>
-                      <TableHead className="text-center">Prorrog?</TableHead>
-                      <TableHead className="text-center">Cad. Res.</TableHead>
-                      <TableHead className="text-center">Bancos Vál.</TableHead>
-                      <TableHead className="text-center">Prorrogados</TableHead>
-                      <TableHead className="text-center">Total Visível</TableHead>
+                    <TableRow className="bg-slate-50/50">
+                      <TableHead className="text-[10px] font-bold uppercase">Candidato / Cargo</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Status Orig.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Prorrog.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Validade</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Status Calc.</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase">Motivo do Cálculo</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase text-center">Data Ref.</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {groupedBancos.map((group) => {
-                      const key = group.processoSeletivo ? `PS-${group.processoSeletivo}` : `${group.edital}-${group.unidade}-${group.cargoNormalizado}`;
-                      const isValid = group.status !== 'VENCIDO' && group.status !== 'CONVOCADO';
-                      const isProrrogado = group.candidatos.some(c => c.is_prorrogado) && group.status !== 'CONVOCADO';
-                      const inCadReserva = group.status === 'CADASTRO RESERVA';
-                      const inBancosValidos = isValid;
-                      const inProrrogados = isProrrogado; // No card real, é contagem de linhas, aqui mostramos se o GRUPO contribui
-                      
+                    {bancos.slice(0, 100).map((b) => {
+                      const calc = calculateBancoStatus(b);
                       return (
-                        <TableRow key={group.id} className="text-[11px] hover:bg-slate-50">
-                          <TableCell className="font-mono text-[9px] max-w-[200px] truncate" title={key}>{key}</TableCell>
-                          <TableCell className="text-center">{group.status}</TableCell>
-                          <TableCell className="text-center font-bold">{group.candidatos.length}</TableCell>
-                          <TableCell className="text-center font-bold text-primary">{group.qtdBanco}</TableCell>
-                          <TableCell className="text-center">{isValid ? '✅' : '❌'}</TableCell>
-                          <TableCell className="text-center">{isProrrogado ? '✅' : '❌'}</TableCell>
-                          <TableCell className="text-center bg-blue-50/30">{inCadReserva ? <span className="font-bold text-blue-600">+{group.qtdBanco}</span> : '—'}</TableCell>
-                          <TableCell className="text-center bg-green-50/30">{inBancosValidos ? <span className="font-bold text-green-600">+{group.qtdBanco}</span> : '—'}</TableCell>
-                          <TableCell className="text-center bg-purple-50/30">{inProrrogados ? <span className="font-bold text-purple-600">+{group.candidatos.filter(c => c.is_prorrogado).length}</span> : '—'}</TableCell>
-                          <TableCell className="text-center bg-slate-50 font-bold">+{group.qtdBanco}</TableCell>
+                        <TableRow key={b.id} className="text-[11px] hover:bg-slate-50">
+                          <TableCell className="max-w-[200px]">
+                            <p className="font-bold truncate" title={b.nome}>{b.nome || 'N/A'}</p>
+                            <p className="text-slate-400 text-[10px] truncate" title={b.cargo}>{b.cargo}</p>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className="text-[9px] h-5">{b.status || 'N/A'}</Badge>
+                          </TableCell>
+                          <TableCell className="text-center font-medium">
+                            {b.prorrogacao || (b.is_prorrogado ? 'SIM' : 'NÃO')}
+                          </TableCell>
+                          <TableCell className="text-center text-slate-500">
+                            {b.data_validade ? formatDate(b.data_validade) : '-'}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {getStatusBadge(calc.status)}
+                          </TableCell>
+                          <TableCell className="text-slate-500 italic">
+                            {calc.motivo}
+                          </TableCell>
+                          <TableCell className="text-center font-bold text-slate-700">
+                            {calc.dataReferencia ? formatDate(calc.dataReferencia) : '-'}
+                          </TableCell>
                         </TableRow>
                       );
                     })}
+                    {bancos.length > 100 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-4 text-slate-400 italic">
+                          Exibindo apenas os primeiros 100 registros para performance. 
+                          Total na base: {bancos.length}
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>

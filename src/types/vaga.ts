@@ -212,13 +212,20 @@ export interface BancoTalentos {
   secao?: string;
   numero_edital: string;
   data_abertura_edital: string;
+  data_publicacao?: string;
   data_validade: string;
   is_prorrogado: boolean;
+  prorrogacao?: string; // "SIM" or manual date
   nova_data_validade?: string;
   data_convocacao?: string;
   unidade_convocacao?: string;
   observacoes: string;
-  status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum';
+  status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum' | string;
+  status_original?: string;
+  status_calculado?: string;
+  motivo_do_calculo?: string;
+  data_base_do_calculo?: string;
+  data_referencia_usada?: string;
   status_import?: string;
   numero_processo?: string;
   nome?: string;

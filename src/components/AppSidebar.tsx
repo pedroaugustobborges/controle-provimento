@@ -44,6 +44,7 @@ export function AppSidebar() {
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
   const { currentUser, users, selectedRegion, selectedUnit, setSelectedRegion, setSelectedUnit } = useAdminStore();
   const location = useLocation();
+  const [showSupport, setShowSupport] = useState(false);
 
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
@@ -348,11 +349,14 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/10 p-5 mt-auto bg-black/10">
+       <SidebarFooter className="border-t border-white/10 p-5 mt-auto bg-black/10">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Ajuda">
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-400 transition-all group overflow-hidden border border-transparent hover:border-white/5">
+            <SidebarMenuButton asChild tooltip="Suporte Interno">
+              <button 
+                onClick={() => setShowSupport(true)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-400 transition-all group overflow-hidden border border-transparent hover:border-white/5"
+              >
                 <div className="relative">
                   <HelpCircle className="h-5 w-5 group-hover:text-white group-hover:rotate-12 transition-transform duration-500" />
                   <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -362,6 +366,32 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+
+        <Dialog open={showSupport} onOpenChange={setShowSupport}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">Suporte Interno</DialogTitle>
+              <DialogDescription>
+                Entre em contato com a administração do sistema para suporte.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="rounded-lg border p-4 space-y-2">
+                <p className="text-sm font-semibold text-foreground">Administrador do Sistema</p>
+                <p className="text-sm text-muted-foreground">Isaac</p>
+                <p className="text-sm text-muted-foreground">Para dúvidas, problemas de acesso ou solicitações, entre em contato diretamente com o administrador.</p>
+              </div>
+              <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
+                <p className="text-sm font-semibold text-foreground">Dicas rápidas</p>
+                <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                  <li>Esqueceu a senha? Solicite o reset ao administrador</li>
+                  <li>Problemas de permissão? Verifique com seu gestor</li>
+                  <li>Recomendamos utilizar o navegador Microsoft Edge</li>
+                </ul>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </SidebarFooter>
     </Sidebar>
   );

@@ -94,29 +94,37 @@ export function AppSidebar() {
   ].filter(item => item.visible);
   
   return (
-    <Sidebar collapsible="icon" className="border-r border-white/5 bg-sidebar">
-      <SidebarHeader className="border-b border-white/5 py-4">
-        <div className="flex items-center gap-3 px-3">
-          <img src={logoAgir} alt="AGIR" className="h-8 w-8 shrink-0 rounded" />
+    <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
+      <SidebarHeader className="border-b border-white/10 py-6 px-4">
+        <div className="flex items-center gap-4 transition-all duration-300">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+            <img src={logoAgir} alt="AGIR" className="relative h-9 w-9 shrink-0 rounded-lg object-contain bg-white/5 p-1.5 shadow-inner" />
+          </div>
           {!collapsed && (
-            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200">
-              <span className="font-bold text-base text-white truncate leading-tight tracking-tight">AGIR</span>
-              <span className="text-[9px] text-white/40 truncate uppercase tracking-[0.15em] font-medium">Provimento de Pessoal</span>
+            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
+              <span className="font-extrabold text-xl text-white tracking-tight flex items-center gap-1.5">
+                AGIR
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+              </span>
+              <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] leading-tight">
+                Provimento de Pessoal
+              </span>
             </div>
           )}
         </div>
 
         {/* Unit selector for multi-unit users */}
         {hasMultipleUnits && !collapsed && (
-          <div className="px-3 pt-3 animate-in fade-in duration-200">
+          <div className="mt-6 animate-in fade-in slide-in-from-top-2 duration-500">
             <Select defaultValue="all">
-              <SelectTrigger className="h-8 bg-white/5 border-white/10 text-white/70 text-[11px] font-semibold hover:bg-white/10 transition-colors">
+              <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
                 <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-xs font-bold">Todas as Unidades</SelectItem>
+              <SelectContent className="bg-[#112240] border-white/10 text-white">
+                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
                 {availableUnits.map(u => (
-                  <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>
+                  <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -124,41 +132,51 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="py-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-4">Fluxo de Provimento</SidebarGroupLabel>
+      <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
+        <SidebarGroup className="px-3">
+          <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
+            <div className="h-[1px] w-4 bg-blue-500/20" />
+            Fluxo de Provimento
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1.5">
               {mainItems.map((item) => {
                 const active = isParentActive(item);
                 return (
                   <SidebarMenuItem key={item.title}>
                     {item.subMenu ? (
-                      <>
+                      <div className="flex flex-col gap-1">
                         <SidebarMenuButton asChild tooltip={item.title}>
                           <NavLink
                             to={item.url}
                             className={cn(
-                              "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group relative select-none",
+                              "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                               active 
-                                ? "bg-white/5 text-white font-semibold" 
-                                : "text-white/50 hover:bg-white/[0.03] hover:text-white"
+                                ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                             )}
                           >
                             <item.icon className={cn(
-                              "h-5 w-5 shrink-0 transition-colors duration-200",
+                              "h-5 w-5 shrink-0 transition-all duration-300",
                               active 
-                                ? "text-blue-500" 
-                                : "text-white/30 group-hover:text-white/70"
+                                ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
+                                : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
                             )} />
-                            {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                            {!collapsed && (
+                              <span className={cn(
+                                "text-[13.5px] font-medium tracking-tight",
+                                active ? "font-bold" : "group-hover:translate-x-0.5 transition-transform duration-300"
+                              )}>
+                                {item.title}
+                              </span>
+                            )}
                             {active && !collapsed && (
-                              <div className="absolute left-0 w-1 h-5 bg-blue-500/50 rounded-r-full" />
+                              <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
                             )}
                           </NavLink>
                         </SidebarMenuButton>
                         {!collapsed && (
-                          <SidebarMenuSub className="ml-4.5 mt-1 border-l border-white/10 space-y-1 pb-2">
+                          <SidebarMenuSub className="ml-5 mt-1 border-l-2 border-blue-500/10 space-y-1.5 py-2 pl-4">
                             {item.subMenu.map((sub) => {
                               const subActive = isUrlActive(sub.url);
                               return (
@@ -167,12 +185,15 @@ export function AppSidebar() {
                                     <NavLink
                                       to={sub.url}
                                       className={cn(
-                                        "text-[13px] py-1.5 px-3.5 rounded-md transition-all duration-200 block relative select-none",
+                                        "text-[12.5px] py-2 px-4 rounded-lg transition-all duration-300 block relative select-none overflow-hidden group/sub",
                                         subActive 
-                                          ? "text-white font-semibold bg-[#2563EB]" 
-                                          : "text-white/40 hover:text-white/80 hover:bg-white/[0.05]"
+                                          ? "text-white font-bold bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
+                                          : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
                                       )}
                                     >
+                                      {subActive && (
+                                        <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
+                                      )}
                                       <span className="relative z-10 block leading-tight">{sub.title}</span>
                                     </NavLink>
                                   </SidebarMenuSubButton>
@@ -181,28 +202,35 @@ export function AppSidebar() {
                             })}
                           </SidebarMenuSub>
                         )}
-                      </>
+                      </div>
                     ) : (
                       <SidebarMenuButton asChild tooltip={item.title}>
                         <NavLink
                           to={item.url}
                           end={item.url === '/'}
                           className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group relative select-none",
+                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
-                              ? "bg-white/5 text-white font-semibold" 
-                              : "text-white/50 hover:bg-white/[0.03] hover:text-white"
+                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
+                              : "text-slate-400 hover:bg-white/5 hover:text-white"
                           )}
                         >
                           <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-colors duration-200",
+                            "h-5 w-5 shrink-0 transition-all duration-300",
                             active 
-                              ? "text-blue-500" 
-                              : "text-white/30 group-hover:text-white/70"
+                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
+                              : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
                           )} />
-                          {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                          {!collapsed && (
+                            <span className={cn(
+                              "text-[13.5px] font-medium tracking-tight",
+                              active ? "font-bold" : "group-hover:translate-x-0.5 transition-transform duration-300"
+                            )}>
+                              {item.title}
+                            </span>
+                          )}
                           {active && !collapsed && (
-                            <div className="absolute left-0 w-1 h-5 bg-blue-500/50 rounded-r-full" />
+                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
                           )}
                         </NavLink>
                       </SidebarMenuButton>
@@ -215,10 +243,13 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {secondaryItems.length > 0 && (
-          <SidebarGroup className="mt-4">
-            <SidebarGroupLabel className="px-4 text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-4">Apoio Administrativo</SidebarGroupLabel>
+          <SidebarGroup className="mt-8 px-3">
+            <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
+              <div className="h-[1px] w-4 bg-blue-500/20" />
+              Apoio Administrativo
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-1.5">
                 {secondaryItems.map((item) => {
                   const active = isParentActive(item);
                   return (
@@ -227,21 +258,28 @@ export function AppSidebar() {
                         <NavLink
                           to={item.url}
                           className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group relative select-none",
+                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
-                              ? "bg-white/5 text-white font-semibold" 
-                              : "text-white/50 hover:bg-white/[0.03] hover:text-white"
+                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
+                              : "text-slate-400 hover:bg-white/5 hover:text-white"
                           )}
                         >
                           <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-colors duration-200",
+                            "h-5 w-5 shrink-0 transition-all duration-300",
                             active 
-                              ? "text-blue-500" 
-                              : "text-white/30 group-hover:text-white/70"
+                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
+                              : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
                           )} />
-                          {!collapsed && <span className="text-sm tracking-tight">{item.title}</span>}
+                          {!collapsed && (
+                            <span className={cn(
+                              "text-[13.5px] font-medium tracking-tight",
+                              active ? "font-bold" : "group-hover:translate-x-0.5 transition-transform duration-300"
+                            )}>
+                              {item.title}
+                            </span>
+                          )}
                           {active && !collapsed && (
-                            <div className="absolute left-0 w-1 h-5 bg-blue-500/50 rounded-r-full" />
+                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
                           )}
                         </NavLink>
                       </SidebarMenuButton>
@@ -254,13 +292,16 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/10 p-4 mt-auto">
+      <SidebarFooter className="border-t border-white/10 p-5 mt-auto bg-black/10">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Ajuda">
-              <button className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 text-white/60 transition-all group">
-                <HelpCircle className="h-4.5 w-4.5 group-hover:text-white" />
-                {!collapsed && <span className="text-sm">Suporte Interno</span>}
+              <button className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-400 transition-all group overflow-hidden border border-transparent hover:border-white/5">
+                <div className="relative">
+                  <HelpCircle className="h-5 w-5 group-hover:text-white group-hover:rotate-12 transition-transform duration-500" />
+                  <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                {!collapsed && <span className="text-sm font-semibold tracking-tight group-hover:text-white">Suporte Interno</span>}
               </button>
             </SidebarMenuButton>
           </SidebarMenuItem>

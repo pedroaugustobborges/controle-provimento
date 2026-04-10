@@ -78,16 +78,16 @@
 
   /* Custom Scrollbar for modern feel */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
-
+  
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
-
+  
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+    @apply bg-blue-500/10 rounded-full hover:bg-blue-500/30 transition-all duration-300;
   }
 
   .glass-card {

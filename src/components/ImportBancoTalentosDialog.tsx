@@ -802,6 +802,27 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                       </div>
                       
                       <div className="text-left space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Região/Base do Banco</p>
+                        <div className="flex gap-2 pt-1">
+                          <Button 
+                            type="button"
+                            variant={selectedRegion === 'GO_ES' ? 'default' : 'outline'}
+                            className={`flex-1 text-xs h-9 ${selectedRegion === 'GO_ES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                            onClick={() => setSelectedRegion('GO_ES')}
+                          >
+                            GO e ES
+                          </Button>
+                          <Button 
+                            type="button"
+                            variant={selectedRegion === 'OUTRAS_UNIDADES' ? 'default' : 'outline'}
+                            className={`flex-1 text-xs h-9 ${selectedRegion === 'OUTRAS_UNIDADES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                            onClick={() => setSelectedRegion('OUTRAS_UNIDADES')}
+                          >
+                            Outras Unidades
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-left space-y-1">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Arquivo</p>
                         <p className="text-sm font-bold truncate text-foreground">{file.name}</p>
                       </div>

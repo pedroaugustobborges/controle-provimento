@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { LogIn, Mail, Lock, Eye, EyeOff, X, UserPlus, ChevronRight, Building2, Briefcase, User, MessageSquare, Users } from 'lucide-react';

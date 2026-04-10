@@ -65,6 +65,8 @@ export function AppSidebar() {
   const { canImport, canAccessAdmin } = usePermissions();
   const { currentUser, users } = useAdminStore();
   const location = useLocation();
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
+  const [selectedUnit, setSelectedUnit] = useState<string>('all');
 
   const hasMultipleUnits = useMemo(() => {
     if (!currentUser) return false;

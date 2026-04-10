@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 
-import { formatDate, normalizeCargo } from '@/lib/vagaUtils';
+import { formatDate, normalizeCargo, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normalizeUnitName } from '@/lib/vagaUtils';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -50,7 +50,7 @@ export default function BancoTalentosPage() {
       fetchBancos();
     }
   }, [bancos.length, fetchBancos]);
-  const { currentUser } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const permissions = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
@@ -99,7 +99,8 @@ export default function BancoTalentosPage() {
   };
 
   const filtered = useMemo(() => {
-    return bancos.filter(b => {
+    const baseRecords = filterByRegionAndUnit(bancos, selectedRegion, globalUnit);
+    return baseRecords.filter(b => {
       // Unit access restriction
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
         return false;

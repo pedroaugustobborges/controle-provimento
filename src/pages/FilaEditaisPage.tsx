@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
@@ -35,7 +35,7 @@ import { useNavigate } from 'react-router-dom';
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
   const { vagas, updateVaga } = useVagasStore();
-  const { currentUser } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -50,7 +50,8 @@ export default function FilaEditaisPage() {
   const [obsUnidade, setObsUnidade] = useState('');
 
   const pendingVagas = useMemo(() => {
-    return vagas.filter(v => {
+    const baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
+    return baseRecords.filter(v => {
       const vUnitNormalized = normalizeUnitName(v.unidade);
       
       // Unit access restriction

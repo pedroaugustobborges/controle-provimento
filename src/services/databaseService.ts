@@ -140,7 +140,7 @@ export class DatabaseService {
       const { data: logData, error: logError } = await supabase.from('importacoes').insert({
         tipo,
         usuario_id: userId,
-        status: 'processando',
+        status: 'em_processamento',
         quantidade_apagada: countBefore || 0,
         arquivo: newData[0]?.origem_importacao || 'Arquivo desconhecido'
       }).select().single();

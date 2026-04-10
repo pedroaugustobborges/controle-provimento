@@ -9,7 +9,9 @@ import {
   Calendar,
   FileSpreadsheet,
   Bell,
-  ChevronDown
+  ChevronDown,
+  CornerDownRight,
+  FileText
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';

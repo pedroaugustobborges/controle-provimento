@@ -899,7 +899,7 @@ export default function BancoTalentosPage() {
                       </TableCell>
                       <TableCell>{getStatusBadge(group.status)}</TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="font-bold bg-slate-50 text-[10px]">{group.qtdBanco}</Badge>
+                        <Badge variant="outline" className="font-bold bg-slate-50 text-[10px]">{group.qtdBanco || group.candidatos.length}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

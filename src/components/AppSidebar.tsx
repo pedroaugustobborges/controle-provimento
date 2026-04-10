@@ -94,29 +94,37 @@ export function AppSidebar() {
   ].filter(item => item.visible);
   
   return (
-    <Sidebar collapsible="icon" className="border-r border-white/5 bg-sidebar">
-      <SidebarHeader className="border-b border-white/5 py-4">
-        <div className="flex items-center gap-3 px-3">
-          <img src={logoAgir} alt="AGIR" className="h-8 w-8 shrink-0 rounded" />
+    <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
+      <SidebarHeader className="border-b border-white/10 py-6 px-4">
+        <div className="flex items-center gap-4 transition-all duration-300">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+            <img src={logoAgir} alt="AGIR" className="relative h-9 w-9 shrink-0 rounded-lg object-contain bg-white/5 p-1.5 shadow-inner" />
+          </div>
           {!collapsed && (
-            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200">
-              <span className="font-bold text-base text-white truncate leading-tight tracking-tight">AGIR</span>
-              <span className="text-[9px] text-white/40 truncate uppercase tracking-[0.15em] font-medium">Provimento de Pessoal</span>
+            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
+              <span className="font-extrabold text-xl text-white tracking-tight flex items-center gap-1.5">
+                AGIR
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+              </span>
+              <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] leading-tight">
+                Provimento de Pessoal
+              </span>
             </div>
           )}
         </div>
 
         {/* Unit selector for multi-unit users */}
         {hasMultipleUnits && !collapsed && (
-          <div className="px-3 pt-3 animate-in fade-in duration-200">
+          <div className="mt-6 animate-in fade-in slide-in-from-top-2 duration-500">
             <Select defaultValue="all">
-              <SelectTrigger className="h-8 bg-white/5 border-white/10 text-white/70 text-[11px] font-semibold hover:bg-white/10 transition-colors">
+              <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
                 <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-xs font-bold">Todas as Unidades</SelectItem>
+              <SelectContent className="bg-[#112240] border-white/10 text-white">
+                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
                 {availableUnits.map(u => (
-                  <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>
+                  <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -124,7 +132,7 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="py-2">
+      <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-4">Fluxo de Provimento</SidebarGroupLabel>
           <SidebarGroupContent>

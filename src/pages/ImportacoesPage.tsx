@@ -51,11 +51,14 @@ import { useEffect } from 'react';
 
 
 export default function ImportacoesPage() {
-  const { importHistory, importedFiles, deleteImportedFile, clearAllData, fixWrongImportBatches } = useVagasStore();
+  const { importHistory, importedFiles, deleteImportedFile, clearAllData, fixWrongImportBatches, fetchImportHistory } = useVagasStore();
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [reprocessFile, setReprocessFile] = useState<any>(null);
 
   useEffect(() => {
+    // Carregar histórico do banco de dados ao montar a página
+    fetchImportHistory();
+
     // Run fix logic once on mount
     const wrongBatches = importHistory.filter(h => 
       h.tipo_importacao === 'banco' && 
@@ -65,7 +68,7 @@ export default function ImportacoesPage() {
       fixWrongImportBatches();
       toast.info(`Identificamos ${wrongBatches.length} lote(s) de importação de Vagas que foram salvos como Banco indevidamente. Foram removidos para re-importação correta.`);
     }
-  }, [fixWrongImportBatches, importHistory]);
+  }, [fixWrongImportBatches, importHistory, fetchImportHistory]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);

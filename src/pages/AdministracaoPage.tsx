@@ -101,6 +101,7 @@ export default function AdministracaoPage() {
     try {
       await addUser({
         ...newUser,
+        perfil: newUser.perfil as any,
         status: 'ativo',
       });
       toast.success('Usuário criado com sucesso!');

@@ -43,6 +43,7 @@ export default function BancoTalentosPage() {
   const [unidadeFilter, setUnidadeFilter] = useState('todas');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [convocadosSearch, setConvocadosSearch] = useState('');
+  const [regiaoFilter, setRegiaoFilter] = useState('todas');
   const [convocadosUnidadeFilter, setConvocadosUnidadeFilter] = useState('todas');
   const [convocadosCargoFilter, setConvocadosCargoFilter] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -153,6 +154,7 @@ export default function BancoTalentosPage() {
       edital: string;
       processoSeletivo: string;
       unidade: string;
+      regiao?: string;
       cargo: string;
       cargoNormalizado: string;
       status: string;
@@ -190,6 +192,7 @@ export default function BancoTalentosPage() {
           edital: b.numero_edital,
           processoSeletivo: b.numero_processo_seletivo || b.numero_processo || '',
           unidade: b.unidade,
+          regiao: b.regiao,
           cargo: b.cargo,
           cargoNormalizado: cargoNorm,
           status: b.status,
@@ -244,9 +247,11 @@ export default function BancoTalentosPage() {
         }
       }
         
-      return matchSearch && matchUnidade && matchStatus;
+      const matchRegiao = regiaoFilter === 'todas' || group.regiao === regiaoFilter;
+
+      return matchSearch && matchUnidade && matchStatus && matchRegiao;
     });
-  }, [groupedBancos, search, unidadeFilter, statusFilter]);
+  }, [groupedBancos, search, unidadeFilter, statusFilter, regiaoFilter]);
 
   const selectedGroupCandidates = useMemo(() => {
     if (!selectedBanco) return [];
@@ -713,7 +718,7 @@ export default function BancoTalentosPage() {
                       <SelectItem value="HEAPA">HEAPA</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-[140px] h-9 bg-white text-xs">
                       <SelectValue placeholder="Situação" />
                     </SelectTrigger>
@@ -722,6 +727,16 @@ export default function BancoTalentosPage() {
                       <SelectItem value="valido">Válidos</SelectItem>
                       <SelectItem value="vencido">Vencidos</SelectItem>
                       <SelectItem value="prorrogado">Prorrogados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={regiaoFilter} onValueChange={setRegiaoFilter}>
+                    <SelectTrigger className="w-[140px] h-9 bg-white text-xs">
+                      <SelectValue placeholder="Região" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas Regiões</SelectItem>
+                      <SelectItem value="GO_ES">GO e ES</SelectItem>
+                      <SelectItem value="OUTRAS_UNIDADES">Outras Unidades</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -735,6 +750,7 @@ export default function BancoTalentosPage() {
                     <TableHead >Proc. Seletivo</TableHead>
                     <TableHead >Cargo</TableHead>
                     <TableHead >Unidade</TableHead>
+                    <TableHead >Região</TableHead>
                     <TableHead >Status</TableHead>
                     <TableHead >Qtd. Banco</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -751,7 +767,16 @@ export default function BancoTalentosPage() {
                         <div className="font-semibold text-slate-800">{group.cargo}</div>
                         <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
-                      <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                       <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                      <TableCell>
+                        {group.regiao ? (
+                          <Badge variant="outline" className={`text-[10px] font-bold ${group.regiao === 'GO_ES' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                            {group.regiao === 'GO_ES' ? 'GO/ES' : 'OUTRAS'}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>{getStatusBadge(group.status)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="font-bold bg-slate-50">{group.qtdBanco}</Badge>

@@ -146,7 +146,7 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
 // parseDateValue was removed in favor of convertDateValue from dateImportUtils
 
 export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { addBancos, addImportHistory, addImportedFile, updateImportedFile, clearBancos } = useVagasStore();
+  const { addBancos, addImportHistory, addImportedFile, updateImportedFile, clearBancos, clearBancosPorRegiao } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
@@ -162,7 +162,19 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const [fileId, setFileId] = useState<string | null>(null);
   const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
   const [totalDetectedRows, setTotalDetectedRows] = useState<number>(0);
+  const [selectedRegion, setSelectedRegion] = useState<'GO_ES' | 'OUTRAS_UNIDADES' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (file) {
+      const name = file.name.toUpperCase();
+      if (name.includes('GO') || name.includes('ES')) {
+        setSelectedRegion('GO_ES');
+      } else if (name.includes('OUTRAS') || name.includes('BASE') || name.includes('GERAL')) {
+        setSelectedRegion('OUTRAS_UNIDADES');
+      }
+    }
+  }, [file]);
 
   useEffect(() => {
     if (workbook && selectedSheets.length > 0) {
@@ -593,6 +605,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           numero_vaga_aproveitamento: mapped.numero_vaga_aproveitamento || '',
           observacoes: mapped.observacoes || '',
           status: status,
+          regiao: selectedRegion || undefined
         });
       });
 
@@ -608,7 +621,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         return;
       }
 
-      clearBancos();
+      if (selectedRegion) {
+        clearBancosPorRegiao(selectedRegion);
+      } else {
+        clearBancos();
+      }
+      
       addBancos(newBancos);
       
       addImportHistory({
@@ -784,6 +802,27 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                       </div>
                       
                       <div className="text-left space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Região/Base do Banco</p>
+                        <div className="flex gap-2 pt-1">
+                          <Button 
+                            type="button"
+                            variant={selectedRegion === 'GO_ES' ? 'default' : 'outline'}
+                            className={`flex-1 text-xs h-9 ${selectedRegion === 'GO_ES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                            onClick={() => setSelectedRegion('GO_ES')}
+                          >
+                            GO e ES
+                          </Button>
+                          <Button 
+                            type="button"
+                            variant={selectedRegion === 'OUTRAS_UNIDADES' ? 'default' : 'outline'}
+                            className={`flex-1 text-xs h-9 ${selectedRegion === 'OUTRAS_UNIDADES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                            onClick={() => setSelectedRegion('OUTRAS_UNIDADES')}
+                          >
+                            Outras Unidades
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-left space-y-1">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Arquivo</p>
                         <p className="text-sm font-bold truncate text-foreground">{file.name}</p>
                       </div>
@@ -819,7 +858,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                       <Button variant="outline" onClick={() => reset()} className="gap-2 px-6">
                         <X className="h-4 w-4" /> Trocar arquivo
                       </Button>
-                      <Button onClick={() => setStep('sheets')} className="gap-2 px-10 bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200">
+                      <Button onClick={() => setStep('sheets')} className="gap-2 px-10 bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200" disabled={!selectedRegion}>
                         Continuar para Abas <ArrowRight className="h-4 w-4" />
                       </Button>
                     </div>

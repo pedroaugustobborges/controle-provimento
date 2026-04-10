@@ -231,6 +231,7 @@ export interface BancoTalentos {
   import_batch_id?: string;
   data_importacao?: string;
   origem_importacao?: string;
+  regiao?: 'GO_ES' | 'OUTRAS_UNIDADES';
 }
 
 export interface Convocacao {

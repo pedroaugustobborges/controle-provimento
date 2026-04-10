@@ -47,6 +47,7 @@ interface VagasState {
   deleteImportBatch: (batchId: string) => void;
   clearVagas: () => void;
   clearBancos: () => void;
+  clearBancosPorRegiao: (regiao: 'GO_ES' | 'OUTRAS_UNIDADES') => void;
   clearAllData: () => void;
   getVaga: (id: string) => Vaga | undefined;
   getEditalByVaga: (vagaId: string) => Edital | undefined;
@@ -147,6 +148,9 @@ export const useVagasStore = create<VagasState>()(
       setTemNovasMensagens: (has) => set({ temNovasMensagens: has }),
       clearVagas: () => set({ vagas: [] }),
       clearBancos: () => set({ bancos: [] }),
+      clearBancosPorRegiao: (regiao) => set((s) => ({
+        bancos: s.bancos.filter((b) => b.regiao !== regiao)
+      })),
       clearAllData: () => set({ 
         vagas: [], 
         bancos: [], 

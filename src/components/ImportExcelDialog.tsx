@@ -58,13 +58,14 @@ export function ImportExcelDialog({
   onOpenChange,
   reprocessFile 
 }: ImportExcelDialogProps) {
-  const { addVagas, addBancos, addImportHistory } = useVagasStore();
+  const { addVagas, addBancos, addImportHistory, clearBancosPorRegiao } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<any>(null);
   const [suggestedType, setSuggestedType] = useState<'vagas' | 'banco' | null>(null);
   const [chosenType, setChosenType] = useState<'vagas' | 'banco' | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<'GO_ES' | 'OUTRAS_UNIDADES' | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [confidence, setConfidence] = useState<'high' | 'low'>('low');
   const [fileMetadata, setFileMetadata] = useState<{
@@ -92,6 +93,17 @@ export function ImportExcelDialog({
       analyzeFile(reprocessFile);
     }
   }, [open, reprocessFile]);
+
+  React.useEffect(() => {
+    if (file && chosenType === 'banco') {
+      const name = file.name.toUpperCase();
+      if (name.includes('GO') || name.includes('ES')) {
+        setSelectedRegion('GO_ES');
+      } else if (name.includes('OUTRAS') || name.includes('BASE') || name.includes('GERAL')) {
+        setSelectedRegion('OUTRAS_UNIDADES');
+      }
+    }
+  }, [file, chosenType]);
 
   const reset = () => {
     setStep('select');
@@ -541,9 +553,13 @@ export function ImportExcelDialog({
             import_batch_id: batchId,
             data_importacao: now,
             origem_importacao: selectedFile.name,
+            regiao: selectedRegion || undefined
           });
         }
 
+        if (selectedRegion) {
+          clearBancosPorRegiao(selectedRegion);
+        }
         addBancos(newBancos);
         
         setSummary({
@@ -553,7 +569,8 @@ export function ImportExcelDialog({
           fileName: selectedFile.name,
           sheetName: sheetUsed,
           manualType: chosenType,
-          suggestedType: suggestedType
+          suggestedType: suggestedType,
+          region: selectedRegion
         });
 
         addImportHistory({
@@ -754,13 +771,43 @@ export function ImportExcelDialog({
                 </div>
               </div>
 
+              {chosenType === 'banco' && (
+                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-bold text-amber-900">Origem/Região do Banco</span>
+                  </div>
+                  <p className="text-xs text-amber-700">
+                    Selecione a região deste arquivo. Ao importar, apenas os registros desta região serão atualizados, preservando as outras bases.
+                  </p>
+                  <div className="flex gap-2 pt-1">
+                    <Button 
+                      type="button"
+                      variant={selectedRegion === 'GO_ES' ? 'default' : 'outline'}
+                      className={`flex-1 text-xs h-9 ${selectedRegion === 'GO_ES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                      onClick={() => setSelectedRegion('GO_ES')}
+                    >
+                      GO e ES
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant={selectedRegion === 'OUTRAS_UNIDADES' ? 'default' : 'outline'}
+                      className={`flex-1 text-xs h-9 ${selectedRegion === 'OUTRAS_UNIDADES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                      onClick={() => setSelectedRegion('OUTRAS_UNIDADES')}
+                    >
+                      Outras Unidades
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setStep('analysis')} className="flex-1">
                   Voltar e Escolher Outro Tipo
                 </Button>
                 <Button 
                   className="flex-1" 
-                  disabled={!validationResult.valid}
+                  disabled={!validationResult.valid || (chosenType === 'banco' && !selectedRegion)}
                   onClick={processImport}
                 >
                   <ArrowRight className="h-4 w-4 mr-2" />
@@ -806,6 +853,7 @@ export function ImportExcelDialog({
                     <li>Aba processada: {summary.sheetName}</li>
                     <li>Escolha manual: {summary.manualType === 'vagas' ? 'Vagas' : 'Banco'}</li>
                     <li>Sugestão do sistema: {summary.suggestedType ? (summary.suggestedType === 'vagas' ? 'Vagas' : 'Banco') : 'Nenhuma'}</li>
+                    {summary.region && <li>Região: {summary.region === 'GO_ES' ? 'GO e ES' : 'Outras Unidades'}</li>}
                   </ul>
                 </div>
               </div>

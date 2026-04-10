@@ -153,7 +153,7 @@ export default function ValidacaoEditaisPage() {
         title="Validação de Edital"
         subtitle="Área de validação administrativa de editais redigidos. Aprove, rejeite ou devolva para ajuste."
         badge="Validação"
-        actions={<HelpGuide />}
+        helpContent={<HelpGuide />}
         icon={<FileCheck className="h-8 w-8 text-primary" />}
       />
 

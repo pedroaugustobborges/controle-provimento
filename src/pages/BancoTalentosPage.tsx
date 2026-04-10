@@ -184,7 +184,8 @@ export default function BancoTalentosPage() {
 
     // Use ALL bancos for grouping calculations to ensure cards are accurate
     // regardless of the list filter (which excludes Convocados)
-    bancos.forEach(b => {
+    const baseRecords = filterByRegionAndUnit(bancos, selectedRegion, globalUnit);
+    baseRecords.forEach(b => {
       // Restricted access check
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
         return;

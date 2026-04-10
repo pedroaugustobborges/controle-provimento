@@ -148,6 +148,9 @@ export const useVagasStore = create<VagasState>()(
       setTemNovasMensagens: (has) => set({ temNovasMensagens: has }),
       clearVagas: () => set({ vagas: [] }),
       clearBancos: () => set({ bancos: [] }),
+      clearBancosPorRegiao: (regiao) => set((s) => ({
+        bancos: s.bancos.filter((b) => b.regiao !== regiao)
+      })),
       clearAllData: () => set({ 
         vagas: [], 
         bancos: [], 

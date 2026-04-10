@@ -82,6 +82,8 @@ export default function VagasPage() {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
 
   const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
   const canInclude = currentUser?.perfil === 'Admin' || currentUser?.pode_incluir_registros;

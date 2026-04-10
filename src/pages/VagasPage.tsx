@@ -583,7 +583,7 @@ export default function VagasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((v) => (
+                {paginatedData.map((v) => (
                   <TableRow
                     key={v.id}
                     className="whitespace-nowrap cursor-pointer"

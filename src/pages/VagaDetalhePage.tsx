@@ -697,7 +697,7 @@ export default function VagaDetalhePage() {
         </TabsContent>
         
         <TabsContent value="acompanhamento">
-          <AcompanhamentoTab vaga={vaga} />
+          <AcompanhamentoTab vaga={vaga} onEditVaga={() => setIsEditVagaOpen(true)} />
         </TabsContent>
         
         <TabsContent value="banco">
@@ -881,7 +881,7 @@ const CRONOGRAMA_KEYS: Record<EtapaEdital, keyof VagaCronograma> = {
   publicar_novo_edital: 'data_encerramento_processo',
 };
 
-function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
+function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () => void }) {
   const { updateVaga } = useVagasStore();
   const [form, setForm] = useState<any>(vaga.acompanhamento || {
     etapa_atual: 'inscricoes',

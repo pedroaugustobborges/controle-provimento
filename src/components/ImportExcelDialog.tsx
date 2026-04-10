@@ -770,6 +770,36 @@ export function ImportExcelDialog({
                 </div>
               </div>
 
+              {chosenType === 'banco' && (
+                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-bold text-amber-900">Origem/Região do Banco</span>
+                  </div>
+                  <p className="text-xs text-amber-700">
+                    Selecione a região deste arquivo. Ao importar, apenas os registros desta região serão atualizados, preservando as outras bases.
+                  </p>
+                  <div className="flex gap-2 pt-1">
+                    <Button 
+                      type="button"
+                      variant={selectedRegion === 'GO_ES' ? 'default' : 'outline'}
+                      className={`flex-1 text-xs h-9 ${selectedRegion === 'GO_ES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                      onClick={() => setSelectedRegion('GO_ES')}
+                    >
+                      GO e ES
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant={selectedRegion === 'OUTRAS_UNIDADES' ? 'default' : 'outline'}
+                      className={`flex-1 text-xs h-9 ${selectedRegion === 'OUTRAS_UNIDADES' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                      onClick={() => setSelectedRegion('OUTRAS_UNIDADES')}
+                    >
+                      Outras Unidades
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setStep('analysis')} className="flex-1">
                   Voltar e Escolher Outro Tipo

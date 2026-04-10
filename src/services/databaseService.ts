@@ -52,18 +52,20 @@ export class DatabaseService {
   ): Promise<{ data: T | null; error: PostgrestError | Error | null }> {
     const { id, version, ...updateData } = data as any;
     
-    const operation = () => supabase
-      .from(table)
-      .update({
-        ...updateData,
-        updated_by: userId,
-        updated_at: new Date().toISOString(),
-        version: (version || 0) + 1,
-      })
-      .eq('id', id)
-      .eq('version', version)
-      .select()
-      .single();
+    const operation = async () => {
+      return await supabase
+        .from(table)
+        .update({
+          ...updateData,
+          updated_by: userId,
+          updated_at: new Date().toISOString(),
+          version: (version || 0) + 1,
+        })
+        .eq('id', id)
+        .eq('version', version)
+        .select()
+        .single();
+    };
 
     const { data: updated, error } = await this.withRetry(operation);
 
@@ -125,9 +127,10 @@ export class DatabaseService {
     try {
       // Step 1: Count existing
       onProgress?.(5, "Analisando base atual...");
-      const { count: countBefore, error: countError } = await this.withRetry(() => 
-        supabase.from(tableName).select('*', { count: 'exact', head: true })
-      );
+      const { count: countBefore, error: countError } = await this.withRetry(async () => {
+        const { count, error } = await supabase.from(tableName).select('*', { count: 'exact', head: true });
+        return { data: count, error };
+      });
 
       if (countError) {
         throw new Error(`Erro ao conectar com o banco de dados: ${this.getFriendlyErrorMessage(countError)}`);
@@ -149,12 +152,13 @@ export class DatabaseService {
 
       // Step 3: Delete existing
       onProgress?.(15, "Limpando base antiga para substituição...");
-      const { error: deleteError } = await this.withRetry(() => 
-        supabase
+      const { error: deleteError } = await this.withRetry(async () => {
+        const { error } = await supabase
           .from(tableName)
           .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000')
-      );
+          .neq('id', '00000000-0000-0000-0000-000000000000');
+        return { data: null, error };
+      });
 
       if (deleteError) {
         throw new Error(`Erro ao limpar base antiga: ${this.getFriendlyErrorMessage(deleteError)}`);
@@ -176,12 +180,13 @@ export class DatabaseService {
           updated_by: userId
         }));
 
-        const { data: inserted, error: insertError } = await this.withRetry(() => 
-          supabase
+        const { data: inserted, error: insertError } = await this.withRetry(async () => {
+          const { data, error } = await supabase
             .from(tableName)
             .insert(cleanChunk)
-            .select()
-        );
+            .select();
+          return { data, error };
+        });
 
         if (insertError) {
           if (logId) {
@@ -193,7 +198,7 @@ export class DatabaseService {
           throw new Error(`Erro no envio dos dados (Lote ${Math.floor(i/chunkSize) + 1}): ${this.getFriendlyErrorMessage(insertError)}`);
         }
         
-        insertedCount += inserted?.length || 0;
+        insertedCount += (inserted as any[])?.length || 0;
       }
 
       // Step 5: Update import log to completed
@@ -244,14 +249,15 @@ export class DatabaseService {
         const prog = Math.min(Math.round((i / total) * 100), 99);
         onProgress?.(prog, `Sincronizando ${i} de ${total}...`);
 
-        const { error } = await this.withRetry(() => 
-          supabase
+        const { error } = await this.withRetry(async () => {
+          const { error } = await supabase
             .from(table)
             .upsert(
               chunk.map(item => ({ ...item, updated_by: userId, updated_at: new Date().toISOString() })),
               { onConflict: matchColumns.join(',') }
-            )
-        );
+            );
+          return { data: null, error };
+        });
 
         if (error) throw new Error(`Erro no sincronismo em lote: ${this.getFriendlyErrorMessage(error)}`);
         processedCount += chunk.length;

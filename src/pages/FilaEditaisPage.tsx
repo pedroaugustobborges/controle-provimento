@@ -62,9 +62,10 @@ export default function FilaEditaisPage() {
         }
       }
 
-      // Regra: Fila de Edital - Filtrar por categoria do status real
-      const isFilaEdital = getCategoriaStatus(v) === 'fila_edital';
-      if (!isFilaEdital) return false;
+      // Regra: Fila de Editais - Somente vagas com status PUBLICAR EDITAL ou PUBLICAR NOVO EDITAL
+      const statusNorm = (v.status || v.status_geral || '').toLowerCase().trim();
+      const isPublicarEdital = statusNorm === 'publicar edital' || statusNorm === 'publicar novo edital' || statusNorm === 'publicar_edital' || statusNorm === 'publicar_novo_edital';
+      if (!isPublicarEdital) return false;
 
       // Se já foi encaminhado para edital, remove da fila da unidade
       if (v.status_fluxo_edital === 'encaminhado_edital' || v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'enviado_validacao') {

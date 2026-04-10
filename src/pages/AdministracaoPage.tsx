@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -46,14 +46,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { UserProfile } from '@/types/auth';
+import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
+import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
+
+const ALL_UNIDADES = [
+  ...UNIDADES_POR_REGIAO['Goiás e Vitória'] || [],
+  ...UNIDADES_POR_REGIAO['Unidades de Fora'] || [],
+];
 
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
-  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, generateBackup } = useAdminStore();
+  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, deleteUser, toggleUserStatus, fetchUsers, fetchAuditLogs, generateBackup } = useAdminStore();
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
   
@@ -61,12 +66,79 @@ export default function AdministracaoPage() {
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const handleDeleteUser = () => {
-    if (usuarioParaExcluir) {
+  // Form state for new user
+  const [newUser, setNewUser] = useState({
+    nome_completo: '',
+    email: '',
+    password: '',
+    perfil: 'Analista de RH',
+    cargo: '',
+    visualiza_todas_unidades: false,
+    unidades_vinculadas: [] as string[],
+    pode_incluir_registros: false,
+    pode_excluir_requisicoes: false,
+    pode_editar_configuracoes: false,
+    pode_gerenciar_usuarios: false,
+  });
+
+  useEffect(() => {
+    fetchUsers();
+    fetchAuditLogs();
+  }, [fetchUsers, fetchAuditLogs]);
+
+  const handleCreateUser = async () => {
+    if (!newUser.nome_completo || !newUser.email || !newUser.password) {
+      toast.error('Preencha nome, e-mail e senha.');
+      return;
+    }
+    if (newUser.password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await addUser({
+        ...newUser,
+        status: 'ativo',
+      });
+      toast.success('Usuário criado com sucesso!');
+      setIsNewUserOpen(false);
+      setNewUser({
+        nome_completo: '', email: '', password: '', perfil: 'Analista de RH', cargo: '',
+        visualiza_todas_unidades: false, unidades_vinculadas: [],
+        pode_incluir_registros: false, pode_excluir_requisicoes: false,
+        pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
+      });
+    } catch (err: any) {
+      toast.error(`Erro ao criar usuário: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!usuarioParaExcluir) return;
+    setSaving(true);
+    try {
+      await deleteUser(usuarioParaExcluir);
       toast.success('Usuário removido com sucesso.');
+    } catch (err: any) {
+      toast.error(`Erro ao excluir: ${err.message}`);
+    } finally {
+      setSaving(false);
       setIsDeleteDialogOpen(false);
       setUsuarioParaExcluir(null);
+    }
+  };
+
+  const handleToggleStatus = async (id: string) => {
+    try {
+      await toggleUserStatus(id);
+      toast.success('Status do usuário atualizado.');
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
     }
   };
 
@@ -78,7 +150,14 @@ export default function AdministracaoPage() {
     }, 1500);
   };
 
-  const unidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
+  const toggleUnidade = (unidade: string) => {
+    setNewUser(prev => ({
+      ...prev,
+      unidades_vinculadas: prev.unidades_vinculadas.includes(unidade)
+        ? prev.unidades_vinculadas.filter(u => u !== unidade)
+        : [...prev.unidades_vinculadas, unidade]
+    }));
+  };
 
   return (
     <div className="space-y-6 pb-10">

@@ -149,26 +149,22 @@ export default function DashboardPage() {
     return Object.values(groups);
   }, [filteredBancos]);
 
-  // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR (não prorrogados)
+  // Card Cadastro Reserva - Contagem de candidatos CR (não prorrogados)
   const totalCR = useMemo(() => {
-    return groupedBancos
-      .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
-      .reduce((sum, g) => sum + g.qtdBanco, 0);
-  }, [groupedBancos]);
+    return filteredBancos.filter(b => 
+      (b.status === 'CADASTRO RESERVA' || b.status === 'valido') && !b.is_prorrogado
+    ).length;
+  }, [filteredBancos]);
 
-  // Card Prorrogados - Soma da quantidade de banco dos grupos prorrogados
+  // Card Prorrogados - Contagem de candidatos prorrogados
   const totalProrrogados = useMemo(() => {
-    return groupedBancos
-      .filter(g => g.isProrrogado || g.status === 'prorrogado')
-      .reduce((sum, g) => sum + g.qtdBanco, 0);
-  }, [groupedBancos]);
+    return filteredBancos.filter(b => b.is_prorrogado || b.status === 'prorrogado').length;
+  }, [filteredBancos]);
 
-  // Card Com Banco Válido (Item 4) - Soma da quantidade de banco dos grupos com validade vigente
-  const totalComBancoValido = useMemo(() => {
-    return groupedBancos
-      .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
-      .reduce((sum, g) => sum + g.qtdBanco, 0);
-  }, [groupedBancos]);
+  // Cadastro Reserva disponíveis (não vencidos, não convocados)
+  const totalCadastroReservaDisponiveis = useMemo(() => {
+    return filteredBancos.filter(b => b.status !== 'VENCIDO' && b.status !== 'CONVOCADO').length;
+  }, [filteredBancos]);
 
   const totalConvocados = useMemo(() => 
     filteredBancos.filter(b => b.status === 'CONVOCADO').length
@@ -178,9 +174,7 @@ export default function DashboardPage() {
     filteredBancos.filter(b => b.status === 'VENCIDO').length
   , [filteredBancos]);
 
-  const totalBancoTotal = useMemo(() => 
-    groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)
-  , [groupedBancos]);
+  const totalBancoTotal = useMemo(() => filteredBancos.length, [filteredBancos]);
 
   const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
 
@@ -195,13 +189,12 @@ export default function DashboardPage() {
     { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Número de pessoas' },
     { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Número de pessoas' },
     { label: 'Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Capacidade de vagas' },
-    { label: 'Capacidade Vigente', value: totalComBancoValido, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Válidos + Prorrogados' },
+    { label: 'Cadastro Reserva Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Não vencidos e não convocados' },
     { label: 'Banco Total', value: totalBancoTotal, icon: Database, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Soma total de bancos' },
     { label: 'Canceladas', value: counts.cancelada, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Dispensa', value: counts.dispensa, icon: RefreshCw, color: 'text-slate-600', bg: 'bg-slate-50' },
     { label: 'Etapas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50' },
-  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalComBancoValido, totalProrrogados, totalTarefasPendentes]);
+  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalProrrogados, totalBancoTotal, totalTarefasPendentes]);
 
   const chartData = useMemo(() => {
     const groupedMap = new Map<string, { total: number, abertas: number }>();

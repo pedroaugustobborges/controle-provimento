@@ -59,35 +59,68 @@ const ALL_UNIDADES = [
 
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
-  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, deleteUser, toggleUserStatus, fetchUsers, fetchAuditLogs, generateBackup } = useAdminStore();
+  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, sendWelcomeEmail, fetchUsers, fetchAuditLogs, generateBackup } = useAdminStore();
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
   
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [passwordUser, setPasswordUser] = useState<{ id: string; nome: string } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Password dialog state
+  const [passwordMode, setPasswordMode] = useState<'manual' | 'temp'>('temp');
+  const [manualPassword, setManualPassword] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [sendEmailAfterPassword, setSendEmailAfterPassword] = useState(true);
 
   // Form state for new user
   const [newUser, setNewUser] = useState({
     nome_completo: '',
     email: '',
     password: '',
+    passwordMode: 'temp' as 'manual' | 'temp',
     perfil: 'Analista de RH',
     cargo: '',
+    status: 'ativo' as 'ativo' | 'suspenso' | 'inativo',
     visualiza_todas_unidades: false,
     unidades_vinculadas: [] as string[],
     pode_incluir_registros: false,
     pode_excluir_requisicoes: false,
     pode_editar_configuracoes: false,
     pode_gerenciar_usuarios: false,
+    sendWelcomeEmail: true,
   });
 
   useEffect(() => {
     fetchUsers();
     fetchAuditLogs();
   }, [fetchUsers, fetchAuditLogs]);
+
+  // Auto-generate temp password when mode changes
+  useEffect(() => {
+    if (newUser.passwordMode === 'temp') {
+      setNewUser(prev => ({ ...prev, password: generateTempPassword() }));
+    } else {
+      setNewUser(prev => ({ ...prev, password: '' }));
+    }
+  }, [newUser.passwordMode]);
+
+  const resetNewUserForm = () => {
+    setNewUser({
+      nome_completo: '', email: '', password: '', passwordMode: 'temp',
+      perfil: 'Analista de RH', cargo: '', status: 'ativo',
+      visualiza_todas_unidades: false, unidades_vinculadas: [],
+      pode_incluir_registros: false, pode_excluir_requisicoes: false,
+      pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
+      sendWelcomeEmail: true,
+    });
+  };
 
   const handleCreateUser = async () => {
     if (!newUser.nome_completo || !newUser.email || !newUser.password) {
@@ -103,16 +136,11 @@ export default function AdministracaoPage() {
       await addUser({
         ...newUser,
         perfil: newUser.perfil as any,
-        status: 'ativo',
+        sendWelcomeEmail: newUser.sendWelcomeEmail,
       });
       toast.success('Usuário criado com sucesso!');
       setIsNewUserOpen(false);
-      setNewUser({
-        nome_completo: '', email: '', password: '', perfil: 'Analista de RH', cargo: '',
-        visualiza_todas_unidades: false, unidades_vinculadas: [],
-        pode_incluir_registros: false, pode_excluir_requisicoes: false,
-        pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
-      });
+      resetNewUserForm();
     } catch (err: any) {
       toast.error(`Erro ao criar usuário: ${err.message}`);
     } finally {
@@ -135,21 +163,95 @@ export default function AdministracaoPage() {
     }
   };
 
-  const handleToggleStatus = async (id: string) => {
+  const handleStatusChange = async (id: string, status: 'ativo' | 'suspenso' | 'inativo') => {
+    setSaving(true);
     try {
-      await toggleUserStatus(id);
-      toast.success('Status do usuário atualizado.');
+      await updateUserStatus(id, status);
+      toast.success(`Status atualizado para "${status}".`);
     } catch (err: any) {
       toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleTestEmail = (id: string) => {
-    setTestEmailLoading(id);
-    setTimeout(() => {
+  const handleResetPassword = async () => {
+    if (!passwordUser) return;
+    const pwd = passwordMode === 'temp' ? generatedPassword : manualPassword;
+    if (!pwd || pwd.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await resetUserPassword(passwordUser.id, pwd);
+      if (sendEmailAfterPassword) {
+        await sendWelcomeEmail(passwordUser.id, pwd);
+        toast.success('Senha redefinida e dados de acesso reenviados por e-mail.');
+      } else {
+        toast.success('Senha redefinida com sucesso.');
+      }
+      setIsPasswordDialogOpen(false);
+      setPasswordUser(null);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResendWelcomeEmail = async (user: any) => {
+    setTestEmailLoading(user.id);
+    try {
+      // We need a password to send — generate a temp one and reset
+      const tempPwd = generateTempPassword();
+      await resetUserPassword(user.id, tempPwd);
+      await sendWelcomeEmail(user.id, tempPwd);
+      toast.success('E-mail de boas-vindas reenviado com nova senha temporária.');
+    } catch (err: any) {
+      toast.error(`Erro ao reenviar e-mail: ${err.message}`);
+    } finally {
       setTestEmailLoading(null);
-      toast.success('E-mail de teste enviado com sucesso!');
-    }, 1500);
+    }
+  };
+
+  const openEditUser = (user: any) => {
+    setEditingUser({ ...user });
+    setIsEditUserOpen(true);
+  };
+
+  const handleSaveEditUser = async () => {
+    if (!editingUser) return;
+    setSaving(true);
+    try {
+      await updateUser(editingUser.id, {
+        nome_completo: editingUser.nome_completo,
+        perfil: editingUser.perfil,
+        cargo: editingUser.cargo,
+        visualiza_todas_unidades: editingUser.visualiza_todas_unidades,
+        unidades_vinculadas: editingUser.unidades_vinculadas,
+        pode_incluir_registros: editingUser.pode_incluir_registros,
+        pode_excluir_requisicoes: editingUser.pode_excluir_requisicoes,
+        pode_editar_configuracoes: editingUser.pode_editar_configuracoes,
+        pode_gerenciar_usuarios: editingUser.pode_gerenciar_usuarios,
+      });
+      toast.success('Dados do usuário atualizados.');
+      setIsEditUserOpen(false);
+      setEditingUser(null);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openPasswordDialog = (user: any) => {
+    setPasswordUser({ id: user.id, nome: user.nome_completo });
+    setPasswordMode('temp');
+    setGeneratedPassword(generateTempPassword());
+    setManualPassword('');
+    setSendEmailAfterPassword(true);
+    setIsPasswordDialogOpen(true);
   };
 
   const toggleUnidade = (unidade: string) => {
@@ -159,6 +261,25 @@ export default function AdministracaoPage() {
         ? prev.unidades_vinculadas.filter(u => u !== unidade)
         : [...prev.unidades_vinculadas, unidade]
     }));
+  };
+
+  const toggleEditUnidade = (unidade: string) => {
+    if (!editingUser) return;
+    setEditingUser((prev: any) => ({
+      ...prev,
+      unidades_vinculadas: prev.unidades_vinculadas.includes(unidade)
+        ? prev.unidades_vinculadas.filter((u: string) => u !== unidade)
+        : [...prev.unidades_vinculadas, unidade]
+    }));
+  };
+
+  const getStatusBadge = (status: string) => {
+    const map: Record<string, string> = {
+      'ativo': 'bg-green-100 text-green-700',
+      'suspenso': 'bg-amber-100 text-amber-700',
+      'inativo': 'bg-slate-100 text-slate-500',
+    };
+    return map[status] || 'bg-slate-100 text-slate-500';
   };
 
   return (

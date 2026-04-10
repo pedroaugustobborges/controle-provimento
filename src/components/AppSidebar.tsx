@@ -11,7 +11,8 @@ import {
   Bell,
   ChevronDown,
   CornerDownRight,
-  FileText
+  FileText,
+  FileCheck
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';
@@ -63,10 +64,12 @@ export function AppSidebar() {
       url: '/fila-analista-edital', 
       icon: FileText, 
       visible: hasFullAccess || isManagement() || isAdminAnalyst() || isEditalAnalyst(),
-      subMenu: [
-        { title: 'Redação do Edital', url: '/fila-analista-edital' },
-        { title: 'Validação de Edital', url: '/validacao-editais' },
-      ] 
+    },
+    { 
+      title: 'Validação de Edital', 
+      url: '/validacao-editais', 
+      icon: FileCheck, 
+      visible: hasFullAccess || isManagement() || isAdminAnalyst(),
     },
     { 
       title: 'Banco de Talentos', 

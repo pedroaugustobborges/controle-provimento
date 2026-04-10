@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, ArrowRight, 
   Search, Info, Check, X, FileWarning, Database, Layers, Loader2, ListChecks,
-  History, Settings, Play, DatabaseZap
+  History, Settings, Play, DatabaseZap, Briefcase, Users, ChevronDown
 } from 'lucide-react';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
@@ -469,10 +469,3 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
     </Dialog>
   );
 }
-
-// Re-using some icons
-function Briefcase(props: any) {
-  return <BriefcaseIcon {...props} />
-}
-
-import { Briefcase as BriefcaseIcon, Users, ChevronDown } from 'lucide-react';

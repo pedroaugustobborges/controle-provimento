@@ -146,7 +146,7 @@ function fuzzyMatch(header: string, fieldKey: string): boolean {
 // parseDateValue was removed in favor of convertDateValue from dateImportUtils
 
 export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { addBancos, addImportHistory, addImportedFile, updateImportedFile, clearBancos } = useVagasStore();
+  const { addBancos, addImportHistory, addImportedFile, updateImportedFile, clearBancos, clearBancosPorRegiao } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
@@ -162,7 +162,19 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
   const [fileId, setFileId] = useState<string | null>(null);
   const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
   const [totalDetectedRows, setTotalDetectedRows] = useState<number>(0);
+  const [selectedRegion, setSelectedRegion] = useState<'GO_ES' | 'OUTRAS_UNIDADES' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (file) {
+      const name = file.name.toUpperCase();
+      if (name.includes('GO') || name.includes('ES')) {
+        setSelectedRegion('GO_ES');
+      } else if (name.includes('OUTRAS') || name.includes('BASE') || name.includes('GERAL')) {
+        setSelectedRegion('OUTRAS_UNIDADES');
+      }
+    }
+  }, [file]);
 
   useEffect(() => {
     if (workbook && selectedSheets.length > 0) {

@@ -424,6 +424,18 @@ export class ImportService {
       if (!nome || !data.cargo) return null;
       data.cargo_normalizado = normalizeCargo(data.cargo);
 
+      // Handle is_prorrogado: convert "sim"/"yes"/"s" → true
+      if (data.is_prorrogado !== undefined) {
+        const prorVal = String(data.is_prorrogado).trim().toLowerCase();
+        data.is_prorrogado = ['sim', 'yes', 's', 'true', '1', 'x'].includes(prorVal);
+      }
+
+      // Handle quantidade_banco as number
+      if (data.quantidade_banco !== undefined) {
+        const parsed = parseInt(String(data.quantidade_banco).replace(/[^\d]/g, ''));
+        data.quantidade_banco = isNaN(parsed) ? 0 : parsed;
+      }
+
       const importObservation = buildBancoImportObservation(options);
       if (importObservation) {
         const currentObservation = String(data.observacao || '').trim();

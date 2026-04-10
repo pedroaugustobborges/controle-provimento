@@ -74,6 +74,7 @@ export type Database = {
           import_batch_id: string | null
           is_prorrogado: boolean | null
           nome: string | null
+          numero_chamada: string | null
           numero_edital: string | null
           numero_processo_seletivo: string | null
           observacao: string | null
@@ -100,6 +101,7 @@ export type Database = {
           import_batch_id?: string | null
           is_prorrogado?: boolean | null
           nome?: string | null
+          numero_chamada?: string | null
           numero_edital?: string | null
           numero_processo_seletivo?: string | null
           observacao?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           import_batch_id?: string | null
           is_prorrogado?: boolean | null
           nome?: string | null
+          numero_chamada?: string | null
           numero_edital?: string | null
           numero_processo_seletivo?: string | null
           observacao?: string | null

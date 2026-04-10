@@ -1,0 +1,267 @@
+import * as XLSX from 'xlsx';
+import { supabase } from '@/lib/supabase';
+import { normalizeStatus, normalizeCargo } from '@/lib/vagaUtils';
+import { convertDateValue } from '@/lib/dateImportUtils';
+import { getResponsavelPorUnidade } from '@/data/equipe';
+import { TipoVaga } from '@/types/vaga';
+
+export type ImportPhase = 'upload' | 'mapping' | 'processing' | 'finishing' | 'error' | 'success';
+
+export interface ImportProgress {
+  phase: ImportPhase;
+  percentage: number;
+  label: string;
+  processedRows: number;
+  totalRows: number;
+  errors: string[];
+}
+
+export interface ColumnMapping {
+  excel: string;
+  system: string;
+  isDate?: boolean;
+  format?: string;
+}
+
+export class ImportService {
+  /**
+   * Reads basic file info without processing all data
+   */
+  static async analyzeFile(file: File) {
+    return new Promise<{
+      sheetNames: string[];
+      sampleData: Record<string, any[][]>;
+      workbook: XLSX.WorkBook;
+    }>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          const workbook = XLSX.read(data, { 
+            type: 'array', 
+            cellDates: true, 
+            cellNF: false, 
+            cellText: false 
+          });
+          
+          const sampleData: Record<string, any[][]> = {};
+          workbook.SheetNames.forEach(name => {
+            const sheet = workbook.Sheets[name];
+            sampleData[name] = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 }).slice(0, 20);
+          });
+          
+          resolve({ sheetNames: workbook.SheetNames, sampleData, workbook });
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  /**
+   * Processes an import in chunks to prevent UI freezing and memory issues
+   */
+  static async processImportInChunks(
+    params: {
+      type: 'vagas' | 'banco';
+      workbook: XLSX.WorkBook;
+      sheetName: string;
+      headerRow: number;
+      mappings: ColumnMapping[];
+      userId: string;
+      onProgress: (progress: ImportProgress) => void;
+    }
+  ) {
+    const { type, workbook, sheetName, headerRow, mappings, userId, onProgress } = params;
+    
+    try {
+      const sheet = workbook.Sheets[sheetName];
+      const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, raw: true });
+      
+      const headers = (rawRows[headerRow] || []).map(c => String(c || '').trim().toUpperCase());
+      const dataRows = rawRows.slice(headerRow + 1);
+      const totalRows = dataRows.length;
+      
+      if (totalRows === 0) {
+        throw new Error("Nenhum dado encontrado na aba selecionada.");
+      }
+
+      const batchId = `IMPORT-${Date.now()}`;
+      const tableName = type === 'vagas' ? 'vagas' : 'banco_candidatos';
+      
+      onProgress({
+        phase: 'processing',
+        percentage: 0,
+        label: 'Iniciando processamento...',
+        processedRows: 0,
+        totalRows,
+        errors: []
+      });
+
+      // Step 1: Record start in importacoes table
+      const { data: logData } = await supabase.from('importacoes').insert({
+        tipo: type,
+        usuario_id: userId,
+        status: 'em_processamento',
+        quantidade_apagada: 0,
+        arquivo: batchId
+      }).select().single();
+
+      const logId = logData?.id;
+
+      // Step 2: Clear old data if it's a "substitution" import
+      onProgress({
+        phase: 'processing',
+        percentage: 5,
+        label: 'Limpando base anterior...',
+        processedRows: 0,
+        totalRows,
+        errors: []
+      });
+
+      const { error: delErr } = await supabase.from(tableName).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (delErr) {
+        console.warn("Erro ao limpar base antiga, continuando...", delErr);
+      }
+
+      // Step 3: Process in chunks
+      const chunkSize = 200;
+      let processedCount = 0;
+      let insertedCount = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < totalRows; i += chunkSize) {
+        const chunk = dataRows.slice(i, i + chunkSize);
+        const transformedChunk: any[] = [];
+
+        for (const row of chunk) {
+          if (!row || (Array.isArray(row) && row.every(c => c === null || c === ''))) continue;
+          
+          try {
+            const item = this.transformRow(row, headers, mappings, type, batchId, userId);
+            if (item) transformedChunk.push(item);
+          } catch (err: any) {
+            errors.push(`Erro na linha ${i + processedCount + headerRow + 2}: ${err.message}`);
+          }
+        }
+
+        if (transformedChunk.length > 0) {
+          const { error: insertError } = await supabase.from(tableName).insert(transformedChunk);
+          if (insertError) {
+            errors.push(`Erro ao salvar lote ${Math.floor(i/chunkSize) + 1}: ${insertError.message}`);
+          } else {
+            insertedCount += transformedChunk.length;
+          }
+        }
+
+        processedCount += chunk.length;
+        const percentage = Math.min(10 + Math.round((processedCount / totalRows) * 85), 95);
+        
+        onProgress({
+          phase: 'processing',
+          percentage,
+          label: `Processando: ${processedCount} de ${totalRows} registros...`,
+          processedRows: processedCount,
+          totalRows,
+          errors: errors.slice(-3) 
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+
+      // Step 4: Finalize
+      if (logId) {
+        await supabase.from('importacoes').update({
+          status: (errors.length > 0 && insertedCount === 0) ? 'erro' : 'concluido',
+          quantidade_inserida: insertedCount,
+          observacoes: errors.length > 0 ? `Processado com ${errors.length} alertas. Ex: ${errors[0].substring(0, 100)}` : 'Sucesso'
+        }).eq('id', logId);
+      }
+
+      onProgress({
+        phase: 'success',
+        percentage: 100,
+        label: 'Importação concluída com sucesso!',
+        processedRows: insertedCount,
+        totalRows,
+        errors
+      });
+    } catch (err: any) {
+      console.error("Erro crítico na importação:", err);
+      onProgress({
+        phase: 'error',
+        percentage: 0,
+        label: `Erro fatal: ${err.message}`,
+        processedRows: 0,
+        totalRows: 0,
+        errors: [err.message]
+      });
+    }
+  }
+
+  private static transformRow(
+    row: any[], 
+    headers: string[], 
+    mappings: ColumnMapping[], 
+    type: 'vagas' | 'banco',
+    batchId: string,
+    userId: string
+  ) {
+    const data: any = {
+      import_batch_id: batchId,
+      created_by: userId,
+      updated_by: userId,
+      data_importacao: new Date().toISOString(),
+      origem: 'importada'
+    };
+
+    mappings.forEach(m => {
+      const colIndex = headers.indexOf(String(m.excel || '').toUpperCase());
+      if (colIndex !== -1) {
+        let val = row[colIndex];
+        
+        if (m.isDate) {
+          const { formatted } = convertDateValue(val, (m.format as any) || 'auto');
+          data[m.system] = formatted;
+        } else {
+          data[m.system] = val === undefined || val === null ? '' : String(val).trim();
+        }
+      }
+    });
+
+    if (type === 'vagas') {
+      const cargo = String(data.cargo || '').trim();
+      if (!cargo) return null;
+      
+      data.unidade = data.unidade || 'NÃO INFORMADA';
+      data.status = normalizeStatus(data.status || '');
+      data.status_geral = data.status;
+      
+      const rawTipo = (data.tipo_vaga || '').toLowerCase();
+      let tipoVaga: TipoVaga = 'substituicao';
+      if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
+      else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
+      else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
+      else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
+      else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
+      else if (rawTipo.includes('edital')) tipoVaga = 'edital';
+      data.tipo_vaga = tipoVaga;
+
+      const { analista, assistentes } = getResponsavelPorUnidade(data.unidade, tipoVaga);
+      data.analista_responsavel = data.analista_responsavel || analista;
+      data.assistentes = data.assistentes || assistentes;
+      
+      const numVagas = Number(data.numero_vagas) || 1;
+      data.quantidade = numVagas;
+      data.numero_vagas = numVagas;
+    } else {
+      const nome = String(data.nome || '').trim();
+      if (!nome || !data.cargo) return null;
+      data.cargo_normalizado = normalizeCargo(data.cargo);
+    }
+
+    return data;
+  }
+}

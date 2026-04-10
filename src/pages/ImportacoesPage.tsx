@@ -28,7 +28,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { formatDate } from '@/lib/vagaUtils';
-import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { useState } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
@@ -460,10 +460,9 @@ export default function ImportacoesPage() {
         </TabsContent>
       </Tabs>
 
-      <ImportExcelDialog 
+      <ImportStagedDialog 
         open={isImportOpen} 
-        onOpenChange={setIsImportOpen} 
-        reprocessFile={reprocessFile}
+        onOpenChange={setIsImportOpen}
       />
 
       <AlertDialog open={!!batchParaExcluir} onOpenChange={(open) => !open && setBatchParaExcluir(null)}>

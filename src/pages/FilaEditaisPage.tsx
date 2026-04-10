@@ -20,7 +20,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
-import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogFooter, DialogDescription 
@@ -282,7 +282,7 @@ export default function FilaEditaisPage() {
         </CardContent>
       </Card>
 
-      <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+      <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
 
       <Dialog open={isSendModalOpen} onOpenChange={setIsSendModalOpen}>
         <DialogContent className="sm:max-w-[500px]">

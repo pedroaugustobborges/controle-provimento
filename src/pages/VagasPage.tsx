@@ -26,7 +26,7 @@ import {
   Database, CheckCircle2, ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import { PageHeader } from '@/components/PageHeader';
@@ -758,7 +758,7 @@ export default function VagasPage() {
         </CardContent>
       </Card>
 
-      <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+      <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
       <AddVagaDialog open={isAddVagaOpen} onOpenChange={setIsAddVagaOpen} />
       <VagaHistoryDialog vaga={selectedVagaForHistory} open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
 

@@ -513,7 +513,7 @@ export default function VagaDetalhePage() {
                     </p>
                     {banco && (
                       <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-green-200 text-green-700 bg-green-50">
-                        {banco.status.toUpperCase()}
+                        {String(banco.status || 'SEM STATUS').toUpperCase()}
                       </Badge>
                     )}
                   </div>

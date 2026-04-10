@@ -326,9 +326,9 @@ export default function AdministracaoPage() {
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0">
               <div>
                 <CardTitle className="text-lg font-bold">Usuários Cadastrados</CardTitle>
-                <CardDescription>Gerencie quem tem acesso ao sistema e seus perfis básicos.</CardDescription>
+                <CardDescription>Gerencie quem tem acesso ao sistema, perfis, permissões e senhas.</CardDescription>
               </div>
-              <Button onClick={() => setIsNewUserOpen(true)} className="gap-2 bg-primary">
+              <Button onClick={() => { resetNewUserForm(); setIsNewUserOpen(true); }} className="gap-2 bg-primary">
                 <UserPlus className="h-4 w-4" /> Incluir novo usuário
               </Button>
             </CardHeader>
@@ -337,12 +337,11 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead >Nome / E-mail</TableHead>
-                      <TableHead >Perfil / Cargo</TableHead>
+                      <TableHead>Nome / E-mail</TableHead>
+                      <TableHead>Perfil / Cargo</TableHead>
+                      <TableHead>Unidades</TableHead>
                       <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-center">Acesso Global</TableHead>
-                      <TableHead className="text-center">Pode Excluir</TableHead>
-                      <TableHead >Último Acesso</TableHead>
+                      <TableHead>Último Acesso</TableHead>
                       <TableHead className="text-right pr-6"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -361,43 +360,57 @@ export default function AdministracaoPage() {
                             <span className="text-[11px] text-slate-500 font-medium">{user.cargo}</span>
                           </div>
                         </TableCell>
+                        <TableCell>
+                          {user.visualiza_todas_unidades ? (
+                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Todas</Badge>
+                          ) : (
+                            <span className="text-[11px] text-slate-500">{user.unidades_vinculadas?.length || 0} unid.</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-center">
-                          <Badge className={`${user.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'} font-bold text-[11px] uppercase border-0`}>
+                          <Badge className={`${getStatusBadge(user.status)} font-bold text-[11px] uppercase border-0`}>
                             {user.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center">
-                          {user.visualiza_todas_unidades ? 
-                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Sim</Badge> : 
-                            <span className="text-[11px] text-slate-400 font-bold">Não</span>
-                          }
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {user.pode_excluir_requisicoes ? 
-                            <Check className="h-4 w-4 text-green-500 mx-auto" /> : 
-                            <X className="h-4 w-4 text-slate-300 mx-auto" />
-                          }
-                        </TableCell>
                         <TableCell className="text-xs text-slate-500 font-medium">
-                          {user.ultimo_acesso || 'Nunca'}
+                          {user.ultimo_acesso ? new Date(user.ultimo_acesso).toLocaleDateString('pt-BR') : 'Nunca'}
                         </TableCell>
                         <TableCell className="text-right pr-6">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4 text-slate-400" /></Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="w-56">
                               <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                              <DropdownMenuItem><Edit2 className="mr-2 h-4 w-4" /> Editar dados básicos</DropdownMenuItem>
-                              <DropdownMenuItem><Shield className="mr-2 h-4 w-4" /> Alterar unidades e permissões</DropdownMenuItem>
-                              <DropdownMenuItem><Lock className="mr-2 h-4 w-4" /> Definir senha</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}
-                                onClick={() => handleToggleStatus(user.id)}
-                              >
-                                {user.status === 'ativo' ? 'Inativar usuário' : 'Ativar usuário'}
+                              <DropdownMenuItem onClick={() => openEditUser(user)}>
+                                <Edit2 className="mr-2 h-4 w-4" /> Editar dados do usuário
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openPasswordDialog(user)}>
+                                <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleResendWelcomeEmail(user)}
+                                disabled={testEmailLoading === user.id}
+                              >
+                                <Send className="mr-2 h-4 w-4" /> {testEmailLoading === user.id ? 'Enviando...' : 'Reenviar e-mail de boas-vindas'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {user.status !== 'ativo' && (
+                                <DropdownMenuItem className="text-green-600" onClick={() => handleStatusChange(user.id, 'ativo')}>
+                                  <UserCheck className="mr-2 h-4 w-4" /> Reativar acesso
+                                </DropdownMenuItem>
+                              )}
+                              {user.status === 'ativo' && (
+                                <DropdownMenuItem className="text-amber-600" onClick={() => handleStatusChange(user.id, 'suspenso')}>
+                                  <Ban className="mr-2 h-4 w-4" /> Suspender acesso
+                                </DropdownMenuItem>
+                              )}
+                              {user.status !== 'inativo' && (
+                                <DropdownMenuItem className="text-slate-500" onClick={() => handleStatusChange(user.id, 'inativo')}>
+                                  <X className="mr-2 h-4 w-4" /> Inativar usuário
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 className="text-destructive"
                                 onClick={() => {
@@ -405,7 +418,7 @@ export default function AdministracaoPage() {
                                   setIsDeleteDialogOpen(true);
                                 }}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" /> Excluir usuário
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir acesso
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

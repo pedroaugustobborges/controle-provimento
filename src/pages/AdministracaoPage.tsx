@@ -253,6 +253,7 @@ export default function AdministracaoPage() {
     setGeneratedPassword(generateTempPassword());
     setManualPassword('');
     setSendEmailAfterPassword(true);
+    setShowResetPassword(false);
     setIsPasswordDialogOpen(true);
   };
 

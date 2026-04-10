@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { BancoTalentosForm } from '@/components/BancoTalentosForm';
-import { ImportExcelDialog } from '@/components/ImportExcelDialog';
+import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -362,9 +362,10 @@ export default function BancoTalentosPage() {
         </DialogContent>
       </Dialog>
 
-      <ImportExcelDialog 
+      <ImportStagedDialog 
         open={isImportOpen} 
         onOpenChange={setIsImportOpen} 
+        type="banco"
       />
 
       <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>

@@ -205,7 +205,7 @@ export default function FilaAnalistaEditalPage() {
         title="Fila do Edital (Redação)"
         subtitle="Vagas recebidas da unidade para redação e preparo do edital."
         badge="Redação de Editais"
-        actions={<HelpGuide />}
+        helpContent={<HelpGuide />}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -314,10 +314,11 @@ export default function VagasPage() {
         <AcompanhamentoEditalList />
       ) : (
         <>
-          <PageHeader 
+           <PageHeader 
             title="Controle de Provimento"
             subtitle="Gerenciamento estratégico e centralizado de vagas, editais e fluxo de convocações AGIR."
             badge="Gestão de Vagas"
+            helpContent={<HelpGuide />}
             actions={
               <>
                 {permissions.canViewAudit() && (
@@ -354,7 +355,6 @@ export default function VagasPage() {
               </>
             }
           />
-          <HelpGuide />
 
       {isDebugOpen && (
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-4">
@@ -969,7 +969,7 @@ function AcompanhamentoEditalList() {
           title="Acompanhamento do Edital"
           subtitle="Monitoramento operacional detalhado das etapas e indicadores dos editais publicados."
           badge="Gestão de Processos"
-          actions={<HelpGuide activeTab="acompanhamento" />}
+          helpContent={<HelpGuide activeTab="acompanhamento" />}
         />
 
         {canFilterByUnit && (

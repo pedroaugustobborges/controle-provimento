@@ -10,6 +10,7 @@ interface PageHeaderProps {
   icon?: ReactNode;
   className?: string;
   withBackground?: boolean;
+  helpContent?: ReactNode;
 }
 
 export function PageHeader({ 
@@ -20,11 +21,12 @@ export function PageHeader({
   actions, 
   icon,
   className,
-  withBackground = false
+  withBackground = false,
+  helpContent
 }: PageHeaderProps) {
   return (
     <div className={cn(
-      "flex flex-col lg:flex-row lg:items-center justify-between gap-6",
+      "flex flex-col lg:flex-row lg:items-start justify-between gap-6",
       withBackground ? "bg-white p-8 rounded-2xl border border-slate-100 shadow-sm mb-8" : "mb-8",
       className
     )}>
@@ -46,6 +48,7 @@ export function PageHeader({
             {subtitle}
           </p>
         )}
+        {helpContent && <div className="mt-2">{helpContent}</div>}
       </div>
       {actions && (
         <div className="flex items-center gap-3 shrink-0">

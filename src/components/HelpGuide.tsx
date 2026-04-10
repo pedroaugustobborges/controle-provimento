@@ -37,6 +37,16 @@ const GUIDES: Record<string, Record<string, GuideSection[]>> = {
       }
     ]
   },
+  "/fila-editais": {
+    "default": [
+      {
+        title: "Fila de Editais",
+        description: "Vagas aguardando redação e publicação de novo edital. A unidade valida os dados e encaminha para o analista.",
+        currentStage: "Validação pela Unidade",
+        nextStage: "Redação do Edital"
+      }
+    ]
+  },
   "/fila-analista-edital": {
     "default": [
       {
@@ -73,14 +83,12 @@ export function HelpGuide({ activeTab }: { activeTab?: string } = {}) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-2 border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-700 font-bold h-10 px-4 rounded-xl shadow-sm transition-all"
+        <button 
+          className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer bg-transparent border-none p-0"
         >
-          <HelpCircle className="h-4 w-4" />
+          <HelpCircle className="h-3.5 w-3.5" />
           Como usar este menu?
-        </Button>
+        </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] border-none shadow-2xl bg-slate-50">
         <DialogHeader className="space-y-3 pb-4 border-b border-slate-200">

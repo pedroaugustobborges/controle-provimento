@@ -320,7 +320,7 @@ export default function VagaDetalhePage() {
       perfil: currentUser?.perfil || 'Sistema',
       data: today,
       hora: new Date().toLocaleTimeString(),
-      acao: 'Publicar no Edital (Ação Rápida)',
+      acao: 'Enviar para Fila de Editais (Ação Rápida)',
       modulo: 'Vagas',
       registro_afetado: vaga.requisicao || vaga.id,
       valor_novo: 'publicar_novo_edital'
@@ -457,7 +457,7 @@ export default function VagaDetalhePage() {
                 <Send className="h-6 w-6" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-base">Publicar no edital</p>
+                <p className="font-bold text-base">Enviar para Fila de Editais</p>
                 <p className="text-xs text-slate-500 font-medium">Encaminhar para fila de novos editais/publicações</p>
               </div>
             </div>

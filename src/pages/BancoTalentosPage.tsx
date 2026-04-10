@@ -598,11 +598,9 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {groupedBancos
-                      .filter(g => (g.status === 'CADASTRO RESERVA' || g.status === 'valido') && !g.isProrrogado)
-                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                    {bancos.filter(b => (b.status === 'CADASTRO RESERVA' || b.status === 'valido') && !b.is_prorrogado).length}
                   </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade de vagas</p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
                 </div>
               </div>
             </div>
@@ -633,14 +631,12 @@ export default function BancoTalentosPage() {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Capacidade Vigente</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva Disponível</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {groupedBancos
-                      .filter(g => g.status !== 'VENCIDO' && g.status !== 'CONVOCADO')
-                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                    {bancos.filter(b => b.status !== 'VENCIDO' && b.status !== 'CONVOCADO').length}
                   </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Válidos + Prorrogados</p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Não vencidos e não convocados</p>
                 </div>
               </div>
             </div>
@@ -656,11 +652,9 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {groupedBancos
-                      .filter(g => g.isProrrogado || g.status === 'prorrogado')
-                      .reduce((sum, g) => sum + g.qtdBanco, 0)}
+                    {bancos.filter(b => b.is_prorrogado || b.status === 'prorrogado').length}
                   </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade de vagas</p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
                 </div>
               </div>
             </div>
@@ -694,9 +688,9 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Banco Total</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)}
+                    {bancos.length}
                   </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Capacidade total</p>
+                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Total de candidatos</p>
                 </div>
               </div>
             </div>

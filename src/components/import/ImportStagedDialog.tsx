@@ -192,7 +192,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       const filtered = prev.filter(m => m.system !== systemKey);
       if (excelHeader === 'none') return filtered;
       
-      const isDate = systemKey.includes('data') || systemKey === 'abertura' || systemKey === 'recebimento';
+      const isDate = systemKey.includes('data_') || systemKey === 'data_abertura' || systemKey === 'data_recebimento' || systemKey === 'data_validade' || systemKey === 'data_convocacao';
       return [...filtered, { system: systemKey, excel: excelHeader, isDate }];
     });
   };

@@ -57,6 +57,22 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    // Bootstrap: allow service-role to reset password without user auth
+    if (action === "bootstrap_reset_password") {
+      const authToken = authHeader.replace("Bearer ", "");
+      if (authToken !== serviceRoleKey) {
+        return new Response(JSON.stringify({ error: "Não autorizado para bootstrap" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { user_id, new_password } = body;
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password: new_password });
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     switch (action) {
       case "create_user": {
         const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios } = body;

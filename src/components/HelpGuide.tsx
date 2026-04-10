@@ -53,7 +53,7 @@ const GUIDES: Record<string, Record<string, GuideSection[]>> = {
         title: "Redação do Edital",
         description: "Espaço para o analista redigir o edital baseado nas informações da vaga.",
         currentStage: "Redação do Conteúdo",
-        nextStage: "Validação Interna"
+        nextStage: "Validação de Edital"
       }
     ]
   },

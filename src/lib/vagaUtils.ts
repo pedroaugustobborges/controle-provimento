@@ -316,7 +316,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
 }
 
 export function normalizeUnitName(name: string): string {
-  if (!name) return '';
+  if (!name || typeof name !== 'string') return '';
   return name.toUpperCase().trim().replace(/\s+/g, ' ');
 }
 

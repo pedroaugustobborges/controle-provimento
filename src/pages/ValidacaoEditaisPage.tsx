@@ -11,20 +11,18 @@ import {
   XCircle, 
   Clock, 
   Search, 
-  Filter, 
-  MoreVertical, 
-  Calendar,
   AlertCircle,
   Eye,
   FileCheck,
   Building2,
   FileText,
   Bot,
-  Zap,
   MessageSquare,
   FileDown,
   User,
-  ExternalLink
+  ExternalLink,
+  RotateCcw,
+  Link2
 } from 'lucide-react';
 import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
 import { useState, useMemo } from 'react';
@@ -35,16 +33,16 @@ import { toast } from 'sonner';
 
 
 export default function ValidacaoEditaisPage() {
-  const { vagas, updateVaga } = useVagasStore();
+  const { vagas, updateVaga, addMensagem } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const [search, setSearch] = useState('');
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
   const [obs, setObs] = useState('');
+  const [reachrUrl, setReachrUrl] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const pendingEditais = useMemo(() => {
     return vagas.filter(v => {
-      // Regra de filtro: status de validação pendente ou status de fluxo correto
       if (v.status_validacao !== 'pendente' && v.status_fluxo_edital !== 'enviado_validacao') {
         return false;
       }
@@ -67,53 +65,94 @@ export default function ValidacaoEditaisPage() {
   }, [vagas, currentUser, search]);
 
 
-  const handleAction = (vagaId: string, actionStatus: 'aprovado' | 'reprovado') => {
+  const handleAction = (vagaId: string, actionStatus: 'aprovado' | 'reprovado' | 'ajuste') => {
     const vaga = vagas.find(v => v.id === vagaId);
     if (!vaga) return;
 
-    // Se aprovado, volta para o analista do edital com status aprovado
-    // Se reprovado, volta para o analista do edital com status em redação (para correção)
-    const newFluxoStatus = actionStatus === 'aprovado' ? 'aprovado_administrativo' : 'em_redacao';
-    
-    updateVaga(vagaId, {
-      status_validacao: actionStatus,
+    let newFluxoStatus: string;
+    let descricao: string;
+    let mensagemAgie: string;
+    const usuario = currentUser?.nome_completo || 'Sistema';
+    const vagaRef = vaga.requisicao || vaga.numero_requisicao || vaga.id;
+    const cargoRef = vaga.cargo || 'não informado';
+    const unidadeRef = vaga.unidade || 'não informada';
+
+    if (actionStatus === 'aprovado') {
+      newFluxoStatus = 'aprovado_administrativo';
+      descricao = `Edital APROVADO por ${usuario}. Obs: ${obs}`;
+      mensagemAgie = `✅ O edital da vaga ${vagaRef} (${cargoRef} - ${unidadeRef}) foi APROVADO na validação por ${usuario}.${reachrUrl ? ` Link Reachr: ${reachrUrl}` : ''} O edital pode prosseguir para publicação.`;
+    } else if (actionStatus === 'ajuste') {
+      newFluxoStatus = 'em_redacao';
+      descricao = `Edital devolvido para AJUSTE/REDAÇÃO por ${usuario}. Obs: ${obs}`;
+      mensagemAgie = `🔄 O edital da vaga ${vagaRef} (${cargoRef} - ${unidadeRef}) foi devolvido para AJUSTE na redação por ${usuario}. Motivo: ${obs || 'Não informado'}. O analista deve corrigir e reenviar.`;
+    } else {
+      newFluxoStatus = 'em_redacao';
+      descricao = `Edital REJEITADO por ${usuario}. Obs: ${obs}`;
+      mensagemAgie = `❌ O edital da vaga ${vagaRef} (${cargoRef} - ${unidadeRef}) foi REJEITADO na validação por ${usuario}. Motivo: ${obs || 'Não informado'}. Verifique as pendências antes de reenviar.`;
+    }
+
+    const updateData: any = {
+      status_validacao: actionStatus === 'ajuste' ? 'pendente' : actionStatus,
       status_fluxo_edital: newFluxoStatus,
-      validado_por: currentUser?.nome_completo,
+      validado_por: usuario,
       data_validacao: new Date().toISOString(),
       observacoes_validacao: obs,
       historico: [...vaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Edital ${actionStatus === 'aprovado' ? 'APROVADO' : 'REPROVADO'} por ${currentUser?.nome_completo}. Obs: ${obs}`,
-        usuario: currentUser?.nome_completo || 'Admin'
+        descricao,
+        usuario: usuario
       }]
-    });
+    };
+
+    if (reachrUrl) {
+      updateData.url_reachr = reachrUrl;
+    }
+
+    updateVaga(vagaId, updateData);
     
+    // Enviar notificação para AGIE
+    addMensagem({
+      id: `msg-val-ed-${Date.now()}`,
+      data: new Date().toISOString(),
+      remetente: 'Aide',
+      conteudo: mensagemAgie,
+      lida: false,
+    });
+
     addAuditLog({
-      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_nome: usuario,
       usuario_email: currentUser?.email || 'sistema@sistema.com',
       perfil: currentUser?.perfil || 'Admin',
       data: new Date().toISOString().split('T')[0],
       hora: new Date().toLocaleTimeString(),
       acao: `Validação de Edital: ${actionStatus.toUpperCase()}`,
       modulo: 'Editais',
-      registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
+      registro_afetado: vagaRef,
       valor_novo: actionStatus
     });
 
-
-    toast.success(`Edital ${actionStatus === 'aprovado' ? 'validado' : 'reprovado'} com sucesso.`);
+    const msgs: Record<string, string> = {
+      aprovado: 'Edital aprovado! Notificação enviada à AGIE.',
+      reprovado: 'Edital rejeitado! Notificação enviada à AGIE.',
+      ajuste: 'Edital devolvido para ajuste na redação! Notificação enviada à AGIE.',
+    };
+    toast.success(msgs[actionStatus]);
     setIsModalOpen(false);
     setSelectedVaga(null);
     setObs('');
+    setReachrUrl('');
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Validar Editais</h1>
-          <p className="text-slate-500 mt-1">Área de validação administrativa de editais redigidos.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
+            <FileCheck className="h-8 w-8 text-primary" />
+            Validação de Edital
+          </h1>
+          <p className="text-slate-500 mt-1">Área de validação administrativa de editais redigidos. Aprove, rejeite ou devolva para ajuste.</p>
         </div>
       </div>
 
@@ -175,7 +214,7 @@ export default function ValidacaoEditaisPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setIsModalOpen(true); }}>
+                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setReachrUrl(v.url_reachr || ''); setIsModalOpen(true); }}>
                         <Eye className="h-3.5 w-3.5" /> Analisar
                       </Button>
                     </div>
@@ -184,7 +223,7 @@ export default function ValidacaoEditaisPage() {
               ))}
               {pendingEditais.length === 0 && (
                 <TableRow>
-                  <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                  <td colSpan={6} className="px-6 py-20 text-center text-slate-400 font-medium italic">
                     Nenhum edital pendente de validação administrativa.
                   </td>
                 </TableRow>
@@ -217,6 +256,32 @@ export default function ValidacaoEditaisPage() {
                 <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Processo</p>
                 <p className="font-bold text-slate-800">{selectedVaga?.numero_processo}</p>
               </div>
+            </div>
+
+            {/* Link Reachr */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-blue-600" /> Endereço da Vaga no Reachr
+              </h4>
+              <div className="flex gap-2">
+                <Input 
+                  value={reachrUrl} 
+                  onChange={(e) => setReachrUrl(e.target.value)} 
+                  className="bg-white border-slate-200 flex-1" 
+                  placeholder="https://www.reachr.com.br/vaga/..." 
+                />
+                {reachrUrl && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1 text-blue-600 border-blue-200 hover:bg-blue-50 shrink-0"
+                    onClick={() => window.open(reachrUrl.startsWith('http') ? reachrUrl : `https://${reachrUrl}`, '_blank')}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> Abrir
+                  </Button>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400">Cole o link da vaga publicada no portal www.reachr.com.br</p>
             </div>
 
             {/* Arquivo do Edital */}
@@ -253,30 +318,24 @@ export default function ValidacaoEditaisPage() {
               </h4>
               
               <div className="space-y-3">
-                {/* Unidade */}
                 <div className="relative pl-6 pb-2 border-l-2 border-slate-100">
                   <div className="absolute left-[-9px] top-0 bg-white p-0.5">
                     <div className="bg-amber-100 p-1 rounded-full"><Building2 className="h-3 w-3 text-amber-600" /></div>
                   </div>
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Analista da Unidade</span>
-                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Analista da Unidade</span>
                     <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
                       {selectedVaga?.observacoes_unidade || 'Nenhuma observação informada pela unidade.'}
                     </div>
                   </div>
                 </div>
 
-                {/* Edital */}
                 <div className="relative pl-6 border-l-2 border-slate-100">
                   <div className="absolute left-[-9px] top-0 bg-white p-0.5">
                     <div className="bg-blue-100 p-1 rounded-full"><User className="h-3 w-3 text-blue-600" /></div>
                   </div>
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Analista do Edital</span>
-                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Analista do Edital</span>
                     <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
                       {selectedVaga?.observacoes_edital || 'Nenhuma observação informada pelo analista do edital.'}
                     </div>
@@ -315,7 +374,7 @@ export default function ValidacaoEditaisPage() {
             <div className="space-y-2">
               <label className="text-[11px] font-bold text-slate-400 uppercase">Observações da Validação Final</label>
               <Textarea 
-                placeholder="Informe o motivo da reprovação ou observações da aprovação..." 
+                placeholder="Informe o motivo da reprovação, ajuste ou observações da aprovação..." 
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
                 className="min-h-[100px] resize-none"
@@ -323,12 +382,26 @@ export default function ValidacaoEditaisPage() {
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleAction(selectedVaga.id, 'reprovado')}>
-              <XCircle className="h-4 w-4 mr-2" /> Reprovar
+          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 flex-wrap">
+            <Button 
+              variant="outline" 
+              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-1" 
+              onClick={() => handleAction(selectedVaga.id, 'ajuste')}
+            >
+              <RotateCcw className="h-4 w-4" /> Devolver para Ajuste
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAction(selectedVaga.id, 'aprovado')}>
-              <CheckCircle2 className="h-4 w-4 mr-2" /> Validar Edital
+            <Button 
+              variant="outline" 
+              className="text-red-600 border-red-200 hover:bg-red-50 gap-1" 
+              onClick={() => handleAction(selectedVaga.id, 'reprovado')}
+            >
+              <XCircle className="h-4 w-4" /> Rejeitar
+            </Button>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white gap-1" 
+              onClick={() => handleAction(selectedVaga.id, 'aprovado')}
+            >
+              <CheckCircle2 className="h-4 w-4" /> Aprovar Edital
             </Button>
           </DialogFooter>
         </DialogContent>

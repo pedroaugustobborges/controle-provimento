@@ -582,6 +582,7 @@ export function ImportExcelDialog({
       });
 
       toast.success(`Importação concluída com sucesso! ${result.count} registros inseridos.`);
+      fetchImportHistory(); // Sync background history
       setStep('summary');
 
     } catch (error: any) {

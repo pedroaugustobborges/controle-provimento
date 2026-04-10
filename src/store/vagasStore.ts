@@ -316,9 +316,10 @@ export const useVagasStore = create<VagasState>()(
       name: 'hospital-recruitment-store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Persistir dados essenciais e bancos de talentos - aumentado limite para evitar perda de dados
-        vagas: state.vagas, // Removing restrictive 2000 limit to ensure data integrity as requested
-        bancos: state.bancos.length > 5000 ? state.bancos.slice(0, 5000) : state.bancos,
+        // Exclude large data arrays from localStorage persistence to avoid 5MB quota crashes
+        // and improve startup performance. Data should be fetched from Supabase.
+        vagas: [], 
+        bancos: [],
         editais: state.editais,
         validacoes: state.validacoes,
         convocacoes: state.convocacoes,

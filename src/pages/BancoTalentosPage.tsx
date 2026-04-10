@@ -154,6 +154,7 @@ export default function BancoTalentosPage() {
       edital: string;
       processoSeletivo: string;
       unidade: string;
+      regiao?: string;
       cargo: string;
       cargoNormalizado: string;
       status: string;

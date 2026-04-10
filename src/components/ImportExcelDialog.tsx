@@ -569,7 +569,8 @@ export function ImportExcelDialog({
           fileName: selectedFile.name,
           sheetName: sheetUsed,
           manualType: chosenType,
-          suggestedType: suggestedType
+          suggestedType: suggestedType,
+          region: selectedRegion
         });
 
         addImportHistory({

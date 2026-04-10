@@ -67,6 +67,16 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
       return;
     }
 
+    if (vaga) {
+      updateVaga(vaga.id, {
+        ...formData,
+        numero_requisicao: formData.requisicao,
+      });
+      toast.success('Vaga atualizada com sucesso.');
+      onOpenChange(false);
+      return;
+    }
+
     const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(formData.unidade, formData.tipo_vaga);
     const now = new Date().toISOString();
     

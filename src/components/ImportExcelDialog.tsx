@@ -17,6 +17,7 @@ import { normalizeStatus, getValidVacancyBase } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 
 type Step = 'select' | 'analysis' | 'validation' | 'processing' | 'summary';
 

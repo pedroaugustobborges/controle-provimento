@@ -72,6 +72,8 @@ export default function AdministracaoPage() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [passwordUser, setPasswordUser] = useState<{ id: string; nome: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   // Password dialog state
   const [passwordMode, setPasswordMode] = useState<'manual' | 'temp'>('temp');
@@ -932,14 +934,24 @@ export default function AdministracaoPage() {
                 </label>
               </div>
               {newUser.passwordMode === 'temp' ? (
-                <div className="flex items-center gap-3">
-                  <Input value={newUser.password} readOnly className="font-mono bg-muted/50" />
-                  <Button type="button" variant="outline" size="sm" onClick={() => setNewUser(p => ({ ...p, password: generateTempPassword() }))}>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input type={showNewPassword ? 'text' : 'password'} value={newUser.password} readOnly className="font-mono bg-muted/50 pr-10" />
+                    <button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setNewUser(p => ({ ...p, password: generateTempPassword() })); setShowNewPassword(false); }}>
                     <RefreshCw className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               ) : (
-                <Input type="text" placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} />
+                <div className="relative">
+                  <Input type={showNewPassword ? 'text' : 'password'} placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} className="pr-10" />
+                  <button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               )}
             </div>
 
@@ -1132,14 +1144,24 @@ export default function AdministracaoPage() {
               </label>
             </div>
             {passwordMode === 'temp' ? (
-              <div className="flex items-center gap-3">
-                <Input value={generatedPassword} readOnly className="font-mono bg-muted/50" />
-                <Button type="button" variant="outline" size="sm" onClick={() => setGeneratedPassword(generateTempPassword())}>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Input type={showResetPassword ? 'text' : 'password'} value={generatedPassword} readOnly className="font-mono bg-muted/50 pr-10" />
+                  <button type="button" onClick={() => setShowResetPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => { setGeneratedPassword(generateTempPassword()); setShowResetPassword(false); }}>
                   <RefreshCw className="h-3.5 w-3.5" />
                 </Button>
               </div>
             ) : (
-              <Input type="text" placeholder="Nova senha (mín. 6 caracteres)" value={manualPassword} onChange={(e) => setManualPassword(e.target.value)} />
+              <div className="relative">
+                <Input type={showResetPassword ? 'text' : 'password'} placeholder="Nova senha (mín. 6 caracteres)" value={manualPassword} onChange={(e) => setManualPassword(e.target.value)} className="pr-10" />
+                <button type="button" onClick={() => setShowResetPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             )}
             <div className="flex items-center gap-3 pt-2">
               <Checkbox 

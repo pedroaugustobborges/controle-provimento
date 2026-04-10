@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { ImportService, ImportProgress, ColumnMapping } from '@/services/importService';
 import { autoMapColumns, getDefaultHeaderRow, VAGA_REQUIRED_COLUMNS, BANCO_REQUIRED_COLUMNS, BANCO_OPTIONAL_COLUMNS } from '@/lib/importUtils';
 import { cn } from '@/lib/utils';
+import { buildBancoImportObservation, ImportExecutionOptions, normalizeImportSystemKey } from '@/lib/importScopeUtils';
 
 interface ImportStagedDialogProps {
   open: boolean;
@@ -42,6 +43,12 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
   const [sampleData, setSampleData] = useState<any[][]>([]);
   const [mappings, setMappings] = useState<ColumnMapping[]>([]);
   const [headerRow, setHeaderRow] = useState(0);
+  const [autoMappingErrors, setAutoMappingErrors] = useState<string[]>([]);
+  const [importOptions, setImportOptions] = useState<ImportExecutionOptions>({
+    bancoTipo: 'geral',
+    bancoEscopo: 'goias',
+    bancoModo: 'substituir',
+  });
   
   const [importProgress, setImportProgress] = useState<ImportProgress>({
     phase: 'upload',
@@ -62,6 +69,14 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
         setFile(null);
         setWorkbook(null);
         setMappings([]);
+        setAutoMappingErrors([]);
+        setHeaderRow(getDefaultHeaderRow(initialType || 'vagas'));
+        setImportType(initialType || 'vagas');
+        setImportOptions({
+          bancoTipo: 'geral',
+          bancoEscopo: 'goias',
+          bancoModo: 'substituir',
+        });
         setImportProgress({
           phase: 'upload',
           percentage: 0,
@@ -73,6 +88,62 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       }, 300);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      setImportType(initialType || 'vagas');
+      setHeaderRow(getDefaultHeaderRow(initialType || 'vagas'));
+    }
+  }, [open, initialType]);
+
+  const requiredFields = useMemo(
+    () => (importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : BANCO_REQUIRED_COLUMNS),
+    [importType]
+  );
+
+  const allFields = useMemo(
+    () => (importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : [...BANCO_REQUIRED_COLUMNS, ...BANCO_OPTIONAL_COLUMNS]),
+    [importType]
+  );
+
+  const missingRequiredFields = useMemo(
+    () => requiredFields.filter(field => !mappings.some(mapping => normalizeImportSystemKey(mapping.system) === field.key)),
+    [mappings, requiredFields]
+  );
+
+  const applyAutomaticConfiguration = (
+    workbookData: XLSX.WorkBook,
+    sheetName: string,
+    nextType: 'vagas' | 'banco'
+  ) => {
+    const defaultHeaderIndex = getDefaultHeaderRow(nextType);
+    const nextSampleData = workbookData.Sheets[sheetName]
+      ? XLSX.utils.sheet_to_json<any[]>(workbookData.Sheets[sheetName], { header: 1 }).slice(0, 20)
+      : [];
+
+    setHeaderRow(defaultHeaderIndex);
+    setSampleData(nextSampleData);
+
+    const headers = (nextSampleData[defaultHeaderIndex] || [])
+      .map((cell: any) => String(cell || '').trim())
+      .filter((value: string) => value !== '');
+
+    if (headers.length === 0) {
+      throw new Error(`Não foi possível identificar o cabeçalho na linha ${defaultHeaderIndex + 1} da aba "${sheetName}".`);
+    }
+
+    const nextMappings = autoMapColumns(headers, nextType).map(mapping => ({
+      ...mapping,
+      system: normalizeImportSystemKey(mapping.system),
+    }));
+    const nextRequiredFields = nextType === 'vagas' ? VAGA_REQUIRED_COLUMNS : BANCO_REQUIRED_COLUMNS;
+    const missingFields = nextRequiredFields.filter(field => !nextMappings.some(mapping => mapping.system === field.key));
+
+    setMappings(nextMappings);
+    setAutoMappingErrors(missingFields.map(field => field.label));
+
+    return { nextMappings, missingFields };
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -100,34 +171,13 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       if (!sheetData || !Array.isArray(sheetData) || sheetData.length === 0) {
         throw new Error(`A aba "${defaultSheet}" selecionada parece estar vazia.`);
       }
-      setSampleData(sheetData);
-      
-      // Use predefined header row based on type
-      const defaultHeaderIndex = getDefaultHeaderRow(importType);
-      setHeaderRow(defaultHeaderIndex);
-      
-      // Auto mapping
-      const headers = (sheetData[defaultHeaderIndex] || [])
-        .map((c: any) => String(c || '').trim())
-        .filter((h: string) => h !== '');
-      
-      if (headers.length === 0) {
-        throw new Error(`Não foi possível identificar o cabeçalho na aba "${defaultSheet}". Revise a linha de cabeçalho.`);
-      }
+      const { nextMappings, missingFields } = applyAutomaticConfiguration(workbook, defaultSheet, importType);
 
-      const autoMappings = autoMapColumns(headers, importType);
-      setMappings(autoMappings);
-      
-      // Check if all required fields are mapped - if so, skip mapping step and go straight to import
-      const requiredFields = importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : BANCO_REQUIRED_COLUMNS;
-      const allRequiredMapped = requiredFields.every(f => autoMappings.some(m => m.system === f.key));
-      
-      if (allRequiredMapped) {
-        // Auto-start import directly
-        setStep('mapping');
-        toast.success(`Mapeamento automático: ${autoMappings.length} colunas identificadas. Confira e clique "Iniciar Importação".`);
+      setStep('mapping');
+      if (missingFields.length > 0) {
+        toast.error(`Não foi possível reconhecer automaticamente: ${missingFields.map(field => field.label).join(', ')}`);
       } else {
-        setStep('mapping');
+        toast.success(`Leitura automática concluída: ${nextMappings.length} colunas identificadas.`);
       }
     } catch (err: any) {
       toast.error(`Falha na leitura do arquivo: ${err.message || 'Erro desconhecido'}`);
@@ -135,23 +185,18 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
     }
   };
 
-  const detectHeaderRow = (rows: any[][]) => {
-    for (let i = 0; i < rows.length; i++) {
-      const filled = rows[i].filter(c => c !== null && String(c).trim() !== '').length;
-      if (filled > 3) return i;
-    }
-    return 0;
-  };
-
   const handleStartImport = async () => {
     if (!workbook || !selectedSheet || !currentUser) return;
     
-    // Validate required mappings
-    const requiredFields = importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : BANCO_REQUIRED_COLUMNS;
-    const missing = requiredFields.filter(f => !mappings.some(m => m.system === f.key));
+    const missing = requiredFields.filter(field => !mappings.some(mapping => normalizeImportSystemKey(mapping.system) === field.key));
     
     if (missing.length > 0) {
-      toast.error(`Mapeie as colunas obrigatórias: ${missing.map(f => f.label).join(', ')}`);
+      toast.error(`Não foi possível reconhecer automaticamente as colunas obrigatórias: ${missing.map(f => f.label).join(', ')}`);
+      return;
+    }
+
+    if (importType === 'banco' && importOptions.bancoTipo === 'geral' && !importOptions.bancoEscopo) {
+      toast.error('Selecione o escopo do banco geral antes de iniciar a importação.');
       return;
     }
 
@@ -164,6 +209,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
         sheetName: selectedSheet,
         headerRow,
         mappings,
+        options: importType === 'banco' ? importOptions : undefined,
         userId: currentUser.id,
         onProgress: (p) => {
           setImportProgress(p);
@@ -187,15 +233,10 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
     return sampleData[headerRow].map(h => String(h || '').trim());
   }, [sampleData, headerRow]);
 
-  const updateMapping = (systemKey: string, excelHeader: string) => {
-    setMappings(prev => {
-      const filtered = prev.filter(m => m.system !== systemKey);
-      if (excelHeader === 'none') return filtered;
-      
-      const isDate = systemKey.includes('data_') || systemKey === 'data_abertura' || systemKey === 'data_recebimento' || systemKey === 'data_validade' || systemKey === 'data_convocacao';
-      return [...filtered, { system: systemKey, excel: excelHeader, isDate }];
-    });
-  };
+  const recognizedOptionalFields = useMemo(
+    () => BANCO_OPTIONAL_COLUMNS.filter(field => mappings.some(mapping => normalizeImportSystemKey(mapping.system) === field.key)),
+    [mappings]
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -283,10 +324,13 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Aba Selecionada</label>
                   <Select value={selectedSheet} onValueChange={(val) => {
                     setSelectedSheet(val);
-                    const newSample = workbook!.Sheets[val] ? XLSX.utils.sheet_to_json<any[]>(workbook!.Sheets[val], { header: 1 }).slice(0, 20) : [];
-                    setSampleData(newSample);
-                    const newHeaders = (newSample[headerRow] || []).map((c: any) => String(c || '').trim());
-                    setMappings(autoMapColumns(newHeaders, importType));
+                    if (!workbook) return;
+
+                    try {
+                      applyAutomaticConfiguration(workbook, val, importType);
+                    } catch (err: any) {
+                      toast.error(err.message || 'Não foi possível reler a aba selecionada.');
+                    }
                   }}>
                     <SelectTrigger className="h-10 rounded-xl font-bold bg-slate-50 border-slate-200">
                       <SelectValue />
@@ -297,17 +341,9 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Linha do Cabeçalho</label>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl" onClick={() => setHeaderRow(Math.max(0, headerRow - 1))}>
-                      <ChevronDown className="h-4 w-4 rotate-180" />
-                    </Button>
-                    <div className="flex-1 h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center font-bold text-slate-700">
-                      Linha {headerRow + 1}
-                    </div>
-                    <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl" onClick={() => setHeaderRow(headerRow + 1)}>
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Cabeçalho Pré-definido</label>
+                  <div className="h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center font-bold text-slate-700">
+                    {importType === 'vagas' ? 'Linha 2 fixa para vagas' : 'Linha 1 fixa para banco'}
                   </div>
                 </div>
               </div>
@@ -317,62 +353,157 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   <div className="p-4 bg-slate-50/80 border-b flex items-center justify-between">
                     <h3 className="font-bold text-slate-700 flex items-center gap-2">
                       <ListChecks className="h-4 w-4 text-blue-600" />
-                      Mapeamento de Colunas
+                      Reconhecimento Automático
                     </h3>
                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-bold">
-                      {mappings.length} de {importType === 'vagas' ? VAGA_REQUIRED_COLUMNS.length : BANCO_REQUIRED_COLUMNS.length} campos obrigatórios
+                      {allFields.filter(field => mappings.some(mapping => normalizeImportSystemKey(mapping.system) === field.key)).length} colunas reconhecidas
                     </Badge>
                   </div>
-                  <div className="max-h-[350px] overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-white border-b z-10">
-                        <tr>
-                          <th className="text-left p-3 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Campo do Sistema</th>
-                          <th className="text-left p-3 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Coluna no Excel</th>
-                          <th className="text-left p-3 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {(importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : [...BANCO_REQUIRED_COLUMNS, ...BANCO_OPTIONAL_COLUMNS]).map(field => {
-                          const mapping = mappings.find(m => m.system === field.key);
-                          const isRequired = importType === 'vagas' ? true : BANCO_REQUIRED_COLUMNS.some(f => f.key === field.key);
-                          
-                          return (
-                            <tr key={field.key} className={cn("hover:bg-blue-50/30 transition-colors", !mapping && isRequired && "bg-red-50/30")}>
-                              <td className="p-3">
-                                <div className="flex flex-col">
-                                  <span className="font-bold text-slate-700">{field.label}</span>
-                                  {isRequired && <span className="text-[9px] font-bold text-red-500 uppercase tracking-tighter">Obrigatório</span>}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <Select value={mapping?.excel || 'none'} onValueChange={(val) => updateMapping(field.key, val)}>
-                                  <SelectTrigger className={cn("h-9 rounded-lg text-xs font-bold", mapping ? "bg-white" : "bg-slate-50 border-slate-300")}>
-                                    <SelectValue placeholder="Selecionar coluna..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="none">Nenhum mapeamento</SelectItem>
-                                    {currentHeaders.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
-                                  </SelectContent>
-                                </Select>
-                              </td>
-                              <td className="p-3">
-                                {mapping ? (
-                                  <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold">Mapeado</Badge>
-                                ) : isRequired ? (
-                                  <Badge variant="outline" className="text-red-500 border-red-200 bg-red-50 font-bold animate-pulse">Pendente</Badge>
-                                ) : (
-                                  <Badge variant="outline" className="text-slate-400 border-slate-200 font-bold">Opcional</Badge>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                  <div className="p-4 space-y-4">
+                    <div className={cn(
+                      'rounded-xl border p-4',
+                      missingRequiredFields.length === 0 ? 'border-emerald-100 bg-emerald-50/70' : 'border-red-100 bg-red-50/70'
+                    )}>
+                      <p className={cn(
+                        'text-sm font-bold',
+                        missingRequiredFields.length === 0 ? 'text-emerald-700' : 'text-red-600'
+                      )}>
+                        {missingRequiredFields.length === 0
+                          ? 'Tudo certo: as colunas obrigatórias foram reconhecidas automaticamente.'
+                          : `Faltou reconhecer automaticamente: ${autoMappingErrors.join(', ')}`}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Não é necessário mapear manualmente. O sistema usa o padrão fixo da planilha e reconhece os cabeçalhos automaticamente.
+                      </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {requiredFields.map(field => {
+                        const mapping = mappings.find(item => normalizeImportSystemKey(item.system) === field.key);
+
+                        return (
+                          <div key={field.key} className={cn(
+                            'rounded-xl border p-3 flex items-center justify-between gap-3',
+                            mapping ? 'border-emerald-100 bg-white' : 'border-red-100 bg-white'
+                          )}>
+                            <div>
+                              <p className="font-bold text-slate-700 text-sm">{field.label}</p>
+                              <p className="text-[11px] text-slate-400 uppercase tracking-wider">Obrigatório</p>
+                            </div>
+                            {mapping ? (
+                              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold max-w-[220px] truncate">
+                                {mapping.excel}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-red-500 border-red-200 bg-red-50 font-bold">Não encontrado</Badge>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {importType === 'banco' && recognizedOptionalFields.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Campos opcionais reconhecidos</p>
+                        <div className="flex flex-wrap gap-2">
+                          {recognizedOptionalFields.map(field => {
+                            const mapping = mappings.find(item => normalizeImportSystemKey(item.system) === field.key);
+                            return (
+                              <Badge key={field.key} variant="outline" className="bg-white text-slate-600 border-slate-200 font-bold">
+                                {field.label}: {mapping?.excel}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentHeaders.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Cabeçalhos lidos</p>
+                        <div className="flex flex-wrap gap-2">
+                          {currentHeaders.filter(Boolean).map(header => (
+                            <Badge key={header} variant="outline" className="bg-white text-slate-500 border-slate-200 font-medium">
+                              {header}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
+
+              {importType === 'banco' && (
+                <Card className="border-slate-100 shadow-sm overflow-hidden bg-slate-50/30">
+                  <CardContent className="p-4 space-y-4">
+                    <div>
+                      <h3 className="font-bold text-slate-700">Escopo do banco importado</h3>
+                      <p className="text-xs text-slate-500 mt-1">Defina a observação do banco e como tratar os dados existentes.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tipo do banco</label>
+                        <Select value={importOptions.bancoTipo || 'geral'} onValueChange={(value) => setImportOptions(prev => ({
+                          ...prev,
+                          bancoTipo: value as ImportExecutionOptions['bancoTipo'],
+                        }))}>
+                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="geral">Banco geral</SelectItem>
+                            <SelectItem value="por_unidades">Usar unidades da planilha</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Escopo</label>
+                        <Select
+                          value={importOptions.bancoTipo === 'geral' ? (importOptions.bancoEscopo || 'goias') : 'unidades_planilha'}
+                          onValueChange={(value) => {
+                            if (value === 'unidades_planilha') return;
+                            setImportOptions(prev => ({ ...prev, bancoEscopo: value as ImportExecutionOptions['bancoEscopo'] }));
+                          }}
+                          disabled={importOptions.bancoTipo !== 'geral'}
+                        >
+                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="goias">Goiás</SelectItem>
+                            <SelectItem value="espirito_santo">Espírito Santo</SelectItem>
+                            <SelectItem value="demais_unidades">Demais unidades</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tratamento</label>
+                        <Select value={importOptions.bancoModo || 'substituir'} onValueChange={(value) => setImportOptions(prev => ({
+                          ...prev,
+                          bancoModo: value as ImportExecutionOptions['bancoModo'],
+                        }))}>
+                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="substituir">Substituir dados do escopo</SelectItem>
+                            <SelectItem value="adicionar">Somar aos dados existentes</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+                      <p className="text-xs font-bold text-blue-700 uppercase tracking-widest">Observação que será salva</p>
+                      <p className="text-sm font-bold text-slate-700 mt-2">{buildBancoImportObservation(importOptions)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 
@@ -472,7 +603,11 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
               <Button variant="outline" className="h-11 px-6 rounded-xl font-bold" onClick={() => setStep('select')}>
                 Voltar
               </Button>
-              <Button className="h-11 px-8 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 gap-2" onClick={handleStartImport}>
+              <Button
+                className="h-11 px-8 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 gap-2"
+                onClick={handleStartImport}
+                disabled={missingRequiredFields.length > 0}
+              >
                 Iniciar Importação <ArrowRight className="h-4 w-4" />
               </Button>
             </>

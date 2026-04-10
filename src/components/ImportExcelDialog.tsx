@@ -67,6 +67,7 @@ export function ImportExcelDialog({
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [suggestedType, setSuggestedType] = useState<'vagas' | 'banco' | null>(null);
   const [chosenType, setChosenType] = useState<'vagas' | 'banco' | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<'GO_ES' | 'OUTRAS_UNIDADES' | null>(null);

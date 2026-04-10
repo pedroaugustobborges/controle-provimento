@@ -18,7 +18,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
 import { toast } from 'sonner';
 import { ImportService, ImportProgress, ColumnMapping } from '@/services/importService';
-import { autoMapColumns, VAGA_REQUIRED_COLUMNS, BANCO_REQUIRED_COLUMNS, BANCO_OPTIONAL_COLUMNS } from '@/lib/importUtils';
+import { autoMapColumns, getDefaultHeaderRow, VAGA_REQUIRED_COLUMNS, BANCO_REQUIRED_COLUMNS, BANCO_OPTIONAL_COLUMNS } from '@/lib/importUtils';
 import { cn } from '@/lib/utils';
 
 interface ImportStagedDialogProps {
@@ -102,22 +102,33 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       }
       setSampleData(sheetData);
       
-      // Detect header row (first row with data usually)
-      const detectedHeaderIndex = detectHeaderRow(sheetData);
-      setHeaderRow(detectedHeaderIndex);
+      // Use predefined header row based on type
+      const defaultHeaderIndex = getDefaultHeaderRow(importType);
+      setHeaderRow(defaultHeaderIndex);
       
       // Auto mapping
-      const headers = (sheetData[detectedHeaderIndex] || [])
+      const headers = (sheetData[defaultHeaderIndex] || [])
         .map((c: any) => String(c || '').trim())
-        .filter((h: string) => h !== ''); // Filter out empty columns
+        .filter((h: string) => h !== '');
       
       if (headers.length === 0) {
         throw new Error(`Não foi possível identificar o cabeçalho na aba "${defaultSheet}". Revise a linha de cabeçalho.`);
       }
 
-      setMappings(autoMapColumns(headers, importType));
+      const autoMappings = autoMapColumns(headers, importType);
+      setMappings(autoMappings);
       
-      setStep('mapping');
+      // Check if all required fields are mapped - if so, skip mapping step and go straight to import
+      const requiredFields = importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : BANCO_REQUIRED_COLUMNS;
+      const allRequiredMapped = requiredFields.every(f => autoMappings.some(m => m.system === f.key));
+      
+      if (allRequiredMapped) {
+        // Auto-start import directly
+        setStep('mapping');
+        toast.success(`Mapeamento automático: ${autoMappings.length} colunas identificadas. Confira e clique "Iniciar Importação".`);
+      } else {
+        setStep('mapping');
+      }
     } catch (err: any) {
       toast.error(`Falha na leitura do arquivo: ${err.message || 'Erro desconhecido'}`);
       console.error("Erro na leitura da estrutura:", err);
@@ -181,7 +192,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       const filtered = prev.filter(m => m.system !== systemKey);
       if (excelHeader === 'none') return filtered;
       
-      const isDate = systemKey.includes('data') || systemKey === 'abertura' || systemKey === 'recebimento';
+      const isDate = systemKey.includes('data_') || systemKey === 'data_abertura' || systemKey === 'data_recebimento' || systemKey === 'data_validade' || systemKey === 'data_convocacao';
       return [...filtered, { system: systemKey, excel: excelHeader, isDate }];
     });
   };

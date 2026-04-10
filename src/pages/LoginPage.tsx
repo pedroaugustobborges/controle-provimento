@@ -9,8 +9,8 @@ import mapaNobg from '@/assets/mapa-agir-nobg.png';
 // ─── Login Modal ───
 function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('izac.jesus@agirsaude.org.br');
+  const [password, setPassword] = useState('adm1234');
   const [showPassword, setShowPassword] = useState(false);
   const [phase, setPhase] = useState<'form' | 'loading' | 'error'>('form');
   const [errorMsg, setErrorMsg] = useState('');
@@ -45,7 +45,7 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-[440px] animate-[modalIn_0.4s_cubic-bezier(0.16,1,0.3,1)]"
+        className="relative w-full max-w-[572px] animate-[modalIn_0.6s_cubic-bezier(0.34,1.56,0.64,1)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
@@ -317,10 +317,10 @@ export default function LoginPage() {
             </div>
 
             {/* Right map */}
-            <div className="hidden lg:flex flex-1 items-center justify-center max-w-[420px]">
+            <div className="hidden lg:flex flex-1 items-center justify-center max-w-[520px]">
               <div className="relative">
-                <div className="absolute inset-0 bg-[hsl(200,70%,40%)]/5 rounded-full blur-[80px] scale-110" />
-                <img src={mapaNobg} alt="Presença AGIR no Brasil" className="relative w-[340px] h-auto opacity-75 drop-shadow-2xl" />
+                <div className="absolute inset-0 bg-[hsl(200,70%,40%)]/8 rounded-full blur-[80px] scale-110" />
+                <img src={mapaNobg} alt="Presença AGIR no Brasil" className="relative w-[420px] h-auto opacity-90 drop-shadow-2xl contrast-[1.15] brightness-110" />
               </div>
             </div>
           </div>
@@ -349,8 +349,10 @@ export default function LoginPage() {
           to { opacity: 1; }
         }
         @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.92) translateY(20px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
+          0% { opacity: 0; transform: scale(0.8) translateY(40px) rotateX(8deg); filter: blur(4px); }
+          50% { opacity: 0.8; transform: scale(1.03) translateY(-5px) rotateX(0deg); filter: blur(0px); }
+          75% { transform: scale(0.98) translateY(2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
         }
       `}</style>
     </div>

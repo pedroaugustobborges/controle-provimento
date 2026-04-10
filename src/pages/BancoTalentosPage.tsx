@@ -675,21 +675,26 @@ export default function BancoTalentosPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Seção de Auditoria Real (Item 1) */}
+      {/* Dynamic status computation based on data_validade */}
       {useMemo(() => {
-        const stats = bancos.reduce((acc, b) => {
-          const s = (b.status || 'NENHUM').toUpperCase();
-          acc[s] = (acc[s] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        
-        console.log('--- AUDITORIA BANCO DE TALENTOS ---');
-        console.log('Status encontrados na base:', Object.keys(stats));
-        console.log('Quantidade por status (linhas):', stats);
-        console.log('Total de bancos (agrupados):', groupedBancos.length);
-        console.log('---------------------------------');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const stats = { cadastroReserva: 0, convocados: 0, prorrogados: 0, vencidos: 0 };
+        bancos.forEach(b => {
+          const s = (b.status || '').toUpperCase();
+          if (s === 'CONVOCADO') { stats.convocados++; return; }
+          if (b.data_validade) {
+            const valDate = new Date(b.data_validade);
+            if (!isNaN(valDate.getTime())) {
+              if (valDate < today) { stats.vencidos++; return; }
+            }
+          }
+          if (b.is_prorrogado || s === 'PRORROGADO') { stats.prorrogados++; return; }
+          stats.cadastroReserva++;
+        });
+        console.log('--- AUDITORIA BANCO ---', stats, 'Total:', bancos.length);
         return null;
-      }, [bancos, groupedBancos])}
+      }, [bancos])}
 
       <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
@@ -702,7 +707,15 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => (b.status === 'CADASTRO RESERVA' || b.status === 'valido') && !b.is_prorrogado).length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (b.is_prorrogado || (b.status || '').toUpperCase() === 'PRORROGADO') return false;
+                      if (b.data_validade) {
+                        const d = new Date(b.data_validade);
+                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
+                      }
+                      return true;
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
                 </div>
@@ -738,7 +751,14 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva Disponível</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.status !== 'VENCIDO' && b.status !== 'CONVOCADO').length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (b.data_validade) {
+                        const d = new Date(b.data_validade);
+                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
+                      }
+                      return true;
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Não vencidos e não convocados</p>
                 </div>
@@ -756,7 +776,15 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.is_prorrogado || b.status === 'prorrogado').length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (!b.is_prorrogado && (b.status || '').toUpperCase() !== 'PRORROGADO') return false;
+                      if (b.data_validade) {
+                        const d = new Date(b.data_validade);
+                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
+                      }
+                      return true;
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
                 </div>
@@ -774,7 +802,12 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.status === 'VENCIDO').length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (!b.data_validade) return false;
+                      const d = new Date(b.data_validade);
+                      return !isNaN(d.getTime()) && d < new Date(new Date().toDateString());
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
                 </div>

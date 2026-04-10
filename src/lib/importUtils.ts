@@ -28,24 +28,37 @@ export const BANCO_OPTIONAL_COLUMNS = [
 ];
 
 export function autoMapColumns(headers: string[], type: 'vagas' | 'banco'): ColumnMapping[] {
+  if (!headers || !Array.isArray(headers)) return [];
+  
   const config = type === 'vagas' ? VAGA_REQUIRED_COLUMNS : [...BANCO_REQUIRED_COLUMNS, ...BANCO_OPTIONAL_COLUMNS];
   const mappings: ColumnMapping[] = [];
-  const normalizedHeaders = headers.map(h => h.toUpperCase().trim());
 
   config.forEach(field => {
+    const fieldLabelUpper = String(field.label || '').toUpperCase();
+    const fieldAliasesUpper = (field.aliases || []).map(a => String(a || '').toUpperCase());
+
     // Try exact match first
-    let foundHeader = headers.find(h => h.toUpperCase().trim() === field.label.toUpperCase());
+    let foundHeader = headers.find(h => {
+      if (!h) return false;
+      const normH = String(h).toUpperCase().trim();
+      return normH === fieldLabelUpper;
+    });
     
     // Try aliases
     if (!foundHeader) {
-      foundHeader = headers.find(h => field.aliases.includes(h.toUpperCase().trim()));
+      foundHeader = headers.find(h => {
+        if (!h) return false;
+        const normH = String(h).toUpperCase().trim();
+        return fieldAliasesUpper.includes(normH);
+      });
     }
 
     // Try partial match if still not found
     if (!foundHeader) {
       foundHeader = headers.find(h => {
-        const normH = h.toUpperCase().trim();
-        return field.aliases.some(alias => normH.includes(alias) || alias.includes(normH));
+        if (!h) return false;
+        const normH = String(h).toUpperCase().trim();
+        return fieldAliasesUpper.some(alias => normH.includes(alias) || alias.includes(normH));
       });
     }
 

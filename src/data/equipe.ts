@@ -58,8 +58,9 @@ export function getResponsavelPorUnidade(unidade: string, tipoVaga?: string) {
     };
   }
 
+  const unitUpper = String(unidade || '').toUpperCase();
   const equipe = EQUIPE_POR_UNIDADE.find(e => 
-    unidade.toUpperCase().includes(e.unidade.toUpperCase())
+    unitUpper.includes(String(e.unidade || '').toUpperCase())
   );
 
   if (equipe) {

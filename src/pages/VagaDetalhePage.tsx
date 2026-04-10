@@ -513,7 +513,7 @@ export default function VagaDetalhePage() {
                     </p>
                     {banco && (
                       <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-green-200 text-green-700 bg-green-50">
-                        {banco.status.toUpperCase()}
+                        {String(banco.status || 'SEM STATUS').toUpperCase()}
                       </Badge>
                     )}
                   </div>
@@ -1511,7 +1511,7 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
             </div>
           </div>
           <Badge className={`${isValido ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-bold`}>
-            {banco.status.toUpperCase()}
+            {String(banco.status || 'SEM STATUS').toUpperCase()}
           </Badge>
         </div>
 
@@ -1592,7 +1592,7 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
                   <TableCell className="text-center font-bold text-slate-600">{c.classificacao}º</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-[11px] font-bold">
-                      {c.status.toUpperCase()}
+                      {String(c.status || 'SEM STATUS').toUpperCase()}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{c.edoc || '—'}</TableCell>

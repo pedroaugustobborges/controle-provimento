@@ -316,7 +316,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
 }
 
 export function normalizeUnitName(name: string): string {
-  if (!name) return '';
+  if (!name || typeof name !== 'string') return '';
   return name.toUpperCase().trim().replace(/\s+/g, ' ');
 }
 
@@ -386,7 +386,7 @@ export type VacancyEligibilityResult = {
 
 export function checkVacancyParity(row: any, selectedUnit: string, selectedMonth: string): VacancyEligibilityResult {
   const normSelectedUnit = selectedUnit === 'all' || selectedUnit === 'TODOS' ? 'TODOS' : normalizeUnitName(selectedUnit);
-  const normSelectedMonth = selectedMonth === 'all' || selectedMonth === 'TODOS' ? 'TODOS' : selectedMonth.toUpperCase();
+  const normSelectedMonth = (selectedMonth === 'all' || selectedMonth === 'TODOS' || !selectedMonth) ? 'TODOS' : String(selectedMonth).toUpperCase();
   const hasCargo = String(row.cargo ?? "").trim() !== "";
   const rowUnitNorm = normalizeUnitName(row.unidade);
   const unitMatches = normSelectedUnit === 'TODOS' || rowUnitNorm === normSelectedUnit;
@@ -419,7 +419,8 @@ export function getStatusSummary(records: any[], selectedUnit: string, selectedM
   const validVacancies = getValidVacancyBase(records, selectedUnit, selectedMonth);
   const summary: Record<string, number> = {};
   validVacancies.forEach(row => {
-    const status = (row.status || row.status_geral || 'SEM STATUS').toUpperCase().trim();
+    const statusVal = row.status || row.status_geral || 'SEM STATUS';
+    const status = String(statusVal).toUpperCase().trim();
     summary[status] = (summary[status] || 0) + 1;
   });
   return { total: validVacancies.length, byStatus: summary };

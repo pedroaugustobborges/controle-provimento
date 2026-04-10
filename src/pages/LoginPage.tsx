@@ -228,8 +228,16 @@ function AccessRequestModal({ open, onClose }: { open: boolean; onClose: () => v
 
 // ─── Main Landing Page ───
 export default function LoginPage() {
+  const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const [showAccess, setShowAccess] = useState(false);
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate]);
 
   const highlights = [
     { value: '20+', label: 'Unidades geridas' },

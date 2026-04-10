@@ -1,9 +1,90 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta, MensagemHistorico } from '@/types/vaga';
-import { mockVagas, mockBancos, mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
+import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
+
+const PAGE_SIZE = 1000;
+
+const splitAssistentes = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.map(item => String(item || '').trim()).filter(Boolean);
+  }
+
+  return String(value || '')
+    .split(/[;,|]/)
+    .map(item => item.trim())
+    .filter(Boolean);
+};
+
+const mapDbVaga = (row: any): Vaga => ({
+  ...row,
+  data_abertura: row.data_abertura || '',
+  data_recebimento: row.data_recebimento || '',
+  data_criacao: row.created_at || row.data_importacao || new Date().toISOString(),
+  requisicao: row.requisicao || row.numero_requisicao || row.numero_processo_seletivo || '',
+  numero_requisicao: row.numero_requisicao || row.numero_processo_seletivo || row.requisicao || '',
+  numero_processo: row.numero_processo || row.numero_processo_seletivo || '',
+  secao: row.secao || '',
+  assistentes: splitAssistentes(row.assistentes),
+  observacoes: row.observacoes || row.observacao || '',
+  observacoes_internas: row.observacoes_internas || row.observacao || '',
+  historico: Array.isArray(row.historico) ? row.historico : [],
+  tem_banco_valido: Boolean(row.tem_banco_valido),
+  origem: row.origem === 'manual' ? 'manual' : 'importada',
+});
+
+const mapDbBanco = (row: any): BancoTalentos => ({
+  ...row,
+  observacoes: row.observacoes || row.observacao || '',
+  numero_processo: row.numero_processo || row.numero_processo_seletivo || '',
+  data_abertura_edital: row.data_abertura_edital || '',
+  data_validade: row.data_validade || '',
+  status: row.status || 'nenhum',
+});
+
+const buildImportedFileFromHistory = (history: ImportHistory): ImportedFile => ({
+  id: history.id,
+  nome_original: history.nome_arquivo || history.arquivo || `Importação ${history.id.slice(0, 8)}`,
+  nome_interno: history.referencia_arquivo || history.id,
+  tipo: history.tipo_importacao || 'importacao',
+  tamanho: 0,
+  data_upload: history.data_hora || history.data || '',
+  usuario: history.usuario,
+  email_usuario: history.email_usuario,
+  modulo_origem: history.tipo_importacao === 'banco' ? 'Banco de Talentos' : 'Vagas',
+  status: history.status === 'erro'
+    ? 'erro'
+    : history.status === 'em_processamento'
+      ? 'processando'
+      : 'processado',
+  vaga_importacao_id: history.referencia_arquivo || history.id,
+});
+
+const fetchAllRows = async (tableName: 'vagas' | 'banco_candidatos' | 'importacoes') => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  const rows: any[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    rows.push(...data);
+
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return rows;
+};
 
 interface VagasState {
   vagas: Vaga[];
@@ -83,77 +164,82 @@ export const useVagasStore = create<VagasState>()(
       setVagas: (vagas) => set({ vagas }),
       fetchVagas: async () => {
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          // Fetch all vagas (may exceed default 1000 limit)
-          let allVagas: any[] = [];
-          let from = 0;
-          const pageSize = 1000;
-          while (true) {
-            const { data, error } = await supabase
-              .from('vagas')
-              .select('*')
-              .order('created_at', { ascending: false })
-              .range(from, from + pageSize - 1);
-            if (error) throw error;
-            if (!data || data.length === 0) break;
-            allVagas = allVagas.concat(data);
-            if (data.length < pageSize) break;
-            from += pageSize;
-          }
-          set({ vagas: allVagas as Vaga[] });
+          const allVagas = await fetchAllRows('vagas');
+          set({ vagas: allVagas.map(mapDbVaga) });
         } catch (err) {
           console.error('Error fetching vagas:', err);
+          set({ vagas: [] });
         }
       },
       fetchBancos: async () => {
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          let allBancos: any[] = [];
-          let from = 0;
-          const pageSize = 1000;
-          while (true) {
-            const { data, error } = await supabase
-              .from('banco_candidatos')
-              .select('*')
-              .order('created_at', { ascending: false })
-              .range(from, from + pageSize - 1);
-            if (error) throw error;
-            if (!data || data.length === 0) break;
-            allBancos = allBancos.concat(data);
-            if (data.length < pageSize) break;
-            from += pageSize;
-          }
-          set({ bancos: allBancos as BancoTalentos[] });
+          const allBancos = await fetchAllRows('banco_candidatos');
+          set({ bancos: allBancos.map(mapDbBanco) });
         } catch (err) {
           console.error('Error fetching bancos:', err);
+          set({ bancos: [] });
         }
       },
       fetchImportHistory: async () => {
         try {
           const { supabase } = await import('@/integrations/supabase/client');
-          const { data, error } = await supabase
-            .from('importacoes')
-            .select('*')
-            .order('created_at', { ascending: false });
-          if (error) throw error;
-          if (data) {
-            const mapped = data.map(item => ({
+          const data = await fetchAllRows('importacoes');
+          const userIds = [...new Set(data.map(item => item.usuario_id).filter(Boolean))];
+          const profilesById = new Map<string, { nome_completo: string; email: string }>();
+
+          if (userIds.length > 0) {
+            const { data: profiles, error: profilesError } = await supabase
+              .from('profiles')
+              .select('id, nome_completo, email')
+              .in('id', userIds);
+
+            if (profilesError) throw profilesError;
+
+            (profiles || []).forEach(profile => {
+              profilesById.set(profile.id, {
+                nome_completo: profile.nome_completo,
+                email: profile.email,
+              });
+            });
+          }
+
+          const mapped = data.map(item => {
+            const profile = profilesById.get(item.usuario_id || '');
+
+            return {
               id: item.id,
-              usuario: item.usuario_id,
-              total_lidos: (item.quantidade_apagada || 0) + (item.quantidade_inserida || 0),
+              usuario_id: item.usuario_id,
+              usuario: profile?.nome_completo || item.usuario_id || 'Sistema',
+              email_usuario: profile?.email,
+              total_lidos: item.quantidade_processada || 0,
               total_novos: item.quantidade_inserida || 0,
-              total_atualizados: 0,
-              total_erros: item.status === 'erro' ? 1 : 0,
+              total_atualizados: item.quantidade_atualizada || 0,
+              total_ignorados: item.quantidade_ignorada || 0,
+              total_erros: item.quantidade_erro || 0,
+              quantidade_confirmada: item.quantidade_confirmada || 0,
               status: item.status,
               tipo_importacao: item.tipo,
-              arquivo: item.arquivo || `Importação ${item.id.slice(0,8)}`,
+              arquivo: item.nome_arquivo || item.arquivo || `Importação ${item.id.slice(0, 8)}`,
+              nome_arquivo: item.nome_arquivo || item.arquivo || `Importação ${item.id.slice(0, 8)}`,
               data_hora: item.created_at,
-              observacoes: item.observacoes
-            }));
-            set({ importHistory: mapped as any[] });
-          }
+              observacoes: item.observacoes,
+              referencia_arquivo: item.arquivo || item.nome_arquivo || item.id,
+              planilha_aba: item.aba_planilha,
+              linha_cabecalho: item.linha_cabecalho,
+              modo_importacao: item.modo_importacao,
+              origem_base: item.origem_base,
+              tabela_destino: item.tabela_destino,
+              mapeamento_aplicado: item.detalhes?.mapeamento,
+            } as ImportHistory;
+          });
+
+          set({
+            importHistory: mapped,
+            importedFiles: mapped.map(buildImportedFileFromHistory),
+          });
         } catch (err) {
           console.error('Error fetching import history:', err);
+          set({ importHistory: [], importedFiles: [] });
         }
       },
       addVagas: (newVagas) => set((s) => ({ vagas: [...newVagas, ...s.vagas] })),

@@ -443,12 +443,7 @@ export function ImportExcelDialog({
               admissao_enviada_acompanhamento: admEnviada,
               admissao_efetivada_acompanhamento: admEfetivada,
               detalhes_acompanhamento: detalhesAcomp,
-              historico: [{
-                id: `h-${Date.now()}-${newVagas.length + 1}`,
-                data: now.split('T')[0],
-                descricao: 'Vaga importada via planilha',
-                usuario: 'Sistema'
-              }]
+              historico: []
             });
           }
 
@@ -460,36 +455,53 @@ export function ImportExcelDialog({
           if (currentIndex < rawRows.length) {
             setTimeout(processChunk, 10);
           } else {
-            addVagas(newVagas);
-            setSummary({
-              type: 'vagas',
-              total: newVagas.length,
-              totalFound: totalRowsFound,
-              discardedEmpty: discardedCargoEmpty,
-              fileName: selectedFile.name,
-              sheetName: sheetUsed,
-              manualType: chosenType,
-              suggestedType: suggestedType
-            });
-            addImportHistory({
-              id: batchId,
-              usuario: 'Sistema',
-              total_lidos: totalRowsFound,
-              total_novos: newVagas.length,
-              total_atualizados: 0,
-              total_ignorados: discardedCargoEmpty,
-              total_erros: 0,
-              status: 'concluido',
-              tipo_importacao: 'vagas',
-              arquivo: selectedFile.name,
-              data_hora: now,
-              aba_utilizada: sheetUsed,
-              linha_cabecalho: headerRowUsed + 1,
-              colunas_reconhecidas: headers.join(', ')
-            } as any);
-            toast.success(`Importação de Vagas concluída: ${newVagas.length} registros.`);
-            setIsProcessing(false);
-            setStep('summary');
+            // Save in batches to avoid freezing on localStorage write
+            setProgressLabel(`Salvando ${newVagas.length} vagas...`);
+            const saveBatchSize = 500;
+            let saveIndex = 0;
+            const saveChunk = () => {
+              const end = Math.min(saveIndex + saveBatchSize, newVagas.length);
+              const batch = newVagas.slice(saveIndex, end);
+              addVagas(batch);
+              saveIndex = end;
+              setProgress(Math.round((saveIndex / newVagas.length) * 100));
+              setProgressLabel(`Salvando: ${saveIndex} / ${newVagas.length}`);
+              if (saveIndex < newVagas.length) {
+                setTimeout(saveChunk, 50);
+              } else {
+                setSummary({
+                  type: 'vagas',
+                  total: newVagas.length,
+                  totalFound: totalRowsFound,
+                  discardedEmpty: discardedCargoEmpty,
+                  fileName: selectedFile.name,
+                  sheetName: sheetUsed,
+                  manualType: chosenType,
+                  suggestedType: suggestedType
+                });
+                addImportHistory({
+                  id: batchId,
+                  usuario: 'Sistema',
+                  total_lidos: totalRowsFound,
+                  total_novos: newVagas.length,
+                  total_atualizados: 0,
+                  total_ignorados: discardedCargoEmpty,
+                  total_erros: 0,
+                  status: 'concluido',
+                  tipo_importacao: 'vagas',
+                  arquivo: selectedFile.name,
+                  data_hora: now,
+                  aba_utilizada: sheetUsed,
+                  linha_cabecalho: headerRowUsed + 1,
+                  colunas_reconhecidas: headers.join(', ')
+                } as any);
+                toast.success(`Importação concluída: ${newVagas.length} vagas.`);
+                setIsProcessing(false);
+                setStep('summary');
+              }
+            };
+            setProgress(0);
+            setTimeout(saveChunk, 50);
           }
         };
 
@@ -588,35 +600,52 @@ export function ImportExcelDialog({
             setTimeout(processChunk, 10);
           } else {
             if (selectedRegion) clearBancosPorRegiao(selectedRegion);
-            addBancos(newBancos);
-            setSummary({
-              type: 'banco',
-              total: newBancos.length,
-              totalFound: totalRowsFound,
-              fileName: selectedFile.name,
-              sheetName: sheetUsed,
-              manualType: chosenType,
-              suggestedType: suggestedType,
-              region: selectedRegion
-            });
-            addImportHistory({
-              id: batchId,
-              usuario: 'Sistema',
-              total_lidos: totalRowsFound,
-              total_novos: newBancos.length,
-              total_atualizados: 0,
-              total_ignorados: 0,
-              total_erros: 0,
-              status: 'concluido',
-              tipo_importacao: 'banco',
-              arquivo: selectedFile.name,
-              data_hora: now,
-              aba_utilizada: sheetUsed,
-              linha_cabecalho: headerRowUsed + 1
-            } as any);
-            toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
-            setIsProcessing(false);
-            setStep('summary');
+            // Save in batches to avoid freezing on localStorage write
+            setProgressLabel(`Salvando ${newBancos.length} registros do banco...`);
+            const saveBatchSize = 500;
+            let saveIndex = 0;
+            const saveChunk = () => {
+              const end = Math.min(saveIndex + saveBatchSize, newBancos.length);
+              const batch = newBancos.slice(saveIndex, end);
+              addBancos(batch);
+              saveIndex = end;
+              setProgress(Math.round((saveIndex / newBancos.length) * 100));
+              setProgressLabel(`Salvando: ${saveIndex} / ${newBancos.length}`);
+              if (saveIndex < newBancos.length) {
+                setTimeout(saveChunk, 50);
+              } else {
+                setSummary({
+                  type: 'banco',
+                  total: newBancos.length,
+                  totalFound: totalRowsFound,
+                  fileName: selectedFile.name,
+                  sheetName: sheetUsed,
+                  manualType: chosenType,
+                  suggestedType: suggestedType,
+                  region: selectedRegion
+                });
+                addImportHistory({
+                  id: batchId,
+                  usuario: 'Sistema',
+                  total_lidos: totalRowsFound,
+                  total_novos: newBancos.length,
+                  total_atualizados: 0,
+                  total_ignorados: 0,
+                  total_erros: 0,
+                  status: 'concluido',
+                  tipo_importacao: 'banco',
+                  arquivo: selectedFile.name,
+                  data_hora: now,
+                  aba_utilizada: sheetUsed,
+                  linha_cabecalho: headerRowUsed + 1
+                } as any);
+                toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
+                setIsProcessing(false);
+                setStep('summary');
+              }
+            };
+            setProgress(0);
+            setTimeout(saveChunk, 50);
           }
         };
 

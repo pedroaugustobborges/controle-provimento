@@ -372,5 +372,4 @@ export const AgieChat = memo(() => {
       </motion.div>
     </div>
   );
-};
 });

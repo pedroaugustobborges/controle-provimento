@@ -806,7 +806,7 @@ export function ImportExcelDialog({
                 </Button>
                 <Button 
                   className="flex-1" 
-                  disabled={!validationResult.valid}
+                  disabled={!validationResult.valid || (chosenType === 'banco' && !selectedRegion)}
                   onClick={processImport}
                 >
                   <ArrowRight className="h-4 w-4 mr-2" />

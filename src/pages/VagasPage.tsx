@@ -21,10 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
   Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle,
-  Database, CheckCircle2, ArrowRight
+  Database, CheckCircle2, ArrowRight, Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';

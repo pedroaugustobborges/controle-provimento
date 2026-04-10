@@ -10,6 +10,7 @@ import mapaNobg from '@/assets/mapa-agir-nobg.png';
 // ─── Login Modal ───
 function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,6 +28,7 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     try {
       await new Promise(r => setTimeout(r, 1500)); // branded delay
       await signIn(email, password);
+      navigate('/', { replace: true });
     } catch (err: any) {
       const msg = err.message?.includes('Invalid login')
         ? 'E-mail ou senha incorretos.'

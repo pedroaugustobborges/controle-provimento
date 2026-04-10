@@ -305,6 +305,107 @@ export default function BancoTalentosPage() {
 
   const historyBT = useMemo(() => {
 
+  const [vencidosSearch, setVencidosSearch] = useState('');
+  const [prorrogandoId, setProrrogandoId] = useState<string | null>(null);
+
+  const vencidosFiltered = useMemo(() => {
+    return bancos.filter(b => {
+      if (b.status !== 'VENCIDO') return false;
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
+        return false;
+      }
+      if (!vencidosSearch) return true;
+      const normalizedSearch = normalizeCargo(vencidosSearch);
+      return normalizeCargo(b.nome || '').includes(normalizedSearch) || 
+        normalizeCargo(b.cargo).includes(normalizedSearch) ||
+        normalizeCargo(b.numero_edital).includes(normalizedSearch);
+    });
+  }, [bancos, currentUser, vencidosSearch]);
+
+  const canProrrogate = useMemo(() => {
+    if (!currentUser) return false;
+    const perfil = (currentUser.perfil || '').toLowerCase();
+    return perfil.includes('admin') || perfil.includes('gestão') || perfil.includes('gestor') || perfil.includes('gestao');
+  }, [currentUser]);
+
+  const handleProrrogacao = async (banco: BancoTalentos) => {
+    if (!currentUser) return;
+    setProrrogandoId(banco.id);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Calculate new validity: publication date + 12 months (6 months original + 6 months prorrogation)
+      let newValidade = '';
+      if (banco.data_validade) {
+        // Parse the current validity date and add 6 months
+        const parts = banco.data_validade.split(/[-\/]/);
+        let dateObj: Date | null = null;
+        if (parts.length >= 3) {
+          // Try YYYY-MM-DD or DD/MM/YYYY
+          if (parts[0].length === 4) {
+            dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          } else {
+            dateObj = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+          }
+        }
+        if (dateObj && !isNaN(dateObj.getTime())) {
+          dateObj.setMonth(dateObj.getMonth() + 6);
+          newValidade = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+        }
+      }
+
+      const updateData: any = {
+        is_prorrogado: true,
+        status: 'prorrogado',
+        updated_by: currentUser.id,
+        observacao: `${banco.observacoes || ''} | Prorrogado por ${currentUser.nome_completo} em ${new Date().toLocaleString('pt-BR')}`.trim(),
+      };
+      if (newValidade) {
+        updateData.data_validade = newValidade;
+      }
+
+      const { error } = await supabase
+        .from('banco_candidatos')
+        .update(updateData)
+        .eq('id', banco.id);
+
+      if (error) throw error;
+
+      // Update local state
+      const { updateBanco } = useVagasStore.getState();
+      updateBanco(banco.id, {
+        is_prorrogado: true,
+        status: 'prorrogado',
+        data_validade: newValidade || banco.data_validade,
+        observacoes: updateData.observacao,
+      });
+
+      // Log audit
+      try {
+        await supabase.from('audit_logs').insert({
+          usuario_id: currentUser.id,
+          usuario_nome: currentUser.nome_completo,
+          usuario_email: currentUser.email,
+          perfil: currentUser.perfil,
+          acao: 'Prorrogação de banco',
+          modulo: 'Banco de Talentos',
+          registro_afetado: banco.id,
+          valor_anterior: JSON.stringify({ status: banco.status, data_validade: banco.data_validade, is_prorrogado: banco.is_prorrogado }),
+          valor_novo: JSON.stringify({ status: 'prorrogado', data_validade: newValidade, is_prorrogado: true }),
+        });
+      } catch (auditErr) {
+        console.warn('Audit log error:', auditErr);
+      }
+
+      toast.success(`Banco prorrogado com sucesso! Nova validade: ${newValidade ? formatDate(newValidade) : 'atualizada'}`);
+    } catch (err: any) {
+      console.error('Erro ao prorrogar:', err);
+      toast.error(`Erro ao prorrogar: ${err.message}`);
+    } finally {
+      setProrrogandoId(null);
+    }
+  };
+
 
     return importHistory.filter(h => h.tipo_importacao === 'banco');
   }, [importHistory]);

@@ -1511,7 +1511,7 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
             </div>
           </div>
           <Badge className={`${isValido ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-bold`}>
-            {banco.status.toUpperCase()}
+            {String(banco.status || 'SEM STATUS').toUpperCase()}
           </Badge>
         </div>
 

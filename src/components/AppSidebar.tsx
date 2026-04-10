@@ -36,30 +36,58 @@ const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Demais Unidades': ['Hospital Central (GO)', 'Hospital das Clínicas']
 };
 
-const mainItems = [
-  { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
-  { title: 'Vagas', url: '/vagas', icon: Briefcase, subMenu: [
-    { title: 'Todas as Vagas', url: '/vagas' },
-    { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
-    { title: 'Fila de Editais', url: '/fila-editais' },
-    { title: 'Redação do Edital', url: '/fila-analista-edital' },
-    { title: 'Validação de Edital', url: '/validacao-editais' },
-  ] },
-  { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users, subMenu: [
-    { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
-    { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
-    { title: 'Vencidos', url: '/banco-talentos?tab=vencidos' },
-  ] },
-  { title: 'Convocações', url: '/convocacoes', icon: Calendar, subMenu: [
-    { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
-    { title: 'Histórico', url: '/convocacoes?tab=list' },
-    { title: 'Pendentes', url: '/convocacoes?tab=pending' },
-  ] },
-  { title: 'Alertas e Tarefas', url: '/alertas-tarefas', icon: Bell, subMenu: [
-    { title: 'Painel de Alertas', url: '/alertas-tarefas' },
-    { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
-  ] },
-];
+  const mainItems = [
+    { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
+    { 
+      title: 'Vagas', 
+      url: '/vagas', 
+      icon: Briefcase, 
+      subMenu: [
+        { title: 'Todas as Vagas', url: '/vagas' },
+        { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
+        { title: 'Fila de Editais', url: '/fila-editais' },
+      ] 
+    },
+    { 
+      title: 'Publicação de Edital', 
+      url: '/fila-analista-edital', 
+      icon: FileText, 
+      visible: isManagement() || isAdminAnalyst() || isEditalAnalyst(),
+      subMenu: [
+        { title: 'Redação do Edital', url: '/fila-analista-edital' },
+        { title: 'Validação de Edital', url: '/validacao-editais' },
+      ] 
+    },
+    { 
+      title: 'Banco de Talentos', 
+      url: '/banco-talentos', 
+      icon: Users, 
+      subMenu: [
+        { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
+        { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
+        { title: 'Vencidos', url: '/banco-talentos?tab=vencidos' },
+      ] 
+    },
+    { 
+      title: 'Convocações', 
+      url: '/convocacoes', 
+      icon: Calendar, 
+      subMenu: [
+        { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
+        { title: 'Histórico', url: '/convocacoes?tab=list' },
+        { title: 'Pendentes', url: '/convocacoes?tab=pending' },
+      ] 
+    },
+    { 
+      title: 'Alertas e Tarefas', 
+      url: '/alertas-tarefas', 
+      icon: Bell, 
+      subMenu: [
+        { title: 'Painel de Alertas', url: '/alertas-tarefas' },
+        { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
+      ] 
+    },
+  ];
 
 export function AppSidebar() {
   const { state } = useSidebar();

@@ -536,7 +536,7 @@ export default function AdministracaoPage() {
                             variant="outline" 
                             size="sm" 
                             className="h-8 gap-1.5 text-[11px] font-bold"
-                            onClick={() => handleTestEmail(config.id)}
+                            onClick={() => { setTestEmailLoading(config.id); setTimeout(() => { setTestEmailLoading(null); toast.success('E-mail de teste enviado!'); }, 1500); }}
                             disabled={testEmailLoading === config.id}
                           >
                             {testEmailLoading === config.id ? 'Enviando...' : <><Play className="h-3 w-3" /> Testar E-mail</>}

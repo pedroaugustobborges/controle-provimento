@@ -750,6 +750,7 @@ export default function BancoTalentosPage() {
                     <TableHead >Proc. Seletivo</TableHead>
                     <TableHead >Cargo</TableHead>
                     <TableHead >Unidade</TableHead>
+                    <TableHead >Região</TableHead>
                     <TableHead >Status</TableHead>
                     <TableHead >Qtd. Banco</TableHead>
                     <TableHead className="text-right">Ações</TableHead>

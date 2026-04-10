@@ -14,6 +14,22 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const body = await req.json();
+    const { action } = body;
+
+    // One-time bootstrap for password reset (remove after use)
+    if (action === "bootstrap_reset_password" && body.bootstrap_key === "agir-bootstrap-2026-temp") {
+      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { user_id, new_password } = body;
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password: new_password });
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Verify the calling user is admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {

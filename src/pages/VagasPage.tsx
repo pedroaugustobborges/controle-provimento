@@ -659,6 +659,15 @@ export default function VagasPage() {
                           <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                             <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
                           </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              updateVaga(v.id, { status: 'FILA DE EDITAIS', etapa: 'fila_editais' });
+                              toast.success('Vaga enviada para Fila de Editais');
+                            }} 
+                            className="gap-2 text-amber-600 font-bold"
+                          >
+                            <FileText className="h-4 w-4" /> Enviar para Fila de Editais
+                          </DropdownMenuItem>
                           {getBancoByVaga(v.id) && (
                             <>
                               <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">

@@ -54,6 +54,9 @@ Deno.serve(async (req) => {
       });
     }
 
+    const body = await req.json();
+    const { action } = body;
+
     switch (action) {
       case "create_user": {
         const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios } = body;

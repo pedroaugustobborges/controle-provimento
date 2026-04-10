@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { User, AuditLog, SupportConfig, BackupRecord } from '@/types/auth';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminState {
   users: User[];

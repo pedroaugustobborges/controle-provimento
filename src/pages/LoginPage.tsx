@@ -9,8 +9,8 @@ import mapaNobg from '@/assets/mapa-agir-nobg.png';
 // ─── Login Modal ───
 function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState('izac.jesus@agirsaude.org.br');
-  const [password, setPassword] = useState('adm1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [phase, setPhase] = useState<'form' | 'loading' | 'error'>('form');
   const [errorMsg, setErrorMsg] = useState('');

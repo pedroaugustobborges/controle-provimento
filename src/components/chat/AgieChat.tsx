@@ -300,11 +300,19 @@ export const AgieChat = memo(() => {
       >
         <AnimatePresence>
           {hasNewMessage && !isOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-4 border-slate-50 rounded-full z-10"
-            />
+            <>
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-4 border-slate-50 rounded-full z-10"
+              />
+              <motion.div
+                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="absolute inset-0 rounded-full bg-red-500/30 z-0"
+              />
+            </>
           )}
         </AnimatePresence>
 

@@ -758,7 +758,7 @@ export default function VagasPage() {
         </CardContent>
       </Card>
 
-      <ImportExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+      <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
       <AddVagaDialog open={isAddVagaOpen} onOpenChange={setIsAddVagaOpen} />
       <VagaHistoryDialog vaga={selectedVagaForHistory} open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
 

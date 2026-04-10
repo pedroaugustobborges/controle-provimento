@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { usePermissions } from '@/hooks/usePermissions';
 import { ShieldAlert } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService } from '@/services/databaseService';
 import { PageHeader } from '@/components/PageHeader';
 import { useEffect } from 'react';

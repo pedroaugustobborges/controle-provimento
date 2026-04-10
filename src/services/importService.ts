@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { normalizeStatus, normalizeCargo } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 import { getResponsavelPorUnidade } from '@/data/equipe';

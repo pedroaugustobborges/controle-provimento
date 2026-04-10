@@ -17,6 +17,7 @@ import { normalizeStatus, getValidVacancyBase } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 
 type Step = 'select' | 'analysis' | 'validation' | 'processing' | 'summary';
 
@@ -84,6 +85,8 @@ export function ImportExcelDialog({
     sheetUsed: string;
     headerRowUsed: number;
   } | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -129,105 +132,107 @@ export function ImportExcelDialog({
   const analyzeFile = async (selectedFile: File) => {
     setIsProcessing(true);
     setStep('processing');
+    setProgress(10);
+    setProgressLabel("Lendo arquivo...");
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      try {
-        const data = evt.target?.result;
-        const wb = XLSX.read(data, { type: 'array' });
-        setWorkbook(wb);
+      // Pequeno timeout para garantir que o UI renderize o estado de processamento
+      setTimeout(() => {
+        try {
+          const data = evt.target?.result;
+          const wb = XLSX.read(data, { type: 'array', cellDates: true, cellNF: false, cellText: false });
+          setWorkbook(wb);
+          setProgress(50);
+          setProgressLabel("Analisando abas e colunas...");
 
-        const sheetNames = wb.SheetNames;
-        let targetSheet = sheetNames[0];
-        let headers: string[] = [];
-        let rowCount = 0;
-        let headerRow = 0;
+          const sheetNames = wb.SheetNames;
+          let targetSheet = sheetNames[0];
+          let headers: string[] = [];
+          let rowCount = 0;
+          let headerRow = 0;
 
-        // PRIORIDADE 1: BANCO GERAL
-        const bancoGeralSheet = sheetNames.find(name => name.toUpperCase() === 'BANCO GERAL');
-        
-        // PRIORIDADE 2: VAGAS
-        const vagaSheetName = sheetNames.find(name => 
-          VAGA_SHEETS.includes(name.toUpperCase()) || 
-          name.toUpperCase().includes('VAGA') || 
-          name.toUpperCase().includes('BASE GERAL')
-        );
+          const bancoGeralSheet = sheetNames.find(name => name.toUpperCase() === 'BANCO GERAL');
+          const vagaSheetName = sheetNames.find(name => 
+            VAGA_SHEETS.includes(name.toUpperCase()) || 
+            name.toUpperCase().includes('VAGA') || 
+            name.toUpperCase().includes('BASE GERAL')
+          );
 
-        if (bancoGeralSheet) {
-          targetSheet = bancoGeralSheet;
-          const sheet = wb.Sheets[bancoGeralSheet];
-          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-          headerRow = 0; // Para Banco Geral a linha de cabeçalho é 1 (index 0)
-          const headerData = rawRows[headerRow];
-          if (headerData) {
-            headers = headerData.map(c => String(c || '').toUpperCase().trim());
+          if (bancoGeralSheet) {
+            targetSheet = bancoGeralSheet;
+            const sheet = wb.Sheets[bancoGeralSheet];
+            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+            headerRow = 0;
+            const headerData = rawRows[headerRow];
+            if (headerData) {
+              headers = headerData.map(c => String(c || '').toUpperCase().trim());
+            }
+            rowCount = Math.max(0, rawRows.length - (headerRow + 1));
+          } else if (vagaSheetName) {
+            targetSheet = vagaSheetName;
+            const sheet = wb.Sheets[vagaSheetName];
+            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+            headerRow = 1;
+            const headerData = rawRows[headerRow];
+            if (headerData) {
+              headers = headerData.map(c => String(c || '').toUpperCase().trim());
+            }
+            rowCount = Math.max(0, rawRows.length - (headerRow + 1));
+          } else {
+            const sheet = wb.Sheets[targetSheet];
+            const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
+            headerRow = 0;
+            const headerData = rawRows[headerRow];
+            if (headerData) {
+              headers = headerData.map(c => String(c || '').toUpperCase().trim());
+            }
+            rowCount = Math.max(0, rawRows.length - (headerRow + 1));
           }
-          rowCount = Math.max(0, rawRows.length - (headerRow + 1));
-        } else if (vagaSheetName) {
-          targetSheet = vagaSheetName;
-          const sheet = wb.Sheets[vagaSheetName];
-          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-          
-          // Para Vagas, o cabeçalho é na linha 2 (index 1)
-          headerRow = 1;
-          const headerData = rawRows[headerRow];
-          if (headerData) {
-            headers = headerData.map(c => String(c || '').toUpperCase().trim());
+
+          let type: 'vagas' | 'banco' | null = null;
+          let conf: 'high' | 'low' = 'low';
+
+          const hasVagaHeaders = VAGA_REQUIRED_COLUMNS.every(col => headers.includes(col));
+          const hasSomeVagaHeaders = VAGA_REQUIRED_COLUMNS.filter(col => headers.includes(col)).length >= 4;
+          const hasBancoHeaders = BANCO_REQUIRED_COLUMNS.every(col => headers.includes(col));
+
+          if (hasVagaHeaders) {
+            type = 'vagas';
+            conf = 'high';
+          } else if (hasBancoHeaders) {
+            type = 'banco';
+            conf = 'high';
+          } else if (hasSomeVagaHeaders || targetSheet.toUpperCase().includes('VAGA')) {
+            type = 'vagas';
+            conf = 'low';
+          } else if (targetSheet.toUpperCase().includes('BANCO')) {
+            type = 'banco';
+            conf = 'low';
           }
-          rowCount = Math.max(0, rawRows.length - (headerRow + 1));
-        } else {
-          // Fallback para a primeira aba
-          const sheet = wb.Sheets[targetSheet];
-          const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-          headerRow = 0;
-          const headerData = rawRows[headerRow];
-          if (headerData) {
-            headers = headerData.map(c => String(c || '').toUpperCase().trim());
-          }
-          rowCount = Math.max(0, rawRows.length - (headerRow + 1));
+
+          setFileMetadata({
+            name: selectedFile.name,
+            sheets: sheetNames,
+            headers,
+            rowCount,
+            targetSheet,
+            headerRow
+          });
+
+          setSuggestedType(type);
+          setConfidence(conf);
+          setProgress(100);
+          setStep('analysis');
+        } catch (error) {
+          console.error(error);
+          toast.error("Erro ao analisar o arquivo.");
+          reset();
+        } finally {
+          setIsProcessing(false);
+          setProgress(0);
         }
-
-        // Sugestão de tipo
-        let type: 'vagas' | 'banco' | null = null;
-        let conf: 'high' | 'low' = 'low';
-
-        const hasVagaHeaders = VAGA_REQUIRED_COLUMNS.every(col => headers.includes(col));
-        const hasSomeVagaHeaders = VAGA_REQUIRED_COLUMNS.filter(col => headers.includes(col)).length >= 4;
-        const hasBancoHeaders = BANCO_REQUIRED_COLUMNS.every(col => headers.includes(col));
-
-        if (hasVagaHeaders) {
-          type = 'vagas';
-          conf = 'high';
-        } else if (hasBancoHeaders) {
-          type = 'banco';
-          conf = 'high';
-        } else if (hasSomeVagaHeaders || targetSheet.toUpperCase().includes('VAGA')) {
-          type = 'vagas';
-          conf = 'low';
-        } else if (targetSheet.toUpperCase().includes('BANCO')) {
-          type = 'banco';
-          conf = 'low';
-        }
-
-        setFileMetadata({
-          name: selectedFile.name,
-          sheets: sheetNames,
-          headers,
-          rowCount,
-          targetSheet,
-          headerRow
-        });
-
-        setSuggestedType(type);
-        setConfidence(conf);
-        setStep('analysis');
-      } catch (error) {
-        console.error(error);
-        toast.error("Erro ao analisar o arquivo.");
-        reset();
-      } finally {
-        setIsProcessing(false);
-      }
+      }, 100);
     };
     reader.readAsArrayBuffer(selectedFile);
   };
@@ -312,6 +317,8 @@ export function ImportExcelDialog({
 
     setIsProcessing(true);
     setStep('processing');
+    setProgress(0);
+    setProgressLabel("Iniciando processamento...");
 
     try {
       const wb = workbook;
@@ -321,7 +328,11 @@ export function ImportExcelDialog({
       const { sheetUsed, headerRowUsed } = validationResult;
       const sheet = wb.Sheets[sheetUsed];
       const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
-
+      
+      const totalToProcess = rawRows.length - (headerRowUsed + 1);
+      const chunkSize = 500;
+      let currentIndex = headerRowUsed + 1;
+      
       if (chosenType === 'vagas') {
         const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
         const mapping = {
@@ -333,7 +344,6 @@ export function ImportExcelDialog({
           tipo: headers.indexOf('TIPO'),
           vagas: headers.indexOf('VAGAS'),
           status: headers.indexOf('STATUS'),
-          // Opcionais
           dataConv: headers.indexOf('DATA CONVOCAÇÃO'),
           horaConv: headers.indexOf('HORÁRIO CONVOCAÇÃO'),
           candidato: headers.indexOf('CANDIDATO CONVOCADO CONVOCAÇÃO'),
@@ -351,127 +361,140 @@ export function ImportExcelDialog({
         let totalRowsFound = 0;
         let discardedCargoEmpty = 0;
 
-        // Dados a partir da linha 3 (index headerRowUsed + 1)
-        for (let i = headerRowUsed + 1; i < rawRows.length; i++) {
-          const row = rawRows[i];
-          if (!row || (Array.isArray(row) && row.length === 0)) continue;
+        const processChunk = () => {
+          const end = Math.min(currentIndex + chunkSize, rawRows.length);
           
-          totalRowsFound++;
-          const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
-          if (!cargo) {
-            discardedCargoEmpty++;
-            continue;
+          for (let i = currentIndex; i < end; i++) {
+            const row = rawRows[i];
+            if (!row || (Array.isArray(row) && row.length === 0)) continue;
+            
+            totalRowsFound++;
+            const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
+            if (!cargo) {
+              discardedCargoEmpty++;
+              continue;
+            }
+
+            const unitInRow = mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : 'NÃO INFORMADA';
+            const requisicao = mapping.requisicao !== -1 ? String(row[mapping.requisicao] || '') : '';
+            const rawTipo = mapping.tipo !== -1 ? String(row[mapping.tipo] || '').toLowerCase() : '';
+            const numVagas = mapping.vagas !== -1 ? (Number(row[mapping.vagas]) || 1) : 1;
+            const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '') : '';
+            
+            const dataAbertura = mapping.abertura !== -1 && row[mapping.abertura] ? convertDateValue(row[mapping.abertura], 'auto').formatted : '';
+            const dataRecebimento = mapping.recebimento !== -1 && row[mapping.recebimento] ? convertDateValue(row[mapping.recebimento], 'auto').formatted : '';
+            
+            const dataConv = mapping.dataConv !== -1 && row[mapping.dataConv] ? convertDateValue(row[mapping.dataConv], 'auto').formatted : '';
+            const horaConv = mapping.horaConv !== -1 ? String(row[mapping.horaConv] || '') : '';
+            const candConv = mapping.candidato !== -1 ? String(row[mapping.candidato] || '') : '';
+            const classConv = mapping.classificacao !== -1 ? String(row[mapping.classificacao] || '') : '';
+            const formaConv = mapping.forma !== -1 ? String(row[mapping.forma] || '') : '';
+            const oitivaConv = mapping.oitiva !== -1 ? String(row[mapping.oitiva] || '') : '';
+            const secao = mapping.secao !== -1 ? String(row[mapping.secao] || '') : '';
+            
+            const admEnviada = mapping.admEnviada !== -1 ? String(row[mapping.admEnviada] || '') : '';
+            const admEfetivada = mapping.admEfetivada !== -1 ? String(row[mapping.admEfetivada] || '') : '';
+            const detalhesAcomp = mapping.detalhes !== -1 ? String(row[mapping.detalhes] || '') : '';
+            const obsAcomp = mapping.obs !== -1 ? String(row[mapping.obs] || '') : '';
+
+            let tipoVaga: TipoVaga = 'substituicao';
+            if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
+            else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
+            else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
+            else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
+            else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
+            else if (rawTipo.includes('edital')) tipoVaga = 'edital';
+
+            const statusNormalized = normalizeStatus(statusRaw);
+            const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
+
+            newVagas.push({
+              id: `vaga-${batchId}-${newVagas.length + 1}`,
+              unidade: unitInRow,
+              cargo,
+              requisicao,
+              numero_requisicao: requisicao,
+              data_abertura: dataAbertura,
+              data_recebimento: dataRecebimento,
+              data_criacao: now,
+              numero_vagas: numVagas,
+              quantidade: numVagas,
+              secao,
+              tipo_vaga: tipoVaga,
+              status: statusNormalized,
+              status_geral: statusNormalized,
+              analista_responsavel: defaultAnalista,
+              assistentes: assistentes,
+              observacoes_internas: obsAcomp,
+              origem: 'importada',
+              origem_importacao: selectedFile.name,
+              data_importacao: now,
+              lote_importacao: batchId,
+              import_batch_id: batchId,
+              source_sheet: sheetUsed,
+              source_row_index: i + 1,
+              tem_banco_valido: false,
+              data_convocacao_planilha: dataConv,
+              horario_convocacao_planilha: horaConv,
+              candidato_convocado_planilha: candConv,
+              classificacao_convocacao_planilha: classConv,
+              forma_convocacao_planilha: formaConv,
+              status_oitiva_convocacao_planilha: oitivaConv,
+              admissao_enviada_acompanhamento: admEnviada,
+              admissao_efetivada_acompanhamento: admEfetivada,
+              detalhes_acompanhamento: detalhesAcomp,
+              historico: [{
+                id: `h-${Date.now()}-${newVagas.length + 1}`,
+                data: now.split('T')[0],
+                descricao: 'Vaga importada via planilha',
+                usuario: 'Sistema'
+              }]
+            });
           }
 
-          const unitInRow = mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : 'NÃO INFORMADA';
-          const requisicao = mapping.requisicao !== -1 ? String(row[mapping.requisicao] || '') : '';
-          const rawTipo = mapping.tipo !== -1 ? String(row[mapping.tipo] || '').toLowerCase() : '';
-          const numVagas = mapping.vagas !== -1 ? (Number(row[mapping.vagas]) || 1) : 1;
-          const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '') : '';
-          
-          const dataAbertura = mapping.abertura !== -1 && row[mapping.abertura] ? convertDateValue(row[mapping.abertura], 'auto').formatted : '';
-          const dataRecebimento = mapping.recebimento !== -1 && row[mapping.recebimento] ? convertDateValue(row[mapping.recebimento], 'auto').formatted : '';
-          
-          const dataConv = mapping.dataConv !== -1 && row[mapping.dataConv] ? convertDateValue(row[mapping.dataConv], 'auto').formatted : '';
-          const horaConv = mapping.horaConv !== -1 ? String(row[mapping.horaConv] || '') : '';
-          const candConv = mapping.candidato !== -1 ? String(row[mapping.candidato] || '') : '';
-          const classConv = mapping.classificacao !== -1 ? String(row[mapping.classificacao] || '') : '';
-          const formaConv = mapping.forma !== -1 ? String(row[mapping.forma] || '') : '';
-          const oitivaConv = mapping.oitiva !== -1 ? String(row[mapping.oitiva] || '') : '';
-          const secao = mapping.secao !== -1 ? String(row[mapping.secao] || '') : '';
-          
-          const admEnviada = mapping.admEnviada !== -1 ? String(row[mapping.admEnviada] || '') : '';
-          const admEfetivada = mapping.admEfetivada !== -1 ? String(row[mapping.admEfetivada] || '') : '';
-          const detalhesAcomp = mapping.detalhes !== -1 ? String(row[mapping.detalhes] || '') : '';
-          const obsAcomp = mapping.obs !== -1 ? String(row[mapping.obs] || '') : '';
+          currentIndex = end;
+          const prog = Math.round(((currentIndex - (headerRowUsed + 1)) / totalToProcess) * 100);
+          setProgress(prog);
+          setProgressLabel(`Processando Vagas: ${newVagas.length} / ${totalToProcess}`);
 
-          let tipoVaga: TipoVaga = 'substituicao';
-          if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
-          else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
-          else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
-          else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
-          else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
-          else if (rawTipo.includes('edital')) tipoVaga = 'edital';
+          if (currentIndex < rawRows.length) {
+            setTimeout(processChunk, 10);
+          } else {
+            addVagas(newVagas);
+            setSummary({
+              type: 'vagas',
+              total: newVagas.length,
+              totalFound: totalRowsFound,
+              discardedEmpty: discardedCargoEmpty,
+              fileName: selectedFile.name,
+              sheetName: sheetUsed,
+              manualType: chosenType,
+              suggestedType: suggestedType
+            });
+            addImportHistory({
+              id: batchId,
+              usuario: 'Sistema',
+              total_lidos: totalRowsFound,
+              total_novos: newVagas.length,
+              total_atualizados: 0,
+              total_ignorados: discardedCargoEmpty,
+              total_erros: 0,
+              status: 'concluido',
+              tipo_importacao: 'vagas',
+              arquivo: selectedFile.name,
+              data_hora: now,
+              aba_utilizada: sheetUsed,
+              linha_cabecalho: headerRowUsed + 1,
+              colunas_reconhecidas: headers.join(', ')
+            } as any);
+            toast.success(`Importação de Vagas concluída: ${newVagas.length} registros.`);
+            setIsProcessing(false);
+            setStep('summary');
+          }
+        };
 
-          const statusNormalized = normalizeStatus(statusRaw);
-          const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
+        setTimeout(processChunk, 10);
 
-          newVagas.push({
-            id: `vaga-${batchId}-${newVagas.length + 1}`,
-            unidade: unitInRow,
-            cargo,
-            requisicao,
-            numero_requisicao: requisicao,
-            data_abertura: dataAbertura,
-            data_recebimento: dataRecebimento,
-            data_criacao: now,
-            numero_vagas: numVagas,
-            quantidade: numVagas,
-            secao,
-            tipo_vaga: tipoVaga,
-            status: statusNormalized,
-            status_geral: statusNormalized,
-            analista_responsavel: defaultAnalista,
-            assistentes: assistentes,
-            observacoes_internas: obsAcomp,
-            origem: 'importada',
-            origem_importacao: selectedFile.name,
-            data_importacao: now,
-            lote_importacao: batchId,
-            import_batch_id: batchId,
-            source_sheet: sheetUsed,
-            source_row_index: i + 1,
-            tem_banco_valido: false,
-            data_convocacao_planilha: dataConv,
-            horario_convocacao_planilha: horaConv,
-            candidato_convocado_planilha: candConv,
-            classificacao_convocacao_planilha: classConv,
-            forma_convocacao_planilha: formaConv,
-            status_oitiva_convocacao_planilha: oitivaConv,
-            admissao_enviada_acompanhamento: admEnviada,
-            admissao_efetivada_acompanhamento: admEfetivada,
-            detalhes_acompanhamento: detalhesAcomp,
-            historico: [{
-              id: `h-${Date.now()}-${newVagas.length + 1}`,
-              data: now.split('T')[0],
-              descricao: 'Vaga importada via planilha',
-              usuario: 'Sistema'
-            }]
-          });
-        }
-
-        addVagas(newVagas);
-        
-        setSummary({
-          type: 'vagas',
-          total: newVagas.length,
-          totalFound: totalRowsFound,
-          discardedEmpty: discardedCargoEmpty,
-          fileName: selectedFile.name,
-          sheetName: sheetUsed,
-          manualType: chosenType,
-          suggestedType: suggestedType
-        });
-        
-        addImportHistory({
-          id: batchId,
-          usuario: 'Sistema',
-          total_lidos: totalRowsFound,
-          total_novos: newVagas.length,
-          total_atualizados: 0,
-          total_ignorados: discardedCargoEmpty,
-          total_erros: 0,
-          status: 'concluido',
-          tipo_importacao: 'vagas',
-          arquivo: selectedFile.name,
-          data_hora: now,
-          // Log detalhado conforme item 8
-          aba_utilizada: sheetUsed,
-          linha_cabecalho: headerRowUsed + 1,
-          colunas_reconhecidas: headers.join(', ')
-        } as any);
-        
-        toast.success(`Importação de Vagas concluída: ${newVagas.length} registros.`);
       } else if (chosenType === 'banco') {
         const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
         const mapping = {
@@ -485,11 +508,8 @@ export function ImportExcelDialog({
           nome: headers.indexOf('NOME'),
           classificacao: headers.indexOf('CLASSIFICAÇÃO'),
           quantidadeBanco: headers.findIndex(h => 
-            h === 'QUANTIDADE DE BANCO' || 
-            h === 'QNTD BANCO' || 
-            h === 'QTD BANCO' || 
-            h === 'QUANTIDADE BANCO' ||
-            h === 'QTD. BANCO'
+            h === 'QUANTIDADE DE BANCO' || h === 'QNTD BANCO' || h === 'QTD BANCO' || 
+            h === 'QUANTIDADE BANCO' || h === 'QTD. BANCO'
           ),
           chamada: headers.indexOf('NÚMERO DE CHAMADA'),
           vagasAproveitamento: headers.indexOf('NÚMERO DE VAGAS DE APROVEITAMENTO'),
@@ -500,105 +520,113 @@ export function ImportExcelDialog({
         const newBancos: BancoTalentos[] = [];
         let totalRowsFound = 0;
 
-        for (let i = headerRowUsed + 1; i < rawRows.length; i++) {
-          const row = rawRows[i];
-          if (!row || (Array.isArray(row) && row.length === 0)) continue;
+        const processChunk = () => {
+          const end = Math.min(currentIndex + chunkSize, rawRows.length);
           
-          totalRowsFound++;
-          const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
-          if (!cargo) continue;
+          for (let i = currentIndex; i < end; i++) {
+            const row = rawRows[i];
+            if (!row || (Array.isArray(row) && row.length === 0)) continue;
+            
+            totalRowsFound++;
+            const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
+            if (!cargo) continue;
 
-          const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '').toUpperCase().trim() : '';
-          let status: any = 'nenhum';
-          if (statusRaw.includes('RESERVA')) status = 'CADASTRO RESERVA';
-          else if (statusRaw.includes('CONVOC')) status = 'CONVOCADO';
-          else if (statusRaw.includes('VENCID')) status = 'VENCIDO';
+            const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '').toUpperCase().trim() : '';
+            let status: any = 'nenhum';
+            if (statusRaw.includes('RESERVA')) status = 'CADASTRO RESERVA';
+            else if (statusRaw.includes('CONVOC')) status = 'CONVOCADO';
+            else if (statusRaw.includes('VENCID')) status = 'VENCIDO';
 
-          const prorrogacaoRaw = mapping.prorrogacao !== -1 ? String(row[mapping.prorrogacao] || '').toUpperCase().trim() : '';
-          const isProrrogado = prorrogacaoRaw === 'SIM';
-          
-          const validadeOriginal = mapping.validade !== -1 && row[mapping.validade] 
-            ? convertDateValue(row[mapping.validade], 'auto').formatted 
-            : '';
-          
-          let novaDataValidade = '';
-          if (validadeOriginal && isProrrogado) {
-            const date = new Date(validadeOriginal);
-            if (!isNaN(date.getTime())) {
-              date.setMonth(date.getMonth() + 6);
-              novaDataValidade = date.toISOString().split('T')[0];
+            const prorrogacaoRaw = mapping.prorrogacao !== -1 ? String(row[mapping.prorrogacao] || '').toUpperCase().trim() : '';
+            const isProrrogado = prorrogacaoRaw === 'SIM';
+            const validadeOriginal = mapping.validade !== -1 && row[mapping.validade] 
+              ? convertDateValue(row[mapping.validade], 'auto').formatted 
+              : '';
+            
+            let novaDataValidade = '';
+            if (validadeOriginal && isProrrogado) {
+              const date = new Date(validadeOriginal);
+              if (!isNaN(date.getTime())) {
+                date.setMonth(date.getMonth() + 6);
+                novaDataValidade = date.toISOString().split('T')[0];
+              }
             }
+
+            newBancos.push({
+              id: `banco-${batchId}-${newBancos.length}`,
+              cargo,
+              unidade: mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : '',
+              status,
+              numero_edital: mapping.edital !== -1 ? String(row[mapping.edital] || '').trim() : '',
+              numero_processo_seletivo: mapping.processoSeletivo !== -1 ? String(row[mapping.processoSeletivo] || '').trim() : '',
+              data_abertura_edital: now.split('T')[0],
+              data_validade: validadeOriginal,
+              is_prorrogado: isProrrogado,
+              nova_data_validade: novaDataValidade,
+              nome: mapping.nome !== -1 ? String(row[mapping.nome] || '').trim() : '',
+              classificacao: mapping.classificacao !== -1 ? row[mapping.classificacao] : '',
+              quantidade_banco: mapping.quantidadeBanco !== -1 ? row[mapping.quantidadeBanco] : '',
+              numero_chamada: mapping.chamada !== -1 ? String(row[mapping.chamada] || '') : '',
+              numero_vaga_aproveitamento: mapping.vagasAproveitamento !== -1 ? String(row[mapping.vagasAproveitamento] || '') : '',
+              data_convocacao: mapping.dataConvocacao !== -1 && row[mapping.dataConvocacao] ? convertDateValue(row[mapping.dataConvocacao], 'auto').formatted : '',
+              unidade_convocacao: mapping.unidadeConvocacao !== -1 ? String(row[mapping.unidadeConvocacao] || '').trim() : '',
+              observacoes: '',
+              status_import: statusRaw,
+              import_batch_id: batchId,
+              data_importacao: now,
+              origem_importacao: selectedFile.name,
+              regiao: selectedRegion || undefined
+            });
           }
 
-          newBancos.push({
-            id: `banco-${batchId}-${newBancos.length}`,
-            cargo,
-            unidade: mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : '',
-            status,
-            numero_edital: mapping.edital !== -1 ? String(row[mapping.edital] || '').trim() : '',
-            numero_processo_seletivo: mapping.processoSeletivo !== -1 ? String(row[mapping.processoSeletivo] || '').trim() : '',
-            data_abertura_edital: now.split('T')[0],
-            data_validade: validadeOriginal,
-            is_prorrogado: isProrrogado,
-            nova_data_validade: novaDataValidade,
-            nome: mapping.nome !== -1 ? String(row[mapping.nome] || '').trim() : '',
-            classificacao: mapping.classificacao !== -1 ? row[mapping.classificacao] : '',
-            quantidade_banco: mapping.quantidadeBanco !== -1 ? row[mapping.quantidadeBanco] : '',
-            numero_chamada: mapping.chamada !== -1 ? String(row[mapping.chamada] || '') : '',
-            numero_vaga_aproveitamento: mapping.vagasAproveitamento !== -1 ? String(row[mapping.vagasAproveitamento] || '') : '',
-            data_convocacao: mapping.dataConvocacao !== -1 && row[mapping.dataConvocacao] ? convertDateValue(row[mapping.dataConvocacao], 'auto').formatted : '',
-            unidade_convocacao: mapping.unidadeConvocacao !== -1 ? String(row[mapping.unidadeConvocacao] || '').trim() : '',
-            observacoes: '',
-            status_import: statusRaw,
-            import_batch_id: batchId,
-            data_importacao: now,
-            origem_importacao: selectedFile.name,
-            regiao: selectedRegion || undefined
-          });
-        }
+          currentIndex = end;
+          const prog = Math.round(((currentIndex - (headerRowUsed + 1)) / totalToProcess) * 100);
+          setProgress(prog);
+          setProgressLabel(`Processando Banco: ${newBancos.length} / ${totalToProcess}`);
 
-        if (selectedRegion) {
-          clearBancosPorRegiao(selectedRegion);
-        }
-        addBancos(newBancos);
-        
-        setSummary({
-          type: 'banco',
-          total: newBancos.length,
-          totalFound: totalRowsFound,
-          fileName: selectedFile.name,
-          sheetName: sheetUsed,
-          manualType: chosenType,
-          suggestedType: suggestedType,
-          region: selectedRegion
-        });
+          if (currentIndex < rawRows.length) {
+            setTimeout(processChunk, 10);
+          } else {
+            if (selectedRegion) clearBancosPorRegiao(selectedRegion);
+            addBancos(newBancos);
+            setSummary({
+              type: 'banco',
+              total: newBancos.length,
+              totalFound: totalRowsFound,
+              fileName: selectedFile.name,
+              sheetName: sheetUsed,
+              manualType: chosenType,
+              suggestedType: suggestedType,
+              region: selectedRegion
+            });
+            addImportHistory({
+              id: batchId,
+              usuario: 'Sistema',
+              total_lidos: totalRowsFound,
+              total_novos: newBancos.length,
+              total_atualizados: 0,
+              total_ignorados: 0,
+              total_erros: 0,
+              status: 'concluido',
+              tipo_importacao: 'banco',
+              arquivo: selectedFile.name,
+              data_hora: now,
+              aba_utilizada: sheetUsed,
+              linha_cabecalho: headerRowUsed + 1
+            } as any);
+            toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
+            setIsProcessing(false);
+            setStep('summary');
+          }
+        };
 
-        addImportHistory({
-          id: batchId,
-          usuario: 'Sistema',
-          total_lidos: totalRowsFound,
-          total_novos: newBancos.length,
-          total_atualizados: 0,
-          total_ignorados: 0,
-          total_erros: 0,
-          status: 'concluido',
-          tipo_importacao: 'banco',
-          arquivo: selectedFile.name,
-          data_hora: now,
-          aba_utilizada: sheetUsed,
-          linha_cabecalho: headerRowUsed + 1
-        } as any);
-
-        toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
+        setTimeout(processChunk, 10);
       }
-
-      setStep('summary');
     } catch (error) {
       console.error(error);
       toast.error("Erro técnico durante a importação.");
-      reset();
-    } finally {
       setIsProcessing(false);
+      reset();
     }
   };
 
@@ -636,9 +664,22 @@ export function ImportExcelDialog({
           )}
 
           {step === 'processing' && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-              <p className="text-gray-600">Processando e analisando o arquivo...</p>
+            <div className="flex flex-col items-center justify-center py-12 space-y-6">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+                {progress > 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary">
+                    {progress}%
+                  </div>
+                )}
+              </div>
+              <div className="w-full max-w-xs space-y-2 text-center">
+                <p className="text-sm font-medium text-gray-700">{progressLabel || "Processando e analisando o arquivo..."}</p>
+                <Progress value={progress} className="h-2" />
+                <p className="text-xs text-gray-500 italic">
+                  Isso pode levar alguns instantes para arquivos grandes.
+                </p>
+              </div>
             </div>
           )}
 

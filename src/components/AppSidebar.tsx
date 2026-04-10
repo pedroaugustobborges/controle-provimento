@@ -150,7 +150,7 @@ export function AppSidebar() {
               <SelectContent className="bg-[#112240] border-white/10 text-white">
                 <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
                 <SelectItem value="Goiás e Vitória" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás e Vitória</SelectItem>
-                <SelectItem value="Fora" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Fora</SelectItem>
+                <SelectItem value="Unidades de Fora" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Unidades de Fora</SelectItem>
               </SelectContent>
             </Select>
 

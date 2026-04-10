@@ -32,17 +32,15 @@ import { useMemo, useState } from 'react';
 
 const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
-  'Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
+  'Unidades de Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
-  const { currentUser, users } = useAdminStore();
+  const { currentUser, users, selectedRegion, selectedUnit, setSelectedRegion, setSelectedUnit } = useAdminStore();
   const location = useLocation();
-  const [selectedRegion, setSelectedRegion] = useState<string>('all');
-  const [selectedUnit, setSelectedUnit] = useState<string>('all');
 
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
@@ -152,7 +150,7 @@ export function AppSidebar() {
               <SelectContent className="bg-[#112240] border-white/10 text-white">
                 <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
                 <SelectItem value="Goiás e Vitória" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás e Vitória</SelectItem>
-                <SelectItem value="Fora" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Fora</SelectItem>
+                <SelectItem value="Unidades de Fora" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Unidades de Fora</SelectItem>
               </SelectContent>
             </Select>
 

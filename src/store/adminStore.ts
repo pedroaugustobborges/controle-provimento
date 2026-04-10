@@ -8,12 +8,16 @@ interface AdminState {
   supportConfigs: SupportConfig[];
   backups: BackupRecord[];
   currentUser: User | null;
+  selectedRegion: string;
+  selectedUnit: string;
   
   // User actions
   addUser: (user: User) => void;
   updateUser: (id: string, data: Partial<User>) => void;
   deleteUser: (id: string) => void;
   setCurrentUser: (user: User | null) => void;
+  setSelectedRegion: (region: string) => void;
+  setSelectedUnit: (unit: string) => void;
   
   // Audit actions
   addAuditLog: (log: Omit<AuditLog, 'id'>) => void;
@@ -32,6 +36,8 @@ export const useAdminStore = create<AdminState>((set) => ({
   supportConfigs: mockSupportConfigs,
   backups: mockBackups,
   currentUser: mockUsers[0], // Simulando admin logado
+  selectedRegion: 'all',
+  selectedUnit: 'all',
   
   addUser: (user) => set((s) => ({ users: [user, ...s.users] })),
   updateUser: (id, data) => set((s) => ({
@@ -41,6 +47,8 @@ export const useAdminStore = create<AdminState>((set) => ({
     users: s.users.filter((u) => u.id !== id),
   })),
   setCurrentUser: (user) => set({ currentUser: user }),
+  setSelectedRegion: (region) => set({ selectedRegion: region }),
+  setSelectedUnit: (unit) => set({ selectedUnit: unit }),
   
   addAuditLog: (log) => set((s) => {
     const newLog: AuditLog = {

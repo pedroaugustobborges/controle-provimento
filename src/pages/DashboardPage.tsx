@@ -1,9 +1,11 @@
 import { useMemo, useEffect } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   calcDiasAberto, normalizeUnitName, 
-  getCategoriaStatus, getValidVacancyBase, normalizeCargo
+  getCategoriaStatus, getValidVacancyBase, normalizeCargo,
+  filterByRegionAndUnit
 } from '@/lib/vagaUtils';
 import { 
   Briefcase, 
@@ -48,6 +50,7 @@ export default function DashboardPage() {
     fetchVagas,
     fetchBancos
   } = useVagasStore();
+  const { selectedRegion, selectedUnit } = useAdminStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,10 +62,16 @@ export default function DashboardPage() {
     }
   }, [allVagas.length, bancos.length, fetchVagas, fetchBancos]);
 
-  // Canonical base for dashboard - using the same parity rule as Excel
+  // Canonical base for dashboard - using the same parity rule as Excel + Region/Unit filters
   const vagas = useMemo(() => {
-    return getValidVacancyBase(allVagas, 'TODOS', 'TODOS');
-  }, [allVagas]);
+    const base = filterByRegionAndUnit(allVagas, selectedRegion, selectedUnit);
+    return getValidVacancyBase(base, 'TODOS', 'TODOS');
+  }, [allVagas, selectedRegion, selectedUnit]);
+
+  // Filter bancos by region/unit as well
+  const filteredBancos = useMemo(() => {
+    return filterByRegionAndUnit(bancos, selectedRegion, selectedUnit);
+  }, [bancos, selectedRegion, selectedUnit]);
 
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 
@@ -114,7 +123,7 @@ export default function DashboardPage() {
       candidatesCount: number;
     }> = {};
 
-    bancos.forEach(b => {
+    filteredBancos.forEach(b => {
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
       const key = b.numero_processo_seletivo 
         ? `PS-${b.numero_processo_seletivo}`
@@ -142,7 +151,7 @@ export default function DashboardPage() {
     });
 
     return Object.values(groups);
-  }, [bancos]);
+  }, [filteredBancos]);
 
   // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR (não prorrogados)
   const totalCR = useMemo(() => {
@@ -166,12 +175,12 @@ export default function DashboardPage() {
   }, [groupedBancos]);
 
   const totalConvocados = useMemo(() => 
-    bancos.filter(b => b.status === 'CONVOCADO').length
-  , [bancos]);
+    filteredBancos.filter(b => b.status === 'CONVOCADO').length
+  , [filteredBancos]);
 
   const totalVencidos = useMemo(() => 
-    bancos.filter(b => b.status === 'VENCIDO').length
-  , [bancos]);
+    filteredBancos.filter(b => b.status === 'VENCIDO').length
+  , [filteredBancos]);
 
   const totalBancoTotal = useMemo(() => 
     groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)

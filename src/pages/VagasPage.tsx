@@ -10,7 +10,8 @@ import { AcompanhamentoModal } from '@/components/AcompanhamentoModal';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
-  getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa 
+  getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa,
+  filterByRegionAndUnit, UNIDADES_POR_REGIAO
 } from '@/lib/vagaUtils';
 import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles } from 'lucide-react';
 
@@ -77,7 +78,7 @@ export default function VagasPage() {
   }, [vagas.length, fetchVagas]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'list';
-  const { currentUser, addAuditLog } = useAdminStore();
+  const { currentUser, addAuditLog, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const navigate = useNavigate();
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
@@ -130,10 +131,17 @@ export default function VagasPage() {
   // Restriction by unit - normalization for consistent comparison
   const visibleUnidades = useMemo(() => {
     const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-    return currentUser?.visualiza_todas_unidades 
-      ? allUnidades 
-      : userUnidades;
-  }, [currentUser, allUnidades]);
+    const regionUnits = selectedRegion !== 'all' ? (UNIDADES_POR_REGIAO[selectedRegion] || []).map(u => normalizeUnitName(u)) : allUnidades;
+    
+    let base = currentUser?.visualiza_todas_unidades ? allUnidades : userUnidades;
+    
+    // Intersect with region if selected
+    if (selectedRegion !== 'all') {
+      base = base.filter(u => regionUnits.includes(u));
+    }
+    
+    return base;
+  }, [currentUser, allUnidades, selectedRegion]);
 
   const unidades = useMemo(() => {
     return allUnidades.filter(u => visibleUnidades.includes(u)).sort();
@@ -144,8 +152,12 @@ export default function VagasPage() {
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
-    return getValidVacancyBase(vagas, filterUnidade, filterMes);
-  }, [vagas, filterUnidade, filterMes]);
+    // 1. Filtragem por Região e Unidade Global (Sidebar)
+    const baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
+    
+    // 2. Filtragem interna da tela
+    return getValidVacancyBase(baseRecords, filterUnidade, filterMes);
+  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes]);
 
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {

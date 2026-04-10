@@ -6,6 +6,11 @@ export const VITORIA_SUB_UNIDADES = [
   'es', 'serra', 'cariacica', 'vila velha', 'viana'
 ];
 
+export const UNIDADES_POR_REGIAO: Record<string, string[]> = {
+  'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
+  'Unidades de Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
+};
+
 function removeAccents(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -347,6 +352,29 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
   const date = parseSpreadsheetDate(dateValue);
   if (!date || isNaN(date.getTime())) return "";
   return new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date).toUpperCase();
+}
+
+export function filterByRegionAndUnit(records: any[], region: string, unit: string): any[] {
+  if (!records || !Array.isArray(records)) return [];
+  
+  let filtered = records;
+  
+  // Filter by Region
+  if (region && region !== 'all') {
+    const unitsInRegion = UNIDADES_POR_REGIAO[region] || [];
+    filtered = filtered.filter(row => {
+      const rowUnit = normalizeUnitName(row.unidade);
+      return unitsInRegion.some(u => normalizeUnitName(u) === rowUnit);
+    });
+  }
+  
+  // Filter by Unit
+  if (unit && unit !== 'all') {
+    const normUnit = normalizeUnitName(unit);
+    filtered = filtered.filter(row => normalizeUnitName(row.unidade) === normUnit);
+  }
+  
+  return filtered;
 }
 
 export function getValidVacancyBase(records: any[], selectedUnit?: string, selectedMonth?: string): any[] {

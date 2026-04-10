@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, MapPin, User, ChevronLeft, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { UNITS, ROLES } from "@/data/chatData";
 import { ChatStep, Unit, Role, Message } from "@/types/chat";
 
-export const AgieChat = () => {
+export const AgieChat = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<ChatStep>('INITIAL');
   const [selectedRegion, setSelectedRegion] = useState<'GO_VIT' | 'FORA' | null>(null);
@@ -181,7 +181,7 @@ export const AgieChat = () => {
                         Goiás e Vitória <ChevronLeft className="w-4 h-4 rotate-180" />
                       </Button>
                       <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('FORA'); setStep('BY_UNIT'); }}>
-                        Fora <ChevronLeft className="w-4 h-4 rotate-180" />
+                        Unidades de Fora <ChevronLeft className="w-4 h-4 rotate-180" />
                       </Button>
                     </div>
                   )}
@@ -372,4 +372,4 @@ export const AgieChat = () => {
       </motion.div>
     </div>
   );
-};
+});

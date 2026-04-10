@@ -148,11 +148,16 @@ export class ImportService {
         }
 
         if (transformedChunk.length > 0) {
-          const { error: insertError } = await supabase.from(tableName).insert(transformedChunk);
-          if (insertError) {
-            errors.push(`Erro ao salvar lote ${Math.floor(i/chunkSize) + 1}: ${insertError.message}`);
-          } else {
-            insertedCount += transformedChunk.length;
+          try {
+            const { error: insertError } = await supabase.from(tableName).insert(transformedChunk);
+            if (insertError) {
+              errors.push(`Erro Supabase no lote ${Math.floor(i/chunkSize) + 1}: ${insertError.message || JSON.stringify(insertError)}`);
+            } else {
+              insertedCount += transformedChunk.length;
+            }
+          } catch (fetchErr: any) {
+            console.error("Fetch error during insert:", fetchErr);
+            errors.push(`Erro de conexão (Failed to fetch) no lote ${Math.floor(i/chunkSize) + 1}. Verifique sua internet ou tente lotes menores.`);
           }
         }
 
@@ -172,18 +177,27 @@ export class ImportService {
       }
 
       // Step 4: Finalize
+      let finalStatus: ImportPhase = 'success';
+      if (insertedCount === 0) {
+        finalStatus = 'error';
+      } else if (errors.length > 0) {
+        finalStatus = 'success'; // Still success but with errors is handled by UI
+      }
+
       if (logId) {
         await supabase.from('importacoes').update({
-          status: (errors.length > 0 && insertedCount === 0) ? 'erro' : 'concluido',
+          status: insertedCount === 0 ? 'erro' : (errors.length > 0 ? 'concluido_alertas' : 'concluido'),
           quantidade_inserida: insertedCount,
           observacoes: errors.length > 0 ? `Processado com ${errors.length} alertas. Ex: ${errors[0].substring(0, 100)}` : 'Sucesso'
         }).eq('id', logId);
       }
 
       onProgress({
-        phase: 'success',
+        phase: finalStatus,
         percentage: 100,
-        label: 'Importação concluída com sucesso!',
+        label: finalStatus === 'success' 
+          ? (errors.length > 0 ? 'Importação concluída parcialmente!' : 'Importação concluída com sucesso!')
+          : 'Falha na Importação: Nenhum registro salvo.',
         processedRows: insertedCount,
         totalRows,
         errors

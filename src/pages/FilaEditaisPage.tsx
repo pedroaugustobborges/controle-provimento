@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
@@ -35,7 +35,7 @@ import { useNavigate } from 'react-router-dom';
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
   const { vagas, updateVaga } = useVagasStore();
-  const { currentUser } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -50,7 +50,8 @@ export default function FilaEditaisPage() {
   const [obsUnidade, setObsUnidade] = useState('');
 
   const pendingVagas = useMemo(() => {
-    return vagas.filter(v => {
+    const baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
+    return baseRecords.filter(v => {
       const vUnitNormalized = normalizeUnitName(v.unidade);
       
       // Unit access restriction
@@ -82,7 +83,14 @@ export default function FilaEditaisPage() {
     });
   }, [vagas, currentUser, search, filterUnidade, filterStatus]);
 
-  const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
+  const unidades = useMemo(() => {
+    const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort();
+    if (selectedRegion !== 'all') {
+      const regionUnits = (UNIDADES_POR_REGIAO[selectedRegion] || []).map(u => normalizeUnitName(u));
+      return allUnidades.filter(u => regionUnits.includes(u));
+    }
+    return allUnidades;
+  }, [vagas, selectedRegion]);
   const statusOptions: StatusEdital[] = [
     'Nova vaga', 'Aguardando processo', 'Aguardando edital', 
     'Aguardando processo e edital', 'Em andamento', 'Encerrada'

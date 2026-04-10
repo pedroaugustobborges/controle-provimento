@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
 import { DevolutivaDialog } from '@/components/DevolutivaDialog';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatDate, getCategoriaStatus } from '@/lib/vagaUtils';
+import { formatDate, getCategoriaStatus, filterByRegionAndUnit, normalizeUnitName, UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
@@ -57,7 +57,7 @@ export default function ConvocacoesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { vagas, convocacoes, bancos, getBancoByVaga } = useVagasStore();
-  const { currentUser } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const [view, setView] = useState<'kanban' | 'list' | 'pending' | 'diaria'>('kanban');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDevolutivaOpen, setIsDevolutivaOpen] = useState(false);
@@ -94,22 +94,27 @@ export default function ConvocacoesPage() {
 
   const unidades = useMemo(() => {
     const u = new Set<string>();
-    vagas.forEach(v => {
+    const allV = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
+    const allC = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
+    const allB = filterByRegionAndUnit(bancos, selectedRegion, globalUnit);
+    
+    allV.forEach(v => {
       if (v.unidade) u.add(v.unidade);
     });
-    convocacoes.forEach(c => {
+    allC.forEach(c => {
       if (c.unidade) u.add(c.unidade);
     });
-    bancos.forEach(b => {
+    allB.forEach(b => {
       if (b.unidade) u.add(b.unidade);
       if (b.unidade_convocacao) u.add(b.unidade_convocacao);
     });
     return Array.from(u).sort();
-  }, [vagas, convocacoes, bancos]);
+  }, [vagas, convocacoes, bancos, selectedRegion, globalUnit]);
 
   // Unit filtering
   const filteredVagas = useMemo(() => {
-    return vagas.filter(v => {
+    const base = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
+    return base.filter(v => {
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
         return false;
       }
@@ -118,16 +123,19 @@ export default function ConvocacoesPage() {
       }
       return true;
     });
-  }, [vagas, currentUser, selectedUnidade]);
+  }, [vagas, currentUser, selectedUnidade, selectedRegion, globalUnit]);
 
   const pendingVagas = useMemo(() => {
     return filteredVagas.filter(v => getCategoriaStatus(v, true) === 'convocacao');
   }, [filteredVagas]);
 
   const filteredConvocacoes = useMemo(() => {
+    const baseConvocacoes = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
+    const baseBancos = filterByRegionAndUnit(bancos, selectedRegion, globalUnit);
+    
     const allConvocacoes = [
-      ...convocacoes,
-      ...bancos
+      ...baseConvocacoes,
+      ...baseBancos
         .filter(b => b.status === 'CONVOCADO')
         .map(b => ({
           id: b.id,

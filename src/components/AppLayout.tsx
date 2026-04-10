@@ -51,7 +51,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const mainEl = mainRef.current;
     if (!mainEl) return;
     const handleScroll = () => {
-      setIsCompact(mainEl.scrollTop > 50);
+      const compact = mainEl.scrollTop > 50;
+      setIsCompact(prev => prev === compact ? prev : compact);
     };
     mainEl.addEventListener('scroll', handleScroll, { passive: true });
     return () => mainEl.removeEventListener('scroll', handleScroll);

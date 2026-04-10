@@ -89,7 +89,7 @@ export const mockSupportConfigs: SupportConfig[] = [
     teams_user: 'ricardo.oliveira.teams',
     mensagem: 'Atendimento das 08:00 às 18:00.',
     status: 'ativo',
-    unidades: ['Hospital Central (GO)', 'Hospital do Norte (GO)']
+    unidades: ['CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO']
   },
   {
     id: '2',
@@ -99,7 +99,7 @@ export const mockSupportConfigs: SupportConfig[] = [
     teams_user: 'fernanda.souza.teams',
     mensagem: 'Suporte remoto especializado.',
     status: 'ativo',
-    unidades: ['Hospital das Clínicas']
+    unidades: ['SÃO PEDRO', 'SUÁ', 'BENTO FERREIRA', 'SERRA']
   }
 ];
 

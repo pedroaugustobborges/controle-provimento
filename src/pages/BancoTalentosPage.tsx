@@ -1264,16 +1264,18 @@ export default function BancoTalentosPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {(() => {
                 const stats = calculateStats(bancos);
                 const auditItems = [
                   { label: 'Cadastro Reserva', value: stats['Cadastro Reserva'], color: 'text-primary', description: 'Vigente pela validade normal' },
-                  { label: 'Convocados', value: stats['Convocados'], color: 'text-purple-600', description: 'Status final de convocação' },
-                  { label: 'Prorrogados por "SIM"', value: stats['Prorrogados por "SIM"'], color: 'text-blue-600', description: 'Prorrogação de 1 ano (SIM)' },
-                  { label: 'Prorrogados por Data', value: stats['Prorrogados por data manual'], color: 'text-indigo-600', description: 'Prorrogação por data manual' },
-                  { label: 'Vencidos (Validade)', value: stats['Vencidos por validade normal'], color: 'text-red-500', description: 'Vencido pela validade original' },
-                  { label: 'Vencidos (Prorrog.)', value: stats['Vencidos por prorrogação expirada'], color: 'text-red-700', description: 'Vencido após prorrogação' },
+                  { label: 'Convocados', value: stats['Convocados'], color: 'text-purple-600', description: 'Status original CONVOCADO' },
+                  { label: 'Prorrogados ("SIM")', value: stats['Prorrogados por "SIM"'], color: 'text-blue-600', description: 'Coluna prorrogação = SIM' },
+                  { label: 'Prorrogados (Data)', value: stats['Prorrogados por data manual'], color: 'text-indigo-600', description: 'Coluna prorrogação = data' },
+                  { label: 'Prorrogados (Original)', value: stats['Prorrogados por status original'], color: 'text-cyan-600', description: 'Status/flag já era PRORROGADO' },
+                  { label: 'Vencidos (Validade)', value: stats['Vencidos por validade normal'], color: 'text-red-500', description: 'Validade original expirada' },
+                  { label: 'Vencidos (Prorrog.)', value: stats['Vencidos por prorrogação expirada'], color: 'text-red-700', description: 'Prorrogação expirada' },
+                  { label: 'Vencidos (Original)', value: stats['Vencidos por status original'], color: 'text-red-900', description: 'Status original VENCIDO confirmado' },
                 ];
                 
                 return auditItems.map((item, i) => (

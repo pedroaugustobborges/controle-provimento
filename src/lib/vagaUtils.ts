@@ -354,6 +354,29 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
   return new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date).toUpperCase();
 }
 
+export function filterByRegionAndUnit(records: any[], region: string, unit: string): any[] {
+  if (!records || !Array.isArray(records)) return [];
+  
+  let filtered = records;
+  
+  // Filter by Region
+  if (region && region !== 'all') {
+    const unitsInRegion = UNIDADES_POR_REGIAO[region] || [];
+    filtered = filtered.filter(row => {
+      const rowUnit = normalizeUnitName(row.unidade);
+      return unitsInRegion.some(u => normalizeUnitName(u) === rowUnit);
+    });
+  }
+  
+  // Filter by Unit
+  if (unit && unit !== 'all') {
+    const normUnit = normalizeUnitName(unit);
+    filtered = filtered.filter(row => normalizeUnitName(row.unidade) === normUnit);
+  }
+  
+  return filtered;
+}
+
 export function getValidVacancyBase(records: any[], selectedUnit?: string, selectedMonth?: string): any[] {
   const normUnit = selectedUnit && selectedUnit !== 'all' && selectedUnit !== 'TODOS' ? normalizeUnitName(selectedUnit) : 'TODOS';
   const normMonth = selectedMonth && selectedMonth !== 'all' && selectedMonth !== 'TODOS' ? selectedMonth.toUpperCase().trim() : 'TODOS';

@@ -10,6 +10,7 @@ import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangl
 import { PageHeader } from '@/components/PageHeader';
 
 import { formatDate, normalizeCargo, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normalizeUnitName } from '@/lib/vagaUtils';
+import { calculateBancoStatus, calculateStats } from '@/lib/bancoTalentosUtils';
 import { useState, useMemo, useEffect } from 'react';
 
 const getRegiaoFromUnit = (unidade: string): string | undefined => {

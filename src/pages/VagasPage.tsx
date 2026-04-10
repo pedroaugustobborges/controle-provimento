@@ -683,6 +683,29 @@ export default function VagasPage() {
                     <TableCell className="text-center font-bold text-slate-700">
                       {v.numero_vagas || v.quantidade || 0}
                     </TableCell>
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                      {getBancoByVaga(v.id) ? (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700" 
+                          title="Realizar Convocação"
+                          onClick={() => navigate(`/convocacoes/nova?vagaId=${v.id}`)}
+                        >
+                          <CheckCircle2 className="h-5 w-5" />
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-300 hover:bg-slate-50" 
+                          title="Banco não encontrado"
+                          onClick={() => toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`)}
+                        >
+                          <CheckCircle2 className="h-5 w-5 opacity-40" />
+                        </Button>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

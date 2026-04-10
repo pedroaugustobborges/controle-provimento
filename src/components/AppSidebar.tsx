@@ -61,7 +61,7 @@ export function AppSidebar() {
       title: 'Publicação de Edital', 
       url: '/fila-analista-edital', 
       icon: FileText, 
-      visible: isManagement() || isAdminAnalyst() || isEditalAnalyst(),
+      visible: hasFullAccess || isManagement() || isAdminAnalyst() || isEditalAnalyst(),
       subMenu: [
         { title: 'Redação do Edital', url: '/fila-analista-edital' },
         { title: 'Validação de Edital', url: '/validacao-editais' },

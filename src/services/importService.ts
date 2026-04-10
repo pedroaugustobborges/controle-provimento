@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { normalizeStatus, normalizeCargo } from '@/lib/vagaUtils';
+import { calculateBancoStatus } from '@/lib/bancoTalentosUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 import { getResponsavelPorUnidade } from '@/data/equipe';
 import { TipoVaga } from '@/types/vaga';

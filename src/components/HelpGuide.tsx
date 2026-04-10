@@ -59,11 +59,11 @@ const GUIDES: Record<string, Record<string, GuideSection[]>> = {
   }
 };
 
-export function HelpGuide() {
+export function HelpGuide({ activeTab }: { activeTab?: string } = {}) {
   const location = useLocation();
   const currentPath = location.pathname;
   const searchParams = new URLSearchParams(location.search);
-  const tab = searchParams.get('tab') || 'default';
+  const tab = activeTab || searchParams.get('tab') || 'default';
   
   const pathGuides = GUIDES[currentPath] || {};
   const sections = pathGuides[tab] || pathGuides['default'] || [];

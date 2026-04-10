@@ -57,6 +57,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function VagasPage() {
   const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic } = useVagasStore();

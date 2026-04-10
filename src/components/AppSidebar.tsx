@@ -39,7 +39,7 @@ const UNIDADES_POR_REGIAO: Record<string, string[]> = {
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst } = usePermissions();
+  const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
   const { currentUser, users } = useAdminStore();
   const location = useLocation();
   const [selectedRegion, setSelectedRegion] = useState<string>('all');

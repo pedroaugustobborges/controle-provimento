@@ -148,11 +148,16 @@ export class ImportService {
         }
 
         if (transformedChunk.length > 0) {
-          const { error: insertError } = await supabase.from(tableName).insert(transformedChunk);
-          if (insertError) {
-            errors.push(`Erro ao salvar lote ${Math.floor(i/chunkSize) + 1}: ${insertError.message}`);
-          } else {
-            insertedCount += transformedChunk.length;
+          try {
+            const { error: insertError } = await supabase.from(tableName).insert(transformedChunk);
+            if (insertError) {
+              errors.push(`Erro Supabase no lote ${Math.floor(i/chunkSize) + 1}: ${insertError.message || JSON.stringify(insertError)}`);
+            } else {
+              insertedCount += transformedChunk.length;
+            }
+          } catch (fetchErr: any) {
+            console.error("Fetch error during insert:", fetchErr);
+            errors.push(`Erro de conexão (Failed to fetch) no lote ${Math.floor(i/chunkSize) + 1}. Verifique sua internet ou tente lotes menores.`);
           }
         }
 

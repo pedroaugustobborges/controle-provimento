@@ -330,7 +330,9 @@ export const AgieChat = memo(() => {
             "w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-2xl border-4 transition-all duration-500 overflow-hidden",
             isOpen 
               ? "bg-white border-primary rotate-90" 
-              : "bg-primary border-white hover:shadow-primary/40"
+              : hasNewMessage
+                ? "bg-red-600 border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
+                : "bg-primary border-white hover:shadow-primary/40"
           )}
         >
           {isOpen ? (

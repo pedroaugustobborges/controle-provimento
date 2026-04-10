@@ -261,6 +261,17 @@ export default function BancoTalentosPage() {
     });
   }, [groupedBancos, search, unidadeFilter, statusFilter, regiaoFilter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, unidadeFilter, statusFilter, regiaoFilter]);
+
+  const paginatedGroups = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredGroups.slice(start, start + pageSize);
+  }, [filteredGroups, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredGroups.length / pageSize);
+
   const selectedGroupCandidates = useMemo(() => {
     if (!selectedBanco) return [];
     

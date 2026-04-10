@@ -214,7 +214,7 @@ export default function ValidacaoEditaisPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setReachrUrl(v.url_reachr || ''); setIsModalOpen(true); }}>
+                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setReachrUrl((v as any).url_reachr || ''); setIsModalOpen(true); }}>
                         <Eye className="h-3.5 w-3.5" /> Analisar
                       </Button>
                     </div>

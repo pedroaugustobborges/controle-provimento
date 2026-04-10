@@ -64,8 +64,8 @@ interface VagasState {
 export const useVagasStore = create<VagasState>()(
   persist(
     (set, get) => ({
-      vagas: mockVagas,
-      bancos: mockBancos,
+      vagas: [],
+      bancos: [],
       convocacoes: mockConvocacoes,
       editais: mockEditais,
       validacoes: mockValidacoes,

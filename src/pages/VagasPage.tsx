@@ -72,10 +72,8 @@ export default function VagasPage() {
   const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas } = useVagasStore();
   
   useEffect(() => {
-    if (vagas.length === 0 || (vagas.length > 0 && vagas[0].id.startsWith('mock-'))) {
-      fetchVagas();
-    }
-  }, [vagas.length, fetchVagas]);
+    fetchVagas();
+  }, [fetchVagas]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog, selectedRegion, selectedUnit: globalUnit } = useAdminStore();

@@ -247,9 +247,11 @@ export default function BancoTalentosPage() {
         }
       }
         
-      return matchSearch && matchUnidade && matchStatus;
+      const matchRegiao = regiaoFilter === 'todas' || group.regiao === regiaoFilter;
+
+      return matchSearch && matchUnidade && matchStatus && matchRegiao;
     });
-  }, [groupedBancos, search, unidadeFilter, statusFilter]);
+  }, [groupedBancos, search, unidadeFilter, statusFilter, regiaoFilter]);
 
   const selectedGroupCandidates = useMemo(() => {
     if (!selectedBanco) return [];

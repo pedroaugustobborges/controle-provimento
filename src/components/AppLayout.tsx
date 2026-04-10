@@ -9,11 +9,12 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, Upload, LayoutDashboard } from 'lucide-react';
 import { AgieChat } from './chat/AgieChat';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
+import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,10 +43,16 @@ const routeContextMap: Record<string, { color: string; bgLight: string; icon: Re
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const pathnames = location.pathname.split('/').filter((x) => x);
-  const { currentUser } = useAdminStore();
+  const { currentUser, fetchCurrentProfile } = useAdminStore();
+  const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchCurrentProfile();
+  }, [fetchCurrentProfile]);
 
   useEffect(() => {
     const mainEl = mainRef.current;
@@ -170,7 +177,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       Configurações
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                    <DropdownMenuItem className="gap-2 cursor-pointer text-destructive focus:text-destructive" onClick={async () => {
+                      await signOut();
+                      navigate('/login');
+                    }}>
                       <LogOut className="h-4 w-4" />
                       Sair
                     </DropdownMenuItem>

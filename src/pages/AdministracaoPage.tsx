@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -46,14 +46,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { UserProfile } from '@/types/auth';
+import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
+import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
+
+const ALL_UNIDADES = [
+  ...UNIDADES_POR_REGIAO['Goiás e Vitória'] || [],
+  ...UNIDADES_POR_REGIAO['Unidades de Fora'] || [],
+];
 
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
-  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, generateBackup } = useAdminStore();
+  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, deleteUser, toggleUserStatus, fetchUsers, fetchAuditLogs, generateBackup } = useAdminStore();
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
   
@@ -61,12 +66,80 @@ export default function AdministracaoPage() {
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const handleDeleteUser = () => {
-    if (usuarioParaExcluir) {
+  // Form state for new user
+  const [newUser, setNewUser] = useState({
+    nome_completo: '',
+    email: '',
+    password: '',
+    perfil: 'Analista de RH',
+    cargo: '',
+    visualiza_todas_unidades: false,
+    unidades_vinculadas: [] as string[],
+    pode_incluir_registros: false,
+    pode_excluir_requisicoes: false,
+    pode_editar_configuracoes: false,
+    pode_gerenciar_usuarios: false,
+  });
+
+  useEffect(() => {
+    fetchUsers();
+    fetchAuditLogs();
+  }, [fetchUsers, fetchAuditLogs]);
+
+  const handleCreateUser = async () => {
+    if (!newUser.nome_completo || !newUser.email || !newUser.password) {
+      toast.error('Preencha nome, e-mail e senha.');
+      return;
+    }
+    if (newUser.password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await addUser({
+        ...newUser,
+        perfil: newUser.perfil as any,
+        status: 'ativo',
+      });
+      toast.success('Usuário criado com sucesso!');
+      setIsNewUserOpen(false);
+      setNewUser({
+        nome_completo: '', email: '', password: '', perfil: 'Analista de RH', cargo: '',
+        visualiza_todas_unidades: false, unidades_vinculadas: [],
+        pode_incluir_registros: false, pode_excluir_requisicoes: false,
+        pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
+      });
+    } catch (err: any) {
+      toast.error(`Erro ao criar usuário: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!usuarioParaExcluir) return;
+    setSaving(true);
+    try {
+      await deleteUser(usuarioParaExcluir);
       toast.success('Usuário removido com sucesso.');
+    } catch (err: any) {
+      toast.error(`Erro ao excluir: ${err.message}`);
+    } finally {
+      setSaving(false);
       setIsDeleteDialogOpen(false);
       setUsuarioParaExcluir(null);
+    }
+  };
+
+  const handleToggleStatus = async (id: string) => {
+    try {
+      await toggleUserStatus(id);
+      toast.success('Status do usuário atualizado.');
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
     }
   };
 
@@ -78,7 +151,14 @@ export default function AdministracaoPage() {
     }, 1500);
   };
 
-  const unidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
+  const toggleUnidade = (unidade: string) => {
+    setNewUser(prev => ({
+      ...prev,
+      unidades_vinculadas: prev.unidades_vinculadas.includes(unidade)
+        ? prev.unidades_vinculadas.filter(u => u !== unidade)
+        : [...prev.unidades_vinculadas, unidade]
+    }));
+  };
 
   return (
     <div className="space-y-6 pb-10">
@@ -190,7 +270,10 @@ export default function AdministracaoPage() {
                               <DropdownMenuItem><Shield className="mr-2 h-4 w-4" /> Alterar unidades e permissões</DropdownMenuItem>
                               <DropdownMenuItem><Lock className="mr-2 h-4 w-4" /> Definir senha</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}>
+                              <DropdownMenuItem 
+                                className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}
+                                onClick={() => handleToggleStatus(user.id)}
+                              >
                                 {user.status === 'ativo' ? 'Inativar usuário' : 'Ativar usuário'}
                               </DropdownMenuItem>
                               <DropdownMenuItem 
@@ -368,7 +451,8 @@ export default function AdministracaoPage() {
                     {auditLogs.map((log) => (
                       <TableRow key={log.id} className="text-xs">
                         <TableCell className="pl-6 font-mono text-slate-500">
-                          {log.data} <br/> {log.hora}
+                          {log.created_at ? new Date(log.created_at).toLocaleDateString('pt-BR') : log.data} <br/> 
+                          {log.created_at ? new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : log.hora}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
@@ -652,32 +736,40 @@ export default function AdministracaoPage() {
           <div className="grid gap-6 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-xs font-bold uppercase text-slate-500">Nome Completo</Label>
-                <Input id="name" placeholder="Ex: João da Silva" />
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Nome Completo</Label>
+                <Input placeholder="Ex: João da Silva" value={newUser.nome_completo} onChange={(e) => setNewUser(p => ({ ...p, nome_completo: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-bold uppercase text-slate-500">E-mail</Label>
-                <Input id="email" type="email" placeholder="joao@hospital.com" />
+                <Label className="text-xs font-bold uppercase text-muted-foreground">E-mail</Label>
+                <Input type="email" placeholder="joao@agir.org.br" value={newUser.email} onChange={(e) => setNewUser(p => ({ ...p, email: e.target.value }))} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">Senha Inicial</Label>
+              <Input type="password" placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="perfil" className="text-xs font-bold uppercase text-slate-500">Perfil de Acesso</Label>
-                <Select defaultValue="Assistente">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
+                <Select value={newUser.perfil} onValueChange={(v) => setNewUser(p => ({ ...p, perfil: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Assistente">Assistente</SelectItem>
-                    <SelectItem value="Analista">Analista</SelectItem>
-                    <SelectItem value="Supervisão">Supervisão</SelectItem>
-                    <SelectItem value="Coordenação">Coordenação</SelectItem>
-                    <SelectItem value="Gerência">Gerência</SelectItem>
-                    <SelectItem value="Admin">Administrador</SelectItem>
+                    {PERFIS_ACESSO.map(p => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cargo" className="text-xs font-bold uppercase text-slate-500">Cargo Hierárquico</Label>
-                <Input id="cargo" placeholder="Ex: Analista Pleno" />
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Cargo Hierárquico</Label>
+                <Select value={newUser.cargo} onValueChange={(v) => setNewUser(p => ({ ...p, cargo: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent>
+                    {CARGOS_HIERARQUICOS.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -687,49 +779,50 @@ export default function AdministracaoPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-bold">Visualizar todas as unidades</Label>
-                  <p className="text-[11px] text-slate-500">O usuário terá acesso a todos os registros do sistema.</p>
+                  <p className="text-[11px] text-muted-foreground">O usuário terá acesso a todos os registros do sistema.</p>
                 </div>
-                <Switch />
+                <Switch checked={newUser.visualiza_todas_unidades} onCheckedChange={(v) => setNewUser(p => ({ ...p, visualiza_todas_unidades: v }))} />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-slate-500">Vincular Unidades Específicas</Label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {unidades.map(u => (
-                    <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-slate-50 transition-colors">
-                      <input type="checkbox" id={`unit-${u}`} className="h-3 w-3 rounded border-slate-300" />
-                      <label htmlFor={`unit-${u}`} className="text-[11px] font-bold text-slate-600 cursor-pointer">{u}</label>
-                    </div>
-                  ))}
+              {!newUser.visualiza_todas_unidades && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Vincular Unidades Específicas</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-1 max-h-[200px] overflow-y-auto">
+                    {ALL_UNIDADES.map(u => (
+                      <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleUnidade(u)}>
+                        <input type="checkbox" checked={newUser.unidades_vinculadas.includes(u)} readOnly className="h-3 w-3 rounded" />
+                        <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="flex items-center gap-2">
-                  <Switch id="pode-incluir" />
-                  <Label htmlFor="pode-incluir" className="text-xs font-bold">Pode incluir registros</Label>
+                  <Switch checked={newUser.pode_incluir_registros} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_incluir_registros: v }))} />
+                  <Label className="text-xs font-bold">Pode incluir registros</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch id="pode-excluir" />
-                  <Label htmlFor="pode-excluir" className="text-xs font-bold">Pode excluir requisições</Label>
+                  <Switch checked={newUser.pode_excluir_requisicoes} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_excluir_requisicoes: v }))} />
+                  <Label className="text-xs font-bold">Pode excluir requisições</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch id="pode-config" />
-                  <Label htmlFor="pode-config" className="text-xs font-bold">Pode editar configurações</Label>
+                  <Switch checked={newUser.pode_editar_configuracoes} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_editar_configuracoes: v }))} />
+                  <Label className="text-xs font-bold">Pode editar configurações</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch id="pode-usuarios" />
-                  <Label htmlFor="pode-usuarios" className="text-xs font-bold">Pode gerenciar usuários</Label>
+                  <Switch checked={newUser.pode_gerenciar_usuarios} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_gerenciar_usuarios: v }))} />
+                  <Label className="text-xs font-bold">Pode gerenciar usuários</Label>
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNewUserOpen(false)}>Cancelar</Button>
-            <Button onClick={() => {
-              setIsNewUserOpen(false);
-              toast.success('Usuário criado com sucesso!');
-            }} className="bg-primary">Criar Usuário</Button>
+            <Button onClick={handleCreateUser} disabled={saving} className="bg-primary">
+              {saving ? 'Criando...' : 'Criar Usuário'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -747,8 +840,8 @@ export default function AdministracaoPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setUsuarioParaExcluir(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Confirmar Exclusão
+            <AlertDialogAction onClick={handleDeleteUser} disabled={saving} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {saving ? 'Excluindo...' : 'Confirmar Exclusão'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

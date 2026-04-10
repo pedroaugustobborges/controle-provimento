@@ -410,6 +410,7 @@ export function ImportExcelDialog({
           const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
 
           processedItems.push({
+            id: `vaga-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 9)}`,
             unidade: unitInRow,
             cargo,
             requisicao,

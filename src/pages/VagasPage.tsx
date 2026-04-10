@@ -68,7 +68,13 @@ import {
 } from "@/components/ui/pagination";
 
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas } = useVagasStore();
+  
+  useEffect(() => {
+    if (vagas.length === 0 || (vagas.length > 0 && vagas[0].id.startsWith('mock-'))) {
+      fetchVagas();
+    }
+  }, [vagas.length, fetchVagas]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog } = useAdminStore();

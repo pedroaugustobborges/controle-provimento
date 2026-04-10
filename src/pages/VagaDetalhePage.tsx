@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
+import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   AlertDialog,

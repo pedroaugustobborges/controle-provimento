@@ -342,7 +342,7 @@ export function ImportExcelDialog({
       }
 
       const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
-      const processedItems: Partial<Vaga>[] = [];
+      const processedItems: any[] = [];
 
       setProgressLabel(`Mapeando ${totalToProcess} registros...`);
 

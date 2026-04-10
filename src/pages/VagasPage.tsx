@@ -320,6 +320,7 @@ export default function VagasPage() {
             badge="Gestão de Vagas"
             actions={
               <>
+                <HelpGuide />
                 {permissions.canViewAudit() && (
                   <Button 
                     variant="ghost" 
@@ -1036,7 +1037,6 @@ function AcompanhamentoEditalList() {
                           <Badge className={`${getEtapaColor(displayEtapa as EtapaEdital)} font-bold text-[11px] uppercase py-0.5 px-2 w-fit`}>
                             {ETAPA_LABELS[displayEtapa as EtapaEdital] || displayEtapa}
                           </Badge>
-                          {/* Removido sugestão conforme solicitado */}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">

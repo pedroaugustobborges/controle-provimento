@@ -41,7 +41,7 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-[fadeIn_0.3s_ease-out]" />
+      <div className="absolute inset-0 bg-black/30 animate-[fadeIn_0.3s_ease-out]" />
 
       {/* Modal */}
       <div
@@ -49,7 +49,7 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
-        <div className="relative rounded-2xl bg-[#0d1a30]/90 backdrop-blur-2xl border border-white/[0.1] shadow-2xl shadow-black/50 overflow-hidden">
+        <div className="relative rounded-2xl bg-white/[0.08] backdrop-blur-sm border border-white/[0.15] shadow-2xl shadow-black/40 overflow-hidden">
           {/* Top bar */}
           <div className="bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">

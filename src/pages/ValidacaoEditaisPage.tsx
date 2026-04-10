@@ -25,6 +25,9 @@ import {
   Link2
 } from 'lucide-react';
 import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
+import { PageHeader } from '@/components/PageHeader';
+import { HelpGuide } from '@/components/HelpGuide';
+
 import { useState, useMemo } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription 
@@ -146,15 +149,13 @@ export default function ValidacaoEditaisPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-            <FileCheck className="h-8 w-8 text-primary" />
-            Validação de Edital
-          </h1>
-          <p className="text-slate-500 mt-1">Área de validação administrativa de editais redigidos. Aprove, rejeite ou devolva para ajuste.</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Validação de Edital"
+        subtitle="Área de validação administrativa de editais redigidos. Aprove, rejeite ou devolva para ajuste."
+        badge="Validação"
+        actions={<HelpGuide />}
+        icon={<FileCheck className="h-8 w-8 text-primary" />}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm">

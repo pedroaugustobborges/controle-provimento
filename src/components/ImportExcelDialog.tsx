@@ -628,25 +628,29 @@ export function ImportExcelDialog({
                   manualType: chosenType,
                   suggestedType: suggestedType,
                   region: selectedRegion
-            });
-            addImportHistory({
-              id: batchId,
-              usuario: 'Sistema',
-              total_lidos: totalRowsFound,
-              total_novos: newBancos.length,
-              total_atualizados: 0,
-              total_ignorados: 0,
-              total_erros: 0,
-              status: 'concluido',
-              tipo_importacao: 'banco',
-              arquivo: selectedFile.name,
-              data_hora: now,
-              aba_utilizada: sheetUsed,
-              linha_cabecalho: headerRowUsed + 1
-            } as any);
-            toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
-            setIsProcessing(false);
-            setStep('summary');
+                });
+                addImportHistory({
+                  id: batchId,
+                  usuario: 'Sistema',
+                  total_lidos: totalRowsFound,
+                  total_novos: newBancos.length,
+                  total_atualizados: 0,
+                  total_ignorados: 0,
+                  total_erros: 0,
+                  status: 'concluido',
+                  tipo_importacao: 'banco',
+                  arquivo: selectedFile.name,
+                  data_hora: now,
+                  aba_utilizada: sheetUsed,
+                  linha_cabecalho: headerRowUsed + 1
+                } as any);
+                toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
+                setIsProcessing(false);
+                setStep('summary');
+              }
+            };
+            setProgress(0);
+            setTimeout(saveChunk, 50);
           }
         };
 

@@ -767,7 +767,16 @@ export default function BancoTalentosPage() {
                         <div className="font-semibold text-slate-800">{group.cargo}</div>
                         <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
-                      <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                       <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                      <TableCell>
+                        {group.regiao ? (
+                          <Badge variant="outline" className={`text-[10px] font-bold ${group.regiao === 'GO_ES' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                            {group.regiao === 'GO_ES' ? 'GO/ES' : 'OUTRAS'}
+                          </Badge>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>{getStatusBadge(group.status)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="font-bold bg-slate-50">{group.qtdBanco}</Badge>

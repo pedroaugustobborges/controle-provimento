@@ -1592,7 +1592,7 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
                   <TableCell className="text-center font-bold text-slate-600">{c.classificacao}º</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-[11px] font-bold">
-                      {c.status.toUpperCase()}
+                      {String(c.status || 'SEM STATUS').toUpperCase()}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{c.edoc || '—'}</TableCell>

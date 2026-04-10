@@ -43,6 +43,12 @@ export const CARGOS_HIERARQUICOS: string[] = [
   'Administrador do Sistema',
 ];
 
+export const STATUS_USUARIO = [
+  { value: 'ativo', label: 'Ativo', color: 'bg-green-100 text-green-700' },
+  { value: 'suspenso', label: 'Suspenso', color: 'bg-amber-100 text-amber-700' },
+  { value: 'inativo', label: 'Inativo', color: 'bg-slate-100 text-slate-500' },
+] as const;
+
 export interface Permissions {
   canRead: boolean;
   canCreate: boolean;
@@ -58,7 +64,7 @@ export interface User {
   email: string;
   perfil: UserProfile;
   cargo?: string;
-  status: 'ativo' | 'inativo';
+  status: 'ativo' | 'inativo' | 'suspenso';
   visualiza_todas_unidades: boolean;
   unidades_vinculadas: string[];
   pode_incluir_registros: boolean;

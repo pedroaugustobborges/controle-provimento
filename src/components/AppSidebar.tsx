@@ -124,23 +124,32 @@ export function AppSidebar() {
 
         {/* Unit selector for multi-unit users */}
         {hasMultipleUnits && !collapsed && (
-          <div className="mt-6 animate-in fade-in slide-in-from-top-2 duration-500">
-            <Select defaultValue="all">
+          <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnit('all'); }}>
               <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
                 <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
-              <SelectContent className="bg-[#112240] border-white/10 text-white max-h-[300px]">
+              <SelectContent className="bg-[#112240] border-white/10 text-white">
                 <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
-                {Object.entries(UNIDADES_POR_REGIAO).map(([regiao, unidades]) => (
-                  <SelectGroup key={regiao}>
-                    <SelectLabel className="text-[10px] font-black uppercase tracking-widest text-blue-400 py-2 px-3 bg-blue-500/5">{regiao}</SelectLabel>
-                    {unidades.map(u => (
-                      <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 pl-6">{u}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
+                <SelectItem value="Goiás" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás</SelectItem>
+                <SelectItem value="Espírito Santo" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Espírito Santo</SelectItem>
+                <SelectItem value="Demais Unidades" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Demais Unidades</SelectItem>
               </SelectContent>
             </Select>
+
+            {selectedRegion !== 'all' && (
+              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
+                <SelectTrigger className="h-8 bg-blue-500/5 border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/10 hover:border-blue-500/30 transition-all animate-in zoom-in-95 duration-300">
+                  <SelectValue placeholder="Selecionar Unidade" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#112240] border-white/10 text-white max-h-[250px]">
+                  <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</SelectItem>
+                  {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
+                    <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         )}
       </SidebarHeader>

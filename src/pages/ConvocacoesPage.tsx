@@ -301,7 +301,7 @@ export default function ConvocacoesPage() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent className="w-auto p-0 z-50" align="end" sideOffset={8}>
               <Calendar
                 initialFocus
                 mode="range"

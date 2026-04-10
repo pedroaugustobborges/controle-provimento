@@ -1,5 +1,14 @@
 import { User, AuditLog, SupportConfig, BackupRecord } from '@/types/auth';
 
+const GO_VIT_UNITS = [
+  'HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 
+  'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'
+];
+
+const FORA_UNITS = [
+  'DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
+];
+
 export const mockUsers: User[] = [
   {
     id: '1',
@@ -9,10 +18,7 @@ export const mockUsers: User[] = [
     cargo: 'Gerente de TI',
     status: 'ativo',
     visualiza_todas_unidades: true,
-    unidades_vinculadas: [
-      'CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO',
-      'SÃO PEDRO', 'SUÁ'
-    ],
+    unidades_vinculadas: [...GO_VIT_UNITS, ...FORA_UNITS],
     pode_incluir_registros: true,
     pode_excluir_requisicoes: true,
     pode_editar_configuracoes: true,
@@ -27,7 +33,7 @@ export const mockUsers: User[] = [
     cargo: 'Analista de RH',
     status: 'ativo',
     visualiza_todas_unidades: false,
-    unidades_vinculadas: ['HUGOL', 'HECAD', 'SÃO PEDRO'],
+    unidades_vinculadas: ['HUGOL', 'HECAD', 'VITÓRIA (SÃO PEDRO/SUÁ)'],
     pode_incluir_registros: true,
     pode_excluir_requisicoes: false,
     pode_editar_configuracoes: false,
@@ -82,23 +88,23 @@ export const mockAuditLogs: AuditLog[] = [
 export const mockSupportConfigs: SupportConfig[] = [
   {
     id: '1',
-    regiao: 'Goiás (GO)',
+    regiao: 'Goiás e Vitória',
     responsavel: 'Ricardo Oliveira',
     email: 'suporte.go@sistema.com',
     teams_user: 'ricardo.oliveira.teams',
     mensagem: 'Atendimento das 08:00 às 18:00.',
     status: 'ativo',
-    unidades: ['CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO']
+    unidades: GO_VIT_UNITS
   },
   {
     id: '2',
-    regiao: 'Espírito Santo (ES)',
+    regiao: 'Fora',
     responsavel: 'Fernanda Souza',
     email: 'suporte.es@sistema.com',
     teams_user: 'fernanda.souza.teams',
     mensagem: 'Suporte remoto especializado.',
     status: 'ativo',
-    unidades: ['SÃO PEDRO', 'SUÁ']
+    unidades: FORA_UNITS
   }
 ];
 

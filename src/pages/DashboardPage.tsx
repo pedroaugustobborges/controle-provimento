@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
@@ -44,9 +44,20 @@ export default function DashboardPage() {
     bancos = [],
     validacoes = [],
     convocacoes = [],
-    tarefas = []
+    tarefas = [],
+    fetchVagas,
+    fetchBancos
   } = useVagasStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (allVagas.length === 0 || (allVagas.length > 0 && allVagas[0].id.startsWith('mock-'))) {
+      fetchVagas();
+    }
+    if (bancos.length === 0 || (bancos.length > 0 && bancos[0].id.startsWith('mock-'))) {
+      fetchBancos();
+    }
+  }, [allVagas.length, bancos.length, fetchVagas, fetchBancos]);
 
   // Canonical base for dashboard - using the same parity rule as Excel
   const vagas = useMemo(() => {

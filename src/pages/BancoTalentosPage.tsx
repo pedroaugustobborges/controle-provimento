@@ -32,9 +32,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function BancoTalentosPage() {
-  const { bancos, importHistory, importedFiles, deleteBanco } = useVagasStore();
+  const { bancos, importHistory, importedFiles, deleteBanco, fetchBancos } = useVagasStore();
+  
+  useEffect(() => {
+    if (bancos.length === 0 || (bancos.length > 0 && bancos[0].id.startsWith('mock-'))) {
+      fetchBancos();
+    }
+  }, [bancos.length, fetchBancos]);
   const { currentUser } = useAdminStore();
   const permissions = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -52,6 +67,8 @@ export default function BancoTalentosPage() {
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
   const [selectedBanco, setSelectedBanco] = useState<BancoTalentos | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
 
   const handleDelete = () => {
     if (bancoParaExcluir) {
@@ -252,6 +269,17 @@ export default function BancoTalentosPage() {
       return matchSearch && matchUnidade && matchStatus && matchRegiao;
     });
   }, [groupedBancos, search, unidadeFilter, statusFilter, regiaoFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, unidadeFilter, statusFilter, regiaoFilter]);
+
+  const paginatedGroups = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredGroups.slice(start, start + pageSize);
+  }, [filteredGroups, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredGroups.length / pageSize);
 
   const selectedGroupCandidates = useMemo(() => {
     if (!selectedBanco) return [];
@@ -757,7 +785,7 @@ export default function BancoTalentosPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                   {filteredGroups.map((group) => (
+                   {paginatedGroups.map((group) => (
                     <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
                       <TableCell className="text-xs font-semibold text-slate-600 italic">
@@ -813,7 +841,7 @@ export default function BancoTalentosPage() {
                   ))}
                   {filteredGroups.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-40 text-center text-slate-400 font-medium italic">
+                      <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
                         Nenhum banco de talentos encontrado para os filtros aplicados.
                       </TableCell>
                     </TableRow>
@@ -822,6 +850,55 @@ export default function BancoTalentosPage() {
               </Table>
             </CardContent>
           </Card>
+          
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink 
+                            isActive={currentPage === page}
+                            onClick={() => setCurrentPage(page)}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (
+                      page === currentPage - 2 || 
+                      page === currentPage + 2
+                    ) {
+                      return <PaginationEllipsis key={page} />;
+                    }
+                    return null;
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="convocados" className="space-y-4">

@@ -19,6 +19,8 @@ interface VagasState {
   temNovasMensagens: boolean;
   
   setVagas: (vagas: Vaga[]) => void;
+  fetchVagas: () => Promise<void>;
+  fetchBancos: () => Promise<void>;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
   deleteVaga: (id: string) => void;
@@ -78,7 +80,27 @@ export const useVagasStore = create<VagasState>()(
       temNovasMensagens: true,
       
       setVagas: (vagas) => set({ vagas }),
-      addVagas: (newVagas) => set((s) => ({ vagas: [...s.vagas, ...newVagas] })),
+      fetchVagas: async () => {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data, error } = await supabase.from('vagas').select('*').order('created_at', { ascending: false });
+          if (error) throw error;
+          if (data) set({ vagas: data as Vaga[] });
+        } catch (err) {
+          console.error('Error fetching vagas:', err);
+        }
+      },
+      fetchBancos: async () => {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data, error } = await supabase.from('banco_candidatos').select('*').order('created_at', { ascending: false });
+          if (error) throw error;
+          if (data) set({ bancos: data as BancoTalentos[] });
+        } catch (err) {
+          console.error('Error fetching bancos:', err);
+        }
+      },
+      addVagas: (newVagas) => set((s) => ({ vagas: [...newVagas, ...s.vagas] })),
       updateVaga: (id, data) => set((s) => ({
         vagas: s.vagas.map((v) => v.id === id ? { ...v, ...data } : v),
       })),
@@ -316,9 +338,10 @@ export const useVagasStore = create<VagasState>()(
       name: 'hospital-recruitment-store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Persistir dados essenciais e bancos de talentos - aumentado limite para evitar perda de dados
-        vagas: state.vagas, // Removing restrictive 2000 limit to ensure data integrity as requested
-        bancos: state.bancos.length > 5000 ? state.bancos.slice(0, 5000) : state.bancos,
+        // Exclude large data arrays from localStorage persistence to avoid 5MB quota crashes
+        // and improve startup performance. Data should be fetched from Supabase.
+        vagas: [], 
+        bancos: [],
         editais: state.editais,
         validacoes: state.validacoes,
         convocacoes: state.convocacoes,

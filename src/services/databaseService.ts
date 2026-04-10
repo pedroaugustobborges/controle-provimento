@@ -66,16 +66,19 @@ export class DatabaseService {
 
   /**
    * Import with substitution (transactional logic simulated in JS as Supabase RPC)
-   * For full atomicity, this should be a Postgres function (RPC).
+   * Enhanced for large datasets with chunked processing and real-time status updates
    */
   static async importBySubstitution(
     tipo: 'vagas' | 'banco',
     newData: any[],
-    userId: string
+    userId: string,
+    onProgress?: (progress: number, label: string) => void
   ): Promise<{ count: number; error: Error | null }> {
     try {
-      // Step 1: Count existing
       const tableName = tipo === 'vagas' ? 'vagas' : 'banco_candidatos';
+      
+      // Step 1: Count existing
+      onProgress?.(5, "Analisando base atual...");
       const { count: countBefore } = await supabase
         .from(tableName)
         .select('*', { count: 'exact', head: true });
@@ -91,7 +94,8 @@ export class DatabaseService {
       if (logError) throw logError;
 
       // Step 3: Delete existing
-      // IMPORTANT: In a production environment, this should be wrapped in a transaction (RPC)
+      // For very large datasets, we might want to truncate or delete in chunks
+      onProgress?.(15, "Limpando base antiga para substituição...");
       const { error: deleteError } = await supabase
         .from(tableName)
         .delete()
@@ -99,22 +103,43 @@ export class DatabaseService {
 
       if (deleteError) throw deleteError;
 
-      // Step 4: Insert new in chunks to avoid request size limits
-      const chunkSize = 500;
+      // Step 4: Insert new in chunks to avoid request size limits and timeouts
+      const total = newData.length;
+      const chunkSize = 200; // Smaller chunks for better reliability
       let insertedCount = 0;
       
-      for (let i = 0; i < newData.length; i += chunkSize) {
+      for (let i = 0; i < total; i += chunkSize) {
         const chunk = newData.slice(i, i + chunkSize);
+        const chunkProgress = Math.min(20 + Math.round((i / total) * 75), 95);
+        onProgress?.(chunkProgress, `Enviando lote ${Math.floor(i / chunkSize) + 1} (${insertedCount} de ${total})...`);
+
+        // Remove local IDs to let database handle it and avoid collisions
+        const cleanChunk = chunk.map(({ id, ...rest }) => ({
+          ...rest,
+          created_by: userId,
+          updated_by: userId
+        }));
+
         const { data: inserted, error: insertError } = await supabase
           .from(tableName)
-          .insert(chunk.map(item => ({ ...item, created_by: userId, updated_by: userId })))
+          .insert(cleanChunk)
           .select();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          // Update log with error status
+          await supabase.from('importacoes').update({
+            status: 'erro',
+            observacoes: `Erro no lote ${i}: ${insertError.message}`
+          }).eq('id', logData.id);
+          
+          throw insertError;
+        }
+        
         insertedCount += inserted?.length || 0;
       }
 
       // Step 5: Update import log to completed
+      onProgress?.(100, "Finalizando importação...");
       await supabase.from('importacoes').update({
         status: 'concluido',
         quantidade_inserida: insertedCount
@@ -126,6 +151,45 @@ export class DatabaseService {
       return { count: insertedCount, error: null };
     } catch (err: any) {
       console.error(`Import failed for ${tipo}:`, err);
+      return { count: 0, error: err };
+    }
+  }
+
+  /**
+   * Bulk upsert logic to avoid deleting everything
+   */
+  static async bulkUpsert(
+    table: string,
+    data: any[],
+    userId: string,
+    matchColumns: string[],
+    onProgress?: (progress: number, label: string) => void
+  ): Promise<{ count: number; error: Error | null }> {
+    try {
+      const total = data.length;
+      const chunkSize = 150;
+      let processedCount = 0;
+
+      for (let i = 0; i < total; i += chunkSize) {
+        const chunk = data.slice(i, i + chunkSize);
+        const prog = Math.min(Math.round((i / total) * 100), 99);
+        onProgress?.(prog, `Processando ${i} de ${total}...`);
+
+        const { error } = await supabase
+          .from(table)
+          .upsert(
+            chunk.map(item => ({ ...item, updated_by: userId, updated_at: new Date().toISOString() })),
+            { onConflict: matchColumns.join(',') }
+          );
+
+        if (error) throw error;
+        processedCount += chunk.length;
+      }
+
+      onProgress?.(100, "Concluído!");
+      return { count: processedCount, error: null };
+    } catch (err: any) {
+      console.error(`Bulk upsert failed for ${table}:`, err);
       return { count: 0, error: err };
     }
   }

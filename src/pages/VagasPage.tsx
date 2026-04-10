@@ -57,9 +57,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas } = useVagasStore();
+  
+  useEffect(() => {
+    if (vagas.length === 0 || (vagas.length > 0 && vagas[0].id.startsWith('mock-'))) {
+      fetchVagas();
+    }
+  }, [vagas.length, fetchVagas]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog } = useAdminStore();
@@ -82,6 +97,8 @@ export default function VagasPage() {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
 
   const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
   const canInclude = currentUser?.perfil === 'Admin' || currentUser?.pode_incluir_registros;
@@ -163,6 +180,17 @@ export default function VagasPage() {
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
   }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filtered.slice(startIndex, startIndex + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   // 3. Vacancy summary - strictly using the same canonical base and unified logic as Dashboard
   const counts = useMemo(() => {
@@ -561,7 +589,7 @@ export default function VagasPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((v) => (
+                {paginatedData.map((v) => (
                   <TableRow
                     key={v.id}
                     className="whitespace-nowrap cursor-pointer"
@@ -669,8 +697,59 @@ export default function VagasPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex justify-between items-center">
-            <span>Exibindo {filtered.length} de {vagas.length} registros</span>
+          <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col gap-1">
+              <span>Exibindo {paginatedData.length} de {filtered.length} filtrados</span>
+              <span className="text-[10px] opacity-70">(Total no sistema: {vagas.length})</span>
+            </div>
+            
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink 
+                            isActive={currentPage === page}
+                            onClick={() => setCurrentPage(page)}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (
+                      page === currentPage - 2 || 
+                      page === currentPage + 2
+                    ) {
+                      return <PaginationEllipsis key={page} />;
+                    }
+                    return null;
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
             <div className="flex gap-4">
               <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500"></div> Banco Válido</span>
               <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-300"></div> Sem Banco</span>

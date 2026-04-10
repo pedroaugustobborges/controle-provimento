@@ -675,21 +675,26 @@ export default function BancoTalentosPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Seção de Auditoria Real (Item 1) */}
+      {/* Dynamic status computation based on data_validade */}
       {useMemo(() => {
-        const stats = bancos.reduce((acc, b) => {
-          const s = (b.status || 'NENHUM').toUpperCase();
-          acc[s] = (acc[s] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        
-        console.log('--- AUDITORIA BANCO DE TALENTOS ---');
-        console.log('Status encontrados na base:', Object.keys(stats));
-        console.log('Quantidade por status (linhas):', stats);
-        console.log('Total de bancos (agrupados):', groupedBancos.length);
-        console.log('---------------------------------');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const stats = { cadastroReserva: 0, convocados: 0, prorrogados: 0, vencidos: 0 };
+        bancos.forEach(b => {
+          const s = (b.status || '').toUpperCase();
+          if (s === 'CONVOCADO') { stats.convocados++; return; }
+          if (b.data_validade) {
+            const valDate = new Date(b.data_validade);
+            if (!isNaN(valDate.getTime())) {
+              if (valDate < today) { stats.vencidos++; return; }
+            }
+          }
+          if (b.is_prorrogado || s === 'PRORROGADO') { stats.prorrogados++; return; }
+          stats.cadastroReserva++;
+        });
+        console.log('--- AUDITORIA BANCO ---', stats, 'Total:', bancos.length);
         return null;
-      }, [bancos, groupedBancos])}
+      }, [bancos])}
 
       <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">

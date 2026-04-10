@@ -65,8 +65,8 @@ export function AppSidebar() {
       icon: FileText, 
       visible: hasFullAccess || isManagement() || isAdminAnalyst() || isEditalAnalyst(),
       subMenu: [
-        { title: 'Redação do Edital', url: '/fila-analista-edital' },
         { title: 'Fila de Editais', url: '/fila-editais' },
+        { title: 'Redação do Edital', url: '/fila-analista-edital' },
       ]
     },
     { 
@@ -74,6 +74,10 @@ export function AppSidebar() {
       url: '/validacao-editais', 
       icon: FileCheck, 
       visible: hasFullAccess || isManagement() || isAdminAnalyst(),
+      subMenu: [
+        { title: 'Pendentes de Validação', url: '/validacao-editais' },
+        { title: 'Validados / Histórico', url: '/validacao-editais?tab=historico' },
+      ]
     },
     { 
       title: 'Banco de Talentos', 

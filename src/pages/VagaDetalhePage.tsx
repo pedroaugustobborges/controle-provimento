@@ -60,6 +60,7 @@ export default function VagaDetalhePage() {
   const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [isEditVagaOpen, setIsEditVagaOpen] = useState(false);
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
   

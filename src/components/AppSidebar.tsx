@@ -11,7 +11,8 @@ import {
   Bell,
   ChevronDown,
   CornerDownRight,
-  FileText
+  FileText,
+  FileCheck
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';

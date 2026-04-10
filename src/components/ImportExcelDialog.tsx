@@ -321,7 +321,7 @@ export function ImportExcelDialog({
     setIsProcessing(true);
     setStep('processing');
     setProgress(0);
-    setProgressLabel("Iniciando processamento...");
+    setProgressLabel("Preparando dados para importação robusta...");
 
     try {
       const wb = workbook;
@@ -330,14 +330,21 @@ export function ImportExcelDialog({
       const batchId = `IMPORT-${Date.now()}`;
       const { sheetUsed, headerRowUsed } = validationResult;
       const sheet = wb.Sheets[sheetUsed];
-      const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1 });
       
+      // Use raw: true but keep cell formatting if possible
+      const rawRows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, raw: true });
       const totalToProcess = rawRows.length - (headerRowUsed + 1);
-      const chunkSize = 500;
-      let currentIndex = headerRowUsed + 1;
       
+      if (totalToProcess <= 0) {
+        throw new Error("Nenhum dado encontrado na aba selecionada.");
+      }
+
+      const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
+      const processedItems: any[] = [];
+      
+      setProgressLabel(`Mapeando ${totalToProcess} registros...`);
+
       if (chosenType === 'vagas') {
-        const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
         const mapping = {
           abertura: headers.indexOf('ABERTURA'),
           recebimento: headers.indexOf('RECEBIMENTO'),
@@ -360,158 +367,90 @@ export function ImportExcelDialog({
           obs: headers.indexOf('OBSERVAÇÃO - ACOMPANHAMENTO'),
         };
 
-        const newVagas: Vaga[] = [];
-        let totalRowsFound = 0;
-        let discardedCargoEmpty = 0;
-
-        const processChunk = () => {
-          const end = Math.min(currentIndex + chunkSize, rawRows.length);
+        for (let i = headerRowUsed + 1; i < rawRows.length; i++) {
+          const row = rawRows[i];
+          if (!row || (Array.isArray(row) && row.length === 0)) continue;
           
-          for (let i = currentIndex; i < end; i++) {
-            const row = rawRows[i];
-            if (!row || (Array.isArray(row) && row.length === 0)) continue;
-            
-            totalRowsFound++;
-            const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
-            if (!cargo) {
-              discardedCargoEmpty++;
-              continue;
-            }
+          const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
+          if (!cargo) continue;
 
-            const unitInRow = mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : 'NÃO INFORMADA';
-            const requisicao = mapping.requisicao !== -1 ? String(row[mapping.requisicao] || '') : '';
-            const rawTipo = mapping.tipo !== -1 ? String(row[mapping.tipo] || '').toLowerCase() : '';
-            const numVagas = mapping.vagas !== -1 ? (Number(row[mapping.vagas]) || 1) : 1;
-            const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '') : '';
-            
-            const dataAbertura = mapping.abertura !== -1 && row[mapping.abertura] ? convertDateValue(row[mapping.abertura], 'auto').formatted : '';
-            const dataRecebimento = mapping.recebimento !== -1 && row[mapping.recebimento] ? convertDateValue(row[mapping.recebimento], 'auto').formatted : '';
-            
-            const dataConv = mapping.dataConv !== -1 && row[mapping.dataConv] ? convertDateValue(row[mapping.dataConv], 'auto').formatted : '';
-            const horaConv = mapping.horaConv !== -1 ? String(row[mapping.horaConv] || '') : '';
-            const candConv = mapping.candidato !== -1 ? String(row[mapping.candidato] || '') : '';
-            const classConv = mapping.classificacao !== -1 ? String(row[mapping.classificacao] || '') : '';
-            const formaConv = mapping.forma !== -1 ? String(row[mapping.forma] || '') : '';
-            const oitivaConv = mapping.oitiva !== -1 ? String(row[mapping.oitiva] || '') : '';
-            const secao = mapping.secao !== -1 ? String(row[mapping.secao] || '') : '';
-            
-            const admEnviada = mapping.admEnviada !== -1 ? String(row[mapping.admEnviada] || '') : '';
-            const admEfetivada = mapping.admEfetivada !== -1 ? String(row[mapping.admEfetivada] || '') : '';
-            const detalhesAcomp = mapping.detalhes !== -1 ? String(row[mapping.detalhes] || '') : '';
-            const obsAcomp = mapping.obs !== -1 ? String(row[mapping.obs] || '') : '';
+          const unitInRow = mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : 'NÃO INFORMADA';
+          const requisicao = mapping.requisicao !== -1 ? String(row[mapping.requisicao] || '') : '';
+          const rawTipo = mapping.tipo !== -1 ? String(row[mapping.tipo] || '').toLowerCase() : '';
+          const numVagas = mapping.vagas !== -1 ? (Number(row[mapping.vagas]) || 1) : 1;
+          const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '') : '';
+          
+          const dataAbertura = mapping.abertura !== -1 && row[mapping.abertura] ? convertDateValue(row[mapping.abertura], 'auto').formatted : '';
+          const dataRecebimento = mapping.recebimento !== -1 && row[mapping.recebimento] ? convertDateValue(row[mapping.recebimento], 'auto').formatted : '';
+          
+          const dataConv = mapping.dataConv !== -1 && row[mapping.dataConv] ? convertDateValue(row[mapping.dataConv], 'auto').formatted : '';
+          const horaConv = mapping.horaConv !== -1 ? String(row[mapping.horaConv] || '') : '';
+          const candConv = mapping.candidato !== -1 ? String(row[mapping.candidato] || '') : '';
+          const classConv = mapping.classificacao !== -1 ? String(row[mapping.classificacao] || '') : '';
+          const formaConv = mapping.forma !== -1 ? String(row[mapping.forma] || '') : '';
+          const oitivaConv = mapping.oitiva !== -1 ? String(row[mapping.oitiva] || '') : '';
+          const secao = mapping.secao !== -1 ? String(row[mapping.secao] || '') : '';
+          
+          const admEnviada = mapping.admEnviada !== -1 ? String(row[mapping.admEnviada] || '') : '';
+          const admEfetivada = mapping.admEfetivada !== -1 ? String(row[mapping.admEfetivada] || '') : '';
+          const detalhesAcomp = mapping.detalhes !== -1 ? String(row[mapping.detalhes] || '') : '';
+          const obsAcomp = mapping.obs !== -1 ? String(row[mapping.obs] || '') : '';
 
-            let tipoVaga: TipoVaga = 'substituicao';
-            if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
-            else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
-            else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
-            else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
-            else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
-            else if (rawTipo.includes('edital')) tipoVaga = 'edital';
+          let tipoVaga: TipoVaga = 'substituicao';
+          if (rawTipo.includes('aumento')) tipoVaga = 'aumento';
+          else if (rawTipo.includes('lideranca')) tipoVaga = 'lideranca';
+          else if (rawTipo.includes('movimentacao')) tipoVaga = 'movimentacao_interna';
+          else if (rawTipo.includes('quadro')) tipoVaga = 'quadro';
+          else if (rawTipo.includes('banco')) tipoVaga = 'banco_talentos';
+          else if (rawTipo.includes('edital')) tipoVaga = 'edital';
 
-            const statusNormalized = normalizeStatus(statusRaw);
-            const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
+          const statusNormalized = normalizeStatus(statusRaw);
+          const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
 
-            newVagas.push({
-              id: `vaga-${batchId}-${newVagas.length + 1}`,
-              unidade: unitInRow,
-              cargo,
-              requisicao,
-              numero_requisicao: requisicao,
-              data_abertura: dataAbertura,
-              data_recebimento: dataRecebimento,
-              data_criacao: now,
-              numero_vagas: numVagas,
-              quantidade: numVagas,
-              secao,
-              tipo_vaga: tipoVaga,
-              status: statusNormalized,
-              status_geral: statusNormalized,
-              analista_responsavel: defaultAnalista,
-              assistentes: assistentes,
-              observacoes_internas: obsAcomp,
-              origem: 'importada',
-              origem_importacao: selectedFile.name,
-              data_importacao: now,
-              lote_importacao: batchId,
-              import_batch_id: batchId,
-              source_sheet: sheetUsed,
-              source_row_index: i + 1,
-              tem_banco_valido: false,
-              data_convocacao_planilha: dataConv,
-              horario_convocacao_planilha: horaConv,
-              candidato_convocado_planilha: candConv,
-              classificacao_convocacao_planilha: classConv,
-              forma_convocacao_planilha: formaConv,
-              status_oitiva_convocacao_planilha: oitivaConv,
-              admissao_enviada_acompanhamento: admEnviada,
-              admissao_efetivada_acompanhamento: admEfetivada,
-              detalhes_acompanhamento: detalhesAcomp,
-              historico: []
-            });
+          processedItems.push({
+            unidade: unitInRow,
+            cargo,
+            requisicao,
+            numero_requisicao: requisicao,
+            data_abertura: dataAbertura,
+            data_recebimento: dataRecebimento,
+            data_criacao: now,
+            numero_vagas: numVagas,
+            quantidade: numVagas,
+            secao,
+            tipo_vaga: tipoVaga,
+            status: statusNormalized,
+            status_geral: statusNormalized,
+            analista_responsavel: defaultAnalista,
+            assistentes: assistentes,
+            observacoes_internas: obsAcomp,
+            origem: 'importada',
+            origem_importacao: selectedFile.name,
+            data_importacao: now,
+            lote_importacao: batchId,
+            import_batch_id: batchId,
+            source_sheet: sheetUsed,
+            source_row_index: i + 1,
+            tem_banco_valido: false,
+            data_convocacao_planilha: dataConv,
+            horario_convocacao_planilha: horaConv,
+            candidato_convocado_planilha: candConv,
+            classificacao_convocacao_planilha: classConv,
+            forma_convocacao_planilha: formaConv,
+            status_oitiva_convocacao_planilha: oitivaConv,
+            admissao_enviada_acompanhamento: admEnviada,
+            admissao_efetivada_acompanhamento: admEfetivada,
+            detalhes_acompanhamento: detalhesAcomp,
+            historico: []
+          });
+
+          if (i % 500 === 0) {
+            setProgress(Math.round((i / rawRows.length) * 15));
+            // Tiny delay to keep UI alive during processing
+            await new Promise(r => setTimeout(r, 0));
           }
-
-          currentIndex = end;
-          const prog = Math.round(((currentIndex - (headerRowUsed + 1)) / totalToProcess) * 100);
-          setProgress(prog);
-          setProgressLabel(`Processando Vagas: ${newVagas.length} / ${totalToProcess}`);
-
-          if (currentIndex < rawRows.length) {
-            setTimeout(processChunk, 10);
-          } else {
-            // Save in batches to avoid freezing on localStorage write
-            setProgressLabel(`Salvando ${newVagas.length} vagas...`);
-            const saveBatchSize = 500;
-            let saveIndex = 0;
-            const saveChunk = () => {
-              const end = Math.min(saveIndex + saveBatchSize, newVagas.length);
-              const batch = newVagas.slice(saveIndex, end);
-              addVagas(batch);
-              saveIndex = end;
-              setProgress(Math.round((saveIndex / newVagas.length) * 100));
-              setProgressLabel(`Salvando: ${saveIndex} / ${newVagas.length}`);
-              if (saveIndex < newVagas.length) {
-                setTimeout(saveChunk, 50);
-              } else {
-                setSummary({
-                  type: 'vagas',
-                  total: newVagas.length,
-                  totalFound: totalRowsFound,
-                  discardedEmpty: discardedCargoEmpty,
-                  fileName: selectedFile.name,
-                  sheetName: sheetUsed,
-                  manualType: chosenType,
-                  suggestedType: suggestedType
-                });
-                addImportHistory({
-                  id: batchId,
-                  usuario: 'Sistema',
-                  total_lidos: totalRowsFound,
-                  total_novos: newVagas.length,
-                  total_atualizados: 0,
-                  total_ignorados: discardedCargoEmpty,
-                  total_erros: 0,
-                  status: 'concluido',
-                  tipo_importacao: 'vagas',
-                  arquivo: selectedFile.name,
-                  data_hora: now,
-                  aba_utilizada: sheetUsed,
-                  linha_cabecalho: headerRowUsed + 1,
-                  colunas_reconhecidas: headers.join(', ')
-                } as any);
-                toast.success(`Importação concluída: ${newVagas.length} vagas.`);
-                setIsProcessing(false);
-                setStep('summary');
-              }
-            };
-            setProgress(0);
-            setTimeout(saveChunk, 50);
-          }
-        };
-
-        setTimeout(processChunk, 10);
-
+        }
       } else if (chosenType === 'banco') {
-        const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
         const mapping = {
           cargo: headers.indexOf('CARGO'),
           unidade: headers.indexOf('UNIDADE'),
@@ -532,133 +471,125 @@ export function ImportExcelDialog({
           unidadeConvocacao: headers.indexOf('UNIDADE DE CONVOCAÇÃO'),
         };
 
-        const newBancos: BancoTalentos[] = [];
-        let totalRowsFound = 0;
-
-        const processChunk = () => {
-          const end = Math.min(currentIndex + chunkSize, rawRows.length);
+        for (let i = headerRowUsed + 1; i < rawRows.length; i++) {
+          const row = rawRows[i];
+          if (!row || (Array.isArray(row) && row.length === 0)) continue;
           
-          for (let i = currentIndex; i < end; i++) {
-            const row = rawRows[i];
-            if (!row || (Array.isArray(row) && row.length === 0)) continue;
-            
-            totalRowsFound++;
-            const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
-            if (!cargo) continue;
+          const cargo = mapping.cargo !== -1 ? String(row[mapping.cargo] || '').trim() : '';
+          if (!cargo) continue;
 
-            const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '').toUpperCase().trim() : '';
-            let status: any = 'nenhum';
-            if (statusRaw.includes('RESERVA')) status = 'CADASTRO RESERVA';
-            else if (statusRaw.includes('CONVOC')) status = 'CONVOCADO';
-            else if (statusRaw.includes('VENCID')) status = 'VENCIDO';
+          const statusRaw = mapping.status !== -1 ? String(row[mapping.status] || '').toUpperCase().trim() : '';
+          let status: any = 'nenhum';
+          if (statusRaw.includes('RESERVA')) status = 'CADASTRO RESERVA';
+          else if (statusRaw.includes('CONVOC')) status = 'CONVOCADO';
+          else if (statusRaw.includes('VENCID')) status = 'VENCIDO';
 
-            const prorrogacaoRaw = mapping.prorrogacao !== -1 ? String(row[mapping.prorrogacao] || '').toUpperCase().trim() : '';
-            const isProrrogado = prorrogacaoRaw === 'SIM';
-            const validadeOriginal = mapping.validade !== -1 && row[mapping.validade] 
-              ? convertDateValue(row[mapping.validade], 'auto').formatted 
-              : '';
-            
-            let novaDataValidade = '';
-            if (validadeOriginal && isProrrogado) {
-              const date = new Date(validadeOriginal);
-              if (!isNaN(date.getTime())) {
-                date.setMonth(date.getMonth() + 6);
-                novaDataValidade = date.toISOString().split('T')[0];
-              }
+          const prorrogacaoRaw = mapping.prorrogacao !== -1 ? String(row[mapping.prorrogacao] || '').toUpperCase().trim() : '';
+          const isProrrogado = prorrogacaoRaw === 'SIM';
+          const validadeOriginal = mapping.validade !== -1 && row[mapping.validade] 
+            ? convertDateValue(row[mapping.validade], 'auto').formatted 
+            : '';
+          
+          let novaDataValidade = '';
+          if (validadeOriginal && isProrrogado) {
+            const date = new Date(validadeOriginal);
+            if (!isNaN(date.getTime())) {
+              date.setMonth(date.getMonth() + 6);
+              novaDataValidade = date.toISOString().split('T')[0];
             }
-
-            newBancos.push({
-              id: `banco-${batchId}-${newBancos.length}`,
-              cargo,
-              unidade: mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : '',
-              status,
-              numero_edital: mapping.edital !== -1 ? String(row[mapping.edital] || '').trim() : '',
-              numero_processo_seletivo: mapping.processoSeletivo !== -1 ? String(row[mapping.processoSeletivo] || '').trim() : '',
-              data_abertura_edital: now.split('T')[0],
-              data_validade: validadeOriginal,
-              is_prorrogado: isProrrogado,
-              nova_data_validade: novaDataValidade,
-              nome: mapping.nome !== -1 ? String(row[mapping.nome] || '').trim() : '',
-              classificacao: mapping.classificacao !== -1 ? row[mapping.classificacao] : '',
-              quantidade_banco: mapping.quantidadeBanco !== -1 ? row[mapping.quantidadeBanco] : '',
-              numero_chamada: mapping.chamada !== -1 ? String(row[mapping.chamada] || '') : '',
-              numero_vaga_aproveitamento: mapping.vagasAproveitamento !== -1 ? String(row[mapping.vagasAproveitamento] || '') : '',
-              data_convocacao: mapping.dataConvocacao !== -1 && row[mapping.dataConvocacao] ? convertDateValue(row[mapping.dataConvocacao], 'auto').formatted : '',
-              unidade_convocacao: mapping.unidadeConvocacao !== -1 ? String(row[mapping.unidadeConvocacao] || '').trim() : '',
-              observacoes: '',
-              status_import: statusRaw,
-              import_batch_id: batchId,
-              data_importacao: now,
-              origem_importacao: selectedFile.name,
-              regiao: selectedRegion || undefined
-            });
           }
 
-          currentIndex = end;
-          const prog = Math.round(((currentIndex - (headerRowUsed + 1)) / totalToProcess) * 100);
-          setProgress(prog);
-          setProgressLabel(`Processando Banco: ${newBancos.length} / ${totalToProcess}`);
+          processedItems.push({
+            cargo,
+            unidade: mapping.unidade !== -1 ? String(row[mapping.unidade] || '').trim() : '',
+            status,
+            numero_edital: mapping.edital !== -1 ? String(row[mapping.edital] || '').trim() : '',
+            numero_processo_seletivo: mapping.processoSeletivo !== -1 ? String(row[mapping.processoSeletivo] || '').trim() : '',
+            data_abertura_edital: now.split('T')[0],
+            data_validade: validadeOriginal,
+            is_prorrogado: isProrrogado,
+            nova_data_validade: novaDataValidade,
+            nome: mapping.nome !== -1 ? String(row[mapping.nome] || '').trim() : '',
+            classificacao: mapping.classificacao !== -1 ? row[mapping.classificacao] : '',
+            quantidade_banco: mapping.quantidadeBanco !== -1 ? row[mapping.quantidadeBanco] : '',
+            numero_chamada: mapping.chamada !== -1 ? String(row[mapping.chamada] || '') : '',
+            numero_vaga_aproveitamento: mapping.vagasAproveitamento !== -1 ? String(row[mapping.vagasAproveitamento] || '') : '',
+            data_convocacao: mapping.dataConvocacao !== -1 && row[mapping.dataConvocacao] ? convertDateValue(row[mapping.dataConvocacao], 'auto').formatted : '',
+            unidade_convocacao: mapping.unidadeConvocacao !== -1 ? String(row[mapping.unidadeConvocacao] || '').trim() : '',
+            observacoes: '',
+            status_import: statusRaw,
+            import_batch_id: batchId,
+            data_importacao: now,
+            origem_importacao: selectedFile.name,
+            regiao: selectedRegion || undefined
+          });
 
-          if (currentIndex < rawRows.length) {
-            setTimeout(processChunk, 10);
-          } else {
-            if (selectedRegion) clearBancosPorRegiao(selectedRegion);
-            // Save in batches to avoid freezing on localStorage write
-            setProgressLabel(`Salvando ${newBancos.length} registros do banco...`);
-            const saveBatchSize = 500;
-            let saveIndex = 0;
-            const saveChunk = () => {
-              const end = Math.min(saveIndex + saveBatchSize, newBancos.length);
-              const batch = newBancos.slice(saveIndex, end);
-              addBancos(batch);
-              saveIndex = end;
-              setProgress(Math.round((saveIndex / newBancos.length) * 100));
-              setProgressLabel(`Salvando: ${saveIndex} / ${newBancos.length}`);
-              if (saveIndex < newBancos.length) {
-                setTimeout(saveChunk, 50);
-              } else {
-                setSummary({
-                  type: 'banco',
-                  total: newBancos.length,
-                  totalFound: totalRowsFound,
-                  fileName: selectedFile.name,
-                  sheetName: sheetUsed,
-                  manualType: chosenType,
-                  suggestedType: suggestedType,
-                  region: selectedRegion
-                });
-                addImportHistory({
-                  id: batchId,
-                  usuario: 'Sistema',
-                  total_lidos: totalRowsFound,
-                  total_novos: newBancos.length,
-                  total_atualizados: 0,
-                  total_ignorados: 0,
-                  total_erros: 0,
-                  status: 'concluido',
-                  tipo_importacao: 'banco',
-                  arquivo: selectedFile.name,
-                  data_hora: now,
-                  aba_utilizada: sheetUsed,
-                  linha_cabecalho: headerRowUsed + 1
-                } as any);
-                toast.success(`Importação de Banco concluída: ${newBancos.length} registros.`);
-                setIsProcessing(false);
-                setStep('summary');
-              }
-            };
-            setProgress(0);
-            setTimeout(saveChunk, 50);
+          if (i % 500 === 0) {
+            setProgress(Math.round((i / rawRows.length) * 15));
+            await new Promise(r => setTimeout(r, 0));
           }
-        };
-
-        setTimeout(processChunk, 10);
+        }
       }
-    } catch (error) {
+
+      // Step 2: Push to Supabase in chunks
+      const result = await DatabaseService.importBySubstitution(
+        chosenType,
+        processedItems,
+        currentUser?.id || 'import-user',
+        (prog, label) => {
+          setProgress(prog);
+          setProgressLabel(label);
+        }
+      );
+
+      if (result.error) throw result.error;
+
+      // Update local state - only update with a subset for local use if needed
+      // Actually, since we removed persistence, we should probably fetch from DB 
+      // but for immediate feedback we can update the store with a limited view
+      if (chosenType === 'vagas') {
+        setVagas(processedItems.slice(0, 3000));
+      } else {
+        if (selectedRegion) clearBancosPorRegiao(selectedRegion);
+        addBancos(processedItems.slice(0, 3000));
+      }
+
+      addImportHistory({
+        id: batchId,
+        usuario: currentUser?.nome_completo || 'Sistema',
+        total_lidos: rawRows.length - (headerRowUsed + 1),
+        total_novos: result.count,
+        total_atualizados: 0,
+        total_ignorados: (rawRows.length - (headerRowUsed + 1)) - result.count,
+        total_erros: 0,
+        status: 'concluido',
+        tipo_importacao: chosenType,
+        arquivo: selectedFile.name,
+        data_hora: now,
+        aba_utilizada: sheetUsed,
+        linha_cabecalho: headerRowUsed + 1
+      } as any);
+
+      setSummary({
+        type: chosenType,
+        total: result.count,
+        totalFound: rawRows.length - (headerRowUsed + 1),
+        fileName: selectedFile.name,
+        sheetName: sheetUsed,
+        manualType: chosenType,
+        suggestedType: suggestedType,
+        region: selectedRegion
+      });
+
+      toast.success(`Importação concluída com sucesso! ${result.count} registros inseridos.`);
+      setStep('summary');
+
+    } catch (error: any) {
       console.error(error);
-      toast.error("Erro técnico durante a importação.");
-      setIsProcessing(false);
+      toast.error(`Falha na importação: ${error.message || "Erro técnico"}`);
       reset();
+    } finally {
+      setIsProcessing(false);
     }
   };
 

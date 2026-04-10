@@ -131,10 +131,17 @@ export default function VagasPage() {
   // Restriction by unit - normalization for consistent comparison
   const visibleUnidades = useMemo(() => {
     const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-    return currentUser?.visualiza_todas_unidades 
-      ? allUnidades 
-      : userUnidades;
-  }, [currentUser, allUnidades]);
+    const regionUnits = selectedRegion !== 'all' ? (UNIDADES_POR_REGIAO[selectedRegion] || []).map(u => normalizeUnitName(u)) : allUnidades;
+    
+    let base = currentUser?.visualiza_todas_unidades ? allUnidades : userUnidades;
+    
+    // Intersect with region if selected
+    if (selectedRegion !== 'all') {
+      base = base.filter(u => regionUnits.includes(u));
+    }
+    
+    return base;
+  }, [currentUser, allUnidades, selectedRegion]);
 
   const unidades = useMemo(() => {
     return allUnidades.filter(u => visibleUnidades.includes(u)).sort();

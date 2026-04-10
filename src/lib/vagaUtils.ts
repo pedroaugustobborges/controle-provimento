@@ -127,7 +127,7 @@ export function getValidacaoColor(status: StatusValidacao): string {
   return map[status];
 }
 
-export function getEtapaColor(etapa: EtapaEdital): string {
+export function getEtapaColor(etapa: EtapaEdital | string): string {
   const map: Record<EtapaEdital, string> = {
     validacao_edital: 'bg-slate-100 text-slate-800',
     inscricoes: 'bg-blue-100 text-blue-800',

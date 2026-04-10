@@ -166,6 +166,17 @@ export default function VagasPage() {
     });
   }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filtered.slice(startIndex, startIndex + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
+
   // 3. Vacancy summary - strictly using the same canonical base and unified logic as Dashboard
   const counts = useMemo(() => {
     const acc = {

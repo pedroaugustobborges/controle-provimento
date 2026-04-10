@@ -87,6 +87,14 @@ export function autoMapColumns(headers: string[], type: 'vagas' | 'banco'): Colu
       });
     }
 
+    // Special case for Prorrogação (Column L is common)
+    if (!foundHeader && field.key === 'is_prorrogado' && headers.length >= 12) {
+      const colL = headers[11];
+      if (colL && (normalizeHeader(colL) === '' || normalizeHeader(colL).includes('L') || normalizeHeader(colL).includes('PRORROG'))) {
+        foundHeader = colL;
+      }
+    }
+
     if (foundHeader) {
       usedHeaders.add(foundHeader);
       const isDate = field.key.includes('data') || field.key === 'data_abertura' || field.key === 'data_recebimento' || field.key === 'data_convocacao' || field.key === 'data_validade';

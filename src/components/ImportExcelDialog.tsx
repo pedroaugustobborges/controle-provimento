@@ -10,6 +10,8 @@ import {
   Database, Layers, Check, X, Info, AlertCircle, FileText, Search, List
 } from 'lucide-react';
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
+import { DatabaseService } from '@/services/databaseService';
 import { Vaga, StatusVaga, TipoVaga, BancoTalentos } from '@/types/vaga';
 import { getResponsavelPorUnidade } from '@/data/equipe';
 import { toast } from 'sonner';

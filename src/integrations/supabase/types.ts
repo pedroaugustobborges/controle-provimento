@@ -66,21 +66,28 @@ export type Database = {
           classificacao: string | null
           created_at: string
           created_by: string | null
+          data_base_do_calculo: string | null
           data_convocacao: string | null
           data_importacao: string | null
+          data_publicacao: string | null
+          data_referencia_usada: string | null
           data_validade: string | null
           email: string | null
           id: string
           import_batch_id: string | null
           is_prorrogado: boolean | null
+          motivo_do_calculo: string | null
           nome: string | null
           numero_chamada: string | null
           numero_edital: string | null
           numero_processo_seletivo: string | null
           observacao: string | null
           origem: string | null
+          prorrogacao: string | null
           quantidade_banco: number | null
           status: string | null
+          status_calculado: string | null
+          status_original: string | null
           telefone: string | null
           unidade: string | null
           unidade_convocacao: string | null
@@ -93,21 +100,28 @@ export type Database = {
           classificacao?: string | null
           created_at?: string
           created_by?: string | null
+          data_base_do_calculo?: string | null
           data_convocacao?: string | null
           data_importacao?: string | null
+          data_publicacao?: string | null
+          data_referencia_usada?: string | null
           data_validade?: string | null
           email?: string | null
           id?: string
           import_batch_id?: string | null
           is_prorrogado?: boolean | null
+          motivo_do_calculo?: string | null
           nome?: string | null
           numero_chamada?: string | null
           numero_edital?: string | null
           numero_processo_seletivo?: string | null
           observacao?: string | null
           origem?: string | null
+          prorrogacao?: string | null
           quantidade_banco?: number | null
           status?: string | null
+          status_calculado?: string | null
+          status_original?: string | null
           telefone?: string | null
           unidade?: string | null
           unidade_convocacao?: string | null
@@ -120,21 +134,28 @@ export type Database = {
           classificacao?: string | null
           created_at?: string
           created_by?: string | null
+          data_base_do_calculo?: string | null
           data_convocacao?: string | null
           data_importacao?: string | null
+          data_publicacao?: string | null
+          data_referencia_usada?: string | null
           data_validade?: string | null
           email?: string | null
           id?: string
           import_batch_id?: string | null
           is_prorrogado?: boolean | null
+          motivo_do_calculo?: string | null
           nome?: string | null
           numero_chamada?: string | null
           numero_edital?: string | null
           numero_processo_seletivo?: string | null
           observacao?: string | null
           origem?: string | null
+          prorrogacao?: string | null
           quantidade_banco?: number | null
           status?: string | null
+          status_calculado?: string | null
+          status_original?: string | null
           telefone?: string | null
           unidade?: string | null
           unidade_convocacao?: string | null

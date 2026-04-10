@@ -828,7 +828,10 @@ export default function VagasPage() {
       </Card>
 
       <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
-      <AddVagaDialog open={isAddVagaOpen} onOpenChange={setIsAddVagaOpen} />
+      <AddVagaDialog open={isAddVagaOpen} onOpenChange={(open) => {
+        setIsAddVagaOpen(open);
+        if (!open) setVagaParaEditar(null);
+      }} vaga={vagaParaEditar} />
       <VagaHistoryDialog vaga={selectedVagaForHistory} open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

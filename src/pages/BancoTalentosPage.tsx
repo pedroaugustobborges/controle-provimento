@@ -1252,9 +1252,17 @@ export default function BancoTalentosPage() {
 
         {permissions.canViewAudit() && (
           <TabsContent value="audit" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(() => {
-                const stats = calculateStats(bancos);
+            <div className="bg-slate-50 border border-slate-200 p-6 rounded-xl space-y-4 shadow-sm">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
+                <CheckCircle2 className="h-5 w-5 text-green-600" /> RESUMO FINAL DA AUDITORIA (STATUS CALCULADO)
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Este painel reflete o <strong>Status Calculado</strong> em tempo real, aplicando as regras de prioridade: 
+                <span className="mx-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded font-bold">1. Convocado</span>
+                <span className="mx-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded font-bold">2. Prorrogação Manual</span>
+                <span className="mx-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-bold">3. Prorrogação "SIM"</span>
+                <span className="mx-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-bold">4. Validade Normal</span>.
+              </p>
                 const auditItems = [
                   { label: 'Cadastro Reserva', value: stats['Cadastro Reserva'], color: 'text-primary', description: 'Vigente pela validade normal' },
                   { label: 'Convocados', value: stats['Convocados'], color: 'text-purple-600', description: 'Status final de convocação' },

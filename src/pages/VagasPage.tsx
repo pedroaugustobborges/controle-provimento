@@ -84,7 +84,7 @@ export default function VagasPage() {
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterMes, setFilterMes] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
   const [filterAssistente, setFilterAssistente] = useState('all');
@@ -170,17 +170,18 @@ export default function VagasPage() {
         (v.unidade || '').toLowerCase().includes(searchTerm) ||
         (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-      const matchStatus = filterStatus === 'all' || 
-        v.status === filterStatus || 
-        v.status_geral === filterStatus ||
-        (filterStatus === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') ||
-        (filterStatus === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') ||
-        (filterStatus === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') ||
-        (filterStatus === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') ||
-        (filterStatus === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') ||
-        (filterStatus === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') ||
-        (filterStatus === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') ||
-        (filterStatus === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade');
+      const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
+        if (s === v.status || s === v.status_geral) return true;
+        if (s === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') return true;
+        if (s === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') return true;
+        if (s === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') return true;
+        if (s === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') return true;
+        if (s === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') return true;
+        if (s === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') return true;
+        if (s === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') return true;
+        if (s === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade') return true;
+        return false;
+      });
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
       const matchAnalista = filterAnalista === 'all' || v.analista_responsavel === filterAnalista;
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);

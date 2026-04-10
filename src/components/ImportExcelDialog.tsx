@@ -550,10 +550,10 @@ export function ImportExcelDialog({
       // Actually, since we removed persistence, we should probably fetch from DB 
       // but for immediate feedback we can update the store with a limited view
       if (chosenType === 'vagas') {
-        setVagas(processedItems.slice(0, 3000));
+        setVagas(processedItems.slice(0, 3000) as Vaga[]);
       } else {
         if (selectedRegion) clearBancosPorRegiao(selectedRegion);
-        addBancos(processedItems.slice(0, 3000));
+        addBancos(processedItems.slice(0, 3000) as BancoTalentos[]);
       }
 
       addImportHistory({

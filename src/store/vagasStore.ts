@@ -57,7 +57,7 @@ interface VagasState {
   getValidacaoByVaga: (vagaId: string) => ValidacaoEdital | undefined;
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
-  getMatchingDiagnostic: () => any[];
+  getMatchingDiagnostic: () => { vagaId: string; vagaCargo: string; vagaUnidade: string; vagaReq: string; potentialBancos: any[] }[];
   fixWrongImportBatches: () => void;
 }
 

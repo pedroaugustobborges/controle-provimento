@@ -849,6 +849,11 @@ export default function VagaDetalhePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AddVagaDialog 
+        open={isEditVagaOpen} 
+        onOpenChange={setIsEditVagaOpen} 
+        vaga={vaga}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { LogIn, Mail, Lock, Eye, EyeOff, X, UserPlus, ChevronRight, Building2, Briefcase, User, MessageSquare, Users } from 'lucide-react';
@@ -9,6 +10,7 @@ import mapaNobg from '@/assets/mapa-agir-nobg.png';
 // ─── Login Modal ───
 function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +28,7 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     try {
       await new Promise(r => setTimeout(r, 1500)); // branded delay
       await signIn(email, password);
+      navigate('/', { replace: true });
     } catch (err: any) {
       const msg = err.message?.includes('Invalid login')
         ? 'E-mail ou senha incorretos.'
@@ -225,8 +228,16 @@ function AccessRequestModal({ open, onClose }: { open: boolean; onClose: () => v
 
 // ─── Main Landing Page ───
 export default function LoginPage() {
+  const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const [showAccess, setShowAccess] = useState(false);
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate]);
 
   const highlights = [
     { value: '20+', label: 'Unidades geridas' },

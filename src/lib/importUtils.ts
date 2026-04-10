@@ -27,6 +27,7 @@ export const BANCO_OPTIONAL_COLUMNS = [
   { key: 'unidade_convocacao', label: 'Unidade Convocação', aliases: ['UNIDADE CONVOCAÇÃO', 'UNIDADE_CONVOCACAO', 'UNIDADE CONVOCADA', 'UNID. CONVOCAÇÃO', 'UNID CONVOCAÇÃO', 'LOCAL CONVOCAÇÃO'] },
   { key: 'numero_chamada', label: 'Nº Chamada', aliases: ['NUMERO CHAMADA', 'Nº CHAMADA', 'N° CHAMADA', 'NUM CHAMADA', 'CHAMADA', 'NR CHAMADA', 'NUMERO DA CHAMADA', 'Nº DA CHAMADA'] },
   { key: 'is_prorrogado', label: 'Prorrogação', aliases: ['PRORROGAÇÃO', 'PRORROGACAO', 'PRORROGADO', 'PRORROG', 'PRORROG.'] },
+  { key: 'quantidade_banco', label: 'Qtd. Banco', aliases: ['QUANTIDADE BANCO', 'QTD BANCO', 'QTD. BANCO', 'QUANTIDADE', 'QTD', 'QTDE', 'QTDE BANCO', 'NUMERO BANCO', 'Nº BANCO'] },
   { key: 'observacao', label: 'Observações', aliases: ['OBSERVAÇÕES', 'OBSERVACAO', 'OBS', 'NOTAS', 'OBS.', 'OBSERVAÇÃO'] },
   { key: 'email', label: 'E-mail', aliases: ['EMAIL', 'E-MAIL', 'CORREIO', 'E MAIL', 'CONTATO EMAIL'] },
   { key: 'telefone', label: 'Telefone', aliases: ['TELEFONE', 'TEL', 'CELULAR', 'CONTATO', 'TEL.', 'FONE', 'WHATSAPP'] },

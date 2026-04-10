@@ -858,7 +858,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
                       <Button variant="outline" onClick={() => reset()} className="gap-2 px-6">
                         <X className="h-4 w-4" /> Trocar arquivo
                       </Button>
-                      <Button onClick={() => setStep('sheets')} className="gap-2 px-10 bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200">
+                      <Button onClick={() => setStep('sheets')} className="gap-2 px-10 bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200" disabled={!selectedRegion}>
                         Continuar para Abas <ArrowRight className="h-4 w-4" />
                       </Button>
                     </div>

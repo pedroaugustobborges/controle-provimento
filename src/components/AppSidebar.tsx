@@ -9,7 +9,9 @@ import {
   Calendar,
   FileSpreadsheet,
   Bell,
-  ChevronDown
+  ChevronDown,
+  CornerDownRight,
+  FileText
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';
@@ -34,39 +36,67 @@ const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Demais Unidades': ['Hospital Central (GO)', 'Hospital das Clínicas']
 };
 
-const mainItems = [
-  { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
-  { title: 'Vagas', url: '/vagas', icon: Briefcase, subMenu: [
-    { title: 'Todas as Vagas', url: '/vagas' },
-    { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
-    { title: 'Fila de Editais', url: '/fila-editais' },
-    { title: 'Redação do Edital', url: '/fila-analista-edital' },
-    { title: 'Validação de Edital', url: '/validacao-editais' },
-  ] },
-  { title: 'Banco de Talentos', url: '/banco-talentos', icon: Users, subMenu: [
-    { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
-    { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
-    { title: 'Vencidos', url: '/banco-talentos?tab=vencidos' },
-  ] },
-  { title: 'Convocações', url: '/convocacoes', icon: Calendar, subMenu: [
-    { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
-    { title: 'Histórico', url: '/convocacoes?tab=list' },
-    { title: 'Pendentes', url: '/convocacoes?tab=pending' },
-  ] },
-  { title: 'Alertas e Tarefas', url: '/alertas-tarefas', icon: Bell, subMenu: [
-    { title: 'Painel de Alertas', url: '/alertas-tarefas' },
-    { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
-  ] },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const { canImport, canAccessAdmin } = usePermissions();
+  const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst } = usePermissions();
   const { currentUser, users } = useAdminStore();
   const location = useLocation();
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedUnit, setSelectedUnit] = useState<string>('all');
+
+  const mainItems = useMemo(() => [
+    { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
+    { 
+      title: 'Vagas', 
+      url: '/vagas', 
+      icon: Briefcase, 
+      subMenu: [
+        { title: 'Todas as Vagas', url: '/vagas' },
+        { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
+        { title: 'Fila de Editais', url: '/fila-editais' },
+      ] 
+    },
+    { 
+      title: 'Publicação de Edital', 
+      url: '/fila-analista-edital', 
+      icon: FileText, 
+      visible: isManagement() || isAdminAnalyst() || isEditalAnalyst(),
+      subMenu: [
+        { title: 'Redação do Edital', url: '/fila-analista-edital' },
+        { title: 'Validação de Edital', url: '/validacao-editais' },
+      ] 
+    },
+    { 
+      title: 'Banco de Talentos', 
+      url: '/banco-talentos', 
+      icon: Users, 
+      subMenu: [
+        { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
+        { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
+        { title: 'Vencidos', url: '/banco-talentos?tab=vencidos' },
+      ] 
+    },
+    { 
+      title: 'Convocações', 
+      url: '/convocacoes', 
+      icon: Calendar, 
+      subMenu: [
+        { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
+        { title: 'Histórico', url: '/convocacoes?tab=list' },
+        { title: 'Pendentes', url: '/convocacoes?tab=pending' },
+      ] 
+    },
+    { 
+      title: 'Alertas e Tarefas', 
+      url: '/alertas-tarefas', 
+      icon: Bell, 
+      subMenu: [
+        { title: 'Painel de Alertas', url: '/alertas-tarefas' },
+        { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
+      ] 
+    },
+  ], [isManagement, isAdminAnalyst, isEditalAnalyst]);
 
   const hasMultipleUnits = useMemo(() => {
     if (!currentUser) return false;
@@ -153,7 +183,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5">
-              {mainItems.map((item) => {
+              {mainItems.filter(item => item.visible !== false).map((item) => {
                 const active = isParentActive(item);
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -205,7 +235,7 @@ export function AppSidebar() {
                                         subActive 
                                           ? "text-white font-bold bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
                                           : hasPassed
-                                            ? "text-emerald-400 font-medium bg-emerald-500/5 hover:bg-emerald-500/10"
+                                            ? "text-[#275ac5] font-medium bg-[#275ac5]/5 hover:bg-[#275ac5]/10"
                                             : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
                                       )}
                                     >
@@ -213,10 +243,13 @@ export function AppSidebar() {
                                         <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
                                       )}
                                       {hasPassed && (
-                                        <div className="absolute left-0 top-0 h-full w-1 bg-emerald-500/50" />
+                                        <div className="absolute left-0 top-0 h-full w-1 bg-[#275ac5]/50" />
                                       )}
                                       <span className="relative z-10 flex items-center gap-2 leading-tight">
-                                        {hasPassed && <CheckCircle className="h-3 w-3" />}
+                                        <CornerDownRight className={cn(
+                                          "h-3 w-3",
+                                          subActive ? "text-white" : hasPassed ? "text-[#275ac5]" : "text-slate-600"
+                                        )} />
                                         {sub.title}
                                       </span>
                                     </NavLink>

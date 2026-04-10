@@ -18,47 +18,55 @@ interface GuideSection {
   nextStage?: string;
 }
 
-const GUIDES: Record<string, GuideSection[]> = {
-  "/vagas": [
-    {
-      title: "Todas as Vagas",
-      description: "Aqui você visualiza todas as requisições de vagas da unidade. É o ponto central para gestão do provimento.",
-      currentStage: "Abertura da Requisição",
-      nextStage: "Análise e Elaboração de Edital"
-    },
-    {
-      title: "Acompanhamento do Edital",
-      description: "Nesta aba, você monitora o progresso dos editais que já foram publicados e estão em fase de seleção.",
-      currentStage: "Publicação do Edital",
-      nextStage: "Triagem e Avaliações"
-    }
-  ],
-  "/fila-analista-edital": [
-    {
-      title: "Redação do Edital",
-      description: "Espaço para o analista redigir o edital baseado nas informações da vaga.",
-      currentStage: "Redação do Conteúdo",
-      nextStage: "Validação Interna"
-    }
-  ],
-  "/validacao-editais": [
-    {
-      title: "Validação de Edital",
-      description: "Os gestores revisam e validam os editais redigidos antes da publicação oficial.",
-      currentStage: "Revisão Final",
-      nextStage: "Publicação no Site"
-    }
-  ]
+const GUIDES: Record<string, Record<string, GuideSection[]>> = {
+  "/vagas": {
+    "default": [
+      {
+        title: "Todas as Vagas",
+        description: "Aqui você visualiza todas as requisições de vagas da unidade. É o ponto central para gestão do provimento.",
+        currentStage: "Abertura da Requisição",
+        nextStage: "Análise e Elaboração de Edital"
+      }
+    ],
+    "acompanhamento": [
+      {
+        title: "Acompanhamento do Edital",
+        description: "Nesta aba, você monitora o progresso dos editais que já foram publicados e estão em fase de seleção.",
+        currentStage: "Publicação do Edital",
+        nextStage: "Triagem e Avaliações"
+      }
+    ]
+  },
+  "/fila-analista-edital": {
+    "default": [
+      {
+        title: "Redação do Edital",
+        description: "Espaço para o analista redigir o edital baseado nas informações da vaga.",
+        currentStage: "Redação do Conteúdo",
+        nextStage: "Validação Interna"
+      }
+    ]
+  },
+  "/validacao-editais": {
+    "default": [
+      {
+        title: "Validação de Edital",
+        description: "Os gestores revisam e validam os editais redigidos antes da publicação oficial.",
+        currentStage: "Revisão Final",
+        nextStage: "Publicação no Site"
+      }
+    ]
+  }
 };
 
 export function HelpGuide() {
   const location = useLocation();
   const currentPath = location.pathname;
   const searchParams = new URLSearchParams(location.search);
-  const tab = searchParams.get('tab');
+  const tab = searchParams.get('tab') || 'default';
   
-  // Custom logic for tabs if needed
-  const sections = GUIDES[currentPath] || [];
+  const pathGuides = GUIDES[currentPath] || {};
+  const sections = pathGuides[tab] || pathGuides['default'] || [];
 
   if (sections.length === 0) return null;
 

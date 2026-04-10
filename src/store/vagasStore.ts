@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta } from '@/types/vaga';
+import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta, MensagemHistorico } from '@/types/vaga';
 import { mockVagas, mockBancos, mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
@@ -15,6 +15,8 @@ interface VagasState {
   importedFiles: ImportedFile[];
   tarefas: Tarefa[];
   alertas: Alerta[];
+  historicoMensagens: MensagemHistorico[];
+  temNovasMensagens: boolean;
   
   setVagas: (vagas: Vaga[]) => void;
   addVagas: (vagas: Vaga[]) => void;
@@ -39,6 +41,9 @@ interface VagasState {
   deleteTarefa: (id: string) => void;
   addAlerta: (alerta: Alerta) => void;
   updateAlerta: (id: string, data: Partial<Alerta>) => void;
+  addMensagem: (mensagem: MensagemHistorico) => void;
+  marcarMensagemLida: (id: string) => void;
+  setTemNovasMensagens: (has: boolean) => void;
   deleteImportBatch: (batchId: string) => void;
   clearVagas: () => void;
   clearBancos: () => void;
@@ -64,6 +69,12 @@ export const useVagasStore = create<VagasState>()(
       importedFiles: [],
       tarefas: mockTarefas || [],
       alertas: mockAlertas || [],
+      historicoMensagens: [
+        { id: '1', data: '2024-05-20T10:00:00', remetente: 'Aide', conteudo: 'Olá! Como posso ajudar você hoje?', lida: true },
+        { id: '2', data: '2024-05-20T10:05:00', remetente: 'Sistema', conteudo: 'O edital #123 foi validado com sucesso.', lida: true },
+        { id: '3', data: '2024-05-21T09:00:00', remetente: 'Aide', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false },
+      ],
+      temNovasMensagens: true,
       
       setVagas: (vagas) => set({ vagas }),
       addVagas: (newVagas) => set((s) => ({ vagas: [...s.vagas, ...newVagas] })),
@@ -124,6 +135,16 @@ export const useVagasStore = create<VagasState>()(
       updateAlerta: (id, data) => set((s) => ({
         alertas: s.alertas.map((a) => a.id === id ? { ...a, ...data } : a),
       })),
+      addMensagem: (mensagem) => set((s) => ({ 
+        historicoMensagens: [mensagem, ...s.historicoMensagens],
+        temNovasMensagens: true 
+      })),
+      marcarMensagemLida: (id) => set((s) => {
+        const newHistory = s.historicoMensagens.map((m) => m.id === id ? { ...m, lida: true } : m);
+        const hasUnread = newHistory.some(m => !m.lida);
+        return { historicoMensagens: newHistory, temNovasMensagens: hasUnread };
+      }),
+      setTemNovasMensagens: (has) => set({ temNovasMensagens: has }),
       clearVagas: () => set({ vagas: [] }),
       clearBancos: () => set({ bancos: [] }),
       clearAllData: () => set({ 
@@ -299,6 +320,8 @@ export const useVagasStore = create<VagasState>()(
         convocacoes: state.convocacoes,
         tarefas: state.tarefas,
         alertas: state.alertas,
+        historicoMensagens: state.historicoMensagens,
+        temNovasMensagens: state.temNovasMensagens,
         importHistory: state.importHistory.map(h => ({
           ...h,
           relatorio_erros: undefined,

@@ -123,7 +123,7 @@ export default function DashboardPage() {
       candidatesCount: number;
     }> = {};
 
-    bancos.forEach(b => {
+    filteredBancos.forEach(b => {
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
       const key = b.numero_processo_seletivo 
         ? `PS-${b.numero_processo_seletivo}`
@@ -151,7 +151,7 @@ export default function DashboardPage() {
     });
 
     return Object.values(groups);
-  }, [bancos]);
+  }, [filteredBancos]);
 
   // Card Cadastro Reserva (Item 1) - Soma da quantidade de banco dos grupos CR (não prorrogados)
   const totalCR = useMemo(() => {
@@ -175,12 +175,12 @@ export default function DashboardPage() {
   }, [groupedBancos]);
 
   const totalConvocados = useMemo(() => 
-    bancos.filter(b => b.status === 'CONVOCADO').length
-  , [bancos]);
+    filteredBancos.filter(b => b.status === 'CONVOCADO').length
+  , [filteredBancos]);
 
   const totalVencidos = useMemo(() => 
-    bancos.filter(b => b.status === 'VENCIDO').length
-  , [bancos]);
+    filteredBancos.filter(b => b.status === 'VENCIDO').length
+  , [filteredBancos]);
 
   const totalBancoTotal = useMemo(() => 
     groupedBancos.reduce((sum, g) => sum + g.qtdBanco, 0)

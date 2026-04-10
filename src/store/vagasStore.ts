@@ -57,13 +57,7 @@ interface VagasState {
   getValidacaoByVaga: (vagaId: string) => ValidacaoEdital | undefined;
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
-  getMatchingDiagnostic: () => { 
-    vagaId: string; 
-    vagaCargo: string; 
-    vagaUnidade: string; 
-    vagaReq: string; 
-    potentialBancos: { cargo: string; unidade: string; status: string }[] 
-  }[];
+  getMatchingDiagnostic: () => any[];
   fixWrongImportBatches: () => void;
 }
 
@@ -116,9 +110,10 @@ export const useVagasStore = create<VagasState>()(
             .order('data_hora', { ascending: false });
           if (error) throw error;
           if (data) {
+            // Mapear os campos do banco para o tipo ImportHistory usado no store
             const mapped = data.map(item => ({
               id: item.id,
-              usuario: item.usuario_id,
+              usuario: item.usuario_id, // Idealmente deveríamos fazer join com profiles
               total_lidos: item.quantidade_apagada + item.quantidade_inserida,
               total_novos: item.quantidade_inserida,
               total_atualizados: 0,
@@ -179,6 +174,7 @@ export const useVagasStore = create<VagasState>()(
       })),
       addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
       deleteImportBatch: (batchId) => set((s) => {
+        // Find if we are deleting vagas or bancos to handle dependencies
         const vagasToRemove = s.vagas.filter(v => v.import_batch_id === batchId).map(v => v.id);
         
         return {
@@ -227,6 +223,7 @@ export const useVagasStore = create<VagasState>()(
         
         if (!vaga) return undefined;
         
+        // 1. Try by ID first (Explicit link)
         if (vaga.banco_id) {
           const banco = state.bancos.find(b => b.id === vaga.banco_id);
           if (banco) {
@@ -234,6 +231,7 @@ export const useVagasStore = create<VagasState>()(
           }
         }
 
+        // 2. Try by process number or edital number (Exact match)
         if (vaga.numero_processo || vaga.numero_edital) {
           const matchedByNumber = state.bancos.find(b => 
             (vaga.numero_processo && (b.numero_processo === vaga.numero_processo || b.numero_processo_seletivo === vaga.numero_processo)) ||
@@ -244,6 +242,7 @@ export const useVagasStore = create<VagasState>()(
           }
         }
         
+        // Fallback: match by cargo and unit scope - relaxed matching
         const normalizedVagaCargo = normalizeCargo(vaga.cargo);
         const normalizedVagaUnidade = normalizeCargo(vaga.unidade);
         
@@ -253,6 +252,7 @@ export const useVagasStore = create<VagasState>()(
             .split(' ')
             .filter(word => word.length > 2 && !['das', 'dos', 'com', 'para', 'pela', 'pelo', 'uma', 'uns', 'nas', 'nos', 'est', 'estadual', 'hospital'].includes(word))
             .map(word => {
+              // Common abbreviations
               if (word === 'tec') return 'tecnico';
               if (word === 'aux') return 'auxiliar';
               if (word === 'esp') return 'especialista';
@@ -266,6 +266,8 @@ export const useVagasStore = create<VagasState>()(
         };
         
         const vagaTokens = getCargoTokens(vaga.cargo);
+
+        // Specific units for matching as requested
         const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds', 'agir', 'teia anapolis', 'teia canedo', 'teia aparecida', 'teia goiania'];
         const upaUnits = ['vitoria', 'sao pedro', 'sua', 'suá', 'vitoria (sao pedro/sua)'];
 
@@ -275,6 +277,7 @@ export const useVagasStore = create<VagasState>()(
           const normalizedBancoCargo = normalizeCargo(b.cargo || '');
           const normalizedVagaCargo = normalizeCargo(vaga.cargo || '');
 
+          // --- Unit Matching conforme Item 8 ---
           let unitMatch = false;
 
           if (normalizedBancoUnidade === normalizedVagaUnidade) {
@@ -293,6 +296,7 @@ export const useVagasStore = create<VagasState>()(
 
           if (!unitMatch) return false;
 
+          // --- Cargo Matching ---
           const hasStringMatch = normalizedBancoCargo === normalizedVagaCargo || 
                                 normalizedBancoCargo.includes(normalizedVagaCargo) || 
                                 normalizedVagaCargo.includes(normalizedBancoCargo);
@@ -320,12 +324,13 @@ export const useVagasStore = create<VagasState>()(
           const matchedBanco = get().getBancoByVaga(v.id);
           if (matchedBanco) return null;
           
+          // If no match, collect potential candidates (same unit or similar cargo)
           const potentialBancos = state.bancos.filter(b => {
             const normV = (v.cargo || '').toLowerCase();
             const normB = (b.cargo || '').toLowerCase();
-            return b.unidade === v.unidade || (normB && normV && (normB.includes(normV) || normV.includes(normB)));
+            return b.unidade === v.unidade || normB.includes(normV) || normV.includes(normB);
           }).slice(0, 10);
-
+          
           return {
             vagaId: v.id,
             vagaCargo: v.cargo,
@@ -337,10 +342,11 @@ export const useVagasStore = create<VagasState>()(
               status: b.status
             }))
           };
-        }).filter(Boolean) as any[];
+        }).filter(Boolean);
       },
       fixWrongImportBatches: () => {
         const state = get();
+        // Identify batches that are BANCO but should be VAGAS based on filename
         const wrongBatches = state.importHistory.filter(h => 
           h.tipo_importacao === 'banco' && 
           (h.arquivo || h.nome_arquivo || '').toLowerCase().includes('vagas')
@@ -351,6 +357,8 @@ export const useVagasStore = create<VagasState>()(
           
           wrongBatches.forEach(batch => {
             console.log(`- Removendo lote ${batch.id} (${batch.arquivo}) do tipo BANCO...`);
+            // We can't automatically convert because the data structure is incompatible,
+            // so we delete them to allow a clean re-import with the new logic.
             get().deleteImportBatch(batch.id);
           });
         }
@@ -360,6 +368,8 @@ export const useVagasStore = create<VagasState>()(
       name: 'hospital-recruitment-store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
+        // Exclude large data arrays from localStorage persistence to avoid 5MB quota crashes
+        // and improve startup performance. Data should be fetched from Supabase.
         vagas: [], 
         bancos: [],
         editais: state.editais,

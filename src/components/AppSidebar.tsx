@@ -64,6 +64,10 @@ export function AppSidebar() {
       url: '/fila-analista-edital', 
       icon: FileText, 
       visible: hasFullAccess || isManagement() || isAdminAnalyst() || isEditalAnalyst(),
+      subMenu: [
+        { title: 'Redação do Edital', url: '/fila-analista-edital' },
+        { title: 'Fila de Editais', url: '/fila-editais' },
+      ]
     },
     { 
       title: 'Validação de Edital', 

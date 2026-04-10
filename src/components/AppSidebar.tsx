@@ -127,10 +127,15 @@ export function AppSidebar() {
               <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
                 <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
-              <SelectContent className="bg-[#112240] border-white/10 text-white">
+              <SelectContent className="bg-[#112240] border-white/10 text-white max-h-[300px]">
                 <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
-                {availableUnits.map(u => (
-                  <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
+                {Object.entries(UNIDADES_POR_REGIAO).map(([regiao, unidades]) => (
+                  <SelectGroup key={regiao}>
+                    <SelectLabel className="text-[10px] font-black uppercase tracking-widest text-blue-400 py-2 px-3 bg-blue-500/5">{regiao}</SelectLabel>
+                    {unidades.map(u => (
+                      <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 pl-6">{u}</SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>

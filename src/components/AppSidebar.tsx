@@ -219,7 +219,7 @@ export function AppSidebar() {
                           </NavLink>
                         </SidebarMenuButton>
                         {!collapsed && (
-                          <SidebarMenuSub className="ml-5 mt-1 border-l-2 border-blue-500/10 space-y-1.5 py-2 pl-4">
+                          <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-blue-500/10 space-y-1.5 py-2 pl-3">
                             {item.subMenu.map((sub, idx) => {
                               const subActive = isUrlActive(sub.url);
                               const activeIndex = item.subMenu.findIndex(s => isUrlActive(s.url));
@@ -231,7 +231,7 @@ export function AppSidebar() {
                                     <NavLink
                                       to={sub.url}
                                       className={cn(
-                                        "text-[12.5px] py-2 px-4 rounded-lg transition-all duration-300 block relative select-none overflow-hidden group/sub font-bold",
+                                        "text-[11.5px] py-2 px-3 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
                                         subActive 
                                           ? "text-white bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
                                           : hasPassed

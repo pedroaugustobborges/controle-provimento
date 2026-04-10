@@ -57,7 +57,7 @@ interface VagasState {
   getValidacaoByVaga: (vagaId: string) => ValidacaoEdital | undefined;
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
-  getMatchingDiagnostic: () => any[];
+  getMatchingDiagnostic: () => { vagaId: string; vagaCargo: string; vagaUnidade: string; vagaReq: string; potentialBancos: any[] }[];
   fixWrongImportBatches: () => void;
 }
 
@@ -324,13 +324,12 @@ export const useVagasStore = create<VagasState>()(
           const matchedBanco = get().getBancoByVaga(v.id);
           if (matchedBanco) return null;
           
-          // If no match, collect potential candidates (same unit or similar cargo)
           const potentialBancos = state.bancos.filter(b => {
             const normV = (v.cargo || '').toLowerCase();
             const normB = (b.cargo || '').toLowerCase();
-            return b.unidade === v.unidade || normB.includes(normV) || normV.includes(normB);
+            return (b.unidade === v.unidade) || (normB && normV && (normB.includes(normV) || normV.includes(normB)));
           }).slice(0, 10);
-          
+
           return {
             vagaId: v.id,
             vagaCargo: v.cargo,

@@ -343,7 +343,7 @@ export function ImportExcelDialog({
 
       const headers = (rawRows[headerRowUsed] || []).map(c => String(c || '').toUpperCase().trim());
       const processedItems: any[] = [];
-      
+
       setProgressLabel(`Mapeando ${totalToProcess} registros...`);
 
       if (chosenType === 'vagas') {
@@ -410,6 +410,7 @@ export function ImportExcelDialog({
           const { analista: defaultAnalista, assistentes } = getResponsavelPorUnidade(unitInRow, tipoVaga);
 
           processedItems.push({
+            id: `vaga-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 9)}`,
             unidade: unitInRow,
             cargo,
             requisicao,
@@ -550,10 +551,10 @@ export function ImportExcelDialog({
       // Actually, since we removed persistence, we should probably fetch from DB 
       // but for immediate feedback we can update the store with a limited view
       if (chosenType === 'vagas') {
-        setVagas(processedItems.slice(0, 3000));
+        setVagas(processedItems.slice(0, 3000) as Vaga[]);
       } else {
         if (selectedRegion) clearBancosPorRegiao(selectedRegion);
-        addBancos(processedItems.slice(0, 3000));
+        addBancos(processedItems.slice(0, 3000) as BancoTalentos[]);
       }
 
       addImportHistory({

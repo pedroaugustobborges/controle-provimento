@@ -78,7 +78,7 @@ export default function BancoTalentosPage() {
   };
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['list', 'convocados', 'history'].includes(tabParam)) {
+    if (tabParam && ['list', 'convocados', 'vencidos', 'history', 'audit'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -303,9 +303,103 @@ export default function BancoTalentosPage() {
     });
   }, [selectedBanco, filtered]);
 
+  const [vencidosSearch, setVencidosSearch] = useState('');
+  const [prorrogandoId, setProrrogandoId] = useState<string | null>(null);
+
+  const vencidosFiltered = useMemo(() => {
+    return bancos.filter(b => {
+      if (b.status !== 'VENCIDO') return false;
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(b.unidade)) {
+        return false;
+      }
+      if (!vencidosSearch) return true;
+      const normalizedSearch = normalizeCargo(vencidosSearch);
+      return normalizeCargo(b.nome || '').includes(normalizedSearch) || 
+        normalizeCargo(b.cargo).includes(normalizedSearch) ||
+        normalizeCargo(b.numero_edital).includes(normalizedSearch);
+    });
+  }, [bancos, currentUser, vencidosSearch]);
+
+  const canProrrogate = useMemo(() => {
+    if (!currentUser) return false;
+    const perfil = (currentUser.perfil || '').toLowerCase();
+    return perfil.includes('admin') || perfil.includes('gestão') || perfil.includes('gestor') || perfil.includes('gestao');
+  }, [currentUser]);
+
+  const handleProrrogacao = async (banco: BancoTalentos) => {
+    if (!currentUser) return;
+    setProrrogandoId(banco.id);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      let newValidade = '';
+      if (banco.data_validade) {
+        const parts = banco.data_validade.split(/[-\/]/);
+        let dateObj: Date | null = null;
+        if (parts.length >= 3) {
+          if (parts[0].length === 4) {
+            dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          } else {
+            dateObj = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+          }
+        }
+        if (dateObj && !isNaN(dateObj.getTime())) {
+          dateObj.setMonth(dateObj.getMonth() + 6);
+          newValidade = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+        }
+      }
+
+      const updateData: any = {
+        is_prorrogado: true,
+        status: 'prorrogado',
+        updated_by: currentUser.id,
+        observacao: `${banco.observacoes || ''} | Prorrogado por ${currentUser.nome_completo} em ${new Date().toLocaleString('pt-BR')}`.trim(),
+      };
+      if (newValidade) {
+        updateData.data_validade = newValidade;
+      }
+
+      const { error } = await supabase
+        .from('banco_candidatos')
+        .update(updateData)
+        .eq('id', banco.id);
+
+      if (error) throw error;
+
+      const { updateBanco } = useVagasStore.getState();
+      updateBanco(banco.id, {
+        is_prorrogado: true,
+        status: 'prorrogado',
+        data_validade: newValidade || banco.data_validade,
+        observacoes: updateData.observacao,
+      });
+
+      try {
+        await supabase.from('audit_logs').insert({
+          usuario_id: currentUser.id,
+          usuario_nome: currentUser.nome_completo,
+          usuario_email: currentUser.email,
+          perfil: currentUser.perfil,
+          acao: 'Prorrogação de banco',
+          modulo: 'Banco de Talentos',
+          registro_afetado: banco.id,
+          valor_anterior: JSON.stringify({ status: banco.status, data_validade: banco.data_validade, is_prorrogado: banco.is_prorrogado }),
+          valor_novo: JSON.stringify({ status: 'prorrogado', data_validade: newValidade, is_prorrogado: true }),
+        });
+      } catch (auditErr) {
+        console.warn('Audit log error:', auditErr);
+      }
+
+      toast.success(`Banco prorrogado com sucesso! Nova validade: ${newValidade ? formatDate(newValidade) : 'atualizada'}`);
+    } catch (err: any) {
+      console.error('Erro ao prorrogar:', err);
+      toast.error(`Erro ao prorrogar: ${err.message}`);
+    } finally {
+      setProrrogandoId(null);
+    }
+  };
+
   const historyBT = useMemo(() => {
-
-
     return importHistory.filter(h => h.tipo_importacao === 'banco');
   }, [importHistory]);
 
@@ -706,6 +800,9 @@ export default function BancoTalentosPage() {
           <TabsTrigger value="convocados" className="gap-2">
             <CheckCircle className="h-4 w-4" /> Convocados
           </TabsTrigger>
+          <TabsTrigger value="vencidos" className="gap-2">
+            <AlertTriangle className="h-4 w-4" /> Vencidos
+          </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" /> Histórico de Importações
           </TabsTrigger>
@@ -1001,6 +1098,101 @@ export default function BancoTalentosPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="vencidos" className="space-y-4">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b bg-slate-50/50">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Buscar por nome, cargo ou edital..." 
+                    className="pl-9 bg-white"
+                    value={vencidosSearch}
+                    onChange={(e) => setVencidosSearch(e.target.value)}
+                  />
+                </div>
+                <div className="text-xs text-slate-500 font-medium">
+                  {vencidosFiltered.length} banco(s) vencido(s)
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap">Nome</TableHead>
+                      <TableHead className="whitespace-nowrap">Cargo</TableHead>
+                      <TableHead className="whitespace-nowrap">Edital</TableHead>
+                      <TableHead className="whitespace-nowrap">Unidade</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Class.</TableHead>
+                      <TableHead className="whitespace-nowrap">Validade</TableHead>
+                      <TableHead className="whitespace-nowrap">Status</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vencidosFiltered.map((b) => (
+                      <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
+                        <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
+                        <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
+                        <TableCell className="text-xs font-medium text-slate-600">{b.unidade}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">
+                            {b.classificacao}°
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-red-600">
+                          {b.data_validade ? formatDate(b.data_validade) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(b.status)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            {canProrrogate && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="font-bold text-xs text-blue-600 border-blue-200 hover:bg-blue-50 h-8 gap-1"
+                                disabled={prorrogandoId === b.id}
+                                onClick={() => handleProrrogacao(b)}
+                              >
+                                <Clock className="h-3 w-3" />
+                                {prorrogandoId === b.id ? 'Prorrogando...' : 'Prorrogar'}
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                              onClick={() => {
+                                setSelectedBanco(b);
+                                setIsDetailsOpen(true);
+                              }}
+                            >
+                              Detalhes
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {vencidosFiltered.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                          Nenhum banco vencido encontrado.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>

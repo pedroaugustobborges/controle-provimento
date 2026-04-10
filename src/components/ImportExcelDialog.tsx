@@ -85,6 +85,8 @@ export function ImportExcelDialog({
     sheetUsed: string;
     headerRowUsed: number;
   } | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

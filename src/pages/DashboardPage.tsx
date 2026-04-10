@@ -1,9 +1,11 @@
 import { useMemo, useEffect } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   calcDiasAberto, normalizeUnitName, 
-  getCategoriaStatus, getValidVacancyBase, normalizeCargo
+  getCategoriaStatus, getValidVacancyBase, normalizeCargo,
+  filterByRegionAndUnit
 } from '@/lib/vagaUtils';
 import { 
   Briefcase, 

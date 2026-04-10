@@ -10,7 +10,8 @@ import { AcompanhamentoModal } from '@/components/AcompanhamentoModal';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
   normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
-  getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa 
+  getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa,
+  filterByRegionAndUnit, UNIDADES_POR_REGIAO
 } from '@/lib/vagaUtils';
 import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles } from 'lucide-react';
 

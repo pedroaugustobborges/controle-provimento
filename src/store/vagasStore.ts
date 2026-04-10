@@ -19,6 +19,8 @@ interface VagasState {
   temNovasMensagens: boolean;
   
   setVagas: (vagas: Vaga[]) => void;
+  fetchVagas: () => Promise<void>;
+  fetchBancos: () => Promise<void>;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
   deleteVaga: (id: string) => void;

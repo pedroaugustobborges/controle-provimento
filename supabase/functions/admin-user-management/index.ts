@@ -46,6 +46,14 @@ Deno.serve(async (req) => {
       .eq("user_id", caller.id)
       .eq("role", "admin")
       .maybeSingle();
+
+    if (!callerRole) {
+      return new Response(JSON.stringify({ error: "Acesso negado. Somente administradores." }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body = await req.json();
     const { action } = body;
 

@@ -152,8 +152,7 @@ export function AppSidebar() {
               <SelectContent className="bg-[#112240] border-white/10 text-white">
                 <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
                 <SelectItem value="Goiás" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás</SelectItem>
-                <SelectItem value="Espírito Santo" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Espírito Santo</SelectItem>
-                <SelectItem value="Demais Unidades" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Demais Unidades</SelectItem>
+                <SelectItem value="Vitória (ES)" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Vitória (ES)</SelectItem>
               </SelectContent>
             </Select>
 

@@ -192,11 +192,11 @@ export default function VagasPage() {
       
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
-  }, [canonicalBase, search, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterUnidade, filterMes, filterStatus, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -294,7 +294,7 @@ export default function VagasPage() {
     setSearch('');
     setFilterUnidade('all');
     setFilterMes('all');
-    setFilterStatus('all');
+    setFilterStatuses([]);
     setFilterTipo('all');
     setFilterAnalista('all');
     setFilterAssistente('all');
@@ -302,7 +302,7 @@ export default function VagasPage() {
     setFilterVagasNovas(false);
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatus !== 'all' || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas;
+  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas;
 
 
   return (
@@ -551,13 +551,48 @@ export default function VagasPage() {
               </SelectContent>
             </Select>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos Status</SelectItem>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs">{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[160px] bg-white text-xs h-9 justify-between font-normal">
+                  <span className="truncate">
+                    {filterStatuses.length === 0 ? "Status" : `${filterStatuses.length} selecionado(s)`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0" align="start">
+                <div className="p-2 space-y-1">
+                  <div className="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded-md cursor-pointer" onClick={() => setFilterStatuses([])}>
+                    <div className={`w-4 h-4 border rounded flex items-center justify-center ${filterStatuses.length === 0 ? 'bg-primary border-primary' : 'border-slate-300'}`}>
+                      {filterStatuses.length === 0 && <Check className="h-3 w-3 text-white" />}
+                    </div>
+                    <span className="text-xs font-medium">Todos Status</span>
+                  </div>
+                  <div className="h-px bg-slate-100 my-1" />
+                  <div className="max-h-[300px] overflow-y-auto space-y-1">
+                    {Object.entries(STATUS_LABELS).map(([k, v]) => {
+                      const isSelected = filterStatuses.includes(k);
+                      return (
+                        <div 
+                          key={k} 
+                          className="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded-md cursor-pointer"
+                          onClick={() => {
+                            if (isSelected) {
+                              setFilterStatuses(filterStatuses.filter(s => s !== k));
+                            } else {
+                              setFilterStatuses([...filterStatuses, k]);
+                            }
+                          }}
+                        >
+                          <Checkbox checked={isSelected} onCheckedChange={() => {}} className="pointer-events-none" />
+                          <span className="text-xs">{v}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Select value={filterTipo} onValueChange={setFilterTipo}>
               <SelectTrigger className="w-[160px] bg-white text-xs"><SelectValue placeholder="Tipo de Vaga" /></SelectTrigger>
               <SelectContent>

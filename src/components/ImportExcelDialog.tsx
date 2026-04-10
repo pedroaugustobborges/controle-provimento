@@ -116,6 +116,7 @@ export function ImportExcelDialog({
     setStep('select');
     setFile(null);
     setSummary(null);
+    setError(null);
     setIsProcessing(false);
     setSuggestedType(null);
     setChosenType(null);

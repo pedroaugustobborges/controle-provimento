@@ -1098,6 +1098,101 @@ export default function BancoTalentosPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="vencidos" className="space-y-4">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b bg-slate-50/50">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Buscar por nome, cargo ou edital..." 
+                    className="pl-9 bg-white"
+                    value={vencidosSearch}
+                    onChange={(e) => setVencidosSearch(e.target.value)}
+                  />
+                </div>
+                <div className="text-xs text-slate-500 font-medium">
+                  {vencidosFiltered.length} banco(s) vencido(s)
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap">Nome</TableHead>
+                      <TableHead className="whitespace-nowrap">Cargo</TableHead>
+                      <TableHead className="whitespace-nowrap">Edital</TableHead>
+                      <TableHead className="whitespace-nowrap">Unidade</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Class.</TableHead>
+                      <TableHead className="whitespace-nowrap">Validade</TableHead>
+                      <TableHead className="whitespace-nowrap">Status</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vencidosFiltered.map((b) => (
+                      <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
+                        <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
+                        <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
+                        <TableCell className="text-xs font-medium text-slate-600">{b.unidade}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">
+                            {b.classificacao}°
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-red-600">
+                          {b.data_validade ? formatDate(b.data_validade) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(b.status)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            {canProrrogate && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="font-bold text-xs text-blue-600 border-blue-200 hover:bg-blue-50 h-8 gap-1"
+                                disabled={prorrogandoId === b.id}
+                                onClick={() => handleProrrogacao(b)}
+                              >
+                                <Clock className="h-3 w-3" />
+                                {prorrogandoId === b.id ? 'Prorrogando...' : 'Prorrogar'}
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                              onClick={() => {
+                                setSelectedBanco(b);
+                                setIsDetailsOpen(true);
+                              }}
+                            >
+                              Detalhes
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {vencidosFiltered.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                          Nenhum banco vencido encontrado.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>

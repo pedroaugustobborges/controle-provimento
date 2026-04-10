@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { UNITS, ROLES } from "@/data/chatData";
 import { ChatStep, Unit, Role, Message } from "@/types/chat";
+import { useVagasStore } from "@/store/vagasStore";
 
 export const AgieChat = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +18,9 @@ export const AgieChat = memo(() => {
   const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
-  const [hasNewMessage, setHasNewMessage] = useState(false);
+  
+  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
+  const hasNewMessage = temNovasMensagens;
 
   // Mock initial notification after 3 seconds
   useEffect(() => {

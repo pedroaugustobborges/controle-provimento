@@ -14,6 +14,8 @@ import {
   FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
+import { PageHeader } from '@/components/PageHeader';
+import { HelpGuide } from '@/components/HelpGuide';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 

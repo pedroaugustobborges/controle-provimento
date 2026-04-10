@@ -679,165 +679,128 @@ export default function BancoTalentosPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Dynamic status computation based on data_validade */}
+      {/* Dynamic status computation based on business logic */}
       {useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const stats = { cadastroReserva: 0, convocados: 0, prorrogados: 0, vencidos: 0 };
-        bancos.forEach(b => {
-          const s = (b.status || '').toUpperCase();
-          if (s === 'CONVOCADO') { stats.convocados++; return; }
-          if (b.data_validade) {
-            const valDate = new Date(b.data_validade);
-            if (!isNaN(valDate.getTime())) {
-              if (valDate < today) { stats.vencidos++; return; }
-            }
-          }
-          if (b.is_prorrogado || s === 'PRORROGADO') { stats.prorrogados++; return; }
-          stats.cadastroReserva++;
-        });
-        console.log('--- AUDITORIA BANCO ---', stats, 'Total:', bancos.length);
+        const stats = calculateStats(bancos);
+        console.log('--- AUDITORIA BANCO (Lógica de Negócio) ---', stats);
         return null;
       }, [bancos])}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-2.5 rounded-lg shrink-0">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (b.is_prorrogado || (b.status || '').toUpperCase() === 'PRORROGADO') return false;
-                      if (b.data_validade) {
-                        const d = new Date(b.data_validade);
-                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
-                      }
-                      return true;
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
+      {(() => {
+        const stats = calculateStats(bancos);
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 p-2.5 rounded-lg shrink-0">
+                    <User className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Cadastro Reserva']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Vigente (Normal)</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
-                <Users className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Convocados</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.status === 'CONVOCADO').length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
+                    <Users className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Convocados</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Convocados']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Status Convocado</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva Disponível</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (b.data_validade) {
-                        const d = new Date(b.data_validade);
-                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
-                      }
-                      return true;
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Não vencidos e não convocados</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 p-2.5 rounded-lg shrink-0">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Prorrogados']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">SIM ou Data Manual</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2.5 rounded-lg shrink-0">
-                <Clock className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (!b.is_prorrogado && (b.status || '').toUpperCase() !== 'PRORROGADO') return false;
-                      if (b.data_validade) {
-                        const d = new Date(b.data_validade);
-                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
-                      }
-                      return true;
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Vencidos']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Validade Expirada</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => {
-                      if (b.status === 'CONVOCADO') return false;
-                      if (!b.data_validade) return false;
-                      const d = new Date(b.data_validade);
-                      return !isNaN(d.getTime()) && d < new Date(new Date().toDateString());
-                    }).length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Total Vigentes</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {stats['Total Cadastro Reserva'] + stats['Total Prorrogados']}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Disponíveis para uso</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
-          <CardContent className="pt-6 px-4 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-slate-100 p-2.5 rounded-lg shrink-0">
-                <Calendar className="h-5 w-5 text-slate-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Banco Total</p>
-                <div className="flex flex-col">
-                  <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.length}
-                  </p>
-                  <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Total de candidatos</p>
+              </CardContent>
+            </Card>
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
+              <CardContent className="pt-6 px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-100 p-2.5 rounded-lg shrink-0">
+                    <Calendar className="h-5 w-5 text-slate-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Banco Total</p>
+                    <div className="flex flex-col">
+                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                        {bancos.length}
+                      </p>
+                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Base completa</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-4">

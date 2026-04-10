@@ -425,18 +425,25 @@ export class ImportService {
       if (!nome || !data.cargo) return null;
       data.cargo_normalizado = normalizeCargo(data.cargo);
 
-      // Handle is_prorrogado: convert "sim"/"yes"/"s" → true
-      // Robust detection: prioritize mapped column, then fallback to Column L (index 11)
-      const mappedValue = data.is_prorrogado !== undefined && data.is_prorrogado !== null ? String(data.is_prorrogado).trim().toLowerCase() : '';
-      const fallbackValue = row[11] !== undefined && row[11] !== null ? String(row[11]).trim().toLowerCase() : '';
+      // Status Original
+      data.status_original = (data.status || 'CADASTRO RESERVA').toUpperCase();
       
-      const isSim = (val: string) => ['sim', 'yes', 's', 'true', '1', 'x', 'y'].includes(val);
-      
-      if (isSim(mappedValue) || isSim(fallbackValue)) {
-        data.is_prorrogado = true;
-      } else {
-        data.is_prorrogado = false;
-      }
+      // Calculate Status based on business rules
+      const calculation = calculateBancoStatus({
+        status: data.status,
+        status_original: data.status_original,
+        prorrogacao: data.prorrogacao,
+        data_publicacao: data.data_publicacao,
+        data_validade: data.data_validade,
+        data_convocacao: data.data_convocacao
+      });
+
+      data.status = calculation.status;
+      data.status_calculado = calculation.status;
+      data.motivo_do_calculo = calculation.motivo;
+      data.data_base_do_calculo = new Date().toISOString();
+      data.data_referencia_usada = calculation.dataReferencia;
+      data.is_prorrogado = calculation.status === 'prorrogado';
 
       // Handle quantidade_banco as number
       if (data.quantidade_banco !== undefined) {

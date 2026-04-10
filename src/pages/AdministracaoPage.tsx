@@ -270,7 +270,10 @@ export default function AdministracaoPage() {
                               <DropdownMenuItem><Shield className="mr-2 h-4 w-4" /> Alterar unidades e permissões</DropdownMenuItem>
                               <DropdownMenuItem><Lock className="mr-2 h-4 w-4" /> Definir senha</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}>
+                              <DropdownMenuItem 
+                                className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}
+                                onClick={() => handleToggleStatus(user.id)}
+                              >
                                 {user.status === 'ativo' ? 'Inativar usuário' : 'Ativar usuário'}
                               </DropdownMenuItem>
                               <DropdownMenuItem 
@@ -448,7 +451,8 @@ export default function AdministracaoPage() {
                     {auditLogs.map((log) => (
                       <TableRow key={log.id} className="text-xs">
                         <TableCell className="pl-6 font-mono text-slate-500">
-                          {log.data} <br/> {log.hora}
+                          {log.created_at ? new Date(log.created_at).toLocaleDateString('pt-BR') : log.data} <br/> 
+                          {log.created_at ? new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : log.hora}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">

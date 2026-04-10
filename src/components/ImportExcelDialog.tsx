@@ -58,13 +58,14 @@ export function ImportExcelDialog({
   onOpenChange,
   reprocessFile 
 }: ImportExcelDialogProps) {
-  const { addVagas, addBancos, addImportHistory } = useVagasStore();
+  const { addVagas, addBancos, addImportHistory, clearBancosPorRegiao } = useVagasStore();
   const [step, setStep] = useState<Step>('select');
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<any>(null);
   const [suggestedType, setSuggestedType] = useState<'vagas' | 'banco' | null>(null);
   const [chosenType, setChosenType] = useState<'vagas' | 'banco' | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<'GO_ES' | 'OUTRAS_UNIDADES' | null>(null);
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [confidence, setConfidence] = useState<'high' | 'low'>('low');
   const [fileMetadata, setFileMetadata] = useState<{

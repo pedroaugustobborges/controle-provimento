@@ -280,8 +280,8 @@ export function AppSidebar() {
                           )} />
                           {!collapsed && (
                             <span className={cn(
-                              "text-[13.5px] font-medium tracking-tight",
-                              active ? "font-bold" : "group-hover:translate-x-0.5 transition-transform duration-300"
+                              "text-[13.5px] font-bold tracking-tight",
+                              !active && "group-hover:translate-x-0.5 transition-transform duration-300"
                             )}>
                               {item.title}
                             </span>
@@ -329,8 +329,8 @@ export function AppSidebar() {
                           )} />
                           {!collapsed && (
                             <span className={cn(
-                              "text-[13.5px] font-medium tracking-tight",
-                              active ? "font-bold" : "group-hover:translate-x-0.5 transition-transform duration-300"
+                              "text-[13.5px] font-bold tracking-tight",
+                              !active && "group-hover:translate-x-0.5 transition-transform duration-300"
                             )}>
                               {item.title}
                             </span>

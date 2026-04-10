@@ -664,9 +664,22 @@ export function ImportExcelDialog({
           )}
 
           {step === 'processing' && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-              <p className="text-gray-600">Processando e analisando o arquivo...</p>
+            <div className="flex flex-col items-center justify-center py-12 space-y-6">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+                {progress > 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary">
+                    {progress}%
+                  </div>
+                )}
+              </div>
+              <div className="w-full max-w-xs space-y-2 text-center">
+                <p className="text-sm font-medium text-gray-700">{progressLabel || "Processando e analisando o arquivo..."}</p>
+                <Progress value={progress} className="h-2" />
+                <p className="text-xs text-gray-500 italic">
+                  Isso pode levar alguns instantes para arquivos grandes.
+                </p>
+              </div>
             </div>
           )}
 

@@ -17,21 +17,38 @@ import { toast } from 'sonner';
 interface AddVagaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  vaga?: any;
 }
 
-export function AddVagaDialog({ open, onOpenChange }: AddVagaDialogProps) {
-  const { addVagas } = useVagasStore();
+export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) {
+  const { addVagas, updateVaga } = useVagasStore();
   const { currentUser } = useAdminStore();
   
-  const [formData, setFormData] = useState({
-    unidade: '',
-    cargo: '',
-    requisicao: '',
-    tipo_vaga: 'substituicao' as TipoVaga,
-    numero_vagas: 1,
-    secao: '',
-    data_abertura: new Date().toISOString().split('T')[0],
+  const [formData, setFormData] = React.useState({
+    unidade: vaga?.unidade || '',
+    cargo: vaga?.cargo || '',
+    requisicao: vaga?.requisicao || vaga?.numero_requisicao || '',
+    tipo_vaga: vaga?.tipo_vaga || 'substituicao' as TipoVaga,
+    numero_vagas: vaga?.numero_vagas || vaga?.quantidade || 1,
+    secao: vaga?.secao || '',
+    data_abertura: vaga?.data_abertura || new Date().toISOString().split('T')[0],
   });
+
+  React.useEffect(() => {
+    if (vaga) {
+      setFormData({
+        unidade: vaga.unidade || '',
+        cargo: vaga.cargo || '',
+        requisicao: vaga.requisicao || vaga.numero_requisicao || '',
+        tipo_vaga: vaga.tipo_vaga || 'substituicao',
+        numero_vagas: vaga.numero_vagas || vaga.quantidade || 1,
+        secao: vaga.secao || '',
+        data_abertura: vaga.data_abertura || new Date().toISOString().split('T')[0],
+      });
+    } else {
+      resetForm();
+    }
+  }, [vaga, open]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

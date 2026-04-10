@@ -145,8 +145,12 @@ export default function VagasPage() {
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
-    return getValidVacancyBase(vagas, filterUnidade, filterMes);
-  }, [vagas, filterUnidade, filterMes]);
+    // 1. Filtragem por Região e Unidade Global (Sidebar)
+    const baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
+    
+    // 2. Filtragem interna da tela
+    return getValidVacancyBase(baseRecords, filterUnidade, filterMes);
+  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes]);
 
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {

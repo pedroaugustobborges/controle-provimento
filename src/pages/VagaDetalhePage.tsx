@@ -1303,9 +1303,25 @@ function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
 
           <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-4">
             <h4 className="text-sm font-bold text-primary uppercase tracking-wider">Ações</h4>
-            <Button onClick={save} className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold h-12">
-              Salvar Acompanhamento
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button onClick={save} className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold h-12">
+                Salvar Acompanhamento
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditVagaOpen(true)}
+                className="w-full text-amber-600 border-amber-200 hover:bg-amber-50 font-bold h-12"
+              >
+                <Edit className="h-4 w-4 mr-2" /> Editar Registro
+              </Button>
+            </div>
+          </div>
+          
+          <AddVagaDialog 
+            open={isEditVagaOpen} 
+            onOpenChange={setIsEditVagaOpen} 
+            vaga={vaga}
+          />
             <p className="text-[11px] text-center text-slate-400 font-medium">As alterações serão registradas no histórico da vaga.</p>
           </div>
         </div>

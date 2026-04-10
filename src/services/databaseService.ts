@@ -142,6 +142,7 @@ export class DatabaseService {
         usuario_id: userId,
         status: 'processando',
         quantidade_apagada: countBefore || 0,
+        arquivo: newData[0]?.origem_importacao || 'Arquivo desconhecido'
       }).select().single();
 
       if (logError) {

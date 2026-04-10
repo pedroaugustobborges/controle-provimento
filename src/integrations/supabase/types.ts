@@ -397,6 +397,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_recruitment_data: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      can_view_recruitment_data: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

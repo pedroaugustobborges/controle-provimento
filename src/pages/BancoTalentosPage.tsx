@@ -707,7 +707,15 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => (b.status === 'CADASTRO RESERVA' || b.status === 'valido') && !b.is_prorrogado).length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (b.is_prorrogado || (b.status || '').toUpperCase() === 'PRORROGADO') return false;
+                      if (b.data_validade) {
+                        const d = new Date(b.data_validade);
+                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
+                      }
+                      return true;
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
                 </div>
@@ -743,7 +751,14 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva Disponível</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.status !== 'VENCIDO' && b.status !== 'CONVOCADO').length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (b.data_validade) {
+                        const d = new Date(b.data_validade);
+                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
+                      }
+                      return true;
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Não vencidos e não convocados</p>
                 </div>
@@ -761,7 +776,15 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.is_prorrogado || b.status === 'prorrogado').length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (!b.is_prorrogado && (b.status || '').toUpperCase() !== 'PRORROGADO') return false;
+                      if (b.data_validade) {
+                        const d = new Date(b.data_validade);
+                        if (!isNaN(d.getTime()) && d < new Date(new Date().toDateString())) return false;
+                      }
+                      return true;
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de candidatos</p>
                 </div>
@@ -779,7 +802,12 @@ export default function BancoTalentosPage() {
                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
                 <div className="flex flex-col">
                   <p className="text-2xl font-bold text-slate-900 leading-none">
-                    {bancos.filter(b => b.status === 'VENCIDO').length}
+                    {bancos.filter(b => {
+                      if (b.status === 'CONVOCADO') return false;
+                      if (!b.data_validade) return false;
+                      const d = new Date(b.data_validade);
+                      return !isNaN(d.getTime()) && d < new Date(new Date().toDateString());
+                    }).length}
                   </p>
                   <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Número de pessoas</p>
                 </div>

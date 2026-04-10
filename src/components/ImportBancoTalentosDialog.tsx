@@ -605,6 +605,7 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
           numero_vaga_aproveitamento: mapped.numero_vaga_aproveitamento || '',
           observacoes: mapped.observacoes || '',
           status: status,
+          regiao: selectedRegion || undefined
         });
       });
 
@@ -620,7 +621,12 @@ export function ImportBancoTalentosDialog({ open, onOpenChange }: { open: boolea
         return;
       }
 
-      clearBancos();
+      if (selectedRegion) {
+        clearBancosPorRegiao(selectedRegion);
+      } else {
+        clearBancos();
+      }
+      
       addBancos(newBancos);
       
       addImportHistory({

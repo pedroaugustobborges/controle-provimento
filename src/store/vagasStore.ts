@@ -212,8 +212,8 @@ export const useVagasStore = create<VagasState>()(
         const vagaTokens = getCargoTokens(vaga.cargo);
 
         // Specific units for matching as requested
-        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds', 'agir'];
-        const upaUnits = ['vitoria', 'sao pedro', 'sua', 'suá'];
+        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds', 'agir', 'teia anapolis', 'teia canedo', 'teia aparecida', 'teia goiania'];
+        const upaUnits = ['vitoria', 'sao pedro', 'sua', 'suá', 'vitoria (sao pedro/sua)'];
 
         const found = state.bancos.find(b => {
           const normalizedBancoUnidade = normalizeCargo(b.unidade || '');

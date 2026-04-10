@@ -63,7 +63,7 @@ const GUIDES: Record<string, Record<string, GuideSection[]>> = {
         title: "Validação de Edital",
         description: "Os gestores revisam e validam os editais redigidos antes da publicação oficial.",
         currentStage: "Revisão Final",
-        nextStage: "Publicação no Site"
+        nextStage: "Aguardar Aprovação"
       }
     ]
   }

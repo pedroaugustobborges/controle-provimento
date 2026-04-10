@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Controle de Provimento AGIR
 
-TODO: Document your project here
+Sistema de Controle de Provimento para gestão de vagas, editais, banco de talentos e convocações das unidades AGIR.

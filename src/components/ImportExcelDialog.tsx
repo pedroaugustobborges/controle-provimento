@@ -853,6 +853,7 @@ export function ImportExcelDialog({
                     <li>Aba processada: {summary.sheetName}</li>
                     <li>Escolha manual: {summary.manualType === 'vagas' ? 'Vagas' : 'Banco'}</li>
                     <li>Sugestão do sistema: {summary.suggestedType ? (summary.suggestedType === 'vagas' ? 'Vagas' : 'Banco') : 'Nenhuma'}</li>
+                    {summary.region && <li>Região: {summary.region === 'GO_ES' ? 'GO e ES' : 'Outras Unidades'}</li>}
                   </ul>
                 </div>
               </div>

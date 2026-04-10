@@ -220,6 +220,28 @@ export default function FilaAnalistaEditalPage() {
         </Card>
       </div>
 
+      {devolvidos.length > 0 && (
+        <div className="relative overflow-hidden rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-4 shadow-md animate-pulse-slow">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500 animate-pulse" />
+          <div className="flex items-center gap-4 pl-3">
+            <div className="bg-amber-100 p-3 rounded-full animate-bounce">
+              <RotateCcw className="h-6 w-6 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-amber-800 flex items-center gap-2">
+                ⚠️ {devolvidos.length} edital(is) devolvido(s) para ajuste!
+              </p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                A validação devolveu editais que precisam de correção. Verifique as observações e reenvie.
+              </p>
+            </div>
+            <Badge className="bg-amber-500 text-white text-sm font-bold px-3 py-1 animate-pulse">
+              {devolvidos.length}
+            </Badge>
+          </div>
+        </div>
+      )}
+
       <Card className="shadow-sm border-slate-200 overflow-hidden">
         <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2">

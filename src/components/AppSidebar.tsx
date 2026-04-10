@@ -127,8 +127,8 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-white/10 py-6 px-4">
         <div className="flex items-center gap-4 transition-all duration-300">
           <div className="relative group">
-            <div className="absolute -inset-1 bg-blue-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            <img src={logoAgir} alt="AGIR" className="relative h-9 w-9 shrink-0 rounded-lg object-contain bg-white/5 p-1.5 shadow-inner" />
+            <div className="absolute -inset-1 bg-blue-500 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
+            <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
           </div>
           {!collapsed && (
             <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
@@ -207,8 +207,8 @@ export function AppSidebar() {
                             )} />
                             {!collapsed && (
                               <span className={cn(
-                                "text-[13.5px] font-medium tracking-tight",
-                                active ? "font-bold" : "group-hover:translate-x-0.5 transition-transform duration-300"
+                                "text-[13.5px] font-bold tracking-tight",
+                                !active && "group-hover:translate-x-0.5 transition-transform duration-300"
                               )}>
                                 {item.title}
                               </span>
@@ -231,12 +231,12 @@ export function AppSidebar() {
                                     <NavLink
                                       to={sub.url}
                                       className={cn(
-                                        "text-[12.5px] py-2 px-4 rounded-lg transition-all duration-300 block relative select-none overflow-hidden group/sub",
+                                        "text-[12.5px] py-2 px-4 rounded-lg transition-all duration-300 block relative select-none overflow-hidden group/sub font-bold",
                                         subActive 
-                                          ? "text-white font-bold bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
+                                          ? "text-white bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
                                           : hasPassed
-                                            ? "text-[#275ac5] font-medium bg-[#275ac5]/5 hover:bg-[#275ac5]/10"
-                                            : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
+                                            ? "text-[#275ac5] bg-[#275ac5]/5 hover:bg-[#275ac5]/10"
+                                            : "text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1"
                                       )}
                                     >
                                       {subActive && (

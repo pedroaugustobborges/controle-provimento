@@ -75,9 +75,19 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
   const isProrrogado = form.watch('is_prorrogado');
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const now = new Date();
-    const expiryDate = new Date(values.nova_data_validade || values.data_validade);
-    const status = expiryDate > now ? (values.is_prorrogado ? 'prorrogado' : 'valido') : 'vencido';
+    const statusOriginal = (values.status_import || 'CADASTRO RESERVA').toUpperCase();
+    
+    // Prorrogação manual input
+    const prorrogacaoVal = values.nova_data_validade || (values.is_prorrogado ? 'SIM' : '');
+    
+    const calculation = calculateBancoStatus({
+      status: statusOriginal,
+      status_original: statusOriginal,
+      prorrogacao: prorrogacaoVal,
+      data_publicacao: values.data_abertura_edital,
+      data_validade: values.data_validade,
+      data_convocacao: values.data_convocacao
+    });
 
     const newBanco: BancoTalentos = {
       id: `banco-${Date.now()}`,
@@ -85,7 +95,6 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
       cargo: values.cargo,
       cargo_normalizado: normalizeCargo(values.cargo),
       secao: values.secao || '',
-
       numero_edital: values.numero_edital,
       numero_processo: values.numero_processo,
       nome: values.nome,
@@ -93,15 +102,22 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
       quantidade_banco: values.quantidade_banco,
       status_import: values.status_import,
       data_abertura_edital: values.data_abertura_edital,
+      data_publicacao: values.data_abertura_edital, // Mapping to the new field
       data_validade: values.data_validade,
-      is_prorrogado: values.is_prorrogado,
+      is_prorrogado: calculation.status === 'prorrogado',
+      prorrogacao: prorrogacaoVal,
       nova_data_validade: values.nova_data_validade,
       data_convocacao: values.data_convocacao,
       unidade_convocacao: values.unidade_convocacao,
       numero_chamada: values.numero_chamada,
       numero_processo_seletivo: values.numero_processo_seletivo,
       numero_vaga_aproveitamento: values.numero_vaga_aproveitamento,
-      status: status as any,
+      status: calculation.status as any,
+      status_original: statusOriginal,
+      status_calculado: calculation.status,
+      motivo_do_calculo: calculation.motivo,
+      data_base_do_calculo: new Date().toISOString(),
+      data_referencia_usada: calculation.dataReferencia,
       observacoes: values.observacoes || '',
     };
 

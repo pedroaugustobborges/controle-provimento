@@ -73,7 +73,7 @@
 
 @layer utilities {
   .status-badge {
-    @apply inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest border shadow-sm transition-all;
+    @apply inline-flex items-center justify-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest border shadow-sm transition-all min-w-[120px] text-center whitespace-nowrap;
   }
 
   /* Custom Scrollbar for modern feel */

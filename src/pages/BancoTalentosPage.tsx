@@ -43,6 +43,7 @@ export default function BancoTalentosPage() {
   const [unidadeFilter, setUnidadeFilter] = useState('todas');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [convocadosSearch, setConvocadosSearch] = useState('');
+  const [regiaoFilter, setRegiaoFilter] = useState('todas');
   const [convocadosUnidadeFilter, setConvocadosUnidadeFilter] = useState('todas');
   const [convocadosCargoFilter, setConvocadosCargoFilter] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);

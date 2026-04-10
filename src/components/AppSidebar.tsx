@@ -39,10 +39,8 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
-  const { currentUser, users } = useAdminStore();
+  const { currentUser, users, selectedRegion, selectedUnit, setSelectedRegion, setSelectedUnit } = useAdminStore();
   const location = useLocation();
-  const [selectedRegion, setSelectedRegion] = useState<string>('all');
-  const [selectedUnit, setSelectedUnit] = useState<string>('all');
 
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard },

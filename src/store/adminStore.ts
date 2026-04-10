@@ -17,11 +17,13 @@ interface AdminState {
   fetchAuditLogs: () => Promise<void>;
   fetchCurrentProfile: () => Promise<void>;
 
-  // User actions
-  addUser: (user: Partial<User> & { email: string; password: string }) => Promise<void>;
+  // User actions via edge function
+  addUser: (user: Partial<User> & { email: string; password: string; sendWelcomeEmail?: boolean }) => Promise<void>;
   updateUser: (id: string, data: Partial<User>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
-  toggleUserStatus: (id: string) => Promise<void>;
+  updateUserStatus: (id: string, status: 'ativo' | 'suspenso' | 'inativo') => Promise<void>;
+  resetUserPassword: (userId: string, newPassword: string) => Promise<void>;
+  sendWelcomeEmail: (userId: string, password: string) => Promise<void>;
   setCurrentUser: (user: User | null) => void;
   setSelectedRegion: (region: string) => void;
   setSelectedUnit: (unit: string) => void;
@@ -35,6 +37,9 @@ interface AdminState {
 
   // Backup actions
   generateBackup: () => void;
+
+  // Legacy compat
+  toggleUserStatus: (id: string) => Promise<void>;
 }
 
 const GO_VIT_UNITS = [
@@ -57,6 +62,13 @@ const defaultSupportConfigs: SupportConfig[] = [
     mensagem: 'Suporte remoto especializado.', status: 'ativo', unidades: FORA_UNITS
   }
 ];
+
+function generateTempPassword(): string {
+  const nums = Math.floor(1000 + Math.random() * 9000);
+  return `agirprovimento${nums}`;
+}
+
+export { generateTempPassword };
 
 export const useAdminStore = create<AdminState>((set, get) => ({
   users: [],
@@ -99,65 +111,49 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
-
       if (error) throw error;
-      if (profile) {
-        set({ currentUser: profile as User });
-      }
+      if (profile) set({ currentUser: profile as User });
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
     }
   },
 
   addUser: async (userData) => {
-    // Create auth user via Supabase Admin (uses service role in edge function)
-    // For now, use signUp directly — the admin will need to create users
-    const { email, password, ...profileData } = userData;
-    
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password: password || 'TempPassword123!',
-      options: {
-        data: {
-          nome_completo: profileData.nome_completo || '',
-        },
-      },
-    });
-    
-    if (authError) throw authError;
-    if (!authData.user) throw new Error('Falha ao criar usuário');
+    const { email, password, sendWelcomeEmail, ...profileData } = userData;
 
-    // Update profile with additional data
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: {
+        action: 'create_user',
+        email,
+        password,
         nome_completo: profileData.nome_completo || '',
         perfil: profileData.perfil || 'Analista de RH',
         cargo: profileData.cargo || '',
-        status: 'ativo',
+        status: profileData.status || 'ativo',
         visualiza_todas_unidades: profileData.visualiza_todas_unidades || false,
         unidades_vinculadas: profileData.unidades_vinculadas || [],
         pode_incluir_registros: profileData.pode_incluir_registros || false,
         pode_excluir_requisicoes: profileData.pode_excluir_requisicoes || false,
         pode_editar_configuracoes: profileData.pode_editar_configuracoes || false,
         pode_gerenciar_usuarios: profileData.pode_gerenciar_usuarios || false,
-      })
-      .eq('id', authData.user.id);
+      },
+    });
 
-    if (profileError) console.error('Erro ao atualizar perfil:', profileError);
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
 
-    // If admin, add role
-    if (profileData.perfil === 'Administrador' || profileData.perfil === 'Admin') {
-      await supabase.from('user_roles').insert({
-        user_id: authData.user.id,
-        role: 'admin',
-      });
+    // Send welcome email if requested
+    if (sendWelcomeEmail && data?.user_id) {
+      try {
+        await get().sendWelcomeEmail(data.user_id, password);
+      } catch (e) {
+        console.error('Erro ao enviar e-mail de boas-vindas:', e);
+      }
     }
 
     await get().fetchUsers();
@@ -173,12 +169,20 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   deleteUser: async (id) => {
-    // Delete profile (auth user deletion requires admin API/edge function)
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', id);
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: { action: 'delete_user', user_id: id },
+    });
     if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    await get().fetchUsers();
+  },
+
+  updateUserStatus: async (id, status) => {
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: { action: 'update_status', user_id: id, new_status: status },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
     await get().fetchUsers();
   },
 
@@ -186,7 +190,39 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const user = get().users.find(u => u.id === id);
     if (!user) return;
     const newStatus = user.status === 'ativo' ? 'inativo' : 'ativo';
-    await get().updateUser(id, { status: newStatus });
+    await get().updateUserStatus(id, newStatus);
+  },
+
+  resetUserPassword: async (userId, newPassword) => {
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: { action: 'reset_password', user_id: userId, new_password: newPassword },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+  },
+
+  sendWelcomeEmail: async (userId, password) => {
+    const user = get().users.find(u => u.id === userId);
+    if (!user) {
+      // Refetch and try again
+      await get().fetchUsers();
+      const u = get().users.find(u => u.id === userId);
+      if (!u) throw new Error('Usuário não encontrado');
+    }
+    const targetUser = get().users.find(u => u.id === userId)!;
+    
+    const siteUrl = window.location.origin;
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: {
+        action: 'send_welcome_email',
+        user_email: targetUser.email,
+        user_name: targetUser.nome_completo,
+        password,
+        site_url: siteUrl,
+      },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
   },
 
   setCurrentUser: (user) => set({ currentUser: user }),

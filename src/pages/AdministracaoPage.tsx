@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
-import { useAdminStore } from '@/store/adminStore';
+import { useAdminStore, generateTempPassword } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
-  HardDrive, Info, Shield, Check, X
+  HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 
@@ -58,35 +59,68 @@ const ALL_UNIDADES = [
 
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
-  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, deleteUser, toggleUserStatus, fetchUsers, fetchAuditLogs, generateBackup } = useAdminStore();
+  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, sendWelcomeEmail, fetchUsers, fetchAuditLogs, generateBackup } = useAdminStore();
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
   
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [passwordUser, setPasswordUser] = useState<{ id: string; nome: string } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Password dialog state
+  const [passwordMode, setPasswordMode] = useState<'manual' | 'temp'>('temp');
+  const [manualPassword, setManualPassword] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [sendEmailAfterPassword, setSendEmailAfterPassword] = useState(true);
 
   // Form state for new user
   const [newUser, setNewUser] = useState({
     nome_completo: '',
     email: '',
     password: '',
+    passwordMode: 'temp' as 'manual' | 'temp',
     perfil: 'Analista de RH',
     cargo: '',
+    status: 'ativo' as 'ativo' | 'suspenso' | 'inativo',
     visualiza_todas_unidades: false,
     unidades_vinculadas: [] as string[],
     pode_incluir_registros: false,
     pode_excluir_requisicoes: false,
     pode_editar_configuracoes: false,
     pode_gerenciar_usuarios: false,
+    sendWelcomeEmail: true,
   });
 
   useEffect(() => {
     fetchUsers();
     fetchAuditLogs();
   }, [fetchUsers, fetchAuditLogs]);
+
+  // Auto-generate temp password when mode changes
+  useEffect(() => {
+    if (newUser.passwordMode === 'temp') {
+      setNewUser(prev => ({ ...prev, password: generateTempPassword() }));
+    } else {
+      setNewUser(prev => ({ ...prev, password: '' }));
+    }
+  }, [newUser.passwordMode]);
+
+  const resetNewUserForm = () => {
+    setNewUser({
+      nome_completo: '', email: '', password: '', passwordMode: 'temp',
+      perfil: 'Analista de RH', cargo: '', status: 'ativo',
+      visualiza_todas_unidades: false, unidades_vinculadas: [],
+      pode_incluir_registros: false, pode_excluir_requisicoes: false,
+      pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
+      sendWelcomeEmail: true,
+    });
+  };
 
   const handleCreateUser = async () => {
     if (!newUser.nome_completo || !newUser.email || !newUser.password) {
@@ -102,16 +136,11 @@ export default function AdministracaoPage() {
       await addUser({
         ...newUser,
         perfil: newUser.perfil as any,
-        status: 'ativo',
+        sendWelcomeEmail: newUser.sendWelcomeEmail,
       });
       toast.success('Usuário criado com sucesso!');
       setIsNewUserOpen(false);
-      setNewUser({
-        nome_completo: '', email: '', password: '', perfil: 'Analista de RH', cargo: '',
-        visualiza_todas_unidades: false, unidades_vinculadas: [],
-        pode_incluir_registros: false, pode_excluir_requisicoes: false,
-        pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
-      });
+      resetNewUserForm();
     } catch (err: any) {
       toast.error(`Erro ao criar usuário: ${err.message}`);
     } finally {
@@ -134,21 +163,95 @@ export default function AdministracaoPage() {
     }
   };
 
-  const handleToggleStatus = async (id: string) => {
+  const handleStatusChange = async (id: string, status: 'ativo' | 'suspenso' | 'inativo') => {
+    setSaving(true);
     try {
-      await toggleUserStatus(id);
-      toast.success('Status do usuário atualizado.');
+      await updateUserStatus(id, status);
+      toast.success(`Status atualizado para "${status}".`);
     } catch (err: any) {
       toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleTestEmail = (id: string) => {
-    setTestEmailLoading(id);
-    setTimeout(() => {
+  const handleResetPassword = async () => {
+    if (!passwordUser) return;
+    const pwd = passwordMode === 'temp' ? generatedPassword : manualPassword;
+    if (!pwd || pwd.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await resetUserPassword(passwordUser.id, pwd);
+      if (sendEmailAfterPassword) {
+        await sendWelcomeEmail(passwordUser.id, pwd);
+        toast.success('Senha redefinida e dados de acesso reenviados por e-mail.');
+      } else {
+        toast.success('Senha redefinida com sucesso.');
+      }
+      setIsPasswordDialogOpen(false);
+      setPasswordUser(null);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResendWelcomeEmail = async (user: any) => {
+    setTestEmailLoading(user.id);
+    try {
+      // We need a password to send — generate a temp one and reset
+      const tempPwd = generateTempPassword();
+      await resetUserPassword(user.id, tempPwd);
+      await sendWelcomeEmail(user.id, tempPwd);
+      toast.success('E-mail de boas-vindas reenviado com nova senha temporária.');
+    } catch (err: any) {
+      toast.error(`Erro ao reenviar e-mail: ${err.message}`);
+    } finally {
       setTestEmailLoading(null);
-      toast.success('E-mail de teste enviado com sucesso!');
-    }, 1500);
+    }
+  };
+
+  const openEditUser = (user: any) => {
+    setEditingUser({ ...user });
+    setIsEditUserOpen(true);
+  };
+
+  const handleSaveEditUser = async () => {
+    if (!editingUser) return;
+    setSaving(true);
+    try {
+      await updateUser(editingUser.id, {
+        nome_completo: editingUser.nome_completo,
+        perfil: editingUser.perfil,
+        cargo: editingUser.cargo,
+        visualiza_todas_unidades: editingUser.visualiza_todas_unidades,
+        unidades_vinculadas: editingUser.unidades_vinculadas,
+        pode_incluir_registros: editingUser.pode_incluir_registros,
+        pode_excluir_requisicoes: editingUser.pode_excluir_requisicoes,
+        pode_editar_configuracoes: editingUser.pode_editar_configuracoes,
+        pode_gerenciar_usuarios: editingUser.pode_gerenciar_usuarios,
+      });
+      toast.success('Dados do usuário atualizados.');
+      setIsEditUserOpen(false);
+      setEditingUser(null);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openPasswordDialog = (user: any) => {
+    setPasswordUser({ id: user.id, nome: user.nome_completo });
+    setPasswordMode('temp');
+    setGeneratedPassword(generateTempPassword());
+    setManualPassword('');
+    setSendEmailAfterPassword(true);
+    setIsPasswordDialogOpen(true);
   };
 
   const toggleUnidade = (unidade: string) => {
@@ -158,6 +261,25 @@ export default function AdministracaoPage() {
         ? prev.unidades_vinculadas.filter(u => u !== unidade)
         : [...prev.unidades_vinculadas, unidade]
     }));
+  };
+
+  const toggleEditUnidade = (unidade: string) => {
+    if (!editingUser) return;
+    setEditingUser((prev: any) => ({
+      ...prev,
+      unidades_vinculadas: prev.unidades_vinculadas.includes(unidade)
+        ? prev.unidades_vinculadas.filter((u: string) => u !== unidade)
+        : [...prev.unidades_vinculadas, unidade]
+    }));
+  };
+
+  const getStatusBadge = (status: string) => {
+    const map: Record<string, string> = {
+      'ativo': 'bg-green-100 text-green-700',
+      'suspenso': 'bg-amber-100 text-amber-700',
+      'inativo': 'bg-slate-100 text-slate-500',
+    };
+    return map[status] || 'bg-slate-100 text-slate-500';
   };
 
   return (
@@ -204,9 +326,9 @@ export default function AdministracaoPage() {
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0">
               <div>
                 <CardTitle className="text-lg font-bold">Usuários Cadastrados</CardTitle>
-                <CardDescription>Gerencie quem tem acesso ao sistema e seus perfis básicos.</CardDescription>
+                <CardDescription>Gerencie quem tem acesso ao sistema, perfis, permissões e senhas.</CardDescription>
               </div>
-              <Button onClick={() => setIsNewUserOpen(true)} className="gap-2 bg-primary">
+              <Button onClick={() => { resetNewUserForm(); setIsNewUserOpen(true); }} className="gap-2 bg-primary">
                 <UserPlus className="h-4 w-4" /> Incluir novo usuário
               </Button>
             </CardHeader>
@@ -215,12 +337,11 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead >Nome / E-mail</TableHead>
-                      <TableHead >Perfil / Cargo</TableHead>
+                      <TableHead>Nome / E-mail</TableHead>
+                      <TableHead>Perfil / Cargo</TableHead>
+                      <TableHead>Unidades</TableHead>
                       <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-center">Acesso Global</TableHead>
-                      <TableHead className="text-center">Pode Excluir</TableHead>
-                      <TableHead >Último Acesso</TableHead>
+                      <TableHead>Último Acesso</TableHead>
                       <TableHead className="text-right pr-6"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -239,43 +360,57 @@ export default function AdministracaoPage() {
                             <span className="text-[11px] text-slate-500 font-medium">{user.cargo}</span>
                           </div>
                         </TableCell>
+                        <TableCell>
+                          {user.visualiza_todas_unidades ? (
+                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Todas</Badge>
+                          ) : (
+                            <span className="text-[11px] text-slate-500">{user.unidades_vinculadas?.length || 0} unid.</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-center">
-                          <Badge className={`${user.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'} font-bold text-[11px] uppercase border-0`}>
+                          <Badge className={`${getStatusBadge(user.status)} font-bold text-[11px] uppercase border-0`}>
                             {user.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-center">
-                          {user.visualiza_todas_unidades ? 
-                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Sim</Badge> : 
-                            <span className="text-[11px] text-slate-400 font-bold">Não</span>
-                          }
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {user.pode_excluir_requisicoes ? 
-                            <Check className="h-4 w-4 text-green-500 mx-auto" /> : 
-                            <X className="h-4 w-4 text-slate-300 mx-auto" />
-                          }
-                        </TableCell>
                         <TableCell className="text-xs text-slate-500 font-medium">
-                          {user.ultimo_acesso || 'Nunca'}
+                          {user.ultimo_acesso ? new Date(user.ultimo_acesso).toLocaleDateString('pt-BR') : 'Nunca'}
                         </TableCell>
                         <TableCell className="text-right pr-6">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4 text-slate-400" /></Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="w-56">
                               <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                              <DropdownMenuItem><Edit2 className="mr-2 h-4 w-4" /> Editar dados básicos</DropdownMenuItem>
-                              <DropdownMenuItem><Shield className="mr-2 h-4 w-4" /> Alterar unidades e permissões</DropdownMenuItem>
-                              <DropdownMenuItem><Lock className="mr-2 h-4 w-4" /> Definir senha</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className={user.status === 'ativo' ? 'text-amber-600' : 'text-green-600'}
-                                onClick={() => handleToggleStatus(user.id)}
-                              >
-                                {user.status === 'ativo' ? 'Inativar usuário' : 'Ativar usuário'}
+                              <DropdownMenuItem onClick={() => openEditUser(user)}>
+                                <Edit2 className="mr-2 h-4 w-4" /> Editar dados do usuário
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openPasswordDialog(user)}>
+                                <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleResendWelcomeEmail(user)}
+                                disabled={testEmailLoading === user.id}
+                              >
+                                <Send className="mr-2 h-4 w-4" /> {testEmailLoading === user.id ? 'Enviando...' : 'Reenviar e-mail de boas-vindas'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {user.status !== 'ativo' && (
+                                <DropdownMenuItem className="text-green-600" onClick={() => handleStatusChange(user.id, 'ativo')}>
+                                  <UserCheck className="mr-2 h-4 w-4" /> Reativar acesso
+                                </DropdownMenuItem>
+                              )}
+                              {user.status === 'ativo' && (
+                                <DropdownMenuItem className="text-amber-600" onClick={() => handleStatusChange(user.id, 'suspenso')}>
+                                  <Ban className="mr-2 h-4 w-4" /> Suspender acesso
+                                </DropdownMenuItem>
+                              )}
+                              {user.status !== 'inativo' && (
+                                <DropdownMenuItem className="text-slate-500" onClick={() => handleStatusChange(user.id, 'inativo')}>
+                                  <X className="mr-2 h-4 w-4" /> Inativar usuário
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 className="text-destructive"
                                 onClick={() => {
@@ -283,7 +418,7 @@ export default function AdministracaoPage() {
                                   setIsDeleteDialogOpen(true);
                                 }}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" /> Excluir usuário
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir acesso
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -401,7 +536,7 @@ export default function AdministracaoPage() {
                             variant="outline" 
                             size="sm" 
                             className="h-8 gap-1.5 text-[11px] font-bold"
-                            onClick={() => handleTestEmail(config.id)}
+                            onClick={() => { setTestEmailLoading(config.id); setTimeout(() => { setTestEmailLoading(null); toast.success('E-mail de teste enviado!'); }, 1500); }}
                             disabled={testEmailLoading === config.id}
                           >
                             {testEmailLoading === config.id ? 'Enviando...' : <><Play className="h-3 w-3" /> Testar E-mail</>}
@@ -726,14 +861,15 @@ export default function AdministracaoPage() {
 
       {/* DIALOG: NOVO USUÁRIO */}
       <Dialog open={isNewUserOpen} onOpenChange={setIsNewUserOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-primary" /> Incluir novo usuário
             </DialogTitle>
-            <DialogDescription>Preencha os dados básicos e defina as permissões iniciais.</DialogDescription>
+            <DialogDescription>Preencha os dados, defina a senha e as permissões iniciais.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-5 py-4">
+            {/* Nome e Email */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">Nome Completo</Label>
@@ -744,11 +880,9 @@ export default function AdministracaoPage() {
                 <Input type="email" placeholder="joao@agir.org.br" value={newUser.email} onChange={(e) => setNewUser(p => ({ ...p, email: e.target.value }))} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">Senha Inicial</Label>
-              <Input type="password" placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Perfil, Cargo, Status */}
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
                 <Select value={newUser.perfil} onValueChange={(v) => setNewUser(p => ({ ...p, perfil: v }))}>
@@ -771,10 +905,47 @@ export default function AdministracaoPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Status</Label>
+                <Select value={newUser.status} onValueChange={(v: any) => setNewUser(p => ({ ...p, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="suspenso">Suspenso</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {/* Senha */}
+            <div className="space-y-3 border-t pt-4">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Senha de Acesso</h4>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={newUser.passwordMode === 'temp'} onChange={() => setNewUser(p => ({ ...p, passwordMode: 'temp' }))} className="h-3.5 w-3.5" />
+                  <span className="text-sm font-medium">Gerar senha temporária</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={newUser.passwordMode === 'manual'} onChange={() => setNewUser(p => ({ ...p, passwordMode: 'manual' }))} className="h-3.5 w-3.5" />
+                  <span className="text-sm font-medium">Definir senha manualmente</span>
+                </label>
+              </div>
+              {newUser.passwordMode === 'temp' ? (
+                <div className="flex items-center gap-3">
+                  <Input value={newUser.password} readOnly className="font-mono bg-muted/50" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setNewUser(p => ({ ...p, password: generateTempPassword() }))}>
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Input type="text" placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} />
+              )}
+            </div>
+
+            {/* Unidades e Permissões */}
             <div className="space-y-4 border-t pt-4">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões e Acesso</h4>
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -786,8 +957,7 @@ export default function AdministracaoPage() {
 
               {!newUser.visualiza_todas_unidades && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Vincular Unidades Específicas</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-1 max-h-[200px] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-2 mt-1 max-h-[180px] overflow-y-auto">
                     {ALL_UNIDADES.map(u => (
                       <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleUnidade(u)}>
                         <input type="checkbox" checked={newUser.unidades_vinculadas.includes(u)} readOnly className="h-3 w-3 rounded" />
@@ -797,8 +967,12 @@ export default function AdministracaoPage() {
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
+            {/* Permissões específicas */}
+            <div className="space-y-3 border-t pt-4">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Switch checked={newUser.pode_incluir_registros} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_incluir_registros: v }))} />
                   <Label className="text-xs font-bold">Pode incluir registros</Label>
@@ -817,25 +991,186 @@ export default function AdministracaoPage() {
                 </div>
               </div>
             </div>
+
+            {/* E-mail de boas-vindas */}
+            <div className="flex items-center gap-3 border-t pt-4">
+              <Checkbox 
+                id="sendWelcome" 
+                checked={newUser.sendWelcomeEmail} 
+                onCheckedChange={(v) => setNewUser(p => ({ ...p, sendWelcomeEmail: !!v }))} 
+              />
+              <label htmlFor="sendWelcome" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" /> Enviar e-mail de boas-vindas agora
+              </label>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNewUserOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreateUser} disabled={saving} className="bg-primary">
-              {saving ? 'Criando...' : 'Criar Usuário'}
+            <Button onClick={handleCreateUser} disabled={saving} className="bg-primary gap-2">
+              {saving ? 'Criando...' : <><UserPlus className="h-4 w-4" /> Criar Usuário</>}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* DIALOG: EDITAR USUÁRIO */}
+      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit2 className="h-5 w-5 text-primary" /> Editar dados do usuário
+            </DialogTitle>
+            <DialogDescription>Altere perfil, cargo, permissões e unidades sem excluir o cadastro.</DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <div className="grid gap-5 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Nome Completo</Label>
+                  <Input value={editingUser.nome_completo} onChange={(e) => setEditingUser((p: any) => ({ ...p, nome_completo: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">E-mail (somente leitura)</Label>
+                  <Input value={editingUser.email} readOnly className="bg-muted/50" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
+                  <Select value={editingUser.perfil} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, perfil: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {PERFIS_ACESSO.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Cargo Hierárquico</Label>
+                  <Select value={editingUser.cargo || ''} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, cargo: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      {CARGOS_HIERARQUICOS.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t pt-4">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-bold">Visualizar todas as unidades</Label>
+                  <Switch checked={editingUser.visualiza_todas_unidades} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: v }))} />
+                </div>
+                {!editingUser.visualiza_todas_unidades && (
+                  <div className="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto">
+                    {ALL_UNIDADES.map(u => (
+                      <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 cursor-pointer" onClick={() => toggleEditUnidade(u)}>
+                        <input type="checkbox" checked={editingUser.unidades_vinculadas?.includes(u)} readOnly className="h-3 w-3 rounded" />
+                        <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 border-t pt-4">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_incluir_registros} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_incluir_registros: v }))} />
+                    <Label className="text-xs font-bold">Pode incluir registros</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_excluir_requisicoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_excluir_requisicoes: v }))} />
+                    <Label className="text-xs font-bold">Pode excluir requisições</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_editar_configuracoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_editar_configuracoes: v }))} />
+                    <Label className="text-xs font-bold">Pode editar configurações</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_gerenciar_usuarios} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_gerenciar_usuarios: v }))} />
+                    <Label className="text-xs font-bold">Pode gerenciar usuários</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveEditUser} disabled={saving} className="bg-primary gap-2">
+              {saving ? 'Salvando...' : <><Save className="h-4 w-4" /> Salvar Alterações</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG: REDEFINIR SENHA */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" /> Redefinir senha
+            </DialogTitle>
+            <DialogDescription>
+              {passwordUser ? `Redefinir senha de ${passwordUser.nome}` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" checked={passwordMode === 'temp'} onChange={() => { setPasswordMode('temp'); setGeneratedPassword(generateTempPassword()); }} className="h-3.5 w-3.5" />
+                <span className="text-sm font-medium">Gerar senha temporária</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" checked={passwordMode === 'manual'} onChange={() => setPasswordMode('manual')} className="h-3.5 w-3.5" />
+                <span className="text-sm font-medium">Definir manualmente</span>
+              </label>
+            </div>
+            {passwordMode === 'temp' ? (
+              <div className="flex items-center gap-3">
+                <Input value={generatedPassword} readOnly className="font-mono bg-muted/50" />
+                <Button type="button" variant="outline" size="sm" onClick={() => setGeneratedPassword(generateTempPassword())}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Input type="text" placeholder="Nova senha (mín. 6 caracteres)" value={manualPassword} onChange={(e) => setManualPassword(e.target.value)} />
+            )}
+            <div className="flex items-center gap-3 pt-2">
+              <Checkbox 
+                id="sendEmailPassword" 
+                checked={sendEmailAfterPassword} 
+                onCheckedChange={(v) => setSendEmailAfterPassword(!!v)} 
+              />
+              <label htmlFor="sendEmailPassword" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" /> Reenviar dados de acesso por e-mail
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleResetPassword} disabled={saving} className="bg-primary gap-2">
+              {saving ? 'Redefinindo...' : <><KeyRound className="h-4 w-4" /> Redefinir Senha</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG: EXCLUIR */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              Excluir usuário?
+              Excluir acesso do usuário?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. O usuário perderá o acesso ao sistema permanentemente.
+              Essa ação não pode ser desfeita. O usuário perderá o acesso ao sistema permanentemente e seu cadastro será removido.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

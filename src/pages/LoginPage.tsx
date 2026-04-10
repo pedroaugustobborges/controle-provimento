@@ -115,6 +115,9 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                     className="w-full h-12 rounded-xl bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,30%)]/30 active:scale-[0.98] mt-2">
                     <LogIn className="h-4 w-4" /> Entrar
                   </button>
+                  <p className="text-center text-[11px] text-[hsl(210,20%,45%)] mt-3">
+                    Esqueceu sua senha? Entre em contato com a administração do sistema.
+                  </p>
                 </form>
               </>
             )}

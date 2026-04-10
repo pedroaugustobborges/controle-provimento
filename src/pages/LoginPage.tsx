@@ -21,6 +21,17 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     if (open) { setPhase('form'); setErrorMsg(''); }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { toast.error('Preencha e-mail e senha.'); return; }
@@ -42,13 +53,22 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/30 animate-[fadeIn_0.3s_ease-out]" />
+      <div
+        className="absolute inset-0 bg-black/30 animate-[fadeIn_0.3s_ease-out]"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={(e) => e.preventDefault()}
+      />
 
       {/* Modal */}
       <div
         className="relative w-full max-w-[572px] animate-[modalIn_0.6s_cubic-bezier(0.34,1.56,0.64,1)]"
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />

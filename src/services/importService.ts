@@ -4,6 +4,13 @@ import { normalizeStatus, normalizeCargo } from '@/lib/vagaUtils';
 import { convertDateValue } from '@/lib/dateImportUtils';
 import { getResponsavelPorUnidade } from '@/data/equipe';
 import { TipoVaga } from '@/types/vaga';
+import {
+  ImportExecutionOptions,
+  buildBancoImportObservation,
+  extractNormalizedUnitsFromRows,
+  normalizeImportSystemKey,
+  shouldReplaceBancoRecord,
+} from '@/lib/importScopeUtils';
 
 export type ImportPhase = 'upload' | 'mapping' | 'processing' | 'finishing' | 'error' | 'success';
 
@@ -70,11 +77,12 @@ export class ImportService {
       sheetName: string;
       headerRow: number;
       mappings: ColumnMapping[];
+      options?: ImportExecutionOptions;
       userId: string;
       onProgress: (progress: ImportProgress) => void;
     }
   ) {
-    const { type, workbook, sheetName, headerRow, mappings, userId, onProgress } = params;
+    const { type, workbook, sheetName, headerRow, mappings, options, userId, onProgress } = params;
     
     try {
       const sheet = workbook.Sheets[sheetName];
@@ -83,6 +91,22 @@ export class ImportService {
       const headers = (rawRows[headerRow] || []).map(c => String(c || '').trim().toUpperCase());
       const dataRows = rawRows.slice(headerRow + 1);
       const totalRows = dataRows.length;
+      const normalizedMappings = mappings.map(mapping => {
+        const normalizedSystem = normalizeImportSystemKey(mapping.system);
+        return {
+          ...mapping,
+          system: normalizedSystem,
+          isDate: mapping.isDate ?? normalizedSystem.startsWith('data_'),
+        };
+      });
+      const resolvedOptions: ImportExecutionOptions = type === 'banco'
+        ? {
+            bancoTipo: options?.bancoTipo || 'por_unidades',
+            bancoEscopo: options?.bancoEscopo,
+            bancoModo: options?.bancoModo || 'substituir',
+          }
+        : (options || {});
+      const importObservation = type === 'banco' ? buildBancoImportObservation(resolvedOptions) : '';
       
       if (totalRows === 0) {
         throw new Error("Nenhum dado encontrado na aba selecionada.");
@@ -90,6 +114,9 @@ export class ImportService {
 
       const batchId = `IMPORT-${Date.now()}`;
       const tableName = type === 'vagas' ? 'vagas' : 'banco_candidatos';
+      const chunkSize = 200;
+      const errors: string[] = [];
+      let deletedCount = 0;
       
       onProgress({
         phase: 'processing',
@@ -106,7 +133,8 @@ export class ImportService {
         usuario_id: userId,
         status: 'em_processamento',
         quantidade_apagada: 0,
-        arquivo: batchId
+        arquivo: batchId,
+        observacoes: importObservation || null,
       }).select().single();
 
       const logId = logData?.id;
@@ -115,22 +143,54 @@ export class ImportService {
       onProgress({
         phase: 'processing',
         percentage: 5,
-        label: 'Limpando base anterior...',
+        label: type === 'banco' && resolvedOptions.bancoModo === 'adicionar'
+          ? 'Mantendo base atual e preparando inclusão...'
+          : 'Preparando base de destino...',
         processedRows: 0,
         totalRows,
         errors: []
       });
 
-      const { error: delErr } = await supabase.from(tableName).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (delErr) {
-        console.warn("Erro ao limpar base antiga, continuando...", delErr);
+      if (type === 'vagas') {
+        const { error: delErr } = await supabase.from(tableName).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (delErr) {
+          console.warn("Erro ao limpar base antiga, continuando...", delErr);
+          errors.push(`Aviso ao limpar vagas anteriores: ${delErr.message || 'erro desconhecido'}`);
+        }
+      } else if (resolvedOptions.bancoModo === 'substituir') {
+        const unitsFromSheet = extractNormalizedUnitsFromRows(dataRows, headers, normalizedMappings);
+        const { data: existingRows, error: fetchExistingError } = await supabase
+          .from('banco_candidatos')
+          .select('id, unidade');
+
+        if (fetchExistingError) {
+          console.warn('Erro ao localizar bancos existentes para substituição:', fetchExistingError);
+          errors.push(`Aviso ao preparar substituição do banco: ${fetchExistingError.message || 'erro desconhecido'}`);
+        } else {
+          const idsToDelete = (existingRows || [])
+            .filter(row => shouldReplaceBancoRecord(row.unidade || '', resolvedOptions, unitsFromSheet))
+            .map(row => row.id);
+
+          deletedCount = idsToDelete.length;
+
+          for (let i = 0; i < idsToDelete.length; i += chunkSize) {
+            const idsChunk = idsToDelete.slice(i, i + chunkSize);
+            const { error: deleteChunkError } = await supabase
+              .from('banco_candidatos')
+              .delete()
+              .in('id', idsChunk);
+
+            if (deleteChunkError) {
+              console.warn('Erro ao excluir lote anterior do banco:', deleteChunkError);
+              errors.push(`Aviso ao excluir lote anterior do banco: ${deleteChunkError.message || 'erro desconhecido'}`);
+            }
+          }
+        }
       }
 
       // Step 3: Process in chunks
-      const chunkSize = 200;
       let processedCount = 0;
       let insertedCount = 0;
-      const errors: string[] = [];
 
       for (let i = 0; i < totalRows; i += chunkSize) {
         const chunk = dataRows.slice(i, i + chunkSize);
@@ -140,7 +200,7 @@ export class ImportService {
           if (!row || (Array.isArray(row) && row.every(c => c === null || c === ''))) continue;
           
           try {
-            const item = this.transformRow(row, headers, mappings, type, batchId, userId);
+            const item = this.transformRow(row, headers, normalizedMappings, type, batchId, userId, resolvedOptions);
             if (item) transformedChunk.push(item);
           } catch (err: any) {
             errors.push(`Erro na linha ${i + processedCount + headerRow + 2}: ${err.message}`);
@@ -187,8 +247,12 @@ export class ImportService {
       if (logId) {
         await supabase.from('importacoes').update({
           status: insertedCount === 0 ? 'erro' : (errors.length > 0 ? 'concluido_alertas' : 'concluido'),
+          quantidade_apagada: deletedCount,
           quantidade_inserida: insertedCount,
-          observacoes: errors.length > 0 ? `Processado com ${errors.length} alertas. Ex: ${errors[0].substring(0, 100)}` : 'Sucesso'
+          observacoes: [
+            importObservation,
+            errors.length > 0 ? `Processado com ${errors.length} alertas. Ex: ${errors[0].substring(0, 100)}` : 'Sucesso'
+          ].filter(Boolean).join(' • ')
         }).eq('id', logId);
       }
 
@@ -221,7 +285,8 @@ export class ImportService {
     mappings: ColumnMapping[], 
     type: 'vagas' | 'banco',
     batchId: string,
-    userId: string
+    userId: string,
+    options?: ImportExecutionOptions,
   ) {
     const data: any = {
       import_batch_id: batchId,
@@ -274,6 +339,14 @@ export class ImportService {
       const nome = String(data.nome || '').trim();
       if (!nome || !data.cargo) return null;
       data.cargo_normalizado = normalizeCargo(data.cargo);
+
+      const importObservation = buildBancoImportObservation(options);
+      if (importObservation) {
+        const currentObservation = String(data.observacao || '').trim();
+        data.observacao = currentObservation
+          ? `${currentObservation} | ${importObservation}`
+          : importObservation;
+      }
     }
 
     return data;

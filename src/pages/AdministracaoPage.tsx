@@ -861,14 +861,15 @@ export default function AdministracaoPage() {
 
       {/* DIALOG: NOVO USUÁRIO */}
       <Dialog open={isNewUserOpen} onOpenChange={setIsNewUserOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-primary" /> Incluir novo usuário
             </DialogTitle>
-            <DialogDescription>Preencha os dados básicos e defina as permissões iniciais.</DialogDescription>
+            <DialogDescription>Preencha os dados, defina a senha e as permissões iniciais.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-5 py-4">
+            {/* Nome e Email */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">Nome Completo</Label>
@@ -879,11 +880,9 @@ export default function AdministracaoPage() {
                 <Input type="email" placeholder="joao@agir.org.br" value={newUser.email} onChange={(e) => setNewUser(p => ({ ...p, email: e.target.value }))} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">Senha Inicial</Label>
-              <Input type="password" placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Perfil, Cargo, Status */}
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
                 <Select value={newUser.perfil} onValueChange={(v) => setNewUser(p => ({ ...p, perfil: v }))}>
@@ -906,10 +905,47 @@ export default function AdministracaoPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Status</Label>
+                <Select value={newUser.status} onValueChange={(v: any) => setNewUser(p => ({ ...p, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="suspenso">Suspenso</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {/* Senha */}
+            <div className="space-y-3 border-t pt-4">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Senha de Acesso</h4>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={newUser.passwordMode === 'temp'} onChange={() => setNewUser(p => ({ ...p, passwordMode: 'temp' }))} className="h-3.5 w-3.5" />
+                  <span className="text-sm font-medium">Gerar senha temporária</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={newUser.passwordMode === 'manual'} onChange={() => setNewUser(p => ({ ...p, passwordMode: 'manual' }))} className="h-3.5 w-3.5" />
+                  <span className="text-sm font-medium">Definir senha manualmente</span>
+                </label>
+              </div>
+              {newUser.passwordMode === 'temp' ? (
+                <div className="flex items-center gap-3">
+                  <Input value={newUser.password} readOnly className="font-mono bg-muted/50" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setNewUser(p => ({ ...p, password: generateTempPassword() }))}>
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Input type="text" placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} />
+              )}
+            </div>
+
+            {/* Unidades e Permissões */}
             <div className="space-y-4 border-t pt-4">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões e Acesso</h4>
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -921,8 +957,7 @@ export default function AdministracaoPage() {
 
               {!newUser.visualiza_todas_unidades && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Vincular Unidades Específicas</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-1 max-h-[200px] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-2 mt-1 max-h-[180px] overflow-y-auto">
                     {ALL_UNIDADES.map(u => (
                       <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleUnidade(u)}>
                         <input type="checkbox" checked={newUser.unidades_vinculadas.includes(u)} readOnly className="h-3 w-3 rounded" />
@@ -932,8 +967,12 @@ export default function AdministracaoPage() {
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
+            {/* Permissões específicas */}
+            <div className="space-y-3 border-t pt-4">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Switch checked={newUser.pode_incluir_registros} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_incluir_registros: v }))} />
                   <Label className="text-xs font-bold">Pode incluir registros</Label>
@@ -952,25 +991,186 @@ export default function AdministracaoPage() {
                 </div>
               </div>
             </div>
+
+            {/* E-mail de boas-vindas */}
+            <div className="flex items-center gap-3 border-t pt-4">
+              <Checkbox 
+                id="sendWelcome" 
+                checked={newUser.sendWelcomeEmail} 
+                onCheckedChange={(v) => setNewUser(p => ({ ...p, sendWelcomeEmail: !!v }))} 
+              />
+              <label htmlFor="sendWelcome" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" /> Enviar e-mail de boas-vindas agora
+              </label>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNewUserOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreateUser} disabled={saving} className="bg-primary">
-              {saving ? 'Criando...' : 'Criar Usuário'}
+            <Button onClick={handleCreateUser} disabled={saving} className="bg-primary gap-2">
+              {saving ? 'Criando...' : <><UserPlus className="h-4 w-4" /> Criar Usuário</>}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* DIALOG: EDITAR USUÁRIO */}
+      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit2 className="h-5 w-5 text-primary" /> Editar dados do usuário
+            </DialogTitle>
+            <DialogDescription>Altere perfil, cargo, permissões e unidades sem excluir o cadastro.</DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <div className="grid gap-5 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Nome Completo</Label>
+                  <Input value={editingUser.nome_completo} onChange={(e) => setEditingUser((p: any) => ({ ...p, nome_completo: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">E-mail (somente leitura)</Label>
+                  <Input value={editingUser.email} readOnly className="bg-muted/50" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
+                  <Select value={editingUser.perfil} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, perfil: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {PERFIS_ACESSO.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Cargo Hierárquico</Label>
+                  <Select value={editingUser.cargo || ''} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, cargo: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                    <SelectContent>
+                      {CARGOS_HIERARQUICOS.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t pt-4">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-bold">Visualizar todas as unidades</Label>
+                  <Switch checked={editingUser.visualiza_todas_unidades} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: v }))} />
+                </div>
+                {!editingUser.visualiza_todas_unidades && (
+                  <div className="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto">
+                    {ALL_UNIDADES.map(u => (
+                      <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 cursor-pointer" onClick={() => toggleEditUnidade(u)}>
+                        <input type="checkbox" checked={editingUser.unidades_vinculadas?.includes(u)} readOnly className="h-3 w-3 rounded" />
+                        <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 border-t pt-4">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_incluir_registros} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_incluir_registros: v }))} />
+                    <Label className="text-xs font-bold">Pode incluir registros</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_excluir_requisicoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_excluir_requisicoes: v }))} />
+                    <Label className="text-xs font-bold">Pode excluir requisições</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_editar_configuracoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_editar_configuracoes: v }))} />
+                    <Label className="text-xs font-bold">Pode editar configurações</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={editingUser.pode_gerenciar_usuarios} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_gerenciar_usuarios: v }))} />
+                    <Label className="text-xs font-bold">Pode gerenciar usuários</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveEditUser} disabled={saving} className="bg-primary gap-2">
+              {saving ? 'Salvando...' : <><Save className="h-4 w-4" /> Salvar Alterações</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG: REDEFINIR SENHA */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" /> Redefinir senha
+            </DialogTitle>
+            <DialogDescription>
+              {passwordUser ? `Redefinir senha de ${passwordUser.nome}` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" checked={passwordMode === 'temp'} onChange={() => { setPasswordMode('temp'); setGeneratedPassword(generateTempPassword()); }} className="h-3.5 w-3.5" />
+                <span className="text-sm font-medium">Gerar senha temporária</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" checked={passwordMode === 'manual'} onChange={() => setPasswordMode('manual')} className="h-3.5 w-3.5" />
+                <span className="text-sm font-medium">Definir manualmente</span>
+              </label>
+            </div>
+            {passwordMode === 'temp' ? (
+              <div className="flex items-center gap-3">
+                <Input value={generatedPassword} readOnly className="font-mono bg-muted/50" />
+                <Button type="button" variant="outline" size="sm" onClick={() => setGeneratedPassword(generateTempPassword())}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Input type="text" placeholder="Nova senha (mín. 6 caracteres)" value={manualPassword} onChange={(e) => setManualPassword(e.target.value)} />
+            )}
+            <div className="flex items-center gap-3 pt-2">
+              <Checkbox 
+                id="sendEmailPassword" 
+                checked={sendEmailAfterPassword} 
+                onCheckedChange={(v) => setSendEmailAfterPassword(!!v)} 
+              />
+              <label htmlFor="sendEmailPassword" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" /> Reenviar dados de acesso por e-mail
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleResetPassword} disabled={saving} className="bg-primary gap-2">
+              {saving ? 'Redefinindo...' : <><KeyRound className="h-4 w-4" /> Redefinir Senha</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG: EXCLUIR */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              Excluir usuário?
+              Excluir acesso do usuário?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. O usuário perderá o acesso ao sistema permanentemente.
+              Essa ação não pode ser desfeita. O usuário perderá o acesso ao sistema permanentemente e seu cadastro será removido.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

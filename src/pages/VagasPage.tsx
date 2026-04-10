@@ -634,6 +634,7 @@ export default function VagasPage() {
                   <TableHead>Seção</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-center">Vaga(s)</TableHead>
+                  <TableHead className="text-center">Ação Rápida</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>

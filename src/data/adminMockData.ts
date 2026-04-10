@@ -11,8 +11,7 @@ export const mockUsers: User[] = [
     visualiza_todas_unidades: true,
     unidades_vinculadas: [
       'CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO',
-      'SÃO PEDRO', 'SUÁ', 'BENTO FERREIRA', 'SERRA',
-      'Hospital Central (GO)', 'Hospital das Clínicas'
+      'SÃO PEDRO', 'SUÁ'
     ],
     pode_incluir_registros: true,
     pode_excluir_requisicoes: true,
@@ -99,7 +98,7 @@ export const mockSupportConfigs: SupportConfig[] = [
     teams_user: 'fernanda.souza.teams',
     mensagem: 'Suporte remoto especializado.',
     status: 'ativo',
-    unidades: ['SÃO PEDRO', 'SUÁ', 'BENTO FERREIRA', 'SERRA']
+    unidades: ['SÃO PEDRO', 'SUÁ']
   }
 ];
 

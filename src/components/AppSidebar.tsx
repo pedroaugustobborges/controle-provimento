@@ -60,7 +60,7 @@ export function AppSidebar() {
     },
     { 
       title: 'Publicação de Edital', 
-      url: '/fila-analista-edital', 
+      url: '/fila-editais', 
       icon: FileText, 
       visible: hasFullAccess || isManagement() || isAdminAnalyst() || isEditalAnalyst(),
       subMenu: [

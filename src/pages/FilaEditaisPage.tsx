@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { HelpGuide } from '@/components/HelpGuide';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
@@ -136,10 +137,11 @@ export default function FilaEditaisPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-800">Fila de Editais</h1>
           <p className="text-slate-500 mt-1">Vagas aguardando redação e publicação de novo edital.</p>
+          <div className="mt-2"><HelpGuide /></div>
         </div>
         <div className="flex gap-2">
           <Button variant="default" className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20" onClick={() => setIsImportOpen(true)}>

@@ -61,9 +61,9 @@ const GUIDES: Record<string, Record<string, GuideSection[]>> = {
     "default": [
       {
         title: "Validação de Edital",
-        description: "Os gestores revisam e validam os editais redigidos antes da publicação oficial.",
-        currentStage: "Revisão Final",
-        nextStage: "Aguardar Aprovação"
+        description: "O analista administrativo revisa e valida os editais redigidos. Após a validação, o edital segue para Validados/Histórico.",
+        currentStage: "Validação pelo Analista Administrativo",
+        nextStage: "Validados / Histórico"
       }
     ]
   }

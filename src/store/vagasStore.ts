@@ -83,45 +83,71 @@ export const useVagasStore = create<VagasState>()(
       setVagas: (vagas) => set({ vagas }),
       fetchVagas: async () => {
         try {
-          const { supabase } = await import('@/lib/supabase');
-          const { data, error } = await supabase.from('vagas').select('*').order('created_at', { ascending: false });
-          if (error) throw error;
-          if (data) set({ vagas: data as Vaga[] });
+          const { supabase } = await import('@/integrations/supabase/client');
+          // Fetch all vagas (may exceed default 1000 limit)
+          let allVagas: any[] = [];
+          let from = 0;
+          const pageSize = 1000;
+          while (true) {
+            const { data, error } = await supabase
+              .from('vagas')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .range(from, from + pageSize - 1);
+            if (error) throw error;
+            if (!data || data.length === 0) break;
+            allVagas = allVagas.concat(data);
+            if (data.length < pageSize) break;
+            from += pageSize;
+          }
+          set({ vagas: allVagas as Vaga[] });
         } catch (err) {
           console.error('Error fetching vagas:', err);
         }
       },
       fetchBancos: async () => {
         try {
-          const { supabase } = await import('@/lib/supabase');
-          const { data, error } = await supabase.from('banco_candidatos').select('*').order('created_at', { ascending: false });
-          if (error) throw error;
-          if (data) set({ bancos: data as BancoTalentos[] });
+          const { supabase } = await import('@/integrations/supabase/client');
+          let allBancos: any[] = [];
+          let from = 0;
+          const pageSize = 1000;
+          while (true) {
+            const { data, error } = await supabase
+              .from('banco_candidatos')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .range(from, from + pageSize - 1);
+            if (error) throw error;
+            if (!data || data.length === 0) break;
+            allBancos = allBancos.concat(data);
+            if (data.length < pageSize) break;
+            from += pageSize;
+          }
+          set({ bancos: allBancos as BancoTalentos[] });
         } catch (err) {
           console.error('Error fetching bancos:', err);
         }
       },
       fetchImportHistory: async () => {
         try {
-          const { supabase } = await import('@/lib/supabase');
+          const { supabase } = await import('@/integrations/supabase/client');
           const { data, error } = await supabase
             .from('importacoes')
             .select('*')
-            .order('data_hora', { ascending: false });
+            .order('created_at', { ascending: false });
           if (error) throw error;
           if (data) {
-            // Mapear os campos do banco para o tipo ImportHistory usado no store
             const mapped = data.map(item => ({
               id: item.id,
-              usuario: item.usuario_id, // Idealmente deveríamos fazer join com profiles
-              total_lidos: item.quantidade_apagada + item.quantidade_inserida,
-              total_novos: item.quantidade_inserida,
+              usuario: item.usuario_id,
+              total_lidos: (item.quantidade_apagada || 0) + (item.quantidade_inserida || 0),
+              total_novos: item.quantidade_inserida || 0,
               total_atualizados: 0,
               total_erros: item.status === 'erro' ? 1 : 0,
               status: item.status,
               tipo_importacao: item.tipo,
               arquivo: item.arquivo || `Importação ${item.id.slice(0,8)}`,
-              data_hora: item.data_hora || item.created_at,
+              data_hora: item.created_at,
               observacoes: item.observacoes
             }));
             set({ importHistory: mapped as any[] });

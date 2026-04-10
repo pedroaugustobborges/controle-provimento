@@ -200,6 +200,9 @@ export default function BancoTalentosPage() {
         return;
       }
 
+      const calculation = calculateBancoStatus(b);
+      const bStatus = calculation.status;
+
       const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
       // REGRA DE IDENTIFICAÇÃO DO BANCO (Auditada: PS ou Edital + Unidade + Cargo)
       const key = b.numero_processo_seletivo 
@@ -223,9 +226,9 @@ export default function BancoTalentosPage() {
           regiao: b.regiao || getRegiaoFromUnit(b.unidade),
           cargo: b.cargo,
           cargoNormalizado: cargoNorm,
-          status: b.status,
-          validade: b.nova_data_validade || b.data_validade,
-          isProrrogado: b.is_prorrogado,
+          status: bStatus,
+          validade: calculation.dataReferencia,
+          isProrrogado: bStatus === 'prorrogado',
           // QNTD BANCO: Pegamos a maior quantidade informada para este grupo para evitar erro de leitura
           qtdBanco: qtd,
           candidatos: []

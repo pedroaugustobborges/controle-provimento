@@ -13,6 +13,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { toast } from 'sonner';
 import { BancoTalentos } from '@/types/vaga';
 import { normalizeCargo } from '@/lib/vagaUtils';
+import { calculateBancoStatus } from '@/lib/bancoTalentosUtils';
 
 
 const formSchema = z.object({

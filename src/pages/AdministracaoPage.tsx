@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
-import { useAdminStore } from '@/store/adminStore';
+import { useAdminStore, generateTempPassword } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
-  HardDrive, Info, Shield, Check, X
+  HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 

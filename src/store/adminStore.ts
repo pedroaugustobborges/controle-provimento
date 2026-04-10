@@ -8,12 +8,16 @@ interface AdminState {
   supportConfigs: SupportConfig[];
   backups: BackupRecord[];
   currentUser: User | null;
+  selectedRegion: string;
+  selectedUnit: string;
   
   // User actions
   addUser: (user: User) => void;
   updateUser: (id: string, data: Partial<User>) => void;
   deleteUser: (id: string) => void;
   setCurrentUser: (user: User | null) => void;
+  setSelectedRegion: (region: string) => void;
+  setSelectedUnit: (unit: string) => void;
   
   // Audit actions
   addAuditLog: (log: Omit<AuditLog, 'id'>) => void;

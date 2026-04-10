@@ -31,7 +31,7 @@ const GUIDES: Record<string, Record<string, GuideSection[]>> = {
     "acompanhamento": [
       {
         title: "Acompanhamento do Edital",
-        description: "Nesta aba, você monitora o progresso dos editais que já foram publicados e estão em fase de seleção.",
+        description: "Nesta aba, você monitora o progresso dos editais que já foram publicados e estão em andamento.",
         currentStage: "Publicação do Edital",
         nextStage: "Triagem e Avaliações"
       }

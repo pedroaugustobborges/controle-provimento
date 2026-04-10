@@ -418,15 +418,14 @@ export default function BancoTalentosPage() {
   }, [importHistory]);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const s = (status || '').toUpperCase();
+    switch (s) {
       case 'CADASTRO RESERVA': 
-      case 'valido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200 text-[10px] whitespace-nowrap">Cad. Reserva</Badge>;
-      case 'VENCIDO':
-      case 'vencido': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200 text-[10px] whitespace-nowrap">Vencido</Badge>;
-      case 'prorrogado': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200 text-[10px] whitespace-nowrap">Prorrogado</Badge>;
-      case 'CONVOCADO':
-      case 'convocado': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200 text-[10px] whitespace-nowrap">Convocado</Badge>;
-      default: return <Badge variant="outline" className="text-[10px] whitespace-nowrap">Indeterminado</Badge>;
+      case 'VALIDO': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200 text-[10px] whitespace-nowrap">Cad. Reserva</Badge>;
+      case 'VENCIDO': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200 text-[10px] whitespace-nowrap">Vencido</Badge>;
+      case 'PRORROGADO': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200 text-[10px] whitespace-nowrap">Prorrogado</Badge>;
+      case 'CONVOCADO': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200 text-[10px] whitespace-nowrap">Convocado</Badge>;
+      default: return <Badge variant="outline" className="text-[10px] whitespace-nowrap">{status || 'Indeterminado'}</Badge>;
     }
   };
 

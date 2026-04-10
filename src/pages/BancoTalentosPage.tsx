@@ -312,13 +312,13 @@ export default function BancoTalentosPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'CADASTRO RESERVA': 
-      case 'valido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200">Cadastro Reserva</Badge>;
+      case 'valido': return <Badge className="bg-green-100 text-green-700 hover:bg-green-200 font-bold border-green-200 text-[10px] whitespace-nowrap">Cad. Reserva</Badge>;
       case 'VENCIDO':
-      case 'vencido': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200">Vencido</Badge>;
-      case 'prorrogado': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200">Prorrogado</Badge>;
+      case 'vencido': return <Badge className="bg-red-100 text-red-700 hover:bg-red-200 font-bold border-red-200 text-[10px] whitespace-nowrap">Vencido</Badge>;
+      case 'prorrogado': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold border-blue-200 text-[10px] whitespace-nowrap">Prorrogado</Badge>;
       case 'CONVOCADO':
-      case 'convocado': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200">Convocado</Badge>;
-      default: return <Badge variant="outline">Indeterminado</Badge>;
+      case 'convocado': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200 text-[10px] whitespace-nowrap">Convocado</Badge>;
+      default: return <Badge variant="outline" className="text-[10px] whitespace-nowrap">Indeterminado</Badge>;
     }
   };
 
@@ -767,16 +767,16 @@ export default function BancoTalentosPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader >
+                <TableHeader>
                   <TableRow>
-                    <TableHead >Edital</TableHead>
-                    <TableHead >Proc. Seletivo</TableHead>
-                    <TableHead >Cargo</TableHead>
-                    <TableHead >Unidade</TableHead>
-                    <TableHead >Região</TableHead>
-                    <TableHead >Status</TableHead>
-                    <TableHead >Qtd. Banco</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead className="whitespace-nowrap">Edital</TableHead>
+                    <TableHead className="whitespace-nowrap">Proc. Seletivo</TableHead>
+                    <TableHead className="whitespace-nowrap">Cargo</TableHead>
+                    <TableHead className="whitespace-nowrap">Unidade</TableHead>
+                    <TableHead className="whitespace-nowrap">Região</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap text-center">Qtd.</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -801,8 +801,8 @@ export default function BancoTalentosPage() {
                         )}
                       </TableCell>
                       <TableCell>{getStatusBadge(group.status)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-bold bg-slate-50">{group.qtdBanco}</Badge>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="font-bold bg-slate-50 text-[10px]">{group.qtdBanco}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

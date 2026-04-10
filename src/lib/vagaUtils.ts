@@ -354,6 +354,30 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
   return new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date).toUpperCase();
 }
 
+// Mapping: which banco unit serves which sidebar units
+const BANCO_UNIT_MAPPING: Record<string, string[]> = {
+  'GOIÂNIA': ['AGIR', 'CRER', 'HUGOL', 'HECAD', 'HDS', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'GOIÂNIA', 'GOIANIA'],
+  'VITÓRIA': ['VITÓRIA (SÃO PEDRO/SUÁ)', 'SÃO PEDRO', 'SUÁ', 'VITÓRIA', 'VITORIA'],
+  'POLICLÍNICA': ['POLICLÍNICA', 'POLICLINICA'],
+  'JATAÍ': ['JATAÍ', 'JATAI'],
+  'UPA': ['UPA'],
+};
+
+function getBancoUnitsForSidebarUnit(sidebarUnit: string): string[] {
+  const norm = normalizeUnitName(sidebarUnit);
+  const matchingBancoUnits: string[] = [];
+  for (const [bancoUnit, servedUnits] of Object.entries(BANCO_UNIT_MAPPING)) {
+    if (servedUnits.some(u => normalizeUnitName(u) === norm) || normalizeUnitName(bancoUnit) === norm) {
+      matchingBancoUnits.push(normalizeUnitName(bancoUnit));
+    }
+  }
+  // If no mapping found, try exact match
+  if (matchingBancoUnits.length === 0) {
+    matchingBancoUnits.push(norm);
+  }
+  return matchingBancoUnits;
+}
+
 export function filterByRegionAndUnit(records: any[], region: string, unit: string): any[] {
   if (!records || !Array.isArray(records)) return [];
   
@@ -362,16 +386,27 @@ export function filterByRegionAndUnit(records: any[], region: string, unit: stri
   // Filter by Region
   if (region && region !== 'all') {
     const unitsInRegion = UNIDADES_POR_REGIAO[region] || [];
+    // Get all banco units that serve units in this region
+    const bancoUnitsForRegion = new Set<string>();
+    unitsInRegion.forEach(u => {
+      getBancoUnitsForSidebarUnit(u).forEach(bu => bancoUnitsForRegion.add(bu));
+    });
+    // Also include direct matches
+    unitsInRegion.forEach(u => bancoUnitsForRegion.add(normalizeUnitName(u)));
+    
     filtered = filtered.filter(row => {
       const rowUnit = normalizeUnitName(row.unidade);
-      return unitsInRegion.some(u => normalizeUnitName(u) === rowUnit);
+      return bancoUnitsForRegion.has(rowUnit);
     });
   }
   
   // Filter by Unit
   if (unit && unit !== 'all') {
-    const normUnit = normalizeUnitName(unit);
-    filtered = filtered.filter(row => normalizeUnitName(row.unidade) === normUnit);
+    const bancoUnits = getBancoUnitsForSidebarUnit(unit);
+    filtered = filtered.filter(row => {
+      const rowUnit = normalizeUnitName(row.unidade);
+      return bancoUnits.includes(rowUnit);
+    });
   }
   
   return filtered;

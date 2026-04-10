@@ -188,8 +188,11 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                         {!collapsed && (
                           <SidebarMenuSub className="ml-5 mt-1 border-l-2 border-blue-500/10 space-y-1.5 py-2 pl-4">
-                            {item.subMenu.map((sub) => {
+                            {item.subMenu.map((sub, idx) => {
                               const subActive = isUrlActive(sub.url);
+                              const activeIndex = item.subMenu.findIndex(s => isUrlActive(s.url));
+                              const hasPassed = activeIndex !== -1 && idx < activeIndex;
+                              
                               return (
                                 <SidebarMenuSubItem key={sub.title}>
                                   <SidebarMenuSubButton asChild>
@@ -199,13 +202,21 @@ export function AppSidebar() {
                                         "text-[12.5px] py-2 px-4 rounded-lg transition-all duration-300 block relative select-none overflow-hidden group/sub",
                                         subActive 
                                           ? "text-white font-bold bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
-                                          : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
+                                          : hasPassed
+                                            ? "text-emerald-400 font-medium bg-emerald-500/5 hover:bg-emerald-500/10"
+                                            : "text-slate-500 hover:text-white hover:bg-white/5 hover:translate-x-1"
                                       )}
                                     >
                                       {subActive && (
                                         <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
                                       )}
-                                      <span className="relative z-10 block leading-tight">{sub.title}</span>
+                                      {hasPassed && (
+                                        <div className="absolute left-0 top-0 h-full w-1 bg-emerald-500/50" />
+                                      )}
+                                      <span className="relative z-10 flex items-center gap-2 leading-tight">
+                                        {hasPassed && <CheckCircle className="h-3 w-3" />}
+                                        {sub.title}
+                                      </span>
                                     </NavLink>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>

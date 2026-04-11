@@ -295,6 +295,9 @@ export default function DashboardPage() {
 
       const status = String(banco.status || '').toUpperCase();
       entry.bancos += 1;
+      if (status === 'CADASTRO RESERVA') {
+        entry.bancosCR += 1;
+      }
 
       if (status !== 'VENCIDO' && status !== 'CONVOCADO') {
         entry.bancosDisponiveis += 1;

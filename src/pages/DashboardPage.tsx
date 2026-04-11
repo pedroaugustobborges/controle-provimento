@@ -262,6 +262,7 @@ export default function DashboardPage() {
         vagas: 0,
         vagasAbertas: 0,
         bancos: 0,
+        bancosCR: 0,
         bancosDisponiveis: 0,
         pendencias: 0,
       };

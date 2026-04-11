@@ -153,7 +153,7 @@ export function AppSidebar() {
                 AGIR
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
               </span>
-              <span className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] leading-tight">
+              <span className="text-[10px] text-white font-bold uppercase tracking-[0.2em] leading-tight">
                 Provimento Digital
               </span>
             </div>

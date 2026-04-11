@@ -12,7 +12,9 @@ import {
   ChevronDown,
   CornerDownRight,
   FileText,
-  FileCheck
+  FileCheck,
+  Check,
+  Search
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';
@@ -29,21 +31,25 @@ import {
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue
 } from '@/components/ui/select';
+import {
+  Popover, PopoverContent, PopoverTrigger
+} from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminStore } from '@/store/adminStore';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useCallback } from 'react';
 
 const UNIDADES_POR_REGIAO: Record<string, string[]> = {
-  'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
-  'Unidades de Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
+  'GOIÁS E VITÓRIA': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
+  'OUTRAS UNIDADES': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
-  const { currentUser, users, selectedRegion, selectedUnit, setSelectedRegion, setSelectedUnit } = useAdminStore();
+  const { currentUser, users, selectedRegion, selectedUnit, selectedUnits, setSelectedRegion, setSelectedUnit, setSelectedUnits } = useAdminStore();
   const location = useLocation();
   const [showSupport, setShowSupport] = useState(false);
 
@@ -147,8 +153,8 @@ export function AppSidebar() {
                 AGIR
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
               </span>
-              <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] leading-tight">
-                Provimento de Pessoal
+              <span className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] leading-tight">
+                Provimento Digital
               </span>
             </div>
           )}
@@ -156,30 +162,78 @@ export function AppSidebar() {
 
         {/* Unit selector for multi-unit users */}
         {hasMultipleUnits && !collapsed && (
-          <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
-            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnit('all'); }}>
-              <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
-                <SelectValue placeholder="Todas as Unidades" />
+          <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500 px-2">
+            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
+              <SelectTrigger className="h-10 bg-white/5 border-white/10 text-white/90 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-lg rounded-xl">
+                <SelectValue placeholder="TODAS AS REGIÕES" />
               </SelectTrigger>
-              <SelectContent className="bg-[#112240] border-white/10 text-white">
-                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
-                <SelectItem value="Goiás e Vitória" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás e Vitória</SelectItem>
-                <SelectItem value="Unidades de Fora" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Unidades de Fora</SelectItem>
+              <SelectContent className="bg-[#0A192F] border-white/10 text-white">
+                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Todas as Regiões</SelectItem>
+                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Goiás e Vitória</SelectItem>
+                <SelectItem value="OUTRAS UNIDADES" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Outras Unidades</SelectItem>
               </SelectContent>
             </Select>
 
             {selectedRegion !== 'all' && (
-              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
-                <SelectTrigger className="h-8 bg-blue-500/5 border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/10 hover:border-blue-500/30 transition-all animate-in zoom-in-95 duration-300">
-                  <SelectValue placeholder="Selecionar Unidade" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#112240] border-white/10 text-white max-h-[250px]">
-                  <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</SelectItem>
-                  {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
-                    <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center justify-between w-full h-10 px-3 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 hover:border-blue-500/30 transition-all rounded-xl">
+                    <span className="truncate">
+                      {selectedUnits.includes('all') ? `TODAS DE ${selectedRegion}` : `${selectedUnits.length} UNIDADE(S) SELECIONADA(S)`}
+                    </span>
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px] p-0 bg-[#0A192F] border-white/10 shadow-2xl" align="start">
+                  <div className="p-2 space-y-1">
+                    <div 
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+                      onClick={() => {
+                        if (selectedUnits.includes('all')) {
+                          setSelectedUnits([]);
+                        } else {
+                          setSelectedUnits(['all']);
+                        }
+                      }}
+                    >
+                      <Checkbox 
+                        checked={selectedUnits.includes('all')}
+                        className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                      />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</span>
+                    </div>
+                    
+                    <div className="h-[1px] bg-white/5 my-1" />
+                    
+                    <div className="max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                      {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
+                        <div 
+                          key={u}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+                          onClick={() => {
+                            let newUnits = [...selectedUnits];
+                            if (newUnits.includes('all')) {
+                              newUnits = [u];
+                            } else if (newUnits.includes(u)) {
+                              newUnits = newUnits.filter(x => x !== u);
+                              if (newUnits.length === 0) newUnits = ['all'];
+                            } else {
+                              newUnits.push(u);
+                            }
+                            setSelectedUnits(newUnits);
+                          }}
+                        >
+                          <Checkbox 
+                            checked={selectedUnits.includes(u)}
+                            className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                          />
+                          <span className="text-[11px] text-white/80 font-medium">{u}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         )}
@@ -187,9 +241,9 @@ export function AppSidebar() {
 
       <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="px-3">
-          <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
-            <div className="h-[1px] w-4 bg-blue-500/20" />
-            Fluxo de Provimento
+          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
+            <div className="h-[1px] w-6 bg-white/10" />
+            FLUXO DE PROVIMENTO
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5">
@@ -205,8 +259,8 @@ export function AppSidebar() {
                             className={cn(
                               "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                               active 
-                                ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                                : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                             )}
                           >
                             <item.icon className={cn(
@@ -240,14 +294,14 @@ export function AppSidebar() {
                                   <SidebarMenuSubButton asChild>
                                     <NavLink
                                       to={sub.url}
-                                      className={cn(
-                                        "text-[11.5px] py-2 px-3 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
-                                        subActive 
-                                          ? "text-white bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
-                                          : hasPassed
-                                            ? "text-[#275ac5] bg-[#275ac5]/5 hover:bg-[#275ac5]/10"
-                                            : "text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1"
-                                      )}
+                                        className={cn(
+                                          "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
+                                          subActive 
+                                            ? "text-white bg-blue-600 shadow-[0_4px_15px_-3px_rgba(37,99,235,0.4)] translate-x-1.5" 
+                                            : hasPassed
+                                              ? "text-blue-400/80 bg-blue-400/5 hover:bg-blue-400/10"
+                                              : "text-slate-500 hover:text-slate-100 hover:bg-white/5 hover:translate-x-1.5"
+                                        )}
                                     >
                                       {subActive && (
                                         <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
@@ -278,8 +332,8 @@ export function AppSidebar() {
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
-                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-white"
+                              ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                              : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                           )}
                         >
                           <item.icon className={cn(
@@ -311,9 +365,9 @@ export function AppSidebar() {
 
         {secondaryItems.length > 0 && (
           <SidebarGroup className="mt-8 px-3">
-            <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
-              <div className="h-[1px] w-4 bg-blue-500/20" />
-              Apoio Administrativo
+            <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
+              <div className="h-[1px] w-6 bg-white/10" />
+              APOIO ADMINISTRATIVO
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1.5">
@@ -327,8 +381,8 @@ export function AppSidebar() {
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
-                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-white"
+                              ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                              : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                           )}
                         >
                           <item.icon className={cn(
@@ -359,7 +413,7 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-       <SidebarFooter className="border-t border-white/10 p-5 mt-auto bg-black/10">
+       <SidebarFooter className="border-t border-white/5 p-5 mt-auto bg-[#0A192F]/50">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Suporte Interno">

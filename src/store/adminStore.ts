@@ -10,6 +10,7 @@ interface AdminState {
   currentUser: User | null;
   selectedRegion: string;
   selectedUnit: string;
+  selectedUnits: string[];
   loading: boolean;
 
   // Data fetching
@@ -27,6 +28,7 @@ interface AdminState {
   setCurrentUser: (user: User | null) => void;
   setSelectedRegion: (region: string) => void;
   setSelectedUnit: (unit: string) => void;
+  setSelectedUnits: (units: string[]) => void;
 
   // Audit actions
   addAuditLog: (log: Omit<AuditLog, 'id'>) => void;
@@ -78,6 +80,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   currentUser: null,
   selectedRegion: 'all',
   selectedUnit: 'all',
+  selectedUnits: ['all'],
   loading: false,
 
   fetchUsers: async () => {
@@ -226,8 +229,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   setCurrentUser: (user) => set({ currentUser: user }),
-  setSelectedRegion: (region) => set({ selectedRegion: region }),
+  setSelectedRegion: (region) => set({ selectedRegion: region, selectedUnits: ['all'], selectedUnit: 'all' }),
   setSelectedUnit: (unit) => set({ selectedUnit: unit }),
+  setSelectedUnits: (units) => set({ selectedUnits: units }),
 
   addAuditLog: async (log) => {
     try {

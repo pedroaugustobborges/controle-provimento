@@ -12,7 +12,9 @@ import {
   ChevronDown,
   CornerDownRight,
   FileText,
-  FileCheck
+  FileCheck,
+  Check,
+  Search
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';
@@ -29,21 +31,25 @@ import {
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue
 } from '@/components/ui/select';
+import {
+  Popover, PopoverContent, PopoverTrigger
+} from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminStore } from '@/store/adminStore';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useCallback } from 'react';
 
 const UNIDADES_POR_REGIAO: Record<string, string[]> = {
-  'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
-  'Unidades de Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
+  'GOIÁS E VITÓRIA': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
+  'OUTRAS UNIDADES': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
-  const { currentUser, users, selectedRegion, selectedUnit, setSelectedRegion, setSelectedUnit } = useAdminStore();
+  const { currentUser, users, selectedRegion, selectedUnit, selectedUnits, setSelectedRegion, setSelectedUnit, setSelectedUnits } = useAdminStore();
   const location = useLocation();
   const [showSupport, setShowSupport] = useState(false);
 
@@ -147,8 +153,8 @@ export function AppSidebar() {
                 AGIR
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
               </span>
-              <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] leading-tight">
-                Provimento de Pessoal
+              <span className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] leading-tight">
+                Provimento Digital
               </span>
             </div>
           )}

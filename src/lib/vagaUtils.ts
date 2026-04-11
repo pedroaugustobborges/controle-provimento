@@ -83,7 +83,7 @@ export const CATEGORIAS_STATUS = {
   concluidas: ['concluida', 'concluidas'],
   movimentacao_interna: ['movimentacao interna', 'transferencia'],
   vagas_lideranca: ['vaga de lideranca', 'estrategicas', 'lideranca'],
-  em_andamento: ['realizar convocacao'],
+  em_andamento: ['realizar convocacao', 'em andamento'],
   convocacoes: ['convocacoes', 'convocacao'],
   fila_edital: ['em edital', 'publicar novo edital', 'fila de editais'],
   em_admissao: ['admissao', 'admissao enviada'],
@@ -91,6 +91,7 @@ export const CATEGORIAS_STATUS = {
   aguardando_unidade: ['aguardando unidade'],
   suspensa: ['suspensa'],
   cancelada: ['cancelada', 'canceladas'],
+  sem_status: ['sem status'],
 };
 
 export function isConvocacaoByFields(row: any): boolean {
@@ -116,10 +117,9 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
   
   const normS = normStatus(String(status));
   
-  // Regras prioritárias com includes() conforme solicitado
+  // Priority rules with includes() for fuzzy matching
   if (normS.includes('movimentac') || normS.includes('transfer')) return 'movimentacao_interna';
   if (normS === 'admissao' || normS.includes('admissao envia')) return 'em_admissao';
-  if (normS.includes('edital')) return 'fila_edital';
   if (normS.includes('realizar convoc')) return 'em_andamento';
   
   for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {

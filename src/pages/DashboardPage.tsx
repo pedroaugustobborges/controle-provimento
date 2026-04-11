@@ -92,17 +92,18 @@ export default function DashboardPage() {
     editais = [],
     convocacoes = [],
     tarefas = [],
-    fetchVagas,
-    fetchBancos,
+    fetchAll,
+    isLoadingVagas,
+    isLoadingBancos,
+    isInitialLoad,
   } = useVagasStore();
   const { selectedRegion, selectedUnits, setSelectedRegion, setSelectedUnits } = useAdminStore();
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchVagas();
-    fetchBancos();
-  }, [fetchVagas, fetchBancos]);
+    fetchAll();
+  }, [fetchAll]);
 
   // Diagnostics
   useEffect(() => {
@@ -491,7 +492,15 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-black tracking-tight text-slate-900">Visão Geral do Provimento</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">Visão Geral do Provimento</h1>
+          {(isLoadingVagas || isLoadingBancos) && (
+            <div className="flex items-center gap-2 px-2 py-1 bg-primary/5 rounded-full border border-primary/10 animate-pulse">
+              <RefreshCcw className="h-3 w-3 text-primary animate-spin" />
+              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">Atualizando...</span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 text-slate-400">
             <Filter className="h-3.5 w-3.5" />
@@ -566,23 +575,34 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {stats.map((stat, idx) => (
-          <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
-            <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
-            <CardContent className="p-5">
-              <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </div>
-              <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
-              <div className="flex flex-col gap-0.5">
-                <p className="text-2xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
-                {stat.description && (
-                  <p className="text-[9px] font-bold text-slate-400 italic leading-none">{stat.description}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {stats.map((stat, idx) => {
+          const isVagasStat = !stat.label.includes('CR') && !stat.label.includes('Tarefas');
+          const isBancosStat = stat.label.includes('CR');
+          const showSkeleton = (isVagasStat && isLoadingVagas && allVagas.length === 0) || 
+                              (isBancosStat && isLoadingBancos && bancos.length === 0);
+
+          return (
+            <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
+              <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
+              <CardContent className="p-5">
+                <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
+                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                </div>
+                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
+                <div className="flex flex-col gap-0.5">
+                  {showSkeleton ? (
+                    <Skeleton className="h-8 w-16 my-0.5" />
+                  ) : (
+                    <p className="text-2xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
+                  )}
+                  {stat.description && (
+                    <p className="text-[9px] font-bold text-slate-400 italic leading-none">{stat.description}</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

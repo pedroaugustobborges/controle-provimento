@@ -14,13 +14,13 @@ export const VAGA_REQUIRED_COLUMNS = [
 export const VAGA_OPTIONAL_COLUMNS = [
   { key: 'secao', label: 'Seção', aliases: ['SECAO', 'SEÇÃO', 'SETOR', 'DEPARTAMENTO'] },
   { key: 'data_convocacao_planilha', label: 'Data Convocação', aliases: ['DATA_CONVOCACAO', 'CONVOCAÇÃO', 'DATA CONVOCAÇÃO'] },
-  { key: 'horario_convocacao_planilha', label: 'Horário', aliases: ['HORARIO', 'HORÁRIO', 'HORA'] },
+  { key: 'horario_convocacao_planilha', label: 'Horário', aliases: ['HORARIO_CONVOCACAO', 'HORARIO', 'HORÁRIO', 'HORA'] },
   { key: 'candidato_convocado_planilha', label: 'Candidato Convocado', aliases: ['CANDIDATO_CONVOCADO', 'NOME CANDIDATO', 'CANDIDATO'] },
   { key: 'classificacao_convocacao_planilha', label: 'Classificação Conv.', aliases: ['CLASSIFICACAO_CONV', 'CLASSIFICAÇÃO CONV', 'ORDEM'] },
-  { key: 'forma_convocacao_planilha', label: 'Forma', aliases: ['FORMA', 'MEIO', 'CANAL'] },
+  { key: 'forma_convocacao_planilha', label: 'Forma', aliases: ['FORMA_CONV', 'FORMA', 'MEIO', 'CANAL'] },
   { key: 'status_oitiva_convocacao_planilha', label: 'Status Oitiva', aliases: ['STATUS_OITIVA', 'OITIVA'] },
-  { key: 'admissao_enviada_acompanhamento', label: 'Admissão Enviada', aliases: ['ADMISSAO_ENVIADA_DATA', 'DATA ADMISSÃO ENVIADA'] },
-  { key: 'admissao_efetivada_acompanhamento', label: 'Admissão Efetivada', aliases: ['ADMISSAO_EFETIVADA_DATA', 'DATA ADMISSÃO EFETIVADA'] },
+  { key: 'admissao_enviada_acompanhamento', label: 'Admissão Enviada', aliases: ['ADMISSAO_ENVIADA', 'ADMISSAO_ENVIADA_DATA', 'DATA ADMISSÃO ENVIADA'] },
+  { key: 'admissao_efetivada_acompanhamento', label: 'Admissão Efetivada', aliases: ['ADMISSAO_EFETIVADA', 'ADMISSAO_EFETIVADA_DATA', 'DATA ADMISSÃO EFETIVADA'] },
   { key: 'detalhes_acompanhamento', label: 'Detalhes', aliases: ['DETALHES'] },
   { key: 'observacao', label: 'Observação', aliases: ['OBSERVACAO', 'OBSERVAÇÃO', 'OBS', 'NOTAS'] },
 ];

@@ -19,13 +19,23 @@ const REGION_ALIASES: Record<string, string[]> = {
 };
 
 export function removeAccents(str: string): string {
+  if (!str) return '';
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+export function normStatus(s: string): string {
+  if (!s) return '';
+  return s.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
 }
 
 export const REGION_MAP: Record<string, string> = Object.fromEntries(
   Object.entries(UNIDADES_POR_REGIAO).flatMap(([region, units]) =>
     [...units, ...(REGION_ALIASES[region] || [])].map((unit) => [
-      removeAccents(String(unit).toUpperCase().trim().replace(/\s+/g, ' ')),
+      normStatus(String(unit)).toUpperCase(),
       region,
     ])
   )

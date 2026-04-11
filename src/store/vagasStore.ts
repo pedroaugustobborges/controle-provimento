@@ -302,9 +302,24 @@ export const useVagasStore = create<VagasState>()(
       updateImportedFile: (id, data) => set((s) => ({
         importedFiles: s.importedFiles.map((f) => f.id === id ? { ...f, ...data } : f),
       })),
-      deleteImportedFile: (id) => set((s) => ({
-        importedFiles: s.importedFiles.filter((f) => f.id !== id),
-      })),
+      deleteImportedFile: async (id) => {
+        try {
+          const { DatabaseService } = await import('@/services/databaseService');
+          const { success, error } = await DatabaseService.deleteImportBatch(id);
+          
+          if (success) {
+            set((s) => ({
+              importedFiles: s.importedFiles.filter((f) => f.id !== id),
+              importHistory: s.importHistory.filter((h) => h.id !== id),
+            }));
+          } else {
+            throw error || new Error('Falha ao excluir o arquivo do banco de dados');
+          }
+        } catch (err) {
+          console.error('Erro ao excluir arquivo:', err);
+          throw err;
+        }
+      },
       addTarefa: (tarefa) => set((s) => ({ tarefas: [tarefa, ...s.tarefas] })),
       updateTarefa: (id, data) => set((s) => ({
         tarefas: s.tarefas.map((t) => t.id === id ? { ...t, ...data } : t),

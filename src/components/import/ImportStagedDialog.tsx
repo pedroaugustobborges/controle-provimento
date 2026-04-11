@@ -156,7 +156,11 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       
       if (importType === 'banco') {
         const matched = sheetNames.find(name => String(name || '').toUpperCase() === 'BANCO_GERAL');
-        if (matched) defaultSheet = matched;
+        if (matched) {
+          defaultSheet = matched;
+        } else {
+          toast.error('O arquivo de Banco de Talentos deve conter uma aba chamada "BANCO_GERAL".');
+        }
       } else {
         const matched = sheetNames.find(name => {
           const nameStr = String(name || '').toUpperCase();

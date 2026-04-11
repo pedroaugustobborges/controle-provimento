@@ -15,7 +15,7 @@ import {
   FileCheck
 } from 'lucide-react';
 
-import logoAgir from '@/assets/logo-agir.png';
+import logoAgir from '@/assets/logo-agir-white.png';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -32,7 +32,7 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminStore } from '@/store/adminStore';
 import { cn } from '@/lib/utils';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 
 const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
@@ -43,7 +43,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
-  const { currentUser, users, selectedRegion, selectedUnit, setSelectedRegion, setSelectedUnit } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnit, setSelectedRegion, setSelectedUnit } = useAdminStore();
   const location = useLocation();
   const [showSupport, setShowSupport] = useState(false);
 
@@ -107,18 +107,17 @@ export function AppSidebar() {
         { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
       ] 
     },
-  ], [isManagement, isAdminAnalyst, isEditalAnalyst]);
+  ], [isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess]);
 
   const hasMultipleUnits = useMemo(() => {
     if (!currentUser) return false;
     return currentUser.visualiza_todas_unidades || currentUser.unidades_vinculadas.length > 1;
   }, [currentUser]);
 
-
   const isUrlActive = (url: string) => {
     const currentUrl = location.pathname + location.search;
-    if (url === '/') return currentUrl === '/';
-    return currentUrl === url || currentUrl.startsWith(url + '?') || currentUrl.startsWith(url + '/');
+    if (url === '/') return location.pathname === '/';
+    return currentUrl === url;
   };
 
   const isParentActive = (item: any) => {
@@ -134,21 +133,20 @@ export function AppSidebar() {
   ].filter(item => item.visible);
   
   return (
-    <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
-      <SidebarHeader className="border-b border-white/10 py-6 px-4">
-        <div className="flex items-center gap-4 transition-all duration-300">
+    <Sidebar collapsible="icon" className="border-r border-[#E5E7EB] bg-white shadow-sm">
+      <SidebarHeader className="p-0 overflow-hidden">
+        <div className="bg-[#1E293B] py-6 px-4 flex items-center gap-4 transition-all duration-300">
           <div className="relative group">
-            <div className="absolute -inset-1 bg-blue-500 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
-            <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
+            <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain p-1" />
           </div>
           {!collapsed && (
             <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
               <span className="font-extrabold text-xl text-white tracking-tight flex items-center gap-1.5">
                 AGIR
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#2563EB] animate-pulse" />
               </span>
-              <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] leading-tight">
-                Provimento de Pessoal
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-tight">
+                Provimento Digital
               </span>
             </div>
           )}
@@ -156,27 +154,27 @@ export function AppSidebar() {
 
         {/* Unit selector for multi-unit users */}
         {hasMultipleUnits && !collapsed && (
-          <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="mt-4 px-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
             <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnit('all'); }}>
-              <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
+              <SelectTrigger className="h-9 bg-slate-50 border-slate-200 text-[#374151] text-[11px] font-bold hover:bg-slate-100 transition-all shadow-sm">
                 <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
-              <SelectContent className="bg-[#112240] border-white/10 text-white">
-                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
-                <SelectItem value="Goiás e Vitória" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás e Vitória</SelectItem>
-                <SelectItem value="Unidades de Fora" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Unidades de Fora</SelectItem>
+              <SelectContent className="bg-white border-slate-200">
+                <SelectItem value="all" className="text-xs font-bold hover:bg-slate-50 focus:bg-slate-50">Todas as Unidades</SelectItem>
+                <SelectItem value="Goiás e Vitória" className="text-xs hover:bg-slate-50 focus:bg-slate-50">Goiás e Vitória</SelectItem>
+                <SelectItem value="Unidades de Fora" className="text-xs hover:bg-slate-50 focus:bg-slate-50">Unidades de Fora</SelectItem>
               </SelectContent>
             </Select>
 
             {selectedRegion !== 'all' && (
               <Select value={selectedUnit} onValueChange={setSelectedUnit}>
-                <SelectTrigger className="h-8 bg-blue-500/5 border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/10 hover:border-blue-500/30 transition-all animate-in zoom-in-95 duration-300">
+                <SelectTrigger className="h-8 bg-blue-50 border-blue-100 text-[#1D4ED8] text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100/50 transition-all animate-in zoom-in-95 duration-300">
                   <SelectValue placeholder="Selecionar Unidade" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#112240] border-white/10 text-white max-h-[250px]">
-                  <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</SelectItem>
+                <SelectContent className="bg-white border-slate-200 max-h-[250px]">
+                  <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest text-[#1D4ED8]">Todas de {selectedRegion}</SelectItem>
                   {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
-                    <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
+                    <SelectItem key={u} value={u} className="text-xs hover:bg-slate-50 focus:bg-slate-50">{u}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -185,122 +183,79 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
+      <SidebarContent className="py-4 overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="px-3">
-          <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
-            <div className="h-[1px] w-4 bg-blue-500/20" />
+          <SidebarGroupLabel className="px-3 text-[11px] font-bold uppercase tracking-[0.1em] text-[#9CA3AF] mb-4 flex items-center gap-2">
             Fluxo de Provimento
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1.5">
+            <SidebarMenu className="space-y-1">
               {mainItems.filter(item => item.visible !== false).map((item) => {
-                const active = isParentActive(item);
+                const parentActive = isParentActive(item);
+                const itemActive = isUrlActive(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
-                    {item.subMenu ? (
-                      <div className="flex flex-col gap-1">
-                        <SidebarMenuButton asChild tooltip={item.title}>
-                          <NavLink
-                            to={item.url}
-                            className={cn(
-                              "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                              active 
-                                ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                            )}
-                          >
-                            <item.icon className={cn(
-                              "h-5 w-5 shrink-0 transition-all duration-300",
-                              active 
-                                ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
-                                : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
-                            )} />
-                            {!collapsed && (
-                              <span className={cn(
-                                "text-[13.5px] font-bold tracking-tight",
-                                !active && "group-hover:translate-x-0.5 transition-transform duration-300"
-                              )}>
-                                {item.title}
-                              </span>
-                            )}
-                            {active && !collapsed && (
-                              <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
-                            )}
-                          </NavLink>
-                        </SidebarMenuButton>
-                        {!collapsed && (
-                          <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-blue-500/10 space-y-1.5 py-2 pl-3">
-                            {item.subMenu.map((sub, idx) => {
-                              const subActive = isUrlActive(sub.url);
-                              const activeIndex = item.subMenu.findIndex(s => isUrlActive(s.url));
-                              const hasPassed = activeIndex !== -1 && idx < activeIndex;
-                              
-                              return (
-                                <SidebarMenuSubItem key={sub.title}>
-                                  <SidebarMenuSubButton asChild>
-                                    <NavLink
-                                      to={sub.url}
-                                      className={cn(
-                                        "text-[11.5px] py-2 px-3 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
-                                        subActive 
-                                          ? "text-white bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
-                                          : hasPassed
-                                            ? "text-[#275ac5] bg-[#275ac5]/5 hover:bg-[#275ac5]/10"
-                                            : "text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1"
-                                      )}
-                                    >
-                                      {subActive && (
-                                        <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
-                                      )}
-                                      {hasPassed && (
-                                        <div className="absolute left-0 top-0 h-full w-1 bg-[#275ac5]/50" />
-                                      )}
-                                      <span className="relative z-10 flex items-center gap-2 leading-tight">
-                                        <CornerDownRight className={cn(
-                                          "h-3 w-3",
-                                          subActive ? "text-white" : hasPassed ? "text-[#275ac5]" : "text-slate-600"
-                                        )} />
-                                        {sub.title}
-                                      </span>
-                                    </NavLink>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              );
-                            })}
-                          </SidebarMenuSub>
+                    <SidebarMenuButton asChild tooltip={item.title}>
+                      <NavLink
+                        to={item.url}
+                        className={cn(
+                          "flex items-center gap-3.5 px-3 py-2.5 rounded-lg transition-all duration-200 group relative select-none",
+                          itemActive 
+                            ? "bg-[#EFF6FF] text-[#1D4ED8] border-l-[3px] border-[#2563EB] rounded-l-none" 
+                            : "text-[#374151] hover:bg-[#F9FAFB] hover:text-[#1D4ED8]"
                         )}
-                      </div>
-                    ) : (
-                      <SidebarMenuButton asChild tooltip={item.title}>
-                        <NavLink
-                          to={item.url}
-                          end={item.url === '/'}
-                          className={cn(
-                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                            active 
-                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-white"
-                          )}
-                        >
-                          <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-all duration-300",
-                            active 
-                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
-                              : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
+                      >
+                        <item.icon className={cn(
+                          "h-5 w-5 shrink-0 transition-all duration-200",
+                          itemActive ? "text-[#2563EB]" : "text-[#6B7280] group-hover:text-[#2563EB]"
+                        )} />
+                        {!collapsed && (
+                          <span className={cn(
+                            "text-sm font-medium",
+                            itemActive && "font-semibold"
+                          )}>
+                            {item.title}
+                          </span>
+                        )}
+                        {item.subMenu && !collapsed && (
+                          <ChevronDown className={cn(
+                            "h-4 w-4 ml-auto transition-transform duration-200",
+                            parentActive && "rotate-180"
                           )} />
-                          {!collapsed && (
-                            <span className={cn(
-                              "text-[13.5px] font-bold tracking-tight",
-                              !active && "group-hover:translate-x-0.5 transition-transform duration-300"
-                            )}>
-                              {item.title}
-                            </span>
-                          )}
-                          {active && !collapsed && (
-                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
-                          )}
-                        </NavLink>
-                      </SidebarMenuButton>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                    
+                    {!collapsed && item.subMenu && (
+                      <div className={cn(
+                        "overflow-hidden transition-all duration-200",
+                        parentActive ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                      )}>
+                        <SidebarMenuSub className="ml-4 mt-1 space-y-1 border-l border-slate-100 pl-4 py-1">
+                          {item.subMenu.map((sub) => {
+                            const subActive = isUrlActive(sub.url);
+                            return (
+                              <SidebarMenuSubItem key={sub.title}>
+                                <SidebarMenuSubButton asChild>
+                                  <NavLink
+                                    to={sub.url}
+                                    className={cn(
+                                      "text-[13px] py-1.5 px-3 rounded-lg transition-all duration-200 block relative select-none font-medium",
+                                      subActive 
+                                        ? "text-[#1D4ED8] bg-[#EFF6FF] font-semibold" 
+                                        : "text-[#374151] hover:text-[#1D4ED8] hover:bg-[#F9FAFB]"
+                                    )}
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      {sub.title}
+                                    </span>
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
+                        </SidebarMenuSub>
+                      </div>
                     )}
                   </SidebarMenuItem>
                 );
@@ -310,43 +265,37 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {secondaryItems.length > 0 && (
-          <SidebarGroup className="mt-8 px-3">
-            <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
-              <div className="h-[1px] w-4 bg-blue-500/20" />
-              Apoio Administrativo
+          <SidebarGroup className="mt-6 px-3">
+            <SidebarGroupLabel className="px-3 text-[11px] font-bold uppercase tracking-[0.1em] text-[#9CA3AF] mb-4 flex items-center gap-2">
+              Bancada Administrativa
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu className="space-y-1.5">
+              <SidebarMenu className="space-y-1">
                 {secondaryItems.map((item) => {
-                  const active = isParentActive(item);
+                  const itemActive = isUrlActive(item.url);
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild tooltip={item.title}>
                         <NavLink
                           to={item.url}
                           className={cn(
-                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                            active 
-                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            "flex items-center gap-3.5 px-3 py-2.5 rounded-lg transition-all duration-200 group relative select-none",
+                            itemActive 
+                              ? "bg-[#EFF6FF] text-[#1D4ED8] border-l-[3px] border-[#2563EB] rounded-l-none" 
+                              : "text-[#374151] hover:bg-[#F9FAFB] hover:text-[#1D4ED8]"
                           )}
                         >
                           <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-all duration-300",
-                            active 
-                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
-                              : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
+                            "h-5 w-5 shrink-0 transition-all duration-200",
+                            itemActive ? "text-[#2563EB]" : "text-[#6B7280] group-hover:text-[#2563EB]"
                           )} />
                           {!collapsed && (
                             <span className={cn(
-                              "text-[13.5px] font-bold tracking-tight",
-                              !active && "group-hover:translate-x-0.5 transition-transform duration-300"
+                              "text-sm font-medium",
+                              itemActive && "font-semibold"
                             )}>
                               {item.title}
                             </span>
-                          )}
-                          {active && !collapsed && (
-                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
                           )}
                         </NavLink>
                       </SidebarMenuButton>
@@ -359,23 +308,29 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-       <SidebarFooter className="border-t border-white/10 p-5 mt-auto bg-black/10">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Suporte Interno">
-              <button 
-                onClick={() => setShowSupport(true)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-400 transition-all group overflow-hidden border border-transparent hover:border-white/5"
-              >
-                <div className="relative">
-                  <HelpCircle className="h-5 w-5 group-hover:text-white group-hover:rotate-12 transition-transform duration-500" />
-                  <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                {!collapsed && <span className="text-sm font-semibold tracking-tight group-hover:text-white">Suporte Interno</span>}
-              </button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="border-t border-[#E5E7EB] p-4 mt-auto">
+        <div className="flex flex-col gap-3">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Suporte Interno">
+                <button 
+                  onClick={() => setShowSupport(true)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 text-[#374151] transition-all group overflow-hidden"
+                >
+                  <HelpCircle className="h-5 w-5 text-[#6B7280] group-hover:text-[#2563EB] transition-colors" />
+                  {!collapsed && <span className="text-sm font-medium">Suporte Interno</span>}
+                </button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          
+          {!collapsed && (
+            <div className="px-3 text-[10px] text-[#9CA3AF] font-medium flex items-center justify-between">
+              <span>v1.0 · AGIR 2025</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+            </div>
+          )}
+        </div>
 
         <Dialog open={showSupport} onOpenChange={setShowSupport}>
           <DialogContent className="sm:max-w-md">

@@ -357,23 +357,23 @@ export default function DashboardPage() {
   const vacancyAlerts = useMemo(() => {
     return vagas
       .filter((vaga) => {
-        const status = String(vaga.status || '').toUpperCase();
-        if (['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(status)) return false;
-        const lastHist = vaga.historico?.[vaga.historico.length - 1];
-        const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
-        return calcDiasAberto(baseDate) > 10;
+        // Only include vacancies with empty/null status ("Sem Status")
+        const status = String(vaga.status || '').trim().toUpperCase();
+        if (status !== '' && status !== 'SEM STATUS') return false;
+        return true;
       })
       .map((vaga) => {
-        const lastHist = vaga.historico?.[vaga.historico.length - 1];
-        const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
-        const daysOpen = calcDiasAberto(baseDate);
+        // Calculate days based on inclusion date (created_at, data_importacao, or data_recebimento)
+        const inclusionDate = vaga.created_at || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
+        const daysOpen = calcDiasAberto(inclusionDate);
 
         return {
           ...vaga,
           daysOpen,
           displayId: vaga.requisicao || vaga.numero_requisicao || 'SEM REQ',
         };
-      });
+      })
+      .sort((a, b) => b.daysOpen - a.daysOpen);
   }, [vagas]);
 
   const alerts = useMemo(() => {
@@ -384,7 +384,7 @@ export default function DashboardPage() {
       title: vaga.cargo || 'Vaga sem cargo informado',
       unit: normalizeUnitName(vaga.unidade),
       badge: `${vaga.daysOpen}d`,
-      description: 'Sem movimentação há mais de 10 dias',
+      description: 'Vaga sem status desde a inclusão no sistema',
       sortValue: 2000 + vaga.daysOpen,
     }));
 
@@ -620,7 +620,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <CardTitle className="text-lg font-bold text-slate-800">Vagas sem Movimentação</CardTitle>
-                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Atrasos de vagas e bancos que exigem atenção</p>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Vagas sem status desde a inclusão no sistema</p>
                 </div>
               </div>
               <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm">
@@ -682,7 +682,7 @@ export default function DashboardPage() {
               <div>
                 <DialogTitle className="text-xl font-bold text-slate-900">Vagas sem Movimentação</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-slate-500">
-                  Listagem de vagas sem atualização de status há mais de 10 dias.
+                  Vagas incluídas no sistema que ainda não receberam nenhuma ação dos analistas.
                 </DialogDescription>
               </div>
             </div>
@@ -695,7 +695,7 @@ export default function DashboardPage() {
                   <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Requisição</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Unidade</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Cargo</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Último Status</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Status</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6 text-center">Dias Parado</TableHead>
                 </TableRow>
               </TableHeader>
@@ -737,7 +737,7 @@ export default function DashboardPage() {
                           <ShieldCheck className="h-6 w-6 text-emerald-500" />
                         </div>
                         <p className="text-sm font-bold text-slate-800">Nenhuma vaga parada</p>
-                        <p className="text-xs text-slate-400">Todas as vagas foram movimentadas nos últimos 10 dias.</p>
+                        <p className="text-xs text-slate-400">Todas as vagas já possuem status definido.</p>
                       </div>
                     </TableCell>
                   </TableRow>

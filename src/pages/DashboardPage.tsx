@@ -88,6 +88,7 @@ export default function DashboardPage() {
     console.log('Vagas carregadas:', allVagas.length);
     console.log('Banco carregado:', bancos.length);
     console.log('Filtro de Região:', selectedRegion);
+    console.log("STATUS únicos na tabela:", [...new Set(allVagas.map(v => v.status))]);
     console.log('-----------------------------');
   }, [allVagas, bancos, selectedRegion]);
 

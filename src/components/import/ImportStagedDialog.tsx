@@ -182,6 +182,24 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
     }
   };
 
+  const handleManualMapping = (systemKey: string, excelHeader: string) => {
+    const updatedMappings = mappings.filter(m => normalizeImportSystemKey(m.system) !== normalizeImportSystemKey(systemKey));
+    if (excelHeader && excelHeader !== 'none') {
+      const isDate = systemKey.includes('data') || 
+                     systemKey.includes('_data') || 
+                     systemKey === 'data_abertura' || 
+                     systemKey === 'data_recebimento' || 
+                     systemKey === 'data_convocacao' || 
+                     systemKey === 'data_validade';
+      updatedMappings.push({
+        excel: excelHeader,
+        system: systemKey,
+        isDate
+      });
+    }
+    setMappings(updatedMappings);
+  };
+
   const handleStartImport = async () => {
     if (!workbook || !selectedSheet || !currentUser) return;
     

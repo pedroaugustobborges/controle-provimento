@@ -128,7 +128,7 @@ interface VagasState {
   addMensagem: (mensagem: MensagemHistorico) => void;
   marcarMensagemLida: (id: string) => void;
   setTemNovasMensagens: (has: boolean) => void;
-  deleteImportBatch: (batchId: string) => void;
+  deleteImportBatch: (batchId: string) => Promise<void>;
   clearVagas: () => void;
   clearBancos: () => void;
   clearBancosPorRegiao: (regiao: 'GO_ES' | 'OUTRAS_UNIDADES') => void;

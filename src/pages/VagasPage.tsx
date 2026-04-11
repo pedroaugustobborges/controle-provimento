@@ -325,8 +325,7 @@ export default function VagasPage() {
       ) : (
         <>
            <PageHeader 
-            title="Controle de Provimento"
-            subtitle="Gerenciamento estratégico e centralizado de vagas, editais e fluxo de convocações AGIR."
+            title="Controle de Vagas"
             badge="Gestão de Vagas"
             helpContent={<HelpGuide />}
             actions={
@@ -469,71 +468,29 @@ export default function VagasPage() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-10 gap-3">
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p>
-            <p className="text-2xl font-bold text-slate-800">{parityAudit.appCount}</p>
-            <p className="text-[11px] text-slate-400">Regra Excel (Cargo + Mes)</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-amber-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fila de Editais</p>
-            <p className="text-2xl font-bold text-amber-600">{countFilaEdital}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Em Andamento</p>
-            <p className="text-2xl font-bold text-blue-600">{countEmAndamento}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
-            <p className="text-2xl font-bold text-green-600">{countConcluidas}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-indigo-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Vagas de Liderança</p>
-            <p className="text-2xl font-bold text-indigo-600">{countVagasLideranca}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-violet-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Convocações</p>
-            <p className="text-2xl font-bold text-violet-600">{countConvocacao}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-rose-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Vagas Interrompidas</p>
-            <p className="text-2xl font-bold text-rose-600">{countVagasInterrompidas}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-orange-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Documentação</p>
-            <p className="text-2xl font-bold text-orange-600">{countDocumentacao}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-yellow-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aguardando Unidade</p>
-            <p className="text-2xl font-bold text-yellow-600">{countAguardandoUnidade}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-emerald-500">
-          <CardContent className="p-4 flex flex-col gap-1">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Com Banco Válido</p>
-            <p className="text-2xl font-bold text-emerald-600">{countComBanco}</p>
-          </CardContent>
-        </Card>
+        {[
+          { label: 'Total de Vagas', value: parityAudit.appCount, sub: 'Base ativa', borderColor: 'border-l-slate-500', textColor: 'text-slate-800' },
+          { label: 'Fila de Editais', value: countFilaEdital, borderColor: 'border-l-amber-400', textColor: 'text-amber-600' },
+          { label: 'Em Andamento', value: countEmAndamento, borderColor: 'border-l-blue-400', textColor: 'text-blue-600' },
+          { label: 'Concluídas', value: countConcluidas, borderColor: 'border-l-green-400', textColor: 'text-green-600' },
+          { label: 'Liderança', value: countVagasLideranca, borderColor: 'border-l-indigo-400', textColor: 'text-indigo-600' },
+          { label: 'Convocações', value: countConvocacao, borderColor: 'border-l-violet-400', textColor: 'text-violet-600' },
+          { label: 'Interrompidas', value: countVagasInterrompidas, borderColor: 'border-l-rose-400', textColor: 'text-rose-600' },
+          { label: 'Documentação', value: countDocumentacao, borderColor: 'border-l-orange-400', textColor: 'text-orange-600' },
+          { label: 'Aguard. Unidade', value: countAguardandoUnidade, borderColor: 'border-l-yellow-400', textColor: 'text-yellow-600' },
+          { label: 'Com Banco', value: countComBanco, borderColor: 'border-l-emerald-400', textColor: 'text-emerald-600' },
+        ].map((card) => (
+          <Card key={card.label} className={`border-slate-200 shadow-sm bg-white border-l-4 ${card.borderColor} hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-default`}>
+            <CardContent className="p-4 flex flex-col gap-1">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{card.label}</p>
+              <p className={`text-2xl font-bold ${card.textColor}`}>{card.value}</p>
+              {card.sub && <p className="text-[10px] text-slate-400">{card.sub}</p>}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <Card className="border-slate-200 shadow-sm bg-slate-50/50">
+      <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">
         <CardContent className="pt-4 pb-3">
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-[240px]">
@@ -659,7 +616,7 @@ export default function VagasPage() {
                   <TableHead>Seção</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-center">Vaga(s)</TableHead>
-                  <TableHead className="text-center">Ação Rápida</TableHead>
+                  <TableHead className="text-center">Banco</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -667,7 +624,7 @@ export default function VagasPage() {
                 {paginatedData.map((v) => (
                   <TableRow
                     key={v.id}
-                    className="whitespace-nowrap cursor-pointer"
+                    className="whitespace-nowrap cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors"
                     onClick={() => navigate(`/vagas/${v.id}`)}
                   >
                     <TableCell className="text-slate-600 text-[11px] font-medium">
@@ -703,7 +660,7 @@ export default function VagasPage() {
                     </TableCell>
                     <TableCell className="text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</TableCell>
                     <TableCell className="text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <StatusBadge status={v.status || v.status_geral} />
                     </TableCell>
                     <TableCell className="text-center font-bold text-slate-700">
@@ -736,11 +693,11 @@ export default function VagasPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
-                            <MoreVertical className="h-4 w-4 text-slate-400" />
+                            <MoreVertical className="h-4 w-4 text-slate-500" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel className="text-[11px] uppercase font-bold text-slate-400">Ações da Vaga</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-slate-400">Ações</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                             <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
                           </DropdownMenuItem>
@@ -755,7 +712,7 @@ export default function VagasPage() {
                               updateVaga(v.id, { status: 'FILA DE EDITAIS' });
                               toast.success('Vaga enviada para Fila de Editais');
                             }} 
-                            className="gap-2 text-amber-600 font-bold"
+                            className="gap-2 text-amber-600"
                           >
                             <FileText className="h-4 w-4" /> Enviar para Fila de Editais
                           </DropdownMenuItem>
@@ -768,7 +725,7 @@ export default function VagasPage() {
                                 toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
                               }
                             }} 
-                            className="gap-2 font-bold text-green-600"
+                            className="gap-2 text-green-600"
                           >
                             <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
                           </DropdownMenuItem>

@@ -54,7 +54,18 @@ export function AppSidebar() {
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
   const { currentUser, users, selectedRegion, selectedUnit, selectedUnits, setSelectedRegion, setSelectedUnit, setSelectedUnits } = useAdminStore();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [showSupport, setShowSupport] = useState(false);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (e) {
+      console.error('Logout error', e);
+    }
+  }, [signOut, navigate]);
 
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard },

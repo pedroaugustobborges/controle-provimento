@@ -65,15 +65,11 @@ const REGION_MAP: Record<string, string> = {
 };
 
 function getRegionForUnit(unitName: string): string {
-  const upper = unitName.toUpperCase().trim();
+  const upper = normalizeUnitName(unitName);
   for (const [key, region] of Object.entries(REGION_MAP)) {
-    if (upper.includes(key) || key.includes(upper)) return region;
+    if (upper.includes(normalizeUnitName(key)) || normalizeUnitName(key).includes(upper)) return region;
   }
-  // Fallback: check for vitória-related tokens
-  if (upper.includes('VITÓRIA') || upper.includes('VITORIA') || upper.includes('SÃO PEDRO') || upper.includes('SUÁ') || upper.includes('SUA')) {
-    return 'Vitória (ES)';
-  }
-  return 'Outras Unidades';
+  return 'Outras unidades';
 }
 
 export default function DashboardPage() {

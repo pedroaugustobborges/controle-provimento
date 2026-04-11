@@ -77,7 +77,10 @@ export const CATEGORIAS_STATUS = {
   ],
   concluidas: ['admissao_efetivada', 'admissao efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
   vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada', 'cancelado'],
-  vagas_lideranca: ['vaga_lideranca', 'vaga de lideranca', 'ESTRATÉGICAS'],
+  vagas_lideranca: [
+    'vaga_lideranca', 'vaga de lideranca', 'ESTRATÉGICAS', 
+    'liderança', 'lideranca', 'vaga de liderança', 'lider'
+  ],
   convocacao: ['realizar_convocacao', 'realizar convocacao', 'CONVOCAÇÕES'],
   documentacao: [
     'documentacao', 'documentacao ok e aso pendente', 'aso pendente', 
@@ -85,7 +88,14 @@ export const CATEGORIAS_STATUS = {
     'documentação ok e aso pendente', 'aso pendente', 'documentação ok', 
     'documentação pendente', 'DOCUMENTAÇÃO'
   ],
-  aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando', 'aguardando unidade']
+  aguardando_unidade: [
+    'aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 
+    'aguardando', 'aguardando unidade', 'aguardar unidade'
+  ],
+  movimentacao_interna: [
+    'movimentação interna', 'movimentacao interna', 'mov interna', 'mov. interna', 
+    'transferência', 'transferencia', 'remanejamento', 'movimentacao_interna'
+  ]
 };
 
 export function isConvocacaoByFields(row: any): boolean {

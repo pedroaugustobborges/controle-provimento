@@ -19,13 +19,23 @@ const REGION_ALIASES: Record<string, string[]> = {
 };
 
 export function removeAccents(str: string): string {
+  if (!str) return '';
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+export function normStatus(s: string): string {
+  if (!s) return '';
+  return s.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
 }
 
 export const REGION_MAP: Record<string, string> = Object.fromEntries(
   Object.entries(UNIDADES_POR_REGIAO).flatMap(([region, units]) =>
     [...units, ...(REGION_ALIASES[region] || [])].map((unit) => [
-      removeAccents(String(unit).toUpperCase().trim().replace(/\s+/g, ' ')),
+      normStatus(String(unit)).toUpperCase(),
       region,
     ])
   )
@@ -59,17 +69,16 @@ export function isVitoriaUnit(unidade: string): boolean {
 }
 
 export const CATEGORIAS_STATUS = {
-  concluidas: ['CONCLUÍDA', 'CONCLUÍDAS', 'CONCLUIDO', 'CONCLUIDA'],
-  movimentacao_interna: ['MOVIMENTAÇÃO INTERNA', 'MOVIMENTACAO INTERNA', 'MOV INTERNA', 'MOV. INTERNA'],
-  vagas_lideranca: ['VAGA DE LIDERANÇA', 'ESTRATÉGICAS', 'ESTRATEGICAS', 'LIDERANÇA', 'LIDERANCA'],
-  em_andamento: ['EM ANDAMENTO', 'REALIZAR CONVOCAÇÃO', 'REALIZAR CONVOCACAO'],
-  aguardando_unidade: ['AGUARDANDO UNIDADE'],
-  fila_edital: ['FILA DE EDITAIS', 'EM EDITAL', 'PUBLICAR NOVO EDITAL'],
-  suspensa: ['SUSPENSA'],
-  cancelada: ['CANCELADA', 'CANCELADAS'],
-  documentacao: ['DOCUMENTAÇÃO', 'DOCUMENTACAO', 'DOCUMENTAÇÃO OK E ASO PENDENTE', 'ASO PENDENTE'],
-  em_admissao: ['ADMISSÃO', 'ADMISSAO', 'ADMISSÃO ENVIADA', 'ADMISSAO ENVIADA'],
-  convocacoes: ['CONVOCAÇÕES', 'CONVOCACOES', 'CONVOCAÇÃO', 'CONVOCACAO'],
+  concluidas: ['concluida', 'concluidas'],
+  movimentacao_interna: ['movimentacao interna', 'transferencia'],
+  vagas_lideranca: ['vaga de lideranca'],
+  em_andamento: ['realizar convocacao', 'em andamento'],
+  fila_edital: ['em edital', 'publicar novo edital'],
+  em_admissao: ['admissao', 'admissao enviada'],
+  documentacao: ['documentacao', 'documentacao ok e aso pendente', 'aso pendente'],
+  aguardando_unidade: ['aguardando unidade'],
+  suspensa: ['suspensa'],
+  cancelada: ['cancelada', 'canceladas'],
 };
 
 export function isConvocacaoByFields(row: any): boolean {
@@ -93,11 +102,10 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
     return 'sem_classificacao';
   }
   
-  const s = String(status).trim();
-  const normStatus = removeAccents(s.toUpperCase());
+  const normS = normStatus(String(status));
   
   for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {
-    if (values.some(v => removeAccents(v.toUpperCase()) === normStatus)) {
+    if (values.includes(normS)) {
       return cat as keyof typeof CATEGORIAS_STATUS;
     }
   }
@@ -108,19 +116,17 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
 export function getStatusColor(status: string): string {
   if (!status) return 'bg-gray-100 text-gray-600';
   
-  const s = String(status).trim();
-  const normStatus = removeAccents(s.toUpperCase());
+  const normS = normStatus(status);
   
-  if (CATEGORIAS_STATUS.concluidas.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-green-100 text-green-700 border-green-200';
-  if (CATEGORIAS_STATUS.fila_edital.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-blue-100 text-blue-700 border-blue-200';
-  if (CATEGORIAS_STATUS.suspensa.some(v => removeAccents(v.toUpperCase()) === normStatus) || CATEGORIAS_STATUS.cancelada.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-red-100 text-red-700 border-red-200';
-  if (CATEGORIAS_STATUS.vagas_lideranca.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-  if (CATEGORIAS_STATUS.documentacao.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-orange-100 text-orange-700 border-orange-200';
-  if (CATEGORIAS_STATUS.aguardando_unidade.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-  if (CATEGORIAS_STATUS.movimentacao_interna.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-cyan-100 text-cyan-700 border-cyan-200';
-  if (CATEGORIAS_STATUS.em_andamento.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-blue-100 text-blue-700 border-blue-200';
-  if (CATEGORIAS_STATUS.em_admissao.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-  if (CATEGORIAS_STATUS.convocacoes.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-purple-100 text-purple-700 border-purple-200';
+  if (CATEGORIAS_STATUS.concluidas.includes(normS)) return 'bg-green-100 text-green-700 border-green-200';
+  if (CATEGORIAS_STATUS.fila_edital.includes(normS)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.suspensa.includes(normS) || CATEGORIAS_STATUS.cancelada.includes(normS)) return 'bg-red-100 text-red-700 border-red-200';
+  if (CATEGORIAS_STATUS.vagas_lideranca.includes(normS)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+  if (CATEGORIAS_STATUS.documentacao.includes(normS)) return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (CATEGORIAS_STATUS.aguardando_unidade.includes(normS)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  if (CATEGORIAS_STATUS.movimentacao_interna.includes(normS)) return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+  if (CATEGORIAS_STATUS.em_andamento.includes(normS)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.em_admissao.includes(normS)) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
   
   return 'bg-gray-100 text-gray-600';
 }
@@ -305,9 +311,9 @@ export function normalizeStatus(statusText: string): StatusVaga {
     return 'SEM STATUS' as StatusVaga;
   }
   
-  const text = removeAccents(statusText.toLowerCase().trim().replace(/\s+/g, ' '));
+  const text = normStatus(statusText);
   
-  if (text === 'admissao efetivada') return 'CONCLUÍDAS' as StatusVaga;
+  if (text === 'admissao efetivada' || text === 'concluida' || text === 'concluidas') return 'CONCLUÍDAS' as StatusVaga;
   if (text === 'publicar novo edital' || text === 'publicar edital' || text.includes('fazer publicacao') || text.includes('fazer publicação') || text === 'aguardando edital' || text === 'aguardando processo e edital') return 'FILA DE EDITAIS' as StatusVaga;
   if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
   if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
@@ -316,7 +322,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text === 'cancelada' || text === 'cancelado') return 'CANCELADAS' as StatusVaga;
   if (text === 'realizar convocacao') return 'CONVOCAÇÕES' as StatusVaga;
   if (text === 'documentacao' || text === 'documentacao ok e aso pendente' || text === 'aso pendente') return 'DOCUMENTAÇÃO' as StatusVaga;
-  if (text === 'admissao enviada' || text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista' || text === 'movimentacao interna') return 'EM ANDAMENTO' as StatusVaga;
+  if (text === 'admissao enviada' || text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista' || text === 'movimentacao interna' || text === 'transferencia') return 'EM ANDAMENTO' as StatusVaga;
   if (text.includes('andamento') || text.includes('processo') || text.includes('edital')) return 'EM ANDAMENTO' as StatusVaga;
 
   return 'SEM STATUS' as StatusVaga;
@@ -511,7 +517,7 @@ export function getStatusSummary(records: any[], selectedUnit: string, selectedM
   const summary: Record<string, number> = {};
   validVacancies.forEach(row => {
     const statusVal = row.status || row.status_geral || 'SEM STATUS';
-    const status = String(statusVal).toUpperCase().trim();
+    const status = normStatus(String(statusVal)).toUpperCase();
     summary[status] = (summary[status] || 0) + 1;
   });
   return { total: validVacancies.length, byStatus: summary };

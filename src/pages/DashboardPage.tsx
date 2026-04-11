@@ -29,7 +29,7 @@ import {
   getValidVacancyBase,
   filterByRegionAndUnit,
   getRegionForUnit,
-  removeAccents,
+  normStatus,
 } from '@/lib/vagaUtils';
 import {
   Briefcase,
@@ -88,6 +88,7 @@ export default function DashboardPage() {
     console.log('Vagas carregadas:', allVagas.length);
     console.log('Banco carregado:', bancos.length);
     console.log('Filtro de Região:', selectedRegion);
+    console.log("STATUS únicos na tabela:", [...new Set(allVagas.map(v => v.status))]);
     console.log('-----------------------------');
   }, [allVagas, bancos, selectedRegion]);
 
@@ -153,7 +154,6 @@ export default function DashboardPage() {
       suspensa: 0,
       cancelada: 0,
       em_admissao: 0,
-      convocacoes: 0,
       atrasadas: 0,
       sem_classificacao: 0,
     };
@@ -164,8 +164,8 @@ export default function DashboardPage() {
 
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
-      const statusUpper = removeAccents(String(v.status || '').toUpperCase());
-      if (calcDiasAberto(baseDate) > 10 && !['CONCLUIDA', 'CANCELADA', 'CANCELADAS', 'SUSPENSA'].includes(statusUpper)) {
+      const normalizedS = normStatus(v.status || '');
+      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
         acc.atrasadas++;
       }
     });
@@ -180,27 +180,27 @@ export default function DashboardPage() {
 
   const totalCR = useMemo(() => {
     return filteredBancos.filter((b) => (
-      (b.status === 'CADASTRO RESERVA' || b.status === 'valido') && !b.is_prorrogado
+      (normStatus(b.status || '') === 'cadastro reserva' || normStatus(b.status || '') === 'valido') && !b.is_prorrogado
     )).length;
   }, [filteredBancos]);
 
   const totalProrrogados = useMemo(() => {
-    return filteredBancos.filter((b) => b.is_prorrogado || b.status === 'prorrogado').length;
+    return filteredBancos.filter((b) => b.is_prorrogado || normStatus(b.status || '') === 'prorrogado').length;
   }, [filteredBancos]);
 
   const totalCadastroReservaDisponiveis = useMemo(() => {
     return filteredBancos.filter((b) => {
-      const status = String(b.status || '').toUpperCase();
-      return status !== 'VENCIDO' && status !== 'CONVOCADO';
+      const s = normStatus(b.status || '');
+      return s !== 'vencido' && s !== 'convocado';
     }).length;
   }, [filteredBancos]);
 
   const totalConvocados = useMemo(() => (
-    filteredBancos.filter((b) => String(b.status || '').toUpperCase() === 'CONVOCADO').length
+    filteredBancos.filter((b) => normStatus(b.status || '') === 'convocado').length
   ), [filteredBancos]);
 
   const totalVencidos = useMemo(() => (
-    filteredBancos.filter((b) => String(b.status || '').toUpperCase() === 'VENCIDO').length
+    filteredBancos.filter((b) => normStatus(b.status || '') === 'vencido').length
   ), [filteredBancos]);
 
   const totalBancoTotal = useMemo(() => filteredBancos.length, [filteredBancos]);
@@ -234,10 +234,9 @@ export default function DashboardPage() {
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5', description: 'Base ativa' },
     { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
     { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos ativos' },
-    { label: 'Convocações', value: counts.convocacoes || 0, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Em convocação' },
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
-    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Transferências' },
+    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
     { label: 'Aguardando', value: counts.aguardando_unidade, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', description: 'Aguardando retorno' },
     { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
     { label: 'Documentação', value: counts.documentacao, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Pendência documental' },
@@ -294,7 +293,8 @@ export default function DashboardPage() {
 
       const lastHist = vaga.historico?.[vaga.historico.length - 1];
       const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
-      if (calcDiasAberto(baseDate) > 10 && !['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(vaga.status)) {
+      const normalizedS = normStatus(vaga.status || '');
+      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
         entry.pendencias += 1;
       }
     });
@@ -303,17 +303,17 @@ export default function DashboardPage() {
       const entry = ensureEntry(banco.unidade);
       if (!entry) return;
 
-      const status = String(banco.status || '').toUpperCase();
+      const s = normStatus(banco.status || '');
       entry.bancos += 1;
-      if (status === 'CADASTRO RESERVA') {
+      if (s === 'cadastro reserva') {
         entry.bancosCR += 1;
       }
 
-      if (status !== 'VENCIDO' && status !== 'CONVOCADO') {
+      if (s !== 'vencido' && s !== 'convocado') {
         entry.bancosDisponiveis += 1;
       }
 
-      if (status === 'VENCIDO' || status === 'PRORROGADO' || banco.is_prorrogado) {
+      if (s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado) {
         entry.pendencias += 1;
       }
     });
@@ -387,8 +387,8 @@ export default function DashboardPage() {
     return vagas
       .filter((vaga) => {
         // Only include vacancies with empty/null status ("Sem Status")
-        const status = String(vaga.status || '').trim().toUpperCase();
-        if (status !== '' && status !== 'SEM STATUS') return false;
+        const s = normStatus(vaga.status || '');
+        if (s !== '' && s !== 'sem status') return false;
         return true;
       })
       .map((vaga) => {
@@ -419,12 +419,12 @@ export default function DashboardPage() {
 
     const bancoAlerts = filteredBancos
       .filter((banco) => {
-        const status = String(banco.status || '').toUpperCase();
-        return status === 'VENCIDO' || status === 'PRORROGADO' || banco.is_prorrogado;
+        const s = normStatus(banco.status || '');
+        return s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado;
       })
       .map((banco) => {
-        const status = String(banco.status || '').toUpperCase();
-        const isExpired = status === 'VENCIDO';
+        const s = normStatus(banco.status || '');
+        const isExpired = s === 'vencido';
 
         return {
           id: `banco-${banco.id}`,

@@ -305,29 +305,40 @@ export class DatabaseService {
   /**
    * Delete an import batch and all its associated records
    */
-  static async deleteImportBatch(batchId: string): Promise<{ success: boolean; error: Error | null }> {
+  static async deleteImportBatch(id: string): Promise<{ success: boolean; error: Error | null }> {
     try {
-      // 1. Delete associated records from vagas
+      // 1. Get the import log record to find the batch reference
+      const { data: importLog, error: logError } = await supabase
+        .from('importacoes')
+        .select('arquivo, nome_arquivo')
+        .eq('id', id)
+        .single();
+      
+      if (logError) throw logError;
+      
+      const batchRef = importLog.arquivo || importLog.nome_arquivo || id;
+
+      // 2. Delete associated records from vagas
       const { error: vagasError } = await supabase
         .from('vagas')
         .delete()
-        .eq('import_batch_id', batchId);
+        .eq('import_batch_id', batchRef);
       
       if (vagasError) console.error('Error deleting vagas for batch:', vagasError);
 
-      // 2. Delete associated records from banco_candidatos
+      // 3. Delete associated records from banco_candidatos
       const { error: bancoError } = await supabase
         .from('banco_candidatos')
         .delete()
-        .eq('import_batch_id', batchId);
+        .eq('import_batch_id', batchRef);
 
       if (bancoError) console.error('Error deleting banco for batch:', bancoError);
 
-      // 3. Delete from importacoes table
+      // 4. Delete from importacoes table
       const { error: importError } = await supabase
         .from('importacoes')
         .delete()
-        .eq('id', batchId);
+        .eq('id', id);
 
       if (importError) throw importError;
 

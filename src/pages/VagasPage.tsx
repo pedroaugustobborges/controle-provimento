@@ -34,7 +34,12 @@ import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
-
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 import {
   DropdownMenu,
@@ -92,6 +97,7 @@ export default function VagasPage() {
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [filterVagasNovas, setFilterVagasNovas] = useState(false);
+  const [vacancyStatusTab, setVacancyStatusTab] = useState('ativas');
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isAddVagaOpen, setIsAddVagaOpen] = useState(false);
@@ -166,6 +172,11 @@ export default function VagasPage() {
   const filtered = useMemo(() => {
     const now = new Date().getTime();
     return canonicalBase.filter((v) => {
+      // Apply status tab filter first (Performance + Logic)
+      const category = v.categoria_status || getCategoriaStatus(v);
+      if (vacancyStatusTab === 'ativas' && (category === 'concluidas' || category === 'vagas_interrompidas')) return false;
+      if (vacancyStatusTab === 'concluidas' && category !== 'concluidas' && category !== 'vagas_interrompidas') return false;
+
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
         (v.cargo || '').toLowerCase().includes(searchTerm) ||
@@ -175,14 +186,14 @@ export default function VagasPage() {
 
       const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
         if (s === v.status || s === v.status_geral) return true;
-        if (s === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') return true;
-        if (s === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') return true;
-        if (s === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') return true;
-        if (s === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') return true;
-        if (s === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') return true;
-        if (s === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') return true;
-        if (s === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') return true;
-        if (s === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade') return true;
+        if (s === 'CONVOCAÇÕES' && category === 'convocacao') return true;
+        if (s === 'DOCUMENTAÇÃO' && category === 'documentacao') return true;
+        if (s === 'FILA DE EDITAIS' && category === 'fila_edital') return true;
+        if (s === 'EM ANDAMENTO' && category === 'em_andamento') return true;
+        if (s === 'CONCLUÍDAS' && category === 'concluidas') return true;
+        if (s === 'ESTRATÉGICAS' && category === 'vagas_lideranca') return true;
+        if (s === 'CANCELADAS' && category === 'vagas_interrompidas') return true;
+        if (s === 'AGUARDANDO UNIDADE' && category === 'aguardando_unidade') return true;
         return false;
       });
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
@@ -195,11 +206,11 @@ export default function VagasPage() {
       
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
-  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, vacancyStatusTab]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, vacancyStatusTab]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -223,22 +234,21 @@ export default function VagasPage() {
     };
     
     canonicalBase.forEach(v => {
-      const cat = getCategoriaStatus(v);
+      const cat = v.categoria_status || getCategoriaStatus(v);
       
       if (acc[cat] !== undefined) {
         acc[cat]++;
       } else {
-        // Fallback para qualquer status não mapeado explicitamente
         acc.em_andamento++;
       }
 
-      if (getBancoByVaga(v.id)) {
+      if (v.tem_banco_valido) {
         acc.com_banco_valido++;
       }
     });
     
     return acc;
-  }, [canonicalBase, getBancoByVaga]);
+  }, [canonicalBase]);
 
   const countFilaEdital = counts.fila_edital;
   const countEmAndamento = counts.em_andamento;
@@ -621,6 +631,19 @@ export default function VagasPage() {
         </CardContent>
       </Card>
 
+      <div className="mb-4">
+        <Tabs value={vacancyStatusTab} onValueChange={setVacancyStatusTab} className="w-full">
+          <TabsList className="bg-slate-100/50 p-1 rounded-xl">
+            <TabsTrigger value="ativas" className="font-bold rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+              Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao})
+            </TabsTrigger>
+            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-6 data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all">
+              Vagas Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -943,7 +966,7 @@ function AcompanhamentoEditalList() {
 
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
-      const cat = getCategoriaStatus(v);
+      const cat = v.categoria_status || getCategoriaStatus(v);
       const isAcompanhamento = ['em_andamento', 'fila_edital', 'convocacao', 'documentacao'].includes(cat);
       if (!isAcompanhamento) return false;
 

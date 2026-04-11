@@ -244,6 +244,7 @@ export default function DashboardPage() {
       vagas: number;
       vagasAbertas: number;
       bancos: number;
+      bancosCR: number;
       bancosDisponiveis: number;
       pendencias: number;
     }>();

@@ -565,7 +565,8 @@ export default function DashboardPage() {
                 <BarChart
                   data={chartData}
                   layout="vertical"
-                  margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
+                  margin={{ top: 0, right: 60, left: 10, bottom: 0 }}
+                  barGap={4}
                 >
                   <CartesianGrid strokeDasharray="4 4" horizontal={true} vertical={false} stroke="#f1f5f9" />
                   <XAxis type="number" hide />
@@ -593,27 +594,50 @@ export default function DashboardPage() {
                       fontWeight: 'bold',
                     }}
                     itemStyle={{ padding: '2px 0' }}
-                    formatter={(value, _name, props) => {
+                    formatter={(value, name, props) => {
                       const data = props.payload;
                       const label = chartMode === 'unidade' && data.region
                         ? `${data.name} (${data.region})`
                         : data.name;
 
-                      return [`${value} registros`, label];
+                      return [`${value} registros`, name === 'vagas' ? 'Vagas' : 'Banco (CR)'];
                     }}
                   />
+                  <Legend 
+                    verticalAlign="top" 
+                    align="right" 
+                    iconType="circle" 
+                    iconSize={8}
+                    wrapperStyle={{ paddingBottom: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                  />
                   <Bar
-                    dataKey="total"
-                    name="Total consolidado"
+                    dataKey="vagas"
+                    name="Vagas"
                     fill="#1e3a5f"
                     radius={[0, 4, 4, 0]}
-                    barSize={18}
+                    barSize={12}
                   >
                     <LabelList
-                      dataKey="total"
+                      dataKey="vagas"
                       position="right"
-                      style={{ fill: '#64748b', fontSize: '11px', fontWeight: 'bold' }}
+                      style={{ fill: '#64748b', fontSize: '10px', fontWeight: 'bold' }}
                       offset={10}
+                      formatter={(val: number) => val > 0 ? val : ''}
+                    />
+                  </Bar>
+                  <Bar
+                    dataKey="bancos"
+                    name="Banco (Cadastro Reserva)"
+                    fill="#10b981"
+                    radius={[0, 4, 4, 0]}
+                    barSize={12}
+                  >
+                    <LabelList
+                      dataKey="bancos"
+                      position="right"
+                      style={{ fill: '#10b981', fontSize: '10px', fontWeight: 'bold' }}
+                      offset={10}
+                      formatter={(val: number) => val > 0 ? val : ''}
                     />
                   </Bar>
                 </BarChart>

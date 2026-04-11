@@ -437,8 +437,9 @@ export default function DashboardPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs font-bold uppercase">Todas as Regiões</SelectItem>
-              <SelectItem value="Goiás e Vitória" className="text-xs font-bold uppercase">Goiás e Vitória</SelectItem>
-              <SelectItem value="Outras unidades" className="text-xs font-bold uppercase">Outras Unidades</SelectItem>
+              <SelectItem value="Goiânia" className="text-xs font-bold uppercase">Goiânia</SelectItem>
+              <SelectItem value="Vitória" className="text-xs font-bold uppercase">Vitória</SelectItem>
+              <SelectItem value="Demais Unidades" className="text-xs font-bold uppercase">Demais Unidades</SelectItem>
             </SelectContent>
           </Select>
 

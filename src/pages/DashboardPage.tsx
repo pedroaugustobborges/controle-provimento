@@ -180,27 +180,27 @@ export default function DashboardPage() {
 
   const totalCR = useMemo(() => {
     return filteredBancos.filter((b) => (
-      (b.status === 'CADASTRO RESERVA' || b.status === 'valido') && !b.is_prorrogado
+      (normStatus(b.status || '') === 'cadastro reserva' || normStatus(b.status || '') === 'valido') && !b.is_prorrogado
     )).length;
   }, [filteredBancos]);
 
   const totalProrrogados = useMemo(() => {
-    return filteredBancos.filter((b) => b.is_prorrogado || b.status === 'prorrogado').length;
+    return filteredBancos.filter((b) => b.is_prorrogado || normStatus(b.status || '') === 'prorrogado').length;
   }, [filteredBancos]);
 
   const totalCadastroReservaDisponiveis = useMemo(() => {
     return filteredBancos.filter((b) => {
-      const status = String(b.status || '').toUpperCase();
-      return status !== 'VENCIDO' && status !== 'CONVOCADO';
+      const s = normStatus(b.status || '');
+      return s !== 'vencido' && s !== 'convocado';
     }).length;
   }, [filteredBancos]);
 
   const totalConvocados = useMemo(() => (
-    filteredBancos.filter((b) => String(b.status || '').toUpperCase() === 'CONVOCADO').length
+    filteredBancos.filter((b) => normStatus(b.status || '') === 'convocado').length
   ), [filteredBancos]);
 
   const totalVencidos = useMemo(() => (
-    filteredBancos.filter((b) => String(b.status || '').toUpperCase() === 'VENCIDO').length
+    filteredBancos.filter((b) => normStatus(b.status || '') === 'vencido').length
   ), [filteredBancos]);
 
   const totalBancoTotal = useMemo(() => filteredBancos.length, [filteredBancos]);

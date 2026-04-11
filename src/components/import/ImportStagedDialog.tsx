@@ -115,7 +115,10 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
     sheetName: string,
     nextType: 'vagas' | 'banco'
   ) => {
-    const defaultHeaderIndex = getDefaultHeaderRow(nextType);
+    // Para a aba VAGAS_GERAL do arquivo VAGAS_UNIFICADO, o cabeçalho é sempre a primeira linha (índice 0)
+    const isVagasGeral = sheetName.toUpperCase() === 'VAGAS_GERAL' && nextType === 'vagas';
+    const defaultHeaderIndex = isVagasGeral ? 0 : getDefaultHeaderRow(nextType);
+    
     const nextSampleData = workbookData.Sheets[sheetName]
       ? XLSX.utils.sheet_to_json<any[]>(workbookData.Sheets[sheetName], { header: 1 }).slice(0, 20)
       : [];
@@ -161,10 +164,11 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           toast.error('O arquivo de Banco de Talentos deve conter uma aba chamada "BANCO_GERAL".');
         }
       } else {
-        const matched = sheetNames.find(name => {
-          const nameStr = String(name || '').toUpperCase();
-          return ['VAGAS', 'GERAL', 'BASE'].some(k => nameStr.includes(k));
-        });
+        const matched = sheetNames.find(name => String(name || '').toUpperCase() === 'VAGAS_GERAL') ||
+                        sheetNames.find(name => {
+                          const nameStr = String(name || '').toUpperCase();
+                          return ['VAGAS', 'GERAL', 'BASE'].some(k => nameStr.includes(k));
+                        });
         if (matched) defaultSheet = matched;
       }
       

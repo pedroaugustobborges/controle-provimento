@@ -83,58 +83,44 @@ export function isConvocacaoByFields(row: any): boolean {
   );
 }
 
-export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = false): keyof typeof CATEGORIAS_STATUS {
-  if (!row) return 'em_andamento';
+export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = false): keyof typeof CATEGORIAS_STATUS | 'sem_classificacao' {
+  if (!row) return 'sem_classificacao';
   
   const status = typeof row === 'string' ? row : (row.status || row.status_geral);
   
   if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || String(status).trim() === '') {
-    if (includeConvocacaoFields && typeof row !== 'string' && isConvocacaoByFields(row)) return 'convocacao';
-    return 'em_andamento';
+    return 'sem_classificacao';
   }
   
   const s = String(status).trim();
-  const sLow = s.toLowerCase();
+  const normStatus = removeAccents(s.toUpperCase());
   
-  const findCategory = (statusVal: string): keyof typeof CATEGORIAS_STATUS | null => {
-    if (CATEGORIAS_STATUS.fila_edital.includes(statusVal)) return 'fila_edital';
-    if (CATEGORIAS_STATUS.concluidas.includes(statusVal)) return 'concluidas';
-    if (CATEGORIAS_STATUS.vagas_interrompidas.includes(statusVal)) return 'vagas_interrompidas';
-    if (CATEGORIAS_STATUS.vagas_lideranca.includes(statusVal)) return 'vagas_lideranca';
-    if (CATEGORIAS_STATUS.convocacao.includes(statusVal)) return 'convocacao';
-    if (CATEGORIAS_STATUS.documentacao.includes(statusVal)) return 'documentacao';
-    if (CATEGORIAS_STATUS.aguardando_unidade.includes(statusVal)) return 'aguardando_unidade';
-    if (CATEGORIAS_STATUS.movimentacao_interna.includes(statusVal)) return 'movimentacao_interna';
-    if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
-    return null;
-  };
-
-  const cat = findCategory(s) || findCategory(sLow);
-  
-  if (includeConvocacaoFields && cat !== 'convocacao' && typeof row !== 'string' && isConvocacaoByFields(row)) {
-    return 'convocacao';
+  for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {
+    if (values.some(v => removeAccents(v.toUpperCase()) === normStatus)) {
+      return cat as keyof typeof CATEGORIAS_STATUS;
+    }
   }
 
-  return cat || 'em_andamento';
+  return 'sem_classificacao';
 }
 
 export function getStatusColor(status: string): string {
   if (!status) return 'bg-gray-100 text-gray-600';
   
-  const s = String(status).trim().toLowerCase();
+  const s = String(status).trim();
+  const normStatus = removeAccents(s.toUpperCase());
   
-  // Categorized colors
-  if (CATEGORIAS_STATUS.concluidas.includes(s)) return 'bg-green-100 text-green-700 border-green-200';
-  if (CATEGORIAS_STATUS.fila_edital.includes(s)) return 'bg-blue-100 text-blue-700 border-blue-200';
-  if (CATEGORIAS_STATUS.vagas_interrompidas.includes(s) || s.includes('cancelada') || s.includes('cancelado')) return 'bg-red-100 text-red-700 border-red-200';
-  if (CATEGORIAS_STATUS.vagas_lideranca.includes(s)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-  if (CATEGORIAS_STATUS.convocacao.includes(s)) return 'bg-violet-100 text-violet-700 border-violet-200';
-  if (CATEGORIAS_STATUS.documentacao.includes(s) || s.includes('documentacao') || s.includes('documentação')) return 'bg-orange-100 text-orange-700 border-orange-200';
-  if (CATEGORIAS_STATUS.aguardando_unidade.includes(s)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-  if (CATEGORIAS_STATUS.movimentacao_interna.includes(s)) return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+  if (CATEGORIAS_STATUS.concluidas.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-green-100 text-green-700 border-green-200';
+  if (CATEGORIAS_STATUS.fila_edital.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.suspensa.some(v => removeAccents(v.toUpperCase()) === normStatus) || CATEGORIAS_STATUS.cancelada.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-red-100 text-red-700 border-red-200';
+  if (CATEGORIAS_STATUS.vagas_lideranca.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+  if (CATEGORIAS_STATUS.documentacao.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (CATEGORIAS_STATUS.aguardando_unidade.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  if (CATEGORIAS_STATUS.movimentacao_interna.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+  if (CATEGORIAS_STATUS.em_andamento.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.em_admissao.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
   
-  // Default color for Em Andamento and others
-  return 'bg-blue-100 text-blue-700 border-blue-200';
+  return 'bg-gray-100 text-gray-600';
 }
 
 export function getValidacaoColor(status: StatusValidacao): string {

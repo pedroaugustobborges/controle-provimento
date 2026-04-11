@@ -183,8 +183,8 @@ export function AppSidebar() {
               </SelectTrigger>
               <SelectContent className="border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl">
                 <SelectItem value="all" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">Todas as Regiões</SelectItem>
-                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">GOIÁS E VITÓRIA</SelectItem>
-                <SelectItem value="OUTRAS UNIDADES" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">OUTRAS UNIDADES</SelectItem>
+                <SelectItem value="Goiás e Vitória" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">GOIÁS E VITÓRIA</SelectItem>
+                <SelectItem value="Outras unidades" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">OUTRAS UNIDADES</SelectItem>
               </SelectContent>
             </Select>
 

@@ -164,10 +164,11 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           toast.error('O arquivo de Banco de Talentos deve conter uma aba chamada "BANCO_GERAL".');
         }
       } else {
-        const matched = sheetNames.find(name => {
-          const nameStr = String(name || '').toUpperCase();
-          return ['VAGAS', 'GERAL', 'BASE'].some(k => nameStr.includes(k));
-        });
+        const matched = sheetNames.find(name => String(name || '').toUpperCase() === 'VAGAS_GERAL') ||
+                        sheetNames.find(name => {
+                          const nameStr = String(name || '').toUpperCase();
+                          return ['VAGAS', 'GERAL', 'BASE'].some(k => nameStr.includes(k));
+                        });
         if (matched) defaultSheet = matched;
       }
       

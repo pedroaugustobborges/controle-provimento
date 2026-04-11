@@ -266,21 +266,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl">
           <div className="relative h-36 bg-primary flex items-center justify-center">
-            <img src={logoAgir} alt="AGIR" className="h-10 object-contain" />
+            <img src={logoAgir} alt="AGIR" className="h-14 object-contain" />
             <div className="absolute -bottom-12 left-8">
               <div className="h-24 w-24 rounded-2xl border-4 border-background bg-muted overflow-hidden shadow-lg">
                 <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
               </div>
             </div>
-            <button 
-              onClick={() => setShowProfile(false)}
-              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors flex items-center justify-center backdrop-blur-sm"
-            >
-              <span className="sr-only">Fechar</span>
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
 
           <div className="pt-16 pb-8 px-8">

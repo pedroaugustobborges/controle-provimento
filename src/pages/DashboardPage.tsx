@@ -635,14 +635,14 @@ export default function DashboardPage() {
                     />
                   </Bar>
                   <Bar
-                    dataKey="bancos"
+                    dataKey="bancosCR"
                     name="Banco (Cadastro Reserva)"
                     fill="#10b981"
                     radius={[0, 4, 4, 0]}
                     barSize={12}
                   >
                     <LabelList
-                      dataKey="bancos"
+                      dataKey="bancosCR"
                       position="right"
                       style={{ fill: '#10b981', fontSize: '10px', fontWeight: 'bold' }}
                       offset={10}

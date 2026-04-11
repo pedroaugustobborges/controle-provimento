@@ -234,12 +234,11 @@ export default function VagasPage() {
     };
     
     canonicalBase.forEach(v => {
-      const cat = getCategoriaStatus(v);
+      const cat = v.categoria_status || getCategoriaStatus(v);
       
       if (acc[cat] !== undefined) {
         acc[cat]++;
       } else {
-        // Fallback para qualquer status não mapeado explicitamente
         acc.em_andamento++;
       }
 

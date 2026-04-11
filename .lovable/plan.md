@@ -1,24 +1,21 @@
 
 
-## Plano: Ajustes na Visão Geral (DashboardPage) e Cabeçalho
+## Plano: Corrigir terminologia, contraste e layout do Dashboard
 
-### Arquivos a modificar:
+### Arquivo: `src/pages/DashboardPage.tsx`
 
-**1. `src/pages/DashboardPage.tsx`:**
-- Remover botão "Relatórios Detalhados" do `actions` do PageHeader
-- Remover card "Canceladas" do array `stats`
-- Corrigir ícones: Cadastro Reserva → `UserCheck`, Mov. Interna → `ArrowLeftRight`, Banco de Talentos → `Users`
-- Adicionar subtextos descritivos em todos os cards que não possuem (Fila de Editais, Em Andamento, Concluídas, Mov. Interna, Liderança)
-- Alterar cor das barras do gráfico para azul do sidebar (`#1e3a5f` ou similar)
-- Adicionar toggle "Por Unidade / Por Região" no gráfico com lógica de agrupamento por região
-- Renomear "Alertas Ativos" → "Vagas em Atraso" com subtítulo explicativo
-- Revisar lógica de `movimentacao_interna` para capturar todos os status relevantes
+**1. Terminologia dos cards:**
+- Renomear "Candidatos Prorrogados" → "Bancos Prorrogados"
+- Renomear "Candidatos Vencidos" → "Bancos Vencidos"  
+- Remover/reformular subtexto redundante do card "Cadastro Reserva"
+- Reformular subtexto do card "Vagas em Atraso" para algo mais objetivo
 
-**2. `src/components/AppLayout.tsx` (ou componente do header/avatar):**
-- Adicionar borda na cor do sidebar ao avatar do usuário
-- Remover dropdown/menu do avatar (perfil, configurações, sair)
-- Remover ícone decorativo do campo de busca se presente
+**2. Contraste visual:**
+- Adicionar `bg-white border border-slate-200 shadow-sm` nos cards de estatísticas para diferenciá-los do fundo
+- Adicionar fundo branco com borda/sombra no container do gráfico para separação visual
 
-**3. Verificar sincronização dos filtros:**
-- Confirmar que `selectedRegion` e `selectedUnit` do `adminStore` são aplicados corretamente em todos os cálculos do dashboard (já parece estar com `filterByRegionAndUnit`, mas validar gráfico e alertas)
+**3. Simplificar layout da página:**
+- Remover seção "Painel Operacional" (indicador verde piscante)
+- Remover seção "Monitoramento Estratégico" (parte inferior)
+- Manter apenas "Visão Geral do Provimento" com cards + gráfico, usando layout limpo do estilo do painel operacional removido
 

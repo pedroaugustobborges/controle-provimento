@@ -285,15 +285,15 @@ export default function DashboardPage() {
     }>();
 
     const ensureEntry = (unitName: string) => {
-      const normalizedUnit = normalizeUnitName(unitName);
-      if (!normalizedUnit) return null;
+      const canonicalName = resolveCanonicalName(unitName);
+      if (!canonicalName) return null;
 
-      const existing = unitMap.get(normalizedUnit);
+      const existing = unitMap.get(canonicalName);
       if (existing) return existing;
 
       const created = {
-        name: normalizedUnit,
-        region: getRegionForUnit(normalizedUnit),
+        name: canonicalName,
+        region: getRegionForUnit(canonicalName),
         vagas: 0,
         vagasAbertas: 0,
         bancos: 0,
@@ -302,7 +302,7 @@ export default function DashboardPage() {
         pendencias: 0,
       };
 
-      unitMap.set(normalizedUnit, created);
+      unitMap.set(canonicalName, created);
       return created;
     };
 

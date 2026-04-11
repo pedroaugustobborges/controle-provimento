@@ -172,6 +172,8 @@ export default function DashboardPage() {
     });
 
     console.log('--- CONTAGEM DE STATUS ---');
+    console.log("MOV INTERNA raw:", vagas.filter(v => normStatus(v.status || '').includes('movimentac')).map(v => v.status).slice(0, 5));
+    console.log("ADMISSAO raw:", vagas.filter(v => normStatus(v.status || '').includes('admissao')).map(v => v.status).slice(0, 5));
     Object.entries(acc).forEach(([k, v]) => console.log(`${k}: ${v}`));
     console.log('TOTAL VAGAS:', totalVagas);
     console.log('--------------------------');

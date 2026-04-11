@@ -33,6 +33,7 @@ const mapDbVaga = (row: any): Vaga => ({
   historico: Array.isArray(row.historico) ? row.historico : [],
   tem_banco_valido: Boolean(row.tem_banco_valido),
   origem: row.origem === 'manual' ? 'manual' : 'importada',
+  categoria_status: getCategoriaStatus(row),
 });
 
 const mapDbBanco = (row: any): BancoTalentos => ({

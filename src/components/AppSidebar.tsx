@@ -200,7 +200,7 @@ export function AppSidebar() {
                         checked={selectedUnits.includes('all')}
                         className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                       />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-100">Todas de {selectedRegion}</span>
                     </div>
                     
                     <div className="h-[1px] bg-white/5 my-1" />
@@ -266,8 +266,8 @@ export function AppSidebar() {
                             <item.icon className={cn(
                               "h-5 w-5 shrink-0 transition-all duration-300",
                               active 
-                                ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
-                                : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
+                                ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
+                                : "text-slate-500 group-hover:text-white group-hover:scale-110"
                             )} />
                             {!collapsed && (
                               <span className={cn(
@@ -278,7 +278,7 @@ export function AppSidebar() {
                               </span>
                             )}
                             {active && !collapsed && (
-                              <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
+                              <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
                             )}
                           </NavLink>
                         </SidebarMenuButton>
@@ -299,7 +299,7 @@ export function AppSidebar() {
                                           subActive 
                                             ? "text-white bg-blue-600 shadow-[0_4px_15px_-3px_rgba(37,99,235,0.4)] translate-x-1.5" 
                                             : hasPassed
-                                              ? "text-blue-400/80 bg-blue-400/5 hover:bg-blue-400/10"
+                                              ? "text-slate-300 bg-white/5 hover:bg-white/10"
                                               : "text-slate-500 hover:text-slate-100 hover:bg-white/5 hover:translate-x-1.5"
                                         )}
                                     >
@@ -312,7 +312,7 @@ export function AppSidebar() {
                                       <span className="relative z-10 flex items-center gap-2 leading-tight">
                                         <CornerDownRight className={cn(
                                           "h-3 w-3",
-                                          subActive ? "text-white" : hasPassed ? "text-[#275ac5]" : "text-slate-600"
+                                          subActive ? "text-white" : hasPassed ? "text-slate-400" : "text-slate-600"
                                         )} />
                                         {sub.title}
                                       </span>
@@ -339,8 +339,8 @@ export function AppSidebar() {
                           <item.icon className={cn(
                             "h-5 w-5 shrink-0 transition-all duration-300",
                             active 
-                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
-                              : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
+                              ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
+                              : "text-slate-500 group-hover:text-white group-hover:scale-110"
                           )} />
                           {!collapsed && (
                             <span className={cn(
@@ -351,7 +351,7 @@ export function AppSidebar() {
                             </span>
                           )}
                           {active && !collapsed && (
-                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
+                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
                           )}
                         </NavLink>
                       </SidebarMenuButton>

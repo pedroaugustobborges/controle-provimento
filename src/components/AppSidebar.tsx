@@ -154,7 +154,7 @@ export function AppSidebar() {
                 AGIR
                 <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
               </span>
-              <span className="text-[10px] text-white font-bold uppercase tracking-[0.2em] leading-tight">
+              <span className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em] leading-tight">
                 Provimento Digital
               </span>
             </div>
@@ -242,8 +242,8 @@ export function AppSidebar() {
 
       <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="px-3">
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
-            <div className="h-[1px] w-6 bg-white/10" />
+          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
+            <div className="h-[1px] w-6 bg-white/15" />
             FLUXO DE PROVIMENTO
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -261,7 +261,7 @@ export function AppSidebar() {
                               "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                               active 
                                 ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
-                                : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
+                : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                             )}
                           >
                             <item.icon className={cn(
@@ -301,7 +301,7 @@ export function AppSidebar() {
                                             ? "text-white bg-white/20 shadow-[0_4px_15px_-3px_rgba(255,255,255,0.2)] translate-x-1.5" 
                                             : hasPassed
                                               ? "text-slate-300 bg-white/5 hover:bg-white/10"
-                                              : "text-slate-500 hover:text-slate-100 hover:bg-white/5 hover:translate-x-1.5"
+                                              : "text-slate-400 hover:text-slate-100 hover:bg-white/5 hover:translate-x-1.5"
                                         )}
                                     >
                                       {subActive && (
@@ -334,14 +334,14 @@ export function AppSidebar() {
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
                               ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
+                              : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                           )}
                         >
                           <item.icon className={cn(
                             "h-5 w-5 shrink-0 transition-all duration-300",
                             active 
                               ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
-                              : "text-slate-500 group-hover:text-white group-hover:scale-110"
+                              : "text-slate-400 group-hover:text-white group-hover:scale-110"
                           )} />
                           {!collapsed && (
                             <span className={cn(
@@ -365,8 +365,8 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup className="px-3 mt-4">
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
-            <div className="h-[1px] w-6 bg-white/10" />
+          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
+            <div className="h-[1px] w-6 bg-white/15" />
             CONTROLE OPERACIONAL
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -382,14 +382,14 @@ export function AppSidebar() {
                           "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                           active 
                             ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
-                            : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
+                              : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                         )}
                       >
                         <item.icon className={cn(
                           "h-5 w-5 shrink-0 transition-all duration-300",
                           active 
                             ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
-                            : "text-slate-500 group-hover:text-white group-hover:scale-110"
+                            : "text-slate-400 group-hover:text-white group-hover:scale-110"
                         )} />
                         {!collapsed && (
                           <span className={cn(

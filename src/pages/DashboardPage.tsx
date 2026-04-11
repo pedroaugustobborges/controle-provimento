@@ -36,7 +36,6 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '@/components/PageHeader';
 
 // Region mapping for chart grouping
 const REGION_MAP: Record<string, string> = {
@@ -179,13 +178,13 @@ export default function DashboardPage() {
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Transferências e remanejamentos' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Vagas estratégicas' },
-    { label: 'Cadastro Reserva', value: totalCR, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Candidatos disponíveis' },
-    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Candidatos convocados' },
-    { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Candidatos vencidos' },
-    { label: 'Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Candidatos prorrogados' },
-    { label: 'Cadastro Reserva Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Não vencidos e não convocados' },
-    { label: 'Total Banco de Talentos', value: totalBancoTotal, icon: Users, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Total de candidatos' },
-    { label: 'Etapas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Mais de 10 dias sem movimentação' },
+    { label: 'Cadastro Reserva', value: totalCR, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Bancos ativos disponíveis' },
+    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Total de convocações realizadas' },
+    { label: 'Bancos Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Bancos com validade expirada' },
+    { label: 'Bancos Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Bancos com prazo estendido' },
+    { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos válidos para convocação' },
+    { label: 'Total Banco de Talentos', value: totalBancoTotal, icon: Users, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Todos os bancos cadastrados' },
+    { label: 'Vagas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Sem movimentação há 10+ dias' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Tarefas aguardando ação' },
   ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalProrrogados, totalBancoTotal, totalTarefasPendentes]);
 
@@ -240,22 +239,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-      <PageHeader 
-        title="Visão Geral de Provimento"
-        subtitle="Monitoramento estratégico em tempo real dos processos seletivos e fluxo de contratações AGIR."
-        badge="Painel Operacional"
-        withBackground={true}
-        actions={
-          <Button className="text-xs font-bold h-10 px-5 bg-primary hover:bg-primary/90 text-white transition-all rounded-xl shadow-lg shadow-primary/20">
-            Novo Processo Seletivo
-          </Button>
-        }
-      />
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-black tracking-tight text-slate-900">Visão Geral do Provimento</h1>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
         {stats.map((stat, idx) => (
-          <Card key={idx} className="border-none shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden bg-white">
+          <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
             <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
             <CardContent className="p-5">
               <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
@@ -275,7 +266,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Unit View */}
-        <Card className="lg:col-span-2 border-none shadow-sm bg-white overflow-hidden flex flex-col">
+        <Card className="lg:col-span-2 border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">
             <div>
               <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2.5">
@@ -366,7 +357,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Vagas em Atraso */}
-        <Card className="border-none shadow-sm bg-white overflow-hidden flex flex-col">
+        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="pb-4 border-b border-slate-50 bg-amber-50/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">

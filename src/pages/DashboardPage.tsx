@@ -29,6 +29,7 @@ import {
   getValidVacancyBase,
   filterByRegionAndUnit,
   getRegionForUnit,
+  removeAccents,
 } from '@/lib/vagaUtils';
 import {
   Briefcase,
@@ -242,18 +243,18 @@ export default function DashboardPage() {
   const stats = useMemo(() => [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5', description: 'Base ativa' },
     { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
-    { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos seletivos ativos' },
+    { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos ativos' },
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
-    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Transferências internas' },
+    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Transferências' },
     { label: 'Aguardando', value: counts.aguardando_unidade, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', description: 'Aguardando retorno' },
-    { label: 'Cadastro Reserva', value: totalCR, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Bancos ativos' },
-    { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Total convocações' },
-    { label: 'Bancos Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Validade expirada' },
-    { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Disponíveis para uso' },
-    { label: 'Total Banco', value: totalBancoTotal, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Todos registros banco' },
+    { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
+    { label: 'Documentação', value: counts.documentacao, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Pendência documental' },
+    { label: 'Suspensa', value: counts.suspensa, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', description: 'Vagas suspensas' },
+    { label: 'Cancelada', value: counts.cancelada, icon: AlertCircle, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Vagas canceladas' },
+    { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos disponíveis' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Ações pendentes' },
-  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalTarefasPendentes, totalBancoTotal]);
+  ], [totalVagas, counts, totalCadastroReservaDisponiveis, totalTarefasPendentes]);
 
   const strategicScopeByUnit = useMemo(() => {
     const unitMap = new Map<string, {
@@ -296,7 +297,7 @@ export default function DashboardPage() {
       entry.vagas += 1;
 
       const categoria = getCategoriaStatus(vaga);
-      if (categoria !== 'concluidas' && categoria !== 'vagas_interrompidas') {
+      if (categoria !== 'concluidas' && categoria !== 'suspensa' && categoria !== 'cancelada') {
         entry.vagasAbertas += 1;
       }
 

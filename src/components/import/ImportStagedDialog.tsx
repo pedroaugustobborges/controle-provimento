@@ -308,7 +308,6 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 bg-white">
-        <div className="flex-1 overflow-y-auto p-6 bg-white">
           {step === 'type-selection' && (
             <div className="flex flex-col items-center justify-center h-80 space-y-8 animate-in fade-in zoom-in-95 duration-500">
               <div className="text-center space-y-2">
@@ -597,94 +596,16 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           )}
         </div>
 
-          {step === 'processing' && (
-            <div className="flex flex-col items-center justify-center h-64 space-y-8 animate-in zoom-in-95 duration-500">
-              <div className="relative">
-                <div className="h-24 w-24 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-black text-blue-600">{importProgress.percentage}%</span>
-                </div>
-              </div>
-              
-              <div className="w-full max-w-md space-y-2 text-center">
-                <p className="text-lg font-bold text-slate-800">{importProgress.label}</p>
-                <Progress value={importProgress.percentage} className="h-2 rounded-full" />
-                <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <span>{importProgress.processedRows} processados</span>
-                  <span>Total: {importProgress.totalRows}</span>
-                </div>
-              </div>
-
-              {importProgress.errors.length > 0 && (
-                <div className="w-full max-w-md p-3 bg-red-50 border border-red-100 rounded-xl">
-                  <p className="text-[10px] font-bold text-red-600 uppercase mb-1">Alertas recentes:</p>
-                  <ul className="text-[10px] text-red-500 space-y-0.5">
-                    {importProgress.errors.map((err, i) => <li key={i} className="truncate">• {err}</li>)}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          {step === 'result' && (
-            <div className="space-y-6 animate-in fade-in duration-500">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className={cn(
-                  "h-20 w-20 rounded-full flex items-center justify-center shadow-xl",
-                  importProgress.phase === 'success' ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
-                )}>
-                  {importProgress.phase === 'success' ? <CheckCircle2 className="h-10 w-10" /> : <AlertTriangle className="h-10 w-10" />}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-slate-900">
-                    {importProgress.phase === 'success' ? 'Importação Concluída!' : 'Erro na Importação'}
-                  </h2>
-                  <p className="text-slate-500 font-medium">{importProgress.label}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="border-slate-100 bg-slate-50/50">
-                  <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-3xl font-black text-blue-600">{importProgress.processedRows}</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confirmados no banco</span>
-                  </CardContent>
-                </Card>
-                <Card className="border-slate-100 bg-slate-50/50">
-                  <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-                    <span className={cn("text-3xl font-black", importProgress.errors.length > 0 ? "text-red-500" : "text-emerald-500")}>
-                      {importProgress.errors.length}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alertas/Erros</span>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {importProgress.errors.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <History className="h-3 w-3" /> Log de Erros
-                  </h4>
-                  <ScrollArea className="h-32 border border-slate-200 rounded-xl bg-slate-50 p-3">
-                    <div className="text-[11px] font-mono space-y-1">
-                      {importProgress.errors.map((err, i) => (
-                        <div key={i} className="flex gap-2 text-red-500">
-                          <span className="shrink-0 font-bold">[{i+1}]</span>
-                          <span>{err}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
         <DialogFooter className="p-6 border-t bg-slate-50/50 gap-2">
-          {step === 'select' && (
+          {step === 'type-selection' && (
             <Button variant="ghost" className="h-11 px-6 rounded-xl font-bold" onClick={() => onOpenChange(false)}>
               Cancelar
+            </Button>
+          )}
+
+          {step === 'select' && (
+            <Button variant="outline" className="h-11 px-6 rounded-xl font-bold" onClick={() => setStep('type-selection')}>
+              Voltar
             </Button>
           )}
           

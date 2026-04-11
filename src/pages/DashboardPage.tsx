@@ -395,6 +395,13 @@ export default function DashboardPage() {
                       fontWeight: 'bold'
                     }}
                     itemStyle={{ padding: '2px 0' }}
+                    formatter={(value, name, props) => {
+                      const data = props.payload;
+                      if (chartMode === 'unidade' && data.region) {
+                        return [`${value} vagas`, `${name} (${data.region})`];
+                      }
+                      return [`${value} vagas`, name];
+                    }}
                   />
                   <Bar 
                     dataKey="abertas" 

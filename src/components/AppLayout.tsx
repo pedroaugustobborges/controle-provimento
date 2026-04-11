@@ -182,7 +182,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="gap-2 cursor-pointer">
+                    <DropdownMenuItem 
+                      className="gap-2 cursor-pointer" 
+                      onClick={() => setShowProfile(true)}
+                    >
                       <User className="h-4 w-4" />
                       Meu Perfil
                     </DropdownMenuItem>

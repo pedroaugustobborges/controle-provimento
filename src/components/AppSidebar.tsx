@@ -113,7 +113,7 @@ export function AppSidebar() {
         { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
       ] 
     },
-  ], [isManagement, isAdminAnalyst, isEditalAnalyst]);
+  ], [isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess]);
 
   const hasMultipleUnits = useMemo(() => {
     if (!currentUser) return false;
@@ -144,7 +144,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-white/10 py-6 px-4">
         <div className="flex items-center gap-4 transition-all duration-300">
           <div className="relative group">
-            <div className="absolute -inset-1 bg-blue-500 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
+            <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
             <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
           </div>
           {!collapsed && (
@@ -198,7 +198,7 @@ export function AppSidebar() {
                     >
                       <Checkbox 
                         checked={selectedUnits.includes('all')}
-                        className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                        className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-primary"
                       />
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-100">Todas de {selectedRegion}</span>
                     </div>
@@ -225,7 +225,7 @@ export function AppSidebar() {
                         >
                           <Checkbox 
                             checked={selectedUnits.includes(u)}
-                            className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                            className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-primary"
                           />
                           <span className="text-[11px] text-white/80 font-medium">{u}</span>
                         </div>
@@ -259,7 +259,7 @@ export function AppSidebar() {
                             className={cn(
                               "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                               active 
-                                ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                                ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
                                 : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                             )}
                           >
@@ -283,7 +283,7 @@ export function AppSidebar() {
                           </NavLink>
                         </SidebarMenuButton>
                         {!collapsed && (
-                          <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-blue-500/10 space-y-1.5 py-2 pl-3">
+                          <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-white/10 space-y-1.5 py-2 pl-3">
                             {item.subMenu.map((sub, idx) => {
                               const subActive = isUrlActive(sub.url);
                               const activeIndex = item.subMenu.findIndex(s => isUrlActive(s.url));
@@ -297,7 +297,7 @@ export function AppSidebar() {
                                         className={cn(
                                           "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
                                           subActive 
-                                            ? "text-white bg-blue-600 shadow-[0_4px_15px_-3px_rgba(37,99,235,0.4)] translate-x-1.5" 
+                                            ? "text-white bg-white/20 shadow-[0_4px_15px_-3px_rgba(255,255,255,0.2)] translate-x-1.5" 
                                             : hasPassed
                                               ? "text-slate-300 bg-white/5 hover:bg-white/10"
                                               : "text-slate-500 hover:text-slate-100 hover:bg-white/5 hover:translate-x-1.5"
@@ -307,7 +307,7 @@ export function AppSidebar() {
                                         <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
                                       )}
                                       {hasPassed && (
-                                        <div className="absolute left-0 top-0 h-full w-1 bg-[#275ac5]/50" />
+                                        <div className="absolute left-0 top-0 h-full w-1 bg-white/20" />
                                       )}
                                       <span className="relative z-10 flex items-center gap-2 leading-tight">
                                         <CornerDownRight className={cn(
@@ -332,7 +332,7 @@ export function AppSidebar() {
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
-                              ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                              ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
                               : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                           )}
                         >
@@ -363,100 +363,130 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {secondaryItems.length > 0 && (
-          <SidebarGroup className="mt-8 px-3">
-            <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
-              <div className="h-[1px] w-6 bg-white/10" />
-              APOIO ADMINISTRATIVO
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-1.5">
-                {secondaryItems.map((item) => {
-                  const active = isParentActive(item);
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
-                        <NavLink
-                          to={item.url}
-                          className={cn(
-                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                            active 
-                              ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
-                          )}
-                        >
-                          <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-all duration-300",
-                            active 
-                              ? "text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" 
-                              : "text-slate-500 group-hover:text-blue-400 group-hover:scale-110"
-                          )} />
-                          {!collapsed && (
-                            <span className={cn(
-                              "text-[13.5px] font-bold tracking-tight",
-                              !active && "group-hover:translate-x-0.5 transition-transform duration-300"
-                            )}>
-                              {item.title}
-                            </span>
-                          )}
-                          {active && !collapsed && (
-                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,1)]" />
-                          )}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <SidebarGroup className="px-3 mt-4">
+          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
+            <div className="h-[1px] w-6 bg-white/10" />
+            CONTROLE OPERACIONAL
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1.5">
+              {secondaryItems.map((item) => {
+                const active = isParentActive(item);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild tooltip={item.title}>
+                      <NavLink
+                        to={item.url}
+                        className={cn(
+                          "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                          active 
+                            ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
+                            : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
+                        )}
+                      >
+                        <item.icon className={cn(
+                          "h-5 w-5 shrink-0 transition-all duration-300",
+                          active 
+                            ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
+                            : "text-slate-500 group-hover:text-white group-hover:scale-110"
+                        )} />
+                        {!collapsed && (
+                          <span className={cn(
+                            "text-[13.5px] font-bold tracking-tight",
+                            !active && "group-hover:translate-x-0.5 transition-transform duration-300"
+                          )}>
+                            {item.title}
+                          </span>
+                        )}
+                        {active && !collapsed && (
+                          <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
-       <SidebarFooter className="border-t border-white/5 p-5 mt-auto bg-[#0A192F]/50">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Suporte Interno">
-              <button 
-                onClick={() => setShowSupport(true)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-400 transition-all group overflow-hidden border border-transparent hover:border-white/5"
-              >
-                <div className="relative">
-                  <HelpCircle className="h-5 w-5 group-hover:text-white group-hover:rotate-12 transition-transform duration-500" />
-                  <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity" />
+      <SidebarFooter className="border-t border-white/10 py-6 px-4">
+        {!collapsed && (
+          <div className="flex flex-col gap-4">
+            <button 
+              onClick={() => setShowSupport(true)}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition-all group border border-white/10"
+            >
+              <HelpCircle className="h-5 w-5 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-white" />
+              <span className="text-sm font-bold tracking-tight">Suporte Técnico</span>
+            </button>
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
+                  <Users className="h-4 w-4 text-white" />
                 </div>
-                {!collapsed && <span className="text-sm font-semibold tracking-tight group-hover:text-white">Suporte Interno</span>}
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-sm font-bold text-white truncate leading-tight">
+                    {currentUser?.nome_completo || 'Usuário'}
+                  </span>
+                  <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight">
+                    {currentUser?.perfil || 'Acesso Restrito'}
+                  </span>
+                </div>
+              </div>
+              <button className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
+                Acessar Perfil
               </button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
-        <Dialog open={showSupport} onOpenChange={setShowSupport}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold">Suporte Interno</DialogTitle>
-              <DialogDescription>
-                Entre em contato com a administração do sistema para suporte.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="rounded-lg border p-4 space-y-2">
-                <p className="text-sm font-semibold text-foreground">Administrador do Sistema</p>
-                <p className="text-sm text-muted-foreground">Isaac</p>
-                <p className="text-sm text-muted-foreground">Para dúvidas, problemas de acesso ou solicitações, entre em contato diretamente com o administrador.</p>
-              </div>
-              <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
-                <p className="text-sm font-semibold text-foreground">Dicas rápidas</p>
-                <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                  <li>Esqueceu a senha? Solicite o reset ao administrador</li>
-                  <li>Problemas de permissão? Verifique com seu gestor</li>
-                  <li>Recomendamos utilizar o navegador Microsoft Edge</li>
-                </ul>
-              </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </SidebarFooter>
+
+      {/* Modal de Suporte */}
+      <Dialog open={showSupport} onOpenChange={setShowSupport}>
+        <DialogContent className="max-w-md bg-[#0A192F] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <HelpCircle className="w-6 h-6 text-white" />
+              Suporte Técnico
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Entre em contato com o responsável pela sua região.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {useAdminStore.getState().supportConfigs
+              .filter(c => c.status === 'ativo' && (selectedRegion === 'all' || c.regiao === selectedRegion))
+              .map((config) => (
+                <div key={config.id} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{config.regiao}</span>
+                    <div className="px-2 py-0.5 rounded-full bg-white/10 text-[9px] font-bold text-white">RESPONSÁVEL</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white">
+                      {config.responsavel.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white leading-tight">{config.responsavel}</h4>
+                      <p className="text-xs text-white/50">{config.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <Button variant="outline" size="sm" className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs">
+                      Teams
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs">
+                      E-mail
+                    </Button>
+                  </div>
+                </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }

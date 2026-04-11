@@ -25,11 +25,22 @@ export function removeAccents(str: string): string {
 
 export function normStatus(s: string): string {
   if (!s) return '';
-  return s.normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, ' ');
+  let r = String(s).trim().toLowerCase();
+  // método 1: NFD + remoção de combining marks
+  try {
+    r = r.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  } catch(e) {
+    // fallback método 2: substituição manual dos acentos mais comuns
+    r = r
+      .replace(/[àáâãä]/g, 'a')
+      .replace(/[èéêë]/g, 'e')
+      .replace(/[ìíîï]/g, 'i')
+      .replace(/[òóôõö]/g, 'o')
+      .replace(/[ùúûü]/g, 'u')
+      .replace(/[ç]/g, 'c')
+      .replace(/[ñ]/g, 'n');
+  }
+  return r.replace(/\s+/g, ' ').trim();
 }
 
 export const REGION_MAP: Record<string, string> = Object.fromEntries(
@@ -72,7 +83,7 @@ export const CATEGORIAS_STATUS = {
   concluidas: ['concluida', 'concluidas'],
   movimentacao_interna: ['movimentacao interna', 'transferencia'],
   vagas_lideranca: ['vaga de lideranca', 'estrategicas', 'lideranca'],
-  em_andamento: ['realizar convocacao', 'em andamento'],
+  em_andamento: ['realizar convocacao'],
   convocacoes: ['convocacoes', 'convocacao'],
   fila_edital: ['em edital', 'publicar novo edital', 'fila de editais'],
   em_admissao: ['admissao', 'admissao enviada'],
@@ -104,6 +115,12 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
   }
   
   const normS = normStatus(String(status));
+  
+  // Regras prioritárias com includes() conforme solicitado
+  if (normS.includes('movimentac') || normS.includes('transfer')) return 'movimentacao_interna';
+  if (normS === 'admissao' || normS.includes('admissao envia')) return 'em_admissao';
+  if (normS.includes('edital')) return 'fila_edital';
+  if (normS.includes('realizar convoc')) return 'em_andamento';
   
   for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {
     if (values.includes(normS)) {

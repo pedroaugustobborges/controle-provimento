@@ -77,7 +77,10 @@ export const CATEGORIAS_STATUS = {
   ],
   concluidas: ['admissao_efetivada', 'admissao efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
   vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada', 'cancelado'],
-  vagas_lideranca: ['vaga_lideranca', 'vaga de lideranca', 'ESTRATÉGICAS'],
+  vagas_lideranca: [
+    'vaga_lideranca', 'vaga de lideranca', 'ESTRATÉGICAS', 
+    'liderança', 'lideranca', 'vaga de liderança', 'lider'
+  ],
   convocacao: ['realizar_convocacao', 'realizar convocacao', 'CONVOCAÇÕES'],
   documentacao: [
     'documentacao', 'documentacao ok e aso pendente', 'aso pendente', 
@@ -85,7 +88,14 @@ export const CATEGORIAS_STATUS = {
     'documentação ok e aso pendente', 'aso pendente', 'documentação ok', 
     'documentação pendente', 'DOCUMENTAÇÃO'
   ],
-  aguardando_unidade: ['aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 'aguardando', 'aguardando unidade']
+  aguardando_unidade: [
+    'aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 
+    'aguardando', 'aguardando unidade', 'aguardar unidade'
+  ],
+  movimentacao_interna: [
+    'movimentação interna', 'movimentacao interna', 'mov interna', 'mov. interna', 
+    'transferência', 'transferencia', 'remanejamento', 'movimentacao_interna'
+  ]
 };
 
 export function isConvocacaoByFields(row: any): boolean {
@@ -121,6 +131,7 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
     if (CATEGORIAS_STATUS.convocacao.includes(statusVal)) return 'convocacao';
     if (CATEGORIAS_STATUS.documentacao.includes(statusVal)) return 'documentacao';
     if (CATEGORIAS_STATUS.aguardando_unidade.includes(statusVal)) return 'aguardando_unidade';
+    if (CATEGORIAS_STATUS.movimentacao_interna.includes(statusVal)) return 'movimentacao_interna';
     if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
     return null;
   };
@@ -147,6 +158,7 @@ export function getStatusColor(status: string): string {
   if (CATEGORIAS_STATUS.convocacao.includes(s)) return 'bg-violet-100 text-violet-700 border-violet-200';
   if (CATEGORIAS_STATUS.documentacao.includes(s) || s.includes('documentacao') || s.includes('documentação')) return 'bg-orange-100 text-orange-700 border-orange-200';
   if (CATEGORIAS_STATUS.aguardando_unidade.includes(s)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  if (CATEGORIAS_STATUS.movimentacao_interna.includes(s)) return 'bg-cyan-100 text-cyan-700 border-cyan-200';
   
   // Default color for Em Andamento and others
   return 'bg-blue-100 text-blue-700 border-blue-200';

@@ -142,7 +142,7 @@ export default function DashboardPage() {
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 
   const counts = useMemo(() => {
-    const acc = {
+    const acc: Record<string, number> = {
       fila_edital: 0,
       em_andamento: 0,
       concluidas: 0,
@@ -153,35 +153,25 @@ export default function DashboardPage() {
       suspensa: 0,
       cancelada: 0,
       em_admissao: 0,
+      convocacoes: 0,
       atrasadas: 0,
+      sem_classificacao: 0,
     };
 
     vagas.forEach((v) => {
       const cat = getCategoriaStatus(v);
-      if (acc[cat] !== undefined) {
-        acc[cat]++;
-      }
+      acc[cat] = (acc[cat] || 0) + 1;
 
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
       const statusUpper = removeAccents(String(v.status || '').toUpperCase());
-      if (calcDiasAberto(baseDate) > 10 && !['CONCLUIDA', 'CANCELADA', 'SUSPENSA'].includes(statusUpper)) {
+      if (calcDiasAberto(baseDate) > 10 && !['CONCLUIDA', 'CANCELADA', 'CANCELADAS', 'SUSPENSA'].includes(statusUpper)) {
         acc.atrasadas++;
       }
     });
 
-    // Logging values as requested
     console.log('--- CONTAGEM DE STATUS ---');
-    console.log('CONCLUÍDAS:', acc.concluidas);
-    console.log('FILA DE EDITAIS:', acc.fila_edital);
-    console.log('MOV. INTERNA:', acc.movimentacao_interna);
-    console.log('LIDERANÇA:', acc.vagas_lideranca);
-    console.log('AGUARDANDO:', acc.aguardando_unidade);
-    console.log('EM ANDAMENTO:', acc.em_andamento);
-    console.log('SUSPENSA:', acc.suspensa);
-    console.log('CANCELADA:', acc.cancelada);
-    console.log('DOCUMENTAÇÃO:', acc.documentacao);
-    console.log('EM ADMISSÃO:', acc.em_admissao);
+    Object.entries(acc).forEach(([k, v]) => console.log(`${k}: ${v}`));
     console.log('TOTAL VAGAS:', totalVagas);
     console.log('--------------------------');
 

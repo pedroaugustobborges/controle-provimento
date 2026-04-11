@@ -59,16 +59,17 @@ export function isVitoriaUnit(unidade: string): boolean {
 }
 
 export const CATEGORIAS_STATUS = {
-  concluidas: ['CONCLUÍDA'],
-  movimentacao_interna: ['MOVIMENTAÇÃO INTERNA'],
-  vagas_lideranca: ['VAGA DE LIDERANÇA'],
-  em_andamento: ['REALIZAR CONVOCAÇÃO'],
+  concluidas: ['CONCLUÍDA', 'CONCLUÍDAS', 'CONCLUIDO', 'CONCLUIDA'],
+  movimentacao_interna: ['MOVIMENTAÇÃO INTERNA', 'MOVIMENTACAO INTERNA', 'MOV INTERNA', 'MOV. INTERNA'],
+  vagas_lideranca: ['VAGA DE LIDERANÇA', 'ESTRATÉGICAS', 'ESTRATEGICAS', 'LIDERANÇA', 'LIDERANCA'],
+  em_andamento: ['EM ANDAMENTO', 'REALIZAR CONVOCAÇÃO', 'REALIZAR CONVOCACAO'],
   aguardando_unidade: ['AGUARDANDO UNIDADE'],
-  fila_edital: ['EM EDITAL', 'PUBLICAR NOVO EDITAL'],
+  fila_edital: ['FILA DE EDITAIS', 'EM EDITAL', 'PUBLICAR NOVO EDITAL'],
   suspensa: ['SUSPENSA'],
-  cancelada: ['CANCELADA'],
-  documentacao: ['DOCUMENTAÇÃO', 'DOCUMENTAÇÃO OK E ASO PENDENTE', 'ASO PENDENTE'],
-  em_admissao: ['ADMISSÃO', 'ADMISSÃO ENVIADA']
+  cancelada: ['CANCELADA', 'CANCELADAS'],
+  documentacao: ['DOCUMENTAÇÃO', 'DOCUMENTACAO', 'DOCUMENTAÇÃO OK E ASO PENDENTE', 'ASO PENDENTE'],
+  em_admissao: ['ADMISSÃO', 'ADMISSAO', 'ADMISSÃO ENVIADA', 'ADMISSAO ENVIADA'],
+  convocacoes: ['CONVOCAÇÕES', 'CONVOCACOES', 'CONVOCAÇÃO', 'CONVOCACAO'],
 };
 
 export function isConvocacaoByFields(row: any): boolean {

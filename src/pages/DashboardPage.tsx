@@ -58,6 +58,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   LabelList,
+  Legend,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 

@@ -53,8 +53,8 @@ import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
 import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 
 const ALL_UNIDADES = [
-  ...UNIDADES_POR_REGIAO['Goiás e Vitória'] || [],
-  ...UNIDADES_POR_REGIAO['Unidades de Fora'] || [],
+  ...UNIDADES_POR_REGIAO['GOIÁS E VITÓRIA'] || [],
+  ...UNIDADES_POR_REGIAO['OUTRAS UNIDADES'] || [],
 ];
 
 export default function AdministracaoPage() {

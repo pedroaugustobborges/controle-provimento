@@ -59,7 +59,7 @@ const defaultSupportConfigs: SupportConfig[] = [
     mensagem: 'Atendimento das 08:00 às 18:00.', status: 'ativo', unidades: GO_VIT_UNITS
   },
   {
-    id: '2', regiao: 'Unidades de Fora', responsavel: 'Fernanda Souza',
+    id: '2', regiao: 'OUTRAS UNIDADES', responsavel: 'Fernanda Souza',
     email: 'suporte.es@sistema.com', teams_user: 'fernanda.souza.teams',
     mensagem: 'Suporte remoto especializado.', status: 'ativo', unidades: FORA_UNITS
   }

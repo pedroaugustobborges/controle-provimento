@@ -224,7 +224,6 @@ export default function DashboardPage() {
     { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
     { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos seletivos ativos' },
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
-    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Transferências e remanejamentos' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Vagas estratégicas' },
     { label: 'Cadastro Reserva', value: totalCR, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Bancos ativos disponíveis' },
     { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Total de convocações realizadas' },
@@ -232,7 +231,6 @@ export default function DashboardPage() {
     { label: 'Bancos Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Bancos com prazo estendido' },
     { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos válidos para convocação' },
     { label: 'Total Banco de Talentos', value: totalBancoTotal, icon: Users, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Todos os bancos cadastrados' },
-    { label: 'Vagas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Sem movimentação há 10+ dias' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Tarefas aguardando ação' },
   ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalProrrogados, totalBancoTotal, totalTarefasPendentes]);
 

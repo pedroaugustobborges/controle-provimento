@@ -242,13 +242,13 @@ export default function VagasPage() {
         acc.em_andamento++;
       }
 
-      if (getBancoByVaga(v.id)) {
+      if (v.tem_banco_valido) {
         acc.com_banco_valido++;
       }
     });
     
     return acc;
-  }, [canonicalBase, getBancoByVaga]);
+  }, [canonicalBase]);
 
   const countFilaEdital = counts.fila_edital;
   const countEmAndamento = counts.em_andamento;

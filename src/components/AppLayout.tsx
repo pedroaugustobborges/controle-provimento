@@ -265,7 +265,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl">
-          <div className="relative h-36 bg-primary flex items-start justify-center pt-4">
+          <div className="relative h-36 bg-primary flex items-center justify-center">
             <img src={logoAgir} alt="AGIR" className="h-10 object-contain" />
             <div className="absolute -bottom-12 left-8">
               <div className="h-24 w-24 rounded-2xl border-4 border-background bg-muted overflow-hidden shadow-lg">

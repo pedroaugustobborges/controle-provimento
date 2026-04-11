@@ -71,9 +71,10 @@ export function isVitoriaUnit(unidade: string): boolean {
 export const CATEGORIAS_STATUS = {
   concluidas: ['concluida', 'concluidas'],
   movimentacao_interna: ['movimentacao interna', 'transferencia'],
-  vagas_lideranca: ['vaga de lideranca'],
+  vagas_lideranca: ['vaga de lideranca', 'estrategicas', 'lideranca'],
   em_andamento: ['realizar convocacao', 'em andamento'],
-  fila_edital: ['em edital', 'publicar novo edital'],
+  convocacoes: ['convocacoes', 'convocacao'],
+  fila_edital: ['em edital', 'publicar novo edital', 'fila de editais'],
   em_admissao: ['admissao', 'admissao enviada'],
   documentacao: ['documentacao', 'documentacao ok e aso pendente', 'aso pendente'],
   aguardando_unidade: ['aguardando unidade'],

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import avatarDefault from '@/assets/avatar-izac.jpeg';
+import logoAgir from '@/assets/logo-agir-white.png';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { 
@@ -264,7 +265,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl">
-          <div className="relative h-32 bg-gradient-to-r from-blue-600 to-indigo-700">
+          <div className="relative h-36 bg-primary flex items-start justify-center pt-4">
+            <img src={logoAgir} alt="AGIR" className="h-10 object-contain" />
             <div className="absolute -bottom-12 left-8">
               <div className="h-24 w-24 rounded-2xl border-4 border-background bg-muted overflow-hidden shadow-lg">
                 <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />

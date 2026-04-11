@@ -261,9 +261,10 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           <div className="flex items-center justify-between mt-6 px-10 relative">
             <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 -z-10" />
             {[
+              { id: 'type-selection', label: 'Tipo', icon: ListChecks },
               { id: 'select', label: 'Upload', icon: Upload },
-              { id: 'mapping', label: 'Mapeamento', icon: ListChecks },
-              { id: 'processing', label: 'Processamento', icon: Play },
+              { id: 'mapping', label: 'Mapeamento', icon: Settings },
+              { id: 'processing', label: 'Importação', icon: Play },
               { id: 'result', label: 'Resultado', icon: CheckCircle2 },
             ].map((s, idx) => {
               const active = step === s.id;

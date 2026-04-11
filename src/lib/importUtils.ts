@@ -11,6 +11,20 @@ export const VAGA_REQUIRED_COLUMNS = [
   { key: 'status', label: 'Status', aliases: ['STATUS', 'SITUAÇÃO', 'SITUACAO', 'ESTADO'] },
 ];
 
+export const VAGA_OPTIONAL_COLUMNS = [
+  { key: 'secao', label: 'Seção', aliases: ['SECAO', 'SEÇÃO', 'SETOR', 'DEPARTAMENTO'] },
+  { key: 'data_convocacao_planilha', label: 'Data Convocação', aliases: ['DATA_CONVOCACAO', 'CONVOCAÇÃO', 'DATA CONVOCAÇÃO'] },
+  { key: 'horario_convocacao_planilha', label: 'Horário', aliases: ['HORARIO', 'HORÁRIO', 'HORA'] },
+  { key: 'candidato_convocado_planilha', label: 'Candidato Convocado', aliases: ['CANDIDATO_CONVOCADO', 'NOME CANDIDATO', 'CANDIDATO'] },
+  { key: 'classificacao_convocacao_planilha', label: 'Classificação Conv.', aliases: ['CLASSIFICACAO_CONV', 'CLASSIFICAÇÃO CONV', 'ORDEM'] },
+  { key: 'forma_convocacao_planilha', label: 'Forma', aliases: ['FORMA', 'MEIO', 'CANAL'] },
+  { key: 'status_oitiva_convocacao_planilha', label: 'Status Oitiva', aliases: ['STATUS_OITIVA', 'OITIVA'] },
+  { key: 'admissao_enviada_acompanhamento', label: 'Admissão Enviada', aliases: ['ADMISSAO_ENVIADA_DATA', 'DATA ADMISSÃO ENVIADA'] },
+  { key: 'admissao_efetivada_acompanhamento', label: 'Admissão Efetivada', aliases: ['ADMISSAO_EFETIVADA_DATA', 'DATA ADMISSÃO EFETIVADA'] },
+  { key: 'detalhes_acompanhamento', label: 'Detalhes', aliases: ['DETALHES'] },
+  { key: 'observacao', label: 'Observação', aliases: ['OBSERVACAO', 'OBSERVAÇÃO', 'OBS', 'NOTAS'] },
+];
+
 export const BANCO_REQUIRED_COLUMNS = [
   { key: 'nome', label: 'Nome', aliases: ['NOME', 'CANDIDATO', 'NOME COMPLETO', 'NOME_CANDIDATO', 'NOME DO CANDIDATO', 'CANDIDATO(A)', 'NOME CANDIDATO'] },
   { key: 'cargo', label: 'Cargo', aliases: ['CARGO', 'FUNÇÃO', 'FUNCAO', 'VAGA', 'CARGO/FUNÇÃO', 'CARGO / FUNÇÃO'] },
@@ -35,7 +49,8 @@ export const BANCO_OPTIONAL_COLUMNS = [
 ];
 
 export function getDefaultHeaderRow(type: 'vagas' | 'banco'): number {
-  // vagas: headers on row 2 (index 1), banco: headers on row 1 (index 0)
+  // Para Vagas deixamos o usuário escolher, mas o padrão sugerido era 2 (índice 1)
+  // Para Banco o padrão é 1 (índice 0)
   return type === 'vagas' ? 1 : 0;
 }
 
@@ -50,7 +65,10 @@ function normalizeHeader(value: string): string {
 export function autoMapColumns(headers: string[], type: 'vagas' | 'banco'): ColumnMapping[] {
   if (!headers || !Array.isArray(headers)) return [];
   
-  const config = type === 'vagas' ? VAGA_REQUIRED_COLUMNS : [...BANCO_REQUIRED_COLUMNS, ...BANCO_OPTIONAL_COLUMNS];
+  const config = type === 'vagas' 
+    ? [...VAGA_REQUIRED_COLUMNS, ...VAGA_OPTIONAL_COLUMNS] 
+    : [...BANCO_REQUIRED_COLUMNS, ...BANCO_OPTIONAL_COLUMNS];
+    
   const mappings: ColumnMapping[] = [];
   const usedHeaders = new Set<string>();
 
@@ -88,8 +106,8 @@ export function autoMapColumns(headers: string[], type: 'vagas' | 'banco'): Colu
       });
     }
 
-    // Special case for Prorrogação (Column L is common)
-    if (!foundHeader && field.key === 'is_prorrogado' && headers.length >= 12) {
+    // Special case for Prorrogação in Banco (Column L is common)
+    if (!foundHeader && type === 'banco' && field.key === 'prorrogacao' && headers.length >= 12) {
       const colL = headers[11];
       if (colL && (normalizeHeader(colL) === '' || normalizeHeader(colL).includes('L') || normalizeHeader(colL).includes('PRORROG'))) {
         foundHeader = colL;
@@ -98,7 +116,13 @@ export function autoMapColumns(headers: string[], type: 'vagas' | 'banco'): Colu
 
     if (foundHeader) {
       usedHeaders.add(foundHeader);
-      const isDate = field.key.includes('data') || field.key === 'data_abertura' || field.key === 'data_recebimento' || field.key === 'data_convocacao' || field.key === 'data_validade';
+      const isDate = field.key.includes('data') || 
+                     field.key.includes('_data') || 
+                     field.key === 'data_abertura' || 
+                     field.key === 'data_recebimento' || 
+                     field.key === 'data_convocacao' || 
+                     field.key === 'data_validade';
+                     
       mappings.push({
         excel: foundHeader,
         system: field.key,

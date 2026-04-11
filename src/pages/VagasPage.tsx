@@ -966,7 +966,7 @@ function AcompanhamentoEditalList() {
 
   const editaisEmAndamento = useMemo(() => {
     return vagas.filter(v => {
-      const cat = getCategoriaStatus(v);
+      const cat = v.categoria_status || getCategoriaStatus(v);
       const isAcompanhamento = ['em_andamento', 'fila_edital', 'convocacao', 'documentacao'].includes(cat);
       if (!isAcompanhamento) return false;
 

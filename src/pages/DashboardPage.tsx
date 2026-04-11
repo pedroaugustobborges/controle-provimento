@@ -325,7 +325,7 @@ export default function DashboardPage() {
 
       // If "All regions" is selected, ensure we initialize all groups
       if (selectedRegion === 'all') {
-        ['Goiás e Vitória', 'Outras unidades'].forEach(reg => {
+        ['Goiânia', 'Vitória', 'Demais Unidades'].forEach(reg => {
           regionMap.set(reg, {
             name: reg,
             total: 0,

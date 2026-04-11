@@ -326,6 +326,7 @@ export default function DashboardPage() {
         ativos: number;
         vagas: number;
         bancos: number;
+        bancosCR: number;
         pendencias: number;
       }>();
 
@@ -338,6 +339,7 @@ export default function DashboardPage() {
             ativos: 0,
             vagas: 0,
             bancos: 0,
+            bancosCR: 0,
             pendencias: 0,
           });
         });
@@ -350,6 +352,7 @@ export default function DashboardPage() {
           ativos: 0,
           vagas: 0,
           bancos: 0,
+          bancosCR: 0,
           pendencias: 0,
         };
 
@@ -357,6 +360,7 @@ export default function DashboardPage() {
         current.ativos += entry.ativos;
         current.vagas += entry.vagas;
         current.bancos += entry.bancos;
+        current.bancosCR += entry.bancosCR;
         current.pendencias += entry.pendencias;
         regionMap.set(entry.region, current);
       });

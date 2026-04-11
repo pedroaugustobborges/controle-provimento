@@ -11,7 +11,11 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, Upload, LayoutDashboard } from 'lucide-react';
+import { 
+  Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
+  Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
+  Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2
+} from 'lucide-react';
 import { AgieChat } from './chat/AgieChat';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
@@ -23,6 +27,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 function getGreeting(): string {
   const hour = new Date().getHours();

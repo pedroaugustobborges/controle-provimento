@@ -39,41 +39,37 @@ import { useNavigate } from 'react-router-dom';
 
 // Region mapping for chart grouping
 const REGION_MAP: Record<string, string> = {
-  'HECAD': 'Goiás',
-  'CRER': 'Goiás',
-  'AGIR': 'Goiás',
-  'HUGOL': 'Goiás',
-  'HDS': 'Goiás',
-  'POLICLÍNICA': 'Goiás',
-  'JATAÍ': 'Goiás',
-  'TEIA ANAPOLIS': 'Goiás',
-  'TEIA CANEDO': 'Goiás',
-  'TEIA APARECIDA': 'Goiás',
-  'TEIA GOIÂNIA': 'Goiás',
-  'VITÓRIA (SÃO PEDRO/SUÁ)': 'Vitória (ES)',
-  'SÃO PEDRO': 'Vitória (ES)',
-  'SUÁ': 'Vitória (ES)',
-  'DOURADOS': 'Outras Unidades',
-  'CHS': 'Outras Unidades',
-  'HMSA': 'Outras Unidades',
-  'HRCAC': 'Outras Unidades',
-  'TEIA CEN': 'Outras Unidades',
-  'TEIA PIN': 'Outras Unidades',
-  'TEIA MAN': 'Outras Unidades',
-  'TEIA MAN 2': 'Outras Unidades',
-  'TEIA MAN 3': 'Outras Unidades',
+  'HECAD': 'Goiás e Vitória',
+  'CRER': 'Goiás e Vitória',
+  'AGIR': 'Goiás e Vitória',
+  'HUGOL': 'Goiás e Vitória',
+  'HDS': 'Goiás e Vitória',
+  'POLICLÍNICA': 'Goiás e Vitória',
+  'JATAÍ': 'Goiás e Vitória',
+  'TEIA ANAPOLIS': 'Goiás e Vitória',
+  'TEIA CANEDO': 'Goiás e Vitória',
+  'TEIA APARECIDA': 'Goiás e Vitória',
+  'TEIA GOIÂNIA': 'Goiás e Vitória',
+  'VITÓRIA (SÃO PEDRO/SUÁ)': 'Goiás e Vitória',
+  'SÃO PEDRO': 'Goiás e Vitória',
+  'SUÁ': 'Goiás e Vitória',
+  'DOURADOS': 'Outras unidades',
+  'CHS': 'Outras unidades',
+  'HMSA': 'Outras unidades',
+  'HRCAC': 'Outras unidades',
+  'TEIA CEN': 'Outras unidades',
+  'TEIA PIN': 'Outras unidades',
+  'TEIA MAN': 'Outras unidades',
+  'TEIA MAN 2': 'Outras unidades',
+  'TEIA MAN 3': 'Outras unidades',
 };
 
 function getRegionForUnit(unitName: string): string {
-  const upper = unitName.toUpperCase().trim();
+  const upper = normalizeUnitName(unitName);
   for (const [key, region] of Object.entries(REGION_MAP)) {
-    if (upper.includes(key) || key.includes(upper)) return region;
+    if (upper.includes(normalizeUnitName(key)) || normalizeUnitName(key).includes(upper)) return region;
   }
-  // Fallback: check for vitória-related tokens
-  if (upper.includes('VITÓRIA') || upper.includes('VITORIA') || upper.includes('SÃO PEDRO') || upper.includes('SUÁ') || upper.includes('SUA')) {
-    return 'Vitória (ES)';
-  }
-  return 'Outras Unidades';
+  return 'Outras unidades';
 }
 
 export default function DashboardPage() {
@@ -253,9 +249,7 @@ export default function DashboardPage() {
       const regionMap = new Map<string, { total: number, abertas: number }>();
       vagas.forEach(v => {
         if (!v.unidade) return;
-        const normalizedName = normalizeUnitName(v.unidade);
-        if (!normalizedName) return;
-        const region = getRegionForUnit(normalizedName);
+        const region = getRegionForUnit(v.unidade);
         const current = regionMap.get(region) || { total: 0, abertas: 0 };
         const categoria = getCategoriaStatus(v);
         current.total += 1;
@@ -284,7 +278,12 @@ export default function DashboardPage() {
       groupedMap.set(normalizedName, current);
     });
     return Array.from(groupedMap.entries())
-      .map(([name, data]) => ({ name, total: data.total, abertas: data.abertas }))
+      .map(([name, data]) => ({ 
+        name, 
+        total: data.total, 
+        abertas: data.abertas,
+        region: getRegionForUnit(name) 
+      }))
       .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total);
   }, [vagas, chartMode]);
@@ -396,6 +395,13 @@ export default function DashboardPage() {
                       fontWeight: 'bold'
                     }}
                     itemStyle={{ padding: '2px 0' }}
+                    formatter={(value, name, props) => {
+                      const data = props.payload;
+                      if (chartMode === 'unidade' && data.region) {
+                        return [`${value} vagas`, `${name} (${data.region})`];
+                      }
+                      return [`${value} vagas`, name];
+                    }}
                   />
                   <Bar 
                     dataKey="abertas" 

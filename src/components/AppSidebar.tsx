@@ -44,8 +44,8 @@ import { cn } from '@/lib/utils';
 import { useMemo, useState, useCallback } from 'react';
 
 const UNIDADES_POR_REGIAO: Record<string, string[]> = {
-  'GOIÁS E VITÓRIA': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
-  'OUTRAS UNIDADES': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
+  'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
+  'Outras unidades': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
 export function AppSidebar() {
@@ -183,8 +183,8 @@ export function AppSidebar() {
               </SelectTrigger>
               <SelectContent className="border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl">
                 <SelectItem value="all" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">Todas as Regiões</SelectItem>
-                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">GOIÁS E VITÓRIA</SelectItem>
-                <SelectItem value="OUTRAS UNIDADES" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">OUTRAS UNIDADES</SelectItem>
+                <SelectItem value="Goiás e Vitória" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">GOIÁS E VITÓRIA</SelectItem>
+                <SelectItem value="Outras unidades" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">OUTRAS UNIDADES</SelectItem>
               </SelectContent>
             </Select>
 

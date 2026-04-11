@@ -63,6 +63,28 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 
+const UNIT_MAPPING = [
+  { bank: 'HRD', vacancies: ['DOURADOS'], display: 'DOURADOS' },
+  { bank: 'HRC', vacancies: ['HRCAC I', 'HRCAC II'], display: 'HRCAC I / II' },
+  { bank: 'CHS', vacancies: ['CHS'], display: 'CHS' },
+  { bank: 'HMSA', vacancies: ['HMSA'], display: 'HMSA' },
+  { bank: 'JATAÍ', vacancies: ['JATAÍ'], display: 'JATAÍ' },
+  { bank: 'POLICLÍNICA', vacancies: ['POLICLÍNICA'], display: 'POLICLÍNICA' },
+  { bank: 'GOIÂNIA', vacancies: ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR'], display: 'GOIÂNIA (HOSPITAIS)' },
+  { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA (UPA/PA)' },
+];
+
+const resolveCanonicalName = (unitName: string) => {
+  if (!unitName) return '';
+  const norm = normalizeUnitName(unitName);
+  for (const map of UNIT_MAPPING) {
+    if (normalizeUnitName(map.bank) === norm || map.vacancies.some(v => normalizeUnitName(v) === norm)) {
+      return map.display;
+    }
+  }
+  return normalizeUnitName(unitName);
+};
+
 export default function DashboardPage() {
   const {
     vagas: allVagas = [],

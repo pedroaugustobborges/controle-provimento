@@ -58,6 +58,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   LabelList,
+  Legend,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 
@@ -79,6 +80,15 @@ export default function DashboardPage() {
     fetchVagas();
     fetchBancos();
   }, [fetchVagas, fetchBancos]);
+
+  // Diagnostics
+  useEffect(() => {
+    console.log('--- DIAGNÓSTICO DASHBOARD ---');
+    console.log('Vagas carregadas:', allVagas.length);
+    console.log('Banco carregado:', bancos.length);
+    console.log('Filtro de Região:', selectedRegion);
+    console.log('-----------------------------');
+  }, [allVagas, bancos, selectedRegion]);
 
   const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
     // If "All regions" is selected, return all records immediately
@@ -224,8 +234,9 @@ export default function DashboardPage() {
     { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Total convocações' },
     { label: 'Bancos Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Validade expirada' },
     { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Disponíveis para uso' },
+    { label: 'Total Banco', value: totalBancoTotal, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Todos registros banco' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Ações pendentes' },
-  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalTarefasPendentes]);
+  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalTarefasPendentes, totalBancoTotal]);
 
   const strategicScopeByUnit = useMemo(() => {
     const unitMap = new Map<string, {
@@ -234,6 +245,7 @@ export default function DashboardPage() {
       vagas: number;
       vagasAbertas: number;
       bancos: number;
+      bancosCR: number;
       bancosDisponiveis: number;
       pendencias: number;
     }>();
@@ -251,6 +263,7 @@ export default function DashboardPage() {
         vagas: 0,
         vagasAbertas: 0,
         bancos: 0,
+        bancosCR: 0,
         bancosDisponiveis: 0,
         pendencias: 0,
       };
@@ -283,6 +296,9 @@ export default function DashboardPage() {
 
       const status = String(banco.status || '').toUpperCase();
       entry.bancos += 1;
+      if (status === 'CADASTRO RESERVA') {
+        entry.bancosCR += 1;
+      }
 
       if (status !== 'VENCIDO' && status !== 'CONVOCADO') {
         entry.bancosDisponiveis += 1;
@@ -311,18 +327,20 @@ export default function DashboardPage() {
         ativos: number;
         vagas: number;
         bancos: number;
+        bancosCR: number;
         pendencias: number;
       }>();
 
       // If "All regions" is selected, ensure we initialize all groups
       if (selectedRegion === 'all') {
-        ['Goiás e Vitória', 'Outras unidades'].forEach(reg => {
+        ['Goiânia', 'Vitória', 'Demais Unidades'].forEach(reg => {
           regionMap.set(reg, {
             name: reg,
             total: 0,
             ativos: 0,
             vagas: 0,
             bancos: 0,
+            bancosCR: 0,
             pendencias: 0,
           });
         });
@@ -335,6 +353,7 @@ export default function DashboardPage() {
           ativos: 0,
           vagas: 0,
           bancos: 0,
+          bancosCR: 0,
           pendencias: 0,
         };
 
@@ -342,6 +361,7 @@ export default function DashboardPage() {
         current.ativos += entry.ativos;
         current.vagas += entry.vagas;
         current.bancos += entry.bancos;
+        current.bancosCR += entry.bancosCR;
         current.pendencias += entry.pendencias;
         regionMap.set(entry.region, current);
       });
@@ -428,8 +448,9 @@ export default function DashboardPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs font-bold uppercase">Todas as Regiões</SelectItem>
-              <SelectItem value="Goiás e Vitória" className="text-xs font-bold uppercase">Goiás e Vitória</SelectItem>
-              <SelectItem value="Outras unidades" className="text-xs font-bold uppercase">Outras Unidades</SelectItem>
+              <SelectItem value="Goiânia" className="text-xs font-bold uppercase">Goiânia</SelectItem>
+              <SelectItem value="Vitória" className="text-xs font-bold uppercase">Vitória</SelectItem>
+              <SelectItem value="Demais Unidades" className="text-xs font-bold uppercase">Demais Unidades</SelectItem>
             </SelectContent>
           </Select>
 
@@ -554,7 +575,8 @@ export default function DashboardPage() {
                 <BarChart
                   data={chartData}
                   layout="vertical"
-                  margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
+                  margin={{ top: 0, right: 60, left: 10, bottom: 0 }}
+                  barGap={4}
                 >
                   <CartesianGrid strokeDasharray="4 4" horizontal={true} vertical={false} stroke="#f1f5f9" />
                   <XAxis type="number" hide />
@@ -582,27 +604,50 @@ export default function DashboardPage() {
                       fontWeight: 'bold',
                     }}
                     itemStyle={{ padding: '2px 0' }}
-                    formatter={(value, _name, props) => {
+                    formatter={(value, name, props) => {
                       const data = props.payload;
                       const label = chartMode === 'unidade' && data.region
                         ? `${data.name} (${data.region})`
                         : data.name;
 
-                      return [`${value} registros`, label];
+                      return [`${value} registros`, name === 'vagas' ? 'Vagas' : 'Banco (CR)'];
                     }}
                   />
+                  <Legend 
+                    verticalAlign="top" 
+                    align="right" 
+                    iconType="circle" 
+                    iconSize={8}
+                    wrapperStyle={{ paddingBottom: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                  />
                   <Bar
-                    dataKey="total"
-                    name="Total consolidado"
+                    dataKey="vagas"
+                    name="Vagas"
                     fill="#1e3a5f"
                     radius={[0, 4, 4, 0]}
-                    barSize={18}
+                    barSize={12}
                   >
                     <LabelList
-                      dataKey="total"
+                      dataKey="vagas"
                       position="right"
-                      style={{ fill: '#64748b', fontSize: '11px', fontWeight: 'bold' }}
+                      style={{ fill: '#64748b', fontSize: '10px', fontWeight: 'bold' }}
                       offset={10}
+                      formatter={(val: number) => val > 0 ? val : ''}
+                    />
+                  </Bar>
+                  <Bar
+                    dataKey="bancosCR"
+                    name="Banco (Cadastro Reserva)"
+                    fill="#10b981"
+                    radius={[0, 4, 4, 0]}
+                    barSize={12}
+                  >
+                    <LabelList
+                      dataKey="bancosCR"
+                      position="right"
+                      style={{ fill: '#10b981', fontSize: '10px', fontWeight: 'bold' }}
+                      offset={10}
+                      formatter={(val: number) => val > 0 ? val : ''}
                     />
                   </Bar>
                 </BarChart>

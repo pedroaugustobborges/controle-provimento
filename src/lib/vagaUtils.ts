@@ -7,13 +7,15 @@ export const VITORIA_SUB_UNIDADES = [
 ];
 
 export const UNIDADES_POR_REGIAO: Record<string, string[]> = {
-  'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'VITORIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'UPA'],
-  'Outras unidades': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'HRD', 'HRC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
+  'Goiânia': ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 'TEIA APARECIDA', 'TEIA CANEDO', 'TEIA CEN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA PIN'],
+  'Vitória': ['SÃO PEDRO', 'SUÁ', 'UPA'],
+  'Demais Unidades': ['CHS', 'HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'JATAÍ', 'DOURADOS', 'POLICLÍNICA']
 };
 
 const REGION_ALIASES: Record<string, string[]> = {
-  'Goiás e Vitória': ['GOIÂNIA', 'GOIANIA', 'VITÓRIA', 'VITORIA', 'SÃO PEDRO', 'SAO PEDRO', 'SUÁ', 'SUA', 'UPA'],
-  'Outras unidades': ['DOURADOS', 'HRD', 'HRC', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'],
+  'Goiânia': ['GOIÂNIA', 'GOIANIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS'],
+  'Vitória': ['VITÓRIA', 'VITORIA', 'VIX', 'ES'],
+  'Demais Unidades': ['OUTRAS UNIDADES'],
 };
 
 function removeAccents(str: string): string {
@@ -32,7 +34,7 @@ export const REGION_MAP: Record<string, string> = Object.fromEntries(
 export function getRegionForUnit(unitName: string): string {
   const normalizedUnit = removeAccents(String(unitName || '').toUpperCase().trim().replace(/\s+/g, ' '));
 
-  if (!normalizedUnit) return 'Outras unidades';
+  if (!normalizedUnit) return 'Demais Unidades';
 
   const exactMatch = REGION_MAP[normalizedUnit];
   if (exactMatch) return exactMatch;
@@ -41,7 +43,7 @@ export function getRegionForUnit(unitName: string): string {
     normalizedUnit.includes(key) || key.includes(normalizedUnit)
   ));
 
-  return partialMatch?.[1] || 'Outras unidades';
+  return partialMatch?.[1] || 'Demais Unidades';
 }
 
 export function isVitoriaUnit(unidade: string): boolean {
@@ -397,11 +399,12 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
 
 // Mapping: which banco unit serves which sidebar units
 const BANCO_UNIT_MAPPING: Record<string, string[]> = {
-  'GOIÂNIA': ['AGIR', 'CRER', 'HUGOL', 'HECAD', 'HDS', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'GOIÂNIA', 'GOIANIA'],
-  'VITÓRIA': ['VITÓRIA (SÃO PEDRO/SUÁ)', 'SÃO PEDRO', 'SUÁ', 'VITÓRIA', 'VITORIA'],
+  'GOIÂNIA': ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 'TEIA APARECIDA', 'TEIA CANEDO', 'TEIA CEN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA PIN', 'GOIÂNIA', 'GOIANIA'],
+  'UPA': ['SÃO PEDRO', 'SUÁ', 'UPA', 'VITÓRIA', 'VITORIA'],
   'POLICLÍNICA': ['POLICLÍNICA', 'POLICLINICA'],
   'JATAÍ': ['JATAÍ', 'JATAI'],
-  'UPA': ['UPA'],
+  'DOURADOS': ['DOURADOS'],
+  'HRC': ['HRC'],
 };
 
 function getBancoUnitsForSidebarUnit(sidebarUnit: string): string[] {

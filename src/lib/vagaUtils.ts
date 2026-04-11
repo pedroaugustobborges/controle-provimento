@@ -322,7 +322,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
 
 export function normalizeUnitName(name: string): string {
   if (!name || typeof name !== 'string') return '';
-  return name.toUpperCase().trim().replace(/\s+/g, ' ');
+  return removeAccents(name.toUpperCase().trim().replace(/\s+/g, ' '));
 }
 
 export function parseSpreadsheetDate(value: any): Date | null {

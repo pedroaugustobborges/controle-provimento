@@ -402,7 +402,7 @@ export default function DashboardPage() {
         };
       });
 
-    return [...vacancyAlerts, ...bancoAlerts].sort((a, b) => (
+    return [...vacancyDisplayAlerts, ...bancoAlerts].sort((a, b) => (
       b.sortValue - a.sortValue || a.unit.localeCompare(b.unit)
     ));
   }, [vagas, filteredBancos]);

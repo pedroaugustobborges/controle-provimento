@@ -80,6 +80,15 @@ export default function DashboardPage() {
     fetchBancos();
   }, [fetchVagas, fetchBancos]);
 
+  // Diagnostics
+  useEffect(() => {
+    console.log('--- DIAGNÓSTICO DASHBOARD ---');
+    console.log('Vagas carregadas:', allVagas.length);
+    console.log('Banco carregado:', bancos.length);
+    console.log('Filtro de Região:', selectedRegion);
+    console.log('-----------------------------');
+  }, [allVagas, bancos, selectedRegion]);
+
   const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
     // If "All regions" is selected, return all records immediately
     if (selectedRegion === 'all') {

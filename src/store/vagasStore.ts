@@ -99,10 +99,15 @@ interface VagasState {
   alertas: Alerta[];
   historicoMensagens: MensagemHistorico[];
   temNovasMensagens: boolean;
+  isLoading: boolean;
+  isInitialLoad: boolean;
+  isLoadingVagas: boolean;
+  isLoadingBancos: boolean;
   
   setVagas: (vagas: Vaga[]) => void;
-  fetchVagas: () => Promise<void>;
-  fetchBancos: () => Promise<void>;
+  fetchVagas: (incremental?: boolean) => Promise<void>;
+  fetchBancos: (incremental?: boolean) => Promise<void>;
+  fetchAll: () => Promise<void>;
   fetchImportHistory: () => Promise<void>;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
@@ -161,24 +166,103 @@ export const useVagasStore = create<VagasState>()(
         { id: '3', data: '2024-05-21T09:00:00', remetente: 'Aide', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false },
       ],
       temNovasMensagens: true,
+      isLoading: false,
+      isInitialLoad: true,
+      isLoadingVagas: false,
+      isLoadingBancos: false,
       
       setVagas: (vagas) => set({ vagas }),
-      fetchVagas: async () => {
+      fetchVagas: async (incremental = false) => {
+        if (get().isLoadingVagas) return;
+        set({ isLoadingVagas: true });
         try {
-          const allVagas = await fetchAllRows('vagas');
-          set({ vagas: allVagas.map(mapDbVaga) });
+          const { supabase } = await import('@/integrations/supabase/client');
+          const rows: any[] = [];
+          let from = 0;
+
+          while (true) {
+            const { data, error } = await supabase
+              .from('vagas')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .range(from, from + PAGE_SIZE - 1);
+
+            if (error) throw error;
+            if (!data || data.length === 0) break;
+
+            const mappedBatch = data.map(mapDbVaga);
+            
+            if (incremental && from === 0) {
+              set({ vagas: mappedBatch });
+            } else if (incremental) {
+              set((s) => ({ vagas: [...s.vagas, ...mappedBatch] }));
+            } else {
+              rows.push(...mappedBatch);
+            }
+
+            if (data.length < PAGE_SIZE) break;
+            from += PAGE_SIZE;
+          }
+
+          if (!incremental) {
+            set({ vagas: rows });
+          }
         } catch (err) {
           console.error('Error fetching vagas:', err);
-          set({ vagas: [] });
+        } finally {
+          set({ isLoadingVagas: false, isInitialLoad: false });
         }
       },
-      fetchBancos: async () => {
+      fetchBancos: async (incremental = false) => {
+        if (get().isLoadingBancos) return;
+        set({ isLoadingBancos: true });
         try {
-          const allBancos = await fetchAllRows('banco_candidatos');
-          set({ bancos: allBancos.map(mapDbBanco) });
+          const { supabase } = await import('@/integrations/supabase/client');
+          const rows: any[] = [];
+          let from = 0;
+
+          while (true) {
+            const { data, error } = await supabase
+              .from('banco_candidatos')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .range(from, from + PAGE_SIZE - 1);
+
+            if (error) throw error;
+            if (!data || data.length === 0) break;
+
+            const mappedBatch = data.map(mapDbBanco);
+            
+            if (incremental && from === 0) {
+              set({ bancos: mappedBatch });
+            } else if (incremental) {
+              set((s) => ({ bancos: [...s.bancos, ...mappedBatch] }));
+            } else {
+              rows.push(...mappedBatch);
+            }
+
+            if (data.length < PAGE_SIZE) break;
+            from += PAGE_SIZE;
+          }
+
+          if (!incremental) {
+            set({ bancos: rows });
+          }
         } catch (err) {
           console.error('Error fetching bancos:', err);
-          set({ bancos: [] });
+        } finally {
+          set({ isLoadingBancos: false, isInitialLoad: false });
+        }
+      },
+      fetchAll: async () => {
+        set({ isLoading: true });
+        try {
+          await Promise.all([
+            get().fetchVagas(true),
+            get().fetchBancos(true)
+          ]);
+        } finally {
+          set({ isLoading: false, isInitialLoad: false });
         }
       },
       fetchImportHistory: async () => {

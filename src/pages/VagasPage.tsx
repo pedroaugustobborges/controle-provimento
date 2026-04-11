@@ -172,6 +172,11 @@ export default function VagasPage() {
   const filtered = useMemo(() => {
     const now = new Date().getTime();
     return canonicalBase.filter((v) => {
+      // Apply status tab filter first (Performance + Logic)
+      const category = v.categoria_status || getCategoriaStatus(v);
+      if (vacancyStatusTab === 'ativas' && (category === 'concluidas' || category === 'vagas_interrompidas')) return false;
+      if (vacancyStatusTab === 'concluidas' && category !== 'concluidas' && category !== 'vagas_interrompidas') return false;
+
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
         (v.cargo || '').toLowerCase().includes(searchTerm) ||
@@ -181,14 +186,14 @@ export default function VagasPage() {
 
       const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
         if (s === v.status || s === v.status_geral) return true;
-        if (s === 'CONVOCAÇÕES' && getCategoriaStatus(v) === 'convocacao') return true;
-        if (s === 'DOCUMENTAÇÃO' && getCategoriaStatus(v) === 'documentacao') return true;
-        if (s === 'FILA DE EDITAIS' && getCategoriaStatus(v) === 'fila_edital') return true;
-        if (s === 'EM ANDAMENTO' && getCategoriaStatus(v) === 'em_andamento') return true;
-        if (s === 'CONCLUÍDAS' && getCategoriaStatus(v) === 'concluidas') return true;
-        if (s === 'ESTRATÉGICAS' && getCategoriaStatus(v) === 'vagas_lideranca') return true;
-        if (s === 'CANCELADAS' && getCategoriaStatus(v) === 'vagas_interrompidas') return true;
-        if (s === 'AGUARDANDO UNIDADE' && getCategoriaStatus(v) === 'aguardando_unidade') return true;
+        if (s === 'CONVOCAÇÕES' && category === 'convocacao') return true;
+        if (s === 'DOCUMENTAÇÃO' && category === 'documentacao') return true;
+        if (s === 'FILA DE EDITAIS' && category === 'fila_edital') return true;
+        if (s === 'EM ANDAMENTO' && category === 'em_andamento') return true;
+        if (s === 'CONCLUÍDAS' && category === 'concluidas') return true;
+        if (s === 'ESTRATÉGICAS' && category === 'vagas_lideranca') return true;
+        if (s === 'CANCELADAS' && category === 'vagas_interrompidas') return true;
+        if (s === 'AGUARDANDO UNIDADE' && category === 'aguardando_unidade') return true;
         return false;
       });
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
@@ -201,7 +206,7 @@ export default function VagasPage() {
       
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
-  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas]);
+  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, vacancyStatusTab]);
 
   useEffect(() => {
     setCurrentPage(1);

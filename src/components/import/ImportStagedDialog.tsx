@@ -65,7 +65,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
   useEffect(() => {
     if (!open) {
       setTimeout(() => {
-        setStep('select');
+        setStep('type-selection');
         setFile(null);
         setWorkbook(null);
         setMappings([]);

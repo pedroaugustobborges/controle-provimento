@@ -11,7 +11,11 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, Upload, LayoutDashboard } from 'lucide-react';
+import { 
+  Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
+  Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
+  Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2
+} from 'lucide-react';
 import { AgieChat } from './chat/AgieChat';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
@@ -23,6 +27,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -49,6 +61,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, fetchCurrentProfile } = useAdminStore();
   const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -169,7 +182,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="gap-2 cursor-pointer">
+                    <DropdownMenuItem 
+                      className="gap-2 cursor-pointer" 
+                      onClick={() => setShowProfile(true)}
+                    >
                       <User className="h-4 w-4" />
                       Meu Perfil
                     </DropdownMenuItem>
@@ -245,6 +261,102 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <AgieChat />
         </div>
       </div>
+
+      <Dialog open={showProfile} onOpenChange={setShowProfile}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl">
+          <div className="relative h-32 bg-gradient-to-r from-blue-600 to-indigo-700">
+            <div className="absolute -bottom-12 left-8">
+              <div className="h-24 w-24 rounded-2xl border-4 border-background bg-muted overflow-hidden shadow-lg">
+                <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowProfile(false)}
+              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 text-white hover:bg-black/40 transition-colors flex items-center justify-center backdrop-blur-sm"
+            >
+              <span className="sr-only">Fechar</span>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="pt-16 pb-8 px-8">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">{currentUser?.nome_completo || userName}</h2>
+                <p className="text-muted-foreground font-medium flex items-center gap-1.5 mt-1">
+                  <BriefcaseBusiness className="h-4 w-4 text-primary" />
+                  {currentUser?.cargo || 'Colaborador AGIR'}
+                </p>
+              </div>
+              <Badge variant={currentUser?.status === 'ativo' ? 'default' : 'secondary'} className="capitalize px-3 py-1 text-xs font-bold bg-success/10 text-success border-success/20 hover:bg-success/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-success mr-2 animate-pulse" />
+                {currentUser?.status || 'Ativo'}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
+                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">E-mail Corporativo</span>
+                    <span className="text-sm font-semibold text-foreground">{currentUser?.email || 'Não informado'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
+                  <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                    <Shield className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Perfil de Acesso</span>
+                    <span className="text-sm font-semibold text-foreground">{currentUser?.perfil || 'Analista de RH'}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 p-4 rounded-xl bg-muted/30 border border-border/40">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className="h-4 w-4 text-rose-500" />
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Unidades Vinculadas</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {currentUser?.visualiza_todas_unidades ? (
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold py-1 px-3">
+                        Todas as Unidades
+                      </Badge>
+                    ) : currentUser?.unidades_vinculadas && currentUser.unidades_vinculadas.length > 0 ? (
+                      currentUser.unidades_vinculadas.map((unidade, idx) => (
+                        <Badge key={idx} variant="outline" className="bg-white text-muted-foreground border-border font-medium">
+                          {unidade}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground italic">Nenhuma unidade vinculada</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-2 border-t border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  Sessão autenticada e segura
+                </div>
+                <button 
+                  onClick={() => setShowProfile(false)}
+                  className="text-xs font-bold text-primary hover:underline underline-offset-4"
+                >
+                  Fechar informações
+                </button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }

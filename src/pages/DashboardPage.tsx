@@ -585,12 +585,98 @@ export default function DashboardPage() {
             )}
           </CardContent>
           <div className="p-4 bg-slate-50/50 border-t border-slate-100">
-            <Button variant="ghost" className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all">
-              Gestão de Gargalos <ChevronRight className="ml-1 h-3 w-3" />
+            <Button 
+              variant="ghost" 
+              className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all"
+              onClick={() => setIsStaleModalOpen(true)}
+            >
+              Vagas sem Movimentação <ChevronRight className="ml-1 h-3 w-3" />
             </Button>
           </div>
         </Card>
       </div>
+
+      <Dialog open={isStaleModalOpen} onOpenChange={setIsStaleModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="p-6 border-b bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-slate-900">Vagas sem Movimentação</DialogTitle>
+                <DialogDescription className="text-sm font-medium text-slate-500">
+                  Listagem de vagas sem atualização de status há mais de 10 dias.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto p-0">
+            <Table>
+              <TableHeader className="bg-slate-50 sticky top-0 z-10">
+                <TableRow className="hover:bg-transparent border-slate-200">
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Requisição</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Unidade</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Cargo</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Último Status</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6 text-center">Dias Parado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vacancyAlerts.length > 0 ? (
+                  vacancyAlerts.map((vaga) => (
+                    <TableRow key={vaga.id} className="group hover:bg-slate-50/50 transition-colors border-slate-100">
+                      <TableCell className="py-4 px-6 font-mono text-[11px] font-bold text-slate-400 group-hover:text-primary transition-colors">
+                        #{vaga.displayId}
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-3 w-3 text-slate-300" />
+                          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{normalizeUnitName(vaga.unidade)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <span className="text-xs font-bold text-slate-700">{vaga.cargo || 'Não informado'}</span>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-tighter bg-white border-slate-200 text-slate-500">
+                          {vaga.status || 'Sem status'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-4 px-6 text-center">
+                        <span className={`text-[11px] font-black px-2.5 py-1 rounded-md ${
+                          vaga.daysOpen > 20 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                        }`}>
+                          {vaga.daysOpen} dias
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-48 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center">
+                          <ShieldCheck className="h-6 w-6 text-emerald-500" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-800">Nenhuma vaga parada</p>
+                        <p className="text-xs text-slate-400">Todas as vagas foram movimentadas nos últimos 10 dias.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          
+          <div className="p-4 border-t bg-slate-50/30 flex justify-end">
+            <Button variant="outline" onClick={() => setIsStaleModalOpen(false)} className="text-xs font-bold uppercase tracking-wider">
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

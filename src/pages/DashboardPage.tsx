@@ -236,7 +236,7 @@ export default function DashboardPage() {
     { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Disponíveis para uso' },
     { label: 'Total Banco', value: totalBancoTotal, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Todos registros banco' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Ações pendentes' },
-  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalTarefasPendentes]);
+  ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalTarefasPendentes, totalBancoTotal]);
 
   const strategicScopeByUnit = useMemo(() => {
     const unitMap = new Map<string, {

@@ -25,11 +25,22 @@ export function removeAccents(str: string): string {
 
 export function normStatus(s: string): string {
   if (!s) return '';
-  return s.normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, ' ');
+  let r = String(s).trim().toLowerCase();
+  // método 1: NFD + remoção de combining marks
+  try {
+    r = r.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+  } catch(e) {
+    // fallback método 2: substituição manual dos acentos mais comuns
+    r = r
+      .replace(/[àáâãä]/g, 'a')
+      .replace(/[èéêë]/g, 'e')
+      .replace(/[ìíîï]/g, 'i')
+      .replace(/[òóôõö]/g, 'o')
+      .replace(/[ùúûü]/g, 'u')
+      .replace(/[ç]/g, 'c')
+      .replace(/[ñ]/g, 'n');
+  }
+  return r.replace(/\s+/g, ' ').trim();
 }
 
 export const REGION_MAP: Record<string, string> = Object.fromEntries(

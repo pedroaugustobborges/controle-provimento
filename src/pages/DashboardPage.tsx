@@ -2,6 +2,10 @@ import { useMemo, useEffect, useState } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +46,8 @@ import {
   Bell,
   ArrowLeftRight,
   ChevronRight,
+  ChevronDown,
+  Filter,
 } from 'lucide-react';
 import {
   BarChart,
@@ -65,7 +71,7 @@ export default function DashboardPage() {
     fetchVagas,
     fetchBancos,
   } = useVagasStore();
-  const { selectedRegion, selectedUnits } = useAdminStore();
+  const { selectedRegion, selectedUnits, setSelectedRegion, setSelectedUnits } = useAdminStore();
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
 
@@ -395,8 +401,77 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-black tracking-tight text-slate-900">Visão Geral do Provimento</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <Filter className="h-3.5 w-3.5" />
+          </div>
+          <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
+            <SelectTrigger className="h-9 w-[180px] rounded-lg border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wider text-slate-600 shadow-sm">
+              <SelectValue placeholder="Todas as Regiões" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs font-bold uppercase">Todas as Regiões</SelectItem>
+              <SelectItem value="Goiás e Vitória" className="text-xs font-bold uppercase">Goiás e Vitória</SelectItem>
+              <SelectItem value="Outras unidades" className="text-xs font-bold uppercase">Outras Unidades</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {selectedRegion !== 'all' && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center justify-between h-9 px-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-300 transition-all rounded-lg shadow-sm min-w-[180px]">
+                  <span className="truncate">
+                    {selectedUnits.includes('all') ? `Todas de ${selectedRegion}` : `${selectedUnits.length} unidade(s)`}
+                  </span>
+                  <ChevronDown className="h-3 w-3 opacity-50 ml-2" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[240px] p-0 bg-white border-slate-200 shadow-xl" align="end">
+                <div className="p-2 space-y-1">
+                  <div 
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      if (selectedUnits.includes('all')) {
+                        setSelectedUnits([]);
+                      } else {
+                        setSelectedUnits(['all']);
+                      }
+                    }}
+                  >
+                    <Checkbox checked={selectedUnits.includes('all')} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">Todas de {selectedRegion}</span>
+                  </div>
+                  <div className="h-[1px] bg-slate-100 my-1" />
+                  <div className="max-h-[200px] overflow-y-auto pr-1">
+                    {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
+                      <div 
+                        key={u}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          let newUnits = [...selectedUnits];
+                          if (newUnits.includes('all')) {
+                            newUnits = [u];
+                          } else if (newUnits.includes(u)) {
+                            newUnits = newUnits.filter(x => x !== u);
+                            if (newUnits.length === 0) newUnits = ['all'];
+                          } else {
+                            newUnits.push(u);
+                          }
+                          setSelectedUnits(newUnits);
+                        }}
+                      >
+                        <Checkbox checked={selectedUnits.includes(u)} />
+                        <span className="text-[11px] text-slate-600 font-medium">{u}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
       </div>
 
       {/* Stats Grid */}

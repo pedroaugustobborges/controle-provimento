@@ -1,24 +1,31 @@
 
+## Plano: Redesign Premium da Página "Controle de Vagas" (VagasPage)
 
-## Plano: Melhorar visual do menu lateral e adicionar botão de logout
+### Arquivo: `src/pages/VagasPage.tsx`
 
-### Alterações no `src/components/AppSidebar.tsx`:
+### Alterações planejadas:
 
-1. **Indicação visual clara do subitem ativo:**
-   - Reforçar o contraste do subitem ativo com fundo mais visível (`bg-white/15` + borda lateral branca sólida de 2px)
-   - Reduzir destaque dos subitens inativos para evitar ambiguidade (usar `text-slate-500` mais suave)
-   - Adicionar uma linha vertical de progresso nos submenus, com pontos/dots indicando a posição atual
+**1. Cards de estatísticas (linhas 471-533):**
+- Adicionar hover effects: `hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-default`
+- Reduzir saturação das cores de borda lateral para tons mais suaves
+- Remover o subtexto "Regra Excel (Cargo + Mes)" do card Total de Vagas — substituir por algo útil como "Base ativa"
 
-2. **Visual mais robusto e corporativo:**
-   - Adicionar separadores (`<div className="h-px bg-white/10">`) entre seções
-   - Ajustar padding e espaçamento para dar mais densidade
-   - Melhorar ícones dos subitens — usar dots/circles em vez do `CornerDownRight` genérico, com cores diferenciadas por estado (ativo/visitado/futuro)
+**2. Título/Subtítulo (linhas 327-331):**
+- Remover o subtítulo longo "Gerenciamento estratégico e centralizado de vagas, editais e fluxo de convocações AGIR"
+- Manter apenas `title="Controle de Vagas"` com badge simples
 
-3. **Rodapé — Botão de Logout:**
-   - Adicionar botão "Sair" com ícone `LogOut` na área do rodapé, abaixo de "Acessar Perfil"
-   - Estilizar com cor destrutiva sutil (`text-red-400 hover:bg-red-500/10`)
-   - Conectar ao `signOut()` do hook `useAuth` + navegação para `/login`
+**3. Barra de filtros (linhas 536-632):**
+- Melhorar visual com bordas mais definidas, tipografia coesa e espaçamento consistente
+- Adicionar `rounded-xl` e melhorar contraste dos selects
 
-### Arquivos a modificar:
-- `src/components/AppSidebar.tsx` — todas as alterações acima
+**4. Tabela (linhas 647-877):**
+- **Cabeçalho:** Corrigir hover para não sumir o texto — adicionar classe `hover:text-slate-700` em vez do comportamento atual
+- **Status:** Alinhar coluna com `text-center` e garantir badges consistentes
+- **Badges de status:** Reduzir saturação, tons mais suaves e profissionais
+- **Coluna "Ação Rápida":** Renomear para "Banco" com tooltip contextual (ícone verde = banco disponível, cinza = sem banco)
+- **Coluna "Ações":** Simplificar label do dropdown, remover cores excessivas do texto "Ações da Vaga"
+- **Linhas:** Adicionar hover sutil `hover:bg-slate-50/50` e linhas zebradas sutis `even:bg-slate-25`
 
+**5. Visual geral:**
+- Harmonizar paleta de cores com o sidebar redesenhado
+- Transições suaves em todos os elementos interativos

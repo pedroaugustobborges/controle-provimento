@@ -34,7 +34,7 @@ export const REGION_MAP: Record<string, string> = Object.fromEntries(
 export function getRegionForUnit(unitName: string): string {
   const normalizedUnit = removeAccents(String(unitName || '').toUpperCase().trim().replace(/\s+/g, ' '));
 
-  if (!normalizedUnit) return 'Outras unidades';
+  if (!normalizedUnit) return 'Demais Unidades';
 
   const exactMatch = REGION_MAP[normalizedUnit];
   if (exactMatch) return exactMatch;
@@ -43,7 +43,7 @@ export function getRegionForUnit(unitName: string): string {
     normalizedUnit.includes(key) || key.includes(normalizedUnit)
   ));
 
-  return partialMatch?.[1] || 'Outras unidades';
+  return partialMatch?.[1] || 'Demais Unidades';
 }
 
 export function isVitoriaUnit(unidade: string): boolean {

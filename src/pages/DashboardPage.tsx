@@ -142,7 +142,7 @@ export default function DashboardPage() {
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 
   const counts = useMemo(() => {
-    const acc = {
+    const acc: Record<string, number> = {
       fila_edital: 0,
       em_andamento: 0,
       concluidas: 0,
@@ -153,35 +153,25 @@ export default function DashboardPage() {
       suspensa: 0,
       cancelada: 0,
       em_admissao: 0,
+      convocacoes: 0,
       atrasadas: 0,
+      sem_classificacao: 0,
     };
 
     vagas.forEach((v) => {
       const cat = getCategoriaStatus(v);
-      if (acc[cat] !== undefined) {
-        acc[cat]++;
-      }
+      acc[cat] = (acc[cat] || 0) + 1;
 
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
       const statusUpper = removeAccents(String(v.status || '').toUpperCase());
-      if (calcDiasAberto(baseDate) > 10 && !['CONCLUIDA', 'CANCELADA', 'SUSPENSA'].includes(statusUpper)) {
+      if (calcDiasAberto(baseDate) > 10 && !['CONCLUIDA', 'CANCELADA', 'CANCELADAS', 'SUSPENSA'].includes(statusUpper)) {
         acc.atrasadas++;
       }
     });
 
-    // Logging values as requested
     console.log('--- CONTAGEM DE STATUS ---');
-    console.log('CONCLUÍDAS:', acc.concluidas);
-    console.log('FILA DE EDITAIS:', acc.fila_edital);
-    console.log('MOV. INTERNA:', acc.movimentacao_interna);
-    console.log('LIDERANÇA:', acc.vagas_lideranca);
-    console.log('AGUARDANDO:', acc.aguardando_unidade);
-    console.log('EM ANDAMENTO:', acc.em_andamento);
-    console.log('SUSPENSA:', acc.suspensa);
-    console.log('CANCELADA:', acc.cancelada);
-    console.log('DOCUMENTAÇÃO:', acc.documentacao);
-    console.log('EM ADMISSÃO:', acc.em_admissao);
+    Object.entries(acc).forEach(([k, v]) => console.log(`${k}: ${v}`));
     console.log('TOTAL VAGAS:', totalVagas);
     console.log('--------------------------');
 
@@ -244,6 +234,7 @@ export default function DashboardPage() {
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5', description: 'Base ativa' },
     { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
     { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos ativos' },
+    { label: 'Convocações', value: counts.convocacoes || 0, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Em convocação' },
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Transferências' },

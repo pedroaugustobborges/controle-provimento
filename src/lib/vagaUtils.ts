@@ -11,8 +11,37 @@ export const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Outras unidades': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'HRD', 'HRC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
+const REGION_ALIASES: Record<string, string[]> = {
+  'Goiás e Vitória': ['GOIÂNIA', 'GOIANIA', 'VITÓRIA', 'VITORIA', 'SÃO PEDRO', 'SAO PEDRO', 'SUÁ', 'SUA', 'UPA'],
+  'Outras unidades': ['DOURADOS', 'HRD', 'HRC', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'],
+};
+
 function removeAccents(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+export const REGION_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(UNIDADES_POR_REGIAO).flatMap(([region, units]) =>
+    [...units, ...(REGION_ALIASES[region] || [])].map((unit) => [
+      removeAccents(String(unit).toUpperCase().trim().replace(/\s+/g, ' ')),
+      region,
+    ])
+  )
+);
+
+export function getRegionForUnit(unitName: string): string {
+  const normalizedUnit = removeAccents(String(unitName || '').toUpperCase().trim().replace(/\s+/g, ' '));
+
+  if (!normalizedUnit) return 'Outras unidades';
+
+  const exactMatch = REGION_MAP[normalizedUnit];
+  if (exactMatch) return exactMatch;
+
+  const partialMatch = Object.entries(REGION_MAP).find(([key]) => (
+    normalizedUnit.includes(key) || key.includes(normalizedUnit)
+  ));
+
+  return partialMatch?.[1] || 'Outras unidades';
 }
 
 export function isVitoriaUnit(unidade: string): boolean {
@@ -366,57 +395,67 @@ const BANCO_UNIT_MAPPING: Record<string, string[]> = {
 function getBancoUnitsForSidebarUnit(sidebarUnit: string): string[] {
   const norm = normalizeUnitName(sidebarUnit);
   const matchingBancoUnits: string[] = [];
+
   for (const [bancoUnit, servedUnits] of Object.entries(BANCO_UNIT_MAPPING)) {
-    if (servedUnits.some(u => normalizeUnitName(u) === norm) || normalizeUnitName(bancoUnit) === norm) {
+    if (servedUnits.some((u) => normalizeUnitName(u) === norm) || normalizeUnitName(bancoUnit) === norm) {
       matchingBancoUnits.push(normalizeUnitName(bancoUnit));
     }
   }
-  // If no mapping found, try exact match
+
   if (matchingBancoUnits.length === 0) {
     matchingBancoUnits.push(norm);
   }
+
   return matchingBancoUnits;
+}
+
+function getScopedUnitNames(unitName: string): string[] {
+  const normalizedUnit = normalizeUnitName(unitName);
+
+  if (!normalizedUnit) return [];
+
+  const allowedUnits = new Set<string>([normalizedUnit]);
+
+  Object.entries(BANCO_UNIT_MAPPING).forEach(([bancoUnit, servedUnits]) => {
+    const normalizedBancoUnit = normalizeUnitName(bancoUnit);
+    const normalizedServedUnits = servedUnits.map(normalizeUnitName);
+
+    if (normalizedBancoUnit === normalizedUnit) {
+      allowedUnits.add(normalizedBancoUnit);
+      normalizedServedUnits.forEach((servedUnit) => allowedUnits.add(servedUnit));
+    }
+
+    if (normalizedServedUnits.includes(normalizedUnit)) {
+      allowedUnits.add(normalizedBancoUnit);
+    }
+  });
+
+  return Array.from(allowedUnits);
 }
 
 export function filterByRegionAndUnit(records: any[], region: string, unit: string): any[] {
   if (!records || !Array.isArray(records)) return [];
-  
+
   let filtered = records;
-  
-  // Filter by Region
+
   if (region && region !== 'all') {
-    const regionUpper = String(region).toUpperCase();
-    
-    // Find matching key in UNIDADES_POR_REGIAO (case-insensitive)
-    const matchingKey = Object.keys(UNIDADES_POR_REGIAO).find(k => k.toUpperCase() === regionUpper);
-    const unitsInRegion = matchingKey ? UNIDADES_POR_REGIAO[matchingKey] : [];
-    
-    // Get all units that are directly in this region OR served by banco units in this region
-    const allowedUnits = new Set<string>();
-    unitsInRegion.forEach(u => {
-      allowedUnits.add(normalizeUnitName(u));
-      getBancoUnitsForSidebarUnit(u).forEach(bu => allowedUnits.add(normalizeUnitName(bu)));
-    });
-    
-    filtered = filtered.filter(row => {
+    filtered = filtered.filter((row) => {
       const rowUnit = normalizeUnitName(row.unidade);
       if (!rowUnit) return false;
-      return allowedUnits.has(rowUnit);
+      return getRegionForUnit(rowUnit) === region;
     });
   }
-  
-  // Filter by Unit
+
   if (unit && unit !== 'all') {
-    const bancoUnits = getBancoUnitsForSidebarUnit(unit);
-    const allowedUnits = new Set([normalizeUnitName(unit), ...bancoUnits.map(normalizeUnitName)]);
-    
-    filtered = filtered.filter(row => {
+    const allowedUnits = new Set(getScopedUnitNames(unit));
+
+    filtered = filtered.filter((row) => {
       const rowUnit = normalizeUnitName(row.unidade);
       if (!rowUnit) return false;
       return allowedUnits.has(rowUnit);
     });
   }
-  
+
   return filtered;
 }
 

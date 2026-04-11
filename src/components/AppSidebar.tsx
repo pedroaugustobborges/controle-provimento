@@ -10,17 +10,18 @@ import {
   FileSpreadsheet,
   Bell,
   ChevronDown,
-  CornerDownRight,
   FileText,
   FileCheck,
   Check,
-  Search
+  Search,
+  LogOut,
+  Circle
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';
 import { NavLink } from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from '@/components/ui/dialog';
@@ -38,6 +39,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminStore } from '@/store/adminStore';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useCallback } from 'react';
 
@@ -52,7 +54,18 @@ export function AppSidebar() {
   const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
   const { currentUser, users, selectedRegion, selectedUnit, selectedUnits, setSelectedRegion, setSelectedUnit, setSelectedUnits } = useAdminStore();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [showSupport, setShowSupport] = useState(false);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (e) {
+      console.error('Logout error', e);
+    }
+  }, [signOut, navigate]);
 
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
@@ -284,7 +297,7 @@ export function AppSidebar() {
                           </NavLink>
                         </SidebarMenuButton>
                         {!collapsed && (
-                          <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-white/10 space-y-1.5 py-2 pl-3">
+                          <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-white/15 space-y-0.5 py-2 pl-3 relative">
                             {item.subMenu.map((sub, idx) => {
                               const subActive = isUrlActive(sub.url);
                               const activeIndex = item.subMenu.findIndex(s => isUrlActive(s.url));
@@ -298,22 +311,18 @@ export function AppSidebar() {
                                         className={cn(
                                           "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
                                           subActive 
-                                            ? "text-white bg-white/20 shadow-[0_4px_15px_-3px_rgba(255,255,255,0.2)] translate-x-1.5" 
+                                            ? "text-white bg-white/15 border-l-2 border-white shadow-[0_4px_15px_-3px_rgba(255,255,255,0.15)] translate-x-1" 
                                             : hasPassed
-                                              ? "text-slate-300 bg-white/5 hover:bg-white/10"
-                                              : "text-slate-400 hover:text-slate-100 hover:bg-white/5 hover:translate-x-1.5"
+                                              ? "text-slate-400 bg-white/5 hover:bg-white/10 hover:text-slate-200"
+                                              : "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-1"
                                         )}
                                     >
-                                      {subActive && (
-                                        <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
-                                      )}
-                                      {hasPassed && (
-                                        <div className="absolute left-0 top-0 h-full w-1 bg-white/20" />
-                                      )}
-                                      <span className="relative z-10 flex items-center gap-2 leading-tight">
-                                        <CornerDownRight className={cn(
-                                          "h-3 w-3",
-                                          subActive ? "text-white" : hasPassed ? "text-slate-400" : "text-slate-600"
+                                      <span className="relative z-10 flex items-center gap-2.5 leading-tight">
+                                        <Circle className={cn(
+                                          "h-2 w-2 shrink-0 transition-all duration-300",
+                                          subActive ? "text-white fill-white drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]" 
+                                            : hasPassed ? "text-slate-400 fill-slate-400" 
+                                            : "text-slate-600 fill-transparent"
                                         )} />
                                         {sub.title}
                                       </span>
@@ -364,7 +373,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="px-3 mt-4">
+        <div className="mx-5 my-3 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
+        <SidebarGroup className="px-3 mt-1">
           <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
             <div className="h-[1px] w-6 bg-white/15" />
             CONTROLE OPERACIONAL
@@ -436,9 +447,19 @@ export function AppSidebar() {
                   </span>
                 </div>
               </div>
-              <button className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
-                Acessar Perfil
-              </button>
+              <div className="flex gap-2">
+                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
+                  Acessar Perfil
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-red-500/10 text-xs font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
+                  title="Sair do sistema"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Sair
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -79,15 +79,14 @@ function getRegionForUnit(unitName: string): string {
 export default function DashboardPage() {
   const { 
     vagas: allVagas = [], 
-    getBancoByVaga,
     bancos = [],
-    validacoes = [],
+    editais = [],
     convocacoes = [],
     tarefas = [],
     fetchVagas,
     fetchBancos
   } = useVagasStore();
-  const { selectedRegion, selectedUnit } = useAdminStore();
+  const { selectedRegion, selectedUnits } = useAdminStore();
   const navigate = useNavigate();
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
 
@@ -96,14 +95,52 @@ export default function DashboardPage() {
     fetchBancos();
   }, [fetchVagas, fetchBancos]);
 
+  const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
+    const regionFiltered = filterByRegionAndUnit(records, selectedRegion, 'all');
+
+    if (selectedRegion === 'all') {
+      return regionFiltered;
+    }
+
+    const activeUnits = selectedUnits.filter((unit) => unit && unit !== 'all');
+
+    if (activeUnits.length === 0) {
+      return regionFiltered;
+    }
+
+    const matchedRecords = new Set<T>();
+
+    activeUnits.forEach((unit) => {
+      filterByRegionAndUnit(regionFiltered, 'all', unit).forEach((record) => {
+        matchedRecords.add(record);
+      });
+    });
+
+    return regionFiltered.filter((record) => matchedRecords.has(record));
+  };
+
   const vagas = useMemo(() => {
-    const base = filterByRegionAndUnit(allVagas, selectedRegion, selectedUnit);
+    const base = filterDashboardRecords(allVagas);
     return getValidVacancyBase(base, 'TODOS', 'TODOS');
-  }, [allVagas, selectedRegion, selectedUnit]);
+  }, [allVagas, selectedRegion, selectedUnits]);
 
   const filteredBancos = useMemo(() => {
-    return filterByRegionAndUnit(bancos, selectedRegion, selectedUnit);
-  }, [bancos, selectedRegion, selectedUnit]);
+    return filterDashboardRecords(bancos);
+  }, [bancos, selectedRegion, selectedUnits]);
+
+  const visibleVagaIds = useMemo(() => new Set(vagas.map((vaga) => vaga.id)), [vagas]);
+
+  const filteredEditais = useMemo(() => (
+    editais.filter((edital) => visibleVagaIds.has(edital.vaga_id))
+  ), [editais, visibleVagaIds]);
+
+  const filteredConvocacoes = useMemo(() => (
+    convocacoes.filter((convocacao) => visibleVagaIds.has(convocacao.vaga_id))
+  ), [convocacoes, visibleVagaIds]);
+
+  const visibleBancoIds = useMemo(() => new Set(filteredBancos.map((banco) => banco.id)), [filteredBancos]);
+  const visibleEditalIds = useMemo(() => new Set(filteredEditais.map((edital) => edital.id)), [filteredEditais]);
+  const visibleConvocacaoIds = useMemo(() => new Set(filteredConvocacoes.map((convocacao) => convocacao.id)), [filteredConvocacoes]);
 
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 
@@ -169,7 +206,30 @@ export default function DashboardPage() {
 
   const totalBancoTotal = useMemo(() => filteredBancos.length, [filteredBancos]);
 
-  const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
+  const totalTarefasPendentes = useMemo(() => {
+    const shouldIncludeUnscopedTasks = selectedRegion === 'all';
+
+    return tarefas.filter((tarefa) => {
+      if (tarefa.status !== 'pendente') return false;
+
+      if (!tarefa.relacionado_a) {
+        return shouldIncludeUnscopedTasks;
+      }
+
+      switch (tarefa.relacionado_a.tipo) {
+        case 'vaga':
+          return visibleVagaIds.has(tarefa.relacionado_a.id);
+        case 'banco':
+          return visibleBancoIds.has(tarefa.relacionado_a.id);
+        case 'convocacao':
+          return visibleConvocacaoIds.has(tarefa.relacionado_a.id);
+        case 'edital':
+          return visibleEditalIds.has(tarefa.relacionado_a.id);
+        default:
+          return shouldIncludeUnscopedTasks;
+      }
+    }).length;
+  }, [tarefas, selectedRegion, visibleVagaIds, visibleBancoIds, visibleConvocacaoIds, visibleEditalIds]);
 
   const stats = useMemo(() => [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5', description: 'Base ativa' },

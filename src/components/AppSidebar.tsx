@@ -168,16 +168,16 @@ export function AppSidebar() {
                 <SelectValue placeholder="TODAS AS REGIÕES" />
               </SelectTrigger>
               <SelectContent className="bg-[#0A192F] border-white/10 text-white">
-                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Todas as Regiões</SelectItem>
-                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Goiás e Vitória</SelectItem>
-                <SelectItem value="OUTRAS UNIDADES" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Outras Unidades</SelectItem>
+                <SelectItem value="all" className="text-xs font-bold hover:bg-white/10 focus:bg-white/10 uppercase">Todas as Regiões</SelectItem>
+                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs hover:bg-white/10 focus:bg-white/10 uppercase">GOIÁS E VITÓRIA</SelectItem>
+                <SelectItem value="OUTRAS UNIDADES" className="text-xs hover:bg-white/10 focus:bg-white/10 uppercase">OUTRAS UNIDADES</SelectItem>
               </SelectContent>
             </Select>
 
             {selectedRegion !== 'all' && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="flex items-center justify-between w-full h-10 px-3 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 hover:border-blue-500/30 transition-all rounded-xl">
+                  <button className="flex items-center justify-between w-full h-10 px-3 bg-white/5 border border-white/10 text-slate-100 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:border-white/20 transition-all rounded-xl">
                     <span className="truncate">
                       {selectedUnits.includes('all') ? `TODAS DE ${selectedRegion}` : `${selectedUnits.length} UNIDADE(S) SELECIONADA(S)`}
                     </span>

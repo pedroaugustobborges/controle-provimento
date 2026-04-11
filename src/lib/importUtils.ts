@@ -59,7 +59,7 @@ function removeAccents(str: string): string {
 }
 
 function normalizeHeader(value: string): string {
-  return removeAccents(String(value || '').toUpperCase().trim());
+  return removeAccents(String(value || '').toUpperCase().trim()).replace(/_/g, ' ');
 }
 
 export function autoMapColumns(headers: string[], type: 'vagas' | 'banco'): ColumnMapping[] {

@@ -178,13 +178,13 @@ export function AppSidebar() {
         {hasMultipleUnits && !collapsed && (
           <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500 px-2">
             <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
-              <SelectTrigger className="h-10 bg-white/5 border-white/10 text-white/90 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-lg rounded-xl">
+              <SelectTrigger className="h-10 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 text-[11px] font-bold text-sidebar-foreground shadow-lg transition-all hover:bg-sidebar-accent/50 hover:border-sidebar-ring/60 focus:ring-sidebar-ring/40 data-[state=open]:bg-sidebar-accent data-[state=open]:border-sidebar-ring data-[state=open]:text-sidebar-foreground">
                 <SelectValue placeholder="TODAS AS REGIÕES" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0A192F] border-white/10 text-white">
-                <SelectItem value="all" className="text-xs font-bold hover:bg-white/10 focus:bg-white/10 uppercase">Todas as Regiões</SelectItem>
-                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs hover:bg-white/10 focus:bg-white/10 uppercase">GOIÁS E VITÓRIA</SelectItem>
-                <SelectItem value="OUTRAS UNIDADES" className="text-xs hover:bg-white/10 focus:bg-white/10 uppercase">OUTRAS UNIDADES</SelectItem>
+              <SelectContent className="border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl">
+                <SelectItem value="all" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">Todas as Regiões</SelectItem>
+                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">GOIÁS E VITÓRIA</SelectItem>
+                <SelectItem value="OUTRAS UNIDADES" className="text-xs font-bold uppercase text-sidebar-foreground/90 focus:bg-sidebar-accent focus:text-sidebar-foreground data-[state=checked]:bg-sidebar-accent/80 data-[state=checked]:text-sidebar-foreground">OUTRAS UNIDADES</SelectItem>
               </SelectContent>
             </Select>
 

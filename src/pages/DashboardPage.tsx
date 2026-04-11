@@ -347,8 +347,8 @@ export default function DashboardPage() {
     return strategicScopeByUnit;
   }, [chartMode, strategicScopeByUnit]);
 
-  const alerts = useMemo(() => {
-    const vacancyAlerts = vagas
+  const vacancyAlerts = useMemo(() => {
+    return vagas
       .filter((vaga) => {
         const status = String(vaga.status || '').toUpperCase();
         if (['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(status)) return false;
@@ -362,16 +362,24 @@ export default function DashboardPage() {
         const daysOpen = calcDiasAberto(baseDate);
 
         return {
-          id: `vaga-${vaga.id}`,
-          type: 'vaga' as const,
-          reference: vaga.requisicao || vaga.numero_requisicao || 'SEM REQ',
-          title: vaga.cargo || 'Vaga sem cargo informado',
-          unit: normalizeUnitName(vaga.unidade),
-          badge: `${daysOpen}d`,
-          description: 'Sem movimentação há mais de 10 dias',
-          sortValue: 2000 + daysOpen,
+          ...vaga,
+          daysOpen,
+          displayId: vaga.requisicao || vaga.numero_requisicao || 'SEM REQ',
         };
       });
+  }, [vagas]);
+
+  const alerts = useMemo(() => {
+    const vacancyDisplayAlerts = vacancyAlerts.map((vaga) => ({
+      id: `vaga-${vaga.id}`,
+      type: 'vaga' as const,
+      reference: vaga.displayId,
+      title: vaga.cargo || 'Vaga sem cargo informado',
+      unit: normalizeUnitName(vaga.unidade),
+      badge: `${vaga.daysOpen}d`,
+      description: 'Sem movimentação há mais de 10 dias',
+      sortValue: 2000 + vaga.daysOpen,
+    }));
 
     const bancoAlerts = filteredBancos
       .filter((banco) => {

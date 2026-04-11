@@ -154,7 +154,6 @@ export default function DashboardPage() {
       suspensa: 0,
       cancelada: 0,
       em_admissao: 0,
-      convocacoes: 0,
       atrasadas: 0,
       sem_classificacao: 0,
     };
@@ -165,8 +164,8 @@ export default function DashboardPage() {
 
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
-      const statusUpper = removeAccents(String(v.status || '').toUpperCase());
-      if (calcDiasAberto(baseDate) > 10 && !['CONCLUIDA', 'CANCELADA', 'CANCELADAS', 'SUSPENSA'].includes(statusUpper)) {
+      const normalizedS = normStatus(v.status || '');
+      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
         acc.atrasadas++;
       }
     });

@@ -94,12 +94,17 @@ export default function ImportacoesPage() {
     );
   }
 
-  const handleDeleteFile = () => {
+  const handleDeleteFile = async () => {
     if (fileParaExcluir) {
-      deleteImportedFile(fileParaExcluir);
-      toast.success('Arquivo removido com sucesso');
-      setIsDeleteDialogOpen(false);
-      setFileParaExcluir(null);
+      try {
+        await deleteImportedFile(fileParaExcluir);
+        toast.success('Arquivo removido com sucesso do histórico');
+      } catch (error) {
+        toast.error('Erro ao remover arquivo');
+      } finally {
+        setIsDeleteDialogOpen(false);
+        setFileParaExcluir(null);
+      }
     }
   };
 

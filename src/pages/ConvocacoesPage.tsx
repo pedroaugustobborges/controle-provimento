@@ -126,7 +126,7 @@ export default function ConvocacoesPage() {
   }, [vagas, currentUser, selectedUnidade, selectedRegion, globalUnit]);
 
   const pendingVagas = useMemo(() => {
-    return filteredVagas.filter(v => getCategoriaStatus(v, true) === 'convocacao');
+    return filteredVagas.filter(v => getCategoriaStatus(v) === 'em_andamento');
   }, [filteredVagas]);
 
   const filteredConvocacoes = useMemo(() => {

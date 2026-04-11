@@ -399,11 +399,12 @@ export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number)
 
 // Mapping: which banco unit serves which sidebar units
 const BANCO_UNIT_MAPPING: Record<string, string[]> = {
-  'GOIÂNIA': ['AGIR', 'CRER', 'HUGOL', 'HECAD', 'HDS', 'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'GOIÂNIA', 'GOIANIA'],
-  'VITÓRIA': ['VITÓRIA (SÃO PEDRO/SUÁ)', 'SÃO PEDRO', 'SUÁ', 'VITÓRIA', 'VITORIA'],
+  'GOIÂNIA': ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 'TEIA APARECIDA', 'TEIA CANEDO', 'TEIA CEN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA PIN', 'GOIÂNIA', 'GOIANIA'],
+  'UPA': ['SÃO PEDRO', 'SUÁ', 'UPA', 'VITÓRIA', 'VITORIA'],
   'POLICLÍNICA': ['POLICLÍNICA', 'POLICLINICA'],
   'JATAÍ': ['JATAÍ', 'JATAI'],
-  'UPA': ['UPA'],
+  'DOURADOS': ['DOURADOS'],
+  'HRC': ['HRC'],
 };
 
 function getBancoUnitsForSidebarUnit(sidebarUnit: string): string[] {

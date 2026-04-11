@@ -151,7 +151,7 @@ export function AppSidebar() {
             <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
               <span className="font-extrabold text-xl text-white tracking-tight flex items-center gap-1.5">
                 AGIR
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
               </span>
               <span className="text-[10px] text-white font-bold uppercase tracking-[0.2em] leading-tight">
                 Provimento Digital

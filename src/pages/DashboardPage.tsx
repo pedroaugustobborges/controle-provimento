@@ -303,17 +303,17 @@ export default function DashboardPage() {
       const entry = ensureEntry(banco.unidade);
       if (!entry) return;
 
-      const status = String(banco.status || '').toUpperCase();
+      const s = normStatus(banco.status || '');
       entry.bancos += 1;
-      if (status === 'CADASTRO RESERVA') {
+      if (s === 'cadastro reserva') {
         entry.bancosCR += 1;
       }
 
-      if (status !== 'VENCIDO' && status !== 'CONVOCADO') {
+      if (s !== 'vencido' && s !== 'convocado') {
         entry.bancosDisponiveis += 1;
       }
 
-      if (status === 'VENCIDO' || status === 'PRORROGADO' || banco.is_prorrogado) {
+      if (s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado) {
         entry.pendencias += 1;
       }
     });

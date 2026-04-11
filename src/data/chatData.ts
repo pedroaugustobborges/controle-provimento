@@ -1,153 +1,153 @@
 import { Unit, Role } from "@/types/chat";
 
 export const UNITS: Unit[] = [
-  // GOIAS E VITÓRIA
+  // GOIÁS E VITÓRIA
   { 
     id: 'hecad', 
     name: 'HECAD', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Thays Silva'], 
     assistants: ['Ana Julia'] 
   },
   { 
     id: 'crer', 
     name: 'CRER', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Samara Silva'], 
     assistants: ['Ana Caroline'] 
   },
   { 
     id: 'agir', 
     name: 'AGIR', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'hugol', 
     name: 'HUGOL', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Sannya Laryssa'], 
     assistants: ['Eduarda Oliveira', 'Flavia Vaz'] 
   },
   { 
     id: 'hds', 
     name: 'HDS', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'policlinica', 
     name: 'POLICLÍNICA', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'jatai', 
     name: 'JATAÍ', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Geovana Miranda'], 
     assistants: ['Nara Rubia'] 
   },
   { 
     id: 'vitoria', 
     name: 'VITÓRIA (SÃO PEDRO/SUÁ)', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Geovana Miranda'], 
     assistants: ['Nara Rubia'] 
   },
   { 
     id: 'teia-anapolis', 
     name: 'TEIA ANAPOLIS', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'teia-canedo', 
     name: 'TEIA CANEDO', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'teia-aparecida', 
     name: 'TEIA APARECIDA', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'teia-goiania', 
     name: 'TEIA GOIÂNIA', 
-    region: 'GO_VIT', 
+    region: 'GOIÁS E VITÓRIA', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   
-  // OUTRAS UNIDADES (FORA)
+  // OUTRAS UNIDADES
   { 
     id: 'dourados', 
     name: 'DOURADOS', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'chs', 
     name: 'CHS', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'hmsa', 
     name: 'HMSA', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'hrcac', 
     name: 'HRCAC', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'teia-cen', 
     name: 'TEIA CEN', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'teia-pin', 
     name: 'TEIA PIN', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'teia-man', 
     name: 'TEIA MAN', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'teia-man-2', 
     name: 'TEIA MAN 2', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
     id: 'teia-man-3', 
     name: 'TEIA MAN 3', 
-    region: 'FORA', 
+    region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },

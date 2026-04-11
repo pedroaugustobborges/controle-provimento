@@ -34,9 +34,7 @@ import {
   ResponsiveContainer,
   LabelList
 } from 'recharts';
-import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '@/components/PageHeader';
 
 // Region mapping for chart grouping
 const REGION_MAP: Record<string, string> = {

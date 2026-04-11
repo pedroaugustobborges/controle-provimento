@@ -387,8 +387,8 @@ export default function DashboardPage() {
     return vagas
       .filter((vaga) => {
         // Only include vacancies with empty/null status ("Sem Status")
-        const status = String(vaga.status || '').trim().toUpperCase();
-        if (status !== '' && status !== 'SEM STATUS') return false;
+        const s = normStatus(vaga.status || '');
+        if (s !== '' && s !== 'sem status') return false;
         return true;
       })
       .map((vaga) => {

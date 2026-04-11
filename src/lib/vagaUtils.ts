@@ -131,6 +131,7 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
     if (CATEGORIAS_STATUS.convocacao.includes(statusVal)) return 'convocacao';
     if (CATEGORIAS_STATUS.documentacao.includes(statusVal)) return 'documentacao';
     if (CATEGORIAS_STATUS.aguardando_unidade.includes(statusVal)) return 'aguardando_unidade';
+    if (CATEGORIAS_STATUS.movimentacao_interna.includes(statusVal)) return 'movimentacao_interna';
     if (CATEGORIAS_STATUS.em_andamento.includes(statusVal)) return 'em_andamento';
     return null;
   };

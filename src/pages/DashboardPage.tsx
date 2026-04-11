@@ -419,12 +419,12 @@ export default function DashboardPage() {
 
     const bancoAlerts = filteredBancos
       .filter((banco) => {
-        const status = String(banco.status || '').toUpperCase();
-        return status === 'VENCIDO' || status === 'PRORROGADO' || banco.is_prorrogado;
+        const s = normStatus(banco.status || '');
+        return s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado;
       })
       .map((banco) => {
-        const status = String(banco.status || '').toUpperCase();
-        const isExpired = status === 'VENCIDO';
+        const s = normStatus(banco.status || '');
+        const isExpired = s === 'vencido';
 
         return {
           id: `banco-${banco.id}`,

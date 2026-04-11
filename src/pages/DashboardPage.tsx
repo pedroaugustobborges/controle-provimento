@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,12 +17,11 @@ import {
   ShieldCheck,
   CheckCircle,
   Star,
-  XCircle,
   AlertTriangle,
-  Database,
+  UserCheck,
   AlertCircle,
   Bell,
-  RefreshCw,
+  ArrowLeftRight,
   ChevronRight
 } from 'lucide-react';
 import { 
@@ -39,6 +38,45 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 
+// Region mapping for chart grouping
+const REGION_MAP: Record<string, string> = {
+  'HECAD': 'Goiás',
+  'CRER': 'Goiás',
+  'AGIR': 'Goiás',
+  'HUGOL': 'Goiás',
+  'HDS': 'Goiás',
+  'POLICLÍNICA': 'Goiás',
+  'JATAÍ': 'Goiás',
+  'TEIA ANAPOLIS': 'Goiás',
+  'TEIA CANEDO': 'Goiás',
+  'TEIA APARECIDA': 'Goiás',
+  'TEIA GOIÂNIA': 'Goiás',
+  'VITÓRIA (SÃO PEDRO/SUÁ)': 'Vitória (ES)',
+  'SÃO PEDRO': 'Vitória (ES)',
+  'SUÁ': 'Vitória (ES)',
+  'DOURADOS': 'Outras Unidades',
+  'CHS': 'Outras Unidades',
+  'HMSA': 'Outras Unidades',
+  'HRCAC': 'Outras Unidades',
+  'TEIA CEN': 'Outras Unidades',
+  'TEIA PIN': 'Outras Unidades',
+  'TEIA MAN': 'Outras Unidades',
+  'TEIA MAN 2': 'Outras Unidades',
+  'TEIA MAN 3': 'Outras Unidades',
+};
+
+function getRegionForUnit(unitName: string): string {
+  const upper = unitName.toUpperCase().trim();
+  for (const [key, region] of Object.entries(REGION_MAP)) {
+    if (upper.includes(key) || key.includes(upper)) return region;
+  }
+  // Fallback: check for vitória-related tokens
+  if (upper.includes('VITÓRIA') || upper.includes('VITORIA') || upper.includes('SÃO PEDRO') || upper.includes('SUÁ') || upper.includes('SUA')) {
+    return 'Vitória (ES)';
+  }
+  return 'Outras Unidades';
+}
+
 export default function DashboardPage() {
   const { 
     vagas: allVagas = [], 
@@ -52,19 +90,18 @@ export default function DashboardPage() {
   } = useVagasStore();
   const { selectedRegion, selectedUnit } = useAdminStore();
   const navigate = useNavigate();
+  const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
 
   useEffect(() => {
     fetchVagas();
     fetchBancos();
   }, [fetchVagas, fetchBancos]);
 
-  // Canonical base for dashboard - using the same parity rule as Excel + Region/Unit filters
   const vagas = useMemo(() => {
     const base = filterByRegionAndUnit(allVagas, selectedRegion, selectedUnit);
     return getValidVacancyBase(base, 'TODOS', 'TODOS');
   }, [allVagas, selectedRegion, selectedUnit]);
 
-  // Filter bancos by region/unit as well
   const filteredBancos = useMemo(() => {
     return filterByRegionAndUnit(bancos, selectedRegion, selectedUnit);
   }, [bancos, selectedRegion, selectedUnit]);
@@ -82,8 +119,6 @@ export default function DashboardPage() {
       aguardando_unidade: 0,
       documentacao: 0,
       movimentacao_interna: 0,
-      cancelada: 0,
-      dispensa: 0,
       atrasadas: 0,
     };
     
@@ -94,11 +129,13 @@ export default function DashboardPage() {
       }
       
       const status = (v.status || '').toLowerCase();
-      if (status.includes('movimentacao interna') || status === 'movimentacao_interna') acc.movimentacao_interna++;
-      if (status === 'cancelada' || status === 'cancelado') acc.cancelada++;
-      if (status === 'dispensa') acc.dispensa++;
+      if (status.includes('movimentacao interna') || status.includes('movimentação interna') || 
+          status === 'movimentacao_interna' || status === 'mov. interna' || status === 'mov interna' ||
+          status.includes('transferencia') || status.includes('transferência') ||
+          status.includes('remanejamento')) {
+        acc.movimentacao_interna++;
+      }
       
-      // Check if delayed (> 10 days since last history or opening)
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
       if (calcDiasAberto(baseDate) > 10 && !['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(v.status)) {
@@ -109,59 +146,16 @@ export default function DashboardPage() {
     return acc;
   }, [vagas]);
 
-  // REGRA DE AGRUPAMENTO DO BANCO (Item 3 e 4)
-  const groupedBancos = useMemo(() => {
-    const groups: Record<string, {
-      id: string;
-      status: string;
-      isProrrogado: boolean;
-      qtdBanco: number;
-      candidatesCount: number;
-    }> = {};
-
-    filteredBancos.forEach(b => {
-      const cargoNorm = b.cargo_normalizado || normalizeCargo(b.cargo);
-      const key = b.numero_processo_seletivo 
-        ? `PS-${b.numero_processo_seletivo}`
-        : `${b.numero_edital}-${b.unidade}-${cargoNorm}`;
-
-      if (!groups[key]) {
-        // Quantidade do banco daquela vaga/grupo
-        let qtd = 0;
-        const rawQtd = b.quantidade_banco;
-        if (typeof rawQtd === 'number') {
-          qtd = rawQtd;
-        } else if (rawQtd) {
-          qtd = parseInt(String(rawQtd).replace(/[^\d]/g, '')) || 0;
-        }
-
-        groups[key] = {
-          id: b.id,
-          status: b.status,
-          isProrrogado: b.is_prorrogado,
-          qtdBanco: qtd,
-          candidatesCount: 0
-        };
-      }
-      groups[key].candidatesCount++;
-    });
-
-    return Object.values(groups);
-  }, [filteredBancos]);
-
-  // Card Cadastro Reserva - Contagem de candidatos CR (não prorrogados)
   const totalCR = useMemo(() => {
     return filteredBancos.filter(b => 
       (b.status === 'CADASTRO RESERVA' || b.status === 'valido') && !b.is_prorrogado
     ).length;
   }, [filteredBancos]);
 
-  // Card Prorrogados - Contagem de candidatos prorrogados
   const totalProrrogados = useMemo(() => {
     return filteredBancos.filter(b => b.is_prorrogado || b.status === 'prorrogado').length;
   }, [filteredBancos]);
 
-  // Cadastro Reserva disponíveis (não vencidos, não convocados)
   const totalCadastroReservaDisponiveis = useMemo(() => {
     return filteredBancos.filter(b => b.status !== 'VENCIDO' && b.status !== 'CONVOCADO').length;
   }, [filteredBancos]);
@@ -179,59 +173,66 @@ export default function DashboardPage() {
   const totalTarefasPendentes = tarefas.filter(t => t.status === 'pendente').length;
 
   const stats = useMemo(() => [
-    { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5' },
-    { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: Database, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Cadastro Reserva', value: totalCR, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Candidatos disponíveis' },
+    { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5', description: 'Base ativa' },
+    { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
+    { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos seletivos ativos' },
+    { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
+    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Transferências e remanejamentos' },
+    { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Vagas estratégicas' },
+    { label: 'Cadastro Reserva', value: totalCR, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Candidatos disponíveis' },
     { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Candidatos convocados' },
     { label: 'Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Candidatos vencidos' },
     { label: 'Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Candidatos prorrogados' },
     { label: 'Cadastro Reserva Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Não vencidos e não convocados' },
-    { label: 'Total Banco de Talentos', value: totalBancoTotal, icon: Database, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Total de candidatos' },
-    { label: 'Canceladas', value: counts.cancelada, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Etapas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Total Banco de Talentos', value: totalBancoTotal, icon: Users, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Total de candidatos' },
+    { label: 'Etapas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Mais de 10 dias sem movimentação' },
+    { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Tarefas aguardando ação' },
   ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalProrrogados, totalBancoTotal, totalTarefasPendentes]);
 
   const chartData = useMemo(() => {
+    if (chartMode === 'regiao') {
+      const regionMap = new Map<string, { total: number, abertas: number }>();
+      vagas.forEach(v => {
+        if (!v.unidade) return;
+        const normalizedName = normalizeUnitName(v.unidade);
+        if (!normalizedName) return;
+        const region = getRegionForUnit(normalizedName);
+        const current = regionMap.get(region) || { total: 0, abertas: 0 };
+        const categoria = getCategoriaStatus(v);
+        current.total += 1;
+        if (categoria !== 'concluidas' && categoria !== 'vagas_interrompidas') {
+          current.abertas += 1;
+        }
+        regionMap.set(region, current);
+      });
+      return Array.from(regionMap.entries())
+        .map(([name, data]) => ({ name, total: data.total, abertas: data.abertas }))
+        .filter(item => item.total > 0)
+        .sort((a, b) => b.total - a.total);
+    }
+
     const groupedMap = new Map<string, { total: number, abertas: number }>();
-    
     vagas.forEach(v => {
       if (!v.unidade) return;
-      
       const normalizedName = normalizeUnitName(v.unidade);
       if (!normalizedName) return;
-
       const current = groupedMap.get(normalizedName) || { total: 0, abertas: 0 };
       const categoria = getCategoriaStatus(v);
-      
       current.total += 1;
-      
-      // Vaga aberta é aquela que NÃO está encerrada ou interrompida
       if (categoria !== 'concluidas' && categoria !== 'vagas_interrompidas') {
         current.abertas += 1;
       }
-      
       groupedMap.set(normalizedName, current);
     });
-
     return Array.from(groupedMap.entries())
-      .map(([name, data]) => ({
-        name,
-        total: data.total,
-        abertas: data.abertas,
-      }))
+      .map(([name, data]) => ({ name, total: data.total, abertas: data.abertas }))
       .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total);
-  }, [vagas]);
+  }, [vagas, chartMode]);
 
   const alerts = useMemo(() => vagas.filter((v) => {
     const status = v.status;
     if (['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(status)) return false;
-    
     const lastHist = v.historico?.[v.historico.length - 1];
     const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
     return calcDiasAberto(baseDate) > 10;
@@ -245,14 +246,9 @@ export default function DashboardPage() {
         badge="Painel Operacional"
         withBackground={true}
         actions={
-          <>
-            <Button variant="outline" className="text-xs font-bold h-10 px-5 border-slate-200 hover:bg-slate-50 text-slate-600 transition-all rounded-xl shadow-sm">
-              Relatórios Detalhados
-            </Button>
-            <Button className="text-xs font-bold h-10 px-5 bg-primary hover:bg-primary/90 text-white transition-all rounded-xl shadow-lg shadow-primary/20">
-              Novo Processo Seletivo
-            </Button>
-          </>
+          <Button className="text-xs font-bold h-10 px-5 bg-primary hover:bg-primary/90 text-white transition-all rounded-xl shadow-lg shadow-primary/20">
+            Novo Processo Seletivo
+          </Button>
         }
       />
 
@@ -286,14 +282,32 @@ export default function DashboardPage() {
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Building2 className="h-4 w-4 text-primary" />
                 </div>
-                Visão Estratégica por Unidade
+                Visão Estratégica {chartMode === 'regiao' ? 'por Região' : 'por Unidade'}
               </CardTitle>
               <CardDescription className="text-xs font-medium text-slate-400 ml-10.5">Distribuição geográfica de processos e demandas ativas.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
-                <div className="h-2 w-2 rounded-full bg-primary"></div>
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">Abertas</span>
+              <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+                <button
+                  onClick={() => setChartMode('unidade')}
+                  className={`text-[10px] font-bold px-3 py-1.5 transition-all uppercase tracking-wider ${
+                    chartMode === 'unidade' 
+                      ? 'bg-[#1e3a5f] text-white' 
+                      : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Por Unidade
+                </button>
+                <button
+                  onClick={() => setChartMode('regiao')}
+                  className={`text-[10px] font-bold px-3 py-1.5 transition-all uppercase tracking-wider ${
+                    chartMode === 'regiao' 
+                      ? 'bg-[#1e3a5f] text-white' 
+                      : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Por Região
+                </button>
               </div>
             </div>
           </CardHeader>
@@ -334,7 +348,7 @@ export default function DashboardPage() {
                   />
                   <Bar 
                     dataKey="abertas" 
-                    fill="var(--primary)" 
+                    fill="#1e3a5f" 
                     radius={[0, 4, 4, 0]} 
                     barSize={18}
                   >
@@ -351,7 +365,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Operational Alerts */}
+        {/* Vagas em Atraso */}
         <Card className="border-none shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="pb-4 border-b border-slate-50 bg-amber-50/30">
             <div className="flex items-center justify-between">
@@ -359,7 +373,10 @@ export default function DashboardPage() {
                 <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                 </div>
-                <CardTitle className="text-lg font-bold text-slate-800">Alertas Ativos</CardTitle>
+                <div>
+                  <CardTitle className="text-lg font-bold text-slate-800">Vagas em Atraso</CardTitle>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Mais de 10 dias sem movimentação</p>
+                </div>
               </div>
               <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm">
                 {alerts.length} Pendências

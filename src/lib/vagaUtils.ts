@@ -69,17 +69,16 @@ export function isVitoriaUnit(unidade: string): boolean {
 }
 
 export const CATEGORIAS_STATUS = {
-  concluidas: ['CONCLUÍDA', 'CONCLUÍDAS', 'CONCLUIDO', 'CONCLUIDA'],
-  movimentacao_interna: ['MOVIMENTAÇÃO INTERNA', 'MOVIMENTACAO INTERNA', 'MOV INTERNA', 'MOV. INTERNA'],
-  vagas_lideranca: ['VAGA DE LIDERANÇA', 'ESTRATÉGICAS', 'ESTRATEGICAS', 'LIDERANÇA', 'LIDERANCA'],
-  em_andamento: ['EM ANDAMENTO', 'REALIZAR CONVOCAÇÃO', 'REALIZAR CONVOCACAO'],
-  aguardando_unidade: ['AGUARDANDO UNIDADE'],
-  fila_edital: ['FILA DE EDITAIS', 'EM EDITAL', 'PUBLICAR NOVO EDITAL'],
-  suspensa: ['SUSPENSA'],
-  cancelada: ['CANCELADA', 'CANCELADAS'],
-  documentacao: ['DOCUMENTAÇÃO', 'DOCUMENTACAO', 'DOCUMENTAÇÃO OK E ASO PENDENTE', 'ASO PENDENTE'],
-  em_admissao: ['ADMISSÃO', 'ADMISSAO', 'ADMISSÃO ENVIADA', 'ADMISSAO ENVIADA'],
-  convocacoes: ['CONVOCAÇÕES', 'CONVOCACOES', 'CONVOCAÇÃO', 'CONVOCACAO'],
+  concluidas: ['concluida', 'concluidas'],
+  movimentacao_interna: ['movimentacao interna', 'transferencia'],
+  vagas_lideranca: ['vaga de lideranca'],
+  em_andamento: ['realizar convocacao', 'em andamento'],
+  fila_edital: ['em edital', 'publicar novo edital'],
+  em_admissao: ['admissao', 'admissao enviada'],
+  documentacao: ['documentacao', 'documentacao ok e aso pendente', 'aso pendente'],
+  aguardando_unidade: ['aguardando unidade'],
+  suspensa: ['suspensa'],
+  cancelada: ['cancelada', 'canceladas'],
 };
 
 export function isConvocacaoByFields(row: any): boolean {

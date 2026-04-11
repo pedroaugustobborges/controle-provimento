@@ -385,27 +385,35 @@ export function filterByRegionAndUnit(records: any[], region: string, unit: stri
   
   // Filter by Region
   if (region && region !== 'all') {
-    const unitsInRegion = UNIDADES_POR_REGIAO[region] || [];
-    // Get all banco units that serve units in this region
-    const bancoUnitsForRegion = new Set<string>();
+    const regionUpper = String(region).toUpperCase();
+    
+    // Find matching key in UNIDADES_POR_REGIAO (case-insensitive)
+    const matchingKey = Object.keys(UNIDADES_POR_REGIAO).find(k => k.toUpperCase() === regionUpper);
+    const unitsInRegion = matchingKey ? UNIDADES_POR_REGIAO[matchingKey] : [];
+    
+    // Get all units that are directly in this region OR served by banco units in this region
+    const allowedUnits = new Set<string>();
     unitsInRegion.forEach(u => {
-      getBancoUnitsForSidebarUnit(u).forEach(bu => bancoUnitsForRegion.add(bu));
+      allowedUnits.add(normalizeUnitName(u));
+      getBancoUnitsForSidebarUnit(u).forEach(bu => allowedUnits.add(normalizeUnitName(bu)));
     });
-    // Also include direct matches
-    unitsInRegion.forEach(u => bancoUnitsForRegion.add(normalizeUnitName(u)));
     
     filtered = filtered.filter(row => {
       const rowUnit = normalizeUnitName(row.unidade);
-      return bancoUnitsForRegion.has(rowUnit);
+      if (!rowUnit) return false;
+      return allowedUnits.has(rowUnit);
     });
   }
   
   // Filter by Unit
   if (unit && unit !== 'all') {
     const bancoUnits = getBancoUnitsForSidebarUnit(unit);
+    const allowedUnits = new Set([normalizeUnitName(unit), ...bancoUnits.map(normalizeUnitName)]);
+    
     filtered = filtered.filter(row => {
       const rowUnit = normalizeUnitName(row.unidade);
-      return bancoUnits.includes(rowUnit);
+      if (!rowUnit) return false;
+      return allowedUnits.has(rowUnit);
     });
   }
   

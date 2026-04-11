@@ -543,12 +543,12 @@ export default function DashboardPage() {
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold text-slate-800">Pendências do Provimento</CardTitle>
+                  <CardTitle className="text-lg font-bold text-slate-800">Vagas sem Movimentação</CardTitle>
                   <p className="text-[10px] text-slate-400 font-medium mt-0.5">Atrasos de vagas e bancos que exigem atenção</p>
                 </div>
               </div>
               <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm">
-                {alerts.length} Pendências
+                {alerts.length} Alertas
               </span>
             </div>
           </CardHeader>

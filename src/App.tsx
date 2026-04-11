@@ -22,7 +22,7 @@ import MonitoramentoAdminPage from "@/pages/MonitoramentoAdminPage";
 import FilaAnalistaEditalPage from "@/pages/FilaAnalistaEditalPage";
 import LoginPage from "@/pages/LoginPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import NotFound from "./pages/NotFound.tsx";
+
 
 const queryClient = new QueryClient();
 
@@ -60,7 +60,7 @@ function ProtectedRoutes() {
         <Route path="/gestor" element={<AdministracaoPage />} />
         <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
         <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppLayout>
   );

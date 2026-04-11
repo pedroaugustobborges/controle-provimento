@@ -28,7 +28,7 @@ interface ImportStagedDialogProps {
   type?: 'vagas' | 'banco';
 }
 
-type Step = 'select' | 'mapping' | 'processing' | 'result';
+type Step = 'type-selection' | 'select' | 'mapping' | 'processing' | 'result';
 
 export function ImportStagedDialog({ open, onOpenChange, type: initialType }: ImportStagedDialogProps) {
   const { currentUser } = useAdminStore();

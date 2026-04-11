@@ -365,9 +365,9 @@ export function AppSidebar() {
 
         {secondaryItems.length > 0 && (
           <SidebarGroup className="mt-8 px-3">
-            <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
-              <div className="h-[1px] w-4 bg-blue-500/20" />
-              Apoio Administrativo
+            <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
+              <div className="h-[1px] w-6 bg-white/10" />
+              APOIO ADMINISTRATIVO
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1.5">
@@ -381,8 +381,8 @@ export function AppSidebar() {
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
-                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-white"
+                              ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                              : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                           )}
                         >
                           <item.icon className={cn(
@@ -413,7 +413,7 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-       <SidebarFooter className="border-t border-white/10 p-5 mt-auto bg-black/10">
+       <SidebarFooter className="border-t border-white/5 p-5 mt-auto bg-[#0A192F]/50">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Suporte Interno">

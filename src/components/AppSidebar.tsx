@@ -162,30 +162,78 @@ export function AppSidebar() {
 
         {/* Unit selector for multi-unit users */}
         {hasMultipleUnits && !collapsed && (
-          <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
-            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnit('all'); }}>
-              <SelectTrigger className="h-9 bg-white/5 border-white/10 text-white/80 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-sm">
-                <SelectValue placeholder="Todas as Unidades" />
+          <div className="mt-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500 px-2">
+            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
+              <SelectTrigger className="h-10 bg-white/5 border-white/10 text-white/90 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all shadow-lg rounded-xl">
+                <SelectValue placeholder="TODAS AS REGIÕES" />
               </SelectTrigger>
-              <SelectContent className="bg-[#112240] border-white/10 text-white">
-                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20">Todas as Unidades</SelectItem>
-                <SelectItem value="Goiás e Vitória" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Goiás e Vitória</SelectItem>
-                <SelectItem value="Unidades de Fora" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">Unidades de Fora</SelectItem>
+              <SelectContent className="bg-[#0A192F] border-white/10 text-white">
+                <SelectItem value="all" className="text-xs font-bold hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Todas as Regiões</SelectItem>
+                <SelectItem value="GOIÁS E VITÓRIA" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Goiás e Vitória</SelectItem>
+                <SelectItem value="OUTRAS UNIDADES" className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20 uppercase">Outras Unidades</SelectItem>
               </SelectContent>
             </Select>
 
             {selectedRegion !== 'all' && (
-              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
-                <SelectTrigger className="h-8 bg-blue-500/5 border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/10 hover:border-blue-500/30 transition-all animate-in zoom-in-95 duration-300">
-                  <SelectValue placeholder="Selecionar Unidade" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#112240] border-white/10 text-white max-h-[250px]">
-                  <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</SelectItem>
-                  {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
-                    <SelectItem key={u} value={u} className="text-xs hover:bg-blue-500/20 focus:bg-blue-500/20">{u}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center justify-between w-full h-10 px-3 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 hover:border-blue-500/30 transition-all rounded-xl">
+                    <span className="truncate">
+                      {selectedUnits.includes('all') ? `TODAS DE ${selectedRegion}` : `${selectedUnits.length} UNIDADE(S) SELECIONADA(S)`}
+                    </span>
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px] p-0 bg-[#0A192F] border-white/10 shadow-2xl" align="start">
+                  <div className="p-2 space-y-1">
+                    <div 
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+                      onClick={() => {
+                        if (selectedUnits.includes('all')) {
+                          setSelectedUnits([]);
+                        } else {
+                          setSelectedUnits(['all']);
+                        }
+                      }}
+                    >
+                      <Checkbox 
+                        checked={selectedUnits.includes('all')}
+                        className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                      />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Todas de {selectedRegion}</span>
+                    </div>
+                    
+                    <div className="h-[1px] bg-white/5 my-1" />
+                    
+                    <div className="max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                      {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
+                        <div 
+                          key={u}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors"
+                          onClick={() => {
+                            let newUnits = [...selectedUnits];
+                            if (newUnits.includes('all')) {
+                              newUnits = [u];
+                            } else if (newUnits.includes(u)) {
+                              newUnits = newUnits.filter(x => x !== u);
+                              if (newUnits.length === 0) newUnits = ['all'];
+                            } else {
+                              newUnits.push(u);
+                            }
+                            setSelectedUnits(newUnits);
+                          }}
+                        >
+                          <Checkbox 
+                            checked={selectedUnits.includes(u)}
+                            className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                          />
+                          <span className="text-[11px] text-white/80 font-medium">{u}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         )}

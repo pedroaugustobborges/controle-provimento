@@ -386,8 +386,10 @@ const BANCO_UNIT_MAPPING: Record<string, string[]> = {
   'UPA': ['SÃO PEDRO', 'SUÁ', 'UPA', 'VITÓRIA', 'VITORIA'],
   'POLICLÍNICA': ['POLICLÍNICA', 'POLICLINICA'],
   'JATAÍ': ['JATAÍ', 'JATAI'],
-  'DOURADOS': ['DOURADOS'],
-  'HRC': ['HRC'],
+  'DOURADOS': ['DOURADOS', 'HRD'],
+  'HRC': ['HRC', 'HRCAC I', 'HRCAC II'],
+  'CHS': ['CHS'],
+  'HMSA': ['HMSA'],
 };
 
 function getBancoUnitsForSidebarUnit(sidebarUnit: string): string[] {

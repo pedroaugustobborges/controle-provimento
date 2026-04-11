@@ -301,4 +301,40 @@ export class DatabaseService {
 
     return message || "Erro técnico inesperado ao processar a requisição.";
   }
+
+  /**
+   * Delete an import batch and all its associated records
+   */
+  static async deleteImportBatch(batchId: string): Promise<{ success: boolean; error: Error | null }> {
+    try {
+      // 1. Delete associated records from vagas
+      const { error: vagasError } = await supabase
+        .from('vagas')
+        .delete()
+        .eq('import_batch_id', batchId);
+      
+      if (vagasError) console.error('Error deleting vagas for batch:', vagasError);
+
+      // 2. Delete associated records from banco_candidatos
+      const { error: bancoError } = await supabase
+        .from('banco_candidatos')
+        .delete()
+        .eq('import_batch_id', batchId);
+
+      if (bancoError) console.error('Error deleting banco for batch:', bancoError);
+
+      // 3. Delete from importacoes table
+      const { error: importError } = await supabase
+        .from('importacoes')
+        .delete()
+        .eq('id', batchId);
+
+      if (importError) throw importError;
+
+      return { success: true, error: null };
+    } catch (err: any) {
+      console.error('Failed to delete import batch:', err);
+      return { success: false, error: err };
+    }
+  }
 }

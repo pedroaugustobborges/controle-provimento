@@ -313,18 +313,32 @@ export const useVagasStore = create<VagasState>()(
         tarefas: s.tarefas.filter((t) => t.id !== id),
       })),
       addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
-      deleteImportBatch: (batchId) => set((s) => {
-        // Find if we are deleting vagas or bancos to handle dependencies
-        const vagasToRemove = s.vagas.filter(v => v.import_batch_id === batchId).map(v => v.id);
-        
-        return {
-          vagas: s.vagas.filter((v) => v.import_batch_id !== batchId),
-          bancos: s.bancos.filter((b) => b.import_batch_id !== batchId),
-          convocacoes: s.convocacoes.filter((c) => !vagasToRemove.includes(c.vaga_id)),
-          importHistory: s.importHistory.filter((h) => h.id !== batchId),
-          importedFiles: s.importedFiles.filter((f) => f.vaga_importacao_id !== batchId && f.id !== batchId),
-        };
-      }),
+      deleteImportBatch: async (batchId) => {
+        try {
+          const { DatabaseService } = await import('@/services/databaseService');
+          const { success, error } = await DatabaseService.deleteImportBatch(batchId);
+          
+          if (success) {
+            set((s) => {
+              // Find if we are deleting vagas or bancos to handle dependencies
+              const vagasToRemove = s.vagas.filter(v => v.import_batch_id === batchId).map(v => v.id);
+              
+              return {
+                vagas: s.vagas.filter((v) => v.import_batch_id !== batchId),
+                bancos: s.bancos.filter((b) => b.import_batch_id !== batchId),
+                convocacoes: s.convocacoes.filter((c) => !vagasToRemove.includes(c.vaga_id)),
+                importHistory: s.importHistory.filter((h) => h.id !== batchId),
+                importedFiles: s.importedFiles.filter((f) => f.vaga_importacao_id !== batchId && f.id !== batchId),
+              };
+            });
+          } else {
+            throw error || new Error('Falha ao excluir o lote do banco de dados');
+          }
+        } catch (err) {
+          console.error('Erro ao excluir lote:', err);
+          throw err;
+        }
+      },
       updateAlerta: (id, data) => set((s) => ({
         alertas: s.alertas.map((a) => a.id === id ? { ...a, ...data } : a),
       })),

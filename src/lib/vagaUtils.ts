@@ -83,7 +83,7 @@ export const CATEGORIAS_STATUS = {
   concluidas: ['concluida', 'concluidas'],
   movimentacao_interna: ['movimentacao interna', 'transferencia'],
   vagas_lideranca: ['vaga de lideranca', 'estrategicas', 'lideranca'],
-  em_andamento: ['realizar convocacao', 'em andamento'],
+  em_andamento: ['realizar convocacao'],
   convocacoes: ['convocacoes', 'convocacao'],
   fila_edital: ['em edital', 'publicar novo edital', 'fila de editais'],
   em_admissao: ['admissao', 'admissao enviada'],

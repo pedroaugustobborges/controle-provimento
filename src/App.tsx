@@ -22,7 +22,7 @@ import MonitoramentoAdminPage from "@/pages/MonitoramentoAdminPage";
 import FilaAnalistaEditalPage from "@/pages/FilaAnalistaEditalPage";
 import LoginPage from "@/pages/LoginPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import NotFound from "./pages/NotFound.tsx";
+
 
 const queryClient = new QueryClient();
 

@@ -67,6 +67,7 @@ export default function DashboardPage() {
   } = useVagasStore();
   const { selectedRegion, selectedUnits } = useAdminStore();
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
+  const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
 
   useEffect(() => {
     fetchVagas();

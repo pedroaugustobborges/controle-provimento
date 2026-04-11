@@ -102,11 +102,10 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
     return 'sem_classificacao';
   }
   
-  const s = String(status).trim();
-  const normStatus = removeAccents(s.toUpperCase());
+  const normS = normStatus(String(status));
   
   for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {
-    if (values.some(v => removeAccents(v.toUpperCase()) === normStatus)) {
+    if (values.includes(normS)) {
       return cat as keyof typeof CATEGORIAS_STATUS;
     }
   }
@@ -117,19 +116,17 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
 export function getStatusColor(status: string): string {
   if (!status) return 'bg-gray-100 text-gray-600';
   
-  const s = String(status).trim();
-  const normStatus = removeAccents(s.toUpperCase());
+  const normS = normStatus(status);
   
-  if (CATEGORIAS_STATUS.concluidas.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-green-100 text-green-700 border-green-200';
-  if (CATEGORIAS_STATUS.fila_edital.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-blue-100 text-blue-700 border-blue-200';
-  if (CATEGORIAS_STATUS.suspensa.some(v => removeAccents(v.toUpperCase()) === normStatus) || CATEGORIAS_STATUS.cancelada.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-red-100 text-red-700 border-red-200';
-  if (CATEGORIAS_STATUS.vagas_lideranca.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-  if (CATEGORIAS_STATUS.documentacao.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-orange-100 text-orange-700 border-orange-200';
-  if (CATEGORIAS_STATUS.aguardando_unidade.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-  if (CATEGORIAS_STATUS.movimentacao_interna.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-cyan-100 text-cyan-700 border-cyan-200';
-  if (CATEGORIAS_STATUS.em_andamento.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-blue-100 text-blue-700 border-blue-200';
-  if (CATEGORIAS_STATUS.em_admissao.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-  if (CATEGORIAS_STATUS.convocacoes.some(v => removeAccents(v.toUpperCase()) === normStatus)) return 'bg-purple-100 text-purple-700 border-purple-200';
+  if (CATEGORIAS_STATUS.concluidas.includes(normS)) return 'bg-green-100 text-green-700 border-green-200';
+  if (CATEGORIAS_STATUS.fila_edital.includes(normS)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.suspensa.includes(normS) || CATEGORIAS_STATUS.cancelada.includes(normS)) return 'bg-red-100 text-red-700 border-red-200';
+  if (CATEGORIAS_STATUS.vagas_lideranca.includes(normS)) return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+  if (CATEGORIAS_STATUS.documentacao.includes(normS)) return 'bg-orange-100 text-orange-700 border-orange-200';
+  if (CATEGORIAS_STATUS.aguardando_unidade.includes(normS)) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+  if (CATEGORIAS_STATUS.movimentacao_interna.includes(normS)) return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+  if (CATEGORIAS_STATUS.em_andamento.includes(normS)) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (CATEGORIAS_STATUS.em_admissao.includes(normS)) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
   
   return 'bg-gray-100 text-gray-600';
 }

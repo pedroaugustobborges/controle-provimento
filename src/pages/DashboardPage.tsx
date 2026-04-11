@@ -81,11 +81,12 @@ export default function DashboardPage() {
   }, [fetchVagas, fetchBancos]);
 
   const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
-    const regionFiltered = filterByRegionAndUnit(records, selectedRegion, 'all');
-
+    // If "All regions" is selected, return all records immediately
     if (selectedRegion === 'all') {
-      return regionFiltered;
+      return records;
     }
+
+    const regionFiltered = filterByRegionAndUnit(records, selectedRegion, 'all');
 
     const activeUnits = selectedUnits.filter((unit) => unit && unit !== 'all');
 
@@ -312,6 +313,20 @@ export default function DashboardPage() {
         bancos: number;
         pendencias: number;
       }>();
+
+      // If "All regions" is selected, ensure we initialize all groups
+      if (selectedRegion === 'all') {
+        ['Goiás e Vitória', 'Outras unidades'].forEach(reg => {
+          regionMap.set(reg, {
+            name: reg,
+            total: 0,
+            ativos: 0,
+            vagas: 0,
+            bancos: 0,
+            pendencias: 0,
+          });
+        });
+      }
 
       strategicScopeByUnit.forEach((entry) => {
         const current = regionMap.get(entry.region) || {

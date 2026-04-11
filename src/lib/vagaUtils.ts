@@ -450,11 +450,18 @@ export function filterByRegionAndUnit(records: any[], region: string, unit: stri
 
   let filtered = records;
 
+  // When "all" is selected, we don't apply any regional or unit filtering
+  if (region === 'all' && unit === 'all') {
+    return filtered;
+  }
+
   if (region && region !== 'all') {
     filtered = filtered.filter((row) => {
       const rowUnit = normalizeUnitName(row.unidade);
       if (!rowUnit) return false;
-      return getRegionForUnit(rowUnit) === region;
+      
+      const rowRegion = getRegionForUnit(rowUnit);
+      return rowRegion === region;
     });
   }
 

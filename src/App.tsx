@@ -60,7 +60,7 @@ function ProtectedRoutes() {
         <Route path="/gestor" element={<AdministracaoPage />} />
         <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
         <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppLayout>
   );

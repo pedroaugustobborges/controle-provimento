@@ -313,19 +313,27 @@ export type Database = {
       }
       vagas: {
         Row: {
+          admissao_efetivada_acompanhamento: string | null
+          admissao_enviada_acompanhamento: string | null
           analista_responsavel: string | null
           assistentes: string | null
+          candidato_convocado_planilha: string | null
           cargo: string | null
+          classificacao_convocacao_planilha: string | null
           created_at: string
           created_by: string | null
           data_abertura: string | null
           data_convocacao: string | null
+          data_convocacao_planilha: string | null
           data_envio_edital: string | null
           data_homologacao: string | null
           data_importacao: string | null
           data_publicacao: string | null
           data_recebimento: string | null
+          detalhes_acompanhamento: string | null
           etapa: string | null
+          forma_convocacao_planilha: string | null
+          horario_convocacao_planilha: string | null
           id: string
           import_batch_id: string | null
           mes_referencia: string | null
@@ -339,27 +347,37 @@ export type Database = {
           prioridade: string | null
           publicacao: string | null
           quantidade: number | null
+          secao: string | null
           status: string | null
           status_geral: string | null
+          status_oitiva_convocacao_planilha: string | null
           tipo_vaga: string | null
           unidade: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          admissao_efetivada_acompanhamento?: string | null
+          admissao_enviada_acompanhamento?: string | null
           analista_responsavel?: string | null
           assistentes?: string | null
+          candidato_convocado_planilha?: string | null
           cargo?: string | null
+          classificacao_convocacao_planilha?: string | null
           created_at?: string
           created_by?: string | null
           data_abertura?: string | null
           data_convocacao?: string | null
+          data_convocacao_planilha?: string | null
           data_envio_edital?: string | null
           data_homologacao?: string | null
           data_importacao?: string | null
           data_publicacao?: string | null
           data_recebimento?: string | null
+          detalhes_acompanhamento?: string | null
           etapa?: string | null
+          forma_convocacao_planilha?: string | null
+          horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
           mes_referencia?: string | null
@@ -373,27 +391,37 @@ export type Database = {
           prioridade?: string | null
           publicacao?: string | null
           quantidade?: number | null
+          secao?: string | null
           status?: string | null
           status_geral?: string | null
+          status_oitiva_convocacao_planilha?: string | null
           tipo_vaga?: string | null
           unidade?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          admissao_efetivada_acompanhamento?: string | null
+          admissao_enviada_acompanhamento?: string | null
           analista_responsavel?: string | null
           assistentes?: string | null
+          candidato_convocado_planilha?: string | null
           cargo?: string | null
+          classificacao_convocacao_planilha?: string | null
           created_at?: string
           created_by?: string | null
           data_abertura?: string | null
           data_convocacao?: string | null
+          data_convocacao_planilha?: string | null
           data_envio_edital?: string | null
           data_homologacao?: string | null
           data_importacao?: string | null
           data_publicacao?: string | null
           data_recebimento?: string | null
+          detalhes_acompanhamento?: string | null
           etapa?: string | null
+          forma_convocacao_planilha?: string | null
+          horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
           mes_referencia?: string | null
@@ -407,8 +435,10 @@ export type Database = {
           prioridade?: string | null
           publicacao?: string | null
           quantidade?: number | null
+          secao?: string | null
           status?: string | null
           status_geral?: string | null
+          status_oitiva_convocacao_planilha?: string | null
           tipo_vaga?: string | null
           unidade?: string | null
           updated_at?: string

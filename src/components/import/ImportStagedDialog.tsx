@@ -102,7 +102,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
   );
 
   const allFields = useMemo(
-    () => (importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : [...BANCO_REQUIRED_COLUMNS, ...BANCO_OPTIONAL_COLUMNS]),
+    () => (importType === 'vagas' ? [...VAGA_REQUIRED_COLUMNS, ...VAGA_OPTIONAL_COLUMNS] : [...BANCO_REQUIRED_COLUMNS, ...BANCO_OPTIONAL_COLUMNS]),
     [importType]
   );
 

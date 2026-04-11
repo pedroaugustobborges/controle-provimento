@@ -631,6 +631,19 @@ export default function VagasPage() {
         </CardContent>
       </Card>
 
+      <div className="mb-4">
+        <Tabs value={vacancyStatusTab} onValueChange={setVacancyStatusTab} className="w-full">
+          <TabsList className="bg-slate-100/50 p-1 rounded-xl">
+            <TabsTrigger value="ativas" className="font-bold rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+              Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao})
+            </TabsTrigger>
+            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-6 data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all">
+              Vagas Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">

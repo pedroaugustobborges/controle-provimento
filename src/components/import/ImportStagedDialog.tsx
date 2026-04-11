@@ -308,29 +308,62 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 bg-white">
-          {step === 'select' && (
-            <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-slate-50 hover:border-blue-400/50 transition-all cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
-              <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFileSelect} />
-              <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
-                <Upload className="h-8 w-8 text-blue-600" />
+        <div className="flex-1 overflow-y-auto p-6 bg-white">
+          {step === 'type-selection' && (
+            <div className="flex flex-col items-center justify-center h-80 space-y-8 animate-in fade-in zoom-in-95 duration-500">
+              <div className="text-center space-y-2">
+                <h3 className="text-2xl font-black text-slate-800">O que esse arquivo contém?</h3>
+                <p className="text-slate-500 font-medium text-sm">Selecione o tipo de dado para que possamos processar corretamente.</p>
               </div>
-              <p className="mt-4 font-bold text-slate-700">Clique para selecionar ou arraste o arquivo</p>
-              <p className="text-xs text-slate-400 mt-1 font-medium">Excel (.xlsx, .xls) ou CSV</p>
               
-              <div className="mt-8 flex gap-3">
-                <Button 
-                  variant={importType === 'vagas' ? 'default' : 'outline'} 
-                  className={cn("h-9 rounded-xl font-bold gap-2", importType === 'vagas' ? "bg-blue-600 shadow-md" : "")}
-                  onClick={(e) => { e.stopPropagation(); setImportType('vagas'); }}
+              <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
+                <button 
+                  onClick={() => { setImportType('banco'); setStep('select'); }}
+                  className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group"
                 >
-                  <Briefcase className="h-4 w-4" /> Vagas
-                </Button>
-                <Button 
-                  variant={importType === 'banco' ? 'default' : 'outline'} 
-                  className={cn("h-9 rounded-xl font-bold gap-2", importType === 'banco' ? "bg-blue-600 shadow-md" : "")}
-                  onClick={(e) => { e.stopPropagation(); setImportType('banco'); }}
+                  <div className="p-4 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
+                    <Users className="h-10 w-10 text-blue-600" />
+                  </div>
+                  <div className="text-center">
+                    <span className="block font-black text-slate-800 text-lg">Banco de Talentos</span>
+                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Cadastro Reserva</span>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => { setImportType('vagas'); setStep('select'); }}
+                  className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all group"
                 >
-                  <Users className="h-4 w-4" /> Banco de Talentos
+                  <div className="p-4 bg-indigo-50 rounded-2xl group-hover:bg-indigo-100 transition-colors">
+                    <Briefcase className="h-10 w-10 text-indigo-600" />
+                  </div>
+                  <div className="text-center">
+                    <span className="block font-black text-slate-800 text-lg">Vagas</span>
+                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Gestão de Vagas</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 'select' && (
+            <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-slate-50 hover:border-blue-400/50 transition-all cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+              <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xlsm" onChange={handleFileSelect} />
+              <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
+                <Upload className="h-10 w-10 text-blue-600" />
+              </div>
+              <div className="text-center mt-6">
+                <p className="font-black text-xl text-slate-800">Selecione o arquivo Excel</p>
+                <p className="text-sm text-slate-500 font-medium mt-1">Arquivos .xlsx ou .xlsm</p>
+              </div>
+              
+              <div className="mt-8 flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo Selecionado:</span>
+                <Badge className={cn("font-black", importType === 'vagas' ? "bg-indigo-600" : "bg-blue-600")}>
+                  {importType === 'vagas' ? 'Vagas' : 'Banco de Talentos'}
+                </Badge>
+                <Button variant="ghost" className="h-6 w-6 p-0 rounded-full hover:bg-slate-200" onClick={(e) => { e.stopPropagation(); setStep('type-selection'); }}>
+                  <X className="h-3 w-3" />
                 </Button>
               </div>
             </div>
@@ -344,14 +377,13 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   <Select value={selectedSheet} onValueChange={(val) => {
                     setSelectedSheet(val);
                     if (!workbook) return;
-
                     try {
                       applyAutomaticConfiguration(workbook, val, importType);
                     } catch (err: any) {
                       toast.error(err.message || 'Não foi possível reler a aba selecionada.');
                     }
                   }}>
-                    <SelectTrigger className="h-10 rounded-xl font-bold bg-slate-50 border-slate-200">
+                    <SelectTrigger className="h-11 rounded-xl font-bold bg-slate-50 border-slate-200">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -360,9 +392,9 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Cabeçalho Pré-definido</label>
-                  <div className="h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center font-bold text-slate-700">
-                    {importType === 'vagas' ? 'Linha 2 fixa para vagas' : 'Linha 1 fixa para banco'}
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Configuração de Cabeçalho</label>
+                  <div className="h-11 bg-slate-100 border border-slate-200 rounded-xl flex items-center px-4 font-bold text-slate-600 text-sm">
+                    {importType === 'vagas' ? 'Busca automática de colunas' : 'Padrão BANCO_GERAL (Linha 1)'}
                   </div>
                 </div>
               </div>
@@ -372,88 +404,72 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   <div className="p-4 bg-slate-50/80 border-b flex items-center justify-between">
                     <h3 className="font-bold text-slate-700 flex items-center gap-2">
                       <ListChecks className="h-4 w-4 text-blue-600" />
-                      Reconhecimento Automático
+                      Mapeamento de Colunas
                     </h3>
                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-bold">
-                      {allFields.filter(field => mappings.some(mapping => normalizeImportSystemKey(mapping.system) === field.key)).length} colunas reconhecidas
+                      {mappings.length} colunas mapeadas
                     </Badge>
                   </div>
+                  
                   <div className="p-4 space-y-4">
-                    <div className={cn(
-                      'rounded-xl border p-4',
-                      missingRequiredFields.length === 0 ? 'border-emerald-100 bg-emerald-50/70' : 'border-red-100 bg-red-50/70'
-                    )}>
-                      <p className={cn(
-                        'text-sm font-bold',
-                        missingRequiredFields.length === 0 ? 'text-emerald-700' : 'text-red-600'
-                      )}>
-                        {missingRequiredFields.length === 0
-                          ? 'Tudo certo: as colunas obrigatórias foram reconhecidas automaticamente.'
-                          : `Faltou reconhecer automaticamente: ${autoMappingErrors.join(', ')}`}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Não é necessário mapear manualmente. O sistema usa o padrão fixo da planilha e reconhece os cabeçalhos automaticamente.
-                      </p>
-                      {importType === 'banco' && (
-                        <div className="mt-2 flex items-center gap-2 px-2 py-1 bg-blue-50/50 border border-blue-100 rounded-lg">
-                          <Info className="h-3 w-3 text-blue-500" />
-                          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">
-                            Revalidação ativa: Coluna L (12ª) verificada para Prorrogação ("Sim")
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-3">
+                    <div className="grid md:grid-cols-2 gap-4">
                       {requiredFields.map(field => {
                         const mapping = mappings.find(item => normalizeImportSystemKey(item.system) === field.key);
-
+                        
                         return (
-                          <div key={field.key} className={cn(
-                            'rounded-xl border p-3 flex items-center justify-between gap-3',
-                            mapping ? 'border-emerald-100 bg-white' : 'border-red-100 bg-white'
-                          )}>
-                            <div>
-                              <p className="font-bold text-slate-700 text-sm">{field.label}</p>
-                              <p className="text-[11px] text-slate-400 uppercase tracking-wider">Obrigatório</p>
+                          <div key={field.key} className="space-y-1.5">
+                            <div className="flex justify-between items-center px-1">
+                              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{field.label} *</label>
+                              {!mapping && <span className="text-[10px] font-bold text-red-500">Obrigatório</span>}
                             </div>
-                            {mapping ? (
-                              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold max-w-[220px] truncate">
-                                {mapping.excel}
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-red-500 border-red-200 bg-red-50 font-bold">Não encontrado</Badge>
-                            )}
+                            <Select 
+                              value={mapping?.excel || 'none'} 
+                              onValueChange={(val) => handleManualMapping(field.key, val)}
+                            >
+                              <SelectTrigger className={cn(
+                                "h-10 rounded-xl font-bold bg-white",
+                                !mapping ? "border-red-200 shadow-sm shadow-red-50" : "border-slate-200"
+                              )}>
+                                <SelectValue placeholder="Selecione a coluna..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-- Não Mapeado --</SelectItem>
+                                {currentHeaders.map((h, i) => (
+                                  <SelectItem key={`${h}-${i}`} value={h}>{h || `Coluna ${i+1}`}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         );
                       })}
                     </div>
 
-                    {importType === 'banco' && recognizedOptionalFields.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Campos opcionais reconhecidos</p>
-                        <div className="flex flex-wrap gap-2">
-                          {recognizedOptionalFields.map(field => {
+                    {importType === 'vagas' && (
+                      <div className="pt-4 border-t">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">Campos Opcionais (Acompanhamento)</label>
+                        <div className="grid md:grid-cols-3 gap-3">
+                          {VAGA_OPTIONAL_COLUMNS.map(field => {
                             const mapping = mappings.find(item => normalizeImportSystemKey(item.system) === field.key);
                             return (
-                              <Badge key={field.key} variant="outline" className="bg-white text-slate-600 border-slate-200 font-bold">
-                                {field.label}: {mapping?.excel}
-                              </Badge>
+                              <div key={field.key} className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-tight px-1">{field.label}</label>
+                                <Select 
+                                  value={mapping?.excel || 'none'} 
+                                  onValueChange={(val) => handleManualMapping(field.key, val)}
+                                >
+                                  <SelectTrigger className="h-8 rounded-lg font-bold bg-white text-xs border-slate-200">
+                                    <SelectValue placeholder="Opcional..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">-- Ignorar --</SelectItem>
+                                    {currentHeaders.map((h, i) => (
+                                      <SelectItem key={`${h}-${i}`} value={h}>{h || `Coluna ${i+1}`}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             );
                           })}
-                        </div>
-                      </div>
-                    )}
-
-                    {currentHeaders.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Cabeçalhos lidos</p>
-                        <div className="flex flex-wrap gap-2">
-                          {currentHeaders.filter(Boolean).map(header => (
-                            <Badge key={header} variant="outline" className="bg-white text-slate-500 border-slate-200 font-medium">
-                              {header}
-                            </Badge>
-                          ))}
                         </div>
                       </div>
                     )}
@@ -464,11 +480,6 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
               {importType === 'banco' && (
                 <Card className="border-slate-100 shadow-sm overflow-hidden bg-slate-50/30">
                   <CardContent className="p-4 space-y-4">
-                    <div>
-                      <h3 className="font-bold text-slate-700">Escopo do banco importado</h3>
-                      <p className="text-xs text-slate-500 mt-1">Defina a observação do banco e como tratar os dados existentes.</p>
-                    </div>
-
                     <div className="grid md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tipo do banco</label>
@@ -523,16 +534,68 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                         </Select>
                       </div>
                     </div>
-
-                    <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-4">
-                      <p className="text-xs font-bold text-blue-700 uppercase tracking-widest">Observação que será salva</p>
-                      <p className="text-sm font-bold text-slate-700 mt-2">{buildBancoImportObservation(importOptions)}</p>
-                    </div>
                   </CardContent>
                 </Card>
               )}
             </div>
           )}
+
+          {step === 'processing' && (
+            <div className="flex flex-col items-center justify-center h-80 space-y-8 animate-in zoom-in-95 duration-500">
+              <div className="relative">
+                <div className="h-24 w-24 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xl font-black text-blue-600">{importProgress.percentage}%</span>
+                </div>
+              </div>
+              
+              <div className="w-full max-w-md space-y-2 text-center">
+                <p className="text-lg font-bold text-slate-800">{importProgress.label}</p>
+                <Progress value={importProgress.percentage} className="h-2 rounded-full" />
+                <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <span>{importProgress.processedRows} processados</span>
+                  <span>Total: {importProgress.totalRows}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 'result' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className={cn(
+                  "h-20 w-20 rounded-full flex items-center justify-center shadow-xl",
+                  importProgress.phase === 'success' ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
+                )}>
+                  {importProgress.phase === 'success' ? <CheckCircle2 className="h-10 w-10" /> : <AlertTriangle className="h-10 w-10" />}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">
+                    {importProgress.phase === 'success' ? 'Importação Concluída!' : 'Erro na Importação'}
+                  </h2>
+                  <p className="text-slate-500 font-medium">{importProgress.label}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="border-slate-100 bg-slate-50/50">
+                  <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+                    <span className="text-3xl font-black text-blue-600">{importProgress.processedRows}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confirmados no banco</span>
+                  </CardContent>
+                </Card>
+                <Card className="border-slate-100 bg-slate-50/50">
+                  <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+                    <span className={cn("text-3xl font-black", importProgress.errors.length > 0 ? "text-red-500" : "text-emerald-500")}>
+                      {importProgress.errors.length}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alertas/Erros</span>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+        </div>
 
           {step === 'processing' && (
             <div className="flex flex-col items-center justify-center h-64 space-y-8 animate-in zoom-in-95 duration-500">

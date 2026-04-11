@@ -234,6 +234,7 @@ export default function DashboardPage() {
     { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Total convocações' },
     { label: 'Bancos Vencidos', value: totalVencidos, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50', description: 'Validade expirada' },
     { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Disponíveis para uso' },
+    { label: 'Total Banco', value: totalBancoTotal, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Todos registros banco' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Ações pendentes' },
   ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalTarefasPendentes]);
 

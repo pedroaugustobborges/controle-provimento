@@ -111,6 +111,14 @@ export default function DashboardPage() {
     console.log('Banco carregado:', bancos.length);
     console.log('Filtro de Região:', selectedRegion);
     console.log("STATUS únicos na tabela:", [...new Set(allVagas.map(v => v.status))]);
+    
+    // PASSO 1 — IMPRIMIR OS STATUS EXATOS DO BANCO
+    const statusList = allVagas.map(v => (v as any).status || (v as any).STATUS);
+    const uniqueStatus = [...new Set(statusList)];
+    console.log("=== TODOS OS STATUS ÚNICOS ===");
+    uniqueStatus.forEach(s => {
+      console.log(JSON.stringify(s), "| length:", s ? String(s).length : 0);
+    });
     console.log('-----------------------------');
   }, [allVagas, bancos, selectedRegion]);
 
@@ -199,6 +207,17 @@ export default function DashboardPage() {
     Object.entries(acc).forEach(([k, v]) => console.log(`${k}: ${v}`));
     console.log('TOTAL VAGAS:', totalVagas);
     console.log('--------------------------');
+
+    // PASSO 2 — BUSCA DIRETA SEM NORMALIZAÇÃO (Temporário para diagnóstico)
+    acc.movimentacao_interna = vagas.filter(v => {
+      const s = (v as any).status || (v as any).STATUS || '';
+      return String(s).toLowerCase().includes('movimenta') || String(s).toLowerCase().includes('transfer');
+    }).length;
+
+    acc.em_admissao = vagas.filter(v => {
+      const s = (v as any).status || (v as any).STATUS || '';
+      return String(s).toLowerCase().includes('admiss');
+    }).length;
 
     return acc;
   }, [vagas, totalVagas]);

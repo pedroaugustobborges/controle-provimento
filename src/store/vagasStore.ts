@@ -119,7 +119,7 @@ interface VagasState {
   addImportHistory: (history: ImportHistory) => void;
   addImportedFile: (file: ImportedFile) => void;
   updateImportedFile: (id: string, data: Partial<ImportedFile>) => void;
-  deleteImportedFile: (id: string) => void;
+  deleteImportedFile: (id: string) => Promise<void>;
   addTarefa: (tarefa: Tarefa) => void;
   updateTarefa: (id: string, data: Partial<Tarefa>) => void;
   deleteTarefa: (id: string) => void;

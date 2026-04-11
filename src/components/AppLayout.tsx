@@ -61,6 +61,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, fetchCurrentProfile } = useAdminStore();
   const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

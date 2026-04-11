@@ -116,6 +116,12 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
   
   const normS = normStatus(String(status));
   
+  // Regras prioritárias com includes() conforme solicitado
+  if (normS.includes('movimentac') || normS.includes('transfer')) return 'movimentacao_interna';
+  if (normS === 'admissao' || normS.includes('admissao envia')) return 'em_admissao';
+  if (normS.includes('edital')) return 'fila_edital';
+  if (normS.includes('realizar convoc')) return 'em_andamento';
+  
   for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {
     if (values.includes(normS)) {
       return cat as keyof typeof CATEGORIAS_STATUS;

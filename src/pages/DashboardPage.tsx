@@ -249,9 +249,7 @@ export default function DashboardPage() {
       const regionMap = new Map<string, { total: number, abertas: number }>();
       vagas.forEach(v => {
         if (!v.unidade) return;
-        const normalizedName = normalizeUnitName(v.unidade);
-        if (!normalizedName) return;
-        const region = getRegionForUnit(normalizedName);
+        const region = getRegionForUnit(v.unidade);
         const current = regionMap.get(region) || { total: 0, abertas: 0 };
         const categoria = getCategoriaStatus(v);
         current.total += 1;
@@ -280,7 +278,12 @@ export default function DashboardPage() {
       groupedMap.set(normalizedName, current);
     });
     return Array.from(groupedMap.entries())
-      .map(([name, data]) => ({ name, total: data.total, abertas: data.abertas }))
+      .map(([name, data]) => ({ 
+        name, 
+        total: data.total, 
+        abertas: data.abertas,
+        region: getRegionForUnit(name) 
+      }))
       .filter(item => item.total > 0)
       .sort((a, b) => b.total - a.total);
   }, [vagas, chartMode]);

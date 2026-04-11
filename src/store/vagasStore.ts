@@ -119,7 +119,7 @@ interface VagasState {
   addImportHistory: (history: ImportHistory) => void;
   addImportedFile: (file: ImportedFile) => void;
   updateImportedFile: (id: string, data: Partial<ImportedFile>) => void;
-  deleteImportedFile: (id: string) => void;
+  deleteImportedFile: (id: string) => Promise<void>;
   addTarefa: (tarefa: Tarefa) => void;
   updateTarefa: (id: string, data: Partial<Tarefa>) => void;
   deleteTarefa: (id: string) => void;
@@ -128,7 +128,7 @@ interface VagasState {
   addMensagem: (mensagem: MensagemHistorico) => void;
   marcarMensagemLida: (id: string) => void;
   setTemNovasMensagens: (has: boolean) => void;
-  deleteImportBatch: (batchId: string) => void;
+  deleteImportBatch: (batchId: string) => Promise<void>;
   clearVagas: () => void;
   clearBancos: () => void;
   clearBancosPorRegiao: (regiao: 'GO_ES' | 'OUTRAS_UNIDADES') => void;
@@ -233,9 +233,37 @@ export const useVagasStore = create<VagasState>()(
             } as ImportHistory;
           });
 
+          // Deduplication Logic: Same file, same user, same date
+          const duplicatesToRemove: string[] = [];
+          const seen = new Map<string, string>(); // key -> id
+
+          const filtered = mapped.filter(item => {
+            const dateStr = item.data_hora ? new Date(item.data_hora).toISOString().split('T')[0] : '';
+            const key = `${item.arquivo}_${item.usuario_id}_${dateStr}`;
+            
+            if (seen.has(key)) {
+              // We have a duplicate. Keep the most recent one (data is already sorted by created_at desc)
+              // But since we are processing in order of appearance (most recent first), 
+              // we keep the first one and discard others.
+              duplicatesToRemove.push(item.id);
+              return false;
+            }
+            
+            seen.set(key, item.id);
+            return true;
+          });
+
+          // Automatically remove duplicates from DB in the background
+          if (duplicatesToRemove.length > 0) {
+            console.log(`[DEDUPLICAÇÃO] Removendo ${duplicatesToRemove.length} registros duplicados automaticamente.`);
+            const { DatabaseService } = await import('@/services/databaseService');
+            Promise.all(duplicatesToRemove.map(id => DatabaseService.deleteImportBatch(id)))
+              .catch(err => console.error('Error auto-removing duplicates:', err));
+          }
+
           set({
-            importHistory: mapped,
-            importedFiles: mapped.map(buildImportedFileFromHistory),
+            importHistory: filtered,
+            importedFiles: filtered.map(buildImportedFileFromHistory),
           });
         } catch (err) {
           console.error('Error fetching import history:', err);
@@ -274,9 +302,24 @@ export const useVagasStore = create<VagasState>()(
       updateImportedFile: (id, data) => set((s) => ({
         importedFiles: s.importedFiles.map((f) => f.id === id ? { ...f, ...data } : f),
       })),
-      deleteImportedFile: (id) => set((s) => ({
-        importedFiles: s.importedFiles.filter((f) => f.id !== id),
-      })),
+      deleteImportedFile: async (id) => {
+        try {
+          const { DatabaseService } = await import('@/services/databaseService');
+          const { success, error } = await DatabaseService.deleteImportBatch(id);
+          
+          if (success) {
+            set((s) => ({
+              importedFiles: s.importedFiles.filter((f) => f.id !== id),
+              importHistory: s.importHistory.filter((h) => h.id !== id),
+            }));
+          } else {
+            throw error || new Error('Falha ao excluir o arquivo do banco de dados');
+          }
+        } catch (err) {
+          console.error('Erro ao excluir arquivo:', err);
+          throw err;
+        }
+      },
       addTarefa: (tarefa) => set((s) => ({ tarefas: [tarefa, ...s.tarefas] })),
       updateTarefa: (id, data) => set((s) => ({
         tarefas: s.tarefas.map((t) => t.id === id ? { ...t, ...data } : t),
@@ -285,18 +328,32 @@ export const useVagasStore = create<VagasState>()(
         tarefas: s.tarefas.filter((t) => t.id !== id),
       })),
       addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
-      deleteImportBatch: (batchId) => set((s) => {
-        // Find if we are deleting vagas or bancos to handle dependencies
-        const vagasToRemove = s.vagas.filter(v => v.import_batch_id === batchId).map(v => v.id);
-        
-        return {
-          vagas: s.vagas.filter((v) => v.import_batch_id !== batchId),
-          bancos: s.bancos.filter((b) => b.import_batch_id !== batchId),
-          convocacoes: s.convocacoes.filter((c) => !vagasToRemove.includes(c.vaga_id)),
-          importHistory: s.importHistory.filter((h) => h.id !== batchId),
-          importedFiles: s.importedFiles.filter((f) => f.vaga_importacao_id !== batchId && f.id !== batchId),
-        };
-      }),
+      deleteImportBatch: async (batchId) => {
+        try {
+          const { DatabaseService } = await import('@/services/databaseService');
+          const { success, error } = await DatabaseService.deleteImportBatch(batchId);
+          
+          if (success) {
+            set((s) => {
+              // Find if we are deleting vagas or bancos to handle dependencies
+              const vagasToRemove = s.vagas.filter(v => v.import_batch_id === batchId).map(v => v.id);
+              
+              return {
+                vagas: s.vagas.filter((v) => v.import_batch_id !== batchId),
+                bancos: s.bancos.filter((b) => b.import_batch_id !== batchId),
+                convocacoes: s.convocacoes.filter((c) => !vagasToRemove.includes(c.vaga_id)),
+                importHistory: s.importHistory.filter((h) => h.id !== batchId),
+                importedFiles: s.importedFiles.filter((f) => f.vaga_importacao_id !== batchId && f.id !== batchId),
+              };
+            });
+          } else {
+            throw error || new Error('Falha ao excluir o lote do banco de dados');
+          }
+        } catch (err) {
+          console.error('Erro ao excluir lote:', err);
+          throw err;
+        }
+      },
       updateAlerta: (id, data) => set((s) => ({
         alertas: s.alertas.map((a) => a.id === id ? { ...a, ...data } : a),
       })),

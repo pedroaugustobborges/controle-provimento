@@ -94,12 +94,17 @@ export default function ImportacoesPage() {
     );
   }
 
-  const handleDeleteFile = () => {
+  const handleDeleteFile = async () => {
     if (fileParaExcluir) {
-      deleteImportedFile(fileParaExcluir);
-      toast.success('Arquivo removido com sucesso');
-      setIsDeleteDialogOpen(false);
-      setFileParaExcluir(null);
+      try {
+        await deleteImportedFile(fileParaExcluir);
+        toast.success('Arquivo removido com sucesso do histórico');
+      } catch (error) {
+        toast.error('Erro ao remover arquivo');
+      } finally {
+        setIsDeleteDialogOpen(false);
+        setFileParaExcluir(null);
+      }
     }
   };
 
@@ -470,33 +475,28 @@ export default function ImportacoesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              Excluir lote de importação?
+              Remover do histórico?
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
-              <p>
-                Você está prestes a excluir o lote <strong>{batchParaExcluir?.arquivo || batchParaExcluir?.id}</strong>.
+              <p className="font-medium text-slate-900">
+                Tem certeza que deseja remover este registro do histórico? Essa ação não pode ser desfeita.
               </p>
               <div className="bg-destructive/5 p-3 rounded-lg border border-destructive/10 text-destructive text-xs space-y-1">
                 <p className="font-bold flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" /> Atenção:
                 </p>
                 <ul className="list-disc list-inside">
-                  <li>Todos os registros vinculados a este lote serão removidos.</li>
-                  <li>Dados em outros módulos que dependem desta importação serão afetados.</li>
-                  <li>Esta ação é definitiva e será registrada no log de auditoria.</li>
+                  <li>O registro será removido permanentemente do banco de dados.</li>
+                  <li>Todos os dados vinculados a este lote (vagas/candidatos) serão excluídos.</li>
+                  <li>Esta ação nunca será restaurada automaticamente.</li>
                 </ul>
               </div>
-              {batchParaExcluir && (
-                <p className="text-xs text-slate-500 italic">
-                  Estimativa: {(batchParaExcluir.total_novos || 0) + (batchParaExcluir.total_atualizados || 0)} registros serão removidos.
-                </p>
-              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteBatch} className="bg-destructive text-white hover:bg-destructive/90">
-              Confirmar Exclusão do Lote
+              Confirmar Exclusão
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -507,10 +507,15 @@ export default function ImportacoesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              Excluir arquivo importado?
+              Remover arquivo do histórico?
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Essa ação não pode ser desfeita. O arquivo será removido permanentemente do repositório.
+            <AlertDialogDescription className="space-y-3">
+              <p className="font-medium text-slate-900">
+                Tem certeza que deseja remover este registro do histórico? Essa ação não pode ser desfeita.
+              </p>
+              <p className="text-sm text-slate-500">
+                O arquivo e seus registros associados serão removidos permanentemente do banco de dados.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

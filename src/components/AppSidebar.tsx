@@ -447,9 +447,19 @@ export function AppSidebar() {
                   </span>
                 </div>
               </div>
-              <button className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
-                Acessar Perfil
-              </button>
+              <div className="flex gap-2">
+                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
+                  Acessar Perfil
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-red-500/10 text-xs font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
+                  title="Sair do sistema"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Sair
+                </button>
+              </div>
             </div>
           </div>
         )}

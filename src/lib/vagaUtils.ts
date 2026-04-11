@@ -18,7 +18,7 @@ const REGION_ALIASES: Record<string, string[]> = {
   'Demais Unidades': ['OUTRAS UNIDADES'],
 };
 
-function removeAccents(str: string): string {
+export function removeAccents(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 

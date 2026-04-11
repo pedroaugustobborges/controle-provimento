@@ -19,6 +19,7 @@ import {
 
 import logoAgir from '@/assets/logo-agir.png';
 import { NavLink } from '@/components/NavLink';
+import { Button } from '@/components/ui/button';
 import { useLocation } from 'react-router-dom';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription

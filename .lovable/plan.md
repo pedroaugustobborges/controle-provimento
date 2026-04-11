@@ -1,31 +1,24 @@
 
-## Plano: Redesign Premium da Página "Controle de Vagas" (VagasPage)
 
-### Arquivo: `src/pages/VagasPage.tsx`
+## Plano: Ajustes na Visão Geral (DashboardPage) e Cabeçalho
 
-### Alterações planejadas:
+### Arquivos a modificar:
 
-**1. Cards de estatísticas (linhas 471-533):**
-- Adicionar hover effects: `hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-default`
-- Reduzir saturação das cores de borda lateral para tons mais suaves
-- Remover o subtexto "Regra Excel (Cargo + Mes)" do card Total de Vagas — substituir por algo útil como "Base ativa"
+**1. `src/pages/DashboardPage.tsx`:**
+- Remover botão "Relatórios Detalhados" do `actions` do PageHeader
+- Remover card "Canceladas" do array `stats`
+- Corrigir ícones: Cadastro Reserva → `UserCheck`, Mov. Interna → `ArrowLeftRight`, Banco de Talentos → `Users`
+- Adicionar subtextos descritivos em todos os cards que não possuem (Fila de Editais, Em Andamento, Concluídas, Mov. Interna, Liderança)
+- Alterar cor das barras do gráfico para azul do sidebar (`#1e3a5f` ou similar)
+- Adicionar toggle "Por Unidade / Por Região" no gráfico com lógica de agrupamento por região
+- Renomear "Alertas Ativos" → "Vagas em Atraso" com subtítulo explicativo
+- Revisar lógica de `movimentacao_interna` para capturar todos os status relevantes
 
-**2. Título/Subtítulo (linhas 327-331):**
-- Remover o subtítulo longo "Gerenciamento estratégico e centralizado de vagas, editais e fluxo de convocações AGIR"
-- Manter apenas `title="Controle de Vagas"` com badge simples
+**2. `src/components/AppLayout.tsx` (ou componente do header/avatar):**
+- Adicionar borda na cor do sidebar ao avatar do usuário
+- Remover dropdown/menu do avatar (perfil, configurações, sair)
+- Remover ícone decorativo do campo de busca se presente
 
-**3. Barra de filtros (linhas 536-632):**
-- Melhorar visual com bordas mais definidas, tipografia coesa e espaçamento consistente
-- Adicionar `rounded-xl` e melhorar contraste dos selects
+**3. Verificar sincronização dos filtros:**
+- Confirmar que `selectedRegion` e `selectedUnit` do `adminStore` são aplicados corretamente em todos os cálculos do dashboard (já parece estar com `filterByRegionAndUnit`, mas validar gráfico e alertas)
 
-**4. Tabela (linhas 647-877):**
-- **Cabeçalho:** Corrigir hover para não sumir o texto — adicionar classe `hover:text-slate-700` em vez do comportamento atual
-- **Status:** Alinhar coluna com `text-center` e garantir badges consistentes
-- **Badges de status:** Reduzir saturação, tons mais suaves e profissionais
-- **Coluna "Ação Rápida":** Renomear para "Banco" com tooltip contextual (ícone verde = banco disponível, cinza = sem banco)
-- **Coluna "Ações":** Simplificar label do dropdown, remover cores excessivas do texto "Ações da Vaga"
-- **Linhas:** Adicionar hover sutil `hover:bg-slate-50/50` e linhas zebradas sutis `even:bg-slate-25`
-
-**5. Visual geral:**
-- Harmonizar paleta de cores com o sidebar redesenhado
-- Transições suaves em todos os elementos interativos

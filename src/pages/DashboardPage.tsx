@@ -29,7 +29,7 @@ import {
   getValidVacancyBase,
   filterByRegionAndUnit,
   getRegionForUnit,
-  removeAccents,
+  normStatus,
 } from '@/lib/vagaUtils';
 import {
   Briefcase,

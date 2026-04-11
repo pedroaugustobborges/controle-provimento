@@ -17,7 +17,7 @@ export function PageHeader({
   title, 
   subtitle, 
   badge, 
-  badgeColor = "bg-[#2563EB]", 
+  badgeColor = "bg-emerald-500", 
   actions, 
   icon,
   className,
@@ -27,28 +27,28 @@ export function PageHeader({
   return (
     <div className={cn(
       "flex flex-col lg:flex-row lg:items-start justify-between gap-6",
-      withBackground ? "bg-white p-8 rounded-lg border border-[#E5E7EB] shadow-sm mb-10" : "mb-10",
+      withBackground ? "bg-white p-8 rounded-2xl border border-slate-100 shadow-sm mb-8" : "mb-8",
       className
     )}>
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {badge && (
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1">
             <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse", badgeColor)}></span>
-            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[0.1em]">{badge}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{badge}</span>
           </div>
         )}
         <div className="flex items-center gap-3">
-          {icon && <div className="p-2.5 bg-[#EFF6FF] rounded-lg text-[#2563EB]">{icon}</div>}
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827]">
+          {icon && <div className="p-2 bg-primary/10 rounded-xl text-primary">{icon}</div>}
+          <h1 className="text-3xl font-black tracking-tighter text-slate-900 sm:text-4xl">
             {title}
           </h1>
         </div>
         {subtitle && (
-          <p className="text-[#6B7280] max-w-2xl text-sm font-medium leading-relaxed mt-1">
+          <p className="text-slate-500 max-w-2xl text-sm font-medium leading-relaxed mt-1">
             {subtitle}
           </p>
         )}
-        {helpContent && <div className="mt-3">{helpContent}</div>}
+        {helpContent && <div className="mt-2">{helpContent}</div>}
       </div>
       {actions && (
         <div className="flex items-center gap-3 shrink-0">

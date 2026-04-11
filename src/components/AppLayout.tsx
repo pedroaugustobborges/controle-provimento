@@ -13,14 +13,12 @@ import {
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
-  Bell, Search, Home, ChevronRight, User, Settings, LogOut, 
+  Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
-  Upload, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
-  Filter
+  Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2
 } from 'lucide-react';
 import { AgieChat } from './chat/AgieChat';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { useAdminStore } from '@/store/adminStore';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -33,9 +31,11 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -44,12 +44,24 @@ function getGreeting(): string {
   return 'Boa noite';
 }
 
+const routeContextMap: Record<string, { color: string; bgLight: string; icon: React.ElementType }> = {
+  'vagas': { color: 'text-blue-600', bgLight: 'bg-blue-50 border-blue-200', icon: Briefcase },
+  'editais': { color: 'text-teal-600', bgLight: 'bg-teal-50 border-teal-200', icon: FileText },
+  'fila-editais': { color: 'text-cyan-600', bgLight: 'bg-cyan-50 border-cyan-200', icon: ListOrdered },
+  'convocacoes': { color: 'text-amber-600', bgLight: 'bg-amber-50 border-amber-200', icon: Megaphone },
+  'validacao': { color: 'text-emerald-600', bgLight: 'bg-emerald-50 border-emerald-200', icon: ShieldCheck },
+  'gestor': { color: 'text-purple-600', bgLight: 'bg-purple-50 border-purple-200', icon: Settings },
+  'banco-talentos': { color: 'text-indigo-600', bgLight: 'bg-indigo-50 border-indigo-200', icon: Users },
+  'importacoes': { color: 'text-green-600', bgLight: 'bg-green-50 border-green-200', icon: Upload },
+};
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const pathnames = location.pathname.split('/').filter((x) => x);
   const { currentUser, fetchCurrentProfile } = useAdminStore();
   const { signOut } = useAuth();
+  const [isCompact, setIsCompact] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
 
@@ -57,9 +69,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     fetchCurrentProfile();
   }, [fetchCurrentProfile]);
 
+  useEffect(() => {
+    const mainEl = mainRef.current;
+    if (!mainEl) return;
+    const handleScroll = () => {
+      const compact = mainEl.scrollTop > 50;
+      setIsCompact(prev => prev === compact ? prev : compact);
+    };
+    mainEl.addEventListener('scroll', handleScroll, { passive: true });
+    return () => mainEl.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const activeRoute = pathnames[0] || '';
+  const routeCtx = routeContextMap[activeRoute];
+
   const getBreadcrumbLabel = (path: string) => {
     const labels: Record<string, string> = {
-      'vagas': 'Vagas',
+      'vagas': 'Processos Seletivos',
       'editais': 'Editais e Etapas',
       'fila-editais': 'Fila de Editais',
       'convocacoes': 'Convocações',
@@ -67,78 +93,93 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       'gestor': 'Administração',
       'banco-talentos': 'Banco de Talentos',
       'importacoes': 'Importações',
-      'fila-analista-edital': 'Redação do Edital',
-      'validacao-editais': 'Validação de Editais',
-      'alertas-tarefas': 'Alertas e Tarefas',
-      'monitoramento': 'Monitoramento',
     };
-    
-    // Custom labels for nested routes or specific tabs if needed
-    if (location.search.includes('tab=acompanhamento')) return 'Acompanhamento de Edital';
-    if (location.search.includes('tab=list')) return 'Cadastro Reserva';
-    
     return labels[path] || path.charAt(0).toUpperCase() + path.slice(1);
   };
 
   const userName = currentUser?.nome_completo?.split(' ')[0] || 'Usuário';
+  const initials = currentUser?.nome_completo
+    ? currentUser.nome_completo.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+    : 'US';
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-[#F8FAFC]">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="shrink-0 z-20 sticky top-0 bg-white border-b border-[#E5E7EB]">
+          <header className="shrink-0 z-20 sticky top-0 bg-background transition-all duration-300">
             {/* Top bar */}
-            <div className="flex items-center justify-between px-6 h-16">
-              <div className="flex items-center gap-6">
-                <SidebarTrigger className="h-9 w-9 text-[#6B7280] hover:text-[#2563EB] hover:bg-slate-50 transition-all rounded-lg" />
+            <div className={`flex items-center justify-between px-6 border-b transition-all duration-300 ${
+              isCompact 
+                ? 'h-12 bg-background shadow-sm border-border/40' 
+                : 'h-16 bg-gradient-to-r from-background via-background to-primary/[0.03] border-border/60'
+            }`}>
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all rounded-lg border border-border/50" />
                 
-                {/* Greeting */}
-                <div className="hidden md:flex flex-col">
-                  <span className="text-sm text-[#374151]">
-                    {getGreeting()}, <span className="font-bold text-[#111827]">{userName}</span>
-                  </span>
-                  <span className="text-[11px] text-[#6B7280] font-medium leading-none mt-0.5">
-                    {currentUser?.cargo || 'Analista de RH'} · {currentUser?.perfil || 'Administrador'}
+                {/* Greeting — hidden when compact */}
+                <div className={`hidden md:flex flex-col transition-all duration-300 overflow-hidden ${
+                  isCompact ? 'opacity-0 max-w-0' : 'opacity-100 max-w-xs'
+                }`}>
+                  <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <Sparkles className="h-3.5 w-3.5 text-warning" />
+                    <span className="text-sm font-semibold text-foreground">
+                      {getGreeting()}, <span className="text-primary">{userName}</span>
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-medium tracking-wide whitespace-nowrap">
+                    {currentUser?.cargo || 'Sistema AGIR'} · {currentUser?.perfil || 'Usuário'}
                   </span>
                 </div>
+
+                {/* Route context icon — shown when compact */}
+                {isCompact && routeCtx && (
+                  <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all duration-300 ${routeCtx.bgLight} ${routeCtx.color}`}>
+                    <routeCtx.icon className="h-3.5 w-3.5" />
+                    <span>{getBreadcrumbLabel(activeRoute)}</span>
+                  </div>
+                )}
               </div>
 
               {/* Search */}
-              <div className="hidden lg:flex items-center flex-1 max-w-xl mx-8 gap-2">
-                <div className="relative flex-1 group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9CA3AF] group-focus-within:text-[#2563EB] transition-colors" />
+              <div className="hidden lg:flex items-center flex-1 max-w-md mx-8">
+                <div className="relative w-full group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input
                     placeholder="Buscar vagas, editais, candidatos..."
-                    className="pl-9 pr-4 bg-slate-50 border-[#E5E7EB] rounded-lg h-10 text-sm placeholder:text-[#9CA3AF] focus-visible:ring-[#2563EB]/20 focus-visible:bg-white transition-all"
+                    className={`pl-9 pr-12 bg-muted/40 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/60 focus-visible:ring-primary/20 focus-visible:bg-white transition-all ${
+                      isCompact ? 'h-8' : 'h-9'
+                    }`}
                   />
+                  <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-bold text-muted-foreground/50 bg-background border border-border/50 rounded px-1.5 py-0.5">
+                    ⌘K
+                  </kbd>
                 </div>
-                <Button variant="outline" size="sm" className="h-10 px-3 border-[#E5E7EB] text-[#374151] hover:bg-slate-50 font-medium">
-                  <Filter className="h-4 w-4 mr-2 text-[#6B7280]" />
-                  Filtrar
-                </Button>
               </div>
 
               {/* Right actions */}
-              <div className="flex items-center gap-4">
-                <button className="p-2 text-[#6B7280] hover:text-[#2563EB] transition-all rounded-lg hover:bg-slate-50 relative">
+              <div className="flex items-center gap-3">
+                <div className={`hidden xl:flex items-center gap-2 text-[10px] text-muted-foreground font-semibold bg-success/5 text-success px-3 py-1.5 rounded-full border border-success/20 transition-all duration-300 ${
+                  isCompact ? 'opacity-0 max-w-0 overflow-hidden px-0 border-0' : 'opacity-100 max-w-xs'
+                }`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                  Sistema sincronizado
+                </div>
+
+                <button className="p-2 text-muted-foreground hover:text-primary transition-all rounded-lg hover:bg-primary/5 relative">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-[#EF4444] rounded-full border-2 border-white" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-destructive rounded-full border-2 border-white animate-pulse" />
                 </button>
                 
-                <div className="h-8 w-px bg-[#E5E7EB] mx-1" />
+                <div className="h-8 w-px bg-border/50 mx-1" />
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-3 group focus:outline-none">
-                      <div className="h-9 w-9 rounded-full overflow-hidden border border-[#E5E7EB] shadow-sm transition-transform group-hover:scale-105">
-                        <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
-                      </div>
-                      <div className="hidden xl:flex flex-col items-start">
-                        <span className="text-sm font-semibold text-[#111827] leading-tight">{userName}</span>
-                        <span className="text-[10px] text-[#6B7280] uppercase font-bold tracking-wider">Ver Perfil</span>
-                      </div>
+                    <button className={`rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-primary/15 ring-2 ring-white transition-all duration-300 hover:scale-105 focus:outline-none ${
+                      isCompact ? 'h-8 w-8' : 'h-10 w-10'
+                    }`}>
+                      <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -168,33 +209,39 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Breadcrumb bar */}
             {pathnames.length > 0 && (
-              <div className="flex items-center px-6 h-10 border-t border-[#F3F4F6] bg-white">
+              <div className={`flex items-center px-6 border-b border-border/30 transition-all duration-300 ${
+                isCompact ? 'h-0 opacity-0 overflow-hidden border-0' : 'h-10 opacity-100 bg-background'
+              }`}>
                 <Breadcrumb>
                   <BreadcrumbList className="gap-1">
                     <BreadcrumbItem>
                       <BreadcrumbLink asChild>
-                        <Link to="/" className="text-[#6B7280] hover:text-[#2563EB] transition-colors text-xs font-medium flex items-center gap-1">
+                        <Link to="/" className="text-muted-foreground hover:text-primary transition-colors text-xs font-medium flex items-center gap-1">
                           <Home className="h-3.5 w-3.5" />
-                          <span>Início</span>
+                          <span className="hidden sm:inline">Início</span>
                         </Link>
                       </BreadcrumbLink>
                     </BreadcrumbItem>
                     {pathnames.map((name, index) => {
                       const routeTo = `/${pathnames.slice(0, index + 1).join('/')}`;
                       const isLast = index === pathnames.length - 1;
+                      const ctx = routeContextMap[name];
                       return (
                         <React.Fragment key={name}>
                           <BreadcrumbSeparator>
-                            <span className="text-[#D1D5DB] font-light text-sm mx-1">&gt;</span>
+                            <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
                           </BreadcrumbSeparator>
                           <BreadcrumbItem>
                             {isLast ? (
-                              <BreadcrumbPage className="text-xs font-bold text-[#111827]">
+                              <BreadcrumbPage className={`text-xs font-semibold px-2 py-0.5 rounded-md transition-all ${
+                                ctx ? `${ctx.bgLight} ${ctx.color} border` : 'text-foreground'
+                              }`}>
+                                {ctx && <ctx.icon className="h-3 w-3 inline mr-1 -mt-0.5" />}
                                 {getBreadcrumbLabel(name)}
                               </BreadcrumbPage>
                             ) : (
                               <BreadcrumbLink asChild>
-                                <Link to={routeTo} className="text-[#6B7280] hover:text-[#2563EB] transition-colors text-xs font-medium">
+                                <Link to={routeTo} className="text-muted-foreground hover:text-primary transition-colors text-xs font-medium">
                                   {getBreadcrumbLabel(name)}
                                 </Link>
                               </BreadcrumbLink>
@@ -218,7 +265,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl">
-          <div className="relative h-36 bg-[#1E293B] flex items-center justify-center">
+          <div className="relative h-36 bg-primary flex items-center justify-center">
             <img src={logoAgir} alt="AGIR" className="h-14 object-contain" />
             <div className="absolute -bottom-12 left-8">
               <div className="h-24 w-24 rounded-2xl border-4 border-background bg-muted overflow-hidden shadow-lg">
@@ -230,71 +277,71 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="pt-16 pb-8 px-8">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-[#111827] tracking-tight">{currentUser?.nome_completo || userName}</h2>
-                <p className="text-[#6B7280] font-medium flex items-center gap-1.5 mt-1">
-                  <BriefcaseBusiness className="h-4 w-4 text-[#2563EB]" />
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">{currentUser?.nome_completo || userName}</h2>
+                <p className="text-muted-foreground font-medium flex items-center gap-1.5 mt-1">
+                  <BriefcaseBusiness className="h-4 w-4 text-primary" />
                   {currentUser?.cargo || 'Colaborador AGIR'}
                 </p>
               </div>
-              <Badge variant="outline" className="capitalize px-3 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 border-emerald-100">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+              <Badge variant={currentUser?.status === 'ativo' ? 'default' : 'secondary'} className="capitalize px-3 py-1 text-xs font-bold bg-success/10 text-success border-success/20 hover:bg-success/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-success mr-2 animate-pulse" />
                 {currentUser?.status || 'Ativo'}
               </Badge>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-4">
-                <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-all hover:bg-slate-100/50">
-                  <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center text-[#2563EB]">
+                <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
+                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
                     <Mail className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">E-mail Corporativo</span>
-                    <span className="text-sm font-semibold text-[#374151]">{currentUser?.email || 'Não informado'}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">E-mail Corporativo</span>
+                    <span className="text-sm font-semibold text-foreground">{currentUser?.email || 'Não informado'}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-all hover:bg-slate-100/50">
-                  <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+                <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
+                  <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600">
                     <Shield className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Perfil de Acesso</span>
-                    <span className="text-sm font-semibold text-[#374151]">{currentUser?.perfil || 'Analista de RH'}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Perfil de Acesso</span>
+                    <span className="text-sm font-semibold text-foreground">{currentUser?.perfil || 'Analista de RH'}</span>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex flex-col gap-3 p-4 rounded-xl bg-muted/30 border border-border/40">
                   <div className="flex items-center gap-2 mb-1">
                     <MapPin className="h-4 w-4 text-rose-500" />
-                    <span className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Unidades Vinculadas</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Unidades Vinculadas</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {currentUser?.visualiza_todas_unidades ? (
-                      <Badge variant="outline" className="bg-blue-50 text-[#2563EB] border-blue-100 font-bold py-1 px-3">
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold py-1 px-3">
                         Todas as Unidades
                       </Badge>
                     ) : currentUser?.unidades_vinculadas && currentUser.unidades_vinculadas.length > 0 ? (
                       currentUser.unidades_vinculadas.map((unidade, idx) => (
-                        <Badge key={idx} variant="outline" className="bg-white text-[#4B5563] border-[#E5E7EB] font-medium">
+                        <Badge key={idx} variant="outline" className="bg-white text-muted-foreground border-border font-medium">
                           {unidade}
                         </Badge>
                       ))
                     ) : (
-                      <span className="text-sm text-[#6B7280] italic">Nenhuma unidade vinculada</span>
+                      <span className="text-sm text-muted-foreground italic">Nenhuma unidade vinculada</span>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-[#6B7280]">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <div className="pt-4 mt-2 border-t border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
                   Sessão autenticada e segura
                 </div>
                 <button 
                   onClick={() => setShowProfile(false)}
-                  className="text-xs font-bold text-[#2563EB] hover:underline underline-offset-4"
+                  className="text-xs font-bold text-primary hover:underline underline-offset-4"
                 >
                   Fechar informações
                 </button>

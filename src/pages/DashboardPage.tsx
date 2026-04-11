@@ -3,6 +3,22 @@ import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import {
   calcDiasAberto,
   normalizeUnitName,
   getCategoriaStatus,
@@ -51,6 +67,7 @@ export default function DashboardPage() {
   } = useVagasStore();
   const { selectedRegion, selectedUnits } = useAdminStore();
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
+  const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
 
   useEffect(() => {
     fetchVagas();
@@ -207,7 +224,6 @@ export default function DashboardPage() {
     { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
     { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos seletivos ativos' },
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
-    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Transferências e remanejamentos' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Vagas estratégicas' },
     { label: 'Cadastro Reserva', value: totalCR, icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Bancos ativos disponíveis' },
     { label: 'Convocados', value: totalConvocados, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Total de convocações realizadas' },
@@ -215,7 +231,6 @@ export default function DashboardPage() {
     { label: 'Bancos Prorrogados', value: totalProrrogados, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Bancos com prazo estendido' },
     { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos válidos para convocação' },
     { label: 'Total Banco de Talentos', value: totalBancoTotal, icon: Users, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Todos os bancos cadastrados' },
-    { label: 'Vagas em Atraso', value: counts.atrasadas, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Sem movimentação há 10+ dias' },
     { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Tarefas aguardando ação' },
   ], [totalVagas, counts, totalCR, totalConvocados, totalVencidos, totalCadastroReservaDisponiveis, totalProrrogados, totalBancoTotal, totalTarefasPendentes]);
 
@@ -332,8 +347,8 @@ export default function DashboardPage() {
     return strategicScopeByUnit;
   }, [chartMode, strategicScopeByUnit]);
 
-  const alerts = useMemo(() => {
-    const vacancyAlerts = vagas
+  const vacancyAlerts = useMemo(() => {
+    return vagas
       .filter((vaga) => {
         const status = String(vaga.status || '').toUpperCase();
         if (['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(status)) return false;
@@ -347,16 +362,24 @@ export default function DashboardPage() {
         const daysOpen = calcDiasAberto(baseDate);
 
         return {
-          id: `vaga-${vaga.id}`,
-          type: 'vaga' as const,
-          reference: vaga.requisicao || vaga.numero_requisicao || 'SEM REQ',
-          title: vaga.cargo || 'Vaga sem cargo informado',
-          unit: normalizeUnitName(vaga.unidade),
-          badge: `${daysOpen}d`,
-          description: 'Sem movimentação há mais de 10 dias',
-          sortValue: 2000 + daysOpen,
+          ...vaga,
+          daysOpen,
+          displayId: vaga.requisicao || vaga.numero_requisicao || 'SEM REQ',
         };
       });
+  }, [vagas]);
+
+  const alerts = useMemo(() => {
+    const vacancyDisplayAlerts = vacancyAlerts.map((vaga) => ({
+      id: `vaga-${vaga.id}`,
+      type: 'vaga' as const,
+      reference: vaga.displayId,
+      title: vaga.cargo || 'Vaga sem cargo informado',
+      unit: normalizeUnitName(vaga.unidade),
+      badge: `${vaga.daysOpen}d`,
+      description: 'Sem movimentação há mais de 10 dias',
+      sortValue: 2000 + vaga.daysOpen,
+    }));
 
     const bancoAlerts = filteredBancos
       .filter((banco) => {
@@ -379,10 +402,10 @@ export default function DashboardPage() {
         };
       });
 
-    return [...vacancyAlerts, ...bancoAlerts].sort((a, b) => (
+    return [...vacancyDisplayAlerts, ...bancoAlerts].sort((a, b) => (
       b.sortValue - a.sortValue || a.unit.localeCompare(b.unit)
     ));
-  }, [vagas, filteredBancos]);
+  }, [vacancyAlerts, filteredBancos]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -391,7 +414,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {stats.map((stat, idx) => (
           <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
             <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
@@ -520,12 +543,12 @@ export default function DashboardPage() {
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold text-slate-800">Pendências do Provimento</CardTitle>
+                  <CardTitle className="text-lg font-bold text-slate-800">Vagas sem Movimentação</CardTitle>
                   <p className="text-[10px] text-slate-400 font-medium mt-0.5">Atrasos de vagas e bancos que exigem atenção</p>
                 </div>
               </div>
               <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm">
-                {alerts.length} Pendências
+                {alerts.length} Alertas
               </span>
             </div>
           </CardHeader>
@@ -562,12 +585,98 @@ export default function DashboardPage() {
             )}
           </CardContent>
           <div className="p-4 bg-slate-50/50 border-t border-slate-100">
-            <Button variant="ghost" className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all">
-              Gestão de Gargalos <ChevronRight className="ml-1 h-3 w-3" />
+            <Button 
+              variant="ghost" 
+              className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all"
+              onClick={() => setIsStaleModalOpen(true)}
+            >
+              Vagas sem Movimentação <ChevronRight className="ml-1 h-3 w-3" />
             </Button>
           </div>
         </Card>
       </div>
+
+      <Dialog open={isStaleModalOpen} onOpenChange={setIsStaleModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="p-6 border-b bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-slate-900">Vagas sem Movimentação</DialogTitle>
+                <DialogDescription className="text-sm font-medium text-slate-500">
+                  Listagem de vagas sem atualização de status há mais de 10 dias.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto p-0">
+            <Table>
+              <TableHeader className="bg-slate-50 sticky top-0 z-10">
+                <TableRow className="hover:bg-transparent border-slate-200">
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Requisição</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Unidade</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Cargo</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Último Status</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6 text-center">Dias Parado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vacancyAlerts.length > 0 ? (
+                  vacancyAlerts.map((vaga) => (
+                    <TableRow key={vaga.id} className="group hover:bg-slate-50/50 transition-colors border-slate-100">
+                      <TableCell className="py-4 px-6 font-mono text-[11px] font-bold text-slate-400 group-hover:text-primary transition-colors">
+                        #{vaga.displayId}
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-3 w-3 text-slate-300" />
+                          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{normalizeUnitName(vaga.unidade)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <span className="text-xs font-bold text-slate-700">{vaga.cargo || 'Não informado'}</span>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-tighter bg-white border-slate-200 text-slate-500">
+                          {vaga.status || 'Sem status'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-4 px-6 text-center">
+                        <span className={`text-[11px] font-black px-2.5 py-1 rounded-md ${
+                          vaga.daysOpen > 20 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                        }`}>
+                          {vaga.daysOpen} dias
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-48 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center">
+                          <ShieldCheck className="h-6 w-6 text-emerald-500" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-800">Nenhuma vaga parada</p>
+                        <p className="text-xs text-slate-400">Todas as vagas foram movimentadas nos últimos 10 dias.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          
+          <div className="p-4 border-t bg-slate-50/30 flex justify-end">
+            <Button variant="outline" onClick={() => setIsStaleModalOpen(false)} className="text-xs font-bold uppercase tracking-wider">
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

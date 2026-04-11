@@ -234,10 +234,9 @@ export default function DashboardPage() {
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5', description: 'Base ativa' },
     { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
     { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos ativos' },
-    { label: 'Convocações', value: counts.convocacoes || 0, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Em convocação' },
     { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
-    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Transferências' },
+    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
     { label: 'Aguardando', value: counts.aguardando_unidade, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', description: 'Aguardando retorno' },
     { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
     { label: 'Documentação', value: counts.documentacao, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Pendência documental' },
@@ -294,7 +293,8 @@ export default function DashboardPage() {
 
       const lastHist = vaga.historico?.[vaga.historico.length - 1];
       const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
-      if (calcDiasAberto(baseDate) > 10 && !['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(vaga.status)) {
+      const normalizedS = normStatus(vaga.status || '');
+      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
         entry.pendencias += 1;
       }
     });

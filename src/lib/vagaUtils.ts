@@ -311,9 +311,9 @@ export function normalizeStatus(statusText: string): StatusVaga {
     return 'SEM STATUS' as StatusVaga;
   }
   
-  const text = removeAccents(statusText.toLowerCase().trim().replace(/\s+/g, ' '));
+  const text = normStatus(statusText);
   
-  if (text === 'admissao efetivada') return 'CONCLUÍDAS' as StatusVaga;
+  if (text === 'admissao efetivada' || text === 'concluida' || text === 'concluidas') return 'CONCLUÍDAS' as StatusVaga;
   if (text === 'publicar novo edital' || text === 'publicar edital' || text.includes('fazer publicacao') || text.includes('fazer publicação') || text === 'aguardando edital' || text === 'aguardando processo e edital') return 'FILA DE EDITAIS' as StatusVaga;
   if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
   if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
@@ -322,7 +322,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text === 'cancelada' || text === 'cancelado') return 'CANCELADAS' as StatusVaga;
   if (text === 'realizar convocacao') return 'CONVOCAÇÕES' as StatusVaga;
   if (text === 'documentacao' || text === 'documentacao ok e aso pendente' || text === 'aso pendente') return 'DOCUMENTAÇÃO' as StatusVaga;
-  if (text === 'admissao enviada' || text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista' || text === 'movimentacao interna') return 'EM ANDAMENTO' as StatusVaga;
+  if (text === 'admissao enviada' || text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista' || text === 'movimentacao interna' || text === 'transferencia') return 'EM ANDAMENTO' as StatusVaga;
   if (text.includes('andamento') || text.includes('processo') || text.includes('edital')) return 'EM ANDAMENTO' as StatusVaga;
 
   return 'SEM STATUS' as StatusVaga;

@@ -257,7 +257,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
 
           <main ref={mainRef} className="flex-1 overflow-auto p-8 max-w-[1600px] mx-auto w-full">
-            {children}
+            <div className="animate-in fade-in duration-200">
+              {children}
+            </div>
           </main>
           <AgieChat />
         </div>

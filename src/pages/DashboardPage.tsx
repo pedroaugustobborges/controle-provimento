@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,7 @@ import {
   ChevronRight,
   ChevronDown,
   Filter,
+  RefreshCcw,
 } from 'lucide-react';
 import {
   BarChart,
@@ -493,7 +495,15 @@ export default function DashboardPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <h1 className="text-2xl font-black tracking-tight text-slate-900">Visão Geral do Provimento</h1>
+          {(isLoadingVagas || isLoadingBancos) && (
+            <div className="flex items-center gap-2 px-2 py-1 bg-primary/5 rounded-full border border-primary/10 animate-pulse">
+              <RefreshCcw className="h-3 w-3 text-primary animate-spin" />
+              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">Atualizando...</span>
+            </div>
+          )}
+        </div>
           {(isLoadingVagas || isLoadingBancos) && (
             <div className="flex items-center gap-2 px-2 py-1 bg-primary/5 rounded-full border border-primary/10 animate-pulse">
               <RefreshCcw className="h-3 w-3 text-primary animate-spin" />

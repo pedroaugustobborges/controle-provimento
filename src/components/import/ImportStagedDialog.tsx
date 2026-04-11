@@ -34,9 +34,9 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
   const { currentUser } = useAdminStore();
   const { fetchVagas, fetchBancos, fetchImportHistory } = useVagasStore();
   
-  const [step, setStep] = useState<Step>('select');
+  const [step, setStep] = useState<Step>('type-selection');
   const [file, setFile] = useState<File | null>(null);
-  const [importType, setImportType] = useState<'vagas' | 'banco'>(initialType || 'vagas');
+  const [importType, setImportType] = useState<'vagas' | 'banco'>('vagas');
   const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
   const [sheetNames, setSheetNames] = useState<string[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<string>('');

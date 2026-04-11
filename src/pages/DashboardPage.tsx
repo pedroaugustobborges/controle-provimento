@@ -143,20 +143,6 @@ export default function DashboardPage() {
         acc[cat]++;
       }
 
-      const status = (v.status || '').toLowerCase();
-      if (
-        status.includes('movimentacao interna') ||
-        status.includes('movimentação interna') ||
-        status === 'movimentacao_interna' ||
-        status === 'mov. interna' ||
-        status === 'mov interna' ||
-        status.includes('transferencia') ||
-        status.includes('transferência') ||
-        status.includes('remanejamento')
-      ) {
-        acc.movimentacao_interna++;
-      }
-
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
       if (calcDiasAberto(baseDate) > 10 && !['CONCLUÍDAS', 'CANCELADAS', 'SUSPENSA'].includes(v.status)) {

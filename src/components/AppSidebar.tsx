@@ -361,7 +361,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="px-3 mt-4">
+        <div className="mx-5 my-3 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
+        <SidebarGroup className="px-3 mt-1">
           <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
             <div className="h-[1px] w-6 bg-white/15" />
             CONTROLE OPERACIONAL

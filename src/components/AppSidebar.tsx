@@ -241,9 +241,9 @@ export function AppSidebar() {
 
       <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="px-3">
-          <SidebarGroupLabel className="px-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-500/60 mb-6 flex items-center gap-2">
-            <div className="h-[1px] w-4 bg-blue-500/20" />
-            Fluxo de Provimento
+          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-5 flex items-center gap-3">
+            <div className="h-[1px] w-6 bg-white/10" />
+            FLUXO DE PROVIMENTO
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5">
@@ -259,8 +259,8 @@ export function AppSidebar() {
                             className={cn(
                               "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                               active 
-                                ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                                : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                             )}
                           >
                             <item.icon className={cn(
@@ -294,14 +294,14 @@ export function AppSidebar() {
                                   <SidebarMenuSubButton asChild>
                                     <NavLink
                                       to={sub.url}
-                                      className={cn(
-                                        "text-[11.5px] py-2 px-3 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
-                                        subActive 
-                                          ? "text-white bg-blue-600 shadow-lg shadow-blue-900/40 translate-x-1" 
-                                          : hasPassed
-                                            ? "text-[#275ac5] bg-[#275ac5]/5 hover:bg-[#275ac5]/10"
-                                            : "text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1"
-                                      )}
+                                        className={cn(
+                                          "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
+                                          subActive 
+                                            ? "text-white bg-blue-600 shadow-[0_4px_15px_-3px_rgba(37,99,235,0.4)] translate-x-1.5" 
+                                            : hasPassed
+                                              ? "text-blue-400/80 bg-blue-400/5 hover:bg-blue-400/10"
+                                              : "text-slate-500 hover:text-slate-100 hover:bg-white/5 hover:translate-x-1.5"
+                                        )}
                                     >
                                       {subActive && (
                                         <div className="absolute left-0 top-0 h-full w-1 bg-white animate-pulse" />
@@ -332,8 +332,8 @@ export function AppSidebar() {
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active 
-                              ? "bg-blue-500/15 text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.3)] border border-blue-500/20" 
-                              : "text-slate-400 hover:bg-white/5 hover:text-white"
+                              ? "bg-gradient-to-r from-blue-600/20 to-blue-400/5 text-white shadow-[0_8px_25px_-5px_rgba(59,130,246,0.25)] border border-blue-500/20" 
+                              : "text-slate-400 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                           )}
                         >
                           <item.icon className={cn(

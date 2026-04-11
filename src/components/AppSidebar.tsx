@@ -40,13 +40,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminStore } from '@/store/adminStore';
 import { useAuth } from '@/hooks/useAuth';
+import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useCallback } from 'react';
-
-const UNIDADES_POR_REGIAO: Record<string, string[]> = {
-  'Goiás e Vitória': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'VITORIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'UPA'],
-  'Outras unidades': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'HRD', 'HRC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
-};
 
 export function AppSidebar() {
   const { state } = useSidebar();

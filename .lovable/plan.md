@@ -1,30 +1,24 @@
 
 
-## Plano: Otimizar velocidade de navegação e feedback visual do menu
+## Plano: Melhorar visual do menu lateral e adicionar botão de logout
 
-### Diagnóstico
-A lentidão ao navegar entre páginas provavelmente é causada por:
-- Páginas pesadas (ex: VagasPage com 3000+ vagas) sendo renderizadas sincronamente
-- Falta de lazy loading nas rotas
-- Re-renderizações desnecessárias ao trocar de página
+### Alterações no `src/components/AppSidebar.tsx`:
 
-### Implementação
+1. **Indicação visual clara do subitem ativo:**
+   - Reforçar o contraste do subitem ativo com fundo mais visível (`bg-white/15` + borda lateral branca sólida de 2px)
+   - Reduzir destaque dos subitens inativos para evitar ambiguidade (usar `text-slate-500` mais suave)
+   - Adicionar uma linha vertical de progresso nos submenus, com pontos/dots indicando a posição atual
 
-1. **Lazy Loading de todas as páginas no App.tsx**
-   - Converter todos os imports de páginas para `React.lazy()` com `Suspense` e um fallback skeleton/spinner
-   - Isso evita que o bundle inteiro seja carregado de uma vez
+2. **Visual mais robusto e corporativo:**
+   - Adicionar separadores (`<div className="h-px bg-white/10">`) entre seções
+   - Ajustar padding e espaçamento para dar mais densidade
+   - Melhorar ícones dos subitens — usar dots/circles em vez do `CornerDownRight` genérico, com cores diferenciadas por estado (ativo/visitado/futuro)
 
-2. **Feedback visual imediato no menu (AppSidebar.tsx)**
-   - O NavLink do React Router já muda o estado ativo via `useLocation`, que é instantâneo — verificar se não há bloqueio
+3. **Rodapé — Botão de Logout:**
+   - Adicionar botão "Sair" com ícone `LogOut` na área do rodapé, abaixo de "Acessar Perfil"
+   - Estilizar com cor destrutiva sutil (`text-red-400 hover:bg-red-500/10`)
+   - Conectar ao `signOut()` do hook `useAuth` + navegação para `/login`
 
-3. **Transição suave no conteúdo principal (AppLayout.tsx)**
-   - Adicionar uma animação leve de fade no container de conteúdo usando CSS `transition` ou `framer-motion` já presente no projeto
-
-4. **Skeleton de carregamento global**
-   - Criar um componente `PageSkeleton` simples para usar como fallback do `Suspense`, dando feedback visual enquanto a página carrega
-
-### Arquivos a modificar
-- `src/App.tsx` — lazy imports + Suspense
-- `src/components/AppLayout.tsx` — transição de fade no conteúdo
-- Criar `src/components/PageSkeleton.tsx` — fallback de carregamento
+### Arquivos a modificar:
+- `src/components/AppSidebar.tsx` — todas as alterações acima
 

@@ -10,11 +10,12 @@ import {
   FileSpreadsheet,
   Bell,
   ChevronDown,
-  CornerDownRight,
   FileText,
   FileCheck,
   Check,
-  Search
+  Search,
+  LogOut,
+  Circle
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';

@@ -94,7 +94,29 @@ export const CATEGORIAS_STATUS = {
   sem_status: ['sem status'],
 };
 
-...
+export function isConvocacaoByFields(row: any): boolean {
+  if (!row) return false;
+  return !!(
+    (row.data_convocacao_planilha && String(row.data_convocacao_planilha).trim() !== '') ||
+    (row.horario_convocacao_planilha && String(row.horario_convocacao_planilha).trim() !== '') ||
+    (row.candidato_convocado_planilha && String(row.candidato_convocado_planilha).trim() !== '') ||
+    (row.classificacao_convocacao_planilha && String(row.classificacao_convocacao_planilha).trim() !== '') ||
+    (row.forma_convocacao_planilha && String(row.forma_convocacao_planilha).trim() !== '') ||
+    (row.status_oitiva_convocacao_planilha && String(row.status_oitiva_convocacao_planilha).trim() !== '')
+  );
+}
+
+export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = false): keyof typeof CATEGORIAS_STATUS | 'sem_classificacao' {
+  if (!row) return 'sem_classificacao';
+  
+  const status = typeof row === 'string' ? row : (row.status || row.status_geral);
+  
+  if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || String(status).trim() === '') {
+    return 'sem_classificacao';
+  }
+  
+  const normS = normStatus(String(status));
+  
   // Priority rules with includes() for fuzzy matching
   if (normS.includes('movimentac') || normS.includes('transfer')) return 'movimentacao_interna';
   if (normS === 'admissao' || normS.includes('admissao envia')) return 'em_admissao';

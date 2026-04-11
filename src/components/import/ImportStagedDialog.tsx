@@ -125,12 +125,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
     setSampleData(nextSampleData);
 
     const headers = (nextSampleData[defaultHeaderIndex] || [])
-      .map((cell: any) => String(cell || '').trim())
-      .filter((value: string) => value !== '');
-
-    if (headers.length === 0) {
-      throw new Error(`Não foi possível identificar o cabeçalho na linha ${defaultHeaderIndex + 1} da aba "${sheetName}".`);
-    }
+      .map((cell: any) => String(cell || '').trim());
 
     const nextMappings = autoMapColumns(headers, nextType).map(mapping => ({
       ...mapping,
@@ -157,31 +152,33 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       setWorkbook(workbook);
       setSheetNames(sheetNames);
       
-      // Smart sheet selection
       let defaultSheet = sheetNames[0];
-      const keywords = importType === 'vagas' ? ['VAGA', 'GERAL', 'BASE'] : ['BANCO', 'GERAL', 'RESERVA'];
-      const matched = sheetNames.find(name => {
-        const nameStr = String(name || '').toUpperCase();
-        return keywords.some(k => nameStr.includes(k.toUpperCase()));
-      });
-      if (matched) defaultSheet = matched;
+      
+      if (importType === 'banco') {
+        const matched = sheetNames.find(name => String(name || '').toUpperCase() === 'BANCO_GERAL');
+        if (matched) defaultSheet = matched;
+      } else {
+        const matched = sheetNames.find(name => {
+          const nameStr = String(name || '').toUpperCase();
+          return ['VAGAS', 'GERAL', 'BASE'].some(k => nameStr.includes(k));
+        });
+        if (matched) defaultSheet = matched;
+      }
       
       setSelectedSheet(defaultSheet);
-      const sheetData = sampleData[defaultSheet];
-      if (!sheetData || !Array.isArray(sheetData) || sheetData.length === 0) {
-        throw new Error(`A aba "${defaultSheet}" selecionada parece estar vazia.`);
-      }
       const { nextMappings, missingFields } = applyAutomaticConfiguration(workbook, defaultSheet, importType);
 
       setStep('mapping');
-      if (missingFields.length > 0) {
-        toast.error(`Não foi possível reconhecer automaticamente: ${missingFields.map(field => field.label).join(', ')}`);
-      } else {
-        toast.success(`Leitura automática concluída: ${nextMappings.length} colunas identificadas.`);
+      
+      if (importType === 'vagas') {
+        if (missingFields.length > 0) {
+          toast.info("Verifique o mapeamento das colunas que não foram identificadas.");
+        } else {
+          toast.success("Mapeamento automático realizado com sucesso.");
+        }
       }
     } catch (err: any) {
       toast.error(`Falha na leitura do arquivo: ${err.message || 'Erro desconhecido'}`);
-      console.error("Erro na leitura da estrutura:", err);
     }
   };
 

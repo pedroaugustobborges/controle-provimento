@@ -91,10 +91,9 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
 
   useEffect(() => {
     if (open) {
-      setImportType(initialType || 'vagas');
-      setHeaderRow(getDefaultHeaderRow(initialType || 'vagas'));
+      setStep('type-selection');
     }
-  }, [open, initialType]);
+  }, [open]);
 
   const requiredFields = useMemo(
     () => (importType === 'vagas' ? VAGA_REQUIRED_COLUMNS : BANCO_REQUIRED_COLUMNS),

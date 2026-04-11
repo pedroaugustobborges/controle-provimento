@@ -203,6 +203,7 @@ export interface Vaga {
   admissao_enviada_acompanhamento?: string;
   admissao_efetivada_acompanhamento?: string;
   detalhes_acompanhamento?: string;
+  categoria_status?: string;
 }
 
 export interface BancoTalentos {

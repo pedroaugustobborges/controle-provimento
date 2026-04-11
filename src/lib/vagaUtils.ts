@@ -517,7 +517,7 @@ export function getStatusSummary(records: any[], selectedUnit: string, selectedM
   const summary: Record<string, number> = {};
   validVacancies.forEach(row => {
     const statusVal = row.status || row.status_geral || 'SEM STATUS';
-    const status = String(statusVal).toUpperCase().trim();
+    const status = normStatus(String(statusVal)).toUpperCase();
     summary[status] = (summary[status] || 0) + 1;
   });
   return { total: validVacancies.length, byStatus: summary };

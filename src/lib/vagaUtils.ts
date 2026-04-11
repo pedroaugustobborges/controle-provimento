@@ -50,54 +50,25 @@ export function isVitoriaUnit(unidade: string): boolean {
   if (!unidade) return false;
   const normalized = removeAccents(unidade.toLowerCase().trim());
   
-  // Directly compare against the known Vitória sub-units
   const vitoriaTokens = VITORIA_SUB_UNIDADES.map(sub => removeAccents(sub.toLowerCase()));
   
-  // Check for exact matches in the normalized string or as whole words
   return vitoriaTokens.some(token => {
     const regex = new RegExp(`\\b${token}\\b`, 'i');
     return regex.test(normalized) || normalized === token;
   });
 }
 
-
 export const CATEGORIAS_STATUS = {
-  fila_edital: [
-    'publicar_novo_edital', 'publicar_edital', 'publicar edital', 'publicar novo edital', 
-    'fazer publicação do edital', 'fazer publicacao do edital', 'fila de editais', 
-    'FILA DE EDITAIS', 'aguardando edital', 'aguardando processo e edital',
-    'sem status', 'sem_status'
-  ],
-  em_andamento: [
-    'em_edital', 'em edital', 
-    'em_processo_seletivo', 'em processo seletivo',
-    'admissao_enviada', 'admissao enviada',
-    'em_admissao', 'em admissao',
-    'em_triagem', 'em triagem',
-    'entrevista',
-    'EM ANDAMENTO'
-  ],
-  concluidas: ['admissao_efetivada', 'admissao efetivada', 'finalizada', 'encerrada', 'CONCLUÍDAS'],
-  vagas_interrompidas: ['cancelada', 'pausada', 'suspensa', 'CANCELADAS', 'SUSPENSA', 'PAUSADA', 'vaga_suspensa', 'vaga_pausada', 'cancelado'],
-  vagas_lideranca: [
-    'vaga_lideranca', 'vaga de lideranca', 'ESTRATÉGICAS', 
-    'liderança', 'lideranca', 'vaga de liderança', 'lider'
-  ],
-  convocacao: ['realizar_convocacao', 'realizar convocacao', 'CONVOCAÇÕES'],
-  documentacao: [
-    'documentacao', 'documentacao ok e aso pendente', 'aso pendente', 
-    'documentacao ok', 'documentacao pendente', 'documentação', 
-    'documentação ok e aso pendente', 'aso pendente', 'documentação ok', 
-    'documentação pendente', 'DOCUMENTAÇÃO'
-  ],
-  aguardando_unidade: [
-    'aguardar_unidade', 'aguardar_anuencia', 'AGUARDANDO UNIDADE', 
-    'aguardando', 'aguardando unidade', 'aguardar unidade'
-  ],
-  movimentacao_interna: [
-    'movimentação interna', 'movimentacao interna', 'mov interna', 'mov. interna', 
-    'transferência', 'transferencia', 'remanejamento', 'movimentacao_interna'
-  ]
+  concluidas: ['CONCLUÍDA'],
+  movimentacao_interna: ['MOVIMENTAÇÃO INTERNA'],
+  vagas_lideranca: ['VAGA DE LIDERANÇA'],
+  em_andamento: ['REALIZAR CONVOCAÇÃO'],
+  aguardando_unidade: ['AGUARDANDO UNIDADE'],
+  fila_edital: ['EM EDITAL', 'PUBLICAR NOVO EDITAL'],
+  suspensa: ['SUSPENSA'],
+  cancelada: ['CANCELADA'],
+  documentacao: ['DOCUMENTAÇÃO', 'DOCUMENTAÇÃO OK E ASO PENDENTE', 'ASO PENDENTE'],
+  em_admissao: ['ADMISSÃO', 'ADMISSÃO ENVIADA']
 };
 
 export function isConvocacaoByFields(row: any): boolean {

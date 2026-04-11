@@ -18,7 +18,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
 import { toast } from 'sonner';
 import { ImportService, ImportProgress, ColumnMapping } from '@/services/importService';
-import { autoMapColumns, getDefaultHeaderRow, VAGA_REQUIRED_COLUMNS, BANCO_REQUIRED_COLUMNS, BANCO_OPTIONAL_COLUMNS } from '@/lib/importUtils';
+import { autoMapColumns, getDefaultHeaderRow, VAGA_REQUIRED_COLUMNS, VAGA_OPTIONAL_COLUMNS, BANCO_REQUIRED_COLUMNS, BANCO_OPTIONAL_COLUMNS } from '@/lib/importUtils';
 import { cn } from '@/lib/utils';
 import { buildBancoImportObservation, ImportExecutionOptions, normalizeImportSystemKey } from '@/lib/importScopeUtils';
 

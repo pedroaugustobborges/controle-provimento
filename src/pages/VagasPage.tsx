@@ -80,11 +80,12 @@ import {
 } from "@/components/ui/pagination";
 
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas, isLoadingVagas, isInitialLoad } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas, fetchBancos, isLoadingVagas, isInitialLoad } = useVagasStore();
   
   useEffect(() => {
     fetchVagas();
-  }, [fetchVagas]);
+    fetchBancos();
+  }, [fetchVagas, fetchBancos]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
@@ -309,19 +310,25 @@ export default function VagasPage() {
         acc.vagas_novas++;
       }
 
-      if (acc[cat] !== undefined) {
-        acc[cat]++;
+      // Correção do mapeamento de categorias para os cards
+      if (cat === 'suspensa' || cat === 'cancelada') {
+        acc.vagas_interrompidas++;
+      } else if (cat === 'convocacoes' || cat === 'convocacao') {
+        acc.convocacao++;
+      } else if (acc[cat as keyof typeof acc] !== undefined) {
+        (acc as any)[cat]++;
       } else {
         acc.em_andamento++;
       }
 
-      if (v.tem_banco_valido) {
+      // Verificação dinâmica de banco de talentos
+      if (v.tem_banco_valido || getBancoByVaga(v.id)) {
         acc.com_banco_valido++;
       }
     });
     
     return acc;
-  }, [canonicalBase]);
+  }, [canonicalBase, getBancoByVaga]);
 
   const countFilaEdital = counts.fila_edital;
   const countEmAndamento = counts.em_andamento;
@@ -337,10 +344,26 @@ export default function VagasPage() {
 
   // 4. Parity Debug Audit - forensic row-level check
   const parityAudit = useMemo(() => {
-    if (!isDebugOpen) return { excelCount: 0, appCount: 0, tableCount: 0, difference: 0, mismatches: [] };
-
     const selUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
     const selMonth = filterMes === 'all' ? 'TODOS' : filterMes;
+    
+    // Rows actually counted by the card metric (finalCount)
+    const appCount = canonicalBase.length;
+    
+    // Rows in table (can have extra UI filters like search, status)
+    const tableCount = filtered.length;
+
+    if (!isDebugOpen) {
+      return { 
+        selUnit, 
+        selMonth, 
+        excelCount: 0, 
+        appCount, 
+        tableCount, 
+        difference: 0, 
+        mismatches: [] 
+      };
+    }
 
     // Check every row in the dataset
     const analyzed = vagas.map(v => checkVacancyParity(v, selUnit, selMonth));
@@ -348,23 +371,17 @@ export default function VagasPage() {
     // Rows counted by Excel Parity rule
     const excelCounted = analyzed.filter(r => r.includedByExcelParity);
     
-    // Rows actually counted by the card metric (finalCount)
-    const appCounted = canonicalBase; // This is what the UI card uses
-    
-    // Rows in table (can have extra UI filters like search, status)
-    const tableCounted = filtered;
-
     // Identify divergences
-    const excludedByAppButIncludedByExcel = excelCounted.filter(e => !appCounted.find(a => a.id === e.id));
-    const includedByAppButExcludedByExcel = appCounted.filter(a => !excelCounted.find(e => e.id === a.id));
+    const excludedByAppButIncludedByExcel = excelCounted.filter(e => !canonicalBase.find(a => a.id === e.id));
+    const includedByAppButExcludedByExcel = canonicalBase.filter(a => !excelCounted.find(e => e.id === a.id));
 
     return {
       selUnit,
       selMonth,
       excelCount: excelCounted.length,
-      appCount: appCounted.length,
-      tableCount: tableCounted.length,
-      difference: appCounted.length - excelCounted.length,
+      appCount,
+      tableCount,
+      difference: appCount - excelCounted.length,
       mismatches: [
         ...excludedByAppButIncludedByExcel.map(r => ({ ...r, mismatchType: 'EXCLUDED_BY_APP' as const })),
         ...includedByAppButExcludedByExcel.map(r => {

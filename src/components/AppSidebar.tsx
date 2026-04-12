@@ -159,12 +159,8 @@ export function AppSidebar() {
             <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
-              <span className="font-extrabold text-xl text-white tracking-tight flex items-center gap-1.5">
-                AGIR
-                <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-              </span>
-              <span className="text-[10px] text-white/80 font-bold uppercase tracking-[0.2em] leading-tight">
+            <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
+              <span className="font-extrabold text-sm text-white tracking-tight leading-tight whitespace-nowrap">
                 Provimento Digital
               </span>
             </div>

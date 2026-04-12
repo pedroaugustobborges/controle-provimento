@@ -31,12 +31,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '@/hooks/usePermissions';
 
 
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
   const { vagas, updateVaga } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
+  const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -140,11 +142,13 @@ export default function FilaEditaisPage() {
           <p className="text-slate-500 mt-1">Vagas aguardando redação e publicação de novo edital.</p>
           <div className="mt-2"><HelpGuide /></div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="default" className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20" onClick={() => setIsImportOpen(true)}>
-            <Building2 className="h-4 w-4 mr-2" /> Importar Excel
-          </Button>
-        </div>
+        {permissions.canImport() && (
+          <div className="flex gap-2">
+            <Button variant="default" className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20" onClick={() => setIsImportOpen(true)}>
+              <Building2 className="h-4 w-4 mr-2" /> Importar Excel
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -68,6 +68,7 @@ export default function ConvocacoesPage() {
   const [search, setSearch] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
+  const [isBloqueioOpen, setIsBloqueioOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,

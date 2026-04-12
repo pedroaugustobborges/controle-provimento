@@ -5,7 +5,7 @@ import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas 
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
 
-const PAGE_SIZE = 1000;
+const PAGE_SIZE = 500;
 
 const splitAssistentes = (value: unknown): string[] => {
   if (Array.isArray(value)) {

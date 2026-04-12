@@ -22,4 +22,4 @@ export interface Message {
   isReply?: boolean;
 }
 
-export type ChatStep = 'INITIAL' | 'BY_REGION' | 'BY_UNIT' | 'BY_PERSON' | 'BY_ROLE' | 'CONVERSATION';
+export type ChatStep = 'INITIAL' | 'BY_REGION' | 'BY_UNIT' | 'BY_PERSON' | 'BY_ROLE' | 'CONVERSATION' | 'FEEDBACK' | 'COMMUNICATION_HUB' | 'BY_USER' | 'SUPERVISION' | 'NEWS';

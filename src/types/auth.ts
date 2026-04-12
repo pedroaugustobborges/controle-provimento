@@ -110,3 +110,15 @@ export interface BackupRecord {
   status: 'sucesso' | 'erro';
   quantidade_registros: number;
 }
+
+export interface Feedback {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  tipo: 'sugestao' | 'problema' | 'melhoria';
+  mensagem: string;
+  status: 'pendente' | 'lido' | 'respondido';
+  created_at: string;
+  updated_at: string;
+}

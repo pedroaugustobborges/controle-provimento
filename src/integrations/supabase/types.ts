@@ -164,6 +164,42 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks: {
+        Row: {
+          created_at: string
+          id: string
+          mensagem: string
+          status: string
+          tipo: string
+          updated_at: string
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mensagem: string
+          status?: string
+          tipo: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mensagem?: string
+          status?: string
+          tipo?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       importacoes: {
         Row: {
           aba_planilha: string | null

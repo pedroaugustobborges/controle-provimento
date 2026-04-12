@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User, AuditLog, SupportConfig, BackupRecord } from '@/types/auth';
+import { User, AuditLog, SupportConfig, BackupRecord, Feedback } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AdminState {
@@ -7,6 +7,7 @@ interface AdminState {
   auditLogs: AuditLog[];
   supportConfigs: SupportConfig[];
   backups: BackupRecord[];
+  feedbacks: Feedback[];
   currentUser: User | null;
   selectedRegion: string;
   selectedUnit: string;
@@ -16,6 +17,7 @@ interface AdminState {
   // Data fetching
   fetchUsers: () => Promise<void>;
   fetchAuditLogs: () => Promise<void>;
+  fetchFeedbacks: () => Promise<void>;
   fetchCurrentProfile: () => Promise<void>;
 
   // User actions via edge function
@@ -29,6 +31,9 @@ interface AdminState {
   setSelectedRegion: (region: string) => void;
   setSelectedUnit: (unit: string) => void;
   setSelectedUnits: (units: string[]) => void;
+
+  // Feedback actions
+  updateFeedbackStatus: (id: string, status: 'pendente' | 'lido' | 'respondido') => Promise<void>;
 
   // Audit actions
   addAuditLog: (log: Omit<AuditLog, 'id'>) => void;
@@ -77,6 +82,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   auditLogs: [],
   supportConfigs: defaultSupportConfigs,
   backups: [],
+  feedbacks: [],
   currentUser: null,
   selectedRegion: 'all',
   selectedUnit: 'all',
@@ -107,6 +113,19 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       set({ auditLogs: (data || []) as AuditLog[] });
     } catch (err) {
       console.error('Erro ao buscar logs:', err);
+    }
+  },
+
+  fetchFeedbacks: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      set({ feedbacks: (data || []) as Feedback[] });
+    } catch (err) {
+      console.error('Erro ao buscar feedbacks:', err);
     }
   },
 
@@ -226,6 +245,19 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     });
     if (error) throw error;
     if (data?.error) throw new Error(data.error);
+  },
+
+  updateFeedbackStatus: async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from('feedbacks')
+        .update({ status })
+        .eq('id', id);
+      if (error) throw error;
+      await get().fetchFeedbacks();
+    } catch (err) {
+      console.error('Erro ao atualizar status do feedback:', err);
+    }
   },
 
   setCurrentUser: (user) => set({ currentUser: user }),

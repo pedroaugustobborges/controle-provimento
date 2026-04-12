@@ -45,8 +45,6 @@ export default function AlertasTarefasPage() {
     <div className="space-y-6">
       <PageHeader 
         title="Alertas e Tarefas"
-        subtitle="Monitoramento operacional de pendências críticas, atrasos e atividades delegadas à equipe."
-        badge="Operacional"
       />
 
 

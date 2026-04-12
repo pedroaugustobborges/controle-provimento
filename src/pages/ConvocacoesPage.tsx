@@ -224,8 +224,6 @@ export default function ConvocacoesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader 
         title="Convocações"
-        subtitle="Controle centralizado do fluxo de admissão, aceite de candidatos e histórico operacional de convocações."
-        badge="Fluxo Admissional"
         actions={
           <>
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">

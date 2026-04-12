@@ -151,8 +151,6 @@ export default function ValidacaoEditaisPage() {
     <div className="space-y-6">
       <PageHeader 
         title="Validação de Edital"
-        subtitle="Área de validação administrativa de editais redigidos. Aprove, rejeite ou devolva para ajuste."
-        badge="Validação"
         helpContent={<HelpGuide />}
         icon={<FileCheck className="h-8 w-8 text-primary" />}
       />

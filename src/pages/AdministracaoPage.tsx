@@ -533,9 +533,18 @@ export default function AdministracaoPage() {
                     {users.map((user) => (
                       <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-700">{user.nome_completo}</span>
-                            <span className="text-xs text-slate-400 font-medium">{user.email}</span>
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
+                              {user.avatar_url ? (
+                                <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                              ) : (
+                                <UserIcon className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-700">{user.nome_completo}</span>
+                              <span className="text-xs text-slate-400 font-medium">{user.email}</span>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>

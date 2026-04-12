@@ -91,19 +91,74 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const activeRoute = pathnames[0] || '';
   const routeCtx = routeContextMap[activeRoute];
 
+  const labels: Record<string, string> = {
+    'vagas': 'Controle de Vagas',
+    'editais': 'Editais',
+    'fila-editais': 'Fila de Editais',
+    'fila-analista-edital': 'Redação de Edital',
+    'validacao-editais': 'Validação de Edital',
+    'banco-talentos': 'Cadastro Reserva',
+    'convocacoes': 'Histórico de Convocação',
+    'gestor': 'Administração',
+    'importacoes': 'Importações',
+    'monitoramento': 'Monitoramento de Prazos',
+    'alertas-tarefas': 'Alertas e Tarefas',
+    'mensagens': 'Mensagens',
+  };
+
   const getBreadcrumbLabel = (path: string) => {
-    const labels: Record<string, string> = {
-      'vagas': 'Processos Seletivos',
-      'editais': 'Editais e Etapas',
-      'fila-editais': 'Fila de Editais',
-      'convocacoes': 'Convocações',
-      'validacao': 'Validações',
-      'gestor': 'Administração',
-      'banco-talentos': 'Banco de Talentos',
-      'importacoes': 'Importações',
-    };
     return labels[path] || path.charAt(0).toUpperCase() + path.slice(1);
   };
+
+  const getBreadcrumbs = () => {
+    const breadcrumbs = [{ label: 'Início', path: '/' }];
+    const path = location.pathname;
+
+    // Explicit overrides based on path requirements
+    if (path === '/vagas' || path === '/validacao-editais') {
+      return breadcrumbs;
+    }
+
+    if (path === '/editais') {
+      breadcrumbs.push({ label: 'Editais', path: '/editais' });
+      return breadcrumbs;
+    }
+
+    if (path === '/fila-editais') {
+      breadcrumbs.push({ label: 'Fila de Editais', path: '/fila-editais' });
+      return breadcrumbs;
+    }
+
+    if (path === '/fila-analista-edital') {
+      breadcrumbs.push({ label: 'Fila de Editais', path: '/fila-editais' });
+      breadcrumbs.push({ label: 'Redação de Edital', path: '/fila-analista-edital' });
+      return breadcrumbs;
+    }
+
+    if (path === '/banco-talentos') {
+      breadcrumbs.push({ label: 'Cadastro Reserva', path: '/banco-talentos' });
+      return breadcrumbs;
+    }
+
+    if (path === '/convocacoes') {
+      breadcrumbs.push({ label: 'Cadastro Reserva', path: '/banco-talentos' });
+      breadcrumbs.push({ label: 'Histórico de Convocação', path: '/convocacoes' });
+      return breadcrumbs;
+    }
+
+    // Default logic for other pages
+    if (pathnames.length > 0) {
+      pathnames.forEach((name, index) => {
+        const routeTo = `/${pathnames.slice(0, index + 1).join('/')}`;
+        const label = getBreadcrumbLabel(name);
+        breadcrumbs.push({ label, path: routeTo });
+      });
+    }
+
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   const userName = currentUser?.nome_completo?.split(' ')[0] || 'Usuário';
   const initials = currentUser?.nome_completo
@@ -269,27 +324,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         </Link>
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    {pathnames.map((name, index) => {
-                      const routeTo = `/${pathnames.slice(0, index + 1).join('/')}`;
-                      const isLast = index === pathnames.length - 1;
-                      const ctx = routeContextMap[name];
+                    {breadcrumbs.slice(1).map((crumb, index) => {
+                      const isLast = index === breadcrumbs.length - 2;
                       return (
-                        <React.Fragment key={name}>
+                        <React.Fragment key={crumb.path}>
                           <BreadcrumbSeparator>
                             <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
                           </BreadcrumbSeparator>
                           <BreadcrumbItem>
                             {isLast ? (
-                              <BreadcrumbPage className={`text-xs font-semibold px-2 py-0.5 rounded-md transition-all ${
-                                ctx ? `${ctx.bgLight} ${ctx.color} border` : 'text-foreground'
-                              }`}>
-                                {ctx && <ctx.icon className="h-3 w-3 inline mr-1 -mt-0.5" />}
-                                {getBreadcrumbLabel(name)}
+                              <BreadcrumbPage className="text-xs font-semibold px-2 py-0.5 text-foreground">
+                                {crumb.label}
                               </BreadcrumbPage>
                             ) : (
                               <BreadcrumbLink asChild>
-                                <Link to={routeTo} className="text-muted-foreground hover:text-primary transition-colors text-xs font-medium">
-                                  {getBreadcrumbLabel(name)}
+                                <Link to={crumb.path} className="text-muted-foreground hover:text-primary transition-colors text-xs font-medium">
+                                  {crumb.label}
                                 </Link>
                               </BreadcrumbLink>
                             )}

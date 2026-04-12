@@ -871,6 +871,8 @@ function AcompanhamentoEditalList() {
   const navigate = useNavigate();
   const [selectedVagaForAcompanhamento, setSelectedVagaForAcompanhamento] = useState<Vaga | null>(null);
   const [filterUnidade, setFilterUnidade] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSaveAcompanhamento = (vagaId: string, data: any) => {
     const vaga = vagas.find(v => v.id === vagaId);
@@ -938,9 +940,23 @@ function AcompanhamentoEditalList() {
         return false;
       }
 
+      if (filterStatus !== 'all') {
+        const situacao = v.acompanhamento?.situacao_etapa || 'em_andamento';
+        if (situacao !== filterStatus) return false;
+      }
+
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const matchCargo = (v.cargo || '').toLowerCase().includes(term);
+        const matchEdital = (v.numero_edital || '').toLowerCase().includes(term);
+        const matchRequisicao = (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(term);
+        
+        if (!matchCargo && !matchEdital && !matchRequisicao) return false;
+      }
+
       return true;
     });
-  }, [vagas, currentUser, filterUnidade]);
+  }, [vagas, currentUser, filterUnidade, filterStatus, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -952,23 +968,54 @@ function AcompanhamentoEditalList() {
           helpContent={<HelpGuide activeTab="acompanhamento" />}
         />
 
-        {canFilterByUnit && (
-          <div className="flex items-center gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-            <Building2 className="h-4 w-4 text-slate-400 ml-2" />
-            <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-              <SelectTrigger className="w-[200px] border-none shadow-none focus:ring-0 font-bold text-slate-600">
-                <SelectValue placeholder="Filtrar por Unidade" />
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Busca por Texto */}
+          <div className="relative group w-full md:w-[300px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <Input
+              placeholder="Buscar por cargo ou edital..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-10 bg-white border-slate-200 rounded-xl shadow-sm focus:ring-primary/20 transition-all font-medium"
+            />
+          </div>
+
+          {/* Filtro por Status */}
+          <div className="flex items-center gap-2 bg-white p-2 h-10 rounded-xl shadow-sm border border-slate-200">
+            <ListFilter className="h-4 w-4 text-slate-400 ml-2" />
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[180px] border-none shadow-none focus:ring-0 font-bold text-slate-600 h-8">
+                <SelectValue placeholder="Status/Etapa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="font-bold">Todas as Unidades</SelectItem>
-                {allUnidades.map(u => (
-                  <SelectItem key={u} value={u} className="font-medium">{u}</SelectItem>
-                ))}
+                <SelectItem value="all" className="font-bold">Todos os Status</SelectItem>
+                <SelectItem value="em_andamento" className="font-medium">Em andamento</SelectItem>
+                <SelectItem value="pendente" className="font-medium">Pendente</SelectItem>
+                <SelectItem value="concluido" className="font-medium">Concluído</SelectItem>
+                <SelectItem value="atrasada" className="font-medium">Atrasado</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        )}
+
+          {canFilterByUnit && (
+            <div className="flex items-center gap-2 bg-white p-2 h-10 rounded-xl shadow-sm border border-slate-200">
+              <Building2 className="h-4 w-4 text-slate-400 ml-2" />
+              <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+                <SelectTrigger className="w-[200px] border-none shadow-none focus:ring-0 font-bold text-slate-600 h-8">
+                  <SelectValue placeholder="Filtrar por Unidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="font-bold">Todas as Unidades</SelectItem>
+                  {allUnidades.map(u => (
+                    <SelectItem key={u} value={u} className="font-medium">{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
       </div>
+
 
 
 
@@ -988,8 +1035,8 @@ function AcompanhamentoEditalList() {
                   <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Avaliação</TableHead>
                   <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Entrevista</TableHead>
                   <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Final</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Ação Rápida</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-right">Ações</TableHead>
+                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-right">Ação Rápida</TableHead>
+
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1055,6 +1102,7 @@ function AcompanhamentoEditalList() {
                 {editaisEmAndamento.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+
                       Nenhum edital em andamento visível para suas unidades.
                     </TableCell>
                   </TableRow>

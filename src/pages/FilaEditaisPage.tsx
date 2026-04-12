@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
@@ -37,11 +37,10 @@ import { usePermissions } from '@/hooks/usePermissions';
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
   const { vagas, updateVaga } = useVagasStore();
-  const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
+  const { currentUser } = useAdminStore();
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
   
   // Modal de envio
@@ -53,11 +52,10 @@ export default function FilaEditaisPage() {
   const [obsUnidade, setObsUnidade] = useState('');
 
   const pendingVagas = useMemo(() => {
-    const baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
-    return baseRecords.filter(v => {
+    return vagas.filter(v => {
       const vUnitNormalized = normalizeUnitName(v.unidade);
       
-      // Unit access restriction
+      // Unit access restriction (Permissions)
       if (!currentUser?.visualiza_todas_unidades) {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
         if (!userUnidades.includes(vUnitNormalized)) {
@@ -69,31 +67,32 @@ export default function FilaEditaisPage() {
       const normalizedS = normStatus(v.status || v.status_geral || '');
       if (normalizedS !== 'publicar edital') return false;
 
-
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
-        v.cargo.toLowerCase().includes(searchTerm) || 
+        (v.cargo || '').toLowerCase().includes(searchTerm) || 
         (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);
       
       const matchUnidade = filterUnidade === 'all' || vUnitNormalized === filterUnidade;
-      const matchStatus = filterStatus === 'all' || v.status_edital === filterStatus;
 
-      return matchSearch && matchUnidade && matchStatus;
+      return matchSearch && matchUnidade;
     });
-  }, [vagas, currentUser, search, filterUnidade, filterStatus]);
+  }, [vagas, currentUser, search, filterUnidade]);
 
-  const unidades = useMemo(() => {
-    const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort();
-    if (selectedRegion !== 'all') {
-      const regionUnits = (UNIDADES_POR_REGIAO[selectedRegion] || []).map(u => normalizeUnitName(u));
-      return allUnidades.filter(u => regionUnits.includes(u));
-    }
-    return allUnidades;
-  }, [vagas, selectedRegion]);
-  const statusOptions: StatusEdital[] = [
-    'Nova vaga', 'Aguardando processo', 'Aguardando edital', 
-    'Aguardando processo e edital', 'Em andamento', 'Encerrada'
-  ];
+  const unidadesAgrupadas = useMemo(() => {
+    const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean);
+    
+    // Labels conforme solicitado
+    const REGION_LABELS: Record<string, string> = {
+      'Goiânia': 'Goiás',
+      'Vitória': 'Vitória (ES)',
+      'Demais Unidades': 'Outras Unidades'
+    };
+
+    return Object.entries(UNIDADES_POR_REGIAO).map(([regiao, units]) => ({
+      label: REGION_LABELS[regiao] || regiao,
+      units: units.map(u => normalizeUnitName(u)).filter(u => allUnidades.includes(u)).sort()
+    })).filter(r => r.units.length > 0);
+  }, [vagas]);
 
   const handleOpenSendModal = (vaga: Vaga) => {
     setSelectedVaga(vaga);
@@ -132,7 +131,7 @@ export default function FilaEditaisPage() {
   };
 
 
-  const hasFilters = search !== '' || filterUnidade !== 'all' || filterStatus !== 'all';
+  const hasFilters = search !== '' || filterUnidade !== 'all';
 
   return (
     <div className="space-y-6">
@@ -193,27 +192,24 @@ export default function FilaEditaisPage() {
               />
             </div>
             <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-              <SelectTrigger className="w-[180px] bg-white">
+              <SelectTrigger className="w-[200px] bg-white">
                 <Building2 className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Unidade" />
+                <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas Unidades</SelectItem>
-                {unidades.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px] bg-white">
-                <Tag className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Status Edital" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos Status</SelectItem>
-                {statusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                <SelectItem value="all">Todas as Unidades</SelectItem>
+                {unidadesAgrupadas.map((grupo) => (
+                  <SelectGroup key={grupo.label}>
+                    <SelectLabel>{grupo.label}</SelectLabel>
+                    {grupo.units.map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
               </SelectContent>
             </Select>
             {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterUnidade('all'); setFilterStatus('all'); }}>
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterUnidade('all'); }}>
                 <X className="h-4 w-4 mr-1" /> Limpar
               </Button>
             )}

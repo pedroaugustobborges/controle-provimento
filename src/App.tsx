@@ -63,6 +63,7 @@ function ProtectedRoutes() {
           <Route path="/gestor" element={<AdministracaoPage />} />
           <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
           <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
+          <Route path="/mensagens" element={<MensagensPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

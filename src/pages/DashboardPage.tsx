@@ -79,15 +79,22 @@ const UNIT_MAPPING = [
   { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA (UPA/PA)' },
 ];
 
+const canonicalCache = new Map<string, string>();
 const resolveCanonicalName = (unitName: string) => {
   if (!unitName) return '';
   const norm = normalizeUnitName(unitName);
+  
+  if (canonicalCache.has(norm)) return canonicalCache.get(norm)!;
+
   for (const map of UNIT_MAPPING) {
     if (normalizeUnitName(map.bank) === norm || map.vacancies.some(v => normalizeUnitName(v) === norm)) {
+      canonicalCache.set(norm, map.display);
       return map.display;
     }
   }
-  return normalizeUnitName(unitName);
+  
+  canonicalCache.set(norm, norm);
+  return norm;
 };
 
 export default function DashboardPage() {
@@ -111,7 +118,7 @@ export default function DashboardPage() {
     fetchAll();
   }, [fetchAll]);
 
-  const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
+  const filterDashboardRecords = useCallback(<T extends { unidade?: string | null }>(records: T[]) => {
     if (selectedRegion === 'all') {
       return records;
     }
@@ -123,15 +130,12 @@ export default function DashboardPage() {
       return regionFiltered;
     }
 
-    const matchedRecords = new Set<T>();
-    activeUnits.forEach((unit) => {
-      filterByRegionAndUnit(regionFiltered, 'all', unit).forEach((record) => {
-        matchedRecords.add(record);
-      });
+    const activeUnitsSet = new Set(activeUnits.map(normalizeUnitName));
+    return regionFiltered.filter((record) => {
+      const unitNorm = normalizeUnitName(record.unidade || '');
+      return activeUnitsSet.has(unitNorm);
     });
-
-    return regionFiltered.filter((record) => matchedRecords.has(record));
-  };
+  }, [selectedRegion, selectedUnits]);
 
   const vagas = useMemo(() => {
     const base = filterDashboardRecords(allVagas);
@@ -159,7 +163,7 @@ export default function DashboardPage() {
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 
   const counts = useMemo(() => {
-    const acc: Record<string, number> = {
+    const acc = {
       fila_edital: 0,
       em_andamento: 0,
       convocacoes: 0,
@@ -175,30 +179,35 @@ export default function DashboardPage() {
       sem_classificacao: 0,
     };
 
+    const statusConcluidos = ['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'];
+
     vagas.forEach((v) => {
       const cat = getCategoriaStatus(v);
-      acc[cat] = (acc[cat] || 0) + 1;
+      if (acc.hasOwnProperty(cat)) {
+        acc[cat as keyof typeof acc]++;
+      }
+
+      const s = ((v as any).status || (v as any).STATUS || '').toLowerCase();
+      if (s.includes('movimenta') || s.includes('transfer')) {
+        acc.movimentacao_interna++;
+      }
+      if (s.includes('admiss')) {
+        acc.em_admissao++;
+      }
 
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
       const normalizedS = normStatus(v.status || '');
-      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
-        acc.atrasadas++;
+      
+      if (!statusConcluidos.includes(normalizedS)) {
+        if (calcDiasAberto(baseDate) > 10) {
+          acc.atrasadas++;
+        }
       }
     });
 
-    acc.movimentacao_interna = vagas.filter(v => {
-      const s = (v as any).status || (v as any).STATUS || '';
-      return String(s).toLowerCase().includes('movimenta') || String(s).toLowerCase().includes('transfer');
-    }).length;
-
-    acc.em_admissao = vagas.filter(v => {
-      const s = (v as any).status || (v as any).STATUS || '';
-      return String(s).toLowerCase().includes('admiss');
-    }).length;
-
     return acc;
-  }, [vagas, totalVagas]);
+  }, [vagas]);
 
   const totalCadastroReservaDisponiveis = useMemo(() => {
     return filteredBancos.filter((b) => {

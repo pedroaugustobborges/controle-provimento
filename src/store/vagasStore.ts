@@ -5,7 +5,7 @@ import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas 
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
 
-const PAGE_SIZE = 1000;
+const PAGE_SIZE = 500;
 
 const splitAssistentes = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -175,144 +175,45 @@ export const useVagasStore = create<VagasState>()(
       lastUpdated: undefined,
 
       setVagas: (vagas) => set({ vagas }),
-      fetchVagas: async (incremental = false) => {
+      fetchVagas: async () => {
         if (get().isLoadingVagas) return;
-        
-        // Check cache (5 min)
-        const now = Date.now();
-        const lastUpdated = get().lastUpdated;
-        const hasData = get().vagas.length > 0;
-        if (!incremental && hasData && lastUpdated && (now - lastUpdated < 5 * 60 * 1000)) {
-          console.log('[VagasStore] Using cached vagas');
-          return;
-        }
-
         set({ isLoadingVagas: true });
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          
-          // Get total count first to parallelize
-          const { count, error: countError } = await supabase
-            .from('vagas')
-            .select('*', { count: 'exact', head: true });
-          
-          if (countError) throw countError;
-          const totalCount = count || 0;
-          const pages = Math.ceil(totalCount / PAGE_SIZE);
-          
-          console.log(`[VagasStore] Fetching ${totalCount} vagas in ${pages} parallel requests`);
-          
-          const pagePromises = [];
-          for (let i = 0; i < pages; i++) {
-            const from = i * PAGE_SIZE;
-            const to = from + PAGE_SIZE - 1;
-            pagePromises.push(
-              supabase
-                .from('vagas')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .range(from, to)
-            );
-          }
-          
-          const results = await Promise.all(pagePromises);
-          const allRows: any[] = [];
-          
-          for (const { data, error } of results) {
-            if (error) throw error;
-            if (data) allRows.push(...data);
-          }
-          
-          const mappedVagas = allRows.map(mapDbVaga);
+          const data = await fetchAllRows('vagas');
+          const mappedVagas = data.map(mapDbVaga);
           set({ 
             vagas: mappedVagas,
-            lastUpdated: Date.now()
+            isInitialLoad: false 
           });
-          
         } catch (err) {
           console.error('Error fetching vagas:', err);
         } finally {
-          set({ isLoadingVagas: false, isInitialLoad: false });
+          set({ isLoadingVagas: false });
         }
       },
-      fetchBancos: async (incremental = false) => {
+      fetchBancos: async () => {
         if (get().isLoadingBancos) return;
-        
-        // Cache check
-        const now = Date.now();
-        const lastUpdated = get().lastUpdated;
-        const hasData = get().bancos.length > 0;
-        if (!incremental && hasData && lastUpdated && (now - lastUpdated < 5 * 60 * 1000)) {
-          console.log('[VagasStore] Using cached bancos');
-          return;
-        }
-
         set({ isLoadingBancos: true });
         try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          
-          // Get total count first to parallelize
-          const { count, error: countError } = await supabase
-            .from('banco_candidatos')
-            .select('*', { count: 'exact', head: true });
-          
-          if (countError) throw countError;
-          const totalCount = count || 0;
-          const pages = Math.ceil(totalCount / PAGE_SIZE);
-          
-          console.log(`[VagasStore] Fetching ${totalCount} bancos in ${pages} parallel requests`);
-          
-          const pagePromises = [];
-          for (let i = 0; i < pages; i++) {
-            const from = i * PAGE_SIZE;
-            const to = from + PAGE_SIZE - 1;
-            pagePromises.push(
-              supabase
-                .from('banco_candidatos')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .range(from, to)
-            );
-          }
-          
-          const results = await Promise.all(pagePromises);
-          const allRows: any[] = [];
-          
-          for (const { data, error } of results) {
-            if (error) throw error;
-            if (data) allRows.push(...data);
-          }
-          
-          const mappedBancos = allRows.map(mapDbBanco);
+          const data = await fetchAllRows('banco_candidatos');
+          const mappedBancos = data.map(mapDbBanco);
           set({ 
             bancos: mappedBancos,
-            lastUpdated: Date.now()
+            isInitialLoad: false 
           });
-          
         } catch (err) {
           console.error('Error fetching bancos:', err);
         } finally {
-          set({ isLoadingBancos: false, isInitialLoad: false });
+          set({ isLoadingBancos: false });
         }
       },
       fetchAll: async () => {
-        const hasData = get().vagas.length > 0 && get().bancos.length > 0;
-        const lastUpdated = get().lastUpdated;
-        const now = Date.now();
-        const isStale = !lastUpdated || (now - lastUpdated > 5 * 60 * 1000);
-
-        if (hasData && !isStale) {
-          console.log('[VagasStore] Data is fresh, skipping fetchAll');
-          return;
-        }
-
         set({ isLoading: true });
         try {
-          // Trigger both in parallel but don't clear memory if they already have data
-          // fetchVagas and fetchBancos now handle cache internally but fetchAll is the primary entry point
           await Promise.all([
-            get().fetchVagas(false),
-            get().fetchBancos(false)
+            get().fetchVagas(),
+            get().fetchBancos(),
+            get().fetchImportHistory()
           ]);
         } finally {
           set({ isLoading: false, isInitialLoad: false });
@@ -678,36 +579,8 @@ export const useVagasStore = create<VagasState>()(
       name: 'hospital-recruitment-store',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Limit persistence to essential data to stay within 5MB quota
-        // Only essential fields for dashboard are stored to ensure "instant" display
-        vagas: state.vagas.map(v => ({
-          id: v.id,
-          unidade: v.unidade,
-          cargo: v.cargo,
-          status: v.status,
-          status_geral: v.status_geral,
-          data_recebimento: v.data_recebimento,
-          data_abertura: v.data_abertura,
-          data_criacao: v.data_criacao,
-          requisicao: v.requisicao,
-          numero_requisicao: v.numero_requisicao,
-          numero_processo: v.numero_processo,
-          tem_banco_valido: v.tem_banco_valido,
-          origem: v.origem,
-          historico: (v.historico || []).slice(-1)
-        })).slice(0, 1500),
-        bancos: state.bancos.map(b => ({
-          id: b.id,
-          unidade: b.unidade,
-          cargo: b.cargo,
-          status: b.status,
-          numero_edital: b.numero_edital,
-          numero_processo_seletivo: b.numero_processo_seletivo,
-          data_validade: b.data_validade,
-          is_prorrogado: b.is_prorrogado,
-          numero_processo: b.numero_processo
-        })).slice(0, 2000),
-        lastUpdated: state.lastUpdated,
+        vagas: state.vagas,
+        bancos: state.bancos,
         editais: state.editais,
         validacoes: state.validacoes,
         convocacoes: state.convocacoes,
@@ -715,8 +588,8 @@ export const useVagasStore = create<VagasState>()(
         alertas: state.alertas,
         historicoMensagens: state.historicoMensagens,
         temNovasMensagens: state.temNovasMensagens,
-        importHistory: state.importHistory.slice(0, 50),
-        importedFiles: state.importedFiles.slice(0, 20),
+        importHistory: state.importHistory,
+        importedFiles: state.importedFiles,
       }),
     }
   )

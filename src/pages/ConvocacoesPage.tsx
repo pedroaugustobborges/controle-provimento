@@ -23,7 +23,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
@@ -235,7 +235,7 @@ export default function ConvocacoesPage() {
                 className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('diaria')}
               >
-                <Calendar className="h-3.5 w-3.5 mr-1" /> Diária
+                <CalendarIcon className="h-3.5 w-3.5 mr-1" /> Diária
               </Button>
               <Button 
                 variant="ghost" 
@@ -327,7 +327,7 @@ export default function ConvocacoesPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 z-[9999]" align="center" sideOffset={8}>
-                  <Calendar
+                  <CalendarComponent
                     mode="single"
                     selected={selectedDate}
                     onSelect={(date) => date && setSelectedDate(date)}
@@ -381,7 +381,7 @@ export default function ConvocacoesPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 z-[9999]" align="end" sideOffset={8}>
-                <Calendar
+                <CalendarComponent
                   initialFocus
                   mode="range"
                   defaultMonth={dateRange.from}

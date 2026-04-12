@@ -1,18 +1,16 @@
 
 
-## Plano — Corrigir lista de unidades em Convocações
+## Plano — Atualizar Mapeamento de Bases/Unidades
 
-### Problema
-As unidades de Goiânia (HECAD, HUGOL, CRER, HDS, AGIR, CONDOMÍNIO) estão aparecendo individualmente no filtro de unidades da página de Convocações, quando deveriam estar agrupadas sob "Goiânia".
+### Alterações
 
-### Solução
-1. **`src/pages/ConvocacoesPage.tsx`** — Alterar a lógica que popula o filtro/seletor de unidades para:
-   - Usar o mapeamento `BASES_CONVOCACAO` de `convocacaoUtils.ts`
-   - Substituir unidades individuais de Goiânia por uma única opção "Goiânia"
-   - Manter as demais unidades com seus nomes próprios
-   - Ao filtrar por "Goiânia", incluir convocações de todas as unidades da base
+1. **`src/lib/convocacaoUtils.ts`** — Reescrever `BASES_CONVOCACAO` com as 4 bases corretas:
+   - Goiânia: HECAD, CRER, AGIR, HUGOL, HDS, TEIA ANÁPOLIS, TEIA CANEDO, TEIA APARECIDA, TEIA GOIÂNIA
+   - Goiás: POLICLÍNICA, JATAÍ
+   - Vitória: VITÓRIA, SÃO PEDRO, SUÁ
+   - Fora: DOURADOS, CHS, HMSA, HRCAC, TEIA CEN, TEIA PIN, TEIA MAN, TEIA MAN 2, TEIA MAN 3
 
-2. **`src/components/ConvocacaoDialog.tsx`** (se necessário) — Verificar se o seletor de unidade ao criar convocação também precisa do mesmo agrupamento
+2. **`src/pages/ConvocacoesPage.tsx`** — Verificar que o filtro de unidades usa as chaves de `BASES_CONVOCACAO` e reflete as 4 bases no seletor.
 
-3. Utilizar a função `getBaseForUnidade()` já existente em `convocacaoUtils.ts` para mapear unidades às suas bases
+3. **Regra de horários** — Verificar se a regra de 5 agendamentos por horário em Goiânia continua funcionando com as novas unidades TEIA adicionadas à base.
 

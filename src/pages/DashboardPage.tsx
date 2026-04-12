@@ -1,4 +1,6 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
@@ -110,13 +112,11 @@ export default function DashboardPage() {
   }, [fetchAll]);
 
   const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
-    // If "All regions" is selected, return all records immediately
     if (selectedRegion === 'all') {
       return records;
     }
 
     const regionFiltered = filterByRegionAndUnit(records, selectedRegion, 'all');
-
     const activeUnits = selectedUnits.filter((unit) => unit && unit !== 'all');
 
     if (activeUnits.length === 0) {
@@ -124,7 +124,6 @@ export default function DashboardPage() {
     }
 
     const matchedRecords = new Set<T>();
-
     activeUnits.forEach((unit) => {
       filterByRegionAndUnit(regionFiltered, 'all', unit).forEach((record) => {
         matchedRecords.add(record);
@@ -188,7 +187,6 @@ export default function DashboardPage() {
       }
     });
 
-    // PASSO 2 — BUSCA DIRETA SEM NORMALIZAÇÃO (Temporário para diagnóstico)
     acc.movimentacao_interna = vagas.filter(v => {
       const s = (v as any).status || (v as any).STATUS || '';
       return String(s).toLowerCase().includes('movimenta') || String(s).toLowerCase().includes('transfer');
@@ -202,32 +200,12 @@ export default function DashboardPage() {
     return acc;
   }, [vagas, totalVagas]);
 
-  const totalCR = useMemo(() => {
-    return filteredBancos.filter((b) => (
-      (normStatus(b.status || '') === 'cadastro reserva' || normStatus(b.status || '') === 'valido') && !b.is_prorrogado
-    )).length;
-  }, [filteredBancos]);
-
-  const totalProrrogados = useMemo(() => {
-    return filteredBancos.filter((b) => b.is_prorrogado || normStatus(b.status || '') === 'prorrogado').length;
-  }, [filteredBancos]);
-
   const totalCadastroReservaDisponiveis = useMemo(() => {
     return filteredBancos.filter((b) => {
       const s = normStatus(b.status || '');
       return s !== 'vencido' && s !== 'convocado';
     }).length;
   }, [filteredBancos]);
-
-  const totalConvocados = useMemo(() => (
-    filteredBancos.filter((b) => normStatus(b.status || '') === 'convocado').length
-  ), [filteredBancos]);
-
-  const totalVencidos = useMemo(() => (
-    filteredBancos.filter((b) => normStatus(b.status || '') === 'vencido').length
-  ), [filteredBancos]);
-
-  const totalBancoTotal = useMemo(() => filteredBancos.length, [filteredBancos]);
 
   const totalTarefasPendentes = useMemo(() => {
     const shouldIncludeUnscopedTasks = selectedRegion === 'all';
@@ -268,7 +246,6 @@ export default function DashboardPage() {
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
     { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
     { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos disponíveis' },
-    
   ], [totalVagas, counts, totalCadastroReservaDisponiveis, totalTarefasPendentes]);
 
   const strategicScopeByUnit = useMemo(() => {
@@ -310,7 +287,6 @@ export default function DashboardPage() {
       if (!entry) return;
 
       entry.vagas += 1;
-
       const categoria = getCategoriaStatus(vaga);
       if (categoria !== 'concluidas' && categoria !== 'suspensa' && categoria !== 'cancelada') {
         entry.vagasAbertas += 1;
@@ -365,7 +341,6 @@ export default function DashboardPage() {
         pendencias: number;
       }>();
 
-      // If "All regions" is selected, ensure we initialize all groups
       if (selectedRegion === 'all') {
         ['Goiânia', 'Vitória', 'Demais Unidades'].forEach(reg => {
           regionMap.set(reg, {
@@ -411,13 +386,11 @@ export default function DashboardPage() {
   const vacancyAlerts = useMemo(() => {
     return vagas
       .filter((vaga) => {
-        // Only include vacancies with empty/null status ("Sem Status")
         const s = normStatus(vaga.status || '');
         if (s !== '' && s !== 'sem status') return false;
         return true;
       })
       .map((vaga) => {
-        // Calculate days based on inclusion date (created_at, data_importacao, or data_recebimento)
         const inclusionDate = vaga.created_at || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
         const daysOpen = calcDiasAberto(inclusionDate);
 
@@ -471,22 +444,45 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">Visão Geral do Provimento</h1>
-          {(isLoadingVagas || isLoadingBancos) && (
-            <div className="flex items-center gap-2 px-2 py-1 bg-primary/5 rounded-full border border-primary/10 animate-pulse">
-              <RefreshCcw className="h-3 w-3 text-primary animate-spin" />
-              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">Atualizando...</span>
-            </div>
-          )}
-        </div>
-          {(isLoadingVagas || isLoadingBancos) && (
-            <div className="flex items-center gap-2 px-2 py-1 bg-primary/5 rounded-full border border-primary/10 animate-pulse">
-              <RefreshCcw className="h-3 w-3 text-primary animate-spin" />
-              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">Atualizando...</span>
-            </div>
-          )}
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-3">
+              Visão Geral do Provimento
+              {totalTarefasPendentes > 0 ? (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  animate={{ 
+                    rotate: [0, -10, 10, -10, 10, 0],
+                  }}
+                  transition={{ 
+                    duration: 0.5, 
+                    repeat: Infinity, 
+                    repeatDelay: 3 
+                  }}
+                  onClick={() => navigate('/alertas-tarefas')}
+                  className="relative p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shadow-sm border border-red-100"
+                  title={`${totalTarefasPendentes} tarefas pendentes`}
+                >
+                  <Bell className="h-5 w-5 fill-red-600/10" />
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    {totalTarefasPendentes}
+                  </span>
+                </motion.button>
+              ) : (
+                <button 
+                  onClick={() => navigate('/alertas-tarefas')}
+                  className="p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-colors border border-slate-100 opacity-60"
+                  title="Nenhuma tarefa pendente"
+                >
+                  <Bell className="h-4 w-4" />
+                </button>
+              )}
+            </h1>
+            <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+              <Activity className="h-3 w-3 text-primary animate-pulse" /> Monitoramento em Tempo Real
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 text-slate-400">
@@ -560,10 +556,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {stats.map((stat, idx) => {
-          const isVagasStat = !stat.label.includes('CR') && !stat.label.includes('Tarefas');
+          const isVagasStat = !stat.label.includes('CR');
           const isBancosStat = stat.label.includes('CR');
           const showSkeleton = (isVagasStat && isLoadingVagas && allVagas.length === 0) || 
                               (isBancosStat && isLoadingBancos && bancos.length === 0);
@@ -593,7 +588,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Unit View */}
         <Card className="lg:col-span-2 border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">
             <div>
@@ -631,7 +625,15 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="pb-8">
-            <div className="h-[400px] w-full mt-4 pr-6">
+            <div className="h-[400px] w-full mt-4 pr-6 relative">
+              {(isLoadingVagas || isLoadingBancos) && (
+                <div className="absolute inset-0 z-10 bg-white/40 backdrop-blur-[1px] flex items-center justify-center rounded-lg">
+                  <div className="flex flex-col items-center gap-3">
+                    <RefreshCcw className="h-8 w-8 text-primary animate-spin opacity-40" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Otimizando dados...</span>
+                  </div>
+                </div>
+              )}
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
@@ -667,10 +669,6 @@ export default function DashboardPage() {
                     itemStyle={{ padding: '2px 0' }}
                     formatter={(value, name, props) => {
                       const data = props.payload;
-                      const label = chartMode === 'unidade' && data.region
-                        ? `${data.name} (${data.region})`
-                        : data.name;
-
                       return [`${value} registros`, name === 'vagas' ? 'Vagas' : 'Banco (CR)'];
                     }}
                   />
@@ -859,7 +857,6 @@ export default function DashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

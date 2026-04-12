@@ -68,6 +68,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { alertas, updateAlerta } = useVagasStore();
+  const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length;
   const mainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

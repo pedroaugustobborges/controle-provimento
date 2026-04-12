@@ -3,16 +3,21 @@
 ## Plano de Implementação
 
 ### Objetivo
-Substituir todas as referências a "Aide" pelo nome correto "Agie" em todo o codebase, garantindo consistência de nomenclatura com o Sistema AGIR.
+Substituir a div do avatar do usuário no header por um componente `Avatar` circular profissional.
 
-### Passos
+### Alterações em `src/components/Layout.tsx`
 
-1. **Busca global** por `Aide` (case-insensitive) em todo o projeto para mapear todas as ocorrências
-2. **Substituir** cada ocorrência por `Agie` nos seguintes locais prováveis:
-   - `src/store/vagasStore.ts` — campo `remetente` nos dados mock de mensagens
-   - `src/components/AIAssistant.tsx` — textos, labels, badges
-   - `src/components/chat/AgieChat.tsx` — referências internas
-   - `src/data/mockData.ts` — dados simulados
-   - Qualquer outro arquivo encontrado na busca
-3. **Validar** que nenhuma referência a "Aide" restou no código
+1. **Importar** `Avatar`, `AvatarFallback`, `AvatarImage` de `@/components/ui/avatar.tsx`
+2. **Substituir** a div atual:
+   ```tsx
+   // DE:
+   <div className="h-10 w-10 rounded-full bg-primary ...">JS</div>
+   
+   // PARA:
+   <Avatar className="h-10 w-10 ring-2 ring-border">
+     <AvatarImage src={userPhotoUrl} alt="João Silva" />
+     <AvatarFallback className="bg-primary text-primary-foreground font-bold">JS</AvatarFallback>
+   </Avatar>
+   ```
+3. Manter o layout existente do header intacto — apenas trocar o elemento do avatar
 

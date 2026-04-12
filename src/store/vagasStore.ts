@@ -190,7 +190,11 @@ export const useVagasStore = create<VagasState>()(
       importHistory: [],
       importedFiles: [],
       tarefas: mockTarefas || [],
-      alertas: mockAlertas || [],
+      alertas: [
+        { id: '1', titulo: 'Atraso na Validação', mensagem: 'O edital #789 está pendente há mais de 2 dias.', tipo: 'atraso', status: 'nao_lido', data_criacao: '2024-05-22T08:00:00', destinatario: 'Analista', link: '/validacao' },
+        { id: '2', titulo: 'Vaga Crítica', mensagem: 'A vaga de Médico intensivista precisa de atenção urgente.', tipo: 'critico', status: 'nao_lido', data_criacao: '2024-05-22T09:30:00', destinatario: 'Analista', link: '/vagas/1' },
+        { id: '3', titulo: 'Validação Concluída', mensagem: 'A unidade aprovou o cargo para o próximo edital.', tipo: 'validacao', status: 'lido', data_criacao: '2024-05-21T15:00:00', destinatario: 'Analista', link: '/editais' },
+      ] || [],
       historicoMensagens: [
         { id: '1', data: '2024-05-20T10:00:00', remetente: 'Aide', conteudo: 'Olá! Como posso ajudar você hoje?', lida: true },
         { id: '2', data: '2024-05-20T10:05:00', remetente: 'Sistema', conteudo: 'O edital #123 foi validado com sucesso.', lida: true },

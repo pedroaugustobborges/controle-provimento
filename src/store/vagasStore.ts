@@ -5,7 +5,7 @@ import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas 
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
 
-const PAGE_SIZE = 500;
+const PAGE_SIZE = 1000;
 
 const splitAssistentes = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -66,26 +66,53 @@ const buildImportedFileFromHistory = (history: ImportHistory): ImportedFile => (
 
 const fetchAllRows = async (tableName: 'vagas' | 'banco_candidatos' | 'importacoes') => {
   const { supabase } = await import('@/integrations/supabase/client');
-  const rows: any[] = [];
-  let from = 0;
+  
+  // Use a head request to get the total count first
+  const { count, error: countError } = await supabase
+    .from(tableName)
+    .select('*', { count: 'exact', head: true });
 
-  while (true) {
+  if (countError) throw countError;
+  
+  if (!count || count === 0) return [];
+
+  // If the count is small enough for one request, just do it
+  if (count <= PAGE_SIZE) {
     const { data, error } = await supabase
       .from(tableName)
       .select('*')
       .order('created_at', { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
-
+      .range(0, PAGE_SIZE - 1);
+    
     if (error) throw error;
-    if (!data || data.length === 0) break;
-
-    rows.push(...data);
-
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+    return data || [];
   }
 
-  return rows;
+  // For larger datasets, fetch in parallel chunks for maximum speed
+  const numChunks = Math.ceil(count / PAGE_SIZE);
+  const promises = [];
+
+  for (let i = 0; i < numChunks; i++) {
+    const from = i * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    promises.push(
+      supabase
+        .from(tableName)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, to)
+    );
+  }
+
+  const results = await Promise.all(promises);
+  const allRows: any[] = [];
+  
+  for (const { data, error } of results) {
+    if (error) throw error;
+    if (data) allRows.push(...data);
+  }
+
+  return allRows;
 };
 
 interface VagasState {
@@ -177,36 +204,48 @@ export const useVagasStore = create<VagasState>()(
       lastUpdated: undefined,
 
       setVagas: (vagas) => set({ vagas }),
-      fetchVagas: async () => {
+      fetchVagas: async (incremental = false) => {
         if (get().isLoadingVagas) return;
+        
+        // Se já temos dados e não é um carregamento inicial/forçado, podemos pular
+        // Isso evita múltiplas chamadas redundantes ao navegar entre páginas
+        if (!incremental && get().vagas.length > 0 && !get().isInitialLoad) {
+          return;
+        }
+
         set({ isLoadingVagas: true });
         try {
           const data = await fetchAllRows('vagas');
           const mappedVagas = data.map(mapDbVaga);
-          set({ vagas: mappedVagas });
+          set({ 
+            vagas: mappedVagas,
+            isInitialLoad: false 
+          });
         } catch (err) {
           console.error('Error fetching vagas:', err);
         } finally {
-          set({ 
-            isLoadingVagas: false,
-            isInitialLoad: false 
-          });
+          set({ isLoadingVagas: false });
         }
       },
-      fetchBancos: async () => {
+      fetchBancos: async (incremental = false) => {
         if (get().isLoadingBancos) return;
+        
+        if (!incremental && get().bancos.length > 0 && !get().isInitialLoad) {
+          return;
+        }
+
         set({ isLoadingBancos: true });
         try {
           const data = await fetchAllRows('banco_candidatos');
           const mappedBancos = data.map(mapDbBanco);
-          set({ bancos: mappedBancos });
+          set({ 
+            bancos: mappedBancos,
+            isInitialLoad: false
+          });
         } catch (err) {
           console.error('Error fetching bancos:', err);
         } finally {
-          set({ 
-            isLoadingBancos: false,
-            isInitialLoad: false 
-          });
+          set({ isLoadingBancos: false });
         }
       },
       fetchAll: async () => {
@@ -594,8 +633,9 @@ export const useVagasStore = create<VagasState>()(
         removeItem: (name: string) => localStorage.removeItem(name),
       })),
       partialize: (state) => ({
-        vagas: state.vagas,
-        bancos: state.bancos,
+        // We only persist small UI state or configurations.
+        // Large arrays (vagas, bancos) are REMOVED from persistence to ensure
+        // instant app startup and prevent UI freezing from large JSON parsing/serialization.
         editais: state.editais,
         validacoes: state.validacoes,
         convocacoes: state.convocacoes,
@@ -603,8 +643,6 @@ export const useVagasStore = create<VagasState>()(
         alertas: state.alertas,
         historicoMensagens: state.historicoMensagens,
         temNovasMensagens: state.temNovasMensagens,
-        importHistory: state.importHistory,
-        importedFiles: state.importedFiles,
       }),
     }
   )

@@ -228,7 +228,7 @@ function HorarioRow({ horario, convocacoes, blocked, bloqueioMotivo, bloqueioId,
                         <span className="text-sm font-semibold text-foreground truncate">{conv.nome_candidato}</span>
                         <span className="text-xs text-muted-foreground truncate hidden sm:inline">{conv.cargo}</span>
                         {conv.tipo_atendimento === 'online' && (
-                          <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[9px] h-4 gap-0.5 shrink-0">
+                          <Badge variant="outline" className="text-[9px] h-4 gap-0.5 shrink-0 bg-primary/10 text-primary border-primary/20">
                             <Video className="h-2.5 w-2.5" /> Online
                           </Badge>
                         )}

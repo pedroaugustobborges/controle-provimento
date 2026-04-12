@@ -575,7 +575,15 @@ export default function VagasPage() {
           </Card>
         ))}
       </div>
-      <div className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2">
+      <div 
+        className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2 cursor-pointer hover:bg-blue-50 transition-all"
+        onClick={() => {
+          setVacancyStatusTab('em_andamento');
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set('statusTab', 'em_andamento');
+          navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+        }}
+      >
         <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
           <TrendingUp className="h-5 w-5 text-white" />
         </div>

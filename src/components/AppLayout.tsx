@@ -113,9 +113,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const getBreadcrumbs = () => {
     const breadcrumbs = [{ label: 'Início', path: '/' }];
     const path = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
 
-    // Explicit overrides based on path requirements
-    if (path === '/vagas' || path === '/validacao-editais') {
+    // Explicit overrides based on path requirements and sidebar hierarchy
+    if (path === '/vagas') {
+      breadcrumbs.push({ label: 'Controle de Vagas', path: '/vagas' });
+      return breadcrumbs;
+    }
+
+    if (path === '/validacao-editais') {
+      breadcrumbs.push({ label: 'Validação de Edital', path: '/validacao-editais' });
       return breadcrumbs;
     }
 
@@ -124,23 +132,33 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       return breadcrumbs;
     }
 
-    if (path === '/fila-editais') {
-      breadcrumbs.push({ label: 'Fila de Editais', path: '/fila-editais' });
-      return breadcrumbs;
-    }
-
-    if (path === '/fila-analista-edital') {
-      breadcrumbs.push({ label: 'Fila de Editais', path: '/fila-editais' });
-      breadcrumbs.push({ label: 'Redação de Edital', path: '/fila-analista-edital' });
+    if (path === '/fila-editais' || path === '/fila-analista-edital') {
+      breadcrumbs.push({ label: 'Publicação de Edital', path: '/fila-editais' });
+      if (path === '/fila-editais') {
+        breadcrumbs.push({ label: 'Fila de Editais', path: '/fila-editais' });
+      } else {
+        breadcrumbs.push({ label: 'Redação de Edital', path: '/fila-analista-edital' });
+      }
       return breadcrumbs;
     }
 
     if (path === '/banco-talentos') {
       breadcrumbs.push({ label: 'Cadastro Reserva', path: '/banco-talentos' });
+      
+      // Points 1, 2, 3: Reflect subpages within Cadastro Reserva
+      if (tab === 'convocados') {
+        breadcrumbs.push({ label: 'Histórico de Convocação', path: '/banco-talentos?tab=convocados' });
+      } else if (tab === 'vencidos') {
+        breadcrumbs.push({ label: 'Bancos Vencidos', path: '/banco-talentos?tab=vencidos' });
+      }
+      // Point 4: For the main page (tab=list or others not specified), 
+      // it stays as "Início > Cadastro Reserva"
+      
       return breadcrumbs;
     }
 
     if (path === '/convocacoes') {
+      // Point 1: Histórico de Convocação should have "Cadastro Reserva" as intermediate clickable link
       breadcrumbs.push({ label: 'Cadastro Reserva', path: '/banco-talentos' });
       breadcrumbs.push({ label: 'Histórico de Convocação', path: '/convocacoes' });
       return breadcrumbs;

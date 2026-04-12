@@ -199,8 +199,8 @@ interface HorarioRowProps {
   horario: string;
   convocacoes: Convocacao[];
   blocked: boolean;
-  bloqueioMotivo?: string;
-  bloqueioId?: string;
+  blockedCount?: number;
+  blocks?: BloqueioHorario[];
   onEdit: (conv: Convocacao) => void;
   onDevolutiva: (conv: Convocacao) => void;
   onRemoveBloqueio: (id: string) => void;

@@ -67,10 +67,6 @@ export default function FilaEditaisPage() {
       const normalizedS = normStatus(v.status || v.status_geral || '');
       if (normalizedS !== 'publicar edital') return false;
 
-      // Se já foi encaminhado para edital, remove da fila da unidade
-      if (v.status_fluxo_edital === 'encaminhado_edital' || v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'enviado_validacao') {
-        return false;
-      }
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 

@@ -947,7 +947,20 @@ export default function BancoTalentosPage() {
                           >
                             Detalhes ({group.candidatos.length})
                           </Button>
-                          {currentUser?.perfil === 'Admin' && (
+                          {permissions.canRequestUpdate() && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="font-bold text-xs text-amber-600 hover:bg-amber-50 h-8"
+                              onClick={() => {
+                                setBancoForUpdate(group.candidatos[0]);
+                                setIsRequestUpdateOpen(true);
+                              }}
+                            >
+                              Solicitar Atualização
+                            </Button>
+                          )}
+                          {permissions.canDeleteRecords() && (
                             <Button 
                               variant="ghost" 
                               size="icon" 

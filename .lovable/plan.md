@@ -2,12 +2,12 @@
 
 ## Plano de Implementação
 
-### 1. Buscar e corrigir referências a "AIDE"/"Aide"
-- Buscar em todo o codebase por ocorrências de "AIDE" ou "Aide" (case-insensitive)
-- Substituir todas por "Agie"
+### Objetivo
+Encontrar e corrigir todas as ocorrências de "AIDE" na Central de Comunicação, substituindo por "Agie".
 
-### 2. Reverter foto do usuário no rodapé da sidebar
-- Em `src/components/AppSidebar.tsx`, reverter a alteração que substituiu o ícone `<Users>` pela foto do usuário (`avatarDefault`) no rodapé do menu lateral
-- Voltar ao ícone original (`<Users className="h-4 w-4 text-white" />`) dentro do div circular
-- Remover o import de `avatarDefault` se não for mais usado nesse arquivo
+### Passos
+1. Buscar no codebase por "AIDE" (case-sensitive e case-insensitive) em todos os arquivos `.ts` e `.tsx`
+2. Verificar especificamente `src/pages/MensagensPage.tsx`, `src/components/chat/AgieChat.tsx`, `src/data/chatData.ts` e `src/store/vagasStore.ts`
+3. Substituir todas as ocorrências de "AIDE" por "Agie" nos textos, labels, mensagens e dados mock
+4. Manter referências de código (nomes de variáveis, imports) consistentes — alterar apenas strings voltadas ao usuário
 

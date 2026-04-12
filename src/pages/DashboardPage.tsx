@@ -79,15 +79,22 @@ const UNIT_MAPPING = [
   { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA (UPA/PA)' },
 ];
 
+const canonicalCache = new Map<string, string>();
 const resolveCanonicalName = (unitName: string) => {
   if (!unitName) return '';
   const norm = normalizeUnitName(unitName);
+  
+  if (canonicalCache.has(norm)) return canonicalCache.get(norm)!;
+
   for (const map of UNIT_MAPPING) {
     if (normalizeUnitName(map.bank) === norm || map.vacancies.some(v => normalizeUnitName(v) === norm)) {
+      canonicalCache.set(norm, map.display);
       return map.display;
     }
   }
-  return normalizeUnitName(unitName);
+  
+  canonicalCache.set(norm, norm);
+  return norm;
 };
 
 export default function DashboardPage() {
@@ -111,7 +118,7 @@ export default function DashboardPage() {
     fetchAll();
   }, [fetchAll]);
 
-  const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
+  const filterDashboardRecords = useCallback(<T extends { unidade?: string | null }>(records: T[]) => {
     if (selectedRegion === 'all') {
       return records;
     }
@@ -123,24 +130,40 @@ export default function DashboardPage() {
       return regionFiltered;
     }
 
-    const matchedRecords = new Set<T>();
-    activeUnits.forEach((unit) => {
-      filterByRegionAndUnit(regionFiltered, 'all', unit).forEach((record) => {
-        matchedRecords.add(record);
-      });
+    const activeUnitsSet = new Set(activeUnits.map(normalizeUnitName));
+    return regionFiltered.filter((record) => {
+      const unitNorm = normalizeUnitName(record.unidade || '');
+      return activeUnitsSet.has(unitNorm);
+    });
+  }, [selectedRegion, selectedUnits]);
+
+  const { filteredVagas, filteredBancos } = useMemo(() => {
+    // 1. Filter by region first (if applicable)
+    let vBase = allVagas;
+    let bBase = bancos;
+
+    if (selectedRegion !== 'all') {
+      vBase = allVagas.filter(v => getRegionForUnit(v.unidade) === selectedRegion);
+      bBase = bancos.filter(b => getRegionForUnit(b.unidade) === selectedRegion);
+    }
+
+    // 2. Filter by units (if applicable)
+    if (selectedUnits.length > 0 && !selectedUnits.includes('all')) {
+      const activeUnitsSet = new Set(selectedUnits.map(normalizeUnitName));
+      vBase = vBase.filter(v => activeUnitsSet.has(normalizeUnitName(v.unidade)));
+      bBase = bBase.filter(b => activeUnitsSet.has(normalizeUnitName(b.unidade)));
+    }
+
+    // 3. Apply validity base for vagas (equivalent to getValidVacancyBase)
+    const validVagas = vBase.filter(row => {
+      const hasCargo = String(row.cargo ?? "").trim() !== "";
+      return hasCargo;
     });
 
-    return regionFiltered.filter((record) => matchedRecords.has(record));
-  };
+    return { filteredVagas: validVagas, filteredBancos: bBase };
+  }, [allVagas, bancos, selectedRegion, selectedUnits]);
 
-  const vagas = useMemo(() => {
-    const base = filterDashboardRecords(allVagas);
-    return getValidVacancyBase(base, 'TODOS', 'TODOS');
-  }, [allVagas, selectedRegion, selectedUnits]);
-
-  const filteredBancos = useMemo(() => {
-    return filterDashboardRecords(bancos);
-  }, [bancos, selectedRegion, selectedUnits]);
+  const vagas = filteredVagas;
 
   const visibleVagaIds = useMemo(() => new Set(vagas.map((vaga) => vaga.id)), [vagas]);
 
@@ -159,7 +182,7 @@ export default function DashboardPage() {
   const totalVagas = useMemo(() => vagas.length, [vagas]);
 
   const counts = useMemo(() => {
-    const acc: Record<string, number> = {
+    const acc = {
       fila_edital: 0,
       em_andamento: 0,
       convocacoes: 0,
@@ -175,30 +198,35 @@ export default function DashboardPage() {
       sem_classificacao: 0,
     };
 
+    const statusConcluidos = ['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'];
+
     vagas.forEach((v) => {
       const cat = getCategoriaStatus(v);
-      acc[cat] = (acc[cat] || 0) + 1;
+      if (acc.hasOwnProperty(cat)) {
+        acc[cat as keyof typeof acc]++;
+      }
+
+      const s = ((v as any).status || (v as any).STATUS || '').toLowerCase();
+      if (s.includes('movimenta') || s.includes('transfer')) {
+        acc.movimentacao_interna++;
+      }
+      if (s.includes('admiss')) {
+        acc.em_admissao++;
+      }
 
       const lastHist = v.historico?.[v.historico.length - 1];
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
       const normalizedS = normStatus(v.status || '');
-      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
-        acc.atrasadas++;
+      
+      if (!statusConcluidos.includes(normalizedS)) {
+        if (calcDiasAberto(baseDate) > 10) {
+          acc.atrasadas++;
+        }
       }
     });
 
-    acc.movimentacao_interna = vagas.filter(v => {
-      const s = (v as any).status || (v as any).STATUS || '';
-      return String(s).toLowerCase().includes('movimenta') || String(s).toLowerCase().includes('transfer');
-    }).length;
-
-    acc.em_admissao = vagas.filter(v => {
-      const s = (v as any).status || (v as any).STATUS || '';
-      return String(s).toLowerCase().includes('admiss');
-    }).length;
-
     return acc;
-  }, [vagas, totalVagas]);
+  }, [vagas]);
 
   const totalCadastroReservaDisponiveis = useMemo(() => {
     return filteredBancos.filter((b) => {
@@ -260,64 +288,68 @@ export default function DashboardPage() {
       pendencias: number;
     }>();
 
-    const ensureEntry = (unitName: string) => {
+    const getEntry = (unitName: string) => {
       const canonicalName = resolveCanonicalName(unitName);
       if (!canonicalName) return null;
 
-      const existing = unitMap.get(canonicalName);
-      if (existing) return existing;
-
-      const created = {
-        name: canonicalName,
-        region: getRegionForUnit(canonicalName),
-        vagas: 0,
-        vagasAbertas: 0,
-        bancos: 0,
-        bancosCR: 0,
-        bancosDisponiveis: 0,
-        pendencias: 0,
-      };
-
-      unitMap.set(canonicalName, created);
-      return created;
+      let entry = unitMap.get(canonicalName);
+      if (!entry) {
+        entry = {
+          name: canonicalName,
+          region: getRegionForUnit(canonicalName),
+          vagas: 0,
+          vagasAbertas: 0,
+          bancos: 0,
+          bancosCR: 0,
+          bancosDisponiveis: 0,
+          pendencias: 0,
+        };
+        unitMap.set(canonicalName, entry);
+      }
+      return entry;
     };
 
-    vagas.forEach((vaga) => {
-      const entry = ensureEntry(vaga.unidade);
-      if (!entry) return;
+    const statusConcluidos = ['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'];
 
-      entry.vagas += 1;
+    for (const vaga of vagas) {
+      const entry = getEntry(vaga.unidade);
+      if (!entry) continue;
+
+      entry.vagas++;
       const categoria = getCategoriaStatus(vaga);
       if (categoria !== 'concluidas' && categoria !== 'suspensa' && categoria !== 'cancelada') {
-        entry.vagasAbertas += 1;
+        entry.vagasAbertas++;
       }
 
       const lastHist = vaga.historico?.[vaga.historico.length - 1];
       const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
       const normalizedS = normStatus(vaga.status || '');
-      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
-        entry.pendencias += 1;
+      
+      if (!statusConcluidos.includes(normalizedS)) {
+        if (calcDiasAberto(baseDate) > 10) {
+          entry.pendencias++;
+        }
       }
-    });
+    }
 
-    filteredBancos.forEach((banco) => {
-      const entry = ensureEntry(banco.unidade);
-      if (!entry) return;
+    for (const banco of filteredBancos) {
+      const entry = getEntry(banco.unidade);
+      if (!entry) continue;
 
       const s = normStatus(banco.status || '');
-      entry.bancos += 1;
+      entry.bancos++;
       if (s === 'cadastro reserva') {
-        entry.bancosCR += 1;
+        entry.bancosCR++;
       }
 
       if (s !== 'vencido' && s !== 'convocado') {
-        entry.bancosDisponiveis += 1;
+        entry.bancosDisponiveis++;
       }
 
       if (s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado) {
-        entry.pendencias += 1;
+        entry.pendencias++;
       }
-    });
+    }
 
     return Array.from(unitMap.values())
       .map((entry) => ({
@@ -391,7 +423,7 @@ export default function DashboardPage() {
         return true;
       })
       .map((vaga) => {
-        const inclusionDate = vaga.created_at || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
+        const inclusionDate = vaga.data_criacao || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
         const daysOpen = calcDiasAberto(inclusionDate);
 
         return {

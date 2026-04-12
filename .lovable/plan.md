@@ -1,21 +1,31 @@
 
 
-## Plano: Corrigir terminologia, contraste e layout do Dashboard
+## Prompt Reescrito
 
-### Arquivo: `src/pages/DashboardPage.tsx`
+---
 
-**1. Terminologia dos cards:**
-- Renomear "Candidatos Prorrogados" → "Bancos Prorrogados"
-- Renomear "Candidatos Vencidos" → "Bancos Vencidos"  
-- Remover/reformular subtexto redundante do card "Cadastro Reserva"
-- Reformular subtexto do card "Vagas em Atraso" para algo mais objetivo
+**Ajuste no escopo de importação do Banco de Talentos:**
 
-**2. Contraste visual:**
-- Adicionar `bg-white border border-slate-200 shadow-sm` nos cards de estatísticas para diferenciá-los do fundo
-- Adicionar fundo branco com borda/sombra no container do gráfico para separação visual
+Atualmente, a importação do Banco de Talentos oferece três escopos separados: **Goiás**, **Espírito Santo** e **Demais Unidades**. Isso está incorreto porque Goiás e Espírito Santo pertencem à mesma região operacional e precisam ser tratados como um único grupo.
 
-**3. Simplificar layout da página:**
-- Remover seção "Painel Operacional" (indicador verde piscante)
-- Remover seção "Monitoramento Estratégico" (parte inferior)
-- Manter apenas "Visão Geral do Provimento" com cards + gráfico, usando layout limpo do estilo do painel operacional removido
+**Alterações necessárias:**
+
+1. **Unificar Goiás e Espírito Santo** em um único escopo chamado **"Goiás e Espírito Santo"** (ou "Goiás e Vitória", conforme nomenclatura já usada no sistema).
+
+2. **As opções de escopo na importação devem ser:**
+   - **Todas as regiões** — importa registros de todas as unidades (Goiás + Espírito Santo + Demais Unidades) de uma só vez.
+   - **Goiás e Espírito Santo** — importa apenas os registros das unidades dessas duas localidades (CRER, AGIR, HUGOL, HECAD, HDS, POLICLÍNICA, JATAÍ, TEIA APARECIDA, TEIA GOIÂNIA, TEIA CANEDO, SÃO PEDRO, SUÁ).
+   - **Demais Unidades** — importa apenas os registros das unidades que não pertencem a Goiás nem ao Espírito Santo.
+
+3. **Comportamento esperado:**
+   - Quando o usuário selecionar **"Todas as regiões"**, o sistema deve substituir/adicionar registros de todas as unidades, sem filtro de região.
+   - Quando selecionar **"Goiás e Espírito Santo"**, deve afetar apenas os registros cujas unidades pertencem a essa região unificada.
+   - Quando selecionar **"Demais Unidades"**, deve afetar apenas os registros fora de Goiás e Espírito Santo.
+
+4. **Aplique essas alterações em:**
+   - O componente de seleção de escopo no formulário de importação.
+   - A lógica de filtragem e substituição no serviço de importação (`importScopeUtils.ts` e `importService.ts`).
+   - Os tipos TypeScript relacionados (`BancoImportScope`).
+
+---
 

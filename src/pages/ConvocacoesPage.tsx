@@ -117,6 +117,17 @@ export default function ConvocacoesPage() {
     return Object.keys(BASES_CONVOCACAO).sort();
   }, []);
 
+  // Helper: check if a unit matches the selected base/unit filter
+  const matchesUnidadeFilter = (unidade: string) => {
+    if (selectedUnidade === 'all') return true;
+    const unidadesNaBase = BASES_CONVOCACAO[selectedUnidade];
+    if (unidadesNaBase) {
+      return unidadesNaBase.some(u => u.toUpperCase() === unidade?.toUpperCase()) || 
+             getBaseForUnidade(unidade) === selectedUnidade;
+    }
+    return unidade === selectedUnidade;
+  };
+
   // Unit filtering
   const filteredVagas = useMemo(() => {
     const base = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
@@ -124,7 +135,7 @@ export default function ConvocacoesPage() {
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
         return false;
       }
-      if (selectedUnidade !== 'all' && v.unidade !== selectedUnidade) {
+      if (!matchesUnidadeFilter(v.unidade)) {
         return false;
       }
       return true;

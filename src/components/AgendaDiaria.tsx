@@ -208,25 +208,30 @@ interface HorarioRowProps {
   isLast: boolean;
 }
 
-function HorarioRow({ horario, convocacoes, blocked, bloqueioMotivo, bloqueioId, onEdit, onDevolutiva, onRemoveBloqueio, isLast }: HorarioRowProps) {
+function HorarioRow({ horario, convocacoes, blocked, blockedCount = 0, blocks = [], onEdit, onDevolutiva, onRemoveBloqueio, isLast }: HorarioRowProps) {
   const count = convocacoes.length;
-  const livres = MAX_SLOTS - count;
+  const livresRaw = MAX_SLOTS - count - (blocked ? (MAX_SLOTS - count) : blockedCount);
+  const livres = Math.max(0, livresRaw);
 
   const statusColor = blocked
     ? 'bg-destructive/10 text-destructive border-destructive/20'
-    : count === 0
-      ? 'bg-muted text-muted-foreground border-border'
-      : count >= MAX_SLOTS
-        ? 'bg-primary/10 text-primary border-primary/20'
-        : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    : blockedCount > 0 && livres > 0
+      ? 'bg-orange-50 text-orange-700 border-orange-200'
+      : count === 0
+        ? 'bg-muted text-muted-foreground border-border'
+        : (count + blockedCount) >= MAX_SLOTS
+          ? 'bg-primary/10 text-primary border-primary/20'
+          : 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
   const statusLabel = blocked
     ? 'Bloqueado'
-    : count === 0
-      ? '5 livres'
-      : count >= MAX_SLOTS
-        ? 'Lotado'
-        : `${livres} livre${livres !== 1 ? 's' : ''}`;
+    : blockedCount > 0 && (count + blockedCount) >= MAX_SLOTS
+      ? 'Lotado (Bloq.)'
+      : count === 0 && blockedCount === 0
+        ? '5 livres'
+        : livres === 0
+          ? 'Lotado'
+          : `${livres} livre${livres !== 1 ? 's' : ''}`;
 
   return (
     <Popover>

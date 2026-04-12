@@ -250,9 +250,24 @@ function HorarioRow({ horario, convocacoes, blocked, blockedCount = 0, blocks = 
 
           <div className="flex-1 flex items-center gap-2 min-w-0">
             {blocked ? (
-              <span className="text-sm text-destructive flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5" /> {bloqueioMotivo || 'Bloqueado'}
+              <span className="text-sm text-destructive flex items-center gap-1.5 font-medium">
+                <Lock className="h-3.5 w-3.5" /> {blocks[0]?.motivo || 'Bloqueado'}
               </span>
+            ) : blockedCount > 0 ? (
+              <div className="flex flex-col gap-0.5 min-w-0">
+                 <span className="text-xs text-orange-600 font-semibold flex items-center gap-1">
+                   <Lock className="h-2.5 w-2.5" /> {blockedCount} vaga{blockedCount !== 1 ? 's' : ''} bloqueada{blockedCount !== 1 ? 's' : ''}
+                 </span>
+                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  {convocacoes.slice(0, 2).map(c => (
+                    <span key={c.id} className="flex items-center gap-1 truncate max-w-[120px]">
+                      <User className="h-2.5 w-2.5 shrink-0 text-muted-foreground/60" />
+                      {c.nome_candidato}
+                    </span>
+                  ))}
+                  {count > 2 && <span className="text-[10px] font-medium text-muted-foreground">+{count - 2}</span>}
+                </div>
+              </div>
             ) : count > 0 ? (
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 {convocacoes.slice(0, 3).map(c => (

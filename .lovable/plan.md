@@ -1,31 +1,19 @@
 
 
-## Prompt Reescrito
+## Plano de Implementação
 
----
+### Objetivo
+Reverter o componente `AIAssistant.tsx` do formato Sheet (drawer lateral) para um **popover flutuante compacto** posicionado acima do botão da Agie, mantendo todas as melhorias (olhos expressivos, 4 abas, badge, redirecionamento).
 
-**Ajuste no escopo de importação do Banco de Talentos:**
+### Alterações
 
-Atualmente, a importação do Banco de Talentos oferece três escopos separados: **Goiás**, **Espírito Santo** e **Demais Unidades**. Isso está incorreto porque Goiás e Espírito Santo pertencem à mesma região operacional e precisam ser tratados como um único grupo.
-
-**Alterações necessárias:**
-
-1. **Unificar Goiás e Espírito Santo** em um único escopo chamado **"Goiás e Espírito Santo"** (ou "Goiás e Vitória", conforme nomenclatura já usada no sistema).
-
-2. **As opções de escopo na importação devem ser:**
-   - **Todas as regiões** — importa registros de todas as unidades (Goiás + Espírito Santo + Demais Unidades) de uma só vez.
-   - **Goiás e Espírito Santo** — importa apenas os registros das unidades dessas duas localidades (CRER, AGIR, HUGOL, HECAD, HDS, POLICLÍNICA, JATAÍ, TEIA APARECIDA, TEIA GOIÂNIA, TEIA CANEDO, SÃO PEDRO, SUÁ).
-   - **Demais Unidades** — importa apenas os registros das unidades que não pertencem a Goiás nem ao Espírito Santo.
-
-3. **Comportamento esperado:**
-   - Quando o usuário selecionar **"Todas as regiões"**, o sistema deve substituir/adicionar registros de todas as unidades, sem filtro de região.
-   - Quando selecionar **"Goiás e Espírito Santo"**, deve afetar apenas os registros cujas unidades pertencem a essa região unificada.
-   - Quando selecionar **"Demais Unidades"**, deve afetar apenas os registros fora de Goiás e Espírito Santo.
-
-4. **Aplique essas alterações em:**
-   - O componente de seleção de escopo no formulário de importação.
-   - A lógica de filtragem e substituição no serviço de importação (`importScopeUtils.ts` e `importService.ts`).
-   - Os tipos TypeScript relacionados (`BancoImportScope`).
-
----
+**Arquivo: `src/components/AIAssistant.tsx`**
+- Remover imports do `Sheet`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`
+- Substituir o bloco `<Sheet>` por um `<div>` posicionado com `fixed bottom-24 right-6` (acima do botão flutuante)
+- Usar `AnimatePresence` + `motion.div` para animação suave de abertura/fechamento
+- Dimensões compactas: `w-[380px] max-h-[520px]` com `rounded-2xl shadow-2xl`
+- Manter header com avatar da Agie + título "Central de Comunicação"
+- Manter as 4 abas (Enviadas, Recebidas, Alertas, Notificações) dentro do espaço compacto
+- Adicionar botão de fechar (X) no header
+- Tudo mais permanece inalterado (animação dos olhos, badge, lógica de navegação, dados do store)
 

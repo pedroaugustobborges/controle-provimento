@@ -201,9 +201,12 @@ export default function VagasPage() {
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
       const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
       
-      const isNew = v.origem === 'manual' && v.data_criacao && (now - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000;
+      const creationDate = v.created_at || v.data_criacao;
+      const isManualNew = v.origem === 'manual' && creationDate && (now - new Date(creationDate).getTime()) < 24 * 60 * 60 * 1000;
+      const isImportedNew = v.origem !== 'manual' && v.created_at && (now - new Date(v.created_at).getTime()) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const isNew = isManualNew || isImportedNew;
       const matchVagasNovas = !filterVagasNovas || isNew;
-      
+
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
   }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, vacancyStatusTab]);

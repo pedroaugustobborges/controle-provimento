@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +12,6 @@ const VagasPage = lazy(() => import("@/pages/VagasPage"));
 const VagaDetalhePage = lazy(() => import("@/pages/VagaDetalhePage"));
 const EditaisPage = lazy(() => import("@/pages/EditaisPage"));
 const ValidacaoPage = lazy(() => import("@/pages/ValidacaoPage"));
-const GestorPage = lazy(() => import("@/pages/GestorPage"));
 const ConvocacoesPage = lazy(() => import("@/pages/ConvocacoesPage"));
 const FilaEditaisPage = lazy(() => import("@/pages/FilaEditaisPage"));
 const BancoTalentosPage = lazy(() => import("@/pages/BancoTalentosPage"));
@@ -25,10 +24,11 @@ const FilaAnalistaEditalPage = lazy(() => import("@/pages/FilaAnalistaEditalPage
 const MensagensPage = lazy(() => import("@/pages/MensagensPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
 
-function ProtectedRoutes() {
+function ProtectedRouteWrapper() {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -49,23 +49,7 @@ function ProtectedRoutes() {
   return (
     <AppLayout>
       <Suspense fallback={<PageSkeleton />}>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/vagas" element={<VagasPage />} />
-          <Route path="/vagas/:id" element={<VagaDetalhePage />} />
-          <Route path="/banco-talentos" element={<BancoTalentosPage />} />
-          <Route path="/fila-editais" element={<FilaEditaisPage />} />
-          <Route path="/fila-analista-edital" element={<FilaAnalistaEditalPage />} />
-          <Route path="/convocacoes" element={<ConvocacoesPage />} />
-          <Route path="/validacao" element={<ValidacaoPage />} />
-          <Route path="/importacoes" element={<ImportacoesPage />} />
-          <Route path="/validacao-editais" element={<ValidacaoEditaisPage />} />
-          <Route path="/gestor" element={<AdministracaoPage />} />
-          <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
-          <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
-          <Route path="/mensagens" element={<MensagensPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Outlet />
       </Suspense>
     </AppLayout>
   );
@@ -84,7 +68,26 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/*" element={<ProtectedRoutes />} />
+            
+            <Route element={<ProtectedRouteWrapper />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/vagas" element={<VagasPage />} />
+              <Route path="/vagas/:id" element={<VagaDetalhePage />} />
+              <Route path="/banco-talentos" element={<BancoTalentosPage />} />
+              <Route path="/fila-editais" element={<FilaEditaisPage />} />
+              <Route path="/fila-analista-edital" element={<FilaAnalistaEditalPage />} />
+              <Route path="/convocacoes" element={<ConvocacoesPage />} />
+              <Route path="/validacao" element={<ValidacaoPage />} />
+              <Route path="/importacoes" element={<ImportacoesPage />} />
+              <Route path="/validacao-editais" element={<ValidacaoEditaisPage />} />
+              <Route path="/gestor" element={<AdministracaoPage />} />
+              <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
+              <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
+              <Route path="/mensagens" element={<MensagensPage />} />
+              <Route path="/editais" element={<EditaisPage />} />
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </BrowserRouter>

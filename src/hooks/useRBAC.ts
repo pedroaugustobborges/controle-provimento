@@ -37,10 +37,9 @@ export function useRBAC() {
     return rolesToCheck.includes(userToUse.perfil as UserProfile);
   };
 
-  const isAdmin = userToUse?.perfil === 'Administrador' || userToUse?.perfil === 'Admin';
-  const isManagement = userToUse?.perfil === 'Gestão' || userToUse?.perfil === 'Gerência' 
-    || userToUse?.perfil === 'Supervisão' || userToUse?.perfil === 'Coordenação';
-  const isFullAccessProfile = isAdmin || isManagement || userToUse?.perfil === 'Analista Administrativo' || userToUse?.perfil === 'Analista administrativo';
+  const isAdmin = userToUse?.perfil?.toLowerCase() === 'administrador' || userToUse?.perfil?.toLowerCase() === 'admin';
+  const isManagement = ['gestão', 'gerência', 'supervisão', 'coordenação'].includes(userToUse?.perfil?.toLowerCase() || '');
+  const isFullAccessProfile = isAdmin || isManagement || userToUse?.perfil?.toLowerCase() === 'analista administrativo';
 
   const getPermissions = (module: string): Permissions => {
     if (isFullAccessProfile) {

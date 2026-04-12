@@ -316,7 +316,7 @@ export class DatabaseService {
       
       if (logError) throw logError;
       
-      const batchRef = importLog.arquivo || importLog.nome_arquivo || id;
+      const batchRef = importLog.arquivo || id;
 
       // 2. Delete associated records from vagas
       const { error: vagasError } = await supabase

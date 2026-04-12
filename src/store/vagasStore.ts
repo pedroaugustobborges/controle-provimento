@@ -323,33 +323,15 @@ export const useVagasStore = create<VagasState>()(
             } as ImportHistory;
           });
 
-          // Deduplication Logic: Same file, same user, same date
-          const duplicatesToRemove: string[] = [];
-          const seen = new Map<string, string>(); // key -> id
-
-          const filtered = mapped.filter(item => {
+          // Deduplication Logic: Show only one entry per file/user/day in UI, but don't delete from DB
+          const filtered = mapped.filter((item, index) => {
             const dateStr = item.data_hora ? new Date(item.data_hora).toISOString().split('T')[0] : '';
             const key = `${item.arquivo}_${item.usuario_id}_${dateStr}`;
-            
-            if (seen.has(key)) {
-              // We have a duplicate. Keep the most recent one (data is already sorted by created_at desc)
-              // But since we are processing in order of appearance (most recent first), 
-              // we keep the first one and discard others.
-              duplicatesToRemove.push(item.id);
-              return false;
-            }
-            
-            seen.set(key, item.id);
-            return true;
+            return mapped.findIndex(m => {
+              const mDateStr = m.data_hora ? new Date(m.data_hora).toISOString().split('T')[0] : '';
+              return `${m.arquivo}_${m.usuario_id}_${mDateStr}` === key;
+            }) === index;
           });
-
-          // Automatically remove duplicates from DB in the background
-          if (duplicatesToRemove.length > 0) {
-            console.log(`[DEDUPLICAÇÃO] Removendo ${duplicatesToRemove.length} registros duplicados automaticamente.`);
-            const { DatabaseService } = await import('@/services/databaseService');
-            Promise.all(duplicatesToRemove.map(id => DatabaseService.deleteImportBatch(id)))
-              .catch(err => console.error('Error auto-removing duplicates:', err));
-          }
 
           set({
             importHistory: filtered,

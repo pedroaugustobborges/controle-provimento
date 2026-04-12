@@ -270,7 +270,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   addAuditLog: async (log) => {
     try {
-      await supabase.from('audit_logs').insert({
+      const newLog = {
         usuario_nome: log.usuario_nome,
         usuario_email: log.usuario_email || '',
         perfil: log.perfil || '',
@@ -280,7 +280,16 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         valor_anterior: log.valor_anterior,
         valor_novo: log.valor_novo,
         ip: log.ip || '',
-      });
+      };
+      
+      const { data, error } = await supabase.from('audit_logs').insert(newLog).select().single();
+      
+      if (error) throw error;
+      
+      // Update local state to show the log immediately
+      if (data) {
+        set((s) => ({ auditLogs: [data as AuditLog, ...s.auditLogs].slice(0, 100) }));
+      }
     } catch (err) {
       console.error('Erro ao salvar log de auditoria:', err);
     }

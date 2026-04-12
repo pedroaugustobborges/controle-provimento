@@ -40,9 +40,10 @@ export function useRBAC() {
   const isAdmin = userToUse?.perfil === 'Administrador' || userToUse?.perfil === 'Admin';
   const isManagement = userToUse?.perfil === 'Gestão' || userToUse?.perfil === 'Gerência' 
     || userToUse?.perfil === 'Supervisão' || userToUse?.perfil === 'Coordenação';
+  const isFullAccessProfile = isAdmin || isManagement || userToUse?.perfil === 'Analista Administrativo' || userToUse?.perfil === 'Analista administrativo';
 
   const getPermissions = (module: string): Permissions => {
-    if (isAdmin) {
+    if (isFullAccessProfile) {
       return { canRead: true, canCreate: true, canEdit: true, canValidate: true, canDelete: true, canAudit: true };
     }
     
@@ -101,6 +102,7 @@ export function useRBAC() {
     hasRole,
     isAdmin,
     isManagement,
+    isFullAccessProfile,
     getPermissions,
   };
 }

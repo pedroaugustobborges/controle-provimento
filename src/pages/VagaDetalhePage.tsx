@@ -38,6 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { RequestUpdateDialog } from '@/components/RequestUpdateDialog';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ export default function VagaDetalhePage() {
   const [isEditVagaOpen, setIsEditVagaOpen] = useState(false);
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
+  const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
   
   const [indicators, setIndicators] = useState({
     total_inscritos: 0,
@@ -204,6 +206,18 @@ export default function VagaDetalhePage() {
 
     toast.success('Status atualizado');
     setPendingStatus(null);
+  };
+
+  const handleRequestUpdate = (recordId: string, description: string) => {
+    updateVaga(recordId, {
+      historico: [...(vaga.historico || []), {
+        id: `h-req-${Date.now()}`,
+        data: new Date().toISOString().split('T')[0],
+        descricao: `[SOLICITAÇÃO DE ATUALIZAÇÃO]: ${description}`,
+        usuario: currentUser?.nome_completo || 'Analista'
+      }]
+    });
+    toast.success('Solicitação de atualização enviada');
   };
 
   const handleQuickConvocacao = () => {
@@ -393,7 +407,7 @@ export default function VagaDetalhePage() {
             )}
             <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
           </div>
-          {canEdit && (
+          {permissions.canDirectEdit() && (
             <Button 
               variant="outline" 
               className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
@@ -402,7 +416,16 @@ export default function VagaDetalhePage() {
               <Edit className="h-4 w-4" /> Editar Registro
             </Button>
           )}
-          {canDelete && (
+          {permissions.canRequestUpdate() && (
+            <Button 
+              variant="outline" 
+              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
+              onClick={() => setIsRequestUpdateOpen(true)}
+            >
+              <AlertCircle className="h-4 w-4" /> Solicitar Atualização
+            </Button>
+          )}
+          {permissions.canDeleteRecords() && (
             <Button 
               variant="outline" 
               className="text-destructive border-destructive/20 hover:bg-destructive/5 gap-2"
@@ -853,6 +876,14 @@ export default function VagaDetalhePage() {
         open={isEditVagaOpen} 
         onOpenChange={setIsEditVagaOpen} 
         vaga={vaga}
+      />
+      <RequestUpdateDialog
+        isOpen={isRequestUpdateOpen}
+        onClose={() => setIsRequestUpdateOpen(false)}
+        recordId={vaga.id}
+        recordTitle={vaga.cargo}
+        type="vaga"
+        onConfirm={handleRequestUpdate}
       />
     </div>
   );

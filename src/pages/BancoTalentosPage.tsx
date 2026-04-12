@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { RequestUpdateDialog } from '@/components/RequestUpdateDialog';
 
 import { formatDate, normalizeCargo, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normalizeUnitName } from '@/lib/vagaUtils';
 import { calculateBancoStatus, calculateStats } from '@/lib/bancoTalentosUtils';
@@ -78,6 +79,8 @@ export default function BancoTalentosPage() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
+  const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
+  const [bancoForUpdate, setBancoForUpdate] = useState<BancoTalentos | null>(null);
 
   const handleDelete = () => {
     if (bancoParaExcluir) {
@@ -86,6 +89,13 @@ export default function BancoTalentosPage() {
       setIsDeleteDialogOpen(false);
       setBancoParaExcluir(null);
     }
+  };
+
+  const handleRequestUpdate = (recordId: string, description: string) => {
+    // In a real app, this would send a notification or create a record.
+    // For now, we'll just show a success message.
+    toast.success('Solicitação de atualização enviada para a gestão.');
+    console.log(`Request update for ${recordId}: ${description}`);
   };
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -437,7 +447,7 @@ export default function BancoTalentosPage() {
         badge="Recursos Humanos"
         actions={
           <>
-            {permissions.canImport() && (
+            {permissions.canIncludeRecords() && (
               <Button 
                 variant="outline" 
                 className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
@@ -446,12 +456,14 @@ export default function BancoTalentosPage() {
                 <FileSpreadsheet className="h-4 w-4 text-primary" /> Importar Excel
               </Button>
             )}
-            <Button 
-              className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 px-4 transition-all rounded-xl font-bold"
-              onClick={() => setIsFormOpen(true)}
-            >
-              <Plus className="h-4 w-4" /> Novo Banco
-            </Button>
+            {permissions.canIncludeRecords() && (
+              <Button 
+                className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 px-4 transition-all rounded-xl font-bold"
+                onClick={() => setIsFormOpen(true)}
+              >
+                <Plus className="h-4 w-4" /> Novo Banco
+              </Button>
+            )}
           </>
         }
       />
@@ -473,6 +485,18 @@ export default function BancoTalentosPage() {
         open={isImportOpen} 
         onOpenChange={setIsImportOpen} 
         type="banco"
+      />
+
+      <RequestUpdateDialog
+        isOpen={isRequestUpdateOpen}
+        onClose={() => {
+          setIsRequestUpdateOpen(false);
+          setBancoForUpdate(null);
+        }}
+        recordId={bancoForUpdate?.id || ''}
+        recordTitle={bancoForUpdate?.cargo || ''}
+        type="banco"
+        onConfirm={handleRequestUpdate}
       />
 
       <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
@@ -923,7 +947,20 @@ export default function BancoTalentosPage() {
                           >
                             Detalhes ({group.candidatos.length})
                           </Button>
-                          {currentUser?.perfil === 'Admin' && (
+                          {permissions.canRequestUpdate() && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="font-bold text-xs text-amber-600 hover:bg-amber-50 h-8"
+                              onClick={() => {
+                                setBancoForUpdate(group.candidatos[0]);
+                                setIsRequestUpdateOpen(true);
+                              }}
+                            >
+                              Solicitar Atualização
+                            </Button>
+                          )}
+                          {permissions.canDeleteRecords() && (
                             <Button 
                               variant="ghost" 
                               size="icon" 

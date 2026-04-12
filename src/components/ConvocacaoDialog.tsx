@@ -101,8 +101,17 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
       };
       addConvocacao(newConvocacao);
       toast.success('Convocação criada e enviada para o módulo diário');
-      
-      // Se tiver vaga vinculada, opcionalmente atualizar status
+
+      // Atualizar registro do banco para CONVOCADO
+      if (formData.banco_relacionado) {
+        updateBanco(formData.banco_relacionado, {
+          status: 'CONVOCADO',
+          data_convocacao: formData.data_convocacao,
+          unidade_convocacao: formData.unidade || vaga?.unidade,
+        });
+      }
+
+      // Se tiver vaga vinculada, atualizar status para CONVOCAÇÕES
       if (vaga) {
         updateVaga(vaga.id, { status: 'CONVOCAÇÕES' });
       }

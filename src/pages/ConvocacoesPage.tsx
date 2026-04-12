@@ -77,6 +77,22 @@ export default function ConvocacoesPage() {
     if (tab && ['kanban', 'list', 'pending', 'diaria'].includes(tab)) {
       setView(tab as any);
     }
+    // Abrir dialog de convocação automaticamente quando vindo de Todas as Vagas
+    const openParam = searchParams.get('open');
+    const vagaIdParam = searchParams.get('vagaId');
+    if (openParam === 'true' && vagaIdParam) {
+      const vaga = useVagasStore.getState().vagas.find(v => v.id === vagaIdParam);
+      if (vaga) {
+        setSelectedVaga(vaga);
+        setIsDialogOpen(true);
+      }
+      // Limpar os params da URL após abrir
+      setSearchParams(prev => {
+        prev.delete('open');
+        prev.delete('vagaId');
+        return prev;
+      });
+    }
   }, [searchParams]);
 
   const handleViewChange = (newView: string) => {
@@ -125,9 +141,16 @@ export default function ConvocacoesPage() {
     });
   }, [vagas, currentUser, selectedUnidade, selectedRegion, globalUnit]);
 
-  const pendingVagas = useMemo(() => {
-    return filteredVagas.filter(v => getCategoriaStatus(v) === 'em_andamento');
-  }, [filteredVagas]);
+  // Convocações pendentes de devolutiva (candidatos agendados sem resposta ainda)
+  const pendingConvocacoes = useMemo(() => {
+    const baseConvocacoes = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
+    return baseConvocacoes.filter(c => {
+      if (c.status !== 'pendente') return false;
+      if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) return false;
+      if (selectedUnidade !== 'all' && c.unidade !== selectedUnidade) return false;
+      return true;
+    });
+  }, [convocacoes, currentUser, selectedUnidade, selectedRegion, globalUnit]);
 
   const filteredConvocacoes = useMemo(() => {
     const baseConvocacoes = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
@@ -231,9 +254,9 @@ export default function ConvocacoesPage() {
                 onClick={() => handleViewChange('pending')}
               >
                 <AlertCircle className="h-3.5 w-3.5 mr-1" /> Pendentes
-                {pendingVagas.length > 0 && (
+                {pendingConvocacoes.length > 0 && (
                   <Badge variant="destructive" className="ml-1 px-1.5 h-4 min-w-[16px] flex items-center justify-center text-[8px] font-bold rounded-full">
-                    {pendingVagas.length}
+                    {pendingConvocacoes.length}
                   </Badge>
                 )}
               </Button>
@@ -330,59 +353,47 @@ export default function ConvocacoesPage() {
               <div>
                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-amber-500" />
-                  Vagas Pendentes de Convocação
+                  Convocações Pendentes de Devolutiva
                 </CardTitle>
-                <p className="text-xs text-slate-500 font-medium mt-1">Vagas marcadas para convocação imediata via Banco ou Edital.</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">Candidatos agendados que ainda não confirmaram presença ou deram retorno.</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader >
+              <TableHeader>
                 <TableRow>
-                  <TableHead >Requisição</TableHead>
-                  <TableHead >Cargo</TableHead>
-                  <TableHead >Unidade</TableHead>
-                  <TableHead className="text-center">Banco?</TableHead>
-                  <TableHead className="text-center">Data Abertura</TableHead>
+                  <TableHead>Candidato</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead className="text-center">Data Convocação</TableHead>
+                  <TableHead className="text-center">Horário</TableHead>
                   <TableHead className="text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingVagas.map((v) => (
-                  <TableRow key={v.id} className="hover:bg-slate-50 transition-colors group">
-                    <TableCell className="font-mono text-[11px] font-bold text-primary">{v.requisicao || v.numero_requisicao}</TableCell>
-                    <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
-                    <TableCell className="text-slate-600 font-medium">{v.unidade}</TableCell>
-                    <TableCell className="text-center">
-                      {getBancoByVaga(v.id) ? (
-                        <div className="flex items-center justify-center gap-1.5 text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 mx-auto w-fit">
-                          <Database className="h-3 w-3" />
-                          <span className="text-[11px] font-bold">Válido</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center gap-1.5 text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 mx-auto w-fit">
-                          <X className="h-3 w-3" />
-                          <span className="text-[11px] font-bold">Sem Banco</span>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center text-xs text-slate-500">{formatDate(v.data_abertura)}</TableCell>
+                {pendingConvocacoes.map((c) => (
+                  <TableRow key={c.id} className="hover:bg-slate-50 transition-colors group">
+                    <TableCell className="font-semibold text-slate-800">{c.nome_candidato}</TableCell>
+                    <TableCell className="text-slate-600 font-medium">{c.cargo}</TableCell>
+                    <TableCell className="text-slate-600 font-medium">{c.unidade}</TableCell>
+                    <TableCell className="text-center text-xs text-slate-500">{formatDate(c.data_convocacao)}</TableCell>
+                    <TableCell className="text-center font-mono text-xs font-bold text-primary">{c.horario || '—'}</TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleNewConvocacao(v)}
-                        className="h-8 gap-1.5 text-[11px] font-bold bg-green-600 hover:bg-green-700 shadow-sm"
+                      <Button
+                        size="sm"
+                        onClick={() => { setSelectedConvocacao(c); setIsDevolutivaOpen(true); }}
+                        className="h-8 gap-1.5 text-[11px] font-bold bg-amber-600 hover:bg-amber-700 shadow-sm"
                       >
-                        Realizar Convocação <ArrowRight className="h-3 w-3" />
+                        Dar Devolutiva <ArrowRight className="h-3 w-3" />
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
-                {pendingVagas.length === 0 && (
+                {pendingConvocacoes.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
-                      Nenhuma vaga pendente de convocação encontrada.
+                      Nenhuma convocação pendente de devolutiva encontrada.
                     </TableCell>
                   </TableRow>
                 )}

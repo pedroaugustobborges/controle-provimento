@@ -673,7 +673,7 @@ export default function VagasPage() {
                           size="icon" 
                           className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700" 
                           title="Realizar Convocação"
-                          onClick={() => navigate(`/convocacoes/nova?vagaId=${v.id}`)}
+                          onClick={() => navigate(`/convocacoes?open=true&vagaId=${v.id}`)}
                         >
                           <CheckCircle2 className="h-5 w-5" />
                         </Button>
@@ -720,7 +720,7 @@ export default function VagasPage() {
                             onClick={() => {
                               const bancoFound = getBancoByVaga(v.id);
                               if (bancoFound) {
-                                navigate(`/convocacoes/nova?vagaId=${v.id}`);
+                                navigate(`/convocacoes?open=true&vagaId=${v.id}`);
                               } else {
                                 toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
                               }

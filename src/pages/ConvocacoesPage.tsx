@@ -102,6 +102,7 @@ export default function ConvocacoesPage() {
 
   const handleDelete = () => {
     if (registroParaExcluir) {
+      useVagasStore.getState().deleteConvocacao(registroParaExcluir);
       toast.success('Convocação removida com sucesso.');
       setIsDeleteDialogOpen(false);
       setRegistroParaExcluir(null);

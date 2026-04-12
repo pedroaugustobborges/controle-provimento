@@ -233,12 +233,23 @@ export default function VagasPage() {
       convocacao: 0,
       aguardando_unidade: 0,
       documentacao: 0,
-      com_banco_valido: 0
+      com_banco_valido: 0,
+      vagas_novas: 0
     };
+    
+    const now = new Date().getTime();
     
     canonicalBase.forEach(v => {
       const cat = v.categoria_status || getCategoriaStatus(v);
       
+      const creationDate = v.created_at || v.data_criacao;
+      const isManualNew = v.origem === 'manual' && creationDate && (now - new Date(creationDate).getTime()) < 24 * 60 * 60 * 1000;
+      const isImportedNew = v.origem !== 'manual' && v.created_at && (now - new Date(v.created_at).getTime()) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      
+      if (isManualNew || isImportedNew) {
+        acc.vagas_novas++;
+      }
+
       if (acc[cat] !== undefined) {
         acc[cat]++;
       } else {

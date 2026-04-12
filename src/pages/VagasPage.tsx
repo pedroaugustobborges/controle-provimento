@@ -273,6 +273,7 @@ export default function VagasPage() {
   const countAguardandoUnidade = counts.aguardando_unidade;
   const countDocumentacao = counts.documentacao;
   const countComBanco = counts.com_banco_valido;
+  const countVagasNovas = counts.vagas_novas;
 
 
   // 4. Parity Debug Audit - forensic row-level check
@@ -592,7 +593,7 @@ export default function VagasPage() {
               onClick={() => setFilterVagasNovas(!filterVagasNovas)}
             >
               <Sparkles className={`h-3.5 w-3.5 ${filterVagasNovas ? 'text-white' : 'text-blue-500'}`} />
-              Vagas Novas (24h)
+              Vagas Novas (24h) {countVagasNovas > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-blue-100 text-blue-700 border-none">{countVagasNovas}</Badge>}
             </Button>
 
             {hasFilters && (

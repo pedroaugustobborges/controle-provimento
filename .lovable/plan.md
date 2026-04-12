@@ -1,38 +1,24 @@
 
 
-## Plano — Agenda Diária com Bloqueio de Horários e Convocação Online
+## Plano — Corrigir Agenda Diária, Bloqueios e Convocação Online
 
-### 1. Tipos e Estado (`src/types/vaga.ts` + `src/store/vagasStore.ts`)
-- Adicionar tipo `BloqueioHorario` com campos: `id`, `data`, `horario` (ou `dia_inteiro`), `motivo`, `criado_por`.
-- Adicionar campo `tipo_atendimento` (`'presencial' | 'online'`) e `link_teams` ao tipo `Convocacao`.
-- No store, adicionar array `bloqueios` com ações `addBloqueio`, `removeBloqueio`.
+### 1. Adicionar horários faltantes (`src/lib/convocacaoUtils.ts`)
+- `HORARIOS_FIXOS_CONVOCACAO` tem apenas 5 horários: `08:30, 09:30, 10:30, 11:30, 14:30`. Faltam `12:30` e `13:30`.
+- Atualizar para incluir **7 horários**: `08:30, 09:30, 10:30, 11:30, 12:30, 13:30, 14:30`.
 
-### 2. Visualização de Agenda Diária (`src/pages/ConvocacoesPage.tsx`)
-- Criar componente `AgendaDiaria` que exibe os horários fixos (08:30–14:30 para Goiânia, ou customizáveis) em formato de linhas visuais.
-- Cada linha mostra: horário, convocações agendadas naquele slot, ou indicação de "bloqueado".
-- Manter a view Kanban existente como opção alternativa (abas: Agenda / Quadro Kanban).
+### 2. Agenda Diária sempre visível (`src/components/AgendaDiaria.tsx`)
+- **Problema:** Quando não há convocações E não há bloqueios, o componente mostra apenas "Nenhuma convocação agendada". Deveria mostrar a **grade de horários** com todos os slots vazios (mostrando "Horário livre").
+- **Correção:** Sempre renderizar a grade de horários fixos, independente de haver convocações. Remover a condição que exibe a mensagem vazia quando `byBase` está vazio e `dayBloqueios` está vazio — em vez disso, mostrar todos os slots com "Horário livre".
 
-### 3. Bloqueio de Horários (novo componente `BloqueioHorarioDialog`)
-- Dialog para selecionar data, horário(s) específico(s) ou dia inteiro, e motivo.
-- Botão "Bloquear Horário" na barra da agenda.
-- Horários bloqueados aparecem em cinza com ícone de cadeado na agenda.
-- Se já existe convocação no horário bloqueado, gerar alerta/devolutiva.
+### 3. Bloqueio de Horários — já funciona
+- O `BloqueioHorarioDialog` já permite selecionar múltiplos horários e bloquear dia inteiro. O código está correto. O problema era que os horários faltantes (`12:30`, `13:30`) não apareciam como opções.
 
-### 4. Convocação Online (`src/components/ConvocacaoDialog.tsx`)
-- Adicionar select "Tipo de Atendimento": Presencial / Online.
-- Campo condicional para "Link do Microsoft Teams" quando online.
-- Exibir o link no card do Kanban e na agenda.
-
-### 5. Devolutiva Automática
-- Ao bloquear um horário que já tem convocação, disparar toast de alerta e registrar devolutiva no store com motivo e sugestão de reagendamento.
+### 4. Convocação Online — ajustar fluxo (`src/components/ConvocacaoDialog.tsx`)
+- O campo `tipo_atendimento` e `link_teams` já existem no formulário. Verificar se estão aparecendo corretamente.
+- **Remover obrigatoriedade do campo "Unidade"** quando tipo de atendimento for "online" — convocação online não exige unidade presencial.
 
 ### Arquivos afetados
-- `src/types/vaga.ts`
-- `src/store/vagasStore.ts`
-- `src/pages/ConvocacoesPage.tsx`
-- `src/components/ConvocacaoDialog.tsx`
-- `src/components/KanbanBoard.tsx`
-- Novo: `src/components/AgendaDiaria.tsx`
-- Novo: `src/components/BloqueioHorarioDialog.tsx`
-- `src/lib/convocacaoUtils.ts`
+- `src/lib/convocacaoUtils.ts` — adicionar horários 12:30 e 13:30
+- `src/components/AgendaDiaria.tsx` — sempre exibir grade de horários
+- `src/components/ConvocacaoDialog.tsx` — tornar unidade opcional para online
 

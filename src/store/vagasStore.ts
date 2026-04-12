@@ -103,7 +103,8 @@ interface VagasState {
   isInitialLoad: boolean;
   isLoadingVagas: boolean;
   isLoadingBancos: boolean;
-  
+  lastUpdated?: number;
+
   setVagas: (vagas: Vaga[]) => void;
   fetchVagas: (incremental?: boolean) => Promise<void>;
   fetchBancos: (incremental?: boolean) => Promise<void>;

@@ -1,10 +1,12 @@
 import { KanbanBoard } from '@/components/KanbanBoard';
+import { AgendaDiaria } from '@/components/AgendaDiaria';
+import { BloqueioHorarioDialog } from '@/components/BloqueioHorarioDialog';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, Search, Filter, Download, LayoutGrid, List, 
   Calendar as CalendarIcon, MapPin, Building2, User, CheckCircle2, 
   AlertCircle, ArrowRight, Database, MoreVertical,
-  History, Eye, Edit, Trash2, X, Clock
+  History, Eye, Edit, Trash2, X, Clock, Lock
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -56,7 +58,7 @@ import { toast } from 'sonner';
 export default function ConvocacoesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { vagas, convocacoes, bancos, getBancoByVaga } = useVagasStore();
+  const { vagas, convocacoes, bancos, bloqueios, getBancoByVaga } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const [view, setView] = useState<'kanban' | 'list' | 'diaria'>('diaria');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

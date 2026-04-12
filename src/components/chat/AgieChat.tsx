@@ -46,21 +46,35 @@ export const AgieChat = memo(() => {
   const notifications = useMemo(() => [
     "Olá! Eu sou a Agie 👋",
     "Envie mensagens para a equipe",
-    "Envie sugestões de melhoria"
+    "Envie sugestões de melhoria",
+    "Conheça as novidades do sistema"
   ], []);
 
-  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
-  const hasNewMessage = temNovasMensagens;
+  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens, tarefas } = useVagasStore();
+  
+  const alertMessages = useMemo(() => {
+    const alerts: string[] = [];
+    const unreadMessages = historicoMensagens.filter(m => !m.lida).length;
+    const pendingTasks = tarefas.filter(t => t.status === 'pendente').length;
+    
+    if (unreadMessages > 0) alerts.push("Você tem uma nova mensagem!");
+    if (pendingTasks > 0) alerts.push(`Você tem ${pendingTasks} tarefas pendentes!`);
+    
+    return alerts;
+  }, [historicoMensagens, tarefas]);
+
+  const hasNewRealNotification = alertMessages.length > 0;
 
   // Notification carousel logic
   useEffect(() => {
     if (!isOpen) {
       const interval = setInterval(() => {
-        setNotificationIndex((prev) => (prev + 1) % (hasNewMessage ? 4 : 3));
+        const maxIndex = hasNewRealNotification ? alertMessages.length : notifications.length;
+        setNotificationIndex((prev) => (prev + 1) % maxIndex);
       }, 4000);
       return () => clearInterval(interval);
     }
-  }, [hasNewMessage, isOpen]);
+  }, [hasNewRealNotification, isOpen, alertMessages.length, notifications.length]);
 
   // Fetch user profile on mount
   useEffect(() => {

@@ -15,11 +15,13 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
   Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
-  Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2
+  Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
+  History, MessageSquare, AlertTriangle, Info, CheckCircle
 } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
+import { useVagasStore } from '@/store/vagasStore';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -36,6 +38,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -63,6 +68,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { alertas, updateAlerta } = useVagasStore();
+  const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length;
   const mainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -152,10 +159,86 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   Sistema sincronizado
                 </div>
 
-                <button className="p-2 text-muted-foreground hover:text-primary transition-all rounded-lg hover:bg-primary/5 relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-destructive rounded-full border-2 border-white animate-pulse" />
-                </button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="p-2 text-muted-foreground hover:text-primary transition-all rounded-lg hover:bg-primary/5 relative">
+                      <Bell className="h-5 w-5" />
+                      {unreadAlertsCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-destructive rounded-full border-2 border-white animate-pulse" />
+                      )}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-slate-200/60 shadow-xl rounded-xl">
+                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                      <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-primary" />
+                        Notificações
+                      </h3>
+                      {unreadAlertsCount > 0 && (
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none">
+                          {unreadAlertsCount} novas
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="max-h-[350px] overflow-y-auto">
+                      {alertas.length === 0 ? (
+                        <div className="p-8 text-center text-muted-foreground">
+                          <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                          <p className="text-sm">Nenhuma notificação por enquanto.</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-slate-100">
+                          {alertas.map((alerta) => (
+                            <Link 
+                              key={alerta.id} 
+                              to={alerta.link || '#'} 
+                              onClick={() => {
+                                if (alerta.status === 'nao_lido') {
+                                  updateAlerta(alerta.id, { status: 'lido' });
+                                }
+                              }}
+                              className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors group relative ${
+                                alerta.status === 'nao_lido' ? 'bg-primary/5' : ''
+                              }`}
+                            >
+                              <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
+                                alerta.tipo === 'atraso' ? 'bg-amber-100 text-amber-600' :
+                                alerta.tipo === 'critico' ? 'bg-red-100 text-red-600' :
+                                'bg-blue-100 text-blue-600'
+                              }`}>
+                                {alerta.tipo === 'atraso' ? <AlertTriangle className="h-4 w-4" /> :
+                                 alerta.tipo === 'critico' ? <Bell className="h-4 w-4" /> :
+                                 <Info className="h-4 w-4" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-800 line-clamp-1">{alerta.titulo}</p>
+                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{alerta.mensagem}</p>
+                                <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
+                                  {format(parseISO(alerta.data_criacao), "dd 'de' MMMM", { locale: ptBR })}
+                                </p>
+                              </div>
+                              {alerta.status === 'nao_lido' && (
+                                <div className="absolute top-4 right-4 h-2 w-2 bg-primary rounded-full" />
+                              )}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-2 border-t border-slate-100 bg-slate-50/50">
+                      <Link 
+                        to="/mensagens?tab=historico" 
+                        className="flex items-center justify-center gap-2 w-full py-2 text-xs font-semibold text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                      >
+                        <History className="h-3.5 w-3.5" />
+                        Histórico de Mensagens
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 
                 <div className="h-8 w-px bg-border/50 mx-1" />
                 

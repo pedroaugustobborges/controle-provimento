@@ -419,14 +419,16 @@ export default function VagasPage() {
                     <Database className="h-3 w-3" /> Diagnóstico
                   </Button>
                 )}
-                {permissions.canImport() && (
+                {permissions.canIncludeRecords() && (
                   <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
                     <FileSpreadsheet className="h-4 w-4 text-primary/80" /> Importar Excel
                   </Button>
                 )}
-                <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-6 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
-                  <Plus className="h-4 w-4" /> Nova Vaga
-                </Button>
+                {permissions.canIncludeRecords() && (
+                  <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-6 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
+                    <Plus className="h-4 w-4" /> Nova Vaga
+                  </Button>
+                )}
               </>
             }
           />

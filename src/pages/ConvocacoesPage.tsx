@@ -326,7 +326,7 @@ export default function ConvocacoesPage() {
                     {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-50" align="center">
+                <PopoverContent className="w-auto p-0 z-[9999]" align="center" sideOffset={8}>
                   <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -380,7 +380,7 @@ export default function ConvocacoesPage() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 z-[100]" align="end" sideOffset={8}>
+              <PopoverContent className="w-auto p-0 z-[9999]" align="end" sideOffset={8}>
                 <Calendar
                   initialFocus
                   mode="range"

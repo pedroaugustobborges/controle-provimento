@@ -142,18 +142,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 )}
               </div>
 
-              {/* Search */}
-              <div className="hidden lg:flex items-center flex-1 max-w-md mx-8">
-                <div className="relative w-full group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    placeholder="Buscar vagas, editais, candidatos..."
-                    className={`pl-9 pr-4 bg-muted/40 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/60 focus-visible:ring-primary/20 focus-visible:bg-white transition-all ${
-                      isCompact ? 'h-8' : 'h-9'
-                    }`}
-                  />
-                </div>
-              </div>
 
               {/* Right actions */}
               <div className="flex items-center gap-3">

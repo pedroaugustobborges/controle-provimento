@@ -452,6 +452,10 @@ export const useVagasStore = create<VagasState>()(
         const hasUnread = newHistory.some(m => !m.lida);
         return { historicoMensagens: newHistory, temNovasMensagens: hasUnread };
       }),
+      marcarTodasLidas: () => set((s) => ({
+        historicoMensagens: s.historicoMensagens.map((m) => ({ ...m, lida: true })),
+        temNovasMensagens: false
+      })),
       setTemNovasMensagens: (has) => set({ temNovasMensagens: has }),
       clearVagas: () => set({ vagas: [] }),
       clearBancos: () => set({ bancos: [] }),

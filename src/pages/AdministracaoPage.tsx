@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore, generateTempPassword } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/lib/supabase';
 import { 
   Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
   HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send, Eye, EyeOff,
-  MessageSquare
+  MessageSquare, Camera, Upload, User as UserIcon
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { cn } from '@/lib/utils';

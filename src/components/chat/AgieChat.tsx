@@ -95,15 +95,12 @@ export const AgieChat = memo(() => {
     fetchProfile();
   }, []);
 
-  // Keep notifications alive
+  // Mark messages as read when closing or opening
   useEffect(() => {
-    if (!temNovasMensagens) {
-      const timer = setTimeout(() => {
-        if (!isOpen) setTemNovasMensagens(true);
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (isOpen) {
+      setTemNovasMensagens(false);
     }
-  }, [isOpen, temNovasMensagens, setTemNovasMensagens]);
+  }, [isOpen, setTemNovasMensagens]);
 
   const handleOpen = () => {
     setIsOpen(true);

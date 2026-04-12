@@ -102,7 +102,8 @@ export default function AdministracaoPage() {
   useEffect(() => {
     fetchUsers();
     fetchAuditLogs();
-  }, [fetchUsers, fetchAuditLogs]);
+    fetchFeedbacks();
+  }, [fetchUsers, fetchAuditLogs, fetchFeedbacks]);
 
   // Auto-generate temp password when mode changes
   useEffect(() => {
@@ -320,6 +321,9 @@ export default function AdministracaoPage() {
           )}
           <TabsTrigger value="parametros" className="gap-2 font-bold px-4 py-2">
             <Settings className="h-4 w-4" /> Configurações Gerais
+          </TabsTrigger>
+          <TabsTrigger value="feedbacks" className="gap-2 font-bold px-4 py-2">
+            <MessageSquare className="h-4 w-4" /> Feedbacks
           </TabsTrigger>
         </TabsList>
 
@@ -859,6 +863,104 @@ export default function AdministracaoPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* FEEDBACKS */}
+        <TabsContent value="feedbacks">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0">
+              <div>
+                <CardTitle className="text-lg font-bold text-slate-800">Feedback dos Usuários</CardTitle>
+                <CardDescription>Sugestões, problemas e oportunidades reportadas via Assistente Agie.</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
+                    <TableRow>
+                      <TableHead className="w-[150px]">Data</TableHead>
+                      <TableHead className="w-[200px]">Usuário</TableHead>
+                      <TableHead className="w-[120px]">Tipo</TableHead>
+                      <TableHead>Mensagem</TableHead>
+                      <TableHead className="w-[120px] text-center">Status</TableHead>
+                      <TableHead className="w-[100px] text-right pr-6">Ação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {feedbacks && feedbacks.length > 0 ? (
+                      feedbacks.map((item) => (
+                        <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                          <TableCell className="text-xs font-medium text-slate-500">
+                            {new Date(item.created_at).toLocaleString('pt-BR')}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-700 text-sm">{item.user_name}</span>
+                              <span className="text-[10px] text-slate-400 font-medium">{item.user_email}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={cn(
+                              "text-[10px] font-bold uppercase",
+                              item.tipo === 'sugestao' ? "bg-blue-100 text-blue-700" :
+                              item.tipo === 'problema' ? "bg-red-100 text-red-700" :
+                              "bg-amber-100 text-amber-700"
+                            )}>
+                              {item.tipo === 'sugestao' ? 'Sugestão' :
+                               item.tipo === 'problema' ? 'Problema' : 'Melhoria'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-md">
+                            <p className="text-xs text-slate-600 leading-relaxed truncate hover:whitespace-normal transition-all cursor-help" title={item.mensagem}>
+                              {item.mensagem}
+                            </p>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge className={cn(
+                              "text-[10px] font-bold uppercase",
+                              item.status === 'pendente' ? "bg-slate-100 text-slate-500" :
+                              item.status === 'lido' ? "bg-green-100 text-green-700" :
+                              "bg-primary/10 text-primary"
+                            )}>
+                              {item.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4 text-slate-400" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Alterar Status</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'lido')}>
+                                  <Check className="mr-2 h-4 w-4 text-green-600" /> Marcar como lido
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'respondido')}>
+                                  <Send className="mr-2 h-4 w-4 text-primary" /> Marcar como respondido
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'pendente')}>
+                                  <Clock className="mr-2 h-4 w-4 text-slate-500" /> Marcar como pendente
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-32 text-center text-slate-400 italic">
+                          Nenhum feedback recebido até o momento.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

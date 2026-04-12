@@ -34,6 +34,7 @@ import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import {
   Tabs,
   TabsContent,

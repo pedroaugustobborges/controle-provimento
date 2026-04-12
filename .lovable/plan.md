@@ -1,14 +1,19 @@
 
 
-## Plano de Implementação
+## Plano de Correção — Seleção Visual dos Submenus
 
-### Objetivo
-Corrigir o destaque visual dos submenus no menu lateral: apenas o submenu ativo deve ter estilo de "selecionado", e deve haver um indicador visual (linha vertical ou indentação) conectando submenus ao grupo pai.
+### Problema
+Todos os submenus ficam visualmente selecionados ao mesmo tempo após a última alteração. A lógica de detecção de rota ativa está com matching excessivamente amplo.
 
-### Passos
+### Correção
 
-1. **Analisar `src/components/AppSidebar.tsx`** para entender a estrutura atual de grupos e submenus, e como o estado ativo é determinado
-2. **Ajustar estilos do item ativo**: garantir que apenas o submenu clicado receba destaque (fundo/cor), e que o grupo pai permaneça expandido mas sem o mesmo estilo de selecionado
-3. **Adicionar indicador visual de hierarquia**: aplicar uma linha vertical lateral ou indentação nos submenus para evidenciar que pertencem ao grupo pai
-4. **Verificar variáveis CSS** em `src/index.css` para garantir que as cores de sidebar estão coerentes com o design
+1. **`src/components/NavLink.tsx`** — Adicionar suporte à prop `end` do React Router (passando-a ao `RouterNavLink` interno), para que submenus usem correspondência exata de rota
+
+2. **`src/components/AppSidebar.tsx`** — Nos submenus:
+   - Usar `NavLink` com `end={true}` para garantir match exato da rota
+   - Remover lógica manual de `isUrlActive` para submenus e confiar no mecanismo nativo do React Router (`NavLink` com `isActive`)
+   - Garantir que `activeClassName` só é aplicado quando `isActive === true`
+   - Simplificar `isParentActive` para apenas verificar se algum filho tem rota ativa
+
+3. **Testar** navegação entre submenus de diferentes grupos para confirmar que apenas um fica selecionado por vez
 

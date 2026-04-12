@@ -115,19 +115,25 @@ const SortableKanbanCard = ({ convocacao, onEdit }: KanbanCardProps) => {
             <div className="flex gap-1">
               <Button 
                 variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 text-slate-400 hover:text-primary"
+                size="sm" 
+                className="h-6 px-1.5 text-[9px] font-bold text-slate-400 hover:text-primary gap-0.5"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(convocacao);
                 }}
               >
                 <Edit className="h-3 w-3" />
+                <span className="hidden group-hover:inline">Devolutiva</span>
               </Button>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+            {convocacao.horario && (
+              <Badge variant="outline" className="text-[10px] font-bold text-primary border-primary/20 bg-primary/5 px-1.5 h-4">
+                {convocacao.horario}
+              </Badge>
+            )}
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <span>{formatDate(convocacao.data_convocacao)}</span>
@@ -182,7 +188,7 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
   );
 
   const columns = [
-    { id: 'pendente', title: 'Aguardando Contato', icon: Phone, color: 'bg-blue-500' },
+    { id: 'pendente', title: 'Convocações do Dia', icon: Clock, color: 'bg-blue-500' },
     { id: 'aceite', title: 'Aceite', icon: Activity, color: 'bg-green-500' },
     { id: 'faltou', title: 'Faltou', icon: XCircle, color: 'bg-red-500' },
     { id: 'desistiu', title: 'Desistiu', icon: Paperclip, color: 'bg-orange-500' },

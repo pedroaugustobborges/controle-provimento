@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import avatarDefault from '@/assets/avatar-izac.jpeg';
 import logoAgir from '@/assets/logo-agir-white.png';
+import { supabase } from '@/lib/supabase';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { 
@@ -16,7 +17,7 @@ import {
   Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
   Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
-  History, MessageSquare, AlertTriangle, Info, CheckCircle
+  History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera
 } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { Input } from '@/components/ui/input';

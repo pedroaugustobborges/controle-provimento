@@ -14,6 +14,8 @@ export type StatusVaga =
   | 'DOCUMENTAÇÃO'
   | 'CONVOCAÇÕES'
   | 'FILA DE EDITAIS'
+  | 'PUBLICAR EDITAL'
+  | 'ACOMPANHAMENTO DE EDITAL'
   | 'SUSPENSA'
   | 'PAUSADA'
   | 'AGUARDANDO UNIDADE'

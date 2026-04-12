@@ -140,7 +140,8 @@ export interface Vaga {
   id: string;
   data_abertura: string;
   data_recebimento?: string;
-  data_criacao: string; // ISO string for precise 24h check
+  data_criacao: string;
+  created_at?: string;
   unidade: string;
   requisicao: string;
   numero_requisicao?: string; 

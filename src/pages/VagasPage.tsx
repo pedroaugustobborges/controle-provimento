@@ -201,9 +201,12 @@ export default function VagasPage() {
       const matchAssistente = filterAssistente === 'all' || (v.assistentes || []).includes(filterAssistente);
       const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
       
-      const isNew = v.origem === 'manual' && v.data_criacao && (now - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000;
+      const creationDate = v.created_at || v.data_criacao;
+      const isManualNew = v.origem === 'manual' && creationDate && (now - new Date(creationDate).getTime()) < 24 * 60 * 60 * 1000;
+      const isImportedNew = v.origem !== 'manual' && v.created_at && (now - new Date(v.created_at).getTime()) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const isNew = isManualNew || isImportedNew;
       const matchVagasNovas = !filterVagasNovas || isNew;
-      
+
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
     });
   }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, vacancyStatusTab]);
@@ -230,12 +233,23 @@ export default function VagasPage() {
       convocacao: 0,
       aguardando_unidade: 0,
       documentacao: 0,
-      com_banco_valido: 0
+      com_banco_valido: 0,
+      vagas_novas: 0
     };
+    
+    const now = new Date().getTime();
     
     canonicalBase.forEach(v => {
       const cat = v.categoria_status || getCategoriaStatus(v);
       
+      const creationDate = v.created_at || v.data_criacao;
+      const isManualNew = v.origem === 'manual' && creationDate && (now - new Date(creationDate).getTime()) < 24 * 60 * 60 * 1000;
+      const isImportedNew = v.origem !== 'manual' && v.created_at && (now - new Date(v.created_at).getTime()) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      
+      if (isManualNew || isImportedNew) {
+        acc.vagas_novas++;
+      }
+
       if (acc[cat] !== undefined) {
         acc[cat]++;
       } else {
@@ -259,6 +273,7 @@ export default function VagasPage() {
   const countAguardandoUnidade = counts.aguardando_unidade;
   const countDocumentacao = counts.documentacao;
   const countComBanco = counts.com_banco_valido;
+  const countVagasNovas = counts.vagas_novas;
 
 
   // 4. Parity Debug Audit - forensic row-level check
@@ -467,9 +482,10 @@ export default function VagasPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-10 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-11 gap-3">
         {[
           { label: 'Total de Vagas', value: parityAudit.appCount, sub: 'Base ativa', borderColor: 'border-l-slate-500', textColor: 'text-slate-800' },
+          { label: 'Novas 24h', value: countVagasNovas, borderColor: 'border-l-blue-500', textColor: 'text-blue-600', isFilterable: true, filterKey: 'novas' },
           { label: 'Fila de Editais', value: countFilaEdital, borderColor: 'border-l-amber-400', textColor: 'text-amber-600' },
           { label: 'Em Andamento', value: countEmAndamento, borderColor: 'border-l-blue-400', textColor: 'text-blue-600' },
           { label: 'Concluídas', value: countConcluidas, borderColor: 'border-l-green-400', textColor: 'text-green-600' },
@@ -480,7 +496,15 @@ export default function VagasPage() {
           { label: 'Aguard. Unidade', value: countAguardandoUnidade, borderColor: 'border-l-yellow-400', textColor: 'text-yellow-600' },
           { label: 'Com Banco', value: countComBanco, borderColor: 'border-l-emerald-400', textColor: 'text-emerald-600' },
         ].map((card) => (
-          <Card key={card.label} className={`border-slate-200 shadow-sm bg-white border-l-4 ${card.borderColor} hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-default`}>
+          <Card 
+            key={card.label} 
+            className={`border-slate-200 shadow-sm bg-white border-l-4 ${card.borderColor} hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer ${card.filterKey === 'novas' && filterVagasNovas ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+            onClick={() => {
+              if (card.filterKey === 'novas') {
+                setFilterVagasNovas(!filterVagasNovas);
+              }
+            }}
+          >
             <CardContent className="p-4 flex flex-col gap-1">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{card.label}</p>
               <p className={`text-2xl font-bold ${card.textColor}`}>{card.value}</p>
@@ -578,7 +602,7 @@ export default function VagasPage() {
               onClick={() => setFilterVagasNovas(!filterVagasNovas)}
             >
               <Sparkles className={`h-3.5 w-3.5 ${filterVagasNovas ? 'text-white' : 'text-blue-500'}`} />
-              Vagas Novas (24h)
+              Vagas Novas (24h) {countVagasNovas > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-blue-100 text-blue-700 border-none">{countVagasNovas}</Badge>}
             </Button>
 
             {hasFilters && (

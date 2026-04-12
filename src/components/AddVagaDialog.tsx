@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
@@ -85,6 +85,7 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
       ...formData,
       numero_requisicao: formData.requisicao,
       data_criacao: now,
+      created_at: now,
       status: 'EM ANDAMENTO' as StatusVaga,
       status_geral: 'EM ANDAMENTO' as StatusVaga,
       analista_responsavel: defaultAnalista,
@@ -131,7 +132,35 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="unidade">Unidade *</Label>
-              <Input id="unidade" name="unidade" value={formData.unidade} onChange={handleInputChange} placeholder="Ex: HUGOL" required />
+              <Select 
+                value={formData.unidade} 
+                onValueChange={(v) => handleSelectChange('unidade', v)}
+                required
+              >
+                <SelectTrigger id="unidade">
+                  <SelectValue placeholder="Selecione a unidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Goiás</SelectLabel>
+                    <SelectItem value="CRER">CRER</SelectItem>
+                    <SelectItem value="AGIR">AGIR</SelectItem>
+                    <SelectItem value="HUGOL">HUGOL</SelectItem>
+                    <SelectItem value="HECAD">HECAD</SelectItem>
+                    <SelectItem value="HDS">HDS</SelectItem>
+                    <SelectItem value="POLICLÍNICA">POLICLÍNICA</SelectItem>
+                    <SelectItem value="JATAÍ">JATAÍ</SelectItem>
+                    <SelectItem value="TEIA APARECIDA">TEIA APARECIDA</SelectItem>
+                    <SelectItem value="TEIA GOIÂNIA">TEIA GOIÂNIA</SelectItem>
+                    <SelectItem value="TEIA CANEDO">TEIA CANEDO</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Vitória (ES)</SelectLabel>
+                    <SelectItem value="SÃO PEDRO">SÃO PEDRO</SelectItem>
+                    <SelectItem value="SUÁ">SUÁ</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="requisicao">Requisição *</Label>

@@ -44,10 +44,9 @@ export const AgieChat = memo(() => {
   // Notification carousel state
   const [notificationIndex, setNotificationIndex] = useState(0);
   const notifications = useMemo(() => [
-    "Nova mensagem recebida",
-    "Sugestão de melhoria pendente",
-    "Problema reportado",
-    "Novidade disponível"
+    "Olá! Eu sou a Agie 👋",
+    "Envie mensagens para a equipe",
+    "Envie sugestões de melhoria"
   ], []);
 
   const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
@@ -55,13 +54,13 @@ export const AgieChat = memo(() => {
 
   // Notification carousel logic
   useEffect(() => {
-    if (hasNewMessage && !isOpen) {
+    if (!isOpen) {
       const interval = setInterval(() => {
-        setNotificationIndex((prev) => (prev + 1) % notifications.length);
-      }, 3000);
+        setNotificationIndex((prev) => (prev + 1) % (hasNewMessage ? 4 : 3));
+      }, 4000);
       return () => clearInterval(interval);
     }
-  }, [hasNewMessage, isOpen, notifications.length]);
+  }, [hasNewMessage, isOpen]);
 
   // Fetch user profile on mount
   useEffect(() => {

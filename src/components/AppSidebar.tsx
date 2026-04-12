@@ -182,7 +182,7 @@ export function AppSidebar() {
         <SidebarGroup className="px-3">
           <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
             <div className="h-[1px] w-6 bg-white/15" />
-            FLUXO DE PROVIMENTO
+            FLUXO PROVIMENTO
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5">

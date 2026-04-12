@@ -195,6 +195,8 @@ export default function VagasPage() {
       const category = v.categoria_status || getCategoriaStatus(v);
       if (vacancyStatusTab === 'ativas' && (category === 'concluidas' || category === 'vagas_interrompidas')) return false;
       if (vacancyStatusTab === 'concluidas' && category !== 'concluidas' && category !== 'vagas_interrompidas') return false;
+      if (vacancyStatusTab === 'em_andamento' && category !== 'em_andamento') return false;
+      // if vacancyStatusTab === 'todas', we don't return false for any category
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 

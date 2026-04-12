@@ -153,15 +153,52 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
             </div>
           )}
 
+          {!diaInteiro && (
+            <div className="space-y-2">
+              <Label htmlFor="vagas-bloq">Quantidade de vagas por horário *</Label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map(v => (
+                  <Button
+                    key={v}
+                    type="button"
+                    variant={vagasBloqueadas === v ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1 h-8 text-xs font-bold"
+                    onClick={() => setVagasBloqueadas(v)}
+                  >
+                    {v === 5 ? 'Todas (5)' : v}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground italic">
+                Selecione quantas vagas de cada horário escolhido acima serão bloqueadas.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="bloq-motivo">Motivo do bloqueio *</Label>
             <Textarea
               id="bloq-motivo"
               value={motivo}
               onChange={e => setMotivo(e.target.value)}
-              placeholder="Ex: Sem atendimento presencial, reunião interna..."
+              placeholder="Ex: Reunião interna, feriado local, sem sistema..."
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="link-teams">Link do Teams (opcional)</Label>
+            <Input
+              id="link-teams"
+              type="url"
+              value={linkTeams}
+              onChange={e => setLinkTeams(e.target.value)}
+              placeholder="https://teams.microsoft.com/..."
+            />
+            <p className="text-[10px] text-muted-foreground italic">
+              Se o atendimento desse horário for online, insira o link aqui.
+            </p>
           </div>
 
           <DialogFooter>

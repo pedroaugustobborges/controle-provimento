@@ -80,11 +80,12 @@ import {
 } from "@/components/ui/pagination";
 
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas, isLoadingVagas, isInitialLoad } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas, fetchBancos, isLoadingVagas, isInitialLoad } = useVagasStore();
   
   useEffect(() => {
     fetchVagas();
-  }, [fetchVagas]);
+    fetchBancos();
+  }, [fetchVagas, fetchBancos]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog, selectedRegion, selectedUnit: globalUnit } = useAdminStore();

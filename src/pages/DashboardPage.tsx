@@ -438,12 +438,14 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <Filter className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
+              <Filter className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Região</span>
             </div>
+            
             <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
-              <SelectTrigger className="h-9 w-[180px] rounded-lg border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wider text-slate-600 shadow-sm">
+              <SelectTrigger className="h-9 w-[180px] rounded-lg border-slate-200 bg-white text-[11px] font-black uppercase tracking-wider text-slate-600 shadow-sm hover:border-primary/30 transition-colors">
                 <SelectValue placeholder="Todas as Regiões" />
               </SelectTrigger>
               <SelectContent>
@@ -455,13 +457,17 @@ export default function DashboardPage() {
             </Select>
 
             {selectedRegion !== 'all' && (
+              <div className="h-4 w-[1px] bg-slate-200 mx-1 hidden sm:block" />
+            )}
+
+            {selectedRegion !== 'all' && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className={`h-8 text-[9px] font-black uppercase tracking-widest rounded-full transition-all ${
+                className={`h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-full transition-all ${
                   selectedUnits.includes('all')
-                    ? 'bg-primary text-white border-primary hover:bg-primary/90'
-                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                 }`}
                 onClick={() => setSelectedUnits(['all'])}
               >
@@ -471,7 +477,7 @@ export default function DashboardPage() {
           </div>
 
           {selectedRegion !== 'all' && UNIDADES_POR_REGIAO[selectedRegion] && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide max-w-[80vw]">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
               {UNIDADES_POR_REGIAO[selectedRegion].map((u) => {
                 const isSelected = selectedUnits.includes(u);
                 return (
@@ -489,10 +495,10 @@ export default function DashboardPage() {
                       }
                       setSelectedUnits(newUnits);
                     }}
-                    className={`shrink-0 h-7 px-3 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all border ${
+                    className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 ${
                       isSelected
-                        ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'bg-primary/5 text-primary border-primary shadow-sm'
+                        : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     {u}

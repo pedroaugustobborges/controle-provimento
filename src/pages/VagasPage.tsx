@@ -606,162 +606,186 @@ export default function VagasPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Abertura</TableHead>
-                  <TableHead>Recebimento</TableHead>
-                  <TableHead>Requisição</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead>Seção</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Vaga(s)</TableHead>
-                  <TableHead className="text-center">Banco</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                <TableRow className="bg-slate-50/50 border-b border-slate-200">
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[100px]">Abertura</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[100px]">Recebimento</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[120px]">Requisição</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[250px]">Cargo</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[120px]">Tipo</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[180px]">Unidade</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[150px]">Seção</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-center min-w-[150px]">Status</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-center min-w-[80px]">Vaga(s)</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-center min-w-[80px]">Banco</TableHead>
+                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-right min-w-[80px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedData.map((v) => (
-                  <TableRow
-                    key={v.id}
-                    className="whitespace-nowrap cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors"
-                    onClick={() => navigate(`/vagas/${v.id}`)}
-                  >
-                    <TableCell className="text-slate-600 text-[11px] font-medium">
-                      {v.data_abertura ? formatDate(v.data_abertura) : '-'}
-                    </TableCell>
-                    <TableCell className="text-slate-600 text-[11px] font-medium">
-                      {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
-                          {v.requisicao || v.numero_requisicao || '-'}
-                        </div>
-                        {v.source_row_index && (
-                          <span className="text-[9px] text-slate-400 ml-1">Linha {v.source_row_index}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <div className="font-semibold text-slate-800 truncate max-w-[200px] flex items-center gap-2" title={v.cargo}>
-                          {v.cargo}
-                          {v.origem === 'manual' && v.data_criacao && (new Date().getTime() - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000 && (
-                            <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase">
-                              <Sparkles className="h-2 w-2 mr-0.5" /> Nova Vaga
-                            </Badge>
+                {paginatedData.map((v) => {
+                  const categoria = v.categoria_status || getCategoriaStatus(v);
+                  const isConsultaOnly = ['concluidas', 'cancelada', 'suspensa'].includes(categoria);
+                  const isInitialStage = ['sem_status', 'aguardando_unidade'].includes(categoria);
+                  const isFilaEdital = categoria === 'fila_edital';
+                  
+                  return (
+                    <TableRow
+                      key={v.id}
+                      className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
+                      onClick={() => navigate(`/vagas/${v.id}`)}
+                    >
+                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                        {v.data_abertura ? formatDate(v.data_abertura) : '-'}
+                      </TableCell>
+                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                        {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
+                      </TableCell>
+                      <TableCell className="py-3 px-4 h-14">
+                        <div className="flex flex-col gap-0.5">
+                          <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
+                            {v.requisicao || v.numero_requisicao || '-'}
+                          </div>
+                          {v.source_row_index && (
+                            <span className="text-[9px] text-slate-400 ml-1">Linha {v.source_row_index}</span>
                           )}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-600 text-[11px] font-medium">
-                      {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
-                    </TableCell>
-                    <TableCell className="text-slate-600 font-medium truncate max-w-[150px]">{v.unidade}</TableCell>
-                    <TableCell className="text-slate-600 text-[11px] font-medium truncate max-w-[120px]" title={v.secao}>{v.secao || '-'}</TableCell>
-                    <TableCell className="text-center">
-                      <StatusBadge status={v.status || v.status_geral} />
-                    </TableCell>
-                    <TableCell className="text-center font-bold text-slate-700">
-                      {v.numero_vagas || v.quantidade || 0}
-                    </TableCell>
-                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                      {getBancoByVaga(v.id) ? (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700" 
-                          title="Realizar Convocação"
-                          onClick={() => navigate(`/convocacoes?open=true&vagaId=${v.id}`)}
-                        >
-                          <CheckCircle2 className="h-5 w-5" />
-                        </Button>
-                      ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-slate-300 hover:bg-slate-50" 
-                          title="Banco não encontrado"
-                          onClick={() => toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`)}
-                        >
-                          <CheckCircle2 className="h-5 w-5 opacity-40" />
-                        </Button>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
-                            <MoreVertical className="h-4 w-4 text-slate-500" />
+                      </TableCell>
+                      <TableCell className="py-3 px-4 h-14">
+                        <div className="flex flex-col">
+                          <div className="font-semibold text-slate-800 whitespace-normal break-words leading-tight max-w-[300px] flex items-center flex-wrap gap-2" title={v.cargo}>
+                            {v.cargo}
+                            {v.origem === 'manual' && v.data_criacao && (new Date().getTime() - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000 && (
+                              <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase">
+                                <Sparkles className="h-2 w-2 mr-0.5" /> Nova Vaga
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                        {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
+                      </TableCell>
+                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
+                        {v.unidade}
+                      </TableCell>
+                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[150px] leading-tight" title={v.secao}>
+                        {v.secao || '-'}
+                      </TableCell>
+                      <TableCell className="text-center py-3 px-4 h-14">
+                        <StatusBadge status={v.status || v.status_geral} />
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-slate-700 py-3 px-4 h-14">
+                        {v.numero_vagas || v.quantidade || 0}
+                      </TableCell>
+                      <TableCell className="text-center py-3 px-4 h-14" onClick={(e) => e.stopPropagation()}>
+                        {getBancoByVaga(v.id) ? (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700" 
+                            title="Realizar Convocação"
+                            onClick={() => navigate(`/convocacoes?open=true&vagaId=${v.id}`)}
+                          >
+                            <CheckCircle2 className="h-5 w-5" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-slate-400">Ações</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
-                            <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            setVagaParaEditar(v);
-                            setIsAddVagaOpen(true);
-                          }} className="gap-2">
-                            <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              updateVaga(v.id, { status: 'PUBLICAR EDITAL' });
-                              toast.success('Vaga enviada para Fila de Editais');
-                            }} 
-                            className="gap-2 text-amber-600"
+                        ) : (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-slate-300 hover:bg-slate-50" 
+                            title="Banco não encontrado"
+                            onClick={() => toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`)}
                           >
-                            <FileText className="h-4 w-4" /> Enviar para Fila de Editais
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              const bancoFound = getBancoByVaga(v.id);
-                              if (bancoFound) {
-                                navigate(`/convocacoes?open=true&vagaId=${v.id}`);
-                              } else {
-                                toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
-                              }
-                            }} 
-                            className="gap-2 text-green-600"
-                          >
-                            <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
-                          </DropdownMenuItem>
-                          {getBancoByVaga(v.id) && (
-                            <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
-                              <Database className="h-4 w-4" /> Ver Banco de Talentos
+                            <CheckCircle2 className="h-5 w-5 opacity-40" />
+                          </Button>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right py-3 px-4 h-14" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
+                              <MoreVertical className="h-4 w-4 text-slate-500" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-slate-400">Ações</DropdownMenuLabel>
+                            
+                            <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
+                              <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem 
-                            className="gap-2"
-                            onClick={() => {
-                              setSelectedVagaForHistory(v);
-                              setIsHistoryOpen(true);
-                            }}
-                          >
-                            <History className="h-4 w-4 text-slate-500" /> Histórico Completo
-                          </DropdownMenuItem>
-                          {canDelete && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive gap-2"
-                                onClick={() => {
-                                  setVagaParaExcluir(v.id);
-                                  setIsDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" /> Excluir Requisição
+
+                            {!isConsultaOnly && (
+                              <DropdownMenuItem onClick={() => {
+                                setVagaParaEditar(v);
+                                setIsAddVagaOpen(true);
+                              }} className="gap-2">
+                                <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
                               </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                            )}
+
+                            {isInitialStage && (
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  updateVaga(v.id, { status: 'PUBLICAR EDITAL' });
+                                  toast.success('Vaga enviada para Fila de Editais');
+                                }} 
+                                className="gap-2 text-amber-600"
+                              >
+                                <FileText className="h-4 w-4" /> Enviar para Fila de Editais
+                              </DropdownMenuItem>
+                            )}
+
+                            {(isInitialStage || isFilaEdital) && (
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  const bancoFound = getBancoByVaga(v.id);
+                                  if (bancoFound) {
+                                    navigate(`/convocacoes?open=true&vagaId=${v.id}`);
+                                  } else {
+                                    toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
+                                  }
+                                }} 
+                                className="gap-2 text-green-600"
+                              >
+                                <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
+                              </DropdownMenuItem>
+                            )}
+
+                            {getBancoByVaga(v.id) && (
+                              <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
+                                <Database className="h-4 w-4" /> Ver Banco de Talentos
+                              </DropdownMenuItem>
+                            )}
+
+                            <DropdownMenuItem 
+                              className="gap-2"
+                              onClick={() => {
+                                setSelectedVagaForHistory(v);
+                                setIsHistoryOpen(true);
+                              }}
+                            >
+                              <History className="h-4 w-4 text-slate-500" /> Histórico Completo
+                            </DropdownMenuItem>
+
+                            {canDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  className="text-destructive focus:text-destructive gap-2"
+                                  onClick={() => {
+                                    setVagaParaExcluir(v.id);
+                                    setIsDeleteDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" /> Excluir Requisição
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {filtered.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="px-6 py-20 text-center text-muted-foreground font-medium">

@@ -661,6 +661,7 @@ export const useVagasStore = create<VagasState>()(
         editais: state.editais,
         validacoes: state.validacoes,
         convocacoes: state.convocacoes,
+        bloqueios: state.bloqueios,
         tarefas: state.tarefas,
         alertas: state.alertas,
         historicoMensagens: state.historicoMensagens,

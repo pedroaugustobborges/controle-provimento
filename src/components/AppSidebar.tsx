@@ -96,7 +96,7 @@ export function AppSidebar() {
     },
     { 
       title: 'Banco de Talentos', 
-      url: '/banco-talentos', 
+      url: '#', // Change from /banco-talentos to #
       icon: Users, 
       subMenu: [
         { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
@@ -106,7 +106,7 @@ export function AppSidebar() {
     },
     { 
       title: 'Convocações', 
-      url: '/convocacoes', 
+      url: '#', // Change from /convocacoes to #
       icon: Calendar, 
       subMenu: [
         { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
@@ -188,8 +188,7 @@ export function AppSidebar() {
                     {item.subMenu ? (
                       <div className="flex flex-col gap-1">
                         <SidebarMenuButton asChild tooltip={item.title}>
-                          <NavLink
-                            to={item.url}
+                          <div
                             className={cn(
                               "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                               active 
@@ -214,7 +213,7 @@ export function AppSidebar() {
                             {active && !collapsed && (
                               <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
                             )}
-                          </NavLink>
+                          </div>
                         </SidebarMenuButton>
                         {!collapsed && (
                           <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-white/15 space-y-0.5 py-2 pl-3 relative">

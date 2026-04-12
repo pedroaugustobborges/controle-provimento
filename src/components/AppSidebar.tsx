@@ -152,13 +152,20 @@ export function AppSidebar() {
   ].filter(item => item.visible), [getPermissions]);
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const [activeParent, setActiveParent] = useState<string | null>(null);
 
   useEffect(() => {
     const activeWithSub = mainItems.find(item => item.subMenu && isParentActive(item));
-    if (activeWithSub && !openMenus.includes(activeWithSub.title)) {
-      setOpenMenus([activeWithSub.title]);
+    const activeTitle = activeWithSub?.title || null;
+    
+    // Somente abre o menu automaticamente se mudarmos de uma seção para outra
+    if (activeTitle && activeTitle !== activeParent) {
+      setOpenMenus([activeTitle]);
+      setActiveParent(activeTitle);
+    } else if (!activeTitle && activeParent) {
+      setActiveParent(null);
     }
-  }, [location.pathname, location.search, mainItems, isParentActive]);
+  }, [location.pathname, location.search, mainItems, isParentActive, activeParent]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
@@ -204,7 +211,8 @@ export function AppSidebar() {
                       >
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton asChild tooltip={item.title}>
-                            <div
+                            <NavLink
+                              to={item.url}
                               className={cn(
                                 "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none cursor-pointer w-full",
                                 active 
@@ -232,7 +240,7 @@ export function AppSidebar() {
                                   isOpen && "rotate-180"
                                 )} />
                               )}
-                            </div>
+                            </NavLink>
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         {!collapsed && (

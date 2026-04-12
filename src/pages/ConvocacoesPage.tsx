@@ -237,6 +237,15 @@ export default function ConvocacoesPage() {
                 <List className="h-3.5 w-3.5 mr-1" /> Histórico
               </Button>
             </div>
+            {view === 'diaria' && (
+              <Button 
+                variant="outline" 
+                onClick={() => setIsBloqueioOpen(true)} 
+                className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
+              >
+                <Lock className="h-4 w-4" /> Bloquear Horário
+              </Button>
+            )}
             <Button onClick={() => handleNewConvocacao()} className="h-10 gap-2 text-xs font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white rounded-xl transition-all px-4">
               <Plus className="h-4 w-4" /> Nova Convocação
             </Button>

@@ -242,7 +242,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 
                 <div className="h-8 w-px bg-border/50 mx-1" />
                 
-                <div className={`rounded-xl overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 ${
+                <div className={`rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 ${
                   isCompact ? 'h-8 w-8' : 'h-10 w-10'
                 }`}>
                   <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
@@ -313,7 +313,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="relative h-36 bg-primary flex items-center justify-center">
             <img src={logoAgir} alt="AGIR" className="h-14 object-contain" />
             <div className="absolute -bottom-12 left-8">
-              <div className="h-24 w-24 rounded-2xl border-4 border-background bg-muted overflow-hidden shadow-lg">
+              <div className="h-24 w-24 rounded-full border-4 border-background bg-muted overflow-hidden shadow-lg">
                 <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
               </div>
             </div>

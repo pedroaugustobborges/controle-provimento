@@ -202,9 +202,24 @@ export default function VagasPage() {
       const matchLideranca = filterLideranca === 'all' || (filterLideranca === 'yes' ? v.tipo_vaga === 'lideranca' : v.tipo_vaga !== 'lideranca');
       
       const creationDate = v.created_at || v.data_criacao;
-      const isManualNew = v.origem === 'manual' && creationDate && (now - new Date(creationDate).getTime()) < 24 * 60 * 60 * 1000;
-      const isImportedNew = v.origem !== 'manual' && v.created_at && (now - new Date(v.created_at).getTime()) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
-      const isNew = isManualNew || isImportedNew;
+      const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
+      
+      const startOfYesterday = new Date(now);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+      startOfYesterday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(now);
+      endOfToday.setHours(23, 59, 59, 999);
+
+      const isManualNew = v.origem === 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000;
+      
+      let isByRecebimento = false;
+      if (v.data_recebimento) {
+        const receivedDate = new Date(v.data_recebimento);
+        isByRecebimento = receivedDate >= startOfYesterday && receivedDate <= endOfToday;
+      }
+      
+      const isImportedFallback = v.origem !== 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const isNew = isManualNew || isByRecebimento || isImportedFallback;
       const matchVagasNovas = !filterVagasNovas || isNew;
 
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
@@ -243,10 +258,25 @@ export default function VagasPage() {
       const cat = v.categoria_status || getCategoriaStatus(v);
       
       const creationDate = v.created_at || v.data_criacao;
-      const isManualNew = v.origem === 'manual' && creationDate && (now - new Date(creationDate).getTime()) < 24 * 60 * 60 * 1000;
-      const isImportedNew = v.origem !== 'manual' && v.created_at && (now - new Date(v.created_at).getTime()) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
       
-      if (isManualNew || isImportedNew) {
+      const startOfYesterday = new Date(now);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+      startOfYesterday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(now);
+      endOfToday.setHours(23, 59, 59, 999);
+
+      const isManualNew = v.origem === 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000;
+      
+      let isByRecebimento = false;
+      if (v.data_recebimento) {
+        const receivedDate = new Date(v.data_recebimento);
+        isByRecebimento = receivedDate >= startOfYesterday && receivedDate <= endOfToday;
+      }
+      
+      const isImportedFallback = v.origem !== 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      
+      if (isManualNew || isByRecebimento || isImportedFallback) {
         acc.vagas_novas++;
       }
 

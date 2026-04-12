@@ -92,6 +92,8 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
     onOpenChange(false);
     setHorariosSelected([]);
     setMotivo('');
+    setLinkTeams('');
+    setVagasBloqueadas(5);
     setDiaInteiro(false);
   };
 

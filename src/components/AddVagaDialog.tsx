@@ -153,11 +153,24 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
                     <SelectItem value="TEIA APARECIDA">TEIA APARECIDA</SelectItem>
                     <SelectItem value="TEIA GOIÂNIA">TEIA GOIÂNIA</SelectItem>
                     <SelectItem value="TEIA CANEDO">TEIA CANEDO</SelectItem>
+                    <SelectItem value="TEIA ANÁPOLIS">TEIA ANÁPOLIS</SelectItem>
                   </SelectGroup>
                   <SelectGroup>
                     <SelectLabel>Vitória (ES)</SelectLabel>
                     <SelectItem value="SÃO PEDRO">SÃO PEDRO</SelectItem>
                     <SelectItem value="SUÁ">SUÁ</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Outras Unidades</SelectLabel>
+                    <SelectItem value="DOURADOS">DOURADOS</SelectItem>
+                    <SelectItem value="CHS">CHS</SelectItem>
+                    <SelectItem value="HMSA">HMSA</SelectItem>
+                    <SelectItem value="HRCAC">HRCAC</SelectItem>
+                    <SelectItem value="TEIA CEN">TEIA CEN</SelectItem>
+                    <SelectItem value="TEIA PIN">TEIA PIN</SelectItem>
+                    <SelectItem value="TEIA MAN">TEIA MAN</SelectItem>
+                    <SelectItem value="TEIA MAN 2">TEIA MAN 2</SelectItem>
+                    <SelectItem value="TEIA MAN 3">TEIA MAN 3</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

@@ -668,12 +668,18 @@ export default function VagasPage() {
 
       <div className="mb-4">
         <Tabs value={vacancyStatusTab} onValueChange={setVacancyStatusTab} className="w-full">
-          <TabsList className="bg-slate-100/50 p-1 rounded-xl">
-            <TabsTrigger value="ativas" className="font-bold rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500">
+          <TabsList className="bg-slate-100/50 p-1 rounded-xl flex-wrap h-auto">
+            <TabsTrigger value="todas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+              Todas as Vagas ({canonicalBase.length})
+            </TabsTrigger>
+            <TabsTrigger value="em_andamento" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+              Em Andamento ({counts.em_andamento})
+            </TabsTrigger>
+            <TabsTrigger value="ativas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
               Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao})
             </TabsTrigger>
-            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500">
-              Vagas Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
+            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+              Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
             </TabsTrigger>
           </TabsList>
         </Tabs>

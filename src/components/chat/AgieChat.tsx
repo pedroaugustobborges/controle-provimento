@@ -104,7 +104,7 @@ export const AgieChat = memo(() => {
 
   const handleOpen = () => {
     setIsOpen(true);
-    setTemNovasMensagens(false);
+    marcarTodasLidas();
   };
 
   const handleClose = useCallback(() => {

@@ -99,7 +99,14 @@ export default function VagasPage() {
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [filterVagasNovas, setFilterVagasNovas] = useState(false);
-  const [vacancyStatusTab, setVacancyStatusTab] = useState('todas');
+  const [vacancyStatusTab, setVacancyStatusTab] = useState(searchParams.get('statusTab') || 'todas');
+  
+  useEffect(() => {
+    const statusTab = searchParams.get('statusTab');
+    if (statusTab) {
+      setVacancyStatusTab(statusTab);
+    }
+  }, [searchParams]);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isAddVagaOpen, setIsAddVagaOpen] = useState(false);

@@ -97,6 +97,15 @@ export const AgieChat = memo(() => {
     setTemNovasMensagens(false);
   };
 
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setStep('INITIAL');
+    setSelectedRegion(null);
+    setSelectedUnit(null);
+    setSelectedRole(null);
+    setSelectedRecipient(null);
+  }, []);
+
   const handleBack = () => {
     if (step === 'COMMUNICATION_HUB') setStep('INITIAL');
     if (step === 'FEEDBACK') setStep('INITIAL');
@@ -111,7 +120,13 @@ export const AgieChat = memo(() => {
       else if (selectedRole) setStep('BY_ROLE');
     }
     if (step === 'CONVERSATION') {
-      setStep('BY_PERSON');
+      if (selectedRole && (selectedRole.id === 'super-go-vit' || selectedRole.id === 'super-fora' || selectedRole.id === 'coordenadora')) {
+        setStep('SUPERVISION');
+      } else if (selectedUnit || selectedRole) {
+        setStep('BY_PERSON');
+      } else {
+        setStep('COMMUNICATION_HUB');
+      }
     }
   };
 
@@ -223,18 +238,18 @@ export const AgieChat = memo(() => {
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-primary rounded-full" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm leading-tight tracking-tight">Agie</h3>
-                  <p className="text-[10px] text-white/70 uppercase tracking-widest font-black">Assistente AG Saúde</p>
+                  <h3 className="font-bold text-sm leading-tight tracking-tight">Hub de Comunicação AGIR</h3>
+                  <p className="text-[10px] text-white/70 uppercase tracking-widest font-black">Central de Atendimento</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full" onClick={handleClose}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col bg-slate-50 relative overflow-hidden">
-              {step !== 'INITIAL' && step !== 'CONVERSATION' && (
+              {step !== 'INITIAL' && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -252,10 +267,10 @@ export const AgieChat = memo(() => {
                     <div className="pt-4 animate-in fade-in slide-in-from-bottom-4">
                       <div className="mb-6">
                         <h2 className="text-xl font-bold text-slate-800">
-                          Olá, {userProfile?.nome_completo?.split(' ')[0] || 'usuário'}! 👋
+                          Olá, {userProfile?.nome_completo?.split(' ')[0] || 'colega'}! 👋
                         </h2>
                         <p className="text-sm text-slate-500 mt-1">
-                          Sou a AGIR Saúde, sua assistente de comunicação interna. Como posso te ajudar hoje?
+                          Como posso te conectar hoje? Escolha uma das opções para começar:
                         </p>
                       </div>
                       <div className="grid gap-3">
@@ -418,19 +433,45 @@ export const AgieChat = memo(() => {
                     </div>
                   )}
 
-                  {step === 'SUPERVISION' && (
+                   {step === 'SUPERVISION' && (
                     <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
-                      <div className="p-6 bg-red-50 border border-red-100 rounded-xl text-center space-y-3">
-                        <Shield className="w-10 h-10 text-red-500 mx-auto" />
-                        <h3 className="font-bold text-red-800">Contatar Supervisão</h3>
-                        <p className="text-xs text-red-600">Este canal é direto para a coordenação do sistema AGIR.</p>
-                        <Button 
-                          className="bg-red-600 hover:bg-red-700 w-full"
-                          onClick={() => { setSelectedRecipient('Supervisão AGIR'); setStep('CONVERSATION'); }}
-                        >
-                          Iniciar Conversa Direta
-                        </Button>
+                      <div className="flex items-center gap-2 px-1">
+                        <Shield className="w-4 h-4 text-red-600" />
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Contatar Supervisão</p>
                       </div>
+                      <div className="grid gap-2">
+                        {ROLES.filter(role => 
+                          role.id === 'super-go-vit' || 
+                          role.id === 'super-fora' || 
+                          role.id === 'coordenadora'
+                        ).map(role => (
+                          <div key={role.id} className="space-y-1">
+                            {role.users.map(userName => (
+                              <Button 
+                                key={userName}
+                                variant="outline" 
+                                className="w-full justify-start gap-3 h-14 bg-white hover:border-red-200 transition-all group"
+                                onClick={() => { 
+                                  setSelectedRecipient(userName); 
+                                  setSelectedRole(role);
+                                  setStep('CONVERSATION'); 
+                                }}
+                              >
+                                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-xs font-bold text-red-600 group-hover:bg-red-100">
+                                  {userName.charAt(0)}
+                                </div>
+                                <div className="text-left">
+                                  <p className="text-sm font-bold text-slate-800">{userName}</p>
+                                  <p className="text-[10px] text-slate-500">{role.label}</p>
+                                </div>
+                              </Button>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-slate-400 italic px-2">
+                        * Canal direto com a liderança e supervisão do sistema.
+                      </p>
                     </div>
                   )}
 
@@ -537,6 +578,20 @@ export const AgieChat = memo(() => {
 
                   {step === 'CONVERSATION' && (
                     <div className="space-y-4">
+                      {/* Conversation Header Info */}
+                      <div className="bg-white p-3 rounded-xl border shadow-sm flex items-center gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {selectedRecipient?.charAt(0)}
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                          <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">Conversando com:</p>
+                          <p className="text-sm font-bold text-slate-800 truncate">{selectedRecipient}</p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {selectedRole?.label || (selectedUnit ? `Equipe ${selectedUnit.name}` : 'Colaborador')}
+                          </p>
+                        </div>
+                      </div>
+
                       {messages.map((msg) => (
                         <div key={msg.id} className={cn("flex flex-col max-w-[85%]", msg.senderId === 'current-user' ? "ml-auto items-end" : "items-start")}>
                           <div className={cn("p-3 rounded-2xl text-sm shadow-sm", msg.senderId === 'current-user' ? "bg-primary text-white rounded-br-none" : "bg-white text-slate-800 rounded-bl-none border")}>
@@ -575,7 +630,7 @@ export const AgieChat = memo(() => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="relative cursor-pointer"
-        onClick={handleOpen}
+        onClick={isOpen ? handleClose : handleOpen}
       >
         <AnimatePresence>
           {hasNewMessage && !isOpen && (
@@ -611,7 +666,7 @@ export const AgieChat = memo(() => {
               ? "bg-white border-primary rotate-90" 
               : hasNewMessage
                 ? "bg-red-600 border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
-                : "bg-primary border-white hover:shadow-primary/40"
+                : "bg-primary border-white hover:shadow-primary/40 shadow-xl"
           )}
         >
           {isOpen ? (
@@ -671,12 +726,17 @@ export const AgieChat = memo(() => {
         {/* Help tooltip */}
         {!isOpen && (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="absolute right-20 top-1/2 -translate-y-1/2 bg-white px-3 py-1.5 rounded-lg shadow-lg border text-xs font-bold whitespace-nowrap text-primary pointer-events-none"
+            initial={{ opacity: 0, x: 20, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ 
+              delay: 0.5, 
+              duration: 0.4,
+              ease: "easeOut"
+            }}
+            className="absolute right-20 top-1/2 -translate-y-1/2 bg-white px-4 py-2.5 rounded-2xl shadow-2xl border text-[13px] font-bold whitespace-nowrap text-primary pointer-events-none"
           >
-            Olá! Sou a Agie.
-            <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 border-8 border-transparent border-l-white" />
+            Central de Comunicação
+            <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-white" />
           </motion.div>
         )}
       </motion.div>

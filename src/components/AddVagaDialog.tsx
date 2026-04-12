@@ -85,6 +85,7 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
       ...formData,
       numero_requisicao: formData.requisicao,
       data_criacao: now,
+      created_at: now,
       status: 'EM ANDAMENTO' as StatusVaga,
       status_geral: 'EM ANDAMENTO' as StatusVaga,
       analista_responsavel: defaultAnalista,

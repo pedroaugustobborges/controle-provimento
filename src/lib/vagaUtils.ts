@@ -23,9 +23,14 @@ export function removeAccents(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+const normStatusCache = new Map<string, string>();
+
 export function normStatus(s: string): string {
   if (!s) return '';
-  let r = String(s).trim().toLowerCase();
+  const input = String(s);
+  if (normStatusCache.has(input)) return normStatusCache.get(input)!;
+
+  let r = input.trim().toLowerCase();
   // método 1: NFD + remoção de combining marks
   try {
     r = r.normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -40,7 +45,9 @@ export function normStatus(s: string): string {
       .replace(/[ç]/g, 'c')
       .replace(/[ñ]/g, 'n');
   }
-  return r.replace(/\s+/g, ' ').trim();
+  const result = r.replace(/\s+/g, ' ').trim();
+  normStatusCache.set(input, result);
+  return result;
 }
 
 export const REGION_MAP: Record<string, string> = Object.fromEntries(
@@ -106,6 +113,8 @@ export function isConvocacaoByFields(row: any): boolean {
   );
 }
 
+const categoriaStatusCache = new Map<string, string>();
+
 export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = false): keyof typeof CATEGORIAS_STATUS | 'sem_classificacao' {
   if (!row) return 'sem_classificacao';
   
@@ -115,20 +124,32 @@ export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = 
     return 'sem_classificacao';
   }
   
-  const normS = normStatus(String(status));
+  const statusStr = String(status);
+  if (categoriaStatusCache.has(statusStr)) {
+    return categoriaStatusCache.get(statusStr) as any;
+  }
+
+  const normS = normStatus(statusStr);
+  let result: any = 'sem_classificacao';
   
   // Priority rules with includes() for fuzzy matching
-  if (normS.includes('movimentac') || normS.includes('transfer')) return 'movimentacao_interna';
-  if (normS === 'admissao' || normS.includes('admissao envia')) return 'em_admissao';
-  if (normS.includes('realizar convoc')) return 'em_andamento';
-  
-  for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {
-    if (values.includes(normS)) {
-      return cat as keyof typeof CATEGORIAS_STATUS;
+  if (normS.includes('movimentac') || normS.includes('transfer')) {
+    result = 'movimentacao_interna';
+  } else if (normS === 'admissao' || normS.includes('admissao envia')) {
+    result = 'em_admissao';
+  } else if (normS.includes('realizar convoc')) {
+    result = 'em_andamento';
+  } else {
+    for (const [cat, values] of Object.entries(CATEGORIAS_STATUS)) {
+      if (values.includes(normS)) {
+        result = cat;
+        break;
+      }
     }
   }
 
-  return 'sem_classificacao';
+  categoriaStatusCache.set(statusStr, result);
+  return result as any;
 }
 
 export function getStatusColor(status: string): string {

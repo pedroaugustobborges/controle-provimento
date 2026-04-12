@@ -44,10 +44,9 @@ export const AgieChat = memo(() => {
   // Notification carousel state
   const [notificationIndex, setNotificationIndex] = useState(0);
   const notifications = useMemo(() => [
-    "Nova mensagem recebida",
-    "Sugestão de melhoria pendente",
-    "Problema reportado",
-    "Novidade disponível"
+    "Olá! Eu sou a Agie 👋",
+    "Envie mensagens para a equipe",
+    "Envie sugestões de melhoria"
   ], []);
 
   const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
@@ -55,13 +54,13 @@ export const AgieChat = memo(() => {
 
   // Notification carousel logic
   useEffect(() => {
-    if (hasNewMessage && !isOpen) {
+    if (!isOpen) {
       const interval = setInterval(() => {
-        setNotificationIndex((prev) => (prev + 1) % notifications.length);
-      }, 3000);
+        setNotificationIndex((prev) => (prev + 1) % (hasNewMessage ? 4 : 3));
+      }, 4000);
       return () => clearInterval(interval);
     }
-  }, [hasNewMessage, isOpen, notifications.length]);
+  }, [hasNewMessage, isOpen]);
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -201,6 +200,14 @@ export const AgieChat = memo(() => {
     }, 1000);
   };
 
+  const currentTooltipMessage = useMemo(() => {
+    if (hasNewMessage) {
+      const alertMessages = ["Você tem uma nova mensagem!", "Você tem uma nova tarefa!"];
+      return alertMessages[notificationIndex % alertMessages.length];
+    }
+    return notifications[notificationIndex % notifications.length];
+  }, [hasNewMessage, notificationIndex, notifications]);
+
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {/* Chat Window */}
@@ -215,31 +222,37 @@ export const AgieChat = memo(() => {
             {/* Header */}
             <div className="bg-primary p-4 text-white flex items-center justify-between shadow-lg">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md relative overflow-hidden group">
-                  {/* Agie Face inside the chat */}
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md relative group">
+                  {/* Improved Agie Face */}
                   <motion.div 
                     animate={{ y: [0, -1, 1, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="flex flex-col items-center justify-center gap-1"
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    className="flex flex-col items-center justify-center gap-0.5"
                   >
                     <div className="flex gap-1.5">
                       <motion.div 
-                        animate={{ height: [2, 2, 0, 2] }}
-                        transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }}
-                        className="w-1.5 h-1.5 bg-white rounded-full" 
+                        animate={{ height: [6, 6, 1, 6] }}
+                        transition={{ duration: 4, repeat: Infinity, times: [0, 0.9, 0.95, 1] }}
+                        className="w-1.5 bg-white rounded-full" 
                       />
                       <motion.div 
-                        animate={{ height: [2, 2, 0, 2] }}
-                        transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }}
-                        className="w-1.5 h-1.5 bg-white rounded-full" 
+                        animate={{ height: [6, 6, 1, 6] }}
+                        transition={{ duration: 4, repeat: Infinity, times: [0, 0.9, 0.95, 1] }}
+                        className="w-1.5 bg-white rounded-full" 
                       />
                     </div>
+                    <motion.div 
+                      animate={{ scaleX: [1, 1.2, 1] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      className="w-3 h-1 bg-white/40 rounded-full mt-0.5"
+                    />
                   </motion.div>
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-primary rounded-full" />
+                  {/* Status Indicator - Standard Position */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-primary rounded-full shadow-sm z-10" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm leading-tight tracking-tight">Hub de Comunicação AGIR</h3>
-                  <p className="text-[10px] text-white/70 uppercase tracking-widest font-black">Central de Atendimento</p>
+                  <h3 className="font-bold text-sm leading-tight tracking-tight">Comunicação Interna</h3>
+                  <p className="text-[10px] text-white/70 uppercase tracking-widest font-black">Setor de Provimento</p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full" onClick={handleClose}>
@@ -579,14 +592,14 @@ export const AgieChat = memo(() => {
                   {step === 'CONVERSATION' && (
                     <div className="space-y-4">
                       {/* Conversation Header Info */}
-                      <div className="bg-white p-3 rounded-xl border shadow-sm flex items-center gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      {/* Compact Conversation Header */}
+                      <div className="bg-white px-3 py-2.5 rounded-xl border shadow-sm flex items-center gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                           {selectedRecipient?.charAt(0)}
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                          <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">Conversando com:</p>
-                          <p className="text-sm font-bold text-slate-800 truncate">{selectedRecipient}</p>
-                          <p className="text-[10px] text-slate-500 truncate">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-800 truncate leading-none mb-1">{selectedRecipient}</p>
+                          <p className="text-[10px] text-slate-500 truncate leading-none">
                             {selectedRole?.label || (selectedUnit ? `Equipe ${selectedUnit.name}` : 'Colaborador')}
                           </p>
                         </div>
@@ -735,7 +748,17 @@ export const AgieChat = memo(() => {
             }}
             className="absolute right-20 top-1/2 -translate-y-1/2 bg-white px-4 py-2.5 rounded-2xl shadow-2xl border text-[13px] font-bold whitespace-nowrap text-primary pointer-events-none"
           >
-            Central de Comunicação
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={currentTooltipMessage}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.3 }}
+              >
+                {currentTooltipMessage}
+              </motion.span>
+            </AnimatePresence>
             <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-white" />
           </motion.div>
         )}

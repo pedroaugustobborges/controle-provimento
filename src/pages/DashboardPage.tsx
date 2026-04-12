@@ -112,23 +112,21 @@ export default function DashboardPage() {
   }, [fetchAll]);
 
   const filterDashboardRecords = useCallback(<T extends { unidade?: string | null }>(records: T[]) => {
-    return filterByRegionAndUnit(records, selectedRegion, 'all');
-  }, [selectedRegion]);
+    const base = filterByRegionAndUnit(records, selectedRegion, 'all');
+    if (selectedUnits.length > 0 && !selectedUnits.includes('all')) {
+      return base.filter(r => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(r.unidade || '')));
+    }
+    return base;
+  }, [selectedRegion, selectedUnits]);
 
   const filteredVagas = useMemo(() => {
-    const base = filterByRegionAndUnit(allVagas, selectedRegion, 'all');
-    const unitFiltered = (selectedUnits.length > 0 && !selectedUnits.includes('all'))
-      ? base.filter(v => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(v.unidade)))
-      : base;
-    return getValidVacancyBase(unitFiltered, 'TODOS', 'TODOS');
-  }, [allVagas, selectedRegion, selectedUnits]);
+    const base = filterDashboardRecords(allVagas);
+    return getValidVacancyBase(base, 'TODOS', 'TODOS');
+  }, [allVagas, filterDashboardRecords]);
 
   const filteredBancos = useMemo(() => {
-    const base = filterByRegionAndUnit(bancos, selectedRegion, 'all');
-    return (selectedUnits.length > 0 && !selectedUnits.includes('all'))
-      ? base.filter(b => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(b.unidade)))
-      : base;
-  }, [bancos, selectedRegion, selectedUnits]);
+    return filterDashboardRecords(bancos);
+  }, [bancos, filterDashboardRecords]);
 
   const vagas = filteredVagas;
 
@@ -439,74 +437,75 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <Filter className="h-3.5 w-3.5" />
-          </div>
-          <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
-            <SelectTrigger className="h-9 w-[180px] rounded-lg border-slate-200 bg-white text-[11px] font-bold uppercase tracking-wider text-slate-600 shadow-sm">
-              <SelectValue placeholder="Todas as Regiões" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs font-bold uppercase">Todas as Regiões</SelectItem>
-              <SelectItem value="Goiânia" className="text-xs font-bold uppercase">Goiânia</SelectItem>
-              <SelectItem value="Vitória" className="text-xs font-bold uppercase">Vitória</SelectItem>
-              <SelectItem value="Demais Unidades" className="text-xs font-bold uppercase">Demais Unidades</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
+              <Filter className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Região</span>
+            </div>
+            
+            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
+              <SelectTrigger className="h-9 w-[180px] rounded-lg border-slate-200 bg-white text-[11px] font-black uppercase tracking-wider text-slate-600 shadow-sm hover:border-primary/30 transition-colors">
+                <SelectValue placeholder="Todas as Regiões" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs font-bold uppercase">Todas as Regiões</SelectItem>
+                <SelectItem value="Goiânia" className="text-xs font-bold uppercase">Goiânia</SelectItem>
+                <SelectItem value="Vitória" className="text-xs font-bold uppercase">Vitória</SelectItem>
+                <SelectItem value="Demais Unidades" className="text-xs font-bold uppercase">Demais Unidades</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {selectedRegion !== 'all' && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="flex items-center justify-between h-9 px-3 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-300 transition-all rounded-lg shadow-sm min-w-[180px]">
-                  <span className="truncate">
-                    {selectedUnits.includes('all') ? `Todas de ${selectedRegion}` : `${selectedUnits.length} unidade(s)`}
-                  </span>
-                  <ChevronDown className="h-3 w-3 opacity-50 ml-2" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[240px] p-0 bg-white border-slate-200 shadow-xl" align="end">
-                <div className="p-2 space-y-1">
-                  <div 
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer transition-colors"
+            {selectedRegion !== 'all' && (
+              <div className="h-4 w-[1px] bg-slate-200 mx-1 hidden sm:block" />
+            )}
+
+            {selectedRegion !== 'all' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-full transition-all ${
+                  selectedUnits.includes('all')
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+                onClick={() => setSelectedUnits(['all'])}
+              >
+                Todas as Unidades
+              </Button>
+            )}
+          </div>
+
+          {selectedRegion !== 'all' && UNIDADES_POR_REGIAO[selectedRegion] && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+              {UNIDADES_POR_REGIAO[selectedRegion].map((u) => {
+                const isSelected = selectedUnits.includes(u);
+                return (
+                  <button
+                    key={u}
                     onClick={() => {
-                      if (selectedUnits.includes('all')) {
-                        setSelectedUnits([]);
+                      let newUnits = [...selectedUnits];
+                      if (newUnits.includes('all')) {
+                        newUnits = [u];
+                      } else if (newUnits.includes(u)) {
+                        newUnits = newUnits.filter((x) => x !== u);
+                        if (newUnits.length === 0) newUnits = ['all'];
                       } else {
-                        setSelectedUnits(['all']);
+                        newUnits.push(u);
                       }
+                      setSelectedUnits(newUnits);
                     }}
+                    className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 ${
+                      isSelected
+                        ? 'bg-primary/5 text-primary border-primary shadow-sm'
+                        : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
                   >
-                    <Checkbox checked={selectedUnits.includes('all')} />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-700">Todas de {selectedRegion}</span>
-                  </div>
-                  <div className="h-[1px] bg-slate-100 my-1" />
-                  <div className="max-h-[200px] overflow-y-auto pr-1">
-                    {UNIDADES_POR_REGIAO[selectedRegion]?.map(u => (
-                      <div 
-                        key={u}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          let newUnits = [...selectedUnits];
-                          if (newUnits.includes('all')) {
-                            newUnits = [u];
-                          } else if (newUnits.includes(u)) {
-                            newUnits = newUnits.filter(x => x !== u);
-                            if (newUnits.length === 0) newUnits = ['all'];
-                          } else {
-                            newUnits.push(u);
-                          }
-                          setSelectedUnits(newUnits);
-                        }}
-                      >
-                        <Checkbox checked={selectedUnits.includes(u)} />
-                        <span className="text-[11px] text-slate-600 font-medium">{u}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+                    {u}
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

@@ -240,9 +240,8 @@ export default function DashboardPage() {
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
     { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
-    { label: 'CR Disponível', value: totalCRDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Cadastros reserva' },
     { label: 'Banco Disponível', value: totalBancosDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos ativos' },
-  ], [totalVagas, counts, totalCRDisponiveis, totalBancosDisponiveis, totalTarefasPendentes]);
+  ], [totalVagas, counts, totalBancosDisponiveis, totalTarefasPendentes]);
 
   const strategicScopeByUnit = useMemo(() => {
     const unitMap = new Map<string, any>();

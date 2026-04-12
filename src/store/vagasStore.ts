@@ -165,7 +165,7 @@ export const useVagasStore = create<VagasState>()(
         { id: '2', data: '2024-05-20T10:05:00', remetente: 'Sistema', conteudo: 'O edital #123 foi validado com sucesso.', lida: true },
         { id: '3', data: '2024-05-21T09:00:00', remetente: 'Aide', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false },
       ],
-      temNovasMensagens: true,
+      temNovasMensagens: false, // Inicia como falso, será atualizado por notificações reais
       isLoading: false,
       isInitialLoad: true,
       isLoadingVagas: false,

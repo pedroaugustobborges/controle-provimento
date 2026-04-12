@@ -80,18 +80,18 @@ export function isVitoriaUnit(unidade: string): boolean {
 }
 
 export const CATEGORIAS_STATUS = {
-  concluidas: ['concluida', 'concluidas', 'concluida', 'admissao efetivada'],
-  movimentacao_interna: ['movimentacao interna', 'transferencia', 'movimentacao interna', 'mov. interna'],
-  vagas_lideranca: ['vaga de lideranca', 'estrategicas', 'lideranca', 'vaga de lideranca'],
-  em_andamento: ['realizar convocacao', 'em andamento'],
-  convocacoes: ['convocacoes', 'convocacao', 'realizar convocacao'],
-  fila_edital: ['em edital', 'publicar novo edital', 'fila de editais'],
-  em_admissao: ['admissao', 'admissao enviada', 'admissao enviada', 'em admissao'],
-  documentacao: ['documentacao', 'documentacao ok e aso pendente', 'aso pendente'],
-  aguardando_unidade: ['aguardando unidade', 'aguardando'],
-  suspensa: ['suspensa', 'vaga pausada', 'pausada'],
-  cancelada: ['cancelada', 'canceladas', 'vaga cancelada'],
-  sem_status: ['sem status'],
+  concluidas:           ['concluida', 'concluidas', 'admissao efetivada'],
+  movimentacao_interna: ['movimentacao interna', 'transferencia', 'mov. interna'],
+  vagas_lideranca:      ['vaga de lideranca', 'estrategicas', 'lideranca'],
+  em_andamento:         ['em andamento', 'em processo seletivo', 'em triagem', 'entrevista'],
+  convocacoes:          ['convocacoes', 'convocacao', 'realizar convocacao'],
+  fila_edital:          ['em edital', 'publicar novo edital', 'fila de editais'],
+  em_admissao:          ['admissao', 'admissao enviada', 'em admissao'],
+  documentacao:         ['documentacao', 'documentacao ok e aso pendente', 'aso pendente'],
+  aguardando_unidade:   ['aguardando unidade', 'aguardando'],
+  suspensa:             ['suspensa', 'vaga pausada', 'pausada'],
+  cancelada:            ['cancelada', 'canceladas', 'vaga cancelada'],
+  sem_status:           ['sem status'],
 };
 
 export function isConvocacaoByFields(row: any): boolean {
@@ -344,9 +344,13 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text === 'movimentacao interna' || text.includes('movimentac') || text === 'transferencia' || text.includes('transfer')) return 'MOVIMENTAÇÃO INTERNA' as StatusVaga;
   // Admissão enviada e admissão são categorias distintas de EM ANDAMENTO
   if (text === 'admissao enviada' || text.includes('admissao envia')) return 'ADMISSÃO ENVIADA' as StatusVaga;
-  if (text === 'admissao') return 'ADMISSÃO' as StatusVaga;
-  if (text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista') return 'EM ANDAMENTO' as StatusVaga;
-  if (text.includes('andamento') || text.includes('processo') || text.includes('edital')) return 'EM ANDAMENTO' as StatusVaga;
+  // "Falta admitir" e "admissão" sozinha = ADMISSÃO
+  if (text === 'admissao' || text === 'falta admitir') return 'ADMISSÃO' as StatusVaga;
+  // EM EDITAL (separado de PUBLICAR NOVO EDITAL)
+  if (text === 'em edital' || text.includes('convocacao/edital') || text.includes('em convocacao')) return 'EM EDITAL' as StatusVaga;
+  if (text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista') return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('andamento')) return 'EM ANDAMENTO' as StatusVaga;
+  if (text.includes('edital')) return 'EM EDITAL' as StatusVaga;
 
   return 'SEM STATUS' as StatusVaga;
 }

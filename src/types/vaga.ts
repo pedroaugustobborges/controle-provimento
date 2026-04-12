@@ -7,6 +7,10 @@ export type StatusVaga =
   | 'MOVIMENTAÇÃO INTERNA'
   | 'ADMISSÃO ENVIADA'
   | 'ADMISSÃO'
+  | 'EM EDITAL'
+  | 'PUBLICAR NOVO EDITAL'
+  | 'REALIZAR CONVOCAÇÃO'
+  | 'VAGA DE LIDERANÇA'
   | 'DOCUMENTAÇÃO'
   | 'CONVOCAÇÕES'
   | 'FILA DE EDITAIS'
@@ -410,6 +414,10 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   'MOVIMENTAÇÃO INTERNA': 'Movimentação Interna',
   'ADMISSÃO ENVIADA': 'Admissão Enviada',
   'ADMISSÃO': 'Admissão',
+  'EM EDITAL': 'Em Edital',
+  'PUBLICAR NOVO EDITAL': 'Publicar Novo Edital',
+  'REALIZAR CONVOCAÇÃO': 'Realizar Convocação',
+  'VAGA DE LIDERANÇA': 'Vaga de Liderança',
   'DOCUMENTAÇÃO': 'Documentação',
   'CONVOCAÇÕES': 'Convocações',
   'FILA DE EDITAIS': 'Fila de Editais',

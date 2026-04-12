@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from 'sonner';
 import { useVagasStore } from '@/store/vagasStore';
+import { usePermissions } from '@/hooks/usePermissions';
 import { formatDate } from '@/lib/vagaUtils';
 
 interface KanbanColumnProps {
@@ -157,6 +158,7 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProps) {
   const updateConvocacao = useVagasStore(state => state.updateConvocacao);
+  const permissions = usePermissions();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -416,18 +418,20 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
                   <Info className="h-4 w-4" />
                   Para alterar dados básicos, use o formulário principal.
                 </div>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="h-8 gap-1.5"
-                  onClick={() => {
-                    useVagasStore.getState().deleteConvocacao(editingConvocacao.id);
-                    setIsEditModalOpen(false);
-                    toast.success('Convocação removida');
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Excluir
-                </Button>
+                {permissions.canDeleteRecords() && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="h-8 gap-1.5"
+                    onClick={() => {
+                      useVagasStore.getState().deleteConvocacao(editingConvocacao.id);
+                      setIsEditModalOpen(false);
+                      toast.success('Convocação removida');
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Excluir
+                  </Button>
+                )}
               </div>
             </div>
           )}

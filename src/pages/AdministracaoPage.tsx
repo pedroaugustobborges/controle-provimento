@@ -61,7 +61,12 @@ const ALL_UNIDADES = [
 
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
-  const { users, auditLogs, supportConfigs, backups, addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, sendWelcomeEmail, fetchUsers, fetchAuditLogs, generateBackup } = useAdminStore();
+  const { 
+    users, auditLogs, supportConfigs, backups, feedbacks, 
+    addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, 
+    sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, updateFeedbackStatus, generateBackup 
+  } = useAdminStore();
+
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
   

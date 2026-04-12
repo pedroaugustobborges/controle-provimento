@@ -389,6 +389,7 @@ export default function ConvocacoesPage() {
             convocacoes={filteredConvocacoes}
             bloqueios={bloqueios}
             selectedDate={format(selectedDate, 'yyyy-MM-dd')}
+            selectedBase={selectedUnidade}
             onEditConvocacao={(conv) => {
               setSelectedConvocacao(conv);
               setIsDialogOpen(true);

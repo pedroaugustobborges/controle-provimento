@@ -27,8 +27,6 @@ export const HORARIOS_FIXOS_CONVOCACAO = [
   '09:30',
   '10:30',
   '11:30',
-  '12:30',
-  '13:30',
   '14:30'
 ];
 

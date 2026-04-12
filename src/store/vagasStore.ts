@@ -195,6 +195,8 @@ export const useVagasStore = create<VagasState>()(
         { id: '1', data: '2024-05-20T10:00:00', remetente: 'Aide', conteudo: 'Olá! Como posso ajudar você hoje?', lida: true },
         { id: '2', data: '2024-05-20T10:05:00', remetente: 'Sistema', conteudo: 'O edital #123 foi validado com sucesso.', lida: true },
         { id: '3', data: '2024-05-21T09:00:00', remetente: 'Aide', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false },
+        { id: '4', data: '2024-05-21T10:00:00', remetente: 'Você', conteudo: 'Poderia me ajudar com a validação do edital #456?', lida: true },
+        { id: '5', data: '2024-05-21T11:30:00', remetente: 'Você', conteudo: 'Encaminhei os documentos da vaga de Analista.', lida: true },
       ],
       temNovasMensagens: false,
       isLoading: false,

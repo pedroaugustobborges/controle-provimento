@@ -145,6 +145,7 @@ interface VagasState {
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
   getMatchingDiagnostic: () => { vagaId: string; vagaCargo: string; vagaUnidade: string; vagaReq: string; potentialBancos: any[] }[];
+  marcarTodasLidas: () => void;
   fixWrongImportBatches: () => void;
 }
 
@@ -165,7 +166,7 @@ export const useVagasStore = create<VagasState>()(
         { id: '2', data: '2024-05-20T10:05:00', remetente: 'Sistema', conteudo: 'O edital #123 foi validado com sucesso.', lida: true },
         { id: '3', data: '2024-05-21T09:00:00', remetente: 'Aide', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false },
       ],
-      temNovasMensagens: true,
+      temNovasMensagens: false, // Inicia como falso, será atualizado por notificações reais
       isLoading: false,
       isInitialLoad: true,
       isLoadingVagas: false,
@@ -451,6 +452,10 @@ export const useVagasStore = create<VagasState>()(
         const hasUnread = newHistory.some(m => !m.lida);
         return { historicoMensagens: newHistory, temNovasMensagens: hasUnread };
       }),
+      marcarTodasLidas: () => set((s) => ({
+        historicoMensagens: s.historicoMensagens.map((m) => ({ ...m, lida: true })),
+        temNovasMensagens: false
+      })),
       setTemNovasMensagens: (has) => set({ temNovasMensagens: has }),
       clearVagas: () => set({ vagas: [] }),
       clearBancos: () => set({ bancos: [] }),

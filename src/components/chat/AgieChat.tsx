@@ -46,21 +46,35 @@ export const AgieChat = memo(() => {
   const notifications = useMemo(() => [
     "Olá! Eu sou a Agie 👋",
     "Envie mensagens para a equipe",
-    "Envie sugestões de melhoria"
+    "Envie sugestões de melhoria",
+    "Conheça as novidades do sistema"
   ], []);
 
-  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
-  const hasNewMessage = temNovasMensagens;
+  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens, tarefas, marcarTodasLidas } = useVagasStore();
+  
+  const alertMessages = useMemo(() => {
+    const alerts: string[] = [];
+    const unreadMessages = historicoMensagens.filter(m => !m.lida).length;
+    const pendingTasks = tarefas.filter(t => t.status === 'pendente').length;
+    
+    if (unreadMessages > 0) alerts.push("Você tem uma nova mensagem!");
+    if (pendingTasks > 0) alerts.push(`Você tem ${pendingTasks} tarefas pendentes!`);
+    
+    return alerts;
+  }, [historicoMensagens, tarefas]);
+
+  const hasNewRealNotification = alertMessages.length > 0;
 
   // Notification carousel logic
   useEffect(() => {
     if (!isOpen) {
       const interval = setInterval(() => {
-        setNotificationIndex((prev) => (prev + 1) % (hasNewMessage ? 4 : 3));
+        const maxIndex = hasNewRealNotification ? alertMessages.length : notifications.length;
+        setNotificationIndex((prev) => (prev + 1) % maxIndex);
       }, 4000);
       return () => clearInterval(interval);
     }
-  }, [hasNewMessage, isOpen]);
+  }, [hasNewRealNotification, isOpen, alertMessages.length, notifications.length]);
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -81,19 +95,16 @@ export const AgieChat = memo(() => {
     fetchProfile();
   }, []);
 
-  // Keep notifications alive
+  // Mark messages as read when closing or opening
   useEffect(() => {
-    if (!temNovasMensagens) {
-      const timer = setTimeout(() => {
-        if (!isOpen) setTemNovasMensagens(true);
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (isOpen) {
+      setTemNovasMensagens(false);
     }
-  }, [isOpen, temNovasMensagens, setTemNovasMensagens]);
+  }, [isOpen, setTemNovasMensagens]);
 
   const handleOpen = () => {
     setIsOpen(true);
-    setTemNovasMensagens(false);
+    marcarTodasLidas();
   };
 
   const handleClose = useCallback(() => {
@@ -201,12 +212,11 @@ export const AgieChat = memo(() => {
   };
 
   const currentTooltipMessage = useMemo(() => {
-    if (hasNewMessage) {
-      const alertMessages = ["Você tem uma nova mensagem!", "Você tem uma nova tarefa!"];
+    if (hasNewRealNotification) {
       return alertMessages[notificationIndex % alertMessages.length];
     }
     return notifications[notificationIndex % notifications.length];
-  }, [hasNewMessage, notificationIndex, notifications]);
+  }, [hasNewRealNotification, notificationIndex, alertMessages, notifications]);
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -646,7 +656,7 @@ export const AgieChat = memo(() => {
         onClick={isOpen ? handleClose : handleOpen}
       >
         <AnimatePresence>
-          {hasNewMessage && !isOpen && (
+          {hasNewRealNotification && !isOpen && (
             <>
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
@@ -677,7 +687,7 @@ export const AgieChat = memo(() => {
             "w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-2xl border-4 transition-all duration-500 overflow-hidden",
             isOpen 
               ? "bg-white border-primary rotate-90" 
-              : hasNewMessage
+              : hasNewRealNotification
                 ? "bg-red-600 border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
                 : "bg-primary border-white hover:shadow-primary/40 shadow-xl"
           )}
@@ -687,49 +697,49 @@ export const AgieChat = memo(() => {
           ) : (
             <div className="flex flex-col items-center gap-1">
               {/* Agie Animated Face - eyes go wide when there are notifications */}
-              <div className={cn("flex mb-0.5", hasNewMessage ? "gap-3" : "gap-2")}>
+              <div className={cn("flex mb-0.5", hasNewRealNotification ? "gap-3" : "gap-2")}>
                 <motion.div 
-                  animate={hasNewMessage 
+                  animate={hasNewRealNotification 
                     ? { scale: [1, 1.5, 1.2, 1.5, 1], scaleY: 1 }
                     : { scaleY: [1, 1, 0.1, 1] }
                   }
-                  transition={hasNewMessage 
+                  transition={hasNewRealNotification 
                     ? { duration: 0.8, repeat: Infinity }
                     : { duration: 4, repeat: Infinity, times: [0, 0.9, 0.92, 1] }
                   }
                   className={cn(
                     "bg-white rounded-full",
-                    hasNewMessage 
+                    hasNewRealNotification 
                       ? "w-3 h-3 shadow-[0_0_12px_rgba(255,255,255,1)]" 
                       : "w-2 h-2 shadow-[0_0_8px_rgba(255,255,255,0.8)]"
                   )} 
                 />
                 <motion.div 
-                  animate={hasNewMessage 
+                  animate={hasNewRealNotification 
                     ? { scale: [1, 1.5, 1.2, 1.5, 1], scaleY: 1 }
                     : { scaleY: [1, 1, 0.1, 1] }
                   }
-                  transition={hasNewMessage 
+                  transition={hasNewRealNotification 
                     ? { duration: 0.8, repeat: Infinity, delay: 0.1 }
                     : { duration: 4, repeat: Infinity, times: [0, 0.9, 0.92, 1] }
                   }
                   className={cn(
                     "bg-white rounded-full",
-                    hasNewMessage 
+                    hasNewRealNotification 
                       ? "w-3 h-3 shadow-[0_0_12px_rgba(255,255,255,1)]" 
                       : "w-2 h-2 shadow-[0_0_8px_rgba(255,255,255,0.8)]"
                   )} 
                 />
               </div>
               <motion.div 
-                animate={hasNewMessage 
+                animate={hasNewRealNotification 
                   ? { width: [8, 14, 8], height: [4, 6, 4] }
                   : { width: [8, 12, 8] }
                 }
-                transition={{ duration: hasNewMessage ? 0.6 : 4, repeat: Infinity }}
+                transition={{ duration: hasNewRealNotification ? 0.6 : 4, repeat: Infinity }}
                 className={cn(
                   "rounded-full",
-                  hasNewMessage ? "h-1.5 bg-white/80" : "h-1 bg-white/40"
+                  hasNewRealNotification ? "h-1.5 bg-white/80" : "h-1 bg-white/40"
                 )}
               />
             </div>

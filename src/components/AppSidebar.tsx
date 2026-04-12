@@ -364,8 +364,12 @@ export function AppSidebar() {
             </button>
             <div className="p-4 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
-                  <Users className="h-4 w-4 text-white" />
+                <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center border border-white/10 overflow-hidden">
+                  {currentUser?.avatar_url ? (
+                    <img src={currentUser.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <Users className="h-4 w-4 text-white" />
+                  )}
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="text-sm font-bold text-white truncate leading-tight">

@@ -134,12 +134,30 @@ export function AppSidebar() {
 
   const isUrlActive = (url: string) => {
     const currentUrl = location.pathname + location.search;
-    if (url === '/') return currentUrl === '/';
-    return currentUrl === url || currentUrl.startsWith(url + '?') || currentUrl.startsWith(url + '/');
+    if (url === '/' || url === '#') return currentUrl === '/';
+    
+    // For URLs with query parameters, require exact match
+    if (url.includes('?')) {
+      return currentUrl === url;
+    }
+    
+    // For base URLs, match exactly or as a parent directory
+    return currentUrl === url || currentUrl.startsWith(url + '/') || currentUrl.startsWith(url + '?');
   };
 
   const isParentActive = (item: any) => {
-    if (isUrlActive(item.url)) return true;
+    // If the item itself matches (for exact matches or items without submenus)
+    if (item.url !== '#' && isUrlActive(item.url)) {
+      // If it has a submenu, we only want it to be "active" if it's the specific base URL match
+      // or if one of its children is active.
+      if (item.subMenu) {
+        const currentUrl = location.pathname + location.search;
+        // If we are on the base URL (e.g. /vagas) and it's one of the submenu items
+        return currentUrl === item.url || item.subMenu.some((sub: any) => isUrlActive(sub.url));
+      }
+      return true;
+    }
+    // Check if any subMenu item is active
     return item.subMenu?.some((sub: any) => isUrlActive(sub.url));
   };
 
@@ -214,32 +232,21 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                         {!collapsed && (
                           <SidebarMenuSub className="ml-6 mt-1 border-l-2 border-white/20 space-y-0.5 py-1.5 pl-3 relative">
-                            {item.subMenu.map((sub, idx) => {
-                              const subActive = isUrlActive(sub.url);
-                              const activeIndex = item.subMenu!.findIndex(s => isUrlActive(s.url));
-                              const hasPassed = activeIndex !== -1 && idx < activeIndex;
-                              
+                            {item.subMenu.map((sub) => {
                               return (
                                 <SidebarMenuSubItem key={sub.title}>
                                   <SidebarMenuSubButton asChild>
                                     <NavLink
                                       to={sub.url}
-                                        className={cn(
-                                          "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
-                                          subActive 
-                                            ? "text-white bg-white/15 shadow-[0_2px_10px_-3px_rgba(255,255,255,0.15)]" 
-                                            : hasPassed
-                                              ? "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-                                              : "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-0.5"
-                                        )}
+                                      end={!sub.url.includes('?')}
+                                      className={cn(
+                                        "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
+                                        "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-0.5"
+                                      )}
+                                      activeClassName="text-white bg-white/15 shadow-[0_2px_10px_-3px_rgba(255,255,255,0.15)] active"
                                     >
                                       <span className="relative z-10 flex items-center gap-2.5 leading-tight">
-                                        <span className={cn(
-                                          "h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300",
-                                          subActive ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" 
-                                            : hasPassed ? "bg-slate-400" 
-                                            : "bg-slate-600"
-                                        )} />
+                                        <span className="h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300 bg-slate-600 group-[.active]/sub:bg-white group-[.active]/sub:shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
                                         {sub.title}
                                       </span>
                                     </NavLink>

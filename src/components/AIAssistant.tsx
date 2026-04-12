@@ -63,35 +63,35 @@ function AgieAvatar({ expression = 'default', className = "" }: { expression?: '
   return (
     <div className={cn("relative flex items-center justify-center bg-primary rounded-full overflow-hidden shadow-inner", className)}>
       <motion.div 
-        animate={{ y: expression === 'alert' ? [0, -1, 1, 0] : [0, -0.5, 0.5, 0] }}
-        transition={{ duration: expression === 'alert' ? 0.2 : 4, repeat: Infinity, ease: "easeInOut" }}
-        className="flex gap-2"
+        animate={{ y: expression === 'alert' ? [0, -0.5, 0.5, 0] : [0, -0.3, 0.3, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="flex gap-1.5"
       >
         <motion.div 
           animate={
-            expression === 'default' ? { height: [8, 8, 1, 8] } :
-            expression === 'curious' ? { height: [8, 10, 8], rotate: -5 } :
-            expression === 'attention' ? { height: 10, width: 10 } :
-            expression === 'alert' ? { height: [8, 9, 8], scale: 1.1 } : {}
+            expression === 'default' ? { height: [6, 6, 6, 1.5, 6] } :
+            expression === 'curious' ? { height: [6, 7, 6], rotate: -3 } :
+            expression === 'attention' ? { height: 7, width: 7 } :
+            expression === 'alert' ? { height: [6, 7, 6], scale: 1.05 } : {}
           }
           transition={
-            expression === 'default' ? { duration: 4, repeat: Infinity, times: [0, 0.9, 0.95, 1] } :
-            { duration: 0.5, repeat: expression === 'curious' ? Infinity : 0 }
+            expression === 'default' ? { duration: 5, repeat: Infinity, times: [0, 0.85, 0.92, 0.95, 1], ease: "easeInOut" } :
+            { duration: 2, repeat: expression === 'curious' ? Infinity : 0, ease: "easeInOut" }
           }
-          className="w-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+          className="w-1.5 bg-white rounded-full shadow-[0_0_6px_rgba(255,255,255,0.6)]" 
         />
         <motion.div 
           animate={
-            expression === 'default' ? { height: [8, 8, 1, 8] } :
-            expression === 'curious' ? { height: [8, 10, 8], rotate: 5, y: -1 } :
-            expression === 'attention' ? { height: 10, width: 10 } :
-            expression === 'alert' ? { height: [8, 9, 8], scale: 1.1 } : {}
+            expression === 'default' ? { height: [6, 6, 6, 1.5, 6] } :
+            expression === 'curious' ? { height: [6, 7, 6], rotate: 3, y: -0.5 } :
+            expression === 'attention' ? { height: 7, width: 7 } :
+            expression === 'alert' ? { height: [6, 7, 6], scale: 1.05 } : {}
           }
           transition={
-            expression === 'default' ? { duration: 4, repeat: Infinity, times: [0, 0.9, 0.95, 1] } :
-            { duration: 0.5, repeat: expression === 'curious' ? Infinity : 0 }
+            expression === 'default' ? { duration: 5, repeat: Infinity, times: [0, 0.85, 0.92, 0.95, 1], ease: "easeInOut" } :
+            { duration: 2, repeat: expression === 'curious' ? Infinity : 0, ease: "easeInOut" }
           }
-          className="w-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
+          className="w-1.5 bg-white rounded-full shadow-[0_0_6px_rgba(255,255,255,0.6)]" 
         />
       </motion.div>
       <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
@@ -292,7 +292,7 @@ export function AIAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute bottom-20 right-0 w-[380px] max-h-[520px] bg-background rounded-2xl shadow-2xl border flex flex-col overflow-hidden"
+            className="absolute bottom-20 right-0 w-[380px] h-[520px] bg-background rounded-2xl shadow-2xl border flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="p-3 bg-primary text-white flex items-center gap-2 shrink-0">

@@ -99,6 +99,11 @@ export function AppSidebar() {
       url: '/convocacoes', 
       icon: Calendar, 
       visible: getPermissions('convocacoes').canRead,
+      subMenu: [
+        { title: 'Convocações Diárias', url: '/convocacoes?tab=diaria' },
+        { title: 'Histórico', url: '/convocacoes?tab=list' },
+        { title: 'Pendentes', url: '/convocacoes?tab=pending' },
+      ]
     },
     { 
       title: 'Alertas e Tarefas', 
@@ -139,7 +144,6 @@ export function AppSidebar() {
 
   const secondaryItems = useMemo(() => [
     { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: getPermissions('monitoramento').canRead },
-    { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle, visible: getPermissions('validacao_convocacoes').canRead },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
     { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
   ].filter(item => item.visible), [getPermissions]);

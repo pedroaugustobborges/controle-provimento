@@ -187,20 +187,20 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     {item.subMenu ? (
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-0.5">
                         <SidebarMenuButton asChild tooltip={item.title}>
                           <div
                             className={cn(
-                              "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                              "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none cursor-default",
                               active 
-                                ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
-                : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
+                                ? "text-white" 
+                                : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
                             )}
                           >
                             <item.icon className={cn(
                               "h-5 w-5 shrink-0 transition-all duration-300",
                               active 
-                                ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
+                                ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
                                 : "text-slate-500 group-hover:text-white group-hover:scale-110"
                             )} />
                             {!collapsed && (
@@ -212,7 +212,7 @@ export function AppSidebar() {
                               </span>
                             )}
                             {active && !collapsed && (
-                              <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
+                              <ChevronDown className="absolute right-3 h-3.5 w-3.5 text-white/50" />
                             )}
                           </div>
                         </SidebarMenuButton>

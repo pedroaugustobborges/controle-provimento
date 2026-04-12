@@ -148,7 +148,7 @@ export default function ConvocacoesPage() {
     return baseConvocacoes.filter(c => {
       if (c.status !== 'pendente') return false;
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) return false;
-      if (selectedUnidade !== 'all' && c.unidade !== selectedUnidade) return false;
+      if (!matchesUnidadeFilter(c.unidade)) return false;
       return true;
     });
   }, [convocacoes, currentUser, selectedUnidade, selectedRegion, globalUnit]);
@@ -162,7 +162,7 @@ export default function ConvocacoesPage() {
           return false;
         }
 
-        if (selectedUnidade !== 'all' && c.unidade !== selectedUnidade) {
+        if (!matchesUnidadeFilter(c.unidade)) {
           return false;
         }
 

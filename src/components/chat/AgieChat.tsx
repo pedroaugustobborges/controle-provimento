@@ -1,13 +1,26 @@
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, MapPin, User, ChevronLeft, Send, Sparkles } from "lucide-react";
+import { 
+  MessageCircle, X, MapPin, User, ChevronLeft, Send, Sparkles, 
+  Lightbulb, Megaphone, Users, Search, Shield, Info, MessageSquare
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { UNITS, ROLES } from "@/data/chatData";
 import { ChatStep, Unit, Role, Message } from "@/types/chat";
 import { useVagasStore } from "@/store/vagasStore";
+import { supabase } from "@/integrations/supabase/client";
 
 export const AgieChat = memo(() => {
   const [isOpen, setIsOpen] = useState(false);

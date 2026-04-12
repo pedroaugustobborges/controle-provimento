@@ -23,6 +23,7 @@ const mapDbVaga = (row: any): Vaga => ({
   data_abertura: row.data_abertura || '',
   data_recebimento: row.data_recebimento || '',
   data_criacao: row.created_at || row.data_importacao || new Date().toISOString(),
+  created_at: row.created_at || row.data_importacao || new Date().toISOString(),
   requisicao: row.requisicao || row.numero_requisicao || row.numero_processo_seletivo || '',
   numero_requisicao: row.numero_requisicao || row.numero_processo_seletivo || row.requisicao || '',
   numero_processo: row.numero_processo || row.numero_processo_seletivo || '',

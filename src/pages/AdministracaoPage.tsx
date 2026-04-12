@@ -122,6 +122,8 @@ export default function AdministracaoPage() {
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
@@ -449,6 +451,7 @@ export default function AdministracaoPage() {
       }));
     }
   };
+  const getStatusBadge = (status: string) => {
     const map: Record<string, string> = {
       'ativo': 'bg-green-100 text-green-700',
       'suspenso': 'bg-amber-100 text-amber-700',

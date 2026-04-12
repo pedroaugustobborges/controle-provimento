@@ -111,23 +111,11 @@ export default function ConvocacoesPage() {
   };
 
   const unidades = useMemo(() => {
-    const u = new Set<string>();
-    const allV = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
-    const allC = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
-    const allB = filterByRegionAndUnit(bancos, selectedRegion, globalUnit);
-    
-    allV.forEach(v => {
-      if (v.unidade) u.add(v.unidade);
-    });
-    allC.forEach(c => {
-      if (c.unidade) u.add(c.unidade);
-    });
-    allB.forEach(b => {
-      if (b.unidade) u.add(b.unidade);
-      if (b.unidade_convocacao) u.add(b.unidade_convocacao);
-    });
-    return Array.from(u).sort();
-  }, [vagas, convocacoes, bancos, selectedRegion, globalUnit]);
+    // Usar as bases de convocação para agrupar unidades
+    // Goiânia agrupa HECAD, HUGOL, CRER, HDS, AGIR, CONDOMÍNIO
+    // Demais bases aparecem com nome próprio
+    return Object.keys(BASES_CONVOCACAO).sort();
+  }, []);
 
   // Unit filtering
   const filteredVagas = useMemo(() => {

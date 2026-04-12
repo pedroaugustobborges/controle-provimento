@@ -55,10 +55,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
 import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 
-const ALL_UNIDADES = [
-  ...UNIDADES_POR_REGIAO['GOIÁS E VITÓRIA'] || [],
-  ...UNIDADES_POR_REGIAO['OUTRAS UNIDADES'] || [],
-];
+const REGIOES_SELECAO = {
+  'Goiânia': UNIDADES_POR_REGIAO['Goiânia'] || [],
+  'Vitória (ES)': UNIDADES_POR_REGIAO['Vitória'] || [],
+  'Demais Unidades': UNIDADES_POR_REGIAO['Demais Unidades'] || [],
+};
+
+const ALL_UNIDADES = Object.values(REGIOES_SELECAO).flat();
 
 const MODULOS_SISTEMA = [
   { id: 'vagas', label: 'Vagas (Painel Principal)' },
@@ -1293,12 +1296,46 @@ export default function AdministracaoPage() {
               </div>
 
               {!newUser.visualiza_todas_unidades && (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2 mt-1 max-h-[180px] overflow-y-auto">
-                    {ALL_UNIDADES.map(u => (
-                      <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleUnidade(u)}>
-                        <input type="checkbox" checked={newUser.unidades_vinculadas.includes(u)} readOnly className="h-3 w-3 rounded" />
-                        <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
+                <div className="space-y-3">
+                  {/* Seleção rápida por região */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase">Selecionar por região:</span>
+                    {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => {
+                      const allSelected = unidades.length > 0 && unidades.every(u => newUser.unidades_vinculadas.includes(u));
+                      return (
+                        <Button
+                          key={regiao}
+                          type="button"
+                          variant={allSelected ? "default" : "outline"}
+                          size="sm"
+                          className="h-7 text-[11px] font-bold"
+                          onClick={() => {
+                            if (allSelected) {
+                              setNewUser(p => ({ ...p, unidades_vinculadas: p.unidades_vinculadas.filter(u => !unidades.includes(u)) }));
+                            } else {
+                              setNewUser(p => ({ ...p, unidades_vinculadas: [...new Set([...p.unidades_vinculadas, ...unidades])] }));
+                            }
+                          }}
+                        >
+                          {regiao} {allSelected && <Check className="h-3 w-3 ml-1" />}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Checkboxes individuais agrupados por região */}
+                  <div className="space-y-3 max-h-[220px] overflow-y-auto">
+                    {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => (
+                      <div key={regiao}>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{regiao}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {unidades.map(u => (
+                            <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleUnidade(u)}>
+                              <input type="checkbox" checked={newUser.unidades_vinculadas.includes(u)} readOnly className="h-3 w-3 rounded" />
+                              <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>

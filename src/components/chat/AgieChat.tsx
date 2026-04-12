@@ -584,14 +584,14 @@ export const AgieChat = memo(() => {
                   {step === 'CONVERSATION' && (
                     <div className="space-y-4">
                       {/* Conversation Header Info */}
-                      <div className="bg-white p-3 rounded-xl border shadow-sm flex items-center gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      {/* Compact Conversation Header */}
+                      <div className="bg-white px-3 py-2.5 rounded-xl border shadow-sm flex items-center gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                           {selectedRecipient?.charAt(0)}
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                          <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">Conversando com:</p>
-                          <p className="text-sm font-bold text-slate-800 truncate">{selectedRecipient}</p>
-                          <p className="text-[10px] text-slate-500 truncate">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-800 truncate leading-none mb-1">{selectedRecipient}</p>
+                          <p className="text-[10px] text-slate-500 truncate leading-none">
                             {selectedRole?.label || (selectedUnit ? `Equipe ${selectedUnit.name}` : 'Colaborador')}
                           </p>
                         </div>

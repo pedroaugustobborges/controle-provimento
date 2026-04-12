@@ -156,30 +156,8 @@ export default function ConvocacoesPage() {
 
   const filteredConvocacoes = useMemo(() => {
     const baseConvocacoes = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
-    const baseBancos = filterByRegionAndUnit(bancos, selectedRegion, globalUnit);
-    
-    const allConvocacoes = [
-      ...baseConvocacoes,
-      ...baseBancos
-        .filter(b => b.status === 'CONVOCADO')
-        .map(b => ({
-          id: b.id,
-          vaga_id: '',
-          data_convocacao: b.data_convocacao || '',
-          horario: '',
-          nome_candidato: b.nome || 'Não identificado',
-          classificacao: Number(b.classificacao) || 0,
-          tipo_convocacao: 'Importado',
-          cargo: b.cargo,
-          unidade: b.unidade_convocacao || b.unidade,
-          requisicao: b.numero_edital,
-          status: 'aceite' as any,
-          observacoes: b.observacoes || '',
-          responsavel: 'Sistema'
-        }))
-    ];
 
-    return allConvocacoes
+    return baseConvocacoes
       .filter(c => {
         if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) {
           return false;
@@ -213,7 +191,7 @@ export default function ConvocacoesPage() {
         return true;
       })
       .sort((a, b) => new Date(b.data_convocacao).getTime() - new Date(a.data_convocacao).getTime());
-  }, [convocacoes, bancos, currentUser, search, selectedUnidade, dateRange]);
+  }, [convocacoes, currentUser, search, selectedUnidade, dateRange, selectedRegion, globalUnit, view, selectedDate]);
 
   const handleNewConvocacao = (vaga?: any) => {
     setSelectedVaga(vaga || null);

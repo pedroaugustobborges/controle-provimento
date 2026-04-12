@@ -162,7 +162,22 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
-...
+      <SidebarHeader className="border-b border-white/10 py-6 px-4">
+        <div className="flex items-center gap-4 transition-all duration-300">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
+            <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
+          </div>
+          {!collapsed && (
+            <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
+              <span className="font-extrabold text-sm text-white tracking-tight leading-tight whitespace-nowrap">
+                Provimento Digital
+              </span>
+            </div>
+          )}
+        </div>
+      </SidebarHeader>
+
       <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="px-3">
           <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">

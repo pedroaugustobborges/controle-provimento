@@ -561,37 +561,7 @@ export default function VagasPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-11 gap-3">
-        {[
-          { label: 'Total de Vagas', value: parityAudit.appCount, sub: 'Base ativa', borderColor: 'border-l-slate-500', textColor: 'text-slate-800' },
-          { label: 'Novas 24h', value: countVagasNovas, borderColor: 'border-l-blue-500', textColor: 'text-blue-600', isFilterable: true, filterKey: 'novas' },
-          { label: 'Fila de Editais', value: countFilaEdital, borderColor: 'border-l-amber-400', textColor: 'text-amber-600' },
-          { label: 'Em Andamento', value: countEmAndamento, borderColor: 'border-l-blue-400', textColor: 'text-blue-600' },
-          { label: 'Concluídas', value: countConcluidas, borderColor: 'border-l-green-400', textColor: 'text-green-600' },
-          { label: 'Liderança', value: countVagasLideranca, borderColor: 'border-l-indigo-400', textColor: 'text-indigo-600' },
-          { label: 'Convocações', value: countConvocacao, borderColor: 'border-l-violet-400', textColor: 'text-violet-600' },
-          { label: 'Interrompidas', value: countVagasInterrompidas, borderColor: 'border-l-rose-400', textColor: 'text-rose-600' },
-          { label: 'Documentação', value: countDocumentacao, borderColor: 'border-l-orange-400', textColor: 'text-orange-600' },
-          { label: 'Aguard. Unidade', value: countAguardandoUnidade, borderColor: 'border-l-yellow-400', textColor: 'text-yellow-600' },
-          { label: 'Com Banco', value: countComBanco, borderColor: 'border-l-emerald-400', textColor: 'text-emerald-600' },
-        ].map((card) => (
-          <Card 
-            key={card.label} 
-            className={`border-slate-200 shadow-sm bg-white border-l-4 ${card.borderColor} hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer ${card.filterKey === 'novas' && filterVagasNovas ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
-            onClick={() => {
-              if (card.filterKey === 'novas') {
-                setFilterVagasNovas(!filterVagasNovas);
-              }
-            }}
-          >
-            <CardContent className="p-4 flex flex-col gap-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{card.label}</p>
-              <p className={`text-2xl font-bold ${card.textColor}`}>{card.value}</p>
-              {card.sub && <p className="text-[10px] text-slate-400">{card.sub}</p>}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Cards removidos conforme solicitação */}
       <div 
         className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2 cursor-pointer hover:bg-blue-50 transition-all"
         onClick={() => {

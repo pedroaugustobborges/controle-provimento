@@ -748,7 +748,17 @@ export const AgieChat = memo(() => {
             }}
             className="absolute right-20 top-1/2 -translate-y-1/2 bg-white px-4 py-2.5 rounded-2xl shadow-2xl border text-[13px] font-bold whitespace-nowrap text-primary pointer-events-none"
           >
-            Central de Comunicação
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={currentTooltipMessage}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.3 }}
+              >
+                {currentTooltipMessage}
+              </motion.span>
+            </AnimatePresence>
             <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-white" />
           </motion.div>
         )}

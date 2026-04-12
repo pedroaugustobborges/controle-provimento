@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
 import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
   Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle,
-  Database, CheckCircle2, ArrowRight, Check
+  Database, CheckCircle2, ArrowRight, Check, TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
@@ -89,6 +89,7 @@ export default function VagasPage() {
   const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
@@ -99,7 +100,14 @@ export default function VagasPage() {
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [filterVagasNovas, setFilterVagasNovas] = useState(false);
-  const [vacancyStatusTab, setVacancyStatusTab] = useState('ativas');
+  const [vacancyStatusTab, setVacancyStatusTab] = useState(searchParams.get('statusTab') || 'todas');
+  
+  useEffect(() => {
+    const statusTab = searchParams.get('statusTab');
+    if (statusTab) {
+      setVacancyStatusTab(statusTab);
+    }
+  }, [searchParams]);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isAddVagaOpen, setIsAddVagaOpen] = useState(false);
@@ -195,6 +203,8 @@ export default function VagasPage() {
       const category = v.categoria_status || getCategoriaStatus(v);
       if (vacancyStatusTab === 'ativas' && (category === 'concluidas' || category === 'vagas_interrompidas')) return false;
       if (vacancyStatusTab === 'concluidas' && category !== 'concluidas' && category !== 'vagas_interrompidas') return false;
+      if (vacancyStatusTab === 'em_andamento' && category !== 'em_andamento') return false;
+      // if vacancyStatusTab === 'todas', we don't return false for any category
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -565,6 +575,26 @@ export default function VagasPage() {
           </Card>
         ))}
       </div>
+      <div 
+        className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2 cursor-pointer hover:bg-blue-50 transition-all"
+        onClick={() => {
+          setVacancyStatusTab('em_andamento');
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set('statusTab', 'em_andamento');
+          navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+        }}
+      >
+        <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
+          <TrendingUp className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">Resumo: Vagas em Andamento</h3>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-blue-700">{countEmAndamento}</span>
+            <span className="text-[11px] text-blue-600/80 font-medium">vagas sendo processadas no momento</span>
+          </div>
+        </div>
+      </div>
 
       <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">
         <CardContent className="pt-4 pb-3">
@@ -665,13 +695,24 @@ export default function VagasPage() {
       </Card>
 
       <div className="mb-4">
-        <Tabs value={vacancyStatusTab} onValueChange={setVacancyStatusTab} className="w-full">
-          <TabsList className="bg-slate-100/50 p-1 rounded-xl">
-            <TabsTrigger value="ativas" className="font-bold rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500">
+        <Tabs value={vacancyStatusTab} onValueChange={(val) => {
+          setVacancyStatusTab(val);
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set('statusTab', val);
+          navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+        }} className="w-full">
+          <TabsList className="bg-slate-100/50 p-1 rounded-xl flex-wrap h-auto">
+            <TabsTrigger value="todas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+              Todas as Vagas ({canonicalBase.length})
+            </TabsTrigger>
+            <TabsTrigger value="em_andamento" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+              Em Andamento ({counts.em_andamento})
+            </TabsTrigger>
+            <TabsTrigger value="ativas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
               Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao})
             </TabsTrigger>
-            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500">
-              Vagas Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
+            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+              Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
             </TabsTrigger>
           </TabsList>
         </Tabs>

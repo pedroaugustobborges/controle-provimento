@@ -50,7 +50,7 @@ export const AgieChat = memo(() => {
     "Conheça as novidades do sistema"
   ], []);
 
-  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens, tarefas } = useVagasStore();
+  const { temNovasMensagens, setTemNovasMensagens, historicoMensagens, tarefas, marcarTodasLidas } = useVagasStore();
   
   const alertMessages = useMemo(() => {
     const alerts: string[] = [];

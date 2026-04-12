@@ -120,9 +120,13 @@ export const AgieChat = memo(() => {
       else if (selectedRole) setStep('BY_ROLE');
     }
     if (step === 'CONVERSATION') {
-      if (selectedUnit || selectedRole) setStep('BY_PERSON');
-      else if (step === 'CONVERSATION' && step === 'SUPERVISION') setStep('SUPERVISION'); // Fix for supervision
-      else setStep('COMMUNICATION_HUB');
+      if (selectedRole && (selectedRole.id === 'super-go-vit' || selectedRole.id === 'super-fora' || selectedRole.id === 'coordenadora')) {
+        setStep('SUPERVISION');
+      } else if (selectedUnit || selectedRole) {
+        setStep('BY_PERSON');
+      } else {
+        setStep('COMMUNICATION_HUB');
+      }
     }
   };
 

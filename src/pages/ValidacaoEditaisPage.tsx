@@ -118,7 +118,7 @@ export default function ValidacaoEditaisPage() {
     addMensagem({
       id: `msg-val-ed-${Date.now()}`,
       data: new Date().toISOString(),
-      remetente: 'Aide',
+      remetente: 'Agie',
       conteudo: mensagemAgie,
       lida: false,
     });

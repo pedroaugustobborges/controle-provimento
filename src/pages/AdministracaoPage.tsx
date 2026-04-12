@@ -60,6 +60,54 @@ const ALL_UNIDADES = [
   ...UNIDADES_POR_REGIAO['OUTRAS UNIDADES'] || [],
 ];
 
+const MODULOS_SISTEMA = [
+  { id: 'vagas', label: 'Vagas (Painel Principal)' },
+  { id: 'publicacao', label: 'Publicação de Edital' },
+  { id: 'validacao', label: 'Validação de Edital' },
+  { id: 'banco', label: 'Banco de Talentos' },
+  { id: 'convocacoes', label: 'Convocações' },
+  { id: 'alertas', label: 'Alertas e Tarefas' },
+  { id: 'monitoramento', label: 'Monitoramento de Prazos' },
+  { id: 'validacao_convocacoes', label: 'Validar Convocações' },
+  { id: 'importacoes', label: 'Importações' },
+  { id: 'administracao', label: 'Administração' },
+];
+
+const DEFAULT_PERMISSIONS_BY_PROFILE: Record<string, { modulos: string[], perms: Record<string, 'read' | 'edit'> }> = {
+  'Analista de RH': {
+    modulos: ['vagas', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Assistente de RH': {
+    modulos: ['vagas', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Analista Administrativo': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+  'Supervisão': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+  'Coordenação': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+  'Analista de Edital': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'read', publicacao: 'edit', validacao: 'read', banco: 'read', convocacoes: 'read', alertas: 'read', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Analista das Convocações': {
+    modulos: ['vagas', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'read', banco: 'read', convocacoes: 'edit', alertas: 'read', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Administrador': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+};
+
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
   const { 

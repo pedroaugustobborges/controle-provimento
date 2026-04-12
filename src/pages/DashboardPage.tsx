@@ -269,64 +269,68 @@ export default function DashboardPage() {
       pendencias: number;
     }>();
 
-    const ensureEntry = (unitName: string) => {
+    const getEntry = (unitName: string) => {
       const canonicalName = resolveCanonicalName(unitName);
       if (!canonicalName) return null;
 
-      const existing = unitMap.get(canonicalName);
-      if (existing) return existing;
-
-      const created = {
-        name: canonicalName,
-        region: getRegionForUnit(canonicalName),
-        vagas: 0,
-        vagasAbertas: 0,
-        bancos: 0,
-        bancosCR: 0,
-        bancosDisponiveis: 0,
-        pendencias: 0,
-      };
-
-      unitMap.set(canonicalName, created);
-      return created;
+      let entry = unitMap.get(canonicalName);
+      if (!entry) {
+        entry = {
+          name: canonicalName,
+          region: getRegionForUnit(canonicalName),
+          vagas: 0,
+          vagasAbertas: 0,
+          bancos: 0,
+          bancosCR: 0,
+          bancosDisponiveis: 0,
+          pendencias: 0,
+        };
+        unitMap.set(canonicalName, entry);
+      }
+      return entry;
     };
 
-    vagas.forEach((vaga) => {
-      const entry = ensureEntry(vaga.unidade);
-      if (!entry) return;
+    const statusConcluidos = ['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'];
 
-      entry.vagas += 1;
+    for (const vaga of vagas) {
+      const entry = getEntry(vaga.unidade);
+      if (!entry) continue;
+
+      entry.vagas++;
       const categoria = getCategoriaStatus(vaga);
       if (categoria !== 'concluidas' && categoria !== 'suspensa' && categoria !== 'cancelada') {
-        entry.vagasAbertas += 1;
+        entry.vagasAbertas++;
       }
 
       const lastHist = vaga.historico?.[vaga.historico.length - 1];
       const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
       const normalizedS = normStatus(vaga.status || '');
-      if (calcDiasAberto(baseDate) > 10 && !['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'].includes(normalizedS)) {
-        entry.pendencias += 1;
+      
+      if (!statusConcluidos.includes(normalizedS)) {
+        if (calcDiasAberto(baseDate) > 10) {
+          entry.pendencias++;
+        }
       }
-    });
+    }
 
-    filteredBancos.forEach((banco) => {
-      const entry = ensureEntry(banco.unidade);
-      if (!entry) return;
+    for (const banco of filteredBancos) {
+      const entry = getEntry(banco.unidade);
+      if (!entry) continue;
 
       const s = normStatus(banco.status || '');
-      entry.bancos += 1;
+      entry.bancos++;
       if (s === 'cadastro reserva') {
-        entry.bancosCR += 1;
+        entry.bancosCR++;
       }
 
       if (s !== 'vencido' && s !== 'convocado') {
-        entry.bancosDisponiveis += 1;
+        entry.bancosDisponiveis++;
       }
 
       if (s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado) {
-        entry.pendencias += 1;
+        entry.pendencias++;
       }
-    });
+    }
 
     return Array.from(unitMap.values())
       .map((entry) => ({

@@ -339,7 +339,116 @@ export default function AdministracaoPage() {
     }));
   };
 
-  const getStatusBadge = (status: string) => {
+  const handleUploadPhoto = async (file: File, isEdit = false) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${Math.random()}.${fileExt}`;
+      
+      const { data, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      if (isEdit) {
+        setEditingUser((prev: any) => ({ ...prev, avatar_url: publicUrl }));
+      } else {
+        setNewUser(prev => ({ ...prev, avatar_url: publicUrl }));
+      }
+      toast.success('Foto carregada com sucesso!');
+    } catch (error: any) {
+      toast.error('Erro ao carregar foto: ' + error.message);
+    }
+  };
+
+  const toggleModule = (moduleId: string, isEdit = false) => {
+    if (isEdit) {
+      if (!editingUser) return;
+      const modulos = editingUser.modulos_acesso || [];
+      const newModulos = modulos.includes(moduleId)
+        ? modulos.filter((m: string) => m !== moduleId)
+        : [...modulos, moduleId];
+      
+      const newPerms = { ...editingUser.permissoes_modulo };
+      if (!newModulos.includes(moduleId)) {
+        delete newPerms[moduleId];
+      } else if (!newPerms[moduleId]) {
+        newPerms[moduleId] = 'read';
+      }
+
+      setEditingUser((prev: any) => ({
+        ...prev,
+        modulos_acesso: newModulos,
+        permissoes_modulo: newPerms
+      }));
+    } else {
+      const modulos = newUser.modulos_acesso || [];
+      const newModulos = modulos.includes(moduleId)
+        ? modulos.filter((m: string) => m !== moduleId)
+        : [...modulos, moduleId];
+      
+      const newPerms = { ...newUser.permissoes_modulo };
+      if (!newModulos.includes(moduleId)) {
+        delete newPerms[moduleId];
+      } else if (!newPerms[moduleId]) {
+        newPerms[moduleId] = 'read';
+      }
+
+      setNewUser(prev => ({
+        ...prev,
+        modulos_acesso: newModulos,
+        permissoes_modulo: newPerms
+      }));
+    }
+  };
+
+  const togglePermission = (moduleId: string, isEdit = false) => {
+    if (isEdit) {
+      if (!editingUser) return;
+      const current = editingUser.permissoes_modulo?.[moduleId] || 'read';
+      const next = current === 'read' ? 'edit' : 'read';
+      setEditingUser((prev: any) => ({
+        ...prev,
+        permissoes_modulo: {
+          ...(prev.permissoes_modulo || {}),
+          [moduleId]: next
+        }
+      }));
+    } else {
+      const current = newUser.permissoes_modulo?.[moduleId] || 'read';
+      const next = current === 'read' ? 'edit' : 'read';
+      setNewUser(prev => ({
+        ...prev,
+        permissoes_modulo: {
+          ...(prev.permissoes_modulo || {}),
+          [moduleId]: next
+        }
+      }));
+    }
+  };
+
+  const handleProfileChange = (perfil: string, isEdit = false) => {
+    const defaults = DEFAULT_PERMISSIONS_BY_PROFILE[perfil] || { modulos: [], perms: {} };
+    if (isEdit) {
+      setEditingUser((prev: any) => ({
+        ...prev,
+        perfil,
+        modulos_acesso: defaults.modulos,
+        permissoes_modulo: defaults.perms
+      }));
+    } else {
+      setNewUser(prev => ({
+        ...prev,
+        perfil,
+        modulos_acesso: defaults.modulos,
+        permissoes_modulo: defaults.perms
+      }));
+    }
+  };
     const map: Record<string, string> = {
       'ativo': 'bg-green-100 text-green-700',
       'suspenso': 'bg-amber-100 text-amber-700',

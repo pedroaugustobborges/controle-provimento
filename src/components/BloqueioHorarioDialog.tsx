@@ -27,7 +27,9 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
   const [data, setData] = useState(defaultDate || new Date().toISOString().split('T')[0]);
   const [diaInteiro, setDiaInteiro] = useState(false);
   const [horariosSelected, setHorariosSelected] = useState<string[]>([]);
+  const [vagasBloqueadas, setVagasBloqueadas] = useState(5);
   const [motivo, setMotivo] = useState('');
+  const [linkTeams, setLinkTeams] = useState('');
 
   const toggleHorario = (h: string) => {
     setHorariosSelected(prev =>

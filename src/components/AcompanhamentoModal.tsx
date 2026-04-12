@@ -139,7 +139,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
               {dateValue ? format(dateValue, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : <span>Selecione uma data</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 z-[9999]" align="start" sideOffset={8}>
             <CalendarComponent
               mode="single"
               selected={dateValue}

@@ -227,7 +227,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
                             </PopoverTrigger>
                             <PopoverContent className="w-64 p-3 text-xs bg-slate-900 text-slate-100 border-none shadow-2xl rounded-lg">
                               <p className="font-semibold mb-2 border-b border-slate-700 pb-1">Atividades da Sessão:</p>
-                              <p className="text-slate-300 leading-relaxed italic">{session.activityDetails}</p>
+                              <p className="text-slate-300 leading-relaxed italic whitespace-pre-line">{session.activityDetails}</p>
                             </PopoverContent>
                           </Popover>
                         )}

@@ -79,21 +79,16 @@ const UNIT_MAPPING = [
   { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA (UPA/PA)' },
 ];
 
-const canonicalCache = new Map<string, string>();
 const resolveCanonicalName = (unitName: string) => {
   if (!unitName) return '';
   const norm = normalizeUnitName(unitName);
   
-  if (canonicalCache.has(norm)) return canonicalCache.get(norm)!;
-
   for (const map of UNIT_MAPPING) {
     if (normalizeUnitName(map.bank) === norm || map.vacancies.some(v => normalizeUnitName(v) === norm)) {
-      canonicalCache.set(norm, map.display);
       return map.display;
     }
   }
   
-  canonicalCache.set(norm, norm);
   return norm;
 };
 
@@ -119,49 +114,23 @@ export default function DashboardPage() {
   }, [fetchAll]);
 
   const filterDashboardRecords = useCallback(<T extends { unidade?: string | null }>(records: T[]) => {
-    if (selectedRegion === 'all') {
-      return records;
-    }
+    return filterByRegionAndUnit(records, selectedRegion, 'all');
+  }, [selectedRegion]);
 
-    const regionFiltered = filterByRegionAndUnit(records, selectedRegion, 'all');
-    const activeUnits = selectedUnits.filter((unit) => unit && unit !== 'all');
+  const filteredVagas = useMemo(() => {
+    const base = filterByRegionAndUnit(allVagas, selectedRegion, 'all');
+    const unitFiltered = (selectedUnits.length > 0 && !selectedUnits.includes('all'))
+      ? base.filter(v => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(v.unidade)))
+      : base;
+    return getValidVacancyBase(unitFiltered, 'TODOS', 'TODOS');
+  }, [allVagas, selectedRegion, selectedUnits]);
 
-    if (activeUnits.length === 0) {
-      return regionFiltered;
-    }
-
-    const activeUnitsSet = new Set(activeUnits.map(normalizeUnitName));
-    return regionFiltered.filter((record) => {
-      const unitNorm = normalizeUnitName(record.unidade || '');
-      return activeUnitsSet.has(unitNorm);
-    });
-  }, [selectedRegion, selectedUnits]);
-
-  const { filteredVagas, filteredBancos } = useMemo(() => {
-    // 1. Filter by region first (if applicable)
-    let vBase = allVagas;
-    let bBase = bancos;
-
-    if (selectedRegion !== 'all') {
-      vBase = allVagas.filter(v => getRegionForUnit(v.unidade) === selectedRegion);
-      bBase = bancos.filter(b => getRegionForUnit(b.unidade) === selectedRegion);
-    }
-
-    // 2. Filter by units (if applicable)
-    if (selectedUnits.length > 0 && !selectedUnits.includes('all')) {
-      const activeUnitsSet = new Set(selectedUnits.map(normalizeUnitName));
-      vBase = vBase.filter(v => activeUnitsSet.has(normalizeUnitName(v.unidade)));
-      bBase = bBase.filter(b => activeUnitsSet.has(normalizeUnitName(b.unidade)));
-    }
-
-    // 3. Apply validity base for vagas (equivalent to getValidVacancyBase)
-    const validVagas = vBase.filter(row => {
-      const hasCargo = String(row.cargo ?? "").trim() !== "";
-      return hasCargo;
-    });
-
-    return { filteredVagas: validVagas, filteredBancos: bBase };
-  }, [allVagas, bancos, selectedRegion, selectedUnits]);
+  const filteredBancos = useMemo(() => {
+    const base = filterByRegionAndUnit(bancos, selectedRegion, 'all');
+    return (selectedUnits.length > 0 && !selectedUnits.includes('all'))
+      ? base.filter(b => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(b.unidade)))
+      : base;
+  }, [bancos, selectedRegion, selectedUnits]);
 
   const vagas = filteredVagas;
 
@@ -204,21 +173,16 @@ export default function DashboardPage() {
       const cat = getCategoriaStatus(v);
       if (acc.hasOwnProperty(cat)) {
         acc[cat as keyof typeof acc]++;
+      } else {
+        acc.sem_classificacao++;
       }
 
-      const s = ((v as any).status || (v as any).STATUS || '').toLowerCase();
-      if (s.includes('movimenta') || s.includes('transfer')) {
-        acc.movimentacao_interna++;
-      }
-      if (s.includes('admiss')) {
-        acc.em_admissao++;
-      }
-
-      const lastHist = v.historico?.[v.historico.length - 1];
+      // Adicional: Atrazadas (mais de 10 dias sem atualização no histórico ou desde abertura)
+      const lastHist = v.historico && v.historico.length > 0 ? v.historico[v.historico.length - 1] : null;
       const baseDate = lastHist?.data || v.data_recebimento || v.data_abertura;
-      const normalizedS = normStatus(v.status || '');
       
-      if (!statusConcluidos.includes(normalizedS)) {
+      const normalizedStatus = normStatus(v.status || '');
+      if (!statusConcluidos.includes(normalizedStatus)) {
         if (calcDiasAberto(baseDate) > 10) {
           acc.atrasadas++;
         }
@@ -228,10 +192,17 @@ export default function DashboardPage() {
     return acc;
   }, [vagas]);
 
-  const totalCadastroReservaDisponiveis = useMemo(() => {
+  const totalBancosDisponiveis = useMemo(() => {
     return filteredBancos.filter((b) => {
       const s = normStatus(b.status || '');
       return s !== 'vencido' && s !== 'convocado';
+    }).length;
+  }, [filteredBancos]);
+
+  const totalCRDisponiveis = useMemo(() => {
+    return filteredBancos.filter((b) => {
+      const s = normStatus(b.status || '');
+      return s === 'cadastro reserva';
     }).length;
   }, [filteredBancos]);
 
@@ -273,28 +244,19 @@ export default function DashboardPage() {
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
     { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
-    { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos disponíveis' },
-  ], [totalVagas, counts, totalCadastroReservaDisponiveis, totalTarefasPendentes]);
+    { label: 'CR Disponível', value: totalCRDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Cadastros reserva' },
+    { label: 'Banco Disponível', value: totalBancosDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos ativos' },
+  ], [totalVagas, counts, totalCRDisponiveis, totalBancosDisponiveis, totalTarefasPendentes]);
 
   const strategicScopeByUnit = useMemo(() => {
-    const unitMap = new Map<string, {
-      name: string;
-      region: string;
-      vagas: number;
-      vagasAbertas: number;
-      bancos: number;
-      bancosCR: number;
-      bancosDisponiveis: number;
-      pendencias: number;
-    }>();
+    const unitMap = new Map<string, any>();
 
     const getEntry = (unitName: string) => {
       const canonicalName = resolveCanonicalName(unitName);
       if (!canonicalName) return null;
 
-      let entry = unitMap.get(canonicalName);
-      if (!entry) {
-        entry = {
+      if (!unitMap.has(canonicalName)) {
+        unitMap.set(canonicalName, {
           name: canonicalName,
           region: getRegionForUnit(canonicalName),
           vagas: 0,
@@ -303,62 +265,55 @@ export default function DashboardPage() {
           bancosCR: 0,
           bancosDisponiveis: 0,
           pendencias: 0,
-        };
-        unitMap.set(canonicalName, entry);
+        });
       }
-      return entry;
+      return unitMap.get(canonicalName);
     };
 
     const statusConcluidos = ['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'];
 
-    for (const vaga of vagas) {
+    vagas.forEach((vaga) => {
       const entry = getEntry(vaga.unidade);
-      if (!entry) continue;
+      if (entry) {
+        entry.vagas++;
+        const cat = getCategoriaStatus(vaga);
+        if (cat !== 'concluidas' && cat !== 'suspensa' && cat !== 'cancelada') {
+          entry.vagasAbertas++;
+        }
 
-      entry.vagas++;
-      const categoria = getCategoriaStatus(vaga);
-      if (categoria !== 'concluidas' && categoria !== 'suspensa' && categoria !== 'cancelada') {
-        entry.vagasAbertas++;
+        const lastHist = vaga.historico && vaga.historico.length > 0 ? vaga.historico[vaga.historico.length - 1] : null;
+        const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
+        const normalizedS = normStatus(vaga.status || '');
+        if (!statusConcluidos.includes(normalizedS)) {
+          if (calcDiasAberto(baseDate) > 10) {
+            entry.pendencias++;
+          }
+        }
       }
+    });
 
-      const lastHist = vaga.historico?.[vaga.historico.length - 1];
-      const baseDate = lastHist?.data || vaga.data_recebimento || vaga.data_abertura;
-      const normalizedS = normStatus(vaga.status || '');
-      
-      if (!statusConcluidos.includes(normalizedS)) {
-        if (calcDiasAberto(baseDate) > 10) {
+    filteredBancos.forEach((banco) => {
+      const entry = getEntry(banco.unidade);
+      if (entry) {
+        entry.bancos++;
+        const s = normStatus(banco.status || '');
+        if (s === 'cadastro reserva') entry.bancosCR++;
+        if (s !== 'vencido' && s !== 'convocado') entry.bancosDisponiveis++;
+        
+        if (s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado) {
           entry.pendencias++;
         }
       }
-    }
-
-    for (const banco of filteredBancos) {
-      const entry = getEntry(banco.unidade);
-      if (!entry) continue;
-
-      const s = normStatus(banco.status || '');
-      entry.bancos++;
-      if (s === 'cadastro reserva') {
-        entry.bancosCR++;
-      }
-
-      if (s !== 'vencido' && s !== 'convocado') {
-        entry.bancosDisponiveis++;
-      }
-
-      if (s === 'vencido' || s === 'prorrogado' || banco.is_prorrogado) {
-        entry.pendencias++;
-      }
-    }
+    });
 
     return Array.from(unitMap.values())
-      .map((entry) => ({
+      .map(entry => ({
         ...entry,
         total: entry.vagas + entry.bancos,
-        ativos: entry.vagasAbertas + entry.bancosDisponiveis,
+        ativos: entry.vagasAbertas + entry.bancosDisponiveis
       }))
-      .filter((entry) => entry.total > 0 || entry.pendencias > 0)
-      .sort((a, b) => b.total - a.total || b.pendencias - a.pendencias || a.name.localeCompare(b.name));
+      .filter(entry => entry.total > 0 || entry.pendencias > 0)
+      .sort((a, b) => b.total - a.total);
   }, [vagas, filteredBancos]);
 
   const chartData = useMemo(() => {

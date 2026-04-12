@@ -103,52 +103,10 @@ export default function DashboardPage() {
   const { selectedRegion, selectedUnits, setSelectedRegion, setSelectedUnits } = useAdminStore();
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
-  const [debugStatus, setDebugStatus] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    const fetchDebugStatus = async () => {
-      const { data, error } = await supabase
-        .from('vagas')
-        .select('status')
-        .not('status', 'is', null);
-
-      if (error) {
-        console.error('Error fetching debug status:', error);
-        return;
-      }
-
-      const contagem: Record<string, number> = {};
-      data.forEach(row => {
-        const s = (row as any).status || 'NULL';
-        contagem[s] = (contagem[s] || 0) + 1;
-      });
-      setDebugStatus(contagem);
-    };
-
-    fetchDebugStatus();
-  }, []);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
-
-  // Diagnostics
-  useEffect(() => {
-    console.log('--- DIAGNÓSTICO DASHBOARD ---');
-    console.log('Vagas carregadas:', allVagas.length);
-    console.log('Banco carregado:', bancos.length);
-    console.log('Filtro de Região:', selectedRegion);
-    console.log("STATUS únicos na tabela:", [...new Set(allVagas.map(v => v.status))]);
-    
-    // PASSO 1 — IMPRIMIR OS STATUS EXATOS DO BANCO
-    const statusList = allVagas.map(v => (v as any).status || (v as any).STATUS);
-    const uniqueStatus = [...new Set(statusList)];
-    console.log("=== TODOS OS STATUS ÚNICOS ===");
-    uniqueStatus.forEach(s => {
-      console.log(JSON.stringify(s), "| length:", s ? String(s).length : 0);
-    });
-    console.log('-----------------------------');
-  }, [allVagas, bancos, selectedRegion]);
 
   const filterDashboardRecords = <T extends { unidade?: string | null }>(records: T[]) => {
     // If "All regions" is selected, return all records immediately
@@ -228,13 +186,6 @@ export default function DashboardPage() {
         acc.atrasadas++;
       }
     });
-
-    console.log('--- CONTAGEM DE STATUS ---');
-    console.log("MOV INTERNA raw:", vagas.filter(v => normStatus(v.status || '').includes('movimentac')).map(v => v.status).slice(0, 5));
-    console.log("ADMISSAO raw:", vagas.filter(v => normStatus(v.status || '').includes('admissao')).map(v => v.status).slice(0, 5));
-    Object.entries(acc).forEach(([k, v]) => console.log(`${k}: ${v}`));
-    console.log('TOTAL VAGAS:', totalVagas);
-    console.log('--------------------------');
 
     // PASSO 2 — BUSCA DIRETA SEM NORMALIZAÇÃO (Temporário para diagnóstico)
     acc.movimentacao_interna = vagas.filter(v => {
@@ -316,7 +267,7 @@ export default function DashboardPage() {
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
     { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
     { label: 'CR Disponível', value: totalCadastroReservaDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos disponíveis' },
-    { label: 'Tarefas Pendentes', value: totalTarefasPendentes, icon: Bell, color: 'text-red-600', bg: 'bg-red-50', description: 'Ações pendentes' },
+    
   ], [totalVagas, counts, totalCadastroReservaDisponiveis, totalTarefasPendentes]);
 
   const strategicScopeByUnit = useMemo(() => {

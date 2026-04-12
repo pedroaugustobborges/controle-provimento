@@ -9,7 +9,8 @@ import {
   X,
   ExternalLink,
   Info,
-  ChevronRight
+  ChevronRight,
+  Lightbulb
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVagasStore } from '@/store/vagasStore';
@@ -121,6 +122,8 @@ export function AIAssistant() {
     if (!msg.lida) {
       marcarMensagemLida(msg.id);
     }
+    navigate('/mensagens?tab=historico');
+    setIsOpen(false);
   };
 
   return (
@@ -224,10 +227,14 @@ export function AIAssistant() {
             </Tabs>
 
             {/* Footer */}
-            <div className="p-3 border-t bg-background shrink-0">
-              <Button className="w-full gap-2 text-xs font-bold" variant="outline" size="sm" onClick={() => navigate('/mensagens')}>
-                <Search className="h-3.5 w-3.5" />
-                Ver Todas as Mensagens
+            <div className="p-3 border-t bg-background shrink-0 grid grid-cols-2 gap-2">
+              <Button className="gap-1 text-[10px] font-bold" variant="outline" size="sm" onClick={() => navigate('/mensagens')}>
+                <Search className="h-3 w-3" />
+                Ver Mensagens
+              </Button>
+              <Button className="gap-1 text-[10px] font-bold" variant="outline" size="sm" onClick={() => navigate('/mensagens?tab=comunicacao')}>
+                <Lightbulb className="h-3 w-3 text-amber-500" />
+                Feedback
               </Button>
             </div>
           </motion.div>

@@ -22,6 +22,7 @@ const AdministracaoPage = lazy(() => import("@/pages/AdministracaoPage"));
 const AlertasTarefasPage = lazy(() => import("@/pages/AlertasTarefasPage"));
 const MonitoramentoAdminPage = lazy(() => import("@/pages/MonitoramentoAdminPage"));
 const FilaAnalistaEditalPage = lazy(() => import("@/pages/FilaAnalistaEditalPage"));
+const MensagensPage = lazy(() => import("@/pages/MensagensPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 
@@ -62,6 +63,7 @@ function ProtectedRoutes() {
           <Route path="/gestor" element={<AdministracaoPage />} />
           <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
           <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
+          <Route path="/mensagens" element={<MensagensPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

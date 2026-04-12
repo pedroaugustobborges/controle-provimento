@@ -1,5 +1,5 @@
 export type BancoImportType = 'geral' | 'por_unidades';
-export type BancoImportScope = 'goias' | 'espirito_santo' | 'demais_unidades';
+export type BancoImportScope = 'todas' | 'goias_es' | 'demais_unidades';
 export type BancoImportMode = 'substituir' | 'adicionar';
 
 export interface ImportExecutionOptions {
@@ -59,19 +59,19 @@ export function normalizeImportedUnit(unidade: string) {
   return normalizeText(unidade);
 }
 
-export function classifyBancoScopeByUnit(unidade: string): BancoImportScope {
+export function classifyBancoScopeByUnit(unidade: string): 'goias_es' | 'demais_unidades' {
   const normalizedUnit = normalizeImportedUnit(unidade);
 
   if (!normalizedUnit) return 'demais_unidades';
-  if (GOIAS_UNITS_NORMALIZED.has(normalizedUnit)) return 'goias';
-  if (ESPIRITO_SANTO_TOKENS.some(token => normalizedUnit.includes(normalizeText(token)))) return 'espirito_santo';
+  if (GOIAS_UNITS_NORMALIZED.has(normalizedUnit)) return 'goias_es';
+  if (ESPIRITO_SANTO_TOKENS.some(token => normalizedUnit.includes(normalizeText(token)))) return 'goias_es';
 
   return 'demais_unidades';
 }
 
 export function getBancoScopeLabel(scope?: BancoImportScope) {
-  if (scope === 'goias') return 'Goiás';
-  if (scope === 'espirito_santo') return 'Espírito Santo';
+  if (scope === 'todas') return 'Todas as regiões';
+  if (scope === 'goias_es') return 'Goiás e Espírito Santo';
   if (scope === 'demais_unidades') return 'Demais unidades';
   return 'Não informado';
 }
@@ -126,6 +126,7 @@ export function shouldReplaceBancoRecord(
 
   if (tipo === 'geral') {
     if (!options.bancoEscopo) return false;
+    if (options.bancoEscopo === 'todas') return true;
     return classifyBancoScopeByUnit(normalizedUnit) === options.bancoEscopo;
   }
 

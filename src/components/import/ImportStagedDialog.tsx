@@ -46,7 +46,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
   const [autoMappingErrors, setAutoMappingErrors] = useState<string[]>([]);
   const [importOptions, setImportOptions] = useState<ImportExecutionOptions>({
     bancoTipo: 'geral',
-    bancoEscopo: 'goias',
+    bancoEscopo: 'todas',
     bancoModo: 'substituir',
   });
   
@@ -74,7 +74,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
         setImportType(initialType || 'vagas');
         setImportOptions({
           bancoTipo: 'geral',
-          bancoEscopo: 'goias',
+          bancoEscopo: 'todas',
           bancoModo: 'substituir',
         });
         setImportProgress({
@@ -506,7 +506,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Escopo</label>
                         <Select
-                          value={importOptions.bancoTipo === 'geral' ? (importOptions.bancoEscopo || 'goias') : 'unidades_planilha'}
+                          value={importOptions.bancoTipo === 'geral' ? (importOptions.bancoEscopo || 'todas') : 'unidades_planilha'}
                           onValueChange={(value) => {
                             if (value === 'unidades_planilha') return;
                             setImportOptions(prev => ({ ...prev, bancoEscopo: value as ImportExecutionOptions['bancoEscopo'] }));
@@ -517,8 +517,8 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="goias">Goiás</SelectItem>
-                            <SelectItem value="espirito_santo">Espírito Santo</SelectItem>
+                            <SelectItem value="todas">Todas as regiões</SelectItem>
+                            <SelectItem value="goias_es">Goiás e Espírito Santo</SelectItem>
                             <SelectItem value="demais_unidades">Demais unidades</SelectItem>
                           </SelectContent>
                         </Select>

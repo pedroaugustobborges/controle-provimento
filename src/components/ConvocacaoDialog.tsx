@@ -40,6 +40,8 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
     carga_horaria: '',
     horario_trabalho: '',
     unidade_alternativa: '',
+    tipo_atendimento: 'presencial',
+    link_teams: '',
     responsavel: currentUser?.nome_completo || 'Analista'
   });
 
@@ -296,6 +298,35 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
                   placeholder="Nº do processo eletrônico"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tipo_atendimento">Tipo de Atendimento</Label>
+                <Select
+                  value={formData.tipo_atendimento || 'presencial'}
+                  onValueChange={v => setFormData({...formData, tipo_atendimento: v as any})}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="presencial">Presencial</SelectItem>
+                    <SelectItem value="online">Online (Microsoft Teams)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.tipo_atendimento === 'online' && (
+                <div className="space-y-2">
+                  <Label htmlFor="link_teams">Link do Microsoft Teams</Label>
+                  <Input
+                    id="link_teams"
+                    value={formData.link_teams || ''}
+                    onChange={e => setFormData({...formData, link_teams: e.target.value})}
+                    placeholder="https://teams.microsoft.com/l/meetup-join/..."
+                    type="url"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

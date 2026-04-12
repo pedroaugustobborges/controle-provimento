@@ -253,6 +253,18 @@ export interface BancoTalentos {
   regiao?: 'GO_ES' | 'OUTRAS_UNIDADES';
 }
 
+export type TipoAtendimento = 'presencial' | 'online';
+
+export interface BloqueioHorario {
+  id: string;
+  data: string;
+  horario?: string; // undefined = dia inteiro
+  dia_inteiro: boolean;
+  motivo: string;
+  criado_por: string;
+  created_at: string;
+}
+
 export interface Convocacao {
   id: string;
   vaga_id: string;
@@ -280,6 +292,8 @@ export interface Convocacao {
   resultado_final?: string;
   validado_por?: string;
   data_validacao?: string;
+  tipo_atendimento?: TipoAtendimento;
+  link_teams?: string;
 }
 
 export interface Tarefa {

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta, MensagemHistorico } from '@/types/vaga';
+import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta, MensagemHistorico, BloqueioHorario } from '@/types/vaga';
 import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
@@ -119,6 +119,7 @@ interface VagasState {
   vagas: Vaga[];
   bancos: BancoTalentos[];
   convocacoes: Convocacao[];
+  bloqueios: BloqueioHorario[];
   editais: Edital[];
   validacoes: ValidacaoEdital[];
   importHistory: ImportHistory[];
@@ -160,6 +161,8 @@ interface VagasState {
   updateTarefa: (id: string, data: Partial<Tarefa>) => void;
   deleteTarefa: (id: string) => void;
   addAlerta: (alerta: Alerta) => void;
+  addBloqueio: (bloqueio: BloqueioHorario) => void;
+  removeBloqueio: (id: string) => void;
   updateAlerta: (id: string, data: Partial<Alerta>) => void;
   addMensagem: (mensagem: MensagemHistorico) => void;
   marcarMensagemLida: (id: string) => void;
@@ -185,6 +188,7 @@ export const useVagasStore = create<VagasState>()(
       vagas: [],
       bancos: [],
       convocacoes: mockConvocacoes,
+      bloqueios: [] as BloqueioHorario[],
       editais: mockEditais,
       validacoes: mockValidacoes,
       importHistory: [],
@@ -417,6 +421,8 @@ export const useVagasStore = create<VagasState>()(
         tarefas: s.tarefas.filter((t) => t.id !== id),
       })),
       addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
+      addBloqueio: (bloqueio) => set((s) => ({ bloqueios: [bloqueio, ...s.bloqueios] })),
+      removeBloqueio: (id) => set((s) => ({ bloqueios: s.bloqueios.filter(b => b.id !== id) })),
       deleteImportBatch: async (batchId) => {
         try {
           const { DatabaseService } = await import('@/services/databaseService');

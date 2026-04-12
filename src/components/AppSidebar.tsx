@@ -32,18 +32,16 @@ import {
   SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import {
-  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue
-} from '@/components/ui/select';
-import {
-  Popover, PopoverContent, PopoverTrigger
-} from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminStore } from '@/store/adminStore';
 import { useAuth } from '@/hooks/useAuth';
 import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { cn } from '@/lib/utils';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 
 export function AppSidebar() {
   const { state } = useSidebar();

@@ -41,8 +41,27 @@ export const AgieChat = memo(() => {
   const [userProfile, setUserProfile] = useState<{ nome_completo: string; email: string; id: string } | null>(null);
   const { toast } = useToast();
   
+  // Notification carousel state
+  const [notificationIndex, setNotificationIndex] = useState(0);
+  const notifications = useMemo(() => [
+    "Nova mensagem recebida",
+    "Sugestão de melhoria pendente",
+    "Problema reportado",
+    "Novidade disponível"
+  ], []);
+
   const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
   const hasNewMessage = temNovasMensagens;
+
+  // Notification carousel logic
+  useEffect(() => {
+    if (hasNewMessage && !isOpen) {
+      const interval = setInterval(() => {
+        setNotificationIndex((prev) => (prev + 1) % notifications.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [hasNewMessage, isOpen, notifications.length]);
 
   // Fetch user profile on mount
   useEffect(() => {

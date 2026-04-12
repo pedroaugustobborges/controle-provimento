@@ -40,6 +40,8 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
     carga_horaria: '',
     horario_trabalho: '',
     unidade_alternativa: '',
+    tipo_atendimento: 'presencial',
+    link_teams: '',
     responsavel: currentUser?.nome_completo || 'Analista'
   });
 

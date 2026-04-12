@@ -20,7 +20,7 @@ import { formatDate, getCategoriaStatus, filterByRegionAndUnit, normalizeUnitNam
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
-import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO } from '@/lib/convocacaoUtils';
+import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';

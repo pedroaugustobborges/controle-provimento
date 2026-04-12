@@ -1,7 +1,7 @@
 import { useRBAC } from './useRBAC';
 
 export function usePermissions() {
-  const { userData, isAdmin, isManagement, getPermissions } = useRBAC();
+  const { userData, isAdmin, isManagement, isFullAccessProfile, getPermissions } = useRBAC();
 
   const perfil = userData?.perfil;
 
@@ -10,7 +10,9 @@ export function usePermissions() {
     canViewAudit: () => isAdmin,
     canViewDiagnostics: () => isAdmin,
     canManageUsers: () => isAdmin || (userData?.pode_gerenciar_usuarios ?? false),
-    canDeleteRecords: () => isAdmin || (userData?.pode_excluir_requisicoes ?? false),
+    canDeleteRecords: () => isFullAccessProfile || (userData?.pode_excluir_requisicoes ?? false),
+    canDirectEdit: () => isFullAccessProfile,
+    canRequestUpdate: () => !isFullAccessProfile,
     canEditSettings: () => isAdmin || (userData?.pode_editar_configuracoes ?? false),
     canAccessAdmin: () => isAdmin || perfil === 'Analista administrativo' || (userData?.pode_gerenciar_usuarios ?? false) || (userData?.pode_editar_configuracoes ?? false),
     canIncludeRecords: () => isAdmin || perfil === 'Analista administrativo' || perfil === 'Analista do edital' || (userData?.pode_incluir_registros ?? false),

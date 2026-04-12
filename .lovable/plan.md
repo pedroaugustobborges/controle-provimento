@@ -2,22 +2,12 @@
 
 ## Plano de Implementação
 
-### Objetivo
-Substituir a div do avatar do usuário no header por um componente `Avatar` circular profissional.
+### 1. Buscar e corrigir referências a "AIDE"/"Aide"
+- Buscar em todo o codebase por ocorrências de "AIDE" ou "Aide" (case-insensitive)
+- Substituir todas por "Agie"
 
-### Alterações em `src/components/Layout.tsx`
-
-1. **Importar** `Avatar`, `AvatarFallback`, `AvatarImage` de `@/components/ui/avatar.tsx`
-2. **Substituir** a div atual:
-   ```tsx
-   // DE:
-   <div className="h-10 w-10 rounded-full bg-primary ...">JS</div>
-   
-   // PARA:
-   <Avatar className="h-10 w-10 ring-2 ring-border">
-     <AvatarImage src={userPhotoUrl} alt="João Silva" />
-     <AvatarFallback className="bg-primary text-primary-foreground font-bold">JS</AvatarFallback>
-   </Avatar>
-   ```
-3. Manter o layout existente do header intacto — apenas trocar o elemento do avatar
+### 2. Reverter foto do usuário no rodapé da sidebar
+- Em `src/components/AppSidebar.tsx`, reverter a alteração que substituiu o ícone `<Users>` pela foto do usuário (`avatarDefault`) no rodapé do menu lateral
+- Voltar ao ícone original (`<Users className="h-4 w-4 text-white" />`) dentro do div circular
+- Remover o import de `avatarDefault` se não for mais usado nesse arquivo
 

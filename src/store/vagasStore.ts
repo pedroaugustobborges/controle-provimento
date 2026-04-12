@@ -688,15 +688,14 @@ export const useVagasStore = create<VagasState>()(
           status_geral: v.status_geral,
           data_recebimento: v.data_recebimento,
           data_abertura: v.data_abertura,
-          created_at: v.created_at,
+          data_criacao: v.data_criacao,
           requisicao: v.requisicao,
           numero_requisicao: v.numero_requisicao,
           numero_processo: v.numero_processo,
           tem_banco_valido: v.tem_banco_valido,
           origem: v.origem,
-          // Extract only the most necessary fields
           historico: (v.historico || []).slice(-1)
-        })).slice(0, 1500), // Persist first 1500 records which covers most recent active vacancies
+        })).slice(0, 1000),
         bancos: state.bancos.map(b => ({
           id: b.id,
           unidade: b.unidade,
@@ -706,7 +705,7 @@ export const useVagasStore = create<VagasState>()(
           numero_processo_seletivo: b.numero_processo_seletivo,
           data_validade: b.data_validade,
           is_prorrogado: b.is_prorrogado
-        })).slice(0, 2000), // Persist first 2000 candidates
+        })).slice(0, 1500),
         lastUpdated: state.lastUpdated,
         editais: state.editais,
         validacoes: state.validacoes,

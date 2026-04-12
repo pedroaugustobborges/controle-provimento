@@ -89,6 +89,7 @@ export default function VagasPage() {
   const currentTab = searchParams.get('tab') || 'list';
   const { currentUser, addAuditLog, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');

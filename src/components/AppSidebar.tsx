@@ -93,6 +93,11 @@ export function AppSidebar() {
       url: '/banco-talentos', 
       icon: Users, 
       visible: getPermissions('banco').canRead,
+      subMenu: [
+        { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
+        { title: 'Histórico de Convocações', url: '/banco-talentos?tab=convocados' },
+        { title: 'Bancos Vencidos', url: '/banco-talentos?tab=vencidos' },
+      ]
     },
     { 
       title: 'Convocações', 

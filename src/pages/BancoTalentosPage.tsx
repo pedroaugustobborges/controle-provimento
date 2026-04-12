@@ -829,7 +829,7 @@ export default function BancoTalentosPage() {
             <Filter className="h-4 w-4" /> Cadastro Reserva
           </TabsTrigger>
           <TabsTrigger value="convocados" className="gap-2">
-            <CheckCircle className="h-4 w-4" /> Convocados
+            <CheckCircle className="h-4 w-4" /> Histórico de Convocações
           </TabsTrigger>
           <TabsTrigger value="vencidos" className="gap-2">
             <AlertTriangle className="h-4 w-4" /> Vencidos
@@ -1087,52 +1087,81 @@ export default function BancoTalentosPage() {
                       <TableHead className="text-center">Class.</TableHead>
                       <TableHead >Data Conv.</TableHead>
                       <TableHead >Unid. Conv.</TableHead>
-                      <TableHead className="text-center">N° Chamada</TableHead>
+                      <TableHead className="text-center">Status / Devolutiva</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {convocadosFiltered.map((b) => (
-                      <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
-                        <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
-                        <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">
-                            {b.classificacao}°
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs font-bold text-green-600">
-                          {b.data_convocacao ? formatDate(b.data_convocacao) : '-'}
-                        </TableCell>
-                        <TableCell className="text-xs font-medium text-slate-600">
-                          <div className="flex items-center gap-1.5">
-                            <Building className="h-3 w-3 text-slate-400" />
-                            {b.unidade_convocacao || '-'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center text-xs font-bold text-slate-500">
-                          {b.numero_chamada || '-'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
-                            onClick={() => {
-                              setSelectedBanco(b);
-                              setIsDetailsOpen(true);
-                            }}
-                          >
-                            Detalhes
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {convocadosFiltered.map((b) => {
+                      // Encontrar a convocação diária relacionada
+                      const dailyConvocacao = useVagasStore.getState().convocacoes.find(c => 
+                        c.banco_relacionado === b.id || 
+                        (c.nome_candidato === b.nome && c.cargo === b.cargo)
+                      );
+
+                      return (
+                        <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                          <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
+                          <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
+                          <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">
+                              {b.classificacao}°
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs font-bold text-green-600">
+                            {b.data_convocacao ? formatDate(b.data_convocacao) : '-'}
+                          </TableCell>
+                          <TableCell className="text-xs font-medium text-slate-600">
+                            <div className="flex items-center gap-1.5">
+                              <Building className="h-3 w-3 text-slate-400" />
+                              {b.unidade_convocacao || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {dailyConvocacao ? (
+                              <Badge 
+                                variant="outline" 
+                                className={`text-[10px] font-bold uppercase ${
+                                  dailyConvocacao.status === 'aceite' ? 'bg-green-100 text-green-700 border-green-200' : 
+                                  dailyConvocacao.status === 'pendente' ? 'bg-amber-100 text-amber-700 border-amber-200' : 
+                                  'bg-red-100 text-red-700 border-red-200'
+                                }`}
+                              >
+                                {dailyConvocacao.status === 'aceite' ? 'Compareceu / Aceitou' : 
+                                 dailyConvocacao.status === 'pendente' ? 'Pendente' : 
+                                 dailyConvocacao.status === 'desistiu' ? 'Desistiu' :
+                                 dailyConvocacao.status === 'faltou' ? 'Faltou' :
+                                 dailyConvocacao.status === 'recusa_plantao' ? 'Recusa Plantão' :
+                                 dailyConvocacao.status === 'recusa_unidade' ? 'Recusa Unidade' :
+                                 dailyConvocacao.status === 'recusa_horario' ? 'Recusa Horário' : dailyConvocacao.status}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] font-bold bg-slate-50 text-slate-400 border-slate-200">
+                                CONVOCADO
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                              onClick={() => {
+                                setSelectedBanco(b);
+                                setIsDetailsOpen(true);
+                              }}
+                            >
+                              Detalhes
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                     {convocadosFiltered.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
-                          Nenhum convocado encontrado para os filtros aplicados.
+                          Nenhum registro de convocação encontrado.
                         </TableCell>
                       </TableRow>
                     )}

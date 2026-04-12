@@ -158,6 +158,11 @@ export default function ConvocacoesPage() {
 
     return baseConvocacoes
       .filter(c => {
+        // Garantir que apenas convocações com agendamento (data e horário) apareçam aqui
+        if (!c.data_convocacao || !c.horario) {
+          return false;
+        }
+
         if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) {
           return false;
         }

@@ -76,20 +76,15 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, onEditConvo
     );
   }
 
-  if (Object.keys(byBase).length === 0 && dayBloqueios.length === 0) {
-    return (
-      <div className="py-20 text-center text-slate-400 font-medium italic bg-white rounded-xl border-2 border-dashed border-slate-100">
-        Nenhuma convocação agendada para {formatDate(selectedDate)}.
-      </div>
-    );
-  }
+  // Always show the agenda grid, even when empty
+  const showEmptyGrid = Object.keys(byBase).length === 0;
 
   return (
     <div className="space-y-8">
-      {Object.entries(byBase).length === 0 && dayBloqueios.length > 0 ? (
+      {showEmptyGrid ? (
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-primary" /> Agenda do Dia
+            <MapPin className="h-5 w-5 text-primary" /> Agenda do Dia — {formatDate(selectedDate)}
           </h2>
           {HORARIOS_FIXOS_CONVOCACAO.map(horario => {
             const blocked = isHorarioBloqueado(horario);

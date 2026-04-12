@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import avatarDefault from '@/assets/avatar-izac.jpeg';
 import logoAgir from '@/assets/logo-agir-white.png';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { 
@@ -20,6 +20,7 @@ import {
   History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera
 } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
+import { InactivityLogout } from './InactivityLogout';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
@@ -72,10 +73,54 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { alertas, updateAlerta } = useVagasStore();
   const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length;
   const mainRef = useRef<HTMLDivElement>(null);
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCurrentProfile();
   }, [fetchCurrentProfile]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const channel = supabase.channel('online-users', {
+      config: {
+        presence: {
+          key: currentUser.id,
+        },
+      },
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const users = Object.values(state)
+          .flat()
+          .filter((user: any, index: number, self: any[]) => 
+            index === self.findIndex((u: any) => u.id === user.id)
+          );
+        setOnlineUsers(users);
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        // Handle join if needed
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        // Handle leave if needed
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            id: currentUser.id,
+            nome_completo: currentUser.nome_completo,
+            perfil: currentUser.perfil,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     const mainEl = mainRef.current;
@@ -226,6 +271,52 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
               {/* Right actions */}
               <div className="flex items-center gap-3">
+                {currentUser?.perfil === 'Administrador' && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold bg-primary/5 text-primary px-3 py-1.5 rounded-full border border-primary/20 transition-all duration-300 hover:bg-primary/10">
+                        <Users className="h-3.5 w-3.5" />
+                        <span>{onlineUsers.length} online</span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-64 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-slate-200/60 shadow-xl rounded-xl">
+                      <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-xs">
+                          <Users className="h-3.5 w-3.5 text-primary" />
+                          Usuários Online
+                        </h3>
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">
+                          {onlineUsers.length}
+                        </Badge>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto p-2">
+                        {onlineUsers.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-muted-foreground">
+                            Nenhum usuário online.
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {onlineUsers.map((user) => (
+                              <div key={user.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                                <div className="relative">
+                                  <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                    {user.nome_completo?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || 'US'}
+                                  </div>
+                                  <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-success rounded-full border-2 border-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-slate-800 truncate">{user.nome_completo}</p>
+                                  <p className="text-[10px] text-slate-500 truncate">{user.perfil}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+
                 <div className={`hidden xl:flex items-center gap-2 text-[10px] text-muted-foreground font-semibold bg-success/5 text-success px-3 py-1.5 rounded-full border border-success/20 transition-all duration-300 ${
                   isCompact ? 'opacity-0 max-w-0 overflow-hidden px-0 border-0' : 'opacity-100 max-w-xs'
                 }`}>
@@ -377,8 +468,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </main>
           <AIAssistant />
+          <InactivityLogout />
         </div>
       </div>
+
 
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl">

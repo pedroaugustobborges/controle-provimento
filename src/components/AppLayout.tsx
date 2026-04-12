@@ -242,7 +242,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 
                 <div className="h-8 w-px bg-border/50 mx-1" />
                 
-                <div className={`rounded-xl overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 ${
+                <div className={`rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 ${
                   isCompact ? 'h-8 w-8' : 'h-10 w-10'
                 }`}>
                   <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />

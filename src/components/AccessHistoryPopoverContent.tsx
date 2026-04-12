@@ -30,7 +30,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
     const end = endOfDay(date).toISOString();
 
     const { data: sessions, error } = await supabase
-      .from('user_sessions')
+      .from('user_sessions' as any)
       .select(`
         *,
         profiles:user_id (
@@ -51,7 +51,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
 
     // Fetch audit logs for these users in this timeframe to calculate interactivity
     const { data: auditLogs, error: auditError } = await supabase
-      .from('audit_log_entries')
+      .from('audit_logs' as any)
       .select('usuario_id, created_at, acao, modulo, registro_afetado')
       .gte('created_at', start)
       .lte('created_at', end);
@@ -60,11 +60,11 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
       console.error('Error fetching audit logs:', auditError);
     }
 
-    const historyWithActivity = sessions.map((session: any) => {
+    const historyWithActivity = (sessions || []).map((session: any) => {
       const sessionStart = new Date(session.login_at);
       const sessionEnd = session.logout_at ? new Date(session.logout_at) : new Date(session.last_activity_at);
       
-      const sessionLogs = (auditLogs || []).filter(log => 
+      const sessionLogs = (auditLogs || []).filter((log: any) => 
         log.usuario_id === session.user_id && 
         new Date(log.created_at) >= sessionStart && 
         new Date(log.created_at) <= sessionEnd

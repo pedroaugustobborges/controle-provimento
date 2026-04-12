@@ -1091,7 +1091,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                                         {document.getElementById(`date-${e}`) ? (document.getElementById(`date-${e}`) as HTMLInputElement).value : format(new Date(), "dd/MM/yyyy")}
                                       </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="end">
+                                    <PopoverContent className="w-auto p-0 z-[9999]" align="end" sideOffset={8}>
                                       <CalendarComponent
                                         mode="single"
                                         onSelect={(date) => {

@@ -99,7 +99,7 @@ export default function VagasPage() {
   const [filterAssistente, setFilterAssistente] = useState('all');
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [filterVagasNovas, setFilterVagasNovas] = useState(false);
-  const [vacancyStatusTab, setVacancyStatusTab] = useState('ativas');
+  const [vacancyStatusTab, setVacancyStatusTab] = useState('todas');
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isAddVagaOpen, setIsAddVagaOpen] = useState(false);

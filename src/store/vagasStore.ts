@@ -627,6 +627,16 @@ export const useVagasStore = create<VagasState>()(
     }),
     {
       name: 'hospital-recruitment-store',
+      version: 2,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2 && persistedState?.historicoMensagens) {
+          persistedState.historicoMensagens = persistedState.historicoMensagens.map((m: any) => ({
+            ...m,
+            remetente: m.remetente === 'AIDE' || m.remetente === 'Aide' ? 'Agie' : m.remetente,
+          }));
+        }
+        return persistedState;
+      },
       storage: createJSONStorage(() => ({
         getItem: (name: string) => localStorage.getItem(name),
         setItem: (name: string, value: string) => {

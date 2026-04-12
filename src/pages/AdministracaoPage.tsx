@@ -301,6 +301,9 @@ export default function AdministracaoPage() {
         pode_excluir_requisicoes: editingUser.pode_excluir_requisicoes,
         pode_editar_configuracoes: editingUser.pode_editar_configuracoes,
         pode_gerenciar_usuarios: editingUser.pode_gerenciar_usuarios,
+        avatar_url: editingUser.avatar_url,
+        modulos_acesso: editingUser.modulos_acesso,
+        permissoes_modulo: editingUser.permissoes_modulo,
       });
       toast.success('Dados do usuário atualizados.');
       setIsEditUserOpen(false);

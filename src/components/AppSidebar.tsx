@@ -160,7 +160,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
-              <span className="font-extrabold text-sm text-white tracking-tight leading-tight whitespace-nowrap">
+              <span className="font-extrabold text-sm text-white tracking-tight leading-tight whitespace-nowrap uppercase">
                 Provimento Digital
               </span>
             </div>

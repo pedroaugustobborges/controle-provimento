@@ -15,11 +15,13 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
   Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
-  Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2
+  Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
+  History, MessageSquare, AlertTriangle, Info, CheckCircle
 } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
+import { useVagasStore } from '@/store/vagasStore';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -36,6 +38,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 function getGreeting(): string {
   const hour = new Date().getHours();

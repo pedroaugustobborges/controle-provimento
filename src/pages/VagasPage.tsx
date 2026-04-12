@@ -35,6 +35,7 @@ import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
 import { PageSkeleton } from '@/components/PageSkeleton';
+import { RequestUpdateDialog } from '@/components/RequestUpdateDialog';
 import {
   Tabs,
   TabsContent,
@@ -109,6 +110,8 @@ export default function VagasPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [vagaParaEditar, setVagaParaEditar] = useState<Vaga | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
+  const [vagaForUpdate, setVagaForUpdate] = useState<Vaga | null>(null);
   const pageSize = 50;
 
   const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
@@ -133,6 +136,21 @@ export default function VagasPage() {
       }
       setIsDeleteDialogOpen(false);
       setVagaParaExcluir(null);
+    }
+  };
+  
+  const handleRequestUpdate = (recordId: string, description: string) => {
+    const vaga = vagas.find(v => v.id === recordId);
+    if (vaga) {
+      updateVaga(recordId, {
+        historico: [...(vaga.historico || []), {
+          id: `h-req-${Date.now()}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `[SOLICITAÇÃO DE ATUALIZAÇÃO]: ${description}`,
+          usuario: currentUser?.nome_completo || 'Analista'
+        }]
+      });
+      toast.success('Solicitação de atualização enviada com sucesso');
     }
   };
 
@@ -772,12 +790,24 @@ export default function VagasPage() {
                               <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
                             </DropdownMenuItem>
 
-                            {!isConsultaOnly && (
+                            {permissions.canDirectEdit() && !isConsultaOnly && (
                               <DropdownMenuItem onClick={() => {
                                 setVagaParaEditar(v);
                                 setIsAddVagaOpen(true);
                               }} className="gap-2">
                                 <Edit className="h-4 w-4 text-amber-500" /> Editar Registro
+                              </DropdownMenuItem>
+                            )}
+
+                            {permissions.canRequestUpdate() && (
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setVagaForUpdate(v);
+                                  setIsRequestUpdateOpen(true);
+                                }} 
+                                className="gap-2 text-amber-600"
+                              >
+                                <AlertCircle className="h-4 w-4" /> Solicitar Atualização
                               </DropdownMenuItem>
                             )}
 
@@ -833,7 +863,7 @@ export default function VagasPage() {
                               <History className="h-4 w-4 text-slate-500" /> Histórico Completo
                             </DropdownMenuItem>
 
-                            {canDelete && (
+                            {permissions.canDeleteRecords() && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem 
@@ -930,6 +960,18 @@ export default function VagasPage() {
         if (!open) setVagaParaEditar(null);
       }} vaga={vagaParaEditar} />
       <VagaHistoryDialog vaga={selectedVagaForHistory} open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
+
+      <RequestUpdateDialog
+        isOpen={isRequestUpdateOpen}
+        onClose={() => {
+          setIsRequestUpdateOpen(false);
+          setVagaForUpdate(null);
+        }}
+        recordId={vagaForUpdate?.id || ''}
+        recordTitle={vagaForUpdate?.cargo || ''}
+        type="vaga"
+        onConfirm={handleRequestUpdate}
+      />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

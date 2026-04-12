@@ -3,11 +3,12 @@
 ## Plano de Implementação
 
 ### Objetivo
-Encontrar e corrigir todas as ocorrências de "AIDE" na Central de Comunicação, substituindo por "Agie".
+Corrigir o destaque visual dos submenus no menu lateral: apenas o submenu ativo deve ter estilo de "selecionado", e deve haver um indicador visual (linha vertical ou indentação) conectando submenus ao grupo pai.
 
 ### Passos
-1. Buscar no codebase por "AIDE" (case-sensitive e case-insensitive) em todos os arquivos `.ts` e `.tsx`
-2. Verificar especificamente `src/pages/MensagensPage.tsx`, `src/components/chat/AgieChat.tsx`, `src/data/chatData.ts` e `src/store/vagasStore.ts`
-3. Substituir todas as ocorrências de "AIDE" por "Agie" nos textos, labels, mensagens e dados mock
-4. Manter referências de código (nomes de variáveis, imports) consistentes — alterar apenas strings voltadas ao usuário
+
+1. **Analisar `src/components/AppSidebar.tsx`** para entender a estrutura atual de grupos e submenus, e como o estado ativo é determinado
+2. **Ajustar estilos do item ativo**: garantir que apenas o submenu clicado receba destaque (fundo/cor), e que o grupo pai permaneça expandido mas sem o mesmo estilo de selecionado
+3. **Adicionar indicador visual de hierarquia**: aplicar uma linha vertical lateral ou indentação nos submenus para evidenciar que pertencem ao grupo pai
+4. **Verificar variáveis CSS** em `src/index.css` para garantir que as cores de sidebar estão coerentes com o design
 

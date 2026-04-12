@@ -67,14 +67,10 @@ export function AppSidebar() {
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard, visible: getPermissions('vagas').canRead },
     { 
-      title: 'Vagas', 
+      title: 'Controle de Vagas', 
       url: '/vagas', 
       icon: Briefcase, 
       visible: getPermissions('vagas').canRead,
-      subMenu: [
-        { title: 'Todas as Vagas', url: '/vagas' },
-        { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
-      ] 
     },
     { 
       title: 'Publicação de Edital', 
@@ -91,42 +87,24 @@ export function AppSidebar() {
       url: '/validacao-editais', 
       icon: FileCheck, 
       visible: getPermissions('validacao').canRead,
-      subMenu: [
-        { title: 'Pendentes de Validação', url: '/validacao-editais' },
-        { title: 'Validados / Histórico', url: '/validacao-editais?tab=historico' },
-      ]
     },
     { 
       title: 'Banco de Talentos', 
-      url: '#', 
+      url: '/banco-talentos', 
       icon: Users, 
       visible: getPermissions('banco').canRead,
-      subMenu: [
-        { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
-        { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
-        { title: 'Vencidos', url: '/banco-talentos?tab=vencidos' },
-      ] 
     },
     { 
       title: 'Convocações', 
-      url: '#', 
+      url: '/convocacoes', 
       icon: Calendar, 
       visible: getPermissions('convocacoes').canRead,
-      subMenu: [
-        { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
-        { title: 'Histórico', url: '/convocacoes?tab=list' },
-        { title: 'Pendentes', url: '/convocacoes?tab=pending' },
-      ] 
     },
     { 
       title: 'Alertas e Tarefas', 
       url: '/alertas-tarefas', 
       icon: Bell, 
       visible: getPermissions('alertas').canRead,
-      subMenu: [
-        { title: 'Painel de Alertas', url: '/alertas-tarefas' },
-        { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
-      ] 
     },
   ], [getPermissions]);
 

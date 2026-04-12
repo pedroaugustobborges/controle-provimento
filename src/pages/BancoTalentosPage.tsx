@@ -447,7 +447,7 @@ export default function BancoTalentosPage() {
         badge="Recursos Humanos"
         actions={
           <>
-            {permissions.canIncludeRecords() && (
+            {permissions.canImport() && (
               <Button 
                 variant="outline" 
                 className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"

@@ -392,7 +392,6 @@ export default function VagasPage() {
         <>
            <PageHeader 
             title="Controle de Vagas"
-            badge="Gestão de Vagas"
             helpContent={<HelpGuide />}
             actions={
               <>
@@ -419,7 +418,7 @@ export default function VagasPage() {
                     <Database className="h-3 w-3" /> Diagnóstico
                   </Button>
                 )}
-                {permissions.canIncludeRecords() && (
+                {permissions.canImport() && (
                   <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
                     <FileSpreadsheet className="h-4 w-4 text-primary/80" /> Importar Excel
                   </Button>

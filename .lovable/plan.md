@@ -1,24 +1,24 @@
 
 
-## Plano — Corrigir Agenda Diária, Bloqueios e Convocação Online
+## Plano — Reformular Agenda Diária com Grade Compacta e Pop-up
 
-### 1. Adicionar horários faltantes (`src/lib/convocacaoUtils.ts`)
-- `HORARIOS_FIXOS_CONVOCACAO` tem apenas 5 horários: `08:30, 09:30, 10:30, 11:30, 14:30`. Faltam `12:30` e `13:30`.
-- Atualizar para incluir **7 horários**: `08:30, 09:30, 10:30, 11:30, 12:30, 13:30, 14:30`.
+### 1. Grade compacta (`src/components/AgendaDiaria.tsx`)
+- Substituir a visualização atual por uma **grade compacta** com 7 linhas (uma por horário fixo).
+- Cada linha mostra: ícone de relógio, horário, indicador de ocupação (ex: "2/5 agendados"), badge de status (livre / parcial / lotado / bloqueado).
+- As linhas são **clicáveis** — ao clicar, abre um **Popover** com os detalhes dos 5 slots daquele horário.
 
-### 2. Agenda Diária sempre visível (`src/components/AgendaDiaria.tsx`)
-- **Problema:** Quando não há convocações E não há bloqueios, o componente mostra apenas "Nenhuma convocação agendada". Deveria mostrar a **grade de horários** com todos os slots vazios (mostrando "Horário livre").
-- **Correção:** Sempre renderizar a grade de horários fixos, independente de haver convocações. Remover a condição que exibe a mensagem vazia quando `byBase` está vazio e `dayBloqueios` está vazio — em vez disso, mostrar todos os slots com "Horário livre".
+### 2. Pop-up de detalhes por horário (Popover)
+- Usar o componente `Popover` existente no projeto.
+- Ao clicar no horário, exibir:
+  - Lista dos **5 slots** (numerados 1 a 5).
+  - Slots ocupados: nome do candidato, cargo, unidade, badge online/presencial, botões Devolutiva e Editar.
+  - Slots vazios: texto "Disponível".
+- Se o horário estiver bloqueado: mostrar motivo e botão "Remover Bloqueio".
 
-### 3. Bloqueio de Horários — já funciona
-- O `BloqueioHorarioDialog` já permite selecionar múltiplos horários e bloquear dia inteiro. O código está correto. O problema era que os horários faltantes (`12:30`, `13:30`) não apareciam como opções.
+### 3. Cabeçalho com resumo do dia
+- Manter título "Agenda do Dia — [data]" com seletor de data.
+- Resumo geral: total de agendamentos, horários bloqueados.
 
-### 4. Convocação Online — ajustar fluxo (`src/components/ConvocacaoDialog.tsx`)
-- O campo `tipo_atendimento` e `link_teams` já existem no formulário. Verificar se estão aparecendo corretamente.
-- **Remover obrigatoriedade do campo "Unidade"** quando tipo de atendimento for "online" — convocação online não exige unidade presencial.
-
-### Arquivos afetados
-- `src/lib/convocacaoUtils.ts` — adicionar horários 12:30 e 13:30
-- `src/components/AgendaDiaria.tsx` — sempre exibir grade de horários
-- `src/components/ConvocacaoDialog.tsx` — tornar unidade opcional para online
+### Arquivo afetado
+- `src/components/AgendaDiaria.tsx` — reescrever inteiro com grade compacta + Popover
 

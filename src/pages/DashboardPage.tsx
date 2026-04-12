@@ -112,23 +112,21 @@ export default function DashboardPage() {
   }, [fetchAll]);
 
   const filterDashboardRecords = useCallback(<T extends { unidade?: string | null }>(records: T[]) => {
-    return filterByRegionAndUnit(records, selectedRegion, 'all');
-  }, [selectedRegion]);
+    const base = filterByRegionAndUnit(records, selectedRegion, 'all');
+    if (selectedUnits.length > 0 && !selectedUnits.includes('all')) {
+      return base.filter(r => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(r.unidade || '')));
+    }
+    return base;
+  }, [selectedRegion, selectedUnits]);
 
   const filteredVagas = useMemo(() => {
-    const base = filterByRegionAndUnit(allVagas, selectedRegion, 'all');
-    const unitFiltered = (selectedUnits.length > 0 && !selectedUnits.includes('all'))
-      ? base.filter(v => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(v.unidade)))
-      : base;
-    return getValidVacancyBase(unitFiltered, 'TODOS', 'TODOS');
-  }, [allVagas, selectedRegion, selectedUnits]);
+    const base = filterDashboardRecords(allVagas);
+    return getValidVacancyBase(base, 'TODOS', 'TODOS');
+  }, [allVagas, filterDashboardRecords]);
 
   const filteredBancos = useMemo(() => {
-    const base = filterByRegionAndUnit(bancos, selectedRegion, 'all');
-    return (selectedUnits.length > 0 && !selectedUnits.includes('all'))
-      ? base.filter(b => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(b.unidade)))
-      : base;
-  }, [bancos, selectedRegion, selectedUnits]);
+    return filterDashboardRecords(bancos);
+  }, [bancos, filterDashboardRecords]);
 
   const vagas = filteredVagas;
 

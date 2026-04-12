@@ -328,15 +328,13 @@ export default function VagasPage() {
             title="Controle de Vagas"
             badge="Gestão de Vagas"
             helpContent={<HelpGuide />}
-            withBackground
-            darkMode
             actions={
               <>
                 {permissions.canViewAudit() && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className={`text-[11px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+                    className={`text-[11px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary hover:bg-slate-100'}`}
                     onClick={() => setIsDebugOpen(!isDebugOpen)}
                   >
                     <Bug className="h-3 w-3" /> Audit
@@ -346,7 +344,7 @@ export default function VagasPage() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="text-[11px] text-white/70 hover:text-white hover:bg-white/10 h-8 gap-1 font-bold"
+                    className="text-[11px] text-slate-500 hover:text-primary hover:bg-slate-100 h-8 gap-1 font-bold"
                     onClick={() => {
                       const diag = getMatchingDiagnostic();
                       toast.info(`${diag.length} vagas sem banco encontradas.`);
@@ -356,11 +354,11 @@ export default function VagasPage() {
                   </Button>
                 )}
                 {permissions.canImport() && (
-                  <Button variant="outline" className="gap-2 border-white/30 hover:bg-white/10 text-white font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
-                    <FileSpreadsheet className="h-4 w-4 text-white/80" /> Importar Excel
+                  <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
+                    <FileSpreadsheet className="h-4 w-4 text-primary/80" /> Importar Excel
                   </Button>
                 )}
-                <Button className="gap-2 shadow-lg shadow-black/20 bg-white hover:bg-white/90 text-primary font-bold h-10 px-6 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
+                <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-6 transition-all rounded-xl" onClick={() => setIsAddVagaOpen(true)}>
                   <Plus className="h-4 w-4" /> Nova Vaga
                 </Button>
               </>
@@ -593,10 +591,10 @@ export default function VagasPage() {
       <div className="mb-4">
         <Tabs value={vacancyStatusTab} onValueChange={setVacancyStatusTab} className="w-full">
           <TabsList className="bg-slate-100/50 p-1 rounded-xl">
-            <TabsTrigger value="ativas" className="font-bold rounded-lg px-6 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+            <TabsTrigger value="ativas" className="font-bold rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500">
               Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao})
             </TabsTrigger>
-            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-6 data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all">
+            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500">
               Vagas Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
             </TabsTrigger>
           </TabsList>

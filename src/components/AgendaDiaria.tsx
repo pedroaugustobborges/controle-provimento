@@ -93,17 +93,18 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, selectedBas
       <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
         {HORARIOS_FIXOS_CONVOCACAO.map((horario, idx) => {
           const convsNoSlot = fixedSlotConvs.filter(c => c.horario === horario);
-          const blocked = dayBloqueios.some(b => b.horario === horario);
-          const bloqueioData = dayBloqueios.find(b => b.horario === horario);
-
+          const blocksForSlot = dayBloqueios.filter(b => b.horario === horario);
+          const isFullyBlocked = blocksForSlot.some(b => !b.vagas_bloqueadas || b.vagas_bloqueadas >= MAX_SLOTS);
+          const blockedVagasCount = blocksForSlot.reduce((acc, curr) => acc + (curr.vagas_bloqueadas || MAX_SLOTS), 0);
+          
           return (
             <HorarioRow
               key={horario}
               horario={horario}
               convocacoes={convsNoSlot}
-              blocked={blocked}
-              bloqueioMotivo={bloqueioData?.motivo}
-              bloqueioId={bloqueioData?.id}
+              blocked={isFullyBlocked}
+              blockedCount={blockedVagasCount}
+              blocks={blocksForSlot}
               onEdit={onEditConvocacao}
               onDevolutiva={onDevolutiva}
               onRemoveBloqueio={(id) => { removeBloqueio(id); toast.success('Bloqueio removido.'); }}

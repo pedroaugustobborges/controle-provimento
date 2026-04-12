@@ -17,7 +17,7 @@ import {
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
   Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2
 } from 'lucide-react';
-import { AgieChat } from './chat/AgieChat';
+import { AIAssistant } from './AIAssistant';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -221,7 +221,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {children}
             </div>
           </main>
-          <AgieChat />
+          <AIAssistant />
         </div>
       </div>
 

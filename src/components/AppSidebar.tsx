@@ -48,7 +48,7 @@ import { useMemo, useState, useCallback } from 'react';
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess } = usePermissions();
+  const { canImport, canAccessAdmin, isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess, getPermissions } = usePermissions();
   const { currentUser, users, selectedRegion, selectedUnit, selectedUnits, setSelectedRegion, setSelectedUnit, setSelectedUnits } = useAdminStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,11 +65,12 @@ export function AppSidebar() {
   }, [signOut, navigate]);
 
   const mainItems = useMemo(() => [
-    { title: 'Visão Geral', url: '/', icon: LayoutDashboard },
+    { title: 'Visão Geral', url: '/', icon: LayoutDashboard, visible: getPermissions('vagas').canRead },
     { 
       title: 'Vagas', 
       url: '/vagas', 
       icon: Briefcase, 
+      visible: getPermissions('vagas').canRead,
       subMenu: [
         { title: 'Todas as Vagas', url: '/vagas' },
         { title: 'Acompanhamento do Edital', url: '/vagas?tab=acompanhamento' },
@@ -79,7 +80,7 @@ export function AppSidebar() {
       title: 'Publicação de Edital', 
       url: '/fila-editais', 
       icon: FileText, 
-      visible: hasFullAccess || isManagement() || isAdminAnalyst() || isEditalAnalyst(),
+      visible: getPermissions('publicacao').canRead,
       subMenu: [
         { title: 'Fila de Editais', url: '/fila-editais' },
         { title: 'Redação do Edital', url: '/fila-analista-edital' },
@@ -89,7 +90,7 @@ export function AppSidebar() {
       title: 'Validação de Edital', 
       url: '/validacao-editais', 
       icon: FileCheck, 
-      visible: hasFullAccess || isManagement() || isAdminAnalyst(),
+      visible: getPermissions('validacao').canRead,
       subMenu: [
         { title: 'Pendentes de Validação', url: '/validacao-editais' },
         { title: 'Validados / Histórico', url: '/validacao-editais?tab=historico' },
@@ -97,8 +98,9 @@ export function AppSidebar() {
     },
     { 
       title: 'Banco de Talentos', 
-      url: '#', // Change from /banco-talentos to #
+      url: '#', 
       icon: Users, 
+      visible: getPermissions('banco').canRead,
       subMenu: [
         { title: 'Cadastro Reserva', url: '/banco-talentos?tab=list' },
         { title: 'Convocados', url: '/banco-talentos?tab=convocados' },
@@ -107,8 +109,9 @@ export function AppSidebar() {
     },
     { 
       title: 'Convocações', 
-      url: '#', // Change from /convocacoes to #
+      url: '#', 
       icon: Calendar, 
+      visible: getPermissions('convocacoes').canRead,
       subMenu: [
         { title: 'Convocação Diária', url: '/convocacoes?tab=diaria' },
         { title: 'Histórico', url: '/convocacoes?tab=list' },
@@ -119,54 +122,20 @@ export function AppSidebar() {
       title: 'Alertas e Tarefas', 
       url: '/alertas-tarefas', 
       icon: Bell, 
+      visible: getPermissions('alertas').canRead,
       subMenu: [
         { title: 'Painel de Alertas', url: '/alertas-tarefas' },
         { title: 'Histórico de Mensagens', url: '/alertas-tarefas?tab=historico' },
       ] 
     },
-  ], [isManagement, isAdminAnalyst, isEditalAnalyst, hasFullAccess]);
+  ], [getPermissions]);
 
-  const hasMultipleUnits = useMemo(() => {
-    if (!currentUser) return false;
-    return currentUser.visualiza_todas_unidades || currentUser.unidades_vinculadas.length > 1;
-  }, [currentUser]);
-
-
-  const isUrlActive = (url: string) => {
-    const currentUrl = location.pathname + location.search;
-    if (url === '/' || url === '#') return currentUrl === '/';
-    
-    // For URLs with query parameters, require exact match
-    if (url.includes('?')) {
-      return currentUrl === url;
-    }
-    
-    // For base URLs, match exactly or as a parent directory
-    return currentUrl === url || currentUrl.startsWith(url + '/') || currentUrl.startsWith(url + '?');
-  };
-
-  const isParentActive = (item: any) => {
-    // If the item itself matches (for exact matches or items without submenus)
-    if (item.url !== '#' && isUrlActive(item.url)) {
-      // If it has a submenu, we only want it to be "active" if it's the specific base URL match
-      // or if one of its children is active.
-      if (item.subMenu) {
-        const currentUrl = location.pathname + location.search;
-        // If we are on the base URL (e.g. /vagas) and it's one of the submenu items
-        return currentUrl === item.url || item.subMenu.some((sub: any) => isUrlActive(sub.url));
-      }
-      return true;
-    }
-    // Check if any subMenu item is active
-    return item.subMenu?.some((sub: any) => isUrlActive(sub.url));
-  };
-
-  const secondaryItems = [
-    { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: true },
-    { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle, visible: true },
-    { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: canImport() },
-    { title: 'Administração', url: '/gestor', icon: Settings, visible: canAccessAdmin() },
-  ].filter(item => item.visible);
+  const secondaryItems = useMemo(() => [
+    { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: getPermissions('monitoramento').canRead },
+    { title: 'Validar Convocações', url: '/validacao', icon: CheckCircle, visible: getPermissions('validacao_convocacoes').canRead },
+    { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
+    { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
+  ].filter(item => item.visible), [getPermissions]);
   
   return (
     <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">

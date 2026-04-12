@@ -1,19 +1,23 @@
 
 
-## Plano de Correção — Seleção Visual dos Submenus
+## Plano de Implementação
 
-### Problema
-Todos os submenus ficam visualmente selecionados ao mesmo tempo após a última alteração. A lógica de detecção de rota ativa está com matching excessivamente amplo.
+### Objetivo
+Adicionar a seção de "Unidades Vinculadas" com seleção por região no formulário de **criação** de novo usuário, replicando e melhorando a funcionalidade que já existe na edição.
 
-### Correção
+### Alterações em `src/pages/AdministracaoPage.tsx`
 
-1. **`src/components/NavLink.tsx`** — Adicionar suporte à prop `end` do React Router (passando-a ao `RouterNavLink` interno), para que submenus usem correspondência exata de rota
+1. **Adicionar constantes de regiões** no topo do arquivo:
+   - `REGIOES` com dois grupos: Goiás (10 unidades) e Vitória/ES (2 unidades: SÃO PEDRO, SUÁ)
 
-2. **`src/components/AppSidebar.tsx`** — Nos submenus:
-   - Usar `NavLink` com `end={true}` para garantir match exato da rota
-   - Remover lógica manual de `isUrlActive` para submenus e confiar no mecanismo nativo do React Router (`NavLink` com `isActive`)
-   - Garantir que `activeClassName` só é aplicado quando `isActive === true`
-   - Simplificar `isParentActive` para apenas verificar se algum filho tem rota ativa
+2. **Criar função `toggleRegion`** que seleciona/deseleciona todas as unidades de uma região de uma vez
 
-3. **Testar** navegação entre submenus de diferentes grupos para confirmar que apenas um fica selecionado por vez
+3. **Inserir seção de Unidades Vinculadas no formulário de criação** (entre a seção de módulos e permissões), contendo:
+   - Switch "Visualizar todas as unidades"
+   - Botões de seleção rápida por região (Goiás / Vitória)
+   - Grid de checkboxes individuais por unidade (desabilitados quando "todas" está ativo)
+
+4. **Garantir que os dados são enviados** na criação do usuário (já existem os campos `visualiza_todas_unidades` e `unidades_vinculadas` no estado `newUser`)
+
+Nenhuma alteração de banco de dados é necessária — os campos já existem na tabela `profiles`.
 

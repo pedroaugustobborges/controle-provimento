@@ -707,28 +707,10 @@ export default function BancoTalentosPage() {
         return null;
       }, [bancos])}
 
-      {(() => {
+      {activeTab === 'list' && (() => {
         const stats = calculateStats(bancos);
         return (
-          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
-              <CardContent className="pt-6 px-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 p-2.5 rounded-lg shrink-0">
-                    <User className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Cadastro Reserva</p>
-                    <div className="flex flex-col">
-                      <p className="text-2xl font-bold text-slate-900 leading-none">
-                        {stats['Total Cadastro Reserva']}
-                      </p>
-                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Vigente (Normal)</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
@@ -741,25 +723,6 @@ export default function BancoTalentosPage() {
                       <p className="text-2xl font-bold text-slate-900 leading-none">
                         {stats['Total Convocados']}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Status Convocado</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-blue-500">
-              <CardContent className="pt-6 px-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 p-2.5 rounded-lg shrink-0">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Prorrogados</p>
-                    <div className="flex flex-col">
-                      <p className="text-2xl font-bold text-slate-900 leading-none">
-                        {stats['Total Prorrogados']}
-                      </p>
-                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">SIM ou Data Manual</p>
                     </div>
                   </div>
                 </div>
@@ -777,7 +740,6 @@ export default function BancoTalentosPage() {
                       <p className="text-2xl font-bold text-slate-900 leading-none">
                         {stats['Total Vencidos']}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Validade Expirada</p>
                     </div>
                   </div>
                 </div>
@@ -795,7 +757,6 @@ export default function BancoTalentosPage() {
                       <p className="text-2xl font-bold text-slate-900 leading-none">
                         {stats['Total Cadastro Reserva'] + stats['Total Prorrogados']}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Disponíveis para uso</p>
                     </div>
                   </div>
                 </div>
@@ -813,7 +774,6 @@ export default function BancoTalentosPage() {
                       <p className="text-2xl font-bold text-slate-900 leading-none">
                         {bancos.length}
                       </p>
-                      <p className="text-[9px] text-slate-400 font-bold italic mt-1 leading-none">Base completa</p>
                     </div>
                   </div>
                 </div>

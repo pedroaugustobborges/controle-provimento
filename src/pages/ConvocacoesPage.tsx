@@ -23,7 +23,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,

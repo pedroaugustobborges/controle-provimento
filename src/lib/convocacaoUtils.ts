@@ -3,15 +3,10 @@ import { normalizeCargo } from './vagaUtils';
 
 // Base sharing rules based on requirements
 export const BASES_CONVOCACAO: Record<string, string[]> = {
-  'Goiânia': ['HECAD', 'HUGOL', 'CRER', 'HDS', 'AGIR', 'CONDOMÍNIO'],
-  'Vitória': ['VITÓRIA', 'SUÁ', 'SÃO PEDRO'],
-  'Jataí': ['POLICLÍNICA JATAÍ', 'JATAÍ'],
-  'São Luís': ['SÃO LUÍS'],
-  'Formosa': ['POLICLÍNICA FORMOSA', 'FORMOSA'],
-  'Goianésia': ['POLICLÍNICA GOIANÉSIA', 'GOIANÉSIA'],
-  'Posse': ['POLICLÍNICA POSSE', 'POSSE'],
-  'Quirinópolis': ['POLICLÍNICA QUIRINÓPOLIS', 'QUIRINÓPOLIS'],
-  'São Luís de Montes Belos': ['POLICLÍNICA SÃO LUÍS', 'SÃO LUÍS DE MONTES BELOS']
+  'Goiânia': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'TEIA ANÁPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
+  'Goiás': ['POLICLÍNICA', 'JATAÍ'],
+  'Vitória': ['VITÓRIA', 'SÃO PEDRO', 'SUÁ'],
+  'Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
 export function getBaseForUnidade(unidade: string): string {

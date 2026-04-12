@@ -217,11 +217,9 @@ export const useVagasStore = create<VagasState>()(
       fetchVagas: async (incremental = false) => {
         if (get().isLoadingVagas) return;
         
-        // Se já temos dados e não é um carregamento inicial/forçado, podemos pular
-        // Isso evita múltiplas chamadas redundantes ao navegar entre páginas
-        if (!incremental && get().vagas.length > 0 && !get().isInitialLoad) {
-          return;
-        }
+        // Evita múltiplas chamadas simultâneas ou redundantes
+        if (!incremental && get().vagas.length > 0 && !get().isInitialLoad) return;
+        if (get().isLoadingVagas) return;
 
         set({ isLoadingVagas: true });
         try {
@@ -240,9 +238,8 @@ export const useVagasStore = create<VagasState>()(
       fetchBancos: async (incremental = false) => {
         if (get().isLoadingBancos) return;
         
-        if (!incremental && get().bancos.length > 0 && !get().isInitialLoad) {
-          return;
-        }
+        if (!incremental && get().bancos.length > 0 && !get().isInitialLoad) return;
+        if (get().isLoadingBancos) return;
 
         set({ isLoadingBancos: true });
         try {

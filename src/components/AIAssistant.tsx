@@ -121,6 +121,8 @@ export function AIAssistant() {
     if (!msg.lida) {
       marcarMensagemLida(msg.id);
     }
+    navigate('/mensagens?tab=historico');
+    setIsOpen(false);
   };
 
   return (

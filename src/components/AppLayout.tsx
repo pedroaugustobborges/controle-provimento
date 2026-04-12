@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { InactivityLogout } from './InactivityLogout';
+import { UserSessionTracker } from './UserSessionTracker';
+import { AccessHistoryPopoverContent } from './AccessHistoryPopoverContent';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
@@ -231,6 +233,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
+        <UserSessionTracker />
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
@@ -279,40 +282,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         <span>{onlineUsers.length} online</span>
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent align="end" className="w-64 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-slate-200/60 shadow-xl rounded-xl">
-                      <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                        <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-xs">
-                          <Users className="h-3.5 w-3.5 text-primary" />
-                          Usuários Online
-                        </h3>
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">
-                          {onlineUsers.length}
-                        </Badge>
-                      </div>
-                      <div className="max-h-60 overflow-y-auto p-2">
-                        {onlineUsers.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-muted-foreground">
-                            Nenhum usuário online.
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            {onlineUsers.map((user) => (
-                              <div key={user.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                                <div className="relative">
-                                  <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                                    {user.nome_completo?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || 'US'}
-                                  </div>
-                                  <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-success rounded-full border-2 border-white" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-slate-800 truncate">{user.nome_completo}</p>
-                                  <p className="text-[10px] text-slate-500 truncate">{user.perfil}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    <PopoverContent align="end" className="p-0 border-none bg-transparent shadow-none w-auto">
+                      <AccessHistoryPopoverContent onlineUsers={onlineUsers} />
                     </PopoverContent>
                   </Popover>
                 )}

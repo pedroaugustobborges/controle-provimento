@@ -131,7 +131,7 @@ export default function FilaEditaisPage() {
   };
 
 
-  const hasFilters = search !== '' || filterUnidade !== 'all' || filterStatus !== 'all';
+  const hasFilters = search !== '' || filterUnidade !== 'all';
 
   return (
     <div className="space-y-6">
@@ -192,27 +192,24 @@ export default function FilaEditaisPage() {
               />
             </div>
             <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-              <SelectTrigger className="w-[180px] bg-white">
+              <SelectTrigger className="w-[200px] bg-white">
                 <Building2 className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Unidade" />
+                <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas Unidades</SelectItem>
-                {unidades.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px] bg-white">
-                <Tag className="h-4 w-4 mr-2 text-slate-400" />
-                <SelectValue placeholder="Status Edital" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos Status</SelectItem>
-                {statusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                <SelectItem value="all">Todas as Unidades</SelectItem>
+                {unidadesAgrupadas.map((grupo) => (
+                  <SelectGroup key={grupo.label}>
+                    <SelectLabel>{grupo.label}</SelectLabel>
+                    {grupo.units.map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
               </SelectContent>
             </Select>
             {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterUnidade('all'); setFilterStatus('all'); }}>
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterUnidade('all'); }}>
                 <X className="h-4 w-4 mr-1" /> Limpar
               </Button>
             )}

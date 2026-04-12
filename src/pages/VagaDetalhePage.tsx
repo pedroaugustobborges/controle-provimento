@@ -877,6 +877,14 @@ export default function VagaDetalhePage() {
         onOpenChange={setIsEditVagaOpen} 
         vaga={vaga}
       />
+      <RequestUpdateDialog
+        isOpen={isRequestUpdateOpen}
+        onClose={() => setIsRequestUpdateOpen(false)}
+        recordId={vaga.id}
+        recordTitle={vaga.cargo}
+        type="vaga"
+        onConfirm={handleRequestUpdate}
+      />
     </div>
   );
 }

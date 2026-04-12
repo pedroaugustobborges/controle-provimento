@@ -177,39 +177,58 @@ export const useVagasStore = create<VagasState>()(
       setVagas: (vagas) => set({ vagas }),
       fetchVagas: async (incremental = false) => {
         if (get().isLoadingVagas) return;
+        
+        // Check cache (5 min)
+        const now = Date.now();
+        const lastUpdated = get().lastUpdated;
+        const hasData = get().vagas.length > 0;
+        if (!incremental && hasData && lastUpdated && (now - lastUpdated < 5 * 60 * 1000)) {
+          console.log('[VagasStore] Using cached vagas');
+          return;
+        }
+
         set({ isLoadingVagas: true });
         try {
           const { supabase } = await import('@/integrations/supabase/client');
-          const rows: any[] = [];
-          let from = 0;
-
-          while (true) {
-            const { data, error } = await supabase
-              .from('vagas')
-              .select('*')
-              .order('created_at', { ascending: false })
-              .range(from, from + PAGE_SIZE - 1);
-
+          
+          // Get total count first to parallelize
+          const { count, error: countError } = await supabase
+            .from('vagas')
+            .select('*', { count: 'exact', head: true });
+          
+          if (countError) throw countError;
+          const totalCount = count || 0;
+          const pages = Math.ceil(totalCount / PAGE_SIZE);
+          
+          console.log(`[VagasStore] Fetching ${totalCount} vagas in ${pages} parallel requests`);
+          
+          const pagePromises = [];
+          for (let i = 0; i < pages; i++) {
+            const from = i * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+            pagePromises.push(
+              supabase
+                .from('vagas')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .range(from, to)
+            );
+          }
+          
+          const results = await Promise.all(pagePromises);
+          const allRows: any[] = [];
+          
+          for (const { data, error } of results) {
             if (error) throw error;
-            if (!data || data.length === 0) break;
-
-            const mappedBatch = data.map(mapDbVaga);
-            
-            if (incremental && from === 0) {
-              set({ vagas: mappedBatch });
-            } else if (incremental) {
-              set((s) => ({ vagas: [...s.vagas, ...mappedBatch] }));
-            } else {
-              rows.push(...mappedBatch);
-            }
-
-            if (data.length < PAGE_SIZE) break;
-            from += PAGE_SIZE;
+            if (data) allRows.push(...data);
           }
-
-          if (!incremental) {
-            set({ vagas: rows });
-          }
+          
+          const mappedVagas = allRows.map(mapDbVaga);
+          set({ 
+            vagas: mappedVagas,
+            lastUpdated: Date.now()
+          });
+          
         } catch (err) {
           console.error('Error fetching vagas:', err);
         } finally {

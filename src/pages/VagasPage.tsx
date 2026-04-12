@@ -1097,8 +1097,6 @@ function AcompanhamentoEditalList() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <PageHeader 
           title="Acompanhamento do Edital"
-          subtitle="Monitoramento operacional detalhado das etapas e indicadores dos editais publicados."
-          badge="Gestão de Processos"
           helpContent={<HelpGuide activeTab="acompanhamento" />}
         />
 

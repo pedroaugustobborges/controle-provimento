@@ -182,8 +182,6 @@ export default function ImportacoesPage() {
     <div className="space-y-6">
       <PageHeader 
         title="Importações de Dados"
-        subtitle="Central de migração inicial e atualização em massa de registros via planilhas estruturadas."
-        badge="Data Management"
         actions={
           <>
             <Button 

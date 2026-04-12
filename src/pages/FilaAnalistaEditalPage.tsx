@@ -203,8 +203,6 @@ export default function FilaAnalistaEditalPage() {
     <div className="space-y-6">
       <PageHeader 
         title="Fila do Edital (Redação)"
-        subtitle="Vagas recebidas da unidade para redação e preparo do edital."
-        badge="Redação de Editais"
         helpContent={<HelpGuide />}
       />
 

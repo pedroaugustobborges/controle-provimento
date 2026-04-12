@@ -81,7 +81,6 @@ export default function ValidacaoPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Validar Convocações</h1>
-          <p className="text-slate-500 mt-1">Conferência e validação final do fluxo de convocações (GO-ES).</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="gap-2 bg-white border-slate-200">

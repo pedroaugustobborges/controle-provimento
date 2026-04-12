@@ -40,8 +40,6 @@ export default function EditaisPage() {
     <div className="space-y-4">
       <PageHeader 
         title="Editais e Publicações"
-        subtitle="Gestão centralizada do fluxo de editais de seleção e status de publicações AGIR."
-        badge="Gestão de Editais"
       />
 
 

@@ -443,8 +443,6 @@ export default function BancoTalentosPage() {
     <div className="space-y-6">
       <PageHeader 
         title="Banco de Talentos"
-        subtitle="Gestão estratégica de validade e disponibilidade de candidatos aprovados nos processos seletivos."
-        badge="Recursos Humanos"
         actions={
           <>
             {permissions.canImport() && (

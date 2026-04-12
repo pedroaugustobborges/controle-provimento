@@ -377,9 +377,14 @@ export function normalizeStatus(statusText: string): StatusVaga {
   return 'SEM STATUS' as StatusVaga;
 }
 
+const normalizeUnitNameCache = new Map<string, string>();
+
 export function normalizeUnitName(name: string): string {
   if (!name || typeof name !== 'string') return '';
-  return removeAccents(name.toUpperCase().trim().replace(/\s+/g, ' '));
+  if (normalizeUnitNameCache.has(name)) return normalizeUnitNameCache.get(name)!;
+  const result = removeAccents(name.toUpperCase().trim().replace(/\s+/g, ' '));
+  normalizeUnitNameCache.set(name, result);
+  return result;
 }
 
 export function parseSpreadsheetDate(value: any): Date | null {
@@ -404,11 +409,18 @@ export function parseSpreadsheetDate(value: any): Date | null {
   return null;
 }
 
+const getMonthNameCache = new Map<string, string>();
+
 export function getMonthNamePtBrUpper(dateValue?: string | null | Date | number): string {
   if (!dateValue) return "";
+  const cacheKey = String(dateValue);
+  if (getMonthNameCache.has(cacheKey)) return getMonthNameCache.get(cacheKey)!;
+  
   const date = parseSpreadsheetDate(dateValue);
   if (!date || isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date).toUpperCase();
+  const result = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date).toUpperCase();
+  getMonthNameCache.set(cacheKey, result);
+  return result;
 }
 
 // Mapping: which banco unit serves which sidebar units

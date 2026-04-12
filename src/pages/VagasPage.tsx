@@ -309,6 +309,8 @@ export default function VagasPage() {
 
   // 4. Parity Debug Audit - forensic row-level check
   const parityAudit = useMemo(() => {
+    if (!isDebugOpen) return { excelCount: 0, appCount: 0, tableCount: 0, difference: 0, mismatches: [] };
+
     const selUnit = filterUnidade === 'all' ? 'TODOS' : filterUnidade;
     const selMonth = filterMes === 'all' ? 'TODOS' : filterMes;
 
@@ -319,8 +321,6 @@ export default function VagasPage() {
     const excelCounted = analyzed.filter(r => r.includedByExcelParity);
     
     // Rows actually counted by the card metric (finalCount)
-    // In our current implementation, this should exactly match excelCounted
-    // If not, we found a logic divergence between the parity check and the production function
     const appCounted = canonicalBase; // This is what the UI card uses
     
     // Rows in table (can have extra UI filters like search, status)
@@ -345,7 +345,7 @@ export default function VagasPage() {
         })
       ]
     };
-  }, [vagas, canonicalBase, filtered, filterUnidade, filterMes]);
+  }, [vagas, canonicalBase, filtered, filterUnidade, filterMes, isDebugOpen]);
 
 
 

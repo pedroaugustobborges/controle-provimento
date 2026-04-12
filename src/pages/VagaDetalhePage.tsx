@@ -286,7 +286,7 @@ export default function VagaDetalhePage() {
     const today = new Date().toISOString().split('T')[0];
     
     const updateData = {
-      status: 'publicar_novo_edital' as StatusVaga,
+      status: 'PUBLICAR EDITAL' as StatusVaga,
       status_edital: 'Fila de Publicação' as any,
       historico: [...vaga.historico, { 
         id: `h-${Date.now()}`, 

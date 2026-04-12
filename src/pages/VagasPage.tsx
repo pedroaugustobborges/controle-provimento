@@ -681,7 +681,7 @@ export default function VagasPage() {
                 {paginatedData.map((v) => {
                   const categoria = v.categoria_status || getCategoriaStatus(v);
                   const isConsultaOnly = ['concluidas', 'cancelada', 'suspensa'].includes(categoria);
-                  const canSendToEdital = ['sem_status', 'aguardando_unidade'].includes(categoria);
+                  const canSendToEdital = ['sem_status', 'aguardando_unidade', 'em_andamento'].includes(categoria);
                   // Allow calling in initial stages, edital stages, or when specifically in "convocação" 
                   // but hide if already in documentation, admission or finished
                   const canCall = ['sem_status', 'aguardando_unidade', 'fila_edital', 'convocacoes', 'em_andamento'].includes(categoria);
@@ -784,7 +784,15 @@ export default function VagasPage() {
                             {canSendToEdital && (
                               <DropdownMenuItem 
                                 onClick={() => {
-                                  updateVaga(v.id, { status: 'PUBLICAR EDITAL' });
+                                  updateVaga(v.id, { 
+                                    status: 'PUBLICAR EDITAL',
+                                    historico: [...v.historico, { 
+                                      id: `h-${Date.now()}`, 
+                                      data: new Date().toISOString().split('T')[0], 
+                                      descricao: 'Vaga encaminhada para Fila de Editais', 
+                                      usuario: currentUser?.nome_completo || 'Analista' 
+                                    }]
+                                  });
                                   toast.success('Vaga enviada para Fila de Editais');
                                 }} 
                                 className="gap-2 text-amber-600"

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus } from '@/lib/vagaUtils';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
@@ -63,14 +63,10 @@ export default function FilaEditaisPage() {
         }
       }
 
-      // Regra: Fila de Editais - Vagas da categoria fila_edital
-      const cat = getCategoriaStatus(v);
-      if (cat !== 'fila_edital') return false;
+      // Regra: Fila de Editais - Somente status PUBLICAR EDITAL
+      const normalizedS = normStatus(v.status || v.status_geral || '');
+      if (normalizedS !== 'publicar edital') return false;
 
-      // Se já foi encaminhado para edital, remove da fila da unidade
-      if (v.status_fluxo_edital === 'encaminhado_edital' || v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'enviado_validacao') {
-        return false;
-      }
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -115,6 +111,7 @@ export default function FilaEditaisPage() {
     }
 
     updateVaga(selectedVaga.id, { 
+      status: 'ACOMPANHAMENTO DE EDITAL',
       status_fluxo_edital: 'encaminhado_edital',
       cargo_validado: true,
       carga_horaria_validada: true,

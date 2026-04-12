@@ -14,6 +14,8 @@ export type StatusVaga =
   | 'DOCUMENTAÇÃO'
   | 'CONVOCAÇÕES'
   | 'FILA DE EDITAIS'
+  | 'PUBLICAR EDITAL'
+  | 'ACOMPANHAMENTO DE EDITAL'
   | 'SUSPENSA'
   | 'PAUSADA'
   | 'AGUARDANDO UNIDADE'
@@ -421,6 +423,8 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   'DOCUMENTAÇÃO': 'Documentação',
   'CONVOCAÇÕES': 'Convocações',
   'FILA DE EDITAIS': 'Fila de Editais',
+  'PUBLICAR EDITAL': 'Publicar Edital',
+  'ACOMPANHAMENTO DE EDITAL': 'Acompanhamento de Edital',
   'SUSPENSA': 'Suspensa',
   'PAUSADA': 'Pausada',
   'AGUARDANDO UNIDADE': 'Aguardando Unidade',

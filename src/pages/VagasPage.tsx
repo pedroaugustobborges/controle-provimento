@@ -709,7 +709,7 @@ export default function VagasPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => {
-                              updateVaga(v.id, { status: 'FILA DE EDITAIS' });
+                              updateVaga(v.id, { status: 'PUBLICAR EDITAL' });
                               toast.success('Vaga enviada para Fila de Editais');
                             }} 
                             className="gap-2 text-amber-600"

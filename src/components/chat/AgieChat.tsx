@@ -630,7 +630,7 @@ export const AgieChat = memo(() => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="relative cursor-pointer"
-        onClick={handleOpen}
+        onClick={isOpen ? handleClose : handleOpen}
       >
         <AnimatePresence>
           {hasNewMessage && !isOpen && (
@@ -668,12 +668,6 @@ export const AgieChat = memo(() => {
                 ? "bg-red-600 border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
                 : "bg-primary border-white hover:shadow-primary/40 shadow-xl"
           )}
-          onClick={(e) => {
-            if (isOpen) {
-              e.stopPropagation();
-              handleClose();
-            }
-          }}
         >
           {isOpen ? (
             <X className="w-8 h-8 text-primary -rotate-90" />

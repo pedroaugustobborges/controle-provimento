@@ -76,7 +76,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
         ...session,
         duration,
         hasActivity: sessionLogs.length > 0,
-        activityDetails: sessionLogs.slice(0, 3).map((log: any) => `${log.acao} em ${log.modulo}`).join(', ') + (sessionLogs.length > 3 ? '...' : '')
+        activityDetails: sessionLogs.slice(0, 5).map((log: any) => `${log.acao} em ${log.modulo}${log.registro_afetado ? ` (${log.registro_afetado})` : ''}`).join('\n') + (sessionLogs.length > 5 ? '\n...' : '')
       };
     });
 

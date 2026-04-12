@@ -85,7 +85,7 @@ export const CATEGORIAS_STATUS = {
   vagas_lideranca:      ['vaga de lideranca', 'estrategicas', 'lideranca'],
   em_andamento:         ['em andamento', 'em processo seletivo', 'em triagem', 'entrevista'],
   convocacoes:          ['convocacoes', 'convocacao', 'realizar convocacao'],
-  fila_edital:          ['em edital', 'publicar novo edital', 'fila de editais'],
+  fila_edital:          ['em edital', 'publicar novo edital', 'fila de editais', 'publicar edital', 'acompanhamento de edital'],
   em_admissao:          ['admissao', 'admissao enviada', 'em admissao'],
   documentacao:         ['documentacao', 'documentacao ok e aso pendente', 'aso pendente'],
   aguardando_unidade:   ['aguardando unidade', 'aguardando'],

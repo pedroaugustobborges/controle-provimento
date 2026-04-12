@@ -232,36 +232,209 @@ export const AgieChat = memo(() => {
                   {step === 'INITIAL' && (
                     <div className="pt-4 animate-in fade-in slide-in-from-bottom-4">
                       <div className="mb-6">
-                        <h2 className="text-xl font-bold text-slate-800">Olá! Eu sou a Agie. 👋</h2>
-                        <p className="text-sm text-slate-500 mt-1">Sua ponte de comunicação interna na AG Saúde. Como posso te conectar hoje?</p>
+                        <h2 className="text-xl font-bold text-slate-800">
+                          Olá, {userProfile?.nome_completo?.split(' ')[0] || 'usuário'}! 👋
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Sou a AGIR Saúde, sua assistente de comunicação interna. Como posso te ajudar hoje?
+                        </p>
                       </div>
                       <div className="grid gap-3">
                         <Button 
                           variant="outline" 
-                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-primary transition-all border-slate-200"
-                          onClick={() => setStep('BY_REGION')}
+                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-primary transition-all border-slate-200 group"
+                          onClick={() => setStep('COMMUNICATION_HUB')}
                         >
-                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                            <MapPin className="w-5 h-5 text-primary" />
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                            <Megaphone className="w-5 h-5 text-primary" />
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-slate-800">Por Unidade</p>
-                            <p className="text-[11px] text-slate-500">Escolha por região e local</p>
+                            <p className="font-bold text-slate-800">Enviar Comunicação Interna</p>
+                            <p className="text-[11px] text-slate-500">Unidades, cargos ou usuários</p>
                           </div>
+                        </Button>
+
+                        <Button 
+                          variant="outline" 
+                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-amber-500 transition-all border-slate-200 group"
+                          onClick={() => setStep('FEEDBACK')}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                            <Lightbulb className="w-5 h-5 text-amber-600" />
+                          </div>
+                          <div className="text-left">
+                            <p className="font-bold text-slate-800">Enviar Feedback / Sugestão</p>
+                            <p className="text-[11px] text-slate-500">Ajude-nos a melhorar o sistema</p>
+                          </div>
+                        </Button>
+
+                        <Button 
+                          variant="outline" 
+                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-purple-500 transition-all border-slate-200 group"
+                          onClick={() => setStep('NEWS')}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                            <Sparkles className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="text-left">
+                            <p className="font-bold text-slate-800">Novidades do Sistema</p>
+                            <p className="text-[11px] text-slate-500">Veja o que há de novo por aqui</p>
+                          </div>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 'COMMUNICATION_HUB' && (
+                    <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Selecione o Destinatário</p>
+                      <div className="grid gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-3 h-12 bg-white"
+                          onClick={() => setStep('BY_REGION')}
+                        >
+                          <MapPin className="w-4 h-4 text-primary" />
+                          <div className="text-left font-semibold text-sm">Por Unidade</div>
                         </Button>
                         <Button 
                           variant="outline" 
-                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-primary transition-all border-slate-200"
+                          className="w-full justify-start gap-3 h-12 bg-white"
                           onClick={() => setStep('BY_ROLE')}
                         >
-                          <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                            <User className="w-5 h-5 text-purple-600" />
-                          </div>
-                          <div className="text-left">
-                            <p className="font-bold text-slate-800">Por Cargo</p>
-                            <p className="text-[11px] text-slate-500">Escolha diretamente a função</p>
-                          </div>
+                          <Users className="w-4 h-4 text-purple-600" />
+                          <div className="text-left font-semibold text-sm">Por Cargo</div>
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-3 h-12 bg-white"
+                          onClick={() => setStep('SUPERVISION')}
+                        >
+                          <Shield className="w-4 h-4 text-red-600" />
+                          <div className="text-left font-semibold text-sm">Falar com a Supervisão</div>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-3 h-12 bg-white"
+                          onClick={() => setStep('BY_USER')}
+                        >
+                          <Search className="w-4 h-4 text-slate-600" />
+                          <div className="text-left font-semibold text-sm">Buscar Usuário Específico</div>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 'FEEDBACK' && (
+                    <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-slate-800">Enviar Feedback</h3>
+                        <p className="text-xs text-slate-500">Sua opinião é fundamental para evoluirmos.</p>
+                      </div>
+
+                      <div className="space-y-4 bg-white p-4 rounded-xl border shadow-sm">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase text-slate-400">Tipo de Feedback</label>
+                          <Select 
+                            value={feedbackType} 
+                            onValueChange={(v: any) => setFeedbackType(v)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecione o tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sugestao">Sugestão de melhoria</SelectItem>
+                              <SelectItem value="problema">Relato de problema</SelectItem>
+                              <SelectItem value="melhoria">Oportunidade de melhoria</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase text-slate-400">Mensagem</label>
+                          <Textarea 
+                            placeholder="Descreva sua sugestão ou problema detalhadamente..."
+                            className="min-h-[120px] resize-none"
+                            value={feedbackMessage}
+                            onChange={(e) => setFeedbackMessage(e.target.value)}
+                          />
+                        </div>
+
+                        <Button 
+                          className="w-full gap-2" 
+                          onClick={submitFeedback}
+                          disabled={isSubmittingFeedback}
+                        >
+                          {isSubmittingFeedback ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4" />
+                          )}
+                          Enviar Feedback
+                        </Button>
+                      </div>
+                      
+                      <div className="bg-blue-50 p-3 rounded-lg flex gap-3 border border-blue-100">
+                        <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                        <p className="text-[10px] text-blue-700 leading-relaxed">
+                          Seu nome, e-mail e dados da sessão serão anexados automaticamente para agilizar o atendimento.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 'BY_USER' && (
+                    <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Buscar Usuário</p>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input placeholder="Digite o nome do usuário..." className="pl-10" />
+                      </div>
+                      <div className="p-8 text-center space-y-2">
+                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                          <Search className="w-6 h-6 text-slate-300" />
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium italic">Funcionalidade de busca em desenvolvimento...</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 'SUPERVISION' && (
+                    <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
+                      <div className="p-6 bg-red-50 border border-red-100 rounded-xl text-center space-y-3">
+                        <Shield className="w-10 h-10 text-red-500 mx-auto" />
+                        <h3 className="font-bold text-red-800">Contatar Supervisão</h3>
+                        <p className="text-xs text-red-600">Este canal é direto para a coordenação do sistema AGIR.</p>
+                        <Button 
+                          className="bg-red-600 hover:bg-red-700 w-full"
+                          onClick={() => { setSelectedRecipient('Supervisão AGIR'); setStep('CONVERSATION'); }}
+                        >
+                          Iniciar Conversa Direta
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 'NEWS' && (
+                    <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Novidades do Sistema</p>
+                      <div className="space-y-3">
+                        <div className="bg-white p-4 rounded-xl border shadow-sm space-y-2 border-l-4 border-l-primary">
+                          <div className="flex justify-between items-start">
+                            <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">Novo Módulo</span>
+                            <span className="text-[10px] text-slate-400">24/05/2024</span>
+                          </div>
+                          <h4 className="font-bold text-slate-800 text-sm">Hub de Comunicação</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed">Agora você pode enviar feedbacks e falar com unidades diretamente pela Agie!</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border shadow-sm space-y-2 border-l-4 border-l-green-500">
+                          <div className="flex justify-between items-start">
+                            <span className="text-[10px] font-black bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Melhoria</span>
+                            <span className="text-[10px] text-slate-400">22/05/2024</span>
+                          </div>
+                          <h4 className="font-bold text-slate-800 text-sm">Filtros Avançados</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed">Melhoramos o desempenho da busca no Banco de Talentos.</p>
+                        </div>
                       </div>
                     </div>
                   )}

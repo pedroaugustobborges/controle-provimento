@@ -1406,6 +1406,42 @@ export default function AdministracaoPage() {
           </DialogHeader>
           {editingUser && (
             <div className="grid gap-5 py-4">
+              <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="relative group">
+                  <div className="h-20 w-20 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                    {editingUser.avatar_url ? (
+                      <img src={editingUser.avatar_url} alt="Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <UserIcon className="h-8 w-8 text-slate-300" />
+                    )}
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-white flex items-center justify-center shadow-md hover:scale-110 transition-transform"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={editFileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUploadPhoto(file, true);
+                    }}
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <h4 className="text-sm font-bold text-slate-800">Foto de Perfil</h4>
+                  <p className="text-xs text-slate-500">Adicione uma foto para facilitar a identificação do usuário no sistema.</p>
+                  <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-primary px-0 hover:bg-transparent" onClick={() => editFileInputRef.current?.click()}>
+                    <Upload className="h-3 w-3 mr-1" /> Alterar foto
+                  </Button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Nome Completo</Label>
@@ -1419,7 +1455,7 @@ export default function AdministracaoPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
-                  <Select value={editingUser.perfil} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, perfil: v }))}>
+                  <Select value={editingUser.perfil} onValueChange={(v) => handleProfileChange(v, true)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {PERFIS_ACESSO.map(p => (
@@ -1459,8 +1495,53 @@ export default function AdministracaoPage() {
                 )}
               </div>
 
+              {/* Acesso a Módulos */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
+                  <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  {MODULOS_SISTEMA.map(modulo => {
+                    const isChecked = editingUser.modulos_acesso?.includes(modulo.id);
+                    const canEdit = editingUser.permissoes_modulo?.[modulo.id] === 'edit';
+                    
+                    return (
+                      <div key={modulo.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors">
+                        <div className="flex items-center gap-3">
+                          <Checkbox 
+                            id={`edit-mod-${modulo.id}`} 
+                            checked={isChecked}
+                            onCheckedChange={() => toggleModule(modulo.id, true)}
+                          />
+                          <Label htmlFor={`edit-mod-${modulo.id}`} className="text-sm font-bold text-slate-700 cursor-pointer">{modulo.label}</Label>
+                        </div>
+                        
+                        {isChecked && (
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-[10px] font-bold cursor-pointer transition-all border-2",
+                                canEdit 
+                                  ? "bg-green-50 text-green-700 border-green-200 shadow-sm" 
+                                  : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                              )}
+                              onClick={() => togglePermission(modulo.id, true)}
+                            >
+                              {canEdit ? <><CheckCircle className="h-2.5 w-2.5 mr-1" /> Edição Completa</> : <><Eye className="h-2.5 w-2.5 mr-1" /> Somente Leitura</>}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="space-y-3 border-t pt-4">
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Outras Permissões</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <Switch checked={editingUser.pode_incluir_registros} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_incluir_registros: v }))} />

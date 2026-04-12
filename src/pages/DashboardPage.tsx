@@ -89,6 +89,7 @@ const resolveCanonicalName = (unitName: string) => {
 };
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const {
     vagas: allVagas = [],
     bancos = [],
@@ -859,34 +860,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Bloco de Debug Temporário */}
-      <div className="mt-8 p-4 border-2 border-red-500 rounded-lg bg-red-50/50">
-        <h2 className="text-red-600 font-black text-sm uppercase mb-4 flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4" /> DEBUG: Status Reais no Supabase (Tabela Vagas)
-        </h2>
-        <Table>
-          <TableHeader>
-            <TableRow className="border-red-200">
-              <TableHead className="text-red-700 font-bold uppercase text-[10px]">STATUS (exato no banco)</TableHead>
-              <TableHead className="text-red-700 font-bold uppercase text-[10px] text-right">Quantidade</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.entries(debugStatus)
-              .sort(([, a], [, b]) => (b as number) - (a as number))
-              .map(([status, count]) => (
-                <TableRow key={status} className="border-red-100 hover:bg-red-100/50 transition-colors">
-                  <TableCell className="font-mono text-xs text-red-900 py-2">
-                    {JSON.stringify(status)}
-                  </TableCell>
-                  <TableCell className="text-right font-bold text-red-900 py-2">
-                    {count as number}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </div>
     </div>
   );
 }

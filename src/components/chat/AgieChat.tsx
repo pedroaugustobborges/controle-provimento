@@ -212,12 +212,11 @@ export const AgieChat = memo(() => {
   };
 
   const currentTooltipMessage = useMemo(() => {
-    if (hasNewMessage) {
-      const alertMessages = ["Você tem uma nova mensagem!", "Você tem uma nova tarefa!"];
+    if (hasNewRealNotification) {
       return alertMessages[notificationIndex % alertMessages.length];
     }
     return notifications[notificationIndex % notifications.length];
-  }, [hasNewMessage, notificationIndex, notifications]);
+  }, [hasNewRealNotification, notificationIndex, alertMessages, notifications]);
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">

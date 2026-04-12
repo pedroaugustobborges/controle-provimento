@@ -20,7 +20,7 @@ import { formatDate, getCategoriaStatus, filterByRegionAndUnit, normalizeUnitNam
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
-import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO } from '@/lib/convocacaoUtils';
+import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -111,23 +111,22 @@ export default function ConvocacoesPage() {
   };
 
   const unidades = useMemo(() => {
-    const u = new Set<string>();
-    const allV = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
-    const allC = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
-    const allB = filterByRegionAndUnit(bancos, selectedRegion, globalUnit);
-    
-    allV.forEach(v => {
-      if (v.unidade) u.add(v.unidade);
-    });
-    allC.forEach(c => {
-      if (c.unidade) u.add(c.unidade);
-    });
-    allB.forEach(b => {
-      if (b.unidade) u.add(b.unidade);
-      if (b.unidade_convocacao) u.add(b.unidade_convocacao);
-    });
-    return Array.from(u).sort();
-  }, [vagas, convocacoes, bancos, selectedRegion, globalUnit]);
+    // Usar as bases de convocação para agrupar unidades
+    // Goiânia agrupa HECAD, HUGOL, CRER, HDS, AGIR, CONDOMÍNIO
+    // Demais bases aparecem com nome próprio
+    return Object.keys(BASES_CONVOCACAO).sort();
+  }, []);
+
+  // Helper: check if a unit matches the selected base/unit filter
+  const matchesUnidadeFilter = (unidade: string) => {
+    if (selectedUnidade === 'all') return true;
+    const unidadesNaBase = BASES_CONVOCACAO[selectedUnidade];
+    if (unidadesNaBase) {
+      return unidadesNaBase.some(u => u.toUpperCase() === unidade?.toUpperCase()) || 
+             getBaseForUnidade(unidade) === selectedUnidade;
+    }
+    return unidade === selectedUnidade;
+  };
 
   // Unit filtering
   const filteredVagas = useMemo(() => {
@@ -136,7 +135,7 @@ export default function ConvocacoesPage() {
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(v.unidade)) {
         return false;
       }
-      if (selectedUnidade !== 'all' && v.unidade !== selectedUnidade) {
+      if (!matchesUnidadeFilter(v.unidade)) {
         return false;
       }
       return true;
@@ -149,7 +148,7 @@ export default function ConvocacoesPage() {
     return baseConvocacoes.filter(c => {
       if (c.status !== 'pendente') return false;
       if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(c.unidade)) return false;
-      if (selectedUnidade !== 'all' && c.unidade !== selectedUnidade) return false;
+      if (!matchesUnidadeFilter(c.unidade)) return false;
       return true;
     });
   }, [convocacoes, currentUser, selectedUnidade, selectedRegion, globalUnit]);
@@ -163,7 +162,7 @@ export default function ConvocacoesPage() {
           return false;
         }
 
-        if (selectedUnidade !== 'all' && c.unidade !== selectedUnidade) {
+        if (!matchesUnidadeFilter(c.unidade)) {
           return false;
         }
 

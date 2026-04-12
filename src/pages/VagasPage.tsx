@@ -686,7 +686,12 @@ export default function VagasPage() {
       </Card>
 
       <div className="mb-4">
-        <Tabs value={vacancyStatusTab} onValueChange={setVacancyStatusTab} className="w-full">
+        <Tabs value={vacancyStatusTab} onValueChange={(val) => {
+          setVacancyStatusTab(val);
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set('statusTab', val);
+          navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+        }} className="w-full">
           <TabsList className="bg-slate-100/50 p-1 rounded-xl flex-wrap h-auto">
             <TabsTrigger value="todas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
               Todas as Vagas ({canonicalBase.length})

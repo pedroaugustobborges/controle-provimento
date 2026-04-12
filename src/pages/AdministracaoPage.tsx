@@ -1297,9 +1297,54 @@ export default function AdministracaoPage() {
               )}
             </div>
 
-            {/* Permissões específicas */}
+            {/* Acesso a Módulos */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
+                <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                {MODULOS_SISTEMA.map(modulo => {
+                  const isChecked = newUser.modulos_acesso?.includes(modulo.id);
+                  const canEdit = newUser.permissoes_modulo?.[modulo.id] === 'edit';
+                  
+                  return (
+                    <div key={modulo.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Checkbox 
+                          id={`mod-${modulo.id}`} 
+                          checked={isChecked}
+                          onCheckedChange={() => toggleModule(modulo.id)}
+                        />
+                        <Label htmlFor={`mod-${modulo.id}`} className="text-sm font-bold text-slate-700 cursor-pointer">{modulo.label}</Label>
+                      </div>
+                      
+                      {isChecked && (
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px] font-bold cursor-pointer transition-all border-2",
+                              canEdit 
+                                ? "bg-green-50 text-green-700 border-green-200 shadow-sm" 
+                                : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                            )}
+                            onClick={() => togglePermission(modulo.id)}
+                          >
+                            {canEdit ? <><CheckCircle className="h-2.5 w-2.5 mr-1" /> Edição Completa</> : <><Eye className="h-2.5 w-2.5 mr-1" /> Somente Leitura</>}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Permissões específicas (Legacy Flags) */}
             <div className="space-y-3 border-t pt-4">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Outras Permissões</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Switch checked={newUser.pode_incluir_registros} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_incluir_registros: v }))} />

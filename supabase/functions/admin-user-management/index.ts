@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case "create_user": {
-        const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios } = body;
+        const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, modulos_acesso, permissoes_modulo, avatar_url, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios } = body;
 
         // Create auth user with admin API (won't affect current session)
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -84,6 +84,9 @@ Deno.serve(async (req) => {
             status: status || "ativo",
             visualiza_todas_unidades: visualiza_todas_unidades || false,
             unidades_vinculadas: unidades_vinculadas || [],
+            modulos_acesso: modulos_acesso || [],
+            permissoes_modulo: permissoes_modulo || {},
+            avatar_url: avatar_url || null,
             pode_incluir_registros: pode_incluir_registros || false,
             pode_excluir_requisicoes: pode_excluir_requisicoes || false,
             pode_editar_configuracoes: pode_editar_configuracoes || false,

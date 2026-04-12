@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import avatarDefault from '@/assets/avatar-izac.jpeg';
 import logoAgir from '@/assets/logo-agir-white.png';
+import { supabase } from '@/lib/supabase';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { 
@@ -16,7 +17,7 @@ import {
   Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
   Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
-  History, MessageSquare, AlertTriangle, Info, CheckCircle
+  History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera
 } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { Input } from '@/components/ui/input';
@@ -242,11 +243,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 
                 <div className="h-8 w-px bg-border/50 mx-1" />
                 
-                <div className={`rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 ${
-                  isCompact ? 'h-8 w-8' : 'h-10 w-10'
-                }`}>
-                  <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
-                </div>
+                <button 
+                  onClick={() => setShowProfile(true)}
+                  className={`rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 hover:ring-primary ${
+                    isCompact ? 'h-8 w-8' : 'h-10 w-10'
+                  }`}
+                >
+                  <img src={currentUser?.avatar_url || avatarDefault} alt={userName} className="h-full w-full object-cover" />
+                </button>
               </div>
             </div>
 
@@ -312,9 +316,38 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl">
           <div className="relative h-36 bg-primary flex items-center justify-center">
             <img src={logoAgir} alt="AGIR" className="h-14 object-contain" />
-            <div className="absolute -bottom-12 left-8">
-              <div className="h-24 w-24 rounded-full border-4 border-background bg-muted overflow-hidden shadow-lg">
-                <img src={avatarDefault} alt={userName} className="h-full w-full object-cover" />
+            <div className="absolute -bottom-12 left-8 group">
+              <div className="h-24 w-24 rounded-full border-4 border-background bg-muted overflow-hidden shadow-lg relative">
+                <img src={currentUser?.avatar_url || avatarDefault} alt={userName} className="h-full w-full object-cover" />
+                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <Camera className="h-6 w-6 text-white" />
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !currentUser) return;
+                      try {
+                        const fileExt = file.name.split('.').pop();
+                        const filePath = `${currentUser.id}/${Math.random()}.${fileExt}`;
+                        const { data, error } = await supabase.storage
+                          .from('avatars')
+                          .upload(filePath, file);
+                        if (error) throw error;
+                        const { data: { publicUrl } } = supabase.storage
+                          .from('avatars')
+                          .getPublicUrl(filePath);
+                        
+                        await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+                        await fetchCurrentProfile();
+                        // Also update admin store if needed, but fetchCurrentProfile should do it
+                      } catch (err: any) {
+                        console.error('Error uploading avatar:', err);
+                      }
+                    }} 
+                  />
+                </label>
               </div>
             </div>
           </div>

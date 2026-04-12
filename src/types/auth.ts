@@ -65,8 +65,11 @@ export interface User {
   perfil: UserProfile;
   cargo?: string;
   status: 'ativo' | 'inativo' | 'suspenso';
+  avatar_url?: string;
   visualiza_todas_unidades: boolean;
   unidades_vinculadas: string[];
+  modulos_acesso?: string[];
+  permissoes_modulo?: Record<string, 'read' | 'edit'>;
   pode_incluir_registros: boolean;
   pode_excluir_requisicoes: boolean;
   pode_editar_configuracoes: boolean;

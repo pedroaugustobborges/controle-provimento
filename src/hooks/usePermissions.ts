@@ -25,5 +25,6 @@ export function usePermissions() {
     isManagement: () => isManagement,
     currentUser: userData,
     hasFullAccess: isAdmin,
+    getPermissions,
   };
 }

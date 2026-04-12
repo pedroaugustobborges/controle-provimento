@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore, generateTempPassword } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/lib/supabase';
 import { 
   Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
   HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send, Eye, EyeOff,
-  MessageSquare
+  MessageSquare, Camera, Upload, User as UserIcon
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { cn } from '@/lib/utils';
@@ -59,6 +60,54 @@ const ALL_UNIDADES = [
   ...UNIDADES_POR_REGIAO['OUTRAS UNIDADES'] || [],
 ];
 
+const MODULOS_SISTEMA = [
+  { id: 'vagas', label: 'Vagas (Painel Principal)' },
+  { id: 'publicacao', label: 'Publicação de Edital' },
+  { id: 'validacao', label: 'Validação de Edital' },
+  { id: 'banco', label: 'Banco de Talentos' },
+  { id: 'convocacoes', label: 'Convocações' },
+  { id: 'alertas', label: 'Alertas e Tarefas' },
+  { id: 'monitoramento', label: 'Monitoramento de Prazos' },
+  { id: 'validacao_convocacoes', label: 'Validar Convocações' },
+  { id: 'importacoes', label: 'Importações' },
+  { id: 'administracao', label: 'Administração' },
+];
+
+const DEFAULT_PERMISSIONS_BY_PROFILE: Record<string, { modulos: string[], perms: Record<string, 'read' | 'edit'> }> = {
+  'Analista de RH': {
+    modulos: ['vagas', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Assistente de RH': {
+    modulos: ['vagas', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Analista Administrativo': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+  'Supervisão': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+  'Coordenação': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+  'Analista de Edital': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'read', publicacao: 'edit', validacao: 'read', banco: 'read', convocacoes: 'read', alertas: 'read', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Analista das Convocações': {
+    modulos: ['vagas', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes'],
+    perms: { vagas: 'read', banco: 'read', convocacoes: 'edit', alertas: 'read', monitoramento: 'read', validacao_convocacoes: 'read' }
+  },
+  'Administrador': {
+    modulos: ['vagas', 'publicacao', 'validacao', 'banco', 'convocacoes', 'alertas', 'monitoramento', 'validacao_convocacoes', 'importacoes', 'administracao'],
+    perms: { vagas: 'edit', publicacao: 'edit', validacao: 'edit', banco: 'edit', convocacoes: 'edit', alertas: 'edit', monitoramento: 'edit', validacao_convocacoes: 'edit', importacoes: 'edit', administracao: 'edit' }
+  },
+};
+
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
   const { 
@@ -73,6 +122,8 @@ export default function AdministracaoPage() {
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [testEmailLoading, setTestEmailLoading] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<string | null>(null);
@@ -97,8 +148,11 @@ export default function AdministracaoPage() {
     perfil: 'Analista de RH',
     cargo: '',
     status: 'ativo' as 'ativo' | 'suspenso' | 'inativo',
+    avatar_url: '',
     visualiza_todas_unidades: false,
     unidades_vinculadas: [] as string[],
+    modulos_acesso: DEFAULT_PERMISSIONS_BY_PROFILE['Analista de RH'].modulos,
+    permissoes_modulo: DEFAULT_PERMISSIONS_BY_PROFILE['Analista de RH'].perms,
     pode_incluir_registros: false,
     pode_excluir_requisicoes: false,
     pode_editar_configuracoes: false,
@@ -125,7 +179,10 @@ export default function AdministracaoPage() {
     setNewUser({
       nome_completo: '', email: '', password: '', passwordMode: 'temp',
       perfil: 'Analista de RH', cargo: '', status: 'ativo',
+      avatar_url: '',
       visualiza_todas_unidades: false, unidades_vinculadas: [],
+      modulos_acesso: DEFAULT_PERMISSIONS_BY_PROFILE['Analista de RH'].modulos,
+      permissoes_modulo: DEFAULT_PERMISSIONS_BY_PROFILE['Analista de RH'].perms,
       pode_incluir_registros: false, pode_excluir_requisicoes: false,
       pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
       sendWelcomeEmail: true,
@@ -244,6 +301,9 @@ export default function AdministracaoPage() {
         pode_excluir_requisicoes: editingUser.pode_excluir_requisicoes,
         pode_editar_configuracoes: editingUser.pode_editar_configuracoes,
         pode_gerenciar_usuarios: editingUser.pode_gerenciar_usuarios,
+        avatar_url: editingUser.avatar_url,
+        modulos_acesso: editingUser.modulos_acesso,
+        permissoes_modulo: editingUser.permissoes_modulo,
       });
       toast.success('Dados do usuário atualizados.');
       setIsEditUserOpen(false);
@@ -284,6 +344,116 @@ export default function AdministracaoPage() {
     }));
   };
 
+  const handleUploadPhoto = async (file: File, isEdit = false) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${Math.random()}.${fileExt}`;
+      
+      const { data, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      if (isEdit) {
+        setEditingUser((prev: any) => ({ ...prev, avatar_url: publicUrl }));
+      } else {
+        setNewUser(prev => ({ ...prev, avatar_url: publicUrl }));
+      }
+      toast.success('Foto carregada com sucesso!');
+    } catch (error: any) {
+      toast.error('Erro ao carregar foto: ' + error.message);
+    }
+  };
+
+  const toggleModule = (moduleId: string, isEdit = false) => {
+    if (isEdit) {
+      if (!editingUser) return;
+      const modulos = editingUser.modulos_acesso || [];
+      const newModulos = modulos.includes(moduleId)
+        ? modulos.filter((m: string) => m !== moduleId)
+        : [...modulos, moduleId];
+      
+      const newPerms = { ...editingUser.permissoes_modulo };
+      if (!newModulos.includes(moduleId)) {
+        delete newPerms[moduleId];
+      } else if (!newPerms[moduleId]) {
+        newPerms[moduleId] = 'read';
+      }
+
+      setEditingUser((prev: any) => ({
+        ...prev,
+        modulos_acesso: newModulos,
+        permissoes_modulo: newPerms
+      }));
+    } else {
+      const modulos = newUser.modulos_acesso || [];
+      const newModulos = modulos.includes(moduleId)
+        ? modulos.filter((m: string) => m !== moduleId)
+        : [...modulos, moduleId];
+      
+      const newPerms = { ...newUser.permissoes_modulo };
+      if (!newModulos.includes(moduleId)) {
+        delete newPerms[moduleId];
+      } else if (!newPerms[moduleId]) {
+        newPerms[moduleId] = 'read';
+      }
+
+      setNewUser(prev => ({
+        ...prev,
+        modulos_acesso: newModulos,
+        permissoes_modulo: newPerms
+      }));
+    }
+  };
+
+  const togglePermission = (moduleId: string, isEdit = false) => {
+    if (isEdit) {
+      if (!editingUser) return;
+      const current = editingUser.permissoes_modulo?.[moduleId] || 'read';
+      const next = current === 'read' ? 'edit' : 'read';
+      setEditingUser((prev: any) => ({
+        ...prev,
+        permissoes_modulo: {
+          ...(prev.permissoes_modulo || {}),
+          [moduleId]: next
+        }
+      }));
+    } else {
+      const current = newUser.permissoes_modulo?.[moduleId] || 'read';
+      const next = current === 'read' ? 'edit' : 'read';
+      setNewUser(prev => ({
+        ...prev,
+        permissoes_modulo: {
+          ...(prev.permissoes_modulo || {}),
+          [moduleId]: next
+        }
+      }));
+    }
+  };
+
+  const handleProfileChange = (perfil: string, isEdit = false) => {
+    const defaults = DEFAULT_PERMISSIONS_BY_PROFILE[perfil] || { modulos: [], perms: {} };
+    if (isEdit) {
+      setEditingUser((prev: any) => ({
+        ...prev,
+        perfil,
+        modulos_acesso: defaults.modulos,
+        permissoes_modulo: defaults.perms
+      }));
+    } else {
+      setNewUser(prev => ({
+        ...prev,
+        perfil,
+        modulos_acesso: defaults.modulos,
+        permissoes_modulo: defaults.perms
+      }));
+    }
+  };
   const getStatusBadge = (status: string) => {
     const map: Record<string, string> = {
       'ativo': 'bg-green-100 text-green-700',
@@ -363,9 +533,18 @@ export default function AdministracaoPage() {
                     {users.map((user) => (
                       <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-700">{user.nome_completo}</span>
-                            <span className="text-xs text-slate-400 font-medium">{user.email}</span>
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
+                              {user.avatar_url ? (
+                                <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                              ) : (
+                                <UserIcon className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-700">{user.nome_completo}</span>
+                              <span className="text-xs text-slate-400 font-medium">{user.email}</span>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -981,6 +1160,42 @@ export default function AdministracaoPage() {
             <DialogDescription>Preencha os dados, defina a senha e as permissões iniciais.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-5 py-4">
+            <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="relative group">
+                <div className="h-20 w-20 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                  {newUser.avatar_url ? (
+                    <img src={newUser.avatar_url} alt="Preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon className="h-8 w-8 text-slate-300" />
+                  )}
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-white flex items-center justify-center shadow-md hover:scale-110 transition-transform"
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadPhoto(file);
+                  }}
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h4 className="text-sm font-bold text-slate-800">Foto de Perfil</h4>
+                <p className="text-xs text-slate-500">Adicione uma foto para facilitar a identificação do usuário no sistema.</p>
+                <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-primary px-0 hover:bg-transparent" onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="h-3 w-3 mr-1" /> Alterar foto
+                </Button>
+              </div>
+            </div>
+
             {/* Nome e Email */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -997,7 +1212,7 @@ export default function AdministracaoPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
-                <Select value={newUser.perfil} onValueChange={(v) => setNewUser(p => ({ ...p, perfil: v }))}>
+                <Select value={newUser.perfil} onValueChange={(v) => handleProfileChange(v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PERFIS_ACESSO.map(p => (
@@ -1091,9 +1306,54 @@ export default function AdministracaoPage() {
               )}
             </div>
 
-            {/* Permissões específicas */}
+            {/* Acesso a Módulos */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
+                <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                {MODULOS_SISTEMA.map(modulo => {
+                  const isChecked = newUser.modulos_acesso?.includes(modulo.id);
+                  const canEdit = newUser.permissoes_modulo?.[modulo.id] === 'edit';
+                  
+                  return (
+                    <div key={modulo.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Checkbox 
+                          id={`mod-${modulo.id}`} 
+                          checked={isChecked}
+                          onCheckedChange={() => toggleModule(modulo.id)}
+                        />
+                        <Label htmlFor={`mod-${modulo.id}`} className="text-sm font-bold text-slate-700 cursor-pointer">{modulo.label}</Label>
+                      </div>
+                      
+                      {isChecked && (
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px] font-bold cursor-pointer transition-all border-2",
+                              canEdit 
+                                ? "bg-green-50 text-green-700 border-green-200 shadow-sm" 
+                                : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                            )}
+                            onClick={() => togglePermission(modulo.id)}
+                          >
+                            {canEdit ? <><CheckCircle className="h-2.5 w-2.5 mr-1" /> Edição Completa</> : <><Eye className="h-2.5 w-2.5 mr-1" /> Somente Leitura</>}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Permissões específicas (Legacy Flags) */}
             <div className="space-y-3 border-t pt-4">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Outras Permissões</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
                   <Switch checked={newUser.pode_incluir_registros} onCheckedChange={(v) => setNewUser(p => ({ ...p, pode_incluir_registros: v }))} />
@@ -1146,6 +1406,42 @@ export default function AdministracaoPage() {
           </DialogHeader>
           {editingUser && (
             <div className="grid gap-5 py-4">
+              <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="relative group">
+                  <div className="h-20 w-20 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                    {editingUser.avatar_url ? (
+                      <img src={editingUser.avatar_url} alt="Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <UserIcon className="h-8 w-8 text-slate-300" />
+                    )}
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-white flex items-center justify-center shadow-md hover:scale-110 transition-transform"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={editFileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUploadPhoto(file, true);
+                    }}
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <h4 className="text-sm font-bold text-slate-800">Foto de Perfil</h4>
+                  <p className="text-xs text-slate-500">Adicione uma foto para facilitar a identificação do usuário no sistema.</p>
+                  <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-primary px-0 hover:bg-transparent" onClick={() => editFileInputRef.current?.click()}>
+                    <Upload className="h-3 w-3 mr-1" /> Alterar foto
+                  </Button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Nome Completo</Label>
@@ -1159,7 +1455,7 @@ export default function AdministracaoPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Perfil de Acesso</Label>
-                  <Select value={editingUser.perfil} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, perfil: v }))}>
+                  <Select value={editingUser.perfil} onValueChange={(v) => handleProfileChange(v, true)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {PERFIS_ACESSO.map(p => (
@@ -1199,8 +1495,53 @@ export default function AdministracaoPage() {
                 )}
               </div>
 
+              {/* Acesso a Módulos */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
+                  <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  {MODULOS_SISTEMA.map(modulo => {
+                    const isChecked = editingUser.modulos_acesso?.includes(modulo.id);
+                    const canEdit = editingUser.permissoes_modulo?.[modulo.id] === 'edit';
+                    
+                    return (
+                      <div key={modulo.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors">
+                        <div className="flex items-center gap-3">
+                          <Checkbox 
+                            id={`edit-mod-${modulo.id}`} 
+                            checked={isChecked}
+                            onCheckedChange={() => toggleModule(modulo.id, true)}
+                          />
+                          <Label htmlFor={`edit-mod-${modulo.id}`} className="text-sm font-bold text-slate-700 cursor-pointer">{modulo.label}</Label>
+                        </div>
+                        
+                        {isChecked && (
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-[10px] font-bold cursor-pointer transition-all border-2",
+                                canEdit 
+                                  ? "bg-green-50 text-green-700 border-green-200 shadow-sm" 
+                                  : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                              )}
+                              onClick={() => togglePermission(modulo.id, true)}
+                            >
+                              {canEdit ? <><CheckCircle className="h-2.5 w-2.5 mr-1" /> Edição Completa</> : <><Eye className="h-2.5 w-2.5 mr-1" /> Somente Leitura</>}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="space-y-3 border-t pt-4">
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Permissões Específicas</h4>
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Outras Permissões</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <Switch checked={editingUser.pode_incluir_registros} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_incluir_registros: v }))} />

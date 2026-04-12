@@ -277,12 +277,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           cargo: string | null
           created_at: string
           email: string
           id: string
+          modulos_acesso: string[] | null
           nome_completo: string
           perfil: string
+          permissoes_modulo: Json | null
           pode_editar_configuracoes: boolean
           pode_excluir_requisicoes: boolean
           pode_gerenciar_usuarios: boolean
@@ -294,12 +297,15 @@ export type Database = {
           visualiza_todas_unidades: boolean
         }
         Insert: {
+          avatar_url?: string | null
           cargo?: string | null
           created_at?: string
           email?: string
           id: string
+          modulos_acesso?: string[] | null
           nome_completo?: string
           perfil?: string
+          permissoes_modulo?: Json | null
           pode_editar_configuracoes?: boolean
           pode_excluir_requisicoes?: boolean
           pode_gerenciar_usuarios?: boolean
@@ -311,12 +317,15 @@ export type Database = {
           visualiza_todas_unidades?: boolean
         }
         Update: {
+          avatar_url?: string | null
           cargo?: string | null
           created_at?: string
           email?: string
           id?: string
+          modulos_acesso?: string[] | null
           nome_completo?: string
           perfil?: string
+          permissoes_modulo?: Json | null
           pode_editar_configuracoes?: boolean
           pode_excluir_requisicoes?: boolean
           pode_gerenciar_usuarios?: boolean

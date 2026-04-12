@@ -47,34 +47,48 @@ export function useRBAC() {
     }
     
     const perms: Permissions = {
-      canRead: true, canCreate: false, canEdit: false,
+      canRead: false, canCreate: false, canEdit: false,
       canValidate: false, canDelete: false, canAudit: isManagement,
     };
 
-    const perfil = userToUse?.perfil;
+    if (!userToUse) return perms;
 
-    switch (module) {
-      case 'vagas':
-        if (perfil === 'Analista da unidade' || perfil === 'Analista de RH') perms.canEdit = true;
-        if (perfil === 'Analista do edital' || perfil === 'Analista de Edital') perms.canRead = true;
-        break;
-      case 'editais':
-        if (perfil === 'Analista do edital' || perfil === 'Analista de Edital') {
-          perms.canCreate = true;
-          perms.canEdit = true;
-        }
-        if (perfil === 'Analista administrativo' || perfil === 'Analista Administrativo') perms.canValidate = true;
-        break;
-      case 'banco':
-        if (perfil === 'Assistente' || perfil === 'Assistente de RH') perms.canEdit = true;
-        if (perfil === 'Analista de convocações' || perfil === 'Analista das Convocações') perms.canRead = true;
-        break;
-      case 'convocacoes':
-        if (perfil === 'Analista de convocações' || perfil === 'Analista das Convocações') {
-          perms.canCreate = true;
-          perms.canEdit = true;
-        }
-        break;
+    // Check if user has explicit module access
+    if (userToUse.modulos_acesso?.includes(module)) {
+      perms.canRead = true;
+      const specificPerm = userToUse.permissoes_modulo?.[module];
+      if (specificPerm === 'edit') {
+        perms.canEdit = true;
+        perms.canCreate = true;
+        perms.canValidate = true;
+      }
+    } else if (!userToUse.modulos_acesso || userToUse.modulos_acesso.length === 0) {
+      // Fallback for legacy users without modulos_acesso defined
+      perms.canRead = true;
+      const perfil = userToUse?.perfil;
+
+      switch (module) {
+        case 'vagas':
+          if (perfil === 'Analista da unidade' || perfil === 'Analista de RH') perms.canEdit = true;
+          break;
+        case 'editais':
+        case 'publicacao':
+          if (perfil === 'Analista do edital' || perfil === 'Analista de Edital') {
+            perms.canCreate = true;
+            perms.canEdit = true;
+          }
+          if (perfil === 'Analista administrativo' || perfil === 'Analista Administrativo') perms.canValidate = true;
+          break;
+        case 'banco':
+          if (perfil === 'Assistente' || perfil === 'Assistente de RH') perms.canEdit = true;
+          break;
+        case 'convocacoes':
+          if (perfil === 'Analista de convocações' || perfil === 'Analista das Convocações') {
+            perms.canCreate = true;
+            perms.canEdit = true;
+          }
+          break;
+      }
     }
 
     return perms;

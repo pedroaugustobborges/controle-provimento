@@ -1,29 +1,38 @@
 
 
-## Plano — Ajustar Quadro Kanban e Fluxo de Convocações Diárias
+## Plano — Agenda Diária com Bloqueio de Horários e Convocação Online
 
-### 1. Corrigir texto truncado no sidebar (`AppSidebar.tsx`)
-- Encurtar "Histórico de Convocações" para **"Histórico Conv."** no submenu de Banco de Talentos, ou ajustar o CSS para não truncar textos longos nos subitens.
+### 1. Tipos e Estado (`src/types/vaga.ts` + `src/store/vagasStore.ts`)
+- Adicionar tipo `BloqueioHorario` com campos: `id`, `data`, `horario` (ou `dia_inteiro`), `motivo`, `criado_por`.
+- Adicionar campo `tipo_atendimento` (`'presencial' | 'online'`) e `link_teams` ao tipo `Convocacao`.
+- No store, adicionar array `bloqueios` com ações `addBloqueio`, `removeBloqueio`.
 
-### 2. Remover aba "Pendentes" de Convocações (`ConvocacoesPage.tsx`)
-- Remover o botão "Pendentes" da barra de abas (linhas 236-248).
-- Remover a seção `{view === 'pending' && ...}` e o estado/filtro `pendingConvocacoes`.
-- Remover `'pending'` do tipo de view e do useEffect de tab.
+### 2. Visualização de Agenda Diária (`src/pages/ConvocacoesPage.tsx`)
+- Criar componente `AgendaDiaria` que exibe os horários fixos (08:30–14:30 para Goiânia, ou customizáveis) em formato de linhas visuais.
+- Cada linha mostra: horário, convocações agendadas naquele slot, ou indicação de "bloqueado".
+- Manter a view Kanban existente como opção alternativa (abas: Agenda / Quadro Kanban).
 
-### 3. Ajustar colunas do Kanban (`KanbanBoard.tsx`)
-- Renomear a primeira coluna de **"Aguardando Contato"** (id: `pendente`) para **"Convocações do Dia"**.
-- Manter as demais colunas: **Aceite**, **Faltou**, **Desistiu**, **Recusa**.
-- Trocar o ícone da primeira coluna de `Phone` para `CalendarIcon` ou `Clock`.
+### 3. Bloqueio de Horários (novo componente `BloqueioHorarioDialog`)
+- Dialog para selecionar data, horário(s) específico(s) ou dia inteiro, e motivo.
+- Botão "Bloquear Horário" na barra da agenda.
+- Horários bloqueados aparecem em cinza com ícone de cadeado na agenda.
+- Se já existe convocação no horário bloqueado, gerar alerta/devolutiva.
 
-### 4. Adicionar horário e dia nos cards do Kanban (`KanbanBoard.tsx`)
-- No card, exibir de forma mais proeminente o **horário** (`convocacao.horario`) e a **data** (`convocacao.data_convocacao`).
-- Trocar o texto do botão de edição para **"Registrar Devolutiva"** quando na primeira coluna.
+### 4. Convocação Online (`src/components/ConvocacaoDialog.tsx`)
+- Adicionar select "Tipo de Atendimento": Presencial / Online.
+- Campo condicional para "Link do Microsoft Teams" quando online.
+- Exibir o link no card do Kanban e na agenda.
 
-### 5. Fluxo direto: convocação criada → Convocações do Dia
-- Já funciona: ao criar via `ConvocacaoDialog`, a convocação recebe status `pendente` e aparece na primeira coluna do kanban. Apenas garantir que a view "diária" filtre pelo dia correto.
+### 5. Devolutiva Automática
+- Ao bloquear um horário que já tem convocação, disparar toast de alerta e registrar devolutiva no store com motivo e sugestão de reagendamento.
 
 ### Arquivos afetados
-- `src/components/AppSidebar.tsx` — texto do submenu
-- `src/pages/ConvocacoesPage.tsx` — remover aba Pendentes
-- `src/components/KanbanBoard.tsx` — renomear coluna, ajustar cards
+- `src/types/vaga.ts`
+- `src/store/vagasStore.ts`
+- `src/pages/ConvocacoesPage.tsx`
+- `src/components/ConvocacaoDialog.tsx`
+- `src/components/KanbanBoard.tsx`
+- Novo: `src/components/AgendaDiaria.tsx`
+- Novo: `src/components/BloqueioHorarioDialog.tsx`
+- `src/lib/convocacaoUtils.ts`
 

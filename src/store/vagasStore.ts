@@ -582,7 +582,17 @@ export const useVagasStore = create<VagasState>()(
     }),
     {
       name: 'hospital-recruitment-store',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => ({
+        getItem: (name: string) => localStorage.getItem(name),
+        setItem: (name: string, value: string) => {
+          try {
+            localStorage.setItem(name, value);
+          } catch (e) {
+            console.warn('LocalStorage quota exceeded, skipping persist.');
+          }
+        },
+        removeItem: (name: string) => localStorage.removeItem(name),
+      })),
       partialize: (state) => ({
         vagas: state.vagas,
         bancos: state.bancos,

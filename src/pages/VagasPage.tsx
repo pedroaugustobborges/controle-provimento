@@ -567,6 +567,18 @@ export default function VagasPage() {
           </Card>
         ))}
       </div>
+      <div className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2">
+        <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
+          <TrendingUp className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">Resumo: Vagas em Andamento</h3>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-blue-700">{countEmAndamento}</span>
+            <span className="text-[11px] text-blue-600/80 font-medium">vagas sendo processadas no momento</span>
+          </div>
+        </div>
+      </div>
 
       <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">
         <CardContent className="pt-4 pb-3">

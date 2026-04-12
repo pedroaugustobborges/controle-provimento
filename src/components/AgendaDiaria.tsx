@@ -125,6 +125,7 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, selectedBas
               horario={c.horario}
               convocacoes={[c]}
               blocked={false}
+              blockedCount={0}
               onEdit={onEditConvocacao}
               onDevolutiva={onDevolutiva}
               onRemoveBloqueio={() => {}}

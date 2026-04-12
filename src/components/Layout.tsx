@@ -2,6 +2,7 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Outlet } from 'react-router-dom';
 import { Bell, Search, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function Layout() {
   return (
@@ -25,9 +26,10 @@ export function Layout() {
                 <p className="text-sm font-medium">João Silva</p>
                 <p className="text-xs text-muted-foreground italic">Administrador</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                JS
-              </div>
+              <Avatar className="h-10 w-10 ring-2 ring-border">
+                <AvatarImage src="" alt="João Silva" />
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold">JS</AvatarFallback>
+              </Avatar>
             </div>
           </div>
         </header>

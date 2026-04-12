@@ -29,11 +29,10 @@ export function getBaseForUnidade(unidade: string): string {
 // Fixed slots as per requirement
 export const HORARIOS_FIXOS_CONVOCACAO = [
   '08:30',
-  '09:00',
   '09:30',
   '10:30',
-  '11:00',
-  '12:30'
+  '11:30',
+  '14:30'
 ];
 
 export function getHorariosDisponiveis(
@@ -45,12 +44,24 @@ export function getHorariosDisponiveis(
   
   const base = getBaseForUnidade(unidade);
   
-  // Filter convocations for the same day and base
-  const convocacoesNaBase = convocacoes.filter(c => {
-    return c.data_convocacao === data && getBaseForUnidade(c.unidade) === base;
-  });
+  // Regra especial para Goiânia: limite de 5 por horário somando todas as unidades da base
+  if (base === 'Goiânia') {
+    const convocacoesNaBase = convocacoes.filter(c => {
+      return c.data_convocacao === data && getBaseForUnidade(c.unidade) === 'Goiânia';
+    });
+    
+    // Contar quantas convocações existem para cada horário fixo
+    const contagemPorHorario: Record<string, number> = {};
+    convocacoesNaBase.forEach(c => {
+      contagemPorHorario[c.horario] = (contagemPorHorario[c.horario] || 0) + 1;
+    });
+    
+    // Retorna apenas horários com menos de 5 agendamentos
+    return HORARIOS_FIXOS_CONVOCACAO.filter(h => (contagemPorHorario[h] || 0) < 5);
+  }
   
-  const horariosOcupados = convocacoesNaBase.map(c => c.horario);
-  
-  return HORARIOS_FIXOS_CONVOCACAO.filter(h => !horariosOcupados.includes(h));
+  // Para outras bases, o comportamento padrão era filtrar horários já ocupados na mesma unidade
+  // Mas o requisito agora é que outras bases usem horário livre (campo de texto)
+  // Retornamos a lista vazia para indicar que não há grade fixa no componente
+  return [];
 }

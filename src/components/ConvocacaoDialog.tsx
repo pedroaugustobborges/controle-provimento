@@ -170,31 +170,54 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="horario">Horários Disponíveis ({baseName}) *</Label>
-                  <Select 
-                    value={formData.horario} 
-                    onValueChange={v => setFormData({...formData, horario: v})}
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Selecione um horário vago" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {horariosDisponiveis.length > 0 ? (
-                        horariosDisponiveis.map(h => (
-                          <SelectItem key={h} value={h}>{h}</SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="none" disabled>Nenhum horário disponível para esta data/base</SelectItem>
-                      )}
-                      {convocacaoToEdit && !horariosDisponiveis.includes(convocacaoToEdit.horario) && (
-                        <SelectItem value={convocacaoToEdit.horario}>{convocacaoToEdit.horario} (Atual)</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-slate-500 italic">
-                    <Info className="h-3 w-3 inline mr-1" />
-                    Horários compartilhados com a base {baseName}.
-                  </p>
+                  <Label htmlFor="horario">Horário da Convocação *</Label>
+                  
+                  {baseName === 'Goiânia' ? (
+                    <>
+                      <Select 
+                        value={formData.horario} 
+                        onValueChange={v => setFormData({...formData, horario: v})}
+                      >
+                        <SelectTrigger className="bg-white border-primary/20">
+                          <SelectValue placeholder="Selecione um horário com vagas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {horariosDisponiveis.length > 0 ? (
+                            horariosDisponiveis.map(h => (
+                              <SelectItem key={h} value={h}>{h}</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none" disabled>Nenhum horário disponível (Limite de 5 por horário excedido)</SelectItem>
+                          )}
+                          {convocacaoToEdit && !horariosDisponiveis.includes(convocacaoToEdit.horario) && (
+                            <SelectItem value={convocacaoToEdit.horario}>{convocacaoToEdit.horario} (Atual)</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-slate-500 italic">
+                        <Info className="h-3 w-3 inline mr-1" />
+                        Base Goiânia: Máximo 5 agendamentos por horário entre todas as unidades (HUGOL, CRER, HDS, HECAD, AGIR).
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative">
+                        <Input 
+                          id="horario" 
+                          value={formData.horario || ''} 
+                          onChange={e => setFormData({...formData, horario: e.target.value})}
+                          placeholder="Ex: 14:30, 15:00..."
+                          className="pl-9"
+                          required
+                        />
+                        <Clock className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      </div>
+                      <p className="text-[10px] text-slate-500 italic">
+                        <Info className="h-3 w-3 inline mr-1" />
+                        Base {baseName || 'não identificada'}: Horário livre. Digite o horário desejado manualmente.
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
 

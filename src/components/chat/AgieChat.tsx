@@ -198,10 +198,12 @@ export const AgieChat = memo(() => {
       };
       setMessages(prev => [...prev, response]);
     }, 1000);
+  };
+
   const currentTooltipMessage = useMemo(() => {
     if (hasNewMessage) {
       const alertMessages = ["Você tem uma nova mensagem!", "Você tem uma nova tarefa!"];
-      return alertMessages[notificationIndex % 2];
+      return alertMessages[notificationIndex % alertMessages.length];
     }
     return notifications[notificationIndex % notifications.length];
   }, [hasNewMessage, notificationIndex, notifications]);

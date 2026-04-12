@@ -16,19 +16,27 @@ export function useAuth() {
   });
 
   useEffect(() => {
+    let initialSessionResolved = false;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setAuthState({
-          user: session?.user ?? null,
-          session,
-          loading: false,
-        });
+        // Only update after initial session has been resolved
+        // to avoid race condition where onAuthStateChange fires
+        // with null before getSession restores the session
+        if (initialSessionResolved) {
+          setAuthState({
+            user: session?.user ?? null,
+            session,
+            loading: false,
+          });
+        }
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      initialSessionResolved = true;
       setAuthState({
         user: session?.user ?? null,
         session,

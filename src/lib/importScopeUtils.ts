@@ -98,14 +98,17 @@ export function extractNormalizedUnitsFromRows(rows: any[][], headers: string[],
   const unitMapping = mappings.find(mapping => normalizeImportSystemKey(mapping.system) === 'unidade');
   if (!unitMapping) return new Set<string>();
 
-  const unitColumnIndex = headers.indexOf(String(unitMapping.excel || '').toUpperCase());
+  const excelHeader = String(unitMapping.excel || '').toUpperCase().trim();
+  const unitColumnIndex = headers.indexOf(excelHeader);
   if (unitColumnIndex === -1) return new Set<string>();
 
   const units = new Set<string>();
 
   rows.forEach(row => {
-    const unitValue = normalizeImportedUnit(String(row?.[unitColumnIndex] || ''));
-    if (unitValue) units.add(unitValue);
+    if (row && Array.isArray(row)) {
+      const unitValue = normalizeImportedUnit(String(row?.[unitColumnIndex] || ''));
+      if (unitValue) units.add(unitValue);
+    }
   });
 
   return units;

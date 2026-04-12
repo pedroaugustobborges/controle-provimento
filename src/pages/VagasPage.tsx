@@ -309,19 +309,25 @@ export default function VagasPage() {
         acc.vagas_novas++;
       }
 
-      if (acc[cat] !== undefined) {
-        acc[cat]++;
+      // Correção do mapeamento de categorias para os cards
+      if (cat === 'suspensa' || cat === 'cancelada') {
+        acc.vagas_interrompidas++;
+      } else if (cat === 'convocacoes' || cat === 'convocacao') {
+        acc.convocacao++;
+      } else if (acc[cat as keyof typeof acc] !== undefined) {
+        (acc as any)[cat]++;
       } else {
         acc.em_andamento++;
       }
 
-      if (v.tem_banco_valido) {
+      // Verificação dinâmica de banco de talentos
+      if (v.tem_banco_valido || getBancoByVaga(v.id)) {
         acc.com_banco_valido++;
       }
     });
     
     return acc;
-  }, [canonicalBase]);
+  }, [canonicalBase, getBancoByVaga]);
 
   const countFilaEdital = counts.fila_edital;
   const countEmAndamento = counts.em_andamento;

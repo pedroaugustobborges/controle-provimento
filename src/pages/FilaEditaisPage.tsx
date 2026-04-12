@@ -115,6 +115,7 @@ export default function FilaEditaisPage() {
     }
 
     updateVaga(selectedVaga.id, { 
+      status: 'ACOMPANHAMENTO DE EDITAL',
       status_fluxo_edital: 'encaminhado_edital',
       cargo_validado: true,
       carga_horaria_validada: true,

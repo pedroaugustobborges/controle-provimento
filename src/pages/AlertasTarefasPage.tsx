@@ -209,7 +209,10 @@ export default function AlertasTarefasPage() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => marcarMensagemLida(msg.id)}
+                              onClick={() => {
+                                marcarMensagemLida(msg.id);
+                                toast.success('Mensagem marcada como lida.');
+                              }}
                               className="w-full h-8 text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-600"
                             >
                               <CheckCircle2 className="h-3 w-3 mr-1.5" /> Marcar como lida

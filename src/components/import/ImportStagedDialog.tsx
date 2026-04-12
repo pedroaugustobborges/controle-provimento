@@ -639,7 +639,12 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           )}
 
           {step === 'result' && (
-            <Button className="h-11 px-8 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white gap-2" onClick={() => onOpenChange(false)}>
+            <Button className="h-11 px-8 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white gap-2" onClick={() => {
+              onOpenChange(false);
+              if (importProgress.phase === 'success') {
+                toast.success('Importação finalizada com sucesso!');
+              }
+            }}>
               Concluir <Check className="h-4 w-4" />
             </Button>
           )}

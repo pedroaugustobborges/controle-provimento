@@ -183,14 +183,14 @@ export const useVagasStore = create<VagasState>()(
         try {
           const data = await fetchAllRows('vagas');
           const mappedVagas = data.map(mapDbVaga);
-          set({ 
-            vagas: mappedVagas,
-            isInitialLoad: false 
-          });
+          set({ vagas: mappedVagas });
         } catch (err) {
           console.error('Error fetching vagas:', err);
         } finally {
-          set({ isLoadingVagas: false });
+          set({ 
+            isLoadingVagas: false,
+            isInitialLoad: false 
+          });
         }
       },
       fetchBancos: async () => {
@@ -199,14 +199,14 @@ export const useVagasStore = create<VagasState>()(
         try {
           const data = await fetchAllRows('banco_candidatos');
           const mappedBancos = data.map(mapDbBanco);
-          set({ 
-            bancos: mappedBancos,
-            isInitialLoad: false 
-          });
+          set({ bancos: mappedBancos });
         } catch (err) {
           console.error('Error fetching bancos:', err);
         } finally {
-          set({ isLoadingBancos: false });
+          set({ 
+            isLoadingBancos: false,
+            isInitialLoad: false 
+          });
         }
       },
       fetchAll: async () => {

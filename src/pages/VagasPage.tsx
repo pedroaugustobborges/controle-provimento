@@ -34,6 +34,7 @@ import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { VagaHistoryDialog } from '@/components/VagaHistoryDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import {
   Tabs,
   TabsContent,
@@ -78,7 +79,7 @@ import {
 } from "@/components/ui/pagination";
 
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas } = useVagasStore();
+  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas, isLoadingVagas, isInitialLoad } = useVagasStore();
   
   useEffect(() => {
     fetchVagas();
@@ -365,7 +366,9 @@ export default function VagasPage() {
 
   return (
     <div className="space-y-4">
-      {currentTab === 'acompanhamento' ? (
+      {isLoadingVagas && isInitialLoad ? (
+        <PageSkeleton />
+      ) : currentTab === 'acompanhamento' ? (
         <AcompanhamentoEditalList />
       ) : (
         <>

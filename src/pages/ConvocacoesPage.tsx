@@ -70,6 +70,7 @@ export default function ConvocacoesPage() {
     from: undefined,
     to: undefined,
   });
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedUnidade, setSelectedUnidade] = useState<string>('all');
 
   useEffect(() => {
@@ -188,6 +189,10 @@ export default function ConvocacoesPage() {
           return false;
         }
 
+        if (view === 'diaria') {
+          return c.data_convocacao === format(selectedDate, 'yyyy-MM-dd');
+        }
+
         if (dateRange.from) {
           const convDate = parseISO(c.data_convocacao);
           const range = {
@@ -282,7 +287,7 @@ export default function ConvocacoesPage() {
           />
         </div>
         
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto overflow-visible">
           <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
             <SelectTrigger className="h-10 w-[180px] bg-white border-slate-200 text-xs font-bold text-slate-600">
               <Building2 className="h-3.5 w-3.5 mr-2" />
@@ -296,50 +301,101 @@ export default function ConvocacoesPage() {
             </SelectContent>
           </Select>
 
-          <Popover>
-            <PopoverTrigger asChild>
+          {view === 'diaria' ? (
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
               <Button 
-                variant="outline" 
-                className={`h-10 px-4 gap-2 text-xs font-bold bg-white border-slate-200 hover:bg-slate-50 ${dateRange.from ? 'text-primary border-primary/30' : 'text-slate-600'}`}
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => setSelectedDate(prev => {
+                  const d = new Date(prev);
+                  d.setDate(d.getDate() - 1);
+                  return d;
+                })}
               >
-                <CalendarIcon className="h-3.5 w-3.5" />
-                {dateRange.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "dd/MM/yy")} - {format(dateRange.to, "dd/MM/yy")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "dd/MM/yy")
-                  )
-                ) : (
-                  "Filtrar Período"
-                )}
-                {dateRange.from && (
-                  <X 
-                    className="ml-1 h-3 w-3 hover:text-destructive" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDateRange({ from: undefined, to: undefined });
-                    }} 
-                  />
-                )}
+                <ArrowRight className="h-4 w-4 rotate-180" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-50" align="end" sideOffset={8}>
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange.from}
-                selected={{
-                  from: dateRange.from,
-                  to: dateRange.to
-                }}
-                onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
-                numberOfMonths={2}
-                locale={ptBR}
-              />
-            </PopoverContent>
-          </Popover>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="h-8 px-3 gap-2 text-xs font-bold text-primary hover:bg-primary/5"
+                  >
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 z-50" align="center">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    initialFocus
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => setSelectedDate(prev => {
+                  const d = new Date(prev);
+                  d.setDate(d.getDate() + 1);
+                  return d;
+                })}
+              >
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className={`h-10 px-4 gap-2 text-xs font-bold bg-white border-slate-200 hover:bg-slate-50 ${dateRange.from ? 'text-primary border-primary/30' : 'text-slate-600'}`}
+                >
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  {dateRange.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "dd/MM/yy")} - {format(dateRange.to, "dd/MM/yy")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "dd/MM/yy")
+                    )
+                  ) : (
+                    "Filtrar Período"
+                  )}
+                  {dateRange.from && (
+                    <X 
+                      className="ml-1 h-3 w-3 hover:text-destructive" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDateRange({ from: undefined, to: undefined });
+                      }} 
+                    />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 z-[100]" align="end" sideOffset={8}>
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from}
+                  selected={{
+                    from: dateRange.from,
+                    to: dateRange.to
+                  }}
+                  onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
+                  numberOfMonths={2}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
 
           <Button variant="outline" className="h-10 px-4 gap-2 text-xs font-bold text-slate-600 bg-white border-slate-200 hover:bg-slate-50">
             <Download className="h-3.5 w-3.5" /> Exportar Relatório
@@ -409,13 +465,13 @@ export default function ConvocacoesPage() {
           <div className="space-y-8">
             {/* Logic for Daily View: Group by Base and Time */}
             {(() => {
-              const today = new Date().toISOString().split('T')[0];
-              const todayConvocacoes = filteredConvocacoes.filter(c => c.data_convocacao === today);
+              const dayStr = format(selectedDate, 'yyyy-MM-dd');
+              const todayConvocacoes = filteredConvocacoes; // FilteredConvocacoes already includes date filter logic now
               
               if (todayConvocacoes.length === 0) {
                 return (
                   <div className="py-20 text-center text-slate-400 font-medium italic bg-white rounded-xl border-2 border-dashed border-slate-100">
-                    Nenhuma convocação agendada para hoje ({formatDate(today)}).
+                    Nenhuma convocação agendada para o dia {formatDate(dayStr)}.
                   </div>
                 );
               }

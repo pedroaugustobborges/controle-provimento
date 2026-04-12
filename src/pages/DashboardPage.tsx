@@ -423,7 +423,7 @@ export default function DashboardPage() {
         return true;
       })
       .map((vaga) => {
-        const inclusionDate = vaga.created_at || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
+        const inclusionDate = vaga.data_criacao || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
         const daysOpen = calcDiasAberto(inclusionDate);
 
         return {

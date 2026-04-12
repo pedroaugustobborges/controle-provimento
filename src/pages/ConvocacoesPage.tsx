@@ -523,6 +523,12 @@ export default function ConvocacoesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BloqueioHorarioDialog
+        open={isBloqueioOpen}
+        onOpenChange={setIsBloqueioOpen}
+        defaultDate={format(selectedDate, 'yyyy-MM-dd')}
+      />
     </div>
   );
 }

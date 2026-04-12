@@ -149,9 +149,15 @@ export function AppSidebar() {
     { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: getPermissions('monitoramento').canRead },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
     { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
-  ].filter(item => item.visible), [getPermissions]);
-  
-  return (
+  const [openMenus, setOpenMenus] = useState<string[]>([]);
+
+  useEffect(() => {
+    const activeWithSub = mainItems.find(item => item.subMenu && isParentActive(item));
+    if (activeWithSub && !openMenus.includes(activeWithSub.title)) {
+      setOpenMenus([activeWithSub.title]);
+    }
+  }, [location.pathname, location.search, mainItems, isParentActive]);
+
     <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
       <SidebarHeader className="border-b border-white/10 py-6 px-4">
         <div className="flex items-center gap-4 transition-all duration-300">

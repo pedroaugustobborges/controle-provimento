@@ -624,8 +624,10 @@ export default function VagasPage() {
                 {paginatedData.map((v) => {
                   const categoria = v.categoria_status || getCategoriaStatus(v);
                   const isConsultaOnly = ['concluidas', 'cancelada', 'suspensa'].includes(categoria);
-                  const isInitialStage = ['sem_status', 'aguardando_unidade'].includes(categoria);
-                  const isFilaEdital = categoria === 'fila_edital';
+                  const canSendToEdital = ['sem_status', 'aguardando_unidade'].includes(categoria);
+                  // Allow calling in initial stages, edital stages, or when specifically in "convocação" 
+                  // but hide if already in documentation, admission or finished
+                  const canCall = ['sem_status', 'aguardando_unidade', 'fila_edital', 'convocacoes', 'em_andamento'].includes(categoria);
                   
                   return (
                     <TableRow
@@ -722,7 +724,7 @@ export default function VagasPage() {
                               </DropdownMenuItem>
                             )}
 
-                            {isInitialStage && (
+                            {canSendToEdital && (
                               <DropdownMenuItem 
                                 onClick={() => {
                                   updateVaga(v.id, { status: 'PUBLICAR EDITAL' });
@@ -734,7 +736,7 @@ export default function VagasPage() {
                               </DropdownMenuItem>
                             )}
 
-                            {(isInitialStage || isFilaEdital) && (
+                            {canCall && (
                               <DropdownMenuItem 
                                 onClick={() => {
                                   const bancoFound = getBancoByVaga(v.id);

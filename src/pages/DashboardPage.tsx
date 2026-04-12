@@ -137,14 +137,33 @@ export default function DashboardPage() {
     });
   }, [selectedRegion, selectedUnits]);
 
-  const vagas = useMemo(() => {
-    const base = filterDashboardRecords(allVagas);
-    return getValidVacancyBase(base, 'TODOS', 'TODOS');
-  }, [allVagas, selectedRegion, selectedUnits]);
+  const { filteredVagas, filteredBancos } = useMemo(() => {
+    // 1. Filter by region first (if applicable)
+    let vBase = allVagas;
+    let bBase = bancos;
 
-  const filteredBancos = useMemo(() => {
-    return filterDashboardRecords(bancos);
-  }, [bancos, selectedRegion, selectedUnits]);
+    if (selectedRegion !== 'all') {
+      vBase = allVagas.filter(v => getRegionForUnit(v.unidade) === selectedRegion);
+      bBase = bancos.filter(b => getRegionForUnit(b.unidade) === selectedRegion);
+    }
+
+    // 2. Filter by units (if applicable)
+    if (selectedUnits.length > 0 && !selectedUnits.includes('all')) {
+      const activeUnitsSet = new Set(selectedUnits.map(normalizeUnitName));
+      vBase = vBase.filter(v => activeUnitsSet.has(normalizeUnitName(v.unidade)));
+      bBase = bBase.filter(b => activeUnitsSet.has(normalizeUnitName(b.unidade)));
+    }
+
+    // 3. Apply validity base for vagas (equivalent to getValidVacancyBase)
+    const validVagas = vBase.filter(row => {
+      const hasCargo = String(row.cargo ?? "").trim() !== "";
+      return hasCargo;
+    });
+
+    return { filteredVagas: validVagas, filteredBancos: bBase };
+  }, [allVagas, bancos, selectedRegion, selectedUnits]);
+
+  const vagas = filteredVagas;
 
   const visibleVagaIds = useMemo(() => new Set(vagas.map((vaga) => vaga.id)), [vagas]);
 

@@ -332,7 +332,8 @@ export function normalizeStatus(statusText: string): StatusVaga {
   const text = normStatus(statusText);
   
   if (text === 'admissao efetivada' || text === 'concluida' || text === 'concluidas') return 'CONCLUÍDAS' as StatusVaga;
-  if (text === 'publicar novo edital' || text === 'publicar edital' || text.includes('fazer publicacao') || text.includes('fazer publicação') || text === 'aguardando edital' || text === 'aguardando processo e edital') return 'FILA DE EDITAIS' as StatusVaga;
+  if (text === 'publicar novo edital' || text === 'publicar edital' || text.includes('fazer publicacao') || text.includes('fazer publicação') || text === 'aguardando edital' || text === 'aguardando processo e edital') return 'PUBLICAR EDITAL' as StatusVaga;
+  if (text === 'acompanhamento de edital' || text === 'acompanhamento edital') return 'ACOMPANHAMENTO DE EDITAL' as StatusVaga;
   if (text === 'vaga de lideranca') return 'ESTRATÉGICAS' as StatusVaga;
   if (text === 'aguardando unidade' || text === 'aguardando') return 'AGUARDANDO UNIDADE' as StatusVaga;
   if (text === 'vaga suspensa' || text === 'suspensa') return 'SUSPENSA' as StatusVaga;

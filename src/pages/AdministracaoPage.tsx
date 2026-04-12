@@ -470,8 +470,6 @@ export default function AdministracaoPage() {
     <div className="space-y-6 pb-10">
       <PageHeader 
         title="Configurações do Sistema"
-        subtitle="Gerenciamento de usuários, níveis de acesso, auditoria completa e parâmetros globais do sistema."
-        badge="Administração"
       />
 
 

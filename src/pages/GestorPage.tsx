@@ -45,8 +45,6 @@ export default function GestorPage() {
     <div className="space-y-6">
       <PageHeader 
         title="Administração e Gestão"
-        subtitle="Painel consolidado de indicadores de performance, produtividade e histórico operacional do sistema AGIR."
-        badge="Business Intelligence"
         actions={
           <>
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">

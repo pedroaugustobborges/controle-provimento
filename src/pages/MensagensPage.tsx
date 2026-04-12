@@ -167,8 +167,6 @@ export default function MensagensPage() {
     <div className="space-y-6 max-w-[1200px] mx-auto">
       <PageHeader 
         title="Central de Comunicação"
-        subtitle="Gerencie suas mensagens, envie feedbacks e conecte-se com a equipe."
-        badge="Comunicação"
       />
 
       <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val })} className="space-y-6">

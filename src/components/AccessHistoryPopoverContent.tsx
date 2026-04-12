@@ -29,7 +29,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
     const start = startOfDay(date).toISOString();
     const end = endOfDay(date).toISOString();
 
-    const { data: sessions, error } = await supabase
+    const { data: sessions, error } = await (supabase
       .from('user_sessions' as any)
       .select(`
         *,
@@ -38,7 +38,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
           perfil,
           cargo
         )
-      `)
+      `) as any)
       .gte('login_at', start)
       .lte('login_at', end)
       .order('login_at', { ascending: false });
@@ -50,9 +50,9 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
     }
 
     // Fetch audit logs for these users in this timeframe to calculate interactivity
-    const { data: auditLogs, error: auditError } = await supabase
+    const { data: auditLogs, error: auditError } = await (supabase
       .from('audit_logs' as any)
-      .select('usuario_id, created_at, acao, modulo, registro_afetado')
+      .select('usuario_id, created_at, acao, modulo, registro_afetado') as any)
       .gte('created_at', start)
       .lte('created_at', end);
 
@@ -76,7 +76,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
         ...session,
         duration,
         hasActivity: sessionLogs.length > 0,
-        activityDetails: sessionLogs.slice(0, 3).map(log => `${log.acao} em ${log.modulo}`).join(', ') + (sessionLogs.length > 3 ? '...' : '')
+        activityDetails: sessionLogs.slice(0, 3).map((log: any) => `${log.acao} em ${log.modulo}`).join(', ') + (sessionLogs.length > 3 ? '...' : '')
       };
     });
 

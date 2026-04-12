@@ -161,6 +161,8 @@ interface VagasState {
   updateTarefa: (id: string, data: Partial<Tarefa>) => void;
   deleteTarefa: (id: string) => void;
   addAlerta: (alerta: Alerta) => void;
+  addBloqueio: (bloqueio: BloqueioHorario) => void;
+  removeBloqueio: (id: string) => void;
   updateAlerta: (id: string, data: Partial<Alerta>) => void;
   addMensagem: (mensagem: MensagemHistorico) => void;
   marcarMensagemLida: (id: string) => void;

@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { UNITS, ROLES } from "@/data/chatData";
 import { ChatStep, Unit, Role, Message } from "@/types/chat";
@@ -39,7 +39,7 @@ export const AgieChat = memo(() => {
   
   // User profile state
   const [userProfile, setUserProfile] = useState<{ nome_completo: string; email: string; id: string } | null>(null);
-  const { toast } = useToast();
+  // const { toast } = useToast(); // Removed in favor of sonner toast
   
   // Notification carousel state
   const [notificationIndex, setNotificationIndex] = useState(0);
@@ -142,11 +142,7 @@ export const AgieChat = memo(() => {
 
   const submitFeedback = async () => {
     if (!feedbackMessage.trim()) {
-      toast({
-        title: "Erro",
-        description: "Por favor, descreva seu feedback.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, descreva seu feedback.");
       return;
     }
 
@@ -162,20 +158,13 @@ export const AgieChat = memo(() => {
 
       if (error) throw error;
 
-      toast({
-        title: "Feedback enviado!",
-        description: "Agradecemos sua contribuição para o sistema AGIR Saúde.",
-      });
+      toast.success("Feedback enviado! Agradecemos sua contribuição.");
 
       setFeedbackMessage("");
       setStep('INITIAL');
     } catch (error: any) {
       console.error("Error submitting feedback:", error);
-      toast({
-        title: "Erro ao enviar feedback",
-        description: error.message || "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Tente novamente mais tarde.");
     } finally {
       setIsSubmittingFeedback(false);
     }

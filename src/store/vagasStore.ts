@@ -120,6 +120,7 @@ interface VagasState {
   deleteBanco: (id: string) => void;
   addConvocacao: (convocacao: Convocacao) => void;
   updateConvocacao: (id: string, data: Partial<Convocacao>) => void;
+  deleteConvocacao: (id: string) => void;
   updateEdital: (id: string, data: Partial<Edital>) => void;
   updateValidacao: (id: string, data: Partial<ValidacaoEdital>) => void;
   addEdital: (edital: Edital) => void;
@@ -328,6 +329,9 @@ export const useVagasStore = create<VagasState>()(
       addConvocacao: (convocacao) => set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] })),
       updateConvocacao: (id, data) => set((s) => ({
         convocacoes: s.convocacoes.map((c) => c.id === id ? { ...c, ...data } : c),
+      })),
+      deleteConvocacao: (id) => set((s) => ({
+        convocacoes: s.convocacoes.filter((c) => c.id !== id),
       })),
       updateEdital: (id, data) => set((s) => ({
         editais: s.editais.map((e) => e.id === id ? { ...e, ...data } : e),

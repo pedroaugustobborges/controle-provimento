@@ -211,7 +211,8 @@ export function AppSidebar() {
                       >
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton asChild tooltip={item.title}>
-                            <div
+                            <NavLink
+                              to={item.url}
                               className={cn(
                                 "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none cursor-pointer w-full",
                                 active 
@@ -239,7 +240,7 @@ export function AppSidebar() {
                                   isOpen && "rotate-180"
                                 )} />
                               )}
-                            </div>
+                            </NavLink>
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         {!collapsed && (

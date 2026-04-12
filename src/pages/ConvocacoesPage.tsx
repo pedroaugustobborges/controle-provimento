@@ -385,116 +385,19 @@ export default function ConvocacoesPage() {
 
       <div className="mt-2 h-full min-h-[500px]">
         {view === 'diaria' ? (
-          <div className="space-y-8">
-            {/* Logic for Daily View: Group by Base and Time */}
-            {(() => {
-              const dayStr = format(selectedDate, 'yyyy-MM-dd');
-              const todayConvocacoes = filteredConvocacoes; // FilteredConvocacoes already includes date filter logic now
-              
-              if (todayConvocacoes.length === 0) {
-                return (
-                  <div className="py-20 text-center text-slate-400 font-medium italic bg-white rounded-xl border-2 border-dashed border-slate-100">
-                    Nenhuma convocação agendada para o dia {formatDate(dayStr)}.
-                  </div>
-                );
-              }
-
-              // Group by Base
-              const byBase: Record<string, any[]> = {};
-              todayConvocacoes.forEach(c => {
-                const base = getBaseForUnidade(c.unidade);
-                if (!byBase[base]) byBase[base] = [];
-                byBase[base].push(c);
-              });
-
-              return Object.entries(byBase).map(([base, baseConvs]) => (
-                <div key={base} className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-bold text-slate-800">Base: {base}</h2>
-                    <Badge variant="outline" className="ml-2 bg-slate-50">{baseConvs.length} Agendamentos</Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {HORARIOS_FIXOS_CONVOCACAO.map(horario => {
-                      const conv = baseConvs.find(c => c.horario === horario);
-                      
-                      return (
-                        <Card 
-                          key={`${base}-${horario}`} 
-                          className={`border shadow-sm transition-all ${conv ? 'border-l-4 border-l-primary' : 'bg-slate-50/50 border-dashed opacity-60'}`}
-                        >
-                          <CardHeader className="py-3 bg-slate-50/50 flex flex-row items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-slate-400" />
-                              <span className="font-bold text-slate-700">{horario}</span>
-                            </div>
-                            {conv && (
-                              <Badge 
-                                className={`text-[10px] font-bold uppercase ${
-                                  conv.status === 'aceite' ? 'bg-green-100 text-green-700' : 
-                                  conv.status === 'pendente' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                                }`}
-                              >
-                                {STATUS_CONVOCACAO_LABELS[conv.status] || conv.status}
-                              </Badge>
-                            )}
-                          </CardHeader>
-                          <CardContent className="py-4">
-                            {conv ? (
-                              <div className="space-y-4">
-                                <div>
-                                  <h3 className="text-base font-bold text-slate-800 line-clamp-1">{conv.nome_candidato}</h3>
-                                  <p className="text-xs text-slate-500 font-medium">{conv.cargo}</p>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="space-y-1">
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase">Unidade</span>
-                                    <p className="text-xs font-semibold text-slate-600 truncate">
-                                      {conv.unidade_alternativa || conv.unidade}
-                                    </p>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase">Requisição</span>
-                                    <p className="text-xs font-mono font-bold text-primary">{conv.requisicao}</p>
-                                  </div>
-                                </div>
-
-                                <div className="pt-2 flex gap-2">
-                                  <Button 
-                                    className="flex-1 h-9 text-xs font-bold gap-2"
-                                    onClick={() => {
-                                      setSelectedConvocacao(conv);
-                                      setIsDevolutivaOpen(true);
-                                    }}
-                                  >
-                                    Dar Devolutiva <CheckCircle2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="icon" 
-                                    className="h-9 w-9"
-                                    onClick={() => navigate(`/vagas/${conv.vaga_id}`)}
-                                  >
-                                    <Eye className="h-4 w-4 text-slate-400" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="py-8 text-center">
-                                <span className="text-xs text-slate-400 font-medium italic">Horário Livre</span>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </div>
-              ));
-            })()}
-          </div>
+          <AgendaDiaria
+            convocacoes={filteredConvocacoes}
+            bloqueios={bloqueios}
+            selectedDate={format(selectedDate, 'yyyy-MM-dd')}
+            onEditConvocacao={(conv) => {
+              setSelectedConvocacao(conv);
+              setIsDialogOpen(true);
+            }}
+            onDevolutiva={(conv) => {
+              setSelectedConvocacao(conv);
+              setIsDevolutivaOpen(true);
+            }}
+          />
         ) : view === 'kanban' ? (
           <KanbanBoard convocacoes={filteredConvocacoes} />
         ) : view === 'list' ? (

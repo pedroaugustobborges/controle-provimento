@@ -58,7 +58,7 @@ export default function ConvocacoesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { vagas, convocacoes, bancos, getBancoByVaga } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
-  const [view, setView] = useState<'kanban' | 'list' | 'pending' | 'diaria'>('diaria');
+  const [view, setView] = useState<'kanban' | 'list' | 'diaria'>('diaria');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDevolutivaOpen, setIsDevolutivaOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
@@ -75,7 +75,7 @@ export default function ConvocacoesPage() {
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['kanban', 'list', 'pending', 'diaria'].includes(tab)) {
+    if (tab && ['kanban', 'list', 'diaria'].includes(tab)) {
       setView(tab as any);
     }
     // Abrir dialog de convocação automaticamente quando vindo de Todas as Vagas
@@ -233,19 +233,6 @@ export default function ConvocacoesPage() {
               >
                 <List className="h-3.5 w-3.5 mr-1" /> Histórico
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'pending' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
-                onClick={() => handleViewChange('pending')}
-              >
-                <AlertCircle className="h-3.5 w-3.5 mr-1" /> Pendentes
-                {pendingConvocacoes.length > 0 && (
-                  <Badge variant="destructive" className="ml-1 px-1.5 h-4 min-w-[16px] flex items-center justify-center text-[8px] font-bold rounded-full">
-                    {pendingConvocacoes.length}
-                  </Badge>
-                )}
-              </Button>
             </div>
             <Button onClick={() => handleNewConvocacao()} className="h-10 gap-2 text-xs font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white rounded-xl transition-all px-4">
               <Plus className="h-4 w-4" /> Nova Convocação
@@ -383,62 +370,6 @@ export default function ConvocacoesPage() {
         </div>
       </div>
 
-      {view === 'pending' && (
-        <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-          <CardHeader className="bg-slate-50/50 border-b pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-amber-500" />
-                  Convocações Pendentes de Devolutiva
-                </CardTitle>
-                <p className="text-xs text-slate-500 font-medium mt-1">Candidatos agendados que ainda não confirmaram presença ou deram retorno.</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Candidato</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead className="text-center">Data Convocação</TableHead>
-                  <TableHead className="text-center">Horário</TableHead>
-                  <TableHead className="text-right">Ação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pendingConvocacoes.map((c) => (
-                  <TableRow key={c.id} className="hover:bg-slate-50 transition-colors group">
-                    <TableCell className="font-semibold text-slate-800">{c.nome_candidato}</TableCell>
-                    <TableCell className="text-slate-600 font-medium">{c.cargo}</TableCell>
-                    <TableCell className="text-slate-600 font-medium">{c.unidade}</TableCell>
-                    <TableCell className="text-center text-xs text-slate-500">{formatDate(c.data_convocacao)}</TableCell>
-                    <TableCell className="text-center font-mono text-xs font-bold text-primary">{c.horario || '—'}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        onClick={() => { setSelectedConvocacao(c); setIsDevolutivaOpen(true); }}
-                        className="h-8 gap-1.5 text-[11px] font-bold bg-amber-600 hover:bg-amber-700 shadow-sm"
-                      >
-                        Dar Devolutiva <ArrowRight className="h-3 w-3" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {pendingConvocacoes.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
-                      Nenhuma convocação pendente de devolutiva encontrada.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="mt-2 h-full min-h-[500px]">
         {view === 'diaria' ? (

@@ -217,10 +217,10 @@ export function AppSidebar() {
                           </div>
                         </SidebarMenuButton>
                         {!collapsed && (
-                          <SidebarMenuSub className="ml-3 mt-1 border-l-2 border-white/15 space-y-0.5 py-2 pl-3 relative">
+                          <SidebarMenuSub className="ml-6 mt-1 border-l-2 border-white/20 space-y-0.5 py-1.5 pl-3 relative">
                             {item.subMenu.map((sub, idx) => {
                               const subActive = isUrlActive(sub.url);
-                              const activeIndex = item.subMenu.findIndex(s => isUrlActive(s.url));
+                              const activeIndex = item.subMenu!.findIndex(s => isUrlActive(s.url));
                               const hasPassed = activeIndex !== -1 && idx < activeIndex;
                               
                               return (
@@ -231,18 +231,18 @@ export function AppSidebar() {
                                         className={cn(
                                           "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
                                           subActive 
-                                            ? "text-white bg-white/15 border-l-2 border-white shadow-[0_4px_15px_-3px_rgba(255,255,255,0.15)] translate-x-1" 
+                                            ? "text-white bg-white/15 shadow-[0_2px_10px_-3px_rgba(255,255,255,0.15)]" 
                                             : hasPassed
-                                              ? "text-slate-400 bg-white/5 hover:bg-white/10 hover:text-slate-200"
-                                              : "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-1"
+                                              ? "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                                              : "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-0.5"
                                         )}
                                     >
                                       <span className="relative z-10 flex items-center gap-2.5 leading-tight">
-                                        <Circle className={cn(
-                                          "h-2 w-2 shrink-0 transition-all duration-300",
-                                          subActive ? "text-white fill-white drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]" 
-                                            : hasPassed ? "text-slate-400 fill-slate-400" 
-                                            : "text-slate-600 fill-transparent"
+                                        <span className={cn(
+                                          "h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300",
+                                          subActive ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" 
+                                            : hasPassed ? "bg-slate-400" 
+                                            : "bg-slate-600"
                                         )} />
                                         {sub.title}
                                       </span>

@@ -261,6 +261,8 @@ export interface BloqueioHorario {
   horario?: string; // undefined = dia inteiro
   dia_inteiro: boolean;
   motivo: string;
+  vagas_bloqueadas?: number; // 1-5, se undefined e horário setado = bloqueia todos os slots
+  link_teams?: string;
   criado_por: string;
   created_at: string;
 }

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 
 import logoAgir from '@/assets/logo-agir.png';
+import avatarDefault from '@/assets/avatar-izac.jpeg';
 import { NavLink } from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';

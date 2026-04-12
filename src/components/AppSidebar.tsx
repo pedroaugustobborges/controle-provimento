@@ -190,7 +190,6 @@ export function AppSidebar() {
                         <SidebarMenuButton asChild tooltip={item.title}>
                           <div
                             className={cn(
-                            className={cn(
                               "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                               active 
                                 ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 

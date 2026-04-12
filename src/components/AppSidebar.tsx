@@ -134,12 +134,30 @@ export function AppSidebar() {
 
   const isUrlActive = (url: string) => {
     const currentUrl = location.pathname + location.search;
-    if (url === '/') return currentUrl === '/';
-    return currentUrl === url || currentUrl.startsWith(url + '?') || currentUrl.startsWith(url + '/');
+    if (url === '/' || url === '#') return currentUrl === '/';
+    
+    // For URLs with query parameters, require exact match
+    if (url.includes('?')) {
+      return currentUrl === url;
+    }
+    
+    // For base URLs, match exactly or as a parent directory
+    return currentUrl === url || currentUrl.startsWith(url + '/') || currentUrl.startsWith(url + '?');
   };
 
   const isParentActive = (item: any) => {
-    if (isUrlActive(item.url)) return true;
+    // If the item itself matches (for exact matches or items without submenus)
+    if (item.url !== '#' && isUrlActive(item.url)) {
+      // If it has a submenu, we only want it to be "active" if it's the specific base URL match
+      // or if one of its children is active.
+      if (item.subMenu) {
+        const currentUrl = location.pathname + location.search;
+        // If we are on the base URL (e.g. /vagas) and it's one of the submenu items
+        return currentUrl === item.url || item.subMenu.some((sub: any) => isUrlActive(sub.url));
+      }
+      return true;
+    }
+    // Check if any subMenu item is active
     return item.subMenu?.some((sub: any) => isUrlActive(sub.url));
   };
 

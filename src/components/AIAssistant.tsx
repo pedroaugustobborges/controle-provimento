@@ -9,7 +9,8 @@ import {
   X,
   ExternalLink,
   Info,
-  ChevronRight
+  ChevronRight,
+  Lightbulb
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVagasStore } from '@/store/vagasStore';

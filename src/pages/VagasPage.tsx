@@ -608,18 +608,18 @@ export default function VagasPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-slate-50/50 border-b border-slate-200">
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[100px]">Abertura</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[100px]">Recebimento</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[120px]">Requisição</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[250px]">Cargo</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[120px]">Tipo</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[180px]">Unidade</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 min-w-[150px]">Seção</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-center min-w-[150px]">Status</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-center min-w-[80px]">Vaga(s)</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-center min-w-[80px]">Banco</TableHead>
-                  <TableHead className="text-[11px] font-bold text-slate-500 uppercase py-4 px-4 h-12 text-right min-w-[80px]">Ações</TableHead>
+                <TableRow className="bg-primary hover:bg-primary transition-none border-b border-white/10">
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[100px]">Abertura</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[100px]">Recebimento</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[120px]">Requisição</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[250px]">Cargo</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[120px]">Tipo</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[180px]">Unidade</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[150px]">Seção</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-center min-w-[150px]">Status</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-center min-w-[80px]">Vaga(s)</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-center min-w-[80px]">Banco</TableHead>
+                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-right min-w-[80px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

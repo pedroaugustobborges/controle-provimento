@@ -1,8 +1,12 @@
 export type TipoVaga = 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
-export type StatusVaga = 
+export type StatusVaga =
   | 'CONCLUÍDAS'
+  | 'CONCLUÍDA'
   | 'EM ANDAMENTO'
   | 'MOV. INTERNA'
+  | 'MOVIMENTAÇÃO INTERNA'
+  | 'ADMISSÃO ENVIADA'
+  | 'ADMISSÃO'
   | 'DOCUMENTAÇÃO'
   | 'CONVOCAÇÕES'
   | 'FILA DE EDITAIS'
@@ -400,8 +404,12 @@ export const TIPO_VAGA_LABELS: Record<TipoVaga, string> = {
 
 export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   'CONCLUÍDAS': 'Concluídas',
+  'CONCLUÍDA': 'Concluída',
   'EM ANDAMENTO': 'Em Andamento',
   'MOV. INTERNA': 'Mov. Interna',
+  'MOVIMENTAÇÃO INTERNA': 'Movimentação Interna',
+  'ADMISSÃO ENVIADA': 'Admissão Enviada',
+  'ADMISSÃO': 'Admissão',
   'DOCUMENTAÇÃO': 'Documentação',
   'CONVOCAÇÕES': 'Convocações',
   'FILA DE EDITAIS': 'Fila de Editais',

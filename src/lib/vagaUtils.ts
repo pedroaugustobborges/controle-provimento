@@ -80,17 +80,17 @@ export function isVitoriaUnit(unidade: string): boolean {
 }
 
 export const CATEGORIAS_STATUS = {
-  concluidas: ['concluida', 'concluidas'],
-  movimentacao_interna: ['movimentacao interna', 'transferencia'],
-  vagas_lideranca: ['vaga de lideranca', 'estrategicas', 'lideranca'],
+  concluidas: ['concluida', 'concluidas', 'concluida', 'admissao efetivada'],
+  movimentacao_interna: ['movimentacao interna', 'transferencia', 'movimentacao interna', 'mov. interna'],
+  vagas_lideranca: ['vaga de lideranca', 'estrategicas', 'lideranca', 'vaga de lideranca'],
   em_andamento: ['realizar convocacao', 'em andamento'],
-  convocacoes: ['convocacoes', 'convocacao'],
+  convocacoes: ['convocacoes', 'convocacao', 'realizar convocacao'],
   fila_edital: ['em edital', 'publicar novo edital', 'fila de editais'],
-  em_admissao: ['admissao', 'admissao enviada'],
+  em_admissao: ['admissao', 'admissao enviada', 'admissao enviada', 'em admissao'],
   documentacao: ['documentacao', 'documentacao ok e aso pendente', 'aso pendente'],
-  aguardando_unidade: ['aguardando unidade'],
-  suspensa: ['suspensa'],
-  cancelada: ['cancelada', 'canceladas'],
+  aguardando_unidade: ['aguardando unidade', 'aguardando'],
+  suspensa: ['suspensa', 'vaga pausada', 'pausada'],
+  cancelada: ['cancelada', 'canceladas', 'vaga cancelada'],
   sem_status: ['sem status'],
 };
 
@@ -340,7 +340,12 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text === 'cancelada' || text === 'cancelado') return 'CANCELADAS' as StatusVaga;
   if (text === 'realizar convocacao') return 'CONVOCAÇÕES' as StatusVaga;
   if (text === 'documentacao' || text === 'documentacao ok e aso pendente' || text === 'aso pendente') return 'DOCUMENTAÇÃO' as StatusVaga;
-  if (text === 'admissao enviada' || text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista' || text === 'movimentacao interna' || text === 'transferencia') return 'EM ANDAMENTO' as StatusVaga;
+  // Movimentação interna e transferência são categorias distintas
+  if (text === 'movimentacao interna' || text.includes('movimentac') || text === 'transferencia' || text.includes('transfer')) return 'MOVIMENTAÇÃO INTERNA' as StatusVaga;
+  // Admissão enviada e admissão são categorias distintas de EM ANDAMENTO
+  if (text === 'admissao enviada' || text.includes('admissao envia')) return 'ADMISSÃO ENVIADA' as StatusVaga;
+  if (text === 'admissao') return 'ADMISSÃO' as StatusVaga;
+  if (text === 'em edital' || text === 'em processo seletivo' || text === 'em triagem' || text === 'entrevista') return 'EM ANDAMENTO' as StatusVaga;
   if (text.includes('andamento') || text.includes('processo') || text.includes('edital')) return 'EM ANDAMENTO' as StatusVaga;
 
   return 'SEM STATUS' as StatusVaga;

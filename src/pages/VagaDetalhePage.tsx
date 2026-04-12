@@ -39,6 +39,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { RequestUpdateDialog } from '@/components/RequestUpdateDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 
 export default function VagaDetalhePage() {

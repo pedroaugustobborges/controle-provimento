@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { 
   Search, Upload, Plus, FileText, X, Building2, 
   Filter, FileSpreadsheet, ListFilter, MoreVertical, Trash2, Edit, History, AlertCircle,
-  Database, CheckCircle2, ArrowRight, Check
+  Database, CheckCircle2, ArrowRight, Check, TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';

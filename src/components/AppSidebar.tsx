@@ -233,23 +233,31 @@ export function AppSidebar() {
                         {!collapsed && (
                           <SidebarMenuSub className="ml-6 mt-1 border-l-2 border-white/20 space-y-0.5 py-1.5 pl-3 relative">
                             {item.subMenu.map((sub) => {
+                              const subActive = isUrlActive(sub.url);
                               return (
                                 <SidebarMenuSubItem key={sub.title}>
                                   <SidebarMenuSubButton asChild>
-                                    <NavLink
-                                      to={sub.url}
-                                      end={!sub.url.includes('?')}
+                                    <a
+                                      href={sub.url}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        navigate(sub.url);
+                                      }}
                                       className={cn(
                                         "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
-                                        "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-0.5"
+                                        subActive
+                                          ? "text-white bg-white/15 shadow-[0_2px_10px_-3px_rgba(255,255,255,0.15)]"
+                                          : "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-0.5"
                                       )}
-                                      activeClassName="text-white bg-white/15 shadow-[0_2px_10px_-3px_rgba(255,255,255,0.15)] active"
                                     >
                                       <span className="relative z-10 flex items-center gap-2.5 leading-tight">
-                                        <span className="h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300 bg-slate-600 group-[.active]/sub:bg-white group-[.active]/sub:shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
+                                        <span className={cn(
+                                          "h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300",
+                                          subActive ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" : "bg-slate-600"
+                                        )} />
                                         {sub.title}
                                       </span>
-                                    </NavLink>
+                                    </a>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               );

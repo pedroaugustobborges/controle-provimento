@@ -58,6 +58,8 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
         horario,
         dia_inteiro: diaInteiro,
         motivo,
+        vagas_bloqueadas: diaInteiro ? 5 : vagasBloqueadas,
+        link_teams: linkTeams.trim() || undefined,
         criado_por: currentUser?.nome_completo || 'Analista',
         created_at: new Date().toISOString(),
       };

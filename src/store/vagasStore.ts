@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta, MensagemHistorico } from '@/types/vaga';
+import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta, MensagemHistorico, BloqueioHorario } from '@/types/vaga';
 import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
@@ -119,6 +119,7 @@ interface VagasState {
   vagas: Vaga[];
   bancos: BancoTalentos[];
   convocacoes: Convocacao[];
+  bloqueios: BloqueioHorario[];
   editais: Edital[];
   validacoes: ValidacaoEdital[];
   importHistory: ImportHistory[];

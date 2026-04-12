@@ -232,11 +232,7 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                         {!collapsed && (
                           <SidebarMenuSub className="ml-6 mt-1 border-l-2 border-white/20 space-y-0.5 py-1.5 pl-3 relative">
-                            {item.subMenu.map((sub, idx) => {
-                              const subActive = isUrlActive(sub.url);
-                              const activeIndex = item.subMenu!.findIndex(s => isUrlActive(s.url));
-                              const hasPassed = activeIndex !== -1 && idx < activeIndex;
-                              
+                            {item.subMenu.map((sub) => {
                               return (
                                 <SidebarMenuSubItem key={sub.title}>
                                   <SidebarMenuSubButton asChild>

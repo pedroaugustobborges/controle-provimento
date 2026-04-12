@@ -32,8 +32,36 @@ export const AgieChat = memo(() => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   
+  // Feedback state
+  const [feedbackType, setFeedbackType] = useState<'sugestao' | 'problema' | 'melhoria'>('sugestao');
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  
+  // User profile state
+  const [userProfile, setUserProfile] = useState<{ nome_completo: string; email: string; id: string } | null>(null);
+  const { toast } = useToast();
+  
   const { temNovasMensagens, setTemNovasMensagens, historicoMensagens } = useVagasStore();
   const hasNewMessage = temNovasMensagens;
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nome_completo, email, id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUserProfile(profile);
+        }
+      }
+    };
+    fetchProfile();
+  }, []);
 
   // Keep notifications alive
   useEffect(() => {
@@ -51,15 +79,61 @@ export const AgieChat = memo(() => {
   };
 
   const handleBack = () => {
-    if (step === 'BY_REGION') setStep('INITIAL');
+    if (step === 'COMMUNICATION_HUB') setStep('INITIAL');
+    if (step === 'FEEDBACK') setStep('INITIAL');
+    if (step === 'NEWS') setStep('INITIAL');
+    if (step === 'BY_REGION') setStep('COMMUNICATION_HUB');
+    if (step === 'BY_ROLE') setStep('COMMUNICATION_HUB');
+    if (step === 'BY_USER') setStep('COMMUNICATION_HUB');
+    if (step === 'SUPERVISION') setStep('COMMUNICATION_HUB');
     if (step === 'BY_UNIT') setStep('BY_REGION');
     if (step === 'BY_PERSON') {
       if (selectedUnit) setStep('BY_UNIT');
       else if (selectedRole) setStep('BY_ROLE');
     }
-    if (step === 'BY_ROLE') setStep('INITIAL');
     if (step === 'CONVERSATION') {
       setStep('BY_PERSON');
+    }
+  };
+
+  const submitFeedback = async () => {
+    if (!feedbackMessage.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, descreva seu feedback.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmittingFeedback(true);
+    try {
+      const { error } = await supabase.from('feedbacks').insert({
+        user_id: userProfile?.id,
+        user_name: userProfile?.nome_completo || 'Anônimo',
+        user_email: userProfile?.email || '',
+        tipo: feedbackType,
+        mensagem: feedbackMessage,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Feedback enviado!",
+        description: "Agradecemos sua contribuição para o sistema AGIR Saúde.",
+      });
+
+      setFeedbackMessage("");
+      setStep('INITIAL');
+    } catch (error: any) {
+      console.error("Error submitting feedback:", error);
+      toast({
+        title: "Erro ao enviar feedback",
+        description: error.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   };
 

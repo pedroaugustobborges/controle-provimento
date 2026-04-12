@@ -39,8 +39,17 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, selectedBas
         <div className="bg-muted border-2 border-dashed border-border rounded-xl p-8 text-center space-y-3">
           <Lock className="h-10 w-10 mx-auto text-muted-foreground" />
           <h3 className="text-lg font-bold text-muted-foreground">Dia Inteiro Bloqueado</h3>
-          <p className="text-sm text-muted-foreground">Motivo: {bloqueio.motivo}</p>
-          <p className="text-xs text-muted-foreground">Bloqueado por {bloqueio.criado_por}</p>
+          <p className="text-sm text-muted-foreground font-medium">Motivo: {bloqueio.motivo}</p>
+          {bloqueio.link_teams && (
+            <div className="flex justify-center mt-2">
+              <Button variant="outline" size="sm" className="gap-2 bg-primary/5 border-primary/20 text-primary font-bold" asChild>
+                <a href={bloqueio.link_teams} target="_blank" rel="noopener noreferrer">
+                  <Video className="h-4 w-4" /> Entrar na Reunião do Teams
+                </a>
+              </Button>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground pt-2">Bloqueado por {bloqueio.criado_por}</p>
           <Button variant="outline" size="sm" onClick={() => { removeBloqueio(bloqueio.id); toast.success('Bloqueio removido.'); }}>
             Remover Bloqueio
           </Button>

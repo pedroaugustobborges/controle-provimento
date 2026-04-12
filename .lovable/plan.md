@@ -1,23 +1,23 @@
 
 
-## Plano de Implementação
+## Plano de Correção — Erro "This Page Does Not Exist"
 
-### Objetivo
-Adicionar a seção de "Unidades Vinculadas" com seleção por região no formulário de **criação** de novo usuário, replicando e melhorando a funcionalidade que já existe na edição.
+### Diagnóstico
+O problema está no componente `ProtectedRoutes` em `src/App.tsx`. Ele usa `<Routes>` aninhado dentro de outro `<Routes>`, e o catch-all `<Route path="*" element={<Navigate to="/" replace />} />` está redirecionando para `/` ao invés de mostrar a página correta. Além disso, o `vercel.json` e `public/_redirects` podem estar interferindo no roteamento SPA.
 
-### Alterações em `src/pages/AdministracaoPage.tsx`
+Preciso verificar:
+1. A estrutura de rotas aninhadas e o catch-all
+2. Se `vercel.json` tem rewrite correto para SPA
+3. Se a autenticação está causando redirects indevidos durante refresh
 
-1. **Adicionar constantes de regiões** no topo do arquivo:
-   - `REGIOES` com dois grupos: Goiás (10 unidades) e Vitória/ES (2 unidades: SÃO PEDRO, SUÁ)
+### Correções em `src/App.tsx`
+- Verificar que a rota `/*` em `ProtectedRoutes` está montada corretamente com as rotas filhas
+- Garantir que o catch-all não redireciona rotas válidas com query params
+- Confirmar que o loading state do `useAuth` não causa flash de redirect
 
-2. **Criar função `toggleRegion`** que seleciona/deseleciona todas as unidades de uma região de uma vez
+### Correções em `vercel.json`
+- Garantir rewrite `{ "source": "/(.*)", "destination": "/index.html" }` para SPA fallback
 
-3. **Inserir seção de Unidades Vinculadas no formulário de criação** (entre a seção de módulos e permissões), contendo:
-   - Switch "Visualizar todas as unidades"
-   - Botões de seleção rápida por região (Goiás / Vitória)
-   - Grid de checkboxes individuais por unidade (desabilitados quando "todas" está ativo)
-
-4. **Garantir que os dados são enviados** na criação do usuário (já existem os campos `visualiza_todas_unidades` e `unidades_vinculadas` no estado `newUser`)
-
-Nenhuma alteração de banco de dados é necessária — os campos já existem na tabela `profiles`.
+### Verificar `src/hooks/useAuth.ts`
+- Confirmar que após refresh o estado de autenticação é restaurado antes de redirecionar para `/login`
 

@@ -3,27 +3,28 @@ import { useRBAC } from './useRBAC';
 export function usePermissions() {
   const { userData, isAdmin, isManagement, isFullAccessProfile, getPermissions } = useRBAC();
 
-  const perfil = userData?.perfil;
+  const perfil = userData?.perfil?.toLowerCase() || '';
+  const canAdmin = isAdmin || perfil === 'analista administrativo';
 
   return {
-    canImport: () => isAdmin || perfil === 'Analista Administrativo' || perfil === 'Analista administrativo',
-    canViewAudit: () => isAdmin || perfil === 'Analista Administrativo' || perfil === 'Analista administrativo',
-    canViewDiagnostics: () => isAdmin || perfil === 'Analista Administrativo' || perfil === 'Analista administrativo',
+    canImport: () => canAdmin,
+    canViewAudit: () => canAdmin,
+    canViewDiagnostics: () => canAdmin,
     canManageUsers: () => isAdmin || (userData?.pode_gerenciar_usuarios ?? false),
     canDeleteRecords: () => isFullAccessProfile || (userData?.pode_excluir_requisicoes ?? false),
     canDirectEdit: () => isFullAccessProfile,
     canRequestUpdate: () => !isFullAccessProfile,
     canEditSettings: () => isAdmin || (userData?.pode_editar_configuracoes ?? false),
-    canAccessAdmin: () => isAdmin || perfil === 'Analista administrativo' || (userData?.pode_gerenciar_usuarios ?? false) || (userData?.pode_editar_configuracoes ?? false),
-    canIncludeRecords: () => isAdmin || perfil === 'Analista administrativo' || perfil === 'Analista do edital' || (userData?.pode_incluir_registros ?? false),
-    canUpdateVagaStatus: () => isAdmin || perfil === 'Analista da unidade' || perfil === 'Analista administrativo',
-    canManageConvocacoes: () => isAdmin || perfil === 'Analista de convocações' || perfil === 'Analista administrativo',
-    canManageEditais: () => isAdmin || perfil === 'Analista do edital' || perfil === 'Analista administrativo',
-    isAssistant: () => perfil === 'Assistente',
-    isUnitAnalyst: () => perfil === 'Analista da unidade',
-    isEditalAnalyst: () => perfil === 'Analista do edital',
-    isAdminAnalyst: () => perfil === 'Analista administrativo',
-    isConvAnalyst: () => perfil === 'Analista de convocações',
+    canAccessAdmin: () => canAdmin || (userData?.pode_gerenciar_usuarios ?? false) || (userData?.pode_editar_configuracoes ?? false),
+    canIncludeRecords: () => canAdmin || perfil === 'analista do edital' || (userData?.pode_incluir_registros ?? false),
+    canUpdateVagaStatus: () => canAdmin || perfil === 'analista da unidade',
+    canManageConvocacoes: () => canAdmin || perfil === 'analista de convocações',
+    canManageEditais: () => canAdmin || perfil === 'analista do edital',
+    isAssistant: () => perfil === 'assistente',
+    isUnitAnalyst: () => perfil === 'analista da unidade',
+    isEditalAnalyst: () => perfil === 'analista do edital',
+    isAdminAnalyst: () => perfil === 'analista administrativo',
+    isConvAnalyst: () => perfil === 'analista de convocações',
     isManagement: () => isManagement,
     currentUser: userData,
     hasFullAccess: isAdmin,

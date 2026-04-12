@@ -421,6 +421,8 @@ export const useVagasStore = create<VagasState>()(
         tarefas: s.tarefas.filter((t) => t.id !== id),
       })),
       addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
+      addBloqueio: (bloqueio) => set((s) => ({ bloqueios: [bloqueio, ...s.bloqueios] })),
+      removeBloqueio: (id) => set((s) => ({ bloqueios: s.bloqueios.filter(b => b.id !== id) })),
       deleteImportBatch: async (batchId) => {
         try {
           const { DatabaseService } = await import('@/services/databaseService');

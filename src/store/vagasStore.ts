@@ -295,23 +295,6 @@ export const useVagasStore = create<VagasState>()(
           set({ isLoadingBancos: false, isInitialLoad: false });
         }
       },
-          for (const { data, error } of results) {
-            if (error) throw error;
-            if (data) allRows.push(...data);
-          }
-          
-          const mappedBancos = allRows.map(mapDbBanco);
-          set({ 
-            bancos: mappedBancos,
-            lastUpdated: Date.now()
-          });
-          
-        } catch (err) {
-          console.error('Error fetching bancos:', err);
-        } finally {
-          set({ isLoadingBancos: false, isInitialLoad: false });
-        }
-      },
       fetchAll: async () => {
         const hasData = get().vagas.length > 0 && get().bancos.length > 0;
         const lastUpdated = get().lastUpdated;

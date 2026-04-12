@@ -1,25 +1,18 @@
 
 
-## Plano — Corrigir Estrutura e Fluxo de Convocações
+## Plano — Corrigir lista de unidades em Convocações
 
-### 1. Adicionar submenu "Convocações Diárias" no sidebar
-- Em `AppSidebar.tsx`, adicionar subitem "Convocações Diárias" dentro do item "Convocações", apontando para a rota correta.
+### Problema
+As unidades de Goiânia (HECAD, HUGOL, CRER, HDS, AGIR, CONDOMÍNIO) estão aparecendo individualmente no filtro de unidades da página de Convocações, quando deveriam estar agrupadas sob "Goiânia".
 
-### 2. Corrigir filtros de unidades por base em Convocações
-- Verificar `ConvocacoesPage.tsx` para garantir que ao filtrar por "Goiânia", as unidades HECAD, HDS, HUGOL, AGIR e CRER apareçam corretamente.
-- Remover filtros incorretos como "Resultado Final" e "Resultado Final da DS" que parecem vir do Banco de Talentos.
+### Solução
+1. **`src/pages/ConvocacoesPage.tsx`** — Alterar a lógica que popula o filtro/seletor de unidades para:
+   - Usar o mapeamento `BASES_CONVOCACAO` de `convocacaoUtils.ts`
+   - Substituir unidades individuais de Goiânia por uma única opção "Goiânia"
+   - Manter as demais unidades com seus nomes próprios
+   - Ao filtrar por "Goiânia", incluir convocações de todas as unidades da base
 
-### 3. Remover "Validar Convocações" do menu/fluxo
-- Remover o item "Validar Convocações" do sidebar (seção Controle Operacional ou onde estiver).
-- Manter a rota `ValidacaoPage.tsx` apenas se necessário para redirecionamento, ou removê-la completamente.
-- A validação que permanece é apenas "Validação de Edital".
+2. **`src/components/ConvocacaoDialog.tsx`** (se necessário) — Verificar se o seletor de unidade ao criar convocação também precisa do mesmo agrupamento
 
-### 4. Ajustar fluxo: convocação criada → aparece direto em Convocações Diárias
-- Verificar que o `ConvocacaoDialog.tsx` ao criar convocação já insere no estado que alimenta a tela de Convocações Diárias (KanbanBoard) — sem etapa intermediária de validação.
-
-### Arquivos afetados
-- `src/components/AppSidebar.tsx`
-- `src/pages/ConvocacoesPage.tsx`
-- `src/pages/ValidacaoPage.tsx` (possível remoção)
-- `src/App.tsx` (rota de validação)
+3. Utilizar a função `getBaseForUnidade()` já existente em `convocacaoUtils.ts` para mapear unidades às suas bases
 

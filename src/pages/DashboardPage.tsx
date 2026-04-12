@@ -432,38 +432,8 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-3">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">
               Visão Geral do Provimento
-              {totalTarefasPendentes > 0 ? (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  animate={{ 
-                    rotate: [0, -10, 10, -10, 10, 0],
-                  }}
-                  transition={{ 
-                    duration: 0.5, 
-                    repeat: Infinity, 
-                    repeatDelay: 3 
-                  }}
-                  onClick={() => navigate('/alertas-tarefas')}
-                  className="relative p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors shadow-sm border border-red-100"
-                  title={`${totalTarefasPendentes} tarefas pendentes`}
-                >
-                  <Bell className="h-5 w-5 fill-red-600/10" />
-                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                    {totalTarefasPendentes}
-                  </span>
-                </motion.button>
-              ) : (
-                <button 
-                  onClick={() => navigate('/alertas-tarefas')}
-                  className="p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-colors border border-slate-100 opacity-60"
-                  title="Nenhuma tarefa pendente"
-                >
-                  <Bell className="h-4 w-4" />
-                </button>
-              )}
             </h1>
             <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5">
               <Activity className="h-3 w-3 text-primary animate-pulse" /> Monitoramento em Tempo Real

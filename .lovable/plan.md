@@ -1,14 +1,25 @@
 
 
-## Plano — Simplificar Layout e Restringir Visibilidade
+## Plano — Corrigir Estrutura e Fluxo de Convocações
 
-Preciso analisar os arquivos antes de propor mudanças específicas, pois os nomes exatos das abas/submenus podem variar. Vou verificar o conteúdo atual das páginas mencionadas.
+### 1. Adicionar submenu "Convocações Diárias" no sidebar
+- Em `AppSidebar.tsx`, adicionar subitem "Convocações Diárias" dentro do item "Convocações", apontando para a rota correta.
 
-### Etapas
+### 2. Corrigir filtros de unidades por base em Convocações
+- Verificar `ConvocacoesPage.tsx` para garantir que ao filtrar por "Goiânia", as unidades HECAD, HDS, HUGOL, AGIR e CRER apareçam corretamente.
+- Remover filtros incorretos como "Resultado Final" e "Resultado Final da DS" que parecem vir do Banco de Talentos.
 
-1. **Verificar** o conteúdo atual de `VagasPage.tsx`, `DashboardPage.tsx`, `EditaisPage.tsx` e `AppSidebar.tsx` para mapear as abas, submenus e botões existentes
-2. **Restringir** os botões "Importar Excel", "Auditoria" e "Diagnóstico" para exibir apenas para perfis Administrador e Analista Administrativo (usando `usePermissions`)
-3. **Simplificar abas** na página de Vagas — remover abas/títulos redundantes, mantendo apenas "Controle de Vagas"
-4. **Limpar submenus** de Editais e da visualização "Todas as Vagas", removendo itens duplicados ou desnecessários
-5. **Testar** que a navegação permanece funcional após as remoções
+### 3. Remover "Validar Convocações" do menu/fluxo
+- Remover o item "Validar Convocações" do sidebar (seção Controle Operacional ou onde estiver).
+- Manter a rota `ValidacaoPage.tsx` apenas se necessário para redirecionamento, ou removê-la completamente.
+- A validação que permanece é apenas "Validação de Edital".
+
+### 4. Ajustar fluxo: convocação criada → aparece direto em Convocações Diárias
+- Verificar que o `ConvocacaoDialog.tsx` ao criar convocação já insere no estado que alimenta a tela de Convocações Diárias (KanbanBoard) — sem etapa intermediária de validação.
+
+### Arquivos afetados
+- `src/components/AppSidebar.tsx`
+- `src/pages/ConvocacoesPage.tsx`
+- `src/pages/ValidacaoPage.tsx` (possível remoção)
+- `src/App.tsx` (rota de validação)
 

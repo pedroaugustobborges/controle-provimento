@@ -188,6 +188,7 @@ export const useVagasStore = create<VagasState>()(
       vagas: [],
       bancos: [],
       convocacoes: mockConvocacoes,
+      bloqueios: [] as BloqueioHorario[],
       editais: mockEditais,
       validacoes: mockValidacoes,
       importHistory: [],

@@ -48,7 +48,6 @@ import {
   AlertTriangle,
   UserCheck,
   AlertCircle,
-  Bell,
   ArrowLeftRight,
   ChevronRight,
   ChevronDown,

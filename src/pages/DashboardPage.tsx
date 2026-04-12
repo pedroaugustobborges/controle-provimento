@@ -195,12 +195,6 @@ export default function DashboardPage() {
     }).length;
   }, [filteredBancos]);
 
-  const totalCRDisponiveis = useMemo(() => {
-    return filteredBancos.filter((b) => {
-      const s = normStatus(b.status || '');
-      return s === 'cadastro reserva';
-    }).length;
-  }, [filteredBancos]);
 
   const totalTarefasPendentes = useMemo(() => {
     const shouldIncludeUnscopedTasks = selectedRegion === 'all';

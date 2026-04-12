@@ -13,9 +13,9 @@ export function UserSessionTracker() {
       // Check if there's a recent session (last 30 mins) to resume
       const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       
-      const { data: existingSessions, error: fetchError } = await supabase
-        .from('user_sessions')
-        .select('id')
+      const { data: existingSessions, error: fetchError } = await (supabase
+        .from('user_sessions' as any)
+        .select('id') as any)
         .eq('user_id', currentUser.id)
         .is('logout_at', null)
         .gt('last_activity_at', thirtyMinsAgo)
@@ -32,12 +32,12 @@ export function UserSessionTracker() {
         await updateSession();
       } else {
         // Create new session
-        const { data: newSession, error: createError } = await supabase
-          .from('user_sessions')
+        const { data: newSession, error: createError } = await (supabase
+          .from('user_sessions' as any)
           .insert({
             user_id: currentUser.id,
             user_agent: navigator.userAgent,
-          })
+          }) as any)
           .select()
           .single();
 
@@ -52,11 +52,11 @@ export function UserSessionTracker() {
     const updateSession = async () => {
       if (!sessionIdRef.current) return;
 
-      const { error } = await supabase
-        .from('user_sessions')
+      const { error } = await (supabase
+        .from('user_sessions' as any)
         .update({
           last_activity_at: new Date().toISOString(),
-        })
+        }) as any)
         .eq('id', sessionIdRef.current);
 
       if (error) {

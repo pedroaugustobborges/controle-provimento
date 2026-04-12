@@ -695,7 +695,7 @@ export const useVagasStore = create<VagasState>()(
           tem_banco_valido: v.tem_banco_valido,
           origem: v.origem,
           historico: (v.historico || []).slice(-1)
-        })).slice(0, 1000),
+        })).slice(0, 1500),
         bancos: state.bancos.map(b => ({
           id: b.id,
           unidade: b.unidade,
@@ -704,8 +704,9 @@ export const useVagasStore = create<VagasState>()(
           numero_edital: b.numero_edital,
           numero_processo_seletivo: b.numero_processo_seletivo,
           data_validade: b.data_validade,
-          is_prorrogado: b.is_prorrogado
-        })).slice(0, 1500),
+          is_prorrogado: b.is_prorrogado,
+          numero_processo: b.numero_processo
+        })).slice(0, 2000),
         lastUpdated: state.lastUpdated,
         editais: state.editais,
         validacoes: state.validacoes,

@@ -95,8 +95,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         const state = channel.presenceState();
         const users = Object.values(state)
           .flat()
-          .filter((user: any, index, self) => 
-            index === self.findIndex((u) => u.id === user.id)
+          .filter((user: any, index: number, self: any[]) => 
+            index === self.findIndex((u: any) => u.id === user.id)
           );
         setOnlineUsers(users);
       })

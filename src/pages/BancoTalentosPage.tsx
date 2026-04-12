@@ -1093,7 +1093,7 @@ export default function BancoTalentosPage() {
                   </TableHeader>
                   <TableBody>
                     {convocadosFiltered.map((b) => {
-                      // Tentar encontrar a convocação diária relacionada para pegar o status da devolutiva
+                      // Encontrar a convocação diária relacionada
                       const dailyConvocacao = useVagasStore.getState().convocacoes.find(c => 
                         c.banco_relacionado === b.id || 
                         (c.nome_candidato === b.nome && c.cargo === b.cargo)
@@ -1142,25 +1142,26 @@ export default function BancoTalentosPage() {
                               </Badge>
                             )}
                           </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
-                            onClick={() => {
-                              setSelectedBanco(b);
-                              setIsDetailsOpen(true);
-                            }}
-                          >
-                            Detalhes
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                              onClick={() => {
+                                setSelectedBanco(b);
+                                setIsDetailsOpen(true);
+                              }}
+                            >
+                              Detalhes
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                     {convocadosFiltered.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
-                          Nenhum convocado encontrado para os filtros aplicados.
+                          Nenhum registro de convocação encontrado.
                         </TableCell>
                       </TableRow>
                     )}

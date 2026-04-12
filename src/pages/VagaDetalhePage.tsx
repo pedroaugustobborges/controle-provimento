@@ -1465,7 +1465,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
     addMensagem({
       id: `msg-val-${Date.now()}`,
       data: new Date().toISOString(),
-      remetente: 'Aide',
+      remetente: 'Agie',
       conteudo: mensagemTexto,
       lida: false,
     });

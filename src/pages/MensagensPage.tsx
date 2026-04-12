@@ -528,7 +528,7 @@ function MessageCard({ msg, onMarkRead }: { msg: any, onMarkRead: () => void }) 
         <div className="flex justify-between items-start mb-2">
           <Badge variant="outline" className={cn(
             "text-[10px] uppercase font-bold",
-            msg.remetente === 'Aide' ? "bg-purple-50 text-purple-600 border-purple-200" : "bg-blue-50 text-blue-600 border-blue-200"
+            msg.remetente === 'Agie' ? "bg-purple-50 text-purple-600 border-purple-200" : "bg-blue-50 text-blue-600 border-blue-200"
           )}>
             {msg.remetente}
           </Badge>

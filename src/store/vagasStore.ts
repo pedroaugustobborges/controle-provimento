@@ -145,6 +145,7 @@ interface VagasState {
   getBancoByVaga: (vagaId: string) => BancoTalentos | undefined;
   getConvocacoesByVaga: (vagaId: string) => Convocacao[];
   getMatchingDiagnostic: () => { vagaId: string; vagaCargo: string; vagaUnidade: string; vagaReq: string; potentialBancos: any[] }[];
+  marcarTodasLidas: () => void;
   fixWrongImportBatches: () => void;
 }
 

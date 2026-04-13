@@ -1,18 +1,23 @@
 
+## Plano: Padronizar cabeçalhos e reformular aba Observações
 
-## Plano: Menus visíveis + Gráfico Top 5 Cargos
+### Alteração 1: Padronizar cabeçalhos das tabelas
+No `UnidadePortalPage.tsx`, unificar o estilo de `TableHead` nas 3 abas (Status, Convocações, Observações) para usar o mesmo padrão: `bg-slate-50/50`, `text-[10px] font-black uppercase tracking-widest text-slate-500`, `py-5 px-6`.
 
-### Alteração 1: Mostrar nomes nas abas
-No `UnidadePortalPage.tsx`, remover a classe `hidden xs:inline` dos `<span>` dentro dos `TabsTrigger`, substituindo por texto sempre visível. Em mobile, usar nomes curtos via classes responsivas.
+### Alteração 2: Reformular aba Observações
+Substituir o conteúdo atual da aba "Observações" por uma tabela editável com as seguintes colunas:
+- **Candidato** (somente leitura)
+- **Unidade** (somente leitura)
+- **Status/Destino** (Select editável com opções: Aceite, Recusa por plantão, Recusa por unidade, Recusa por horário, Desistiu, Faltou, Pendente)
+- **Horário/Plantão** (Input editável)
+- **Aceito** (Switch ou checkbox sim/não)
+- **Observação** (Textarea/Input editável)
+- **Botão Salvar** (por linha, salva via `updateConvocacao`)
 
-### Alteração 2: Substituir gráfico "Convocações por Unidade" por "Top 5 Cargos"
-- Adicionar um `useMemo` que agrupa `filteredVagas` por `cargo`, conta ocorrências, ordena decrescente e pega os 5 primeiros.
-- Substituir o segundo `<Card>` de gráfico (convByUnitData) por um BarChart horizontal usando os dados de top 5 cargos.
-- Aplicar cores distintas por barra usando `<Cell>` + paleta de cores.
-- Usar o mesmo `CustomChartTooltip` existente.
+A lógica usará um state local para rastrear edições por convocação e chamar `updateConvocacao` ao salvar cada linha.
 
 ### Arquivo alterado
 - `src/pages/UnidadePortalPage.tsx`
 
 ### Sem alteração de banco de dados
-
+Os campos `status`, `horario`, `observacoes` já existem no tipo `Convocacao` e são salvos via `updateConvocacao` do store.

@@ -191,13 +191,15 @@ function DayHeader({ date, total, blocked }: { date: string; total: number; bloc
 }
 
 /* ── Single convocação row (used in free schedule view) ── */
-function ConvocacaoRow({ conv, onEdit, onDevolutiva }: { conv: Convocacao; onEdit: (c: Convocacao) => void; onDevolutiva: (c: Convocacao) => void }) {
+function ConvocacaoRow({ conv, onEdit, onDevolutiva, showHorario = true }: { conv: Convocacao; onEdit: (c: Convocacao) => void; onDevolutiva: (c: Convocacao) => void; showHorario?: boolean }) {
   return (
     <div className="px-5 py-3 flex items-center gap-4 hover:bg-accent/30 transition-colors">
-      <div className="flex items-center gap-2 w-16 shrink-0">
-        <Clock className="h-4 w-4 text-primary" />
-        <span className="text-sm font-bold text-foreground">{conv.horario}</span>
-      </div>
+      {showHorario && (
+        <div className="flex items-center gap-2 w-24 shrink-0">
+          <Clock className="h-4 w-4 text-primary" />
+          <span className="text-sm font-bold text-foreground">{conv.horario}</span>
+        </div>
+      )}
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <User className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="text-sm font-semibold text-foreground truncate">{conv.nome_candidato}</span>

@@ -40,19 +40,37 @@ import { toast } from 'sonner';
 
 export default function ValidacaoEditaisPage() {
   const { vagas, updateVaga, addMensagem } = useVagasStore();
-  const { currentUser, addAuditLog } = useAdminStore();
+  const { currentUser, addAuditLog, users, fetchUsers } = useAdminStore();
   const [search, setSearch] = useState('');
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
   const [obs, setObs] = useState('');
   const [reachrUrl, setReachrUrl] = useState('');
+  const [selectedGestorId, setSelectedGestorId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const gestores = useMemo(() => {
+    return users.filter(u => u.perfil === 'Gestão' || u.perfil === 'Gerência' || u.perfil === 'Coordenação');
+  }, [users]);
 
   const pendingEditais = useMemo(() => {
     return vagas.filter(v => {
-      if (v.status_validacao !== 'pendente' && v.status_fluxo_edital !== 'enviado_validacao') {
-        return false;
-      }
+      // Regra: Mostrar se está em validação ou aguardando aprovação do gestor
+      const isPending = v.status_fluxo_edital === 'enviado_validacao' || 
+                       v.status_fluxo_edital === 'aguardando_aprovacao_gestor';
       
+      if (!isPending) return false;
+      
+      // Se estiver aguardando gestor, apenas o gestor selecionado ou admin vê para aprovar
+      if (v.status_fluxo_edital === 'aguardando_aprovacao_gestor') {
+        if (v.gestor_aprovador_id !== currentUser?.id && currentUser?.perfil !== 'Admin') {
+          return false;
+        }
+      }
+
       if (!currentUser?.visualiza_todas_unidades) {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
         if (!userUnidades.includes(normalizeUnitName(v.unidade))) {

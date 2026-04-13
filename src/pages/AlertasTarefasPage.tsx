@@ -56,7 +56,7 @@ export default function AlertasTarefasPage() {
     toast.success('Tarefa concluída com sucesso.');
   };
 
-  const groupedMessages = historicoMensagens.reduce((groups: { [key: string]: any[] }, message) => {
+  const groupedMessages = filteredMensagens.reduce((groups: { [key: string]: any[] }, message) => {
     const date = format(parseISO(message.data), 'yyyy-MM-dd');
     if (!groups[date]) groups[date] = [];
     groups[date].push(message);
@@ -77,25 +77,25 @@ export default function AlertasTarefasPage() {
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="tarefas" className="gap-2">
             <ClipboardList className="h-4 w-4" /> Minhas Tarefas
-            {tarefas.filter(t => t.status === 'pendente').length > 0 && (
+            {filteredTarefas.filter(t => t.status === 'pendente').length > 0 && (
               <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
-                {tarefas.filter(t => t.status === 'pendente').length}
+                {filteredTarefas.filter(t => t.status === 'pendente').length}
               </Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="alertas" className="gap-2">
             <Bell className="h-4 w-4" /> Alertas Operacionais
-            {alertas.filter(a => a.status === 'nao_lido').length > 0 && (
+            {filteredAlertas.filter(a => a.status === 'nao_lido').length > 0 && (
               <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
-                {alertas.filter(a => a.status === 'nao_lido').length}
+                {filteredAlertas.filter(a => a.status === 'nao_lido').length}
               </Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="historico" className="gap-2">
             <History className="h-4 w-4" /> Histórico de Mensagens
-            {historicoMensagens.filter(m => !m.lida).length > 0 && (
+            {filteredMensagens.filter(m => !m.lida).length > 0 && (
               <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
-                {historicoMensagens.filter(m => !m.lida).length}
+                {filteredMensagens.filter(m => !m.lida).length}
               </Badge>
             )}
           </TabsTrigger>
@@ -103,7 +103,7 @@ export default function AlertasTarefasPage() {
 
         <TabsContent value="tarefas" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tarefas.map((tarefa) => (
+            {filteredTarefas.map((tarefa) => (
               <Card key={tarefa.id} className={`border-l-4 ${tarefa.status === 'concluida' ? 'border-l-green-500 opacity-60' : 'border-l-amber-500 shadow-sm'}`}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">

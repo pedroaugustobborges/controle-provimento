@@ -28,7 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import logoAgir from '@/assets/logo-agir.png';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
-import { getCategoriaStatus, normStatus, calcDiasAberto } from '@/lib/vagaUtils';
+import { getCategoriaStatus, calcDiasAberto } from '@/lib/vagaUtils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList
 } from 'recharts';
@@ -217,11 +217,11 @@ export default function UnidadePortalPage() {
     const rows = [['Data', 'Horário', 'Candidato', 'Cargo', 'Unidade', 'Status', 'Observação'], ...todayConvocacoes.map(c => [
       c.data_convocacao ? format(new Date(c.data_convocacao + 'T12:00:00'), 'dd/MM/yyyy') : '', c.horario || '', c.nome_candidato || '', c.cargo || '', c.unidade || '', STATUS_CONVOCACAO_LABELS[c.status as keyof typeof STATUS_CONVOCACAO_LABELS] || c.status, c.observacoes || '',
     ])];
-    const csv = rows.map(r => r.map(v => \`"\${String(v).replace(/"/g, '""')}"\`).join(',')).join('\n');
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url; link.download = \`convocacoes_\${unidadeLabel.replace(/\s+/g, '_')}_\${dateStr}.csv\`; link.click();
+    link.href = url; link.download = `convocacoes_${unidadeLabel.replace(/\s+/g, '_')}_${dateStr}.csv`; link.click();
     URL.revokeObjectURL(url);
     toast.success('Exportação gerada.');
   };
@@ -284,10 +284,11 @@ export default function UnidadePortalPage() {
               ))}
             </TabsList>
           </div>
-          <TabsContent value="dashboard" className="space-y-6 focus-visible:outline-none">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+          <TabsContent value="dashboard" className="space-y-6 focus-visible:outline-none animate-in fade-in duration-500">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total', value: dashStats.totalVagas, icon: Briefcase, color: 'text-slate-900', bg: 'bg-slate-100' },
+                { label: 'Total Vagas', value: dashStats.totalVagas, icon: Briefcase, color: 'text-slate-900', bg: 'bg-slate-100' },
                 { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
                 { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                 { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
@@ -303,6 +304,154 @@ export default function UnidadePortalPage() {
                 </Card>
               ))}
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="rounded-2xl border-slate-200/60 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/50 py-4 px-6 border-b border-slate-100">
+                  <CardTitle className="text-sm font-bold text-slate-700">Distribuição de Status</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={statusChartData} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                        <XAxis type="number" hide />
+                        <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 10, fontWeight: 600}} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                        <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20}>
+                          <LabelList dataKey="value" position="right" style={{fontSize: 11, fontWeight: 800}} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border-slate-200/60 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/50 py-4 px-6 border-b border-slate-100">
+                  <CardTitle className="text-sm font-bold text-slate-700">Convocações por Unidade</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={convByUnitData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="name" tick={{fontSize: 8}} angle={-45} textAnchor="end" height={60} axisLine={false} tickLine={false} />
+                        <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                        <Bar dataKey="aceitos" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="pendentes" stackId="a" fill="#6366f1" />
+                        <Bar dataKey="recusas" stackId="a" fill="#f43f5e" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="status" className="animate-in fade-in duration-500">
+            <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50/50">
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Cargo</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Status</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Data</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">SLA</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vagasParaConsulta.map(v => (
+                      <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="py-4 px-6 font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
+                        <TableCell className="py-4 px-6">
+                          <Badge variant="outline" className="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-700 border-blue-100">
+                            {v.status || 'Sem Status'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-4 px-6 text-slate-500 text-xs font-bold">
+                          {v.data_abertura ? format(new Date(v.data_abertura + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
+                        </TableCell>
+                        <TableCell className="py-4 px-6">
+                          <span className={cn("inline-flex h-8 w-12 items-center justify-center rounded-lg font-black text-xs", calcDiasAberto(v.data_recebimento || v.data_abertura) > 10 ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600")}>
+                            {calcDiasAberto(v.data_recebimento || v.data_abertura)}d
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="convocacoes" className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex justify-end gap-3">
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="rounded-xl font-bold gap-2">
+                    <CalendarIcon className="h-4 w-4" />
+                    {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 rounded-2xl overflow-hidden border-none shadow-2xl">
+                  <CalendarComponent mode="single" selected={selectedDate} onSelect={(d) => { if(d){setSelectedDate(d); setCalendarOpen(false);} }} locale={ptBR} />
+                </PopoverContent>
+              </Popover>
+              <Button variant="outline" onClick={handleExport} className="rounded-xl font-bold gap-2"><Download className="h-4 w-4" />Exportar</Button>
+            </div>
+            <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50/50">
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Hora</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Candidato</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Status</TableHead>
+                      <TableHead className="py-5 px-6 w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {todayConvocacoes.map(c => (
+                      <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="py-4 px-6 font-black text-slate-900 text-sm">{c.horario}</TableCell>
+                        <TableCell className="py-4 px-6 font-bold text-slate-800 text-sm">{c.nome_candidato}</TableCell>
+                        <TableCell className="py-4 px-6">
+                          <Badge className={cn("text-[10px] font-black rounded-full", STATUS_COLOR[c.status] || 'bg-slate-100 text-slate-600')}>
+                            {STATUS_CONVOCACAO_LABELS[c.status as keyof typeof STATUS_CONVOCACAO_LABELS] || c.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-4 px-6">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenObs(c.id, c.observacoes || '')}><MessageSquare className="h-4 w-4 text-slate-400" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="observacoes" className="space-y-6 animate-in fade-in duration-500">
+            <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-amber-50/30 border-b border-amber-100"><CardTitle className="text-sm font-bold text-amber-800">Pendentes</CardTitle></CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableBody>
+                    {convocacoesSemObs.map(c => (
+                      <TableRow key={c.id}>
+                        <TableCell className="py-4 px-6 font-bold text-sm text-slate-900">{c.nome_candidato}</TableCell>
+                        <TableCell className="py-4 px-6 text-right">
+                          <Button variant="ghost" size="sm" onClick={() => handleOpenObs(c.id, '')} className="text-amber-600 font-bold gap-2"><Edit3 className="h-4 w-4" />Inserir</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

@@ -416,74 +416,114 @@ export default function UnidadePortalPage() {
             </div>
 
             {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150">
               {/* Status distribution */}
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-700">Distribuição de Status das Vagas</CardTitle>
+              <Card className="border-slate-200/60 shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
+                  <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-blue-500" />
+                    Distribuição de Status das Vagas
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   {statusChartData.length === 0 ? (
-                    <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Sem dados</div>
+                    <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
+                      <BarChart3 className="h-10 w-10 opacity-20" />
+                      <p className="text-sm font-medium">Sem dados para exibir</p>
+                    </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={statusChartData} layout="vertical" margin={{ left: 10, right: 30 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis type="number" tick={{ fontSize: 11 }} />
-                        <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
-                        <Tooltip />
-                        <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]}>
-                          <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 700 }} />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <div className="h-[280px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={statusChartData} layout="vertical" margin={{ left: 10, right: 30 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                          <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                          <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fontWeight: 600, fill: '#475569' }} axisLine={false} tickLine={false} />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                            cursor={{ fill: '#f8fafc' }}
+                          />
+                          <Bar dataKey="value" fill="#3b82f6" radius={[0, 6, 6, 0]} barSize={20}>
+                            <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 800, fill: '#1e293b' }} />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Convocações por unidade */}
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold text-slate-700">Convocações por Unidade (Top 10)</CardTitle>
+              <Card className="border-slate-200/60 shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2 bg-slate-50/50 border-b border-slate-100">
+                  <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-indigo-500" />
+                    Convocações por Unidade (Top 10)
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   {convByUnitData.length === 0 ? (
-                    <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Sem dados</div>
+                    <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
+                      <Users className="h-10 w-10 opacity-20" />
+                      <p className="text-sm font-medium">Sem dados para exibir</p>
+                    </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={convByUnitData} margin={{ left: 10, right: 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="name" tick={{ fontSize: 9 }} angle={-30} textAnchor="end" height={60} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip />
-                        <Bar dataKey="aceitos" stackId="a" fill="#10b981" name="Aceitos" />
-                        <Bar dataKey="pendentes" stackId="a" fill="#f59e0b" name="Pendentes" />
-                        <Bar dataKey="recusas" stackId="a" fill="#ef4444" name="Recusas" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <div className="h-[280px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={convByUnitData} margin={{ left: 10, right: 10, bottom: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 9, fontWeight: 600, fill: '#64748b' }} 
+                            angle={-30} 
+                            textAnchor="end" 
+                            height={60} 
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                          />
+                          <Bar dataKey="aceitos" stackId="a" fill="#10b981" name="Aceitos" radius={[0, 0, 0, 0]} />
+                          <Bar dataKey="pendentes" stackId="a" fill="#6366f1" name="Pendentes" />
+                          <Bar dataKey="recusas" stackId="a" fill="#f43f5e" name="Recusas" radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   )}
                 </CardContent>
               </Card>
             </div>
 
             {/* Today summary */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-slate-700">
-                  Resumo do Dia — {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+            <Card className="border-slate-200/60 shadow-md bg-white rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+              <CardHeader className="pb-4 bg-slate-50/50 border-b border-slate-100">
+                <CardTitle className="text-sm font-bold text-slate-700 flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-slate-500" />
+                    Resumo do Dia
+                  </span>
+                  <span className="text-xs font-semibold text-slate-400 px-3 py-1 bg-white border border-slate-100 rounded-full shadow-sm">
+                    {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                  </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <CardContent className="py-8">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-12">
                   {[
-                    { label: 'Total', value: convStats.total, color: 'text-slate-700' },
-                    { label: 'Aceitos', value: convStats.aceitos, color: 'text-emerald-600' },
-                    { label: 'Pendentes', value: convStats.pendentes, color: 'text-yellow-600' },
-                    { label: 'Recusas', value: convStats.recusas, color: 'text-red-600' },
-                  ].map(({ label, value, color }) => (
-                    <div key={label} className="text-center p-3 rounded-lg bg-slate-50">
-                      <p className={cn('text-3xl font-black', color)}>{value}</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">{label}</p>
+                    { label: 'Total', value: convStats.total, color: 'text-slate-900', bg: 'bg-slate-100', icon: Users },
+                    { label: 'Aceitos', value: convStats.aceitos, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle2 },
+                    { label: 'Pendentes', value: convStats.pendentes, color: 'text-indigo-600', bg: 'bg-indigo-50', icon: Clock },
+                    { label: 'Recusas', value: convStats.recusas, color: 'text-rose-600', bg: 'bg-rose-50', icon: AlertCircle },
+                  ].map(({ label, value, color, bg, icon: Icon }) => (
+                    <div key={label} className="flex flex-col items-center gap-3 group">
+                      <div className={cn('p-4 rounded-2xl transition-all duration-300 group-hover:scale-110 shadow-sm', bg)}>
+                        <Icon className={cn('h-6 w-6', color)} />
+                      </div>
+                      <div className="text-center">
+                        <p className={cn('text-3xl sm:text-4xl font-black tracking-tighter leading-none', color)}>{value}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
+                      </div>
                     </div>
                   ))}
                 </div>

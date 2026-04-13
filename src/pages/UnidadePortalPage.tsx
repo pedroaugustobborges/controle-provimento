@@ -39,16 +39,16 @@ const TODAS_UNIDADES: string[] = (Object.values(BASES_CONVOCACAO) as string[][])
   .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
 const STATUS_COLOR: Record<string, string> = {
-  aceite: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  recusa_plantao: 'bg-red-100 text-red-700 border-red-200',
-  recusa_unidade: 'bg-red-100 text-red-700 border-red-200',
-  recusa_horario: 'bg-orange-100 text-orange-700 border-orange-200',
-  desistiu: 'bg-slate-100 text-slate-600 border-slate-200',
-  faltou: 'bg-rose-100 text-rose-700 border-rose-200',
-  pendente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  aceite: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+  recusa_plantao: 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
+  recusa_unidade: 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
+  recusa_horario: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+  desistiu: 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20',
+  faltou: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
+  pendente: 'bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20',
 };
 
-const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'];
+const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'];
 
 export default function UnidadePortalPage() {
   const navigate = useNavigate();

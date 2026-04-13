@@ -1,26 +1,22 @@
 
 
-## Plano: Personalizar alertas e mensagens por perfil de usuário
+## Plano: Ajustar visibilidade por perfil em Alertas e Tarefas
 
 ### Arquivos a modificar
 
-**`src/store/vagasStore.ts`** (linhas ~197-240):
-- Adicionar campo `perfil_destinatario` a cada alerta, tarefa e mensagem do histórico, associando-os aos perfis corretos:
-  - Convocações pendentes → `'Analista das Convocações'`
-  - Validação de edital → `'Analista Administrativo'`
-  - Publicação de edital → `'Analista de Edital'`
-  - Vagas/requisições → `'Analista de RH'`
-- Criar alertas mock diversificados por perfil
+**`src/hooks/useRBAC.ts`**:
+- Separar `isManagement` para não incluir "Supervisão" — criar flag `isSupervisao` à parte
 
 **`src/pages/AlertasTarefasPage.tsx`**:
-- Importar `useRBAC` para obter o perfil do usuário logado
-- Filtrar `alertas`, `tarefas` e `historicoMensagens` com base no perfil:
-  - Perfis de gestão/admin veem tudo
-  - Demais perfis veem apenas alertas com `perfil_destinatario` correspondente
-- Atualizar contadores de badges nas abas para refletir apenas itens filtrados
+- Remover Gestão e Supervisão do `showAll` (apenas Admin vê tudo)
+- Gestão: filtrar tarefas e alertas para vazio, mensagens pelo perfil
+- Supervisão: filtrar tarefas para vazio, alertas apenas com destinatário `'supervisão'`, mensagens pelo perfil
+- Demais perfis: filtrar tarefas, alertas e mensagens pelo `perfil_destinatario` correspondente
 
-**`src/types/vaga.ts`** (se necessário):
-- Adicionar campo `perfil_destinatario` às interfaces de Alerta, Tarefa e HistoricoMensagem
+**`src/store/vagasStore.ts`**:
+- Adicionar alertas/tarefas mock com `destinatario: 'supervisão'` para aprovação de edital
+- Garantir que cada alerta/tarefa/mensagem tem `perfil_destinatario` ou `destinatario` correto
+- Bump version para `5` com migration para limpar cache
 
 Nenhuma alteração de banco de dados necessária.
 

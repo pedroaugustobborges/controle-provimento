@@ -421,6 +421,20 @@ export default function FilaAnalistaEditalPage() {
                   />
                 </div>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="reachr" className="text-sm font-semibold flex items-center gap-2">
+                  <Rocket className="h-4 w-4 text-blue-600" /> Link da Vaga no Reachr
+                </Label>
+                <Input 
+                  id="reachr" 
+                  placeholder="https://www.reachr.com.br/vaga/..." 
+                  value={reachrUrl}
+                  onChange={(e) => setReachrUrl(e.target.value)}
+                  className="bg-white border-slate-200"
+                />
+                <p className="text-[10px] text-slate-400 font-medium italic">Opcional: Informe o link da vaga já publicada no portal Reachr.</p>
+              </div>
 
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Edital (Arquivo Word)</Label>

@@ -79,6 +79,40 @@ export default function FilaEditaisPage() {
     });
   }, [vagas, currentUser, search, filterUnidade]);
 
+  const groupedVagas = useMemo(() => {
+    const goianiaVagas = pendingVagas.filter(v => UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
+    const otherVagas = pendingVagas.filter(v => !UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
+
+    const grouped: Record<string, {
+      cargo: string;
+      vagas: Vaga[];
+      totalVagas: number;
+      unidades: string[];
+    }> = {};
+
+    goianiaVagas.forEach(v => {
+      const cargo = v.cargo.toUpperCase().trim();
+      if (!grouped[cargo]) {
+        grouped[cargo] = {
+          cargo: v.cargo,
+          vagas: [],
+          totalVagas: 0,
+          unidades: []
+        };
+      }
+      grouped[cargo].vagas.push(v);
+      grouped[cargo].totalVagas += (v.numero_vagas || v.quantidade || 1);
+      if (!grouped[cargo].unidades.includes(v.unidade)) {
+        grouped[cargo].unidades.push(v.unidade);
+      }
+    });
+
+    return {
+      groupedGoiania: Object.values(grouped),
+      otherVagas
+    };
+  }, [pendingVagas]);
+
   const unidadesAgrupadas = useMemo(() => {
     const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean);
     

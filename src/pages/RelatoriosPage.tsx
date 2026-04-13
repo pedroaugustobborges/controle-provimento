@@ -62,7 +62,7 @@ export default function RelatoriosPage() {
           profiles:user_id (nome_completo, email, perfil)
         `)
         .order('login_at', { ascending: false })
-        .limit(500);
+        .limit(1000);
       
       if (error) throw error;
       return data as any[];
@@ -76,7 +76,7 @@ export default function RelatoriosPage() {
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(1000);
       
       if (error) throw error;
       return data as any[];

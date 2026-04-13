@@ -114,7 +114,7 @@ export function AppSidebar() {
       visible: getPermissions('convocacoes').canRead,
       subMenu: [
         { title: 'Agenda Goiânia', url: '/convocacoes?tab=diaria&regiao=goiania' },
-        { title: 'Agenda Demais Unidades', url: '/convocacoes?tab=diaria&regiao=outras' },
+        { title: 'Demais Unidades', url: '/convocacoes?tab=diaria&regiao=outras' },
         { title: 'Histórico', url: '/convocacoes?tab=list' },
         { title: 'Pendentes', url: '/convocacoes?tab=pending' },
       ]
@@ -418,22 +418,13 @@ export function AppSidebar() {
               <span className="text-sm font-bold tracking-tight">Suporte Técnico</span>
             </button>
             <div className="p-4 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center border border-white/10 overflow-hidden">
-                  {currentUser?.avatar_url ? (
-                    <img src={currentUser.avatar_url} alt="Profile" className="h-full w-full object-cover" />
-                  ) : (
-                    <Users className="h-4 w-4 text-white" />
-                  )}
-                </div>
-                <div className="flex flex-col overflow-hidden">
-                  <span className="text-sm font-bold text-white truncate leading-tight">
-                    {currentUser?.nome_completo || 'Usuário'}
-                  </span>
-                  <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight">
-                    {currentUser?.perfil || 'Acesso Restrito'}
-                  </span>
-                </div>
+              <div className="flex flex-col overflow-hidden mb-3">
+                <span className="text-sm font-bold text-white truncate leading-tight">
+                  {currentUser?.nome_completo || 'Usuário'}
+                </span>
+                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight">
+                  {currentUser?.perfil || 'Acesso Restrito'}
+                </span>
               </div>
               <div className="flex gap-2">
                 <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">

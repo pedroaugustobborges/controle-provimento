@@ -23,27 +23,36 @@ function matchesPerfil(destinatario: string | undefined, perfilUsuario: string):
 export default function AlertasTarefasPage() {
   const { alertas, tarefas, historicoMensagens, updateAlerta, updateTarefa, marcarMensagemLida } = useVagasStore();
   const permissions = usePermissions();
-  const { isAdmin, isManagement, isFullAccessProfile } = useRBAC();
+  const { isAdmin, isSupervisao, isManagement } = useRBAC();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'tarefas';
 
-  const perfilUsuario = permissions.currentUser?.perfil || '';
-  const showAll = isAdmin || isManagement || isFullAccessProfile;
+  const perfilUsuario = (permissions.currentUser?.perfil || '').toLowerCase();
 
-  const filteredAlertas = useMemo(() =>
-    showAll ? alertas : alertas.filter(a => matchesPerfil(a.destinatario, perfilUsuario)),
-    [alertas, showAll, perfilUsuario]
-  );
+  // Filtering logic per profile:
+  // Admin: sees everything
+  // Gestão: no tasks/alerts, only messages for their profile
+  // Supervisão: no tasks, only "supervisão" alerts, only messages for their profile
+  // Others: filter by perfil_destinatario match
 
-  const filteredTarefas = useMemo(() =>
-    showAll ? tarefas : tarefas.filter(t => matchesPerfil((t as any).perfil_destinatario, perfilUsuario)),
-    [tarefas, showAll, perfilUsuario]
-  );
+  const filteredTarefas = useMemo(() => {
+    if (isAdmin) return tarefas;
+    if (isManagement || isSupervisao) return []; // Gestão and Supervisão see no tasks
+    return tarefas.filter(t => matchesPerfil((t as any).perfil_destinatario, perfilUsuario));
+  }, [tarefas, isAdmin, isManagement, isSupervisao, perfilUsuario]);
 
-  const filteredMensagens = useMemo(() =>
-    showAll ? historicoMensagens : historicoMensagens.filter(m => matchesPerfil(m.perfil_destinatario, perfilUsuario)),
-    [historicoMensagens, showAll, perfilUsuario]
-  );
+  const filteredAlertas = useMemo(() => {
+    if (isAdmin) return alertas;
+    if (isManagement) return []; // Gestão sees no alerts
+    if (isSupervisao) return alertas.filter(a => a.destinatario?.toLowerCase() === 'supervisão');
+    return alertas.filter(a => matchesPerfil(a.destinatario, perfilUsuario));
+  }, [alertas, isAdmin, isManagement, isSupervisao, perfilUsuario]);
+
+  const filteredMensagens = useMemo(() => {
+    if (isAdmin) return historicoMensagens;
+    // All non-admin profiles: only messages destined to them (or without destinatario)
+    return historicoMensagens.filter(m => matchesPerfil(m.perfil_destinatario, perfilUsuario));
+  }, [historicoMensagens, isAdmin, perfilUsuario]);
 
 
   const handleResolveAlerta = (id: string) => {

@@ -129,7 +129,7 @@ export default function AlertasTarefasPage() {
                 </CardContent>
               </Card>
             ))}
-            {tarefas.length === 0 && (
+            {filteredTarefas.length === 0 && (
               <div className="col-span-full py-12 text-center text-slate-400 italic">
                 Nenhuma tarefa pendente encontrada.
               </div>
@@ -139,7 +139,7 @@ export default function AlertasTarefasPage() {
 
         <TabsContent value="alertas" className="space-y-4">
           <div className="space-y-3">
-            {alertas.map((alerta) => (
+            {filteredAlertas.map((alerta) => (
               <Card key={alerta.id} className={`border-none shadow-sm ${alerta.status === 'nao_lido' ? 'bg-amber-50/50' : 'bg-white'}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">

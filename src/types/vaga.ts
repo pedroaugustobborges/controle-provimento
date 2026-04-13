@@ -172,7 +172,7 @@ export interface Vaga {
   salario_validado?: boolean;
   observacoes_unidade?: string;
   observacoes_edital?: string;
-  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao' | 'aprovado_administrativo' | 'publicado';
+  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao' | 'aguardando_aprovacao_gestor' | 'aprovado_administrativo' | 'publicado';
 
   historico: HistoricoItem[];
   origem: 'manual' | 'importada';
@@ -215,7 +215,28 @@ export interface Vaga {
   admissao_efetivada_acompanhamento?: string;
   detalhes_acompanhamento?: string;
   categoria_status?: string;
+  
+  // Novos campos para fluxo de edital (Melhorias Reachr e Gestor)
+  url_reachr?: string;
+  gestor_aprovador_id?: string;
+  status_aprovacao_gestor?: 'pendente' | 'aprovado' | 'devolvido';
+  observacoes_gestor?: string;
+  distribuicao_vagas?: Record<string, number>;
+  unidade_trabalho?: string;
+  unidades_banco_talentos?: string[];
 }
+
+export const UNIDADES_GOIANIA = [
+  'HECAD',
+  'CRER',
+  'AGIR',
+  'HUGOL',
+  'HDS',
+  'TEIA ANÁPOLIS',
+  'TEIA CANEDO',
+  'TEIA APARECIDA',
+  'TEIA GOIÂNIA'
+];
 
 export interface BancoTalentos {
   id: string;

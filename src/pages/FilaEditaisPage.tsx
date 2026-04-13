@@ -17,6 +17,7 @@ import {
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus } from '@/lib/vagaUtils';
+import { UNIDADES_GOIANIA } from '@/types/vaga';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger, DropdownMenuSeparator 
@@ -77,6 +78,40 @@ export default function FilaEditaisPage() {
       return matchSearch && matchUnidade;
     });
   }, [vagas, currentUser, search, filterUnidade]);
+
+  const groupedVagas = useMemo(() => {
+    const goianiaVagas = pendingVagas.filter(v => UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
+    const otherVagas = pendingVagas.filter(v => !UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
+
+    const grouped: Record<string, {
+      cargo: string;
+      vagas: Vaga[];
+      totalVagas: number;
+      unidades: string[];
+    }> = {};
+
+    goianiaVagas.forEach(v => {
+      const cargo = v.cargo.toUpperCase().trim();
+      if (!grouped[cargo]) {
+        grouped[cargo] = {
+          cargo: v.cargo,
+          vagas: [],
+          totalVagas: 0,
+          unidades: []
+        };
+      }
+      grouped[cargo].vagas.push(v);
+      grouped[cargo].totalVagas += (v.numero_vagas || v.quantidade || 1);
+      if (!grouped[cargo].unidades.includes(v.unidade)) {
+        grouped[cargo].unidades.push(v.unidade);
+      }
+    });
+
+    return {
+      groupedGoiania: Object.values(grouped),
+      otherVagas
+    };
+  }, [pendingVagas]);
 
   const unidadesAgrupadas = useMemo(() => {
     const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean);
@@ -233,7 +268,60 @@ export default function FilaEditaisPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingVagas.map((v) => (
+                {/* Vagas Agrupadas de Goiânia */}
+                {groupedVagas.groupedGoiania.map((group) => (
+                  <React.Fragment key={group.cargo}>
+                    <TableRow className="bg-blue-50/50 hover:bg-blue-50/70 border-l-4 border-l-blue-500">
+                      <TableCell colSpan={2} className="font-bold text-blue-800">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4" /> 
+                          Agrupado Goiânia ({group.unidades.length} unidades)
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-bold text-blue-900">{group.cargo}</TableCell>
+                      <TableCell colSpan={1}></TableCell>
+                      <TableCell className="text-center">
+                        <Badge className="bg-blue-600 text-white font-bold">{group.totalVagas}</Badge>
+                      </TableCell>
+                      <TableCell colSpan={2}></TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">CONSOLIDADO</Badge>
+                      </TableCell>
+                      <TableCell colSpan={1}></TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" className="text-blue-600 font-bold hover:bg-blue-100" onClick={() => handleOpenSendModal(group.vagas[0])}>
+                          <Send className="h-4 w-4 mr-1" /> Preparar Consolidado
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {group.vagas.map(v => (
+                      <TableRow key={v.id} className="group bg-white opacity-80 hover:opacity-100">
+                        <TableCell className="pl-10 font-mono text-[10px] text-slate-400">
+                          {v.requisicao || v.numero_requisicao}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 ml-6">
+                            <Building2 className="h-3 w-3 text-slate-300" />
+                            <span className="text-xs text-slate-500">{v.unidade}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-slate-600 italic pl-10">{v.cargo}</TableCell>
+                        <TableCell className="text-[10px] text-slate-400">{v.tipo_vaga}</TableCell>
+                        <TableCell className="text-center text-xs">{v.numero_vagas || v.quantidade}</TableCell>
+                        <TableCell className="text-[10px] text-slate-400">{formatDate(v.data_recebimento!)}</TableCell>
+                        <TableCell className="text-center text-[10px]">{calcDiasAberto(v.data_recebimento || v.data_abertura)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[9px] uppercase bg-slate-50 text-slate-400 border-slate-200">Individual</Badge>
+                        </TableCell>
+                        <TableCell className="text-[10px] text-slate-400">{v.analista_responsavel}</TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                    ))}
+                  </React.Fragment>
+                ))}
+
+                {/* Demais Vagas */}
+                {groupedVagas.otherVagas.map((v) => (
                   <TableRow key={v.id} className="group">
                     <TableCell className="font-mono text-xs text-primary font-bold">
                       {v.requisicao || v.numero_requisicao}

@@ -11,12 +11,13 @@ import {
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
-  FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw
+  FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw,
+  Minus, Plus
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
-import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
+import { STATUS_EDITAL_COLORS, StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
@@ -26,6 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
@@ -41,6 +43,7 @@ export default function FilaAnalistaEditalPage() {
   const [nomeArquivo, setNomeArquivo] = useState('');
   const [numeroEdital, setNumeroEdital] = useState('');
   const [numeroProcesso, setNumeroProcesso] = useState('');
+  const [reachrUrl, setReachrUrl] = useState('');
 
   // Modal de Publicação / Cronograma
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -57,6 +60,10 @@ export default function FilaAnalistaEditalPage() {
     data_entrevistas: '',
     data_resultado_final_seletivo: ''
   });
+  const [unidadeTrabalho, setUnidadeTrabalho] = useState('');
+  const [distribuicaoVagas, setDistribuicaoVagas] = useState<Record<string, number>>({});
+  const [unidadesBanco, setUnidadesBanco] = useState<string[]>([]);
+  const [isTalentBank, setIsTalentBank] = useState(false);
 
   const editalVagas = useMemo(() => {
     return vagas.filter(v => {
@@ -102,6 +109,7 @@ export default function FilaAnalistaEditalPage() {
     setNumeroEdital(vaga.numero_edital || '');
     setNumeroProcesso(vaga.numero_processo || '');
     setNomeArquivo(vaga.arquivo_edital || '');
+    setReachrUrl((vaga as any).url_reachr || '');
     setIsEditModalOpen(true);
   };
 
@@ -114,6 +122,7 @@ export default function FilaAnalistaEditalPage() {
       numero_edital: numeroEdital,
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
+      url_reachr: reachrUrl,
     });
 
     toast.success('Rascunho do edital salvo com sucesso!');
@@ -139,6 +148,7 @@ export default function FilaAnalistaEditalPage() {
       numero_edital: numeroEdital,
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
+      url_reachr: reachrUrl,
       historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
@@ -166,6 +176,10 @@ export default function FilaAnalistaEditalPage() {
       data_entrevistas: vaga.cronograma?.data_entrevistas || '',
       data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
     });
+    setUnidadeTrabalho(vaga.unidade_trabalho || vaga.unidade || '');
+    setDistribuicaoVagas(vaga.distribuicao_vagas || {});
+    setUnidadesBanco(vaga.unidades_banco_talentos || []);
+    setIsTalentBank(vaga.acompanhamento?.gerou_banco || false);
     setIsPublishModalOpen(true);
   };
 
@@ -174,15 +188,22 @@ export default function FilaAnalistaEditalPage() {
 
     updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'publicado',
-      status: 'EM ANDAMENTO', // Muda o status principal da vaga para "Em Andamento" após publicar
+      status: 'EM ANDAMENTO', 
+      unidade_trabalho: unidadeTrabalho,
+      distribuicao_vagas: distribuicaoVagas,
+      unidades_banco_talentos: unidadesBanco,
       cronograma: {
         ...selectedVaga.cronograma,
         ...cronograma
       },
+      acompanhamento: {
+        ...selectedVaga.acompanhamento,
+        gerou_banco: isTalentBank,
+      },
       historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Edital PUBLICADO. Cronograma preenchido.`,
+        descricao: `Edital PUBLICADO. Unidade de trabalho definida: ${unidadeTrabalho}. ${isTalentBank ? 'Banco de talentos habilitado.' : ''}`,
         usuario: currentUser?.nome_completo || 'Analista do Edital'
       }]
     });
@@ -417,6 +438,20 @@ export default function FilaAnalistaEditalPage() {
                   />
                 </div>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="reachr" className="text-sm font-semibold flex items-center gap-2">
+                  <Rocket className="h-4 w-4 text-blue-600" /> Link da Vaga no Reachr
+                </Label>
+                <Input 
+                  id="reachr" 
+                  placeholder="https://www.reachr.com.br/vaga/..." 
+                  value={reachrUrl}
+                  onChange={(e) => setReachrUrl(e.target.value)}
+                  className="bg-white border-slate-200"
+                />
+                <p className="text-[10px] text-slate-400 font-medium italic">Opcional: Informe o link da vaga já publicada no portal Reachr.</p>
+              </div>
 
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Edital (Arquivo Word)</Label>
@@ -491,7 +526,110 @@ export default function FilaAnalistaEditalPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              {/* Distribuição e Unidade de Trabalho (Item 4) */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Distribuição e Ordem de Trabalho</h4>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase">Unidade da vez (Trabalha a vaga agora)</Label>
+                    <Select value={unidadeTrabalho} onValueChange={setUnidadeTrabalho}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Selecione a unidade..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={selectedVaga.unidade}>{selectedVaga.unidade} (Original)</SelectItem>
+                        {UNIDADES_GOIANIA.filter(u => u !== selectedVaga.unidade).map(u => (
+                          <SelectItem key={u} value={u}>{u}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col justify-end pb-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="isTalentBank" 
+                        checked={isTalentBank} 
+                        onCheckedChange={(checked) => setIsTalentBank(checked as boolean)} 
+                      />
+                      <Label htmlFor="isTalentBank" className="text-sm font-bold cursor-pointer">Haverá Banco de Talentos</Label>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedVaga.numero_vagas && selectedVaga.numero_vagas > 1 && (
+                  <div className="space-y-3 pt-2 border-t border-slate-100">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase">Distribuir Vagas por Unidade ({selectedVaga.numero_vagas} total)</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      {UNIDADES_GOIANIA.filter(u => u === selectedVaga.unidade || true).map(u => {
+                        const count = distribuicaoVagas[u] || 0;
+                        if (count === 0 && !UNIDADES_GOIANIA.includes(u)) return null;
+                        return (
+                          <div key={u} className="flex items-center justify-between bg-white p-2 rounded border border-slate-100">
+                            <span className="text-[10px] font-medium text-slate-600 truncate mr-1">{u}</span>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-5 w-5" 
+                                onClick={() => setDistribuicaoVagas({...distribuicaoVagas, [u]: Math.max(0, count - 1)})}
+                              >
+                                <Minus className="h-2 w-2" />
+                              </Button>
+                              <span className="text-xs font-bold w-4 text-center">{count}</span>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-5 w-5" 
+                                onClick={() => {
+                                  const totalDist = Object.values(distribuicaoVagas).reduce((a, b) => a + b, 0);
+                                  if (totalDist < (selectedVaga.numero_vagas || 0)) {
+                                    setDistribuicaoVagas({...distribuicaoVagas, [u]: count + 1});
+                                  } else {
+                                    toast.error('Limite de vagas atingido.');
+                                  }
+                                }}
+                              >
+                                <Plus className="h-2 w-2" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {isTalentBank && (
+                  <div className="space-y-2 pt-2 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase">Unidades que podem convocar do banco</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {UNIDADES_GOIANIA.map(u => (
+                        <Badge 
+                          key={u} 
+                          variant={unidadesBanco.includes(u) ? "default" : "outline"}
+                          className={`cursor-pointer text-[10px] ${unidadesBanco.includes(u) ? 'bg-primary' : 'bg-white'}`}
+                          onClick={() => {
+                            if (unidadesBanco.includes(u)) {
+                              setUnidadesBanco(unidadesBanco.filter(item => item !== u));
+                            } else {
+                              setUnidadesBanco([...unidadesBanco, u]);
+                            }
+                          }}
+                        >
+                          {u}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-slate-100">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold text-slate-500 uppercase">Data de Publicação</Label>
                   <Input 

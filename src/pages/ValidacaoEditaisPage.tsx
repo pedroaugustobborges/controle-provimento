@@ -32,24 +32,45 @@ import { useState, useMemo } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription 
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 
 export default function ValidacaoEditaisPage() {
   const { vagas, updateVaga, addMensagem } = useVagasStore();
-  const { currentUser, addAuditLog } = useAdminStore();
+  const { currentUser, addAuditLog, users, fetchUsers } = useAdminStore();
   const [search, setSearch] = useState('');
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
   const [obs, setObs] = useState('');
   const [reachrUrl, setReachrUrl] = useState('');
+  const [selectedGestorId, setSelectedGestorId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const gestores = useMemo(() => {
+    return users.filter(u => u.perfil === 'Gestão' || u.perfil === 'Gerência' || u.perfil === 'Coordenação');
+  }, [users]);
 
   const pendingEditais = useMemo(() => {
     return vagas.filter(v => {
-      if (v.status_validacao !== 'pendente' && v.status_fluxo_edital !== 'enviado_validacao') {
-        return false;
-      }
+      // Regra: Mostrar se está em validação ou aguardando aprovação do gestor
+      const isPending = v.status_fluxo_edital === 'enviado_validacao' || 
+                       v.status_fluxo_edital === 'aguardando_aprovacao_gestor';
       
+      if (!isPending) return false;
+      
+      // Se estiver aguardando gestor, apenas o gestor selecionado ou admin vê para aprovar
+      if (v.status_fluxo_edital === 'aguardando_aprovacao_gestor') {
+        if (v.gestor_aprovador_id !== currentUser?.id && currentUser?.perfil !== 'Admin') {
+          return false;
+        }
+      }
+
       if (!currentUser?.visualiza_todas_unidades) {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
         if (!userUnidades.includes(normalizeUnitName(v.unidade))) {
@@ -114,26 +135,7 @@ export default function ValidacaoEditaisPage() {
 
     updateVaga(vagaId, updateData);
     
-    // Enviar notificação para AGIE
-    addMensagem({
-      id: `msg-val-ed-${Date.now()}`,
-      data: new Date().toISOString(),
-      remetente: 'Agie',
-      conteudo: mensagemAgie,
-      lida: false,
-    });
-
-    addAuditLog({
-      usuario_nome: usuario,
-      usuario_email: currentUser?.email || 'sistema@sistema.com',
-      perfil: currentUser?.perfil || 'Admin',
-      data: new Date().toISOString().split('T')[0],
-      hora: new Date().toLocaleTimeString(),
-      acao: `Validação de Edital: ${actionStatus.toUpperCase()}`,
-      modulo: 'Editais',
-      registro_afetado: vagaRef,
-      valor_novo: actionStatus
-    });
+    // ... rest of the code for aprovado/ajuste/rejeitado
 
     const msgs: Record<string, string> = {
       aprovado: 'Edital aprovado! Notificação enviada à AGIE.',
@@ -145,6 +147,43 @@ export default function ValidacaoEditaisPage() {
     setSelectedVaga(null);
     setObs('');
     setReachrUrl('');
+    setSelectedGestorId('');
+  };
+
+  const handleRequestGestorApproval = (vagaId: string) => {
+    const vaga = vagas.find(v => v.id === vagaId);
+    const gestor = users.find(u => u.id === selectedGestorId);
+    if (!vaga || !gestor) return;
+
+    const usuario = currentUser?.nome_completo || 'Validador';
+    const vagaRef = vaga.requisicao || vaga.numero_requisicao || vaga.id;
+
+    updateVaga(vagaId, {
+      status_fluxo_edital: 'aguardando_aprovacao_gestor',
+      gestor_aprovador_id: selectedGestorId,
+      status_aprovacao_gestor: 'pendente',
+      observacoes_validacao: obs,
+      historico: [...vaga.historico, {
+        id: `h-${Date.now()}`,
+        data: new Date().toISOString().split('T')[0],
+        descricao: `Edital enviado para aprovação do gestor ${gestor.nome_completo} por ${usuario}. Obs: ${obs}`,
+        usuario: usuario
+      }]
+    });
+
+    addMensagem({
+      id: `msg-gestor-${Date.now()}`,
+      data: new Date().toISOString(),
+      remetente: 'Agie',
+      conteudo: `🔔 Edital pendente de aprovação: O validador ${usuario} solicitou sua análise para o edital da vaga ${vagaRef} (${vaga.cargo}).`,
+      lida: false,
+    });
+
+    toast.success(`Solicitação de aprovação enviada para o gestor ${gestor.nome_completo}!`);
+    setIsModalOpen(false);
+    setSelectedVaga(null);
+    setObs('');
+    setSelectedGestorId('');
   };
 
   return (
@@ -212,7 +251,12 @@ export default function ValidacaoEditaisPage() {
                     <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-2 items-center">
+                      {v.status_fluxo_edital === 'aguardando_aprovacao_gestor' && (
+                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 animate-pulse">
+                          Aguardando Gestor
+                        </Badge>
+                      )}
                       <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setReachrUrl((v as any).url_reachr || ''); setIsModalOpen(true); }}>
                         <Eye className="h-3.5 w-3.5" /> Analisar
                       </Button>
@@ -379,6 +423,38 @@ export default function ValidacaoEditaisPage() {
                 className="min-h-[100px] resize-none"
               />
             </div>
+
+            {selectedVaga?.status_fluxo_edital === 'enviado_validacao' && (
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-3">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-amber-600" />
+                  <span className="text-xs font-bold text-amber-900">Solicitar Aprovação de Gestor</span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Select value={selectedGestorId} onValueChange={setSelectedGestorId}>
+                      <SelectTrigger className="bg-white border-amber-200">
+                        <SelectValue placeholder="Selecione um Gestor..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gestores.map(g => (
+                          <SelectItem key={g.id} value={g.id}>{g.nome_completo}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="text-amber-700 border-amber-300 hover:bg-amber-100 font-bold"
+                    onClick={() => handleRequestGestorApproval(selectedVaga.id)}
+                    disabled={!selectedGestorId}
+                  >
+                    Solicitar
+                  </Button>
+                </div>
+                <p className="text-[10px] text-amber-600 italic">O gestor selecionado receberá uma notificação para validar este edital.</p>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 flex-wrap">

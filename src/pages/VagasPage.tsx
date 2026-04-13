@@ -792,7 +792,14 @@ export default function VagasPage() {
                         {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
                       </TableCell>
                       <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
-                        {v.unidade}
+                        <div className="flex flex-col">
+                          <span>{v.unidade}</span>
+                          {v.unidade_trabalho && v.unidade_trabalho !== v.unidade && (
+                            <span className="text-[9px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
+                              TRABALHANDO: {v.unidade_trabalho}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[150px] leading-tight" title={v.secao}>
                         {v.secao || '-'}

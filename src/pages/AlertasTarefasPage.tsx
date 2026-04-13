@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useRBAC } from '@/hooks/useRBAC';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,13 +15,35 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-
+function matchesPerfil(destinatario: string | undefined, perfilUsuario: string): boolean {
+  if (!destinatario) return true; // sem perfil = visível a todos
+  return destinatario.toLowerCase() === perfilUsuario.toLowerCase();
+}
 
 export default function AlertasTarefasPage() {
   const { alertas, tarefas, historicoMensagens, updateAlerta, updateTarefa, marcarMensagemLida } = useVagasStore();
   const permissions = usePermissions();
+  const { isAdmin, isManagement, isFullAccessProfile } = useRBAC();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'tarefas';
+
+  const perfilUsuario = permissions.currentUser?.perfil || '';
+  const showAll = isAdmin || isManagement || isFullAccessProfile;
+
+  const filteredAlertas = useMemo(() =>
+    showAll ? alertas : alertas.filter(a => matchesPerfil(a.destinatario, perfilUsuario)),
+    [alertas, showAll, perfilUsuario]
+  );
+
+  const filteredTarefas = useMemo(() =>
+    showAll ? tarefas : tarefas.filter(t => matchesPerfil((t as any).perfil_destinatario, perfilUsuario)),
+    [tarefas, showAll, perfilUsuario]
+  );
+
+  const filteredMensagens = useMemo(() =>
+    showAll ? historicoMensagens : historicoMensagens.filter(m => matchesPerfil(m.perfil_destinatario, perfilUsuario)),
+    [historicoMensagens, showAll, perfilUsuario]
+  );
 
 
   const handleResolveAlerta = (id: string) => {
@@ -32,7 +56,7 @@ export default function AlertasTarefasPage() {
     toast.success('Tarefa concluída com sucesso.');
   };
 
-  const groupedMessages = historicoMensagens.reduce((groups: { [key: string]: any[] }, message) => {
+  const groupedMessages = filteredMensagens.reduce((groups: { [key: string]: any[] }, message) => {
     const date = format(parseISO(message.data), 'yyyy-MM-dd');
     if (!groups[date]) groups[date] = [];
     groups[date].push(message);
@@ -53,25 +77,25 @@ export default function AlertasTarefasPage() {
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="tarefas" className="gap-2">
             <ClipboardList className="h-4 w-4" /> Minhas Tarefas
-            {tarefas.filter(t => t.status === 'pendente').length > 0 && (
+            {filteredTarefas.filter(t => t.status === 'pendente').length > 0 && (
               <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
-                {tarefas.filter(t => t.status === 'pendente').length}
+                {filteredTarefas.filter(t => t.status === 'pendente').length}
               </Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="alertas" className="gap-2">
             <Bell className="h-4 w-4" /> Alertas Operacionais
-            {alertas.filter(a => a.status === 'nao_lido').length > 0 && (
+            {filteredAlertas.filter(a => a.status === 'nao_lido').length > 0 && (
               <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
-                {alertas.filter(a => a.status === 'nao_lido').length}
+                {filteredAlertas.filter(a => a.status === 'nao_lido').length}
               </Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="historico" className="gap-2">
             <History className="h-4 w-4" /> Histórico de Mensagens
-            {historicoMensagens.filter(m => !m.lida).length > 0 && (
+            {filteredMensagens.filter(m => !m.lida).length > 0 && (
               <Badge variant="destructive" className="ml-1 px-1.5 h-4 text-[11px]">
-                {historicoMensagens.filter(m => !m.lida).length}
+                {filteredMensagens.filter(m => !m.lida).length}
               </Badge>
             )}
           </TabsTrigger>
@@ -79,7 +103,7 @@ export default function AlertasTarefasPage() {
 
         <TabsContent value="tarefas" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tarefas.map((tarefa) => (
+            {filteredTarefas.map((tarefa) => (
               <Card key={tarefa.id} className={`border-l-4 ${tarefa.status === 'concluida' ? 'border-l-green-500 opacity-60' : 'border-l-amber-500 shadow-sm'}`}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
@@ -105,7 +129,7 @@ export default function AlertasTarefasPage() {
                 </CardContent>
               </Card>
             ))}
-            {tarefas.length === 0 && (
+            {filteredTarefas.length === 0 && (
               <div className="col-span-full py-12 text-center text-slate-400 italic">
                 Nenhuma tarefa pendente encontrada.
               </div>
@@ -115,7 +139,7 @@ export default function AlertasTarefasPage() {
 
         <TabsContent value="alertas" className="space-y-4">
           <div className="space-y-3">
-            {alertas.map((alerta) => (
+            {filteredAlertas.map((alerta) => (
               <Card key={alerta.id} className={`border-none shadow-sm ${alerta.status === 'nao_lido' ? 'bg-amber-50/50' : 'bg-white'}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
@@ -156,7 +180,7 @@ export default function AlertasTarefasPage() {
                 </CardContent>
               </Card>
             ))}
-            {alertas.length === 0 && (
+            {filteredAlertas.length === 0 && (
               <div className="py-12 text-center text-slate-400 italic">
                 Nenhum alerta encontrado no momento.
               </div>

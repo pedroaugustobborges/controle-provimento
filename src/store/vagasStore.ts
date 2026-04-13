@@ -193,28 +193,40 @@ export const useVagasStore = create<VagasState>()(
       validacoes: mockValidacoes,
       importHistory: [],
       importedFiles: [],
-      tarefas: mockTarefas || [],
+      tarefas: (() => {
+        const now = new Date();
+        const today = now.toISOString().slice(0, 10);
+        const yesterday = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
+        return [
+          { id: 't1', titulo: 'Validar edital #789', descricao: 'Revisar e aprovar o edital pendente de validação administrativa.', status: 'pendente' as const, prioridade: 'alta' as const, data_criacao: `${today}T08:00:00`, atribuido_a: 'Analista Administrativo', perfil_destinatario: 'analista administrativo' },
+          { id: 't2', titulo: 'Realizar convocação pendente', descricao: 'Há 5 candidatos aguardando convocação para vagas abertas.', status: 'pendente' as const, prioridade: 'alta' as const, data_criacao: `${today}T09:00:00`, atribuido_a: 'Analista das Convocações', perfil_destinatario: 'analista de convocações' },
+          { id: 't3', titulo: 'Publicar edital de Enfermeiro', descricao: 'Edital pronto para publicação no portal.', status: 'pendente' as const, prioridade: 'media' as const, data_criacao: `${yesterday}T14:00:00`, atribuido_a: 'Analista de Edital', perfil_destinatario: 'analista do edital' },
+          { id: 't4', titulo: 'Revisar requisição de vaga', descricao: 'Nova requisição de vaga recebida da unidade HUGOL.', status: 'pendente' as const, prioridade: 'media' as const, data_criacao: `${yesterday}T10:00:00`, atribuido_a: 'Analista de RH', perfil_destinatario: 'analista da unidade' },
+        ] as Tarefa[];
+      })(),
       alertas: (() => {
         const now = new Date();
         const today = now.toISOString().slice(0, 10);
         const yesterday = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
         return [
-          { id: '1', titulo: 'Atraso na Validação', mensagem: 'O edital #789 está pendente há mais de 2 dias.', tipo: 'atraso', status: 'nao_lido', data_criacao: `${today}T08:00:00`, destinatario: 'Analista', link: '/validacao' },
-          { id: '2', titulo: 'Vaga Crítica', mensagem: 'A vaga de Médico intensivista precisa de atenção urgente.', tipo: 'critico', status: 'nao_lido', data_criacao: `${today}T09:30:00`, destinatario: 'Analista', link: '/vagas/1' },
-          { id: '3', titulo: 'Validação Concluída', mensagem: 'A unidade aprovou o cargo para o próximo edital.', tipo: 'validacao', status: 'lido', data_criacao: `${yesterday}T15:00:00`, destinatario: 'Analista', link: '/editais' },
-        ];
+          { id: 'a1', titulo: 'Convocações pendentes', mensagem: 'Você tem 5 convocações pendentes para hoje.', tipo: 'atraso' as const, status: 'nao_lido' as const, data_criacao: `${today}T08:00:00`, destinatario: 'analista de convocações', link: '/convocacoes' },
+          { id: 'a2', titulo: 'Validação de edital pendente', mensagem: 'O edital #789 está pendente de validação administrativa há 2 dias.', tipo: 'validacao' as const, status: 'nao_lido' as const, data_criacao: `${today}T09:30:00`, destinatario: 'analista administrativo', link: '/validacao' },
+          { id: 'a3', titulo: 'Edital pronto para publicação', mensagem: 'O edital de Enfermeiro está pronto para ser publicado.', tipo: 'informativo' as const, status: 'nao_lido' as const, data_criacao: `${today}T10:00:00`, destinatario: 'analista do edital', link: '/editais' },
+          { id: 'a4', titulo: 'Vaga crítica sem andamento', mensagem: 'A vaga de Médico Intensivista está há 5 dias sem movimentação.', tipo: 'critico' as const, status: 'nao_lido' as const, data_criacao: `${today}T07:00:00`, destinatario: 'analista da unidade', link: '/vagas' },
+          { id: 'a5', titulo: 'Validação concluída', mensagem: 'A unidade aprovou o cargo para o próximo edital.', tipo: 'validacao' as const, status: 'lido' as const, data_criacao: `${yesterday}T15:00:00`, destinatario: 'analista administrativo', link: '/editais' },
+        ] as Alerta[];
       })(),
       historicoMensagens: (() => {
         const now = new Date();
         const twoDaysAgo = new Date(now.getTime() - 2 * 86400000).toISOString().slice(0, 10);
         const yesterday = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
         return [
-          { id: '1', data: `${twoDaysAgo}T10:00:00`, remetente: 'Agie', conteudo: 'Olá! Como posso ajudar você hoje?', lida: true },
-          { id: '2', data: `${twoDaysAgo}T10:05:00`, remetente: 'Sistema', conteudo: 'O edital #123 foi validado com sucesso.', lida: true },
-          { id: '3', data: `${yesterday}T09:00:00`, remetente: 'Agie', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false },
-          { id: '4', data: `${yesterday}T10:00:00`, remetente: 'Você', conteudo: 'Poderia me ajudar com a validação do edital #456?', lida: true },
-          { id: '5', data: `${yesterday}T11:30:00`, remetente: 'Você', conteudo: 'Encaminhei os documentos da vaga de Analista.', lida: true },
-        ];
+          { id: 'm1', data: `${twoDaysAgo}T10:00:00`, remetente: 'Agie', conteudo: 'Olá! Como posso ajudar você hoje?', lida: true, perfil_destinatario: undefined },
+          { id: 'm2', data: `${twoDaysAgo}T10:05:00`, remetente: 'Sistema', conteudo: 'O edital #123 foi validado com sucesso.', lida: true, perfil_destinatario: 'analista administrativo' },
+          { id: 'm3', data: `${yesterday}T09:00:00`, remetente: 'Agie', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false, perfil_destinatario: 'analista de convocações' },
+          { id: 'm4', data: `${yesterday}T10:00:00`, remetente: 'Sistema', conteudo: 'Edital de Enfermeiro aguardando publicação.', lida: false, perfil_destinatario: 'analista do edital' },
+          { id: 'm5', data: `${yesterday}T11:30:00`, remetente: 'Sistema', conteudo: 'Nova requisição de vaga recebida da unidade HUGOL.', lida: false, perfil_destinatario: 'analista da unidade' },
+        ] as MensagemHistorico[];
       })(),
       temNovasMensagens: false,
       isLoading: false,
@@ -622,7 +634,7 @@ export const useVagasStore = create<VagasState>()(
     }),
     {
       name: 'hospital-recruitment-store',
-      version: 3,
+      version: 4,
       migrate: (persistedState: any, version: number) => {
         if (version < 2 && persistedState?.historicoMensagens) {
           persistedState.historicoMensagens = persistedState.historicoMensagens.map((m: any) => ({
@@ -630,10 +642,11 @@ export const useVagasStore = create<VagasState>()(
             remetente: m.remetente === 'AIDE' || m.remetente === 'Aide' ? 'Agie' : m.remetente,
           }));
         }
-        if (version < 3) {
-          // Force regeneration of alertas and historicoMensagens with dynamic dates
+        if (version < 4) {
+          // Force regeneration with profile-targeted alerts
           delete persistedState.alertas;
           delete persistedState.historicoMensagens;
+          delete persistedState.tarefas;
         }
         return persistedState;
       },

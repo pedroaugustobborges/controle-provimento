@@ -327,7 +327,8 @@ export interface Tarefa {
   prioridade: 'baixa' | 'media' | 'alta';
   data_criacao: string;
   data_vencimento?: string;
-  atribuido_a: string; // ID ou nome do usuário/perfil
+  atribuido_a: string;
+  perfil_destinatario?: string;
   relacionado_a?: {
     tipo: 'vaga' | 'edital' | 'banco' | 'convocacao';
     id: string;
@@ -404,6 +405,7 @@ export interface MensagemHistorico {
   remetente: string;
   conteudo: string;
   lida: boolean;
+  perfil_destinatario?: string;
 }
 
 

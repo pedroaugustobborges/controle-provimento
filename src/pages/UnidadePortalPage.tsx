@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import {
   Calendar as CalendarIcon, Download, LogOut, Building2,
-  MessageSquare, CheckCircle2, AlertCircle, Clock, ChevronDown
+  MessageSquare, CheckCircle2, AlertCircle, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -120,7 +120,7 @@ export default function UnidadePortalPage() {
     if (!obsDialog.convId) return;
     try {
       updateConvocacao(obsDialog.convId, { observacoes: obsText });
-      await supabase
+      await (supabase as any)
         .from('convocacoes')
         .update({ observacoes: obsText })
         .eq('id', obsDialog.convId);

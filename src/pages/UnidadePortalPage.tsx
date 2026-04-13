@@ -1,16 +1,18 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
+import { STATUS_CONVOCACAO_LABELS, type StatusConvocacao } from '@/types/vaga';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,7 +23,7 @@ import {
 import {
   Calendar as CalendarIcon, Download, LogOut, Building2,
   MessageSquare, CheckCircle2, AlertCircle, Clock, BarChart3,
-  Search, FileText, Edit3, Briefcase, Activity, Users
+  Search, FileText, Edit3, Briefcase, Activity, Users, Save, Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -97,6 +99,10 @@ export default function UnidadePortalPage() {
   });
   const [obsText, setObsText] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [obsEdits, setObsEdits] = useState<Record<string, {
+    status: string; horario_plantao: string; aceito: boolean; observacao: string;
+  }>>({});
+  const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
 
   const isAdmin = currentUser?.perfil === 'Administrador';
   const isSupervision = currentUser?.perfil === 'Supervisão';
@@ -264,6 +270,37 @@ export default function UnidadePortalPage() {
       if (currentUser) await supabase.from('user_sessions').update({ logout_at: new Date().toISOString() }).eq('user_id', currentUser.id).is('logout_at', null);
       await signOut(); navigate('/login');
     } catch { navigate('/login'); }
+  };
+
+  const getObsEdit = (c: any) => obsEdits[c.id] || {
+    status: c.status || 'pendente',
+    horario_plantao: c.horario_trabalho || c.carga_horaria || '',
+    aceito: c.devolutiva === 'aceitou',
+    observacao: c.observacoes || '',
+  };
+
+  const setObsField = (id: string, c: any, field: string, value: any) => {
+    const current = getObsEdit(c);
+    setObsEdits(prev => ({ ...prev, [id]: { ...current, [field]: value } }));
+  };
+
+  const handleSaveObsRow = async (c: any) => {
+    const edit = getObsEdit(c);
+    setSavingObs(prev => ({ ...prev, [c.id]: true }));
+    try {
+      await updateConvocacao(c.id, {
+        status: edit.status as StatusConvocacao,
+        horario_trabalho: edit.horario_plantao,
+        devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+        observacoes: edit.observacao,
+      });
+      toast.success('Devolutiva salva com sucesso.');
+      setObsEdits(prev => { const n = { ...prev }; delete n[c.id]; return n; });
+    } catch {
+      toast.error('Erro ao salvar devolutiva.');
+    } finally {
+      setSavingObs(prev => ({ ...prev, [c.id]: false }));
+    }
   };
 
   if (!currentUser || !hasAccess) return null;
@@ -467,11 +504,11 @@ export default function UnidadePortalPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Cargo</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Status</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Data</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">SLA</TableHead>
+                    <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Cargo</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Status</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Data</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">SLA</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -518,11 +555,11 @@ export default function UnidadePortalPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Hora</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Candidato</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Status</TableHead>
-                      <TableHead className="py-5 px-6 w-10"></TableHead>
+                    <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Hora</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Candidato</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Status</TableHead>
+                      <TableHead className="py-5 px-6 w-10 bg-slate-50/80"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -548,20 +585,120 @@ export default function UnidadePortalPage() {
 
           <TabsContent value="observacoes" className="space-y-6 animate-in fade-in duration-500">
             <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-amber-50/30 border-b border-amber-100"><CardTitle className="text-sm font-bold text-amber-800">Pendentes</CardTitle></CardHeader>
+              <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-4 px-6">
+                <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Edit3 className="h-4 w-4 text-slate-400" />
+                  Devolutiva das Convocações
+                </CardTitle>
+              </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableBody>
-                    {convocacoesSemObs.map(c => (
-                      <TableRow key={c.id}>
-                        <TableCell className="py-4 px-6 font-bold text-sm text-slate-900">{c.nome_candidato}</TableCell>
-                        <TableCell className="py-4 px-6 text-right">
-                          <Button variant="ghost" size="sm" onClick={() => handleOpenObs(c.id, '')} className="text-amber-600 font-bold gap-2"><Edit3 className="h-4 w-4" />Inserir</Button>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Candidato</TableHead>
+                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Unidade</TableHead>
+                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 min-w-[160px]">Status/Destino</TableHead>
+                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 min-w-[130px]">Horário/Plantão</TableHead>
+                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 text-center">Aceito</TableHead>
+                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 min-w-[200px]">Observação</TableHead>
+                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 w-20 text-center">Ação</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {allFilteredConvocacoes.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="py-12 text-center text-slate-400">
+                            <div className="flex flex-col items-center gap-2">
+                              <Edit3 className="h-8 w-8 opacity-20" />
+                              <p className="text-xs font-bold">Nenhuma convocação encontrada</p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        allFilteredConvocacoes.slice(0, 100).map(c => {
+                          const edit = getObsEdit(c);
+                          const isSaving = savingObs[c.id] || false;
+                          const hasChanges = !!obsEdits[c.id];
+                          return (
+                            <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                              <TableCell className="py-3 px-4 font-bold text-slate-900 text-sm">{c.nome_candidato || '—'}</TableCell>
+                              <TableCell className="py-3 px-4 text-slate-600 text-xs font-semibold">{c.unidade || '—'}</TableCell>
+                              <TableCell className="py-3 px-4">
+                                <Select value={edit.status} onValueChange={(v) => setObsField(c.id, c, 'status', v)}>
+                                  <SelectTrigger className="h-9 text-xs font-semibold rounded-lg border-slate-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {[
+                                      { value: 'aceite', label: 'Aceite' },
+                                      { value: 'recusa_plantao', label: 'Recusa por Plantão' },
+                                      { value: 'recusa_unidade', label: 'Recusa por Unidade' },
+                                      { value: 'recusa_horario', label: 'Recusa por Horário' },
+                                      { value: 'desistiu', label: 'Desistiu' },
+                                      { value: 'faltou', label: 'Faltou' },
+                                      { value: 'pendente', label: 'Pendente' },
+                                    ].map(opt => (
+                                      <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="py-3 px-4">
+                                <Input
+                                  value={edit.horario_plantao}
+                                  onChange={(e) => setObsField(c.id, c, 'horario_plantao', e.target.value)}
+                                  placeholder="Ex: 07h-19h"
+                                  className="h-9 text-xs rounded-lg border-slate-200"
+                                />
+                              </TableCell>
+                              <TableCell className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <Switch
+                                    checked={edit.aceito}
+                                    onCheckedChange={(v) => setObsField(c.id, c, 'aceito', v)}
+                                    aria-label="Aceito"
+                                  />
+                                  <span className={cn("text-[10px] font-black uppercase", edit.aceito ? "text-emerald-600" : "text-slate-400")}>
+                                    {edit.aceito ? 'Sim' : 'Não'}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3 px-4">
+                                <Input
+                                  value={edit.observacao}
+                                  onChange={(e) => setObsField(c.id, c, 'observacao', e.target.value)}
+                                  placeholder="Observação adicional..."
+                                  className="h-9 text-xs rounded-lg border-slate-200"
+                                />
+                              </TableCell>
+                              <TableCell className="py-3 px-4 text-center">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSaveObsRow(c)}
+                                  disabled={isSaving || !hasChanges}
+                                  className={cn(
+                                    "rounded-lg font-bold text-xs gap-1.5 h-9 px-3 transition-all",
+                                    hasChanges
+                                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                  )}
+                                >
+                                  {isSaving ? (
+                                    <span className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full" />
+                                  ) : (
+                                    <Save className="h-3.5 w-3.5" />
+                                  )}
+                                  Salvar
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

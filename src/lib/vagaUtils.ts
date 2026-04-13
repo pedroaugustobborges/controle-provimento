@@ -1,14 +1,14 @@
 import { StatusVaga, StatusValidacao, EtapaEdital, StatusPublicacao, Vaga, VagaCronograma } from '@/types/vaga';
 
 export const VITORIA_SUB_UNIDADES = [
-  'sao pedro', 'suá', 'sua', 'bento ferreira', 'jardim da penha', 
+  'sao pedro', 'suá', 'sua', 'upa', 'bento ferreira', 'jardim da penha', 
   'maruípe', 'maruipe', 'vitoria', 'vitória', 'vix', 'espirito santo', 
   'es', 'serra', 'cariacica', 'vila velha', 'viana'
 ];
 
 export const UNIDADES_POR_REGIAO: Record<string, string[]> = {
   'Goiânia': ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 'TEIA APARECIDA', 'TEIA CANEDO', 'TEIA CEN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA PIN'],
-  'Vitória': ['SÃO PEDRO', 'SUÁ', 'UPA'],
+  'Vitória': ['VITÓRIA'],
   'Demais Unidades': ['CHS', 'HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'JATAÍ', 'DOURADOS', 'POLICLÍNICA']
 };
 

@@ -113,8 +113,8 @@ export function AppSidebar() {
       icon: Calendar,
       visible: getPermissions('convocacoes').canRead,
       subMenu: [
-        { title: 'Diárias — Goiânia', url: '/convocacoes?tab=diaria&regiao=goiania' },
-        { title: 'Diárias — Outras', url: '/convocacoes?tab=diaria&regiao=outras' },
+        { title: 'Agenda Goiânia', url: '/convocacoes?tab=diaria&regiao=goiania' },
+        { title: 'Agenda Demais Unidades', url: '/convocacoes?tab=diaria&regiao=outras' },
         { title: 'Histórico', url: '/convocacoes?tab=list' },
         { title: 'Pendentes', url: '/convocacoes?tab=pending' },
       ]

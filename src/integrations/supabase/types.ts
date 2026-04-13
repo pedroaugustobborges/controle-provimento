@@ -93,6 +93,7 @@ export type Database = {
           unidade_convocacao: string | null
           updated_at: string
           updated_by: string | null
+          version: number
         }
         Insert: {
           cargo?: string | null
@@ -127,6 +128,7 @@ export type Database = {
           unidade_convocacao?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Update: {
           cargo?: string | null
@@ -161,6 +163,7 @@ export type Database = {
           unidade_convocacao?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Relationships: []
       }
@@ -433,6 +436,7 @@ export type Database = {
           unidade: string | null
           updated_at: string
           updated_by: string | null
+          version: number
         }
         Insert: {
           admissao_efetivada_acompanhamento?: string | null
@@ -477,6 +481,7 @@ export type Database = {
           unidade?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Update: {
           admissao_efetivada_acompanhamento?: string | null
@@ -521,6 +526,7 @@ export type Database = {
           unidade?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Relationships: []
       }

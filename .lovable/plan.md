@@ -1,24 +1,26 @@
 
 
-## Plano: Corrigir datas hardcoded em Alertas e Tarefas
+## Plano: Personalizar alertas e mensagens por perfil de usuário
 
-### Problema
-Os alertas e o histórico de mensagens no `vagasStore.ts` usam datas fixas de maio de 2024 (`'2024-05-22'`, `'2024-05-20'`, etc.). Essas datas não correspondem à realidade e confundem o usuário.
+### Arquivos a modificar
 
-### Solução
-**Arquivo: `src/store/vagasStore.ts`** (linhas 197-208)
-- Substituir as datas hardcoded por datas **relativas ao momento atual**, usando `new Date()` e subtraindo dias:
-  - Alertas: datas de hoje, ontem e anteontem
-  - Histórico de mensagens: datas dos últimos 2 dias
-- Isso garante que as datas sempre façam sentido independente de quando o sistema é acessado.
+**`src/store/vagasStore.ts`** (linhas ~197-240):
+- Adicionar campo `perfil_destinatario` a cada alerta, tarefa e mensagem do histórico, associando-os aos perfis corretos:
+  - Convocações pendentes → `'Analista das Convocações'`
+  - Validação de edital → `'Analista Administrativo'`
+  - Publicação de edital → `'Analista de Edital'`
+  - Vagas/requisições → `'Analista de RH'`
+- Criar alertas mock diversificados por perfil
 
-Exemplo:
-```ts
-const now = new Date();
-const today = now.toISOString();
-const yesterday = new Date(now.getTime() - 86400000).toISOString();
-const twoDaysAgo = new Date(now.getTime() - 2 * 86400000).toISOString();
-```
+**`src/pages/AlertasTarefasPage.tsx`**:
+- Importar `useRBAC` para obter o perfil do usuário logado
+- Filtrar `alertas`, `tarefas` e `historicoMensagens` com base no perfil:
+  - Perfis de gestão/admin veem tudo
+  - Demais perfis veem apenas alertas com `perfil_destinatario` correspondente
+- Atualizar contadores de badges nas abas para refletir apenas itens filtrados
+
+**`src/types/vaga.ts`** (se necessário):
+- Adicionar campo `perfil_destinatario` às interfaces de Alerta, Tarefa e HistoricoMensagem
 
 Nenhuma alteração de banco de dados necessária.
 

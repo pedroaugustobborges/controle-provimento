@@ -102,6 +102,7 @@ export default function RelatoriosPage() {
     return <Navigate to="/" replace />;
   }
 
+  const filteredSessions = sessions?.filter(s => 
     s.profiles?.nome_completo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.ip_address?.includes(searchTerm)

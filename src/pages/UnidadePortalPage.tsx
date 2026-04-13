@@ -272,6 +272,37 @@ export default function UnidadePortalPage() {
     } catch { navigate('/login'); }
   };
 
+  const getObsEdit = (c: any) => obsEdits[c.id] || {
+    status: c.status || 'pendente',
+    horario_plantao: c.horario_trabalho || c.carga_horaria || '',
+    aceito: c.devolutiva === 'aceitou',
+    observacao: c.observacoes || '',
+  };
+
+  const setObsField = (id: string, c: any, field: string, value: any) => {
+    const current = getObsEdit(c);
+    setObsEdits(prev => ({ ...prev, [id]: { ...current, [field]: value } }));
+  };
+
+  const handleSaveObsRow = async (c: any) => {
+    const edit = getObsEdit(c);
+    setSavingObs(prev => ({ ...prev, [c.id]: true }));
+    try {
+      await updateConvocacao(c.id, {
+        status: edit.status as StatusConvocacao,
+        horario_trabalho: edit.horario_plantao,
+        devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+        observacoes: edit.observacao,
+      });
+      toast.success('Devolutiva salva com sucesso.');
+      setObsEdits(prev => { const n = { ...prev }; delete n[c.id]; return n; });
+    } catch {
+      toast.error('Erro ao salvar devolutiva.');
+    } finally {
+      setSavingObs(prev => ({ ...prev, [c.id]: false }));
+    }
+  };
+
   if (!currentUser || !hasAccess) return null;
 
   return (

@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useRBAC } from '@/hooks/useRBAC';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,13 +15,35 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-
+function matchesPerfil(destinatario: string | undefined, perfilUsuario: string): boolean {
+  if (!destinatario) return true; // sem perfil = visível a todos
+  return destinatario.toLowerCase() === perfilUsuario.toLowerCase();
+}
 
 export default function AlertasTarefasPage() {
   const { alertas, tarefas, historicoMensagens, updateAlerta, updateTarefa, marcarMensagemLida } = useVagasStore();
   const permissions = usePermissions();
+  const { isAdmin, isManagement, isFullAccessProfile } = useRBAC();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'tarefas';
+
+  const perfilUsuario = permissions.currentUser?.perfil || '';
+  const showAll = isAdmin || isManagement || isFullAccessProfile;
+
+  const filteredAlertas = useMemo(() =>
+    showAll ? alertas : alertas.filter(a => matchesPerfil(a.destinatario, perfilUsuario)),
+    [alertas, showAll, perfilUsuario]
+  );
+
+  const filteredTarefas = useMemo(() =>
+    showAll ? tarefas : tarefas.filter(t => matchesPerfil((t as any).perfil_destinatario, perfilUsuario)),
+    [tarefas, showAll, perfilUsuario]
+  );
+
+  const filteredMensagens = useMemo(() =>
+    showAll ? historicoMensagens : historicoMensagens.filter(m => matchesPerfil(m.perfil_destinatario, perfilUsuario)),
+    [historicoMensagens, showAll, perfilUsuario]
+  );
 
 
   const handleResolveAlerta = (id: string) => {

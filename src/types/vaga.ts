@@ -404,6 +404,7 @@ export interface MensagemHistorico {
   remetente: string;
   conteudo: string;
   lida: boolean;
+  perfil_destinatario?: string;
 }
 
 

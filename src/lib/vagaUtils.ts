@@ -14,7 +14,7 @@ export const UNIDADES_POR_REGIAO: Record<string, string[]> = {
 
 const REGION_ALIASES: Record<string, string[]> = {
   'Goiânia': ['GOIÂNIA', 'GOIANIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS'],
-  'Vitória': ['VITÓRIA', 'VITORIA', 'VIX', 'ES'],
+  'Vitória': ['VITÓRIA', 'VITORIA', 'VIX', 'ES', 'UPA'],
   'Demais Unidades': ['OUTRAS UNIDADES'],
 };
 

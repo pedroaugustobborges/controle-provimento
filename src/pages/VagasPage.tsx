@@ -197,34 +197,59 @@ export default function VagasPage() {
 
     const set = new Set<string>();
     
-    // Build a cargo index from bancos for fast lookup
-    const bancosByNormalizedCargo = new Map<string, typeof bancos>();
+    // 1. Build Indexes for fast lookup
+    const bancosById = new Map<string, any>();
+    const bancosByProcesso = new Map<string, any>();
+    const bancosByEdital = new Map<string, any>();
+    const bancosByNormalizedCargo = new Map<string, any[]>();
+
     bancos.forEach(b => {
-      const key = (b.cargo || '').toLowerCase().trim();
-      if (!key) return;
-      const arr = bancosByNormalizedCargo.get(key) || [];
-      arr.push(b);
-      bancosByNormalizedCargo.set(key, arr);
+      if (b.id) bancosById.set(b.id, b);
+      
+      const proc = (b.numero_processo || b.numero_processo_seletivo || '').trim();
+      if (proc) bancosByProcesso.set(proc, b);
+      
+      const editalNum = (b.numero_edital || '').trim();
+      if (editalNum) bancosByEdital.set(editalNum, b);
+      
+      const cargoKey = (b.cargo || '').toLowerCase().trim();
+      if (cargoKey) {
+        const list = bancosByNormalizedCargo.get(cargoKey) || [];
+        list.push(b);
+        bancosByNormalizedCargo.set(cargoKey, list);
+      }
     });
 
+    // 2. Perform matching for each vaga (O(1) lookups)
     vagas.forEach(v => {
-      if (v.tem_banco_valido) {
+      // a. Already marked or explicit link
+      if (v.tem_banco_valido || (v.banco_id && bancosById.has(v.banco_id))) {
         set.add(v.id);
         return;
       }
-      // Quick check: does any banco share the same cargo name?
+      
+      // b. Process/Edital number match
+      const vProc = (v.numero_processo || v.requisicao || v.numero_requisicao || '').trim();
+      if (vProc && (bancosByProcesso.has(vProc) || bancosByEdital.has(vProc))) {
+        set.add(v.id);
+        return;
+      }
+      
+      const vEdital = (v.numero_edital || '').trim();
+      if (vEdital && (bancosByEdital.has(vEdital) || bancosByProcesso.has(vEdital))) {
+        set.add(v.id);
+        return;
+      }
+
+      // c. Fast cargo name match
       const vagaCargo = (v.cargo || '').toLowerCase().trim();
       if (vagaCargo && bancosByNormalizedCargo.has(vagaCargo)) {
         set.add(v.id);
-        return;
-      }
-      // Fallback to full matching (only for vagas not yet matched)
-      if (getBancoByVaga(v.id)) {
-        set.add(v.id);
       }
     });
+    
     return set;
-  }, [vagas, getBancoByVaga]);
+  }, [vagas]);
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
@@ -237,14 +262,22 @@ export default function VagasPage() {
 
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {
-    const now = new Date().getTime();
+    const nowTime = new Date().getTime();
+    const startOfYesterday = new Date(nowTime);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    startOfYesterday.setHours(0, 0, 0, 0);
+    const startOfYesterdayTime = startOfYesterday.getTime();
+    
+    const endOfToday = new Date(nowTime);
+    endOfToday.setHours(23, 59, 59, 999);
+    const endOfTodayTime = endOfToday.getTime();
+
     return canonicalBase.filter((v) => {
       // Apply status tab filter first (Performance + Logic)
       const category = v.categoria_status || getCategoriaStatus(v);
       if (vacancyStatusTab === 'ativas' && (category === 'concluidas' || category === 'vagas_interrompidas')) return false;
       if (vacancyStatusTab === 'concluidas' && category !== 'concluidas' && category !== 'vagas_interrompidas') return false;
       if (vacancyStatusTab === 'em_andamento' && category !== 'em_andamento') return false;
-      // if vacancyStatusTab === 'todas', we don't return false for any category
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -272,22 +305,15 @@ export default function VagasPage() {
       
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
-      
-      const startOfYesterday = new Date(now);
-      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-      startOfYesterday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date(now);
-      endOfToday.setHours(23, 59, 59, 999);
-
-      const isManualNew = v.origem === 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000;
+      const isManualNew = v.origem === 'manual' && creationDate && (nowTime - creationTime) < 86400000;
       
       let isByRecebimento = false;
       if (v.data_recebimento) {
-        const receivedDate = new Date(v.data_recebimento);
-        isByRecebimento = receivedDate >= startOfYesterday && receivedDate <= endOfToday;
+        const receivedTime = new Date(v.data_recebimento).getTime();
+        isByRecebimento = receivedTime >= startOfYesterdayTime && receivedTime <= endOfTodayTime;
       }
       
-      const isImportedFallback = v.origem !== 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const isImportedFallback = v.origem !== 'manual' && creationDate && (nowTime - creationTime) < 86400000 && (!v.status || v.status.trim() === '');
       const isNew = isManualNew || isByRecebimento || isImportedFallback;
       const matchVagasNovas = !filterVagasNovas || isNew;
 
@@ -308,7 +334,6 @@ export default function VagasPage() {
 
   const totalPages = Math.ceil(filtered.length / pageSize);
 
-  // 3. Vacancy summary - strictly using the same canonical base and unified logic as Dashboard
   const counts = useMemo(() => {
     const acc = {
       fila_edital: 0,
@@ -323,29 +348,30 @@ export default function VagasPage() {
       vagas_novas: 0
     };
     
-    const now = new Date().getTime();
+    const nowTime = new Date().getTime();
+    const startOfYesterday = new Date(nowTime);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    startOfYesterday.setHours(0, 0, 0, 0);
+    const startOfYesterdayTime = startOfYesterday.getTime();
+    
+    const endOfToday = new Date(nowTime);
+    endOfToday.setHours(23, 59, 59, 999);
+    const endOfTodayTime = endOfToday.getTime();
     
     canonicalBase.forEach(v => {
       const cat = v.categoria_status || getCategoriaStatus(v);
       
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
-      
-      const startOfYesterday = new Date(now);
-      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-      startOfYesterday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date(now);
-      endOfToday.setHours(23, 59, 59, 999);
-
-      const isManualNew = v.origem === 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000;
+      const isManualNew = v.origem === 'manual' && creationDate && (nowTime - creationTime) < 86400000;
       
       let isByRecebimento = false;
       if (v.data_recebimento) {
-        const receivedDate = new Date(v.data_recebimento);
-        isByRecebimento = receivedDate >= startOfYesterday && receivedDate <= endOfToday;
+        const receivedTime = new Date(v.data_recebimento).getTime();
+        isByRecebimento = receivedTime >= startOfYesterdayTime && receivedTime <= endOfTodayTime;
       }
       
-      const isImportedFallback = v.origem !== 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const isImportedFallback = v.origem !== 'manual' && creationDate && (nowTime - creationTime) < 86400000 && (!v.status || v.status.trim() === '');
       
       if (isManualNew || isByRecebimento || isImportedFallback) {
         acc.vagas_novas++;
@@ -413,8 +439,11 @@ export default function VagasPage() {
     const excelCounted = analyzed.filter(r => r.includedByExcelParity);
     
     // Identify divergences
-    const excludedByAppButIncludedByExcel = excelCounted.filter(e => !canonicalBase.find(a => a.id === e.id));
-    const includedByAppButExcludedByExcel = canonicalBase.filter(a => !excelCounted.find(e => e.id === a.id));
+    const canonicalBaseIds = new Set(canonicalBase.map(a => a.id));
+    const excelCountedIds = new Set(excelCounted.map(e => e.id));
+    
+    const excludedByAppButIncludedByExcel = excelCounted.filter(e => !canonicalBaseIds.has(e.id));
+    const includedByAppButExcludedByExcel = canonicalBase.filter(a => !excelCountedIds.has(a.id));
 
     return {
       selUnit,

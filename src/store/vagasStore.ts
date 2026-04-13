@@ -496,20 +496,21 @@ export const useVagasStore = create<VagasState>()(
         // 1. Try by ID first (Explicit link)
         if (vaga.banco_id) {
           const banco = state.bancos.find(b => b.id === vaga.banco_id);
-          if (banco) {
-            return banco;
-          }
+          if (banco) return banco;
         }
 
+        const vProc = (vaga.numero_processo || vaga.numero_requisicao || vaga.requisicao || '').trim();
+        const vEdital = (vaga.numero_edital || '').trim();
+
         // 2. Try by process number or edital number (Exact match)
-        if (vaga.numero_processo || vaga.numero_edital) {
-          const matchedByNumber = state.bancos.find(b => 
-            (vaga.numero_processo && (b.numero_processo === vaga.numero_processo || b.numero_processo_seletivo === vaga.numero_processo)) ||
-            (vaga.numero_edital && b.numero_edital === vaga.numero_edital)
-          );
-          if (matchedByNumber) {
-            return matchedByNumber;
-          }
+        if (vProc || vEdital) {
+          const matchedByNumber = state.bancos.find(b => {
+             const bProc = (b.numero_processo || b.numero_processo_seletivo || '').trim();
+             const bEdital = (b.numero_edital || '').trim();
+             return (vProc && (bProc === vProc || bEdital === vProc)) ||
+                    (vEdital && (bEdital === vEdital || bProc === vEdital));
+          });
+          if (matchedByNumber) return matchedByNumber;
         }
         
         // Fallback: match by cargo and unit scope - relaxed matching

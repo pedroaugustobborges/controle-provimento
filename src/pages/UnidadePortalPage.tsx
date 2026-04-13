@@ -30,7 +30,7 @@ import logoAgir from '@/assets/logo-agir.png';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { getCategoriaStatus, calcDiasAberto } from '@/lib/vagaUtils';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell, Legend
 } from 'recharts';
 
 // Flat list of all units across all bases

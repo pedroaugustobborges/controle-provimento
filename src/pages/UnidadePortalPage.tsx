@@ -527,6 +527,7 @@ export default function UnidadePortalPage() {
                             {v.status || 'Sem Status'}
                           </Badge>
                         </TableCell>
+                      </TableRow>
                     ))}
 
                   </TableBody>

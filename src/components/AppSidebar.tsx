@@ -17,6 +17,7 @@ import {
   LogOut,
   Circle
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 import logoAgir from '@/assets/logo-agir.png';
 

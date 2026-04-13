@@ -347,18 +347,57 @@ export default function UnidadePortalPage() {
                   <CardTitle className="text-sm font-bold text-slate-700">Distribuição de Status</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={statusChartData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 10, fontWeight: 600}} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
-                        <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20}>
-                          <LabelList dataKey="value" position="right" style={{fontSize: 11, fontWeight: 800}} />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="h-[320px] w-full">
+                    {statusChartData.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
+                        <BarChart3 className="h-10 w-10 opacity-20" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={statusChartData} 
+                          layout="vertical" 
+                          margin={{ left: 10, right: 40, top: 10, bottom: 10 }}
+                        >
+                          <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke="#f1f5f9" />
+                          <XAxis type="number" hide />
+                          <YAxis 
+                            dataKey="name" 
+                            type="category" 
+                            width={110} 
+                            tick={{fontSize: 10, fontWeight: 700, fill: '#64748b'}} 
+                            axisLine={false} 
+                            tickLine={false} 
+                          />
+                          <Tooltip 
+                            cursor={{ fill: '#f8fafc' }} 
+                            content={<CustomChartTooltip />} 
+                          />
+                          <Bar 
+                            dataKey="value" 
+                            name="Quantidade"
+                            radius={[0, 8, 8, 0]} 
+                            barSize={18}
+                            animationDuration={1500}
+                            animationEasing="ease-out"
+                          >
+                            {statusChartData.map((entry: any, index: number) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={CHART_STATUS_COLORS[entry.name as string] || '#3b82f6'} 
+                              />
+                            ))}
+                            <LabelList 
+                              dataKey="value" 
+                              position="right" 
+                              style={{fontSize: 11, fontWeight: 900, fill: '#1e293b'}} 
+                              offset={12}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </CardContent>
               </Card>

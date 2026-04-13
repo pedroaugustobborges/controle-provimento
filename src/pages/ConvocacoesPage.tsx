@@ -540,6 +540,46 @@ export default function ConvocacoesPage() {
               </Table>
             </CardContent>
           </Card>
+        ) : view === 'pending' ? (
+          <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <CardHeader className="bg-slate-50/50 border-b pb-3">
+              <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-500" />
+                Convocações Pendentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/80">
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Candidato</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Cargo</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Unidade</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Data</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredConvocacoes.map((conv) => (
+                    <TableRow key={conv.id} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="font-medium text-sm">{conv.candidato}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{conv.cargo}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{conv.unidade}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{formatDate(conv.data_convocacao)}</TableCell>
+                      <TableCell><StatusBadge status={conv.status} /></TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredConvocacoes.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-medium italic">
+                        Nenhuma convocação pendente.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         ) : null}
       </div>
 

@@ -262,14 +262,22 @@ export default function VagasPage() {
 
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {
-    const now = new Date().getTime();
+    const nowTime = new Date().getTime();
+    const startOfYesterday = new Date(nowTime);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    startOfYesterday.setHours(0, 0, 0, 0);
+    const startOfYesterdayTime = startOfYesterday.getTime();
+    
+    const endOfToday = new Date(nowTime);
+    endOfToday.setHours(23, 59, 59, 999);
+    const endOfTodayTime = endOfToday.getTime();
+
     return canonicalBase.filter((v) => {
       // Apply status tab filter first (Performance + Logic)
       const category = v.categoria_status || getCategoriaStatus(v);
       if (vacancyStatusTab === 'ativas' && (category === 'concluidas' || category === 'vagas_interrompidas')) return false;
       if (vacancyStatusTab === 'concluidas' && category !== 'concluidas' && category !== 'vagas_interrompidas') return false;
       if (vacancyStatusTab === 'em_andamento' && category !== 'em_andamento') return false;
-      // if vacancyStatusTab === 'todas', we don't return false for any category
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -297,22 +305,15 @@ export default function VagasPage() {
       
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
-      
-      const startOfYesterday = new Date(now);
-      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-      startOfYesterday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date(now);
-      endOfToday.setHours(23, 59, 59, 999);
-
-      const isManualNew = v.origem === 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000;
+      const isManualNew = v.origem === 'manual' && creationDate && (nowTime - creationTime) < 86400000;
       
       let isByRecebimento = false;
       if (v.data_recebimento) {
-        const receivedDate = new Date(v.data_recebimento);
-        isByRecebimento = receivedDate >= startOfYesterday && receivedDate <= endOfToday;
+        const receivedTime = new Date(v.data_recebimento).getTime();
+        isByRecebimento = receivedTime >= startOfYesterdayTime && receivedTime <= endOfTodayTime;
       }
       
-      const isImportedFallback = v.origem !== 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const isImportedFallback = v.origem !== 'manual' && creationDate && (nowTime - creationTime) < 86400000 && (!v.status || v.status.trim() === '');
       const isNew = isManualNew || isByRecebimento || isImportedFallback;
       const matchVagasNovas = !filterVagasNovas || isNew;
 

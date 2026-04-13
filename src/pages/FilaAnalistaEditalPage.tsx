@@ -103,6 +103,7 @@ export default function FilaAnalistaEditalPage() {
     setNumeroEdital(vaga.numero_edital || '');
     setNumeroProcesso(vaga.numero_processo || '');
     setNomeArquivo(vaga.arquivo_edital || '');
+    setReachrUrl((vaga as any).url_reachr || '');
     setIsEditModalOpen(true);
   };
 

@@ -350,7 +350,8 @@ export default function AdministracaoPage() {
   const handleUploadPhoto = async (file: File, isEdit = false) => {
     try {
       const fileExt = file.name.split('.').pop();
-      const filePath = `${Math.random()}.${fileExt}`;
+      const userId = isEdit ? editingUser?.id : 'new';
+      const filePath = `${userId}/${Date.now()}.${fileExt}`;
       
       const { data, error: uploadError } = await supabase.storage
         .from('avatars')

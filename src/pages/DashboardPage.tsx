@@ -360,15 +360,26 @@ export default function DashboardPage() {
   }, [chartMode, strategicScopeByUnit]);
 
   const vacancyAlerts = useMemo(() => {
+    const STALE_THRESHOLD_DAYS = 10;
+    const statusConcluidos = ['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa', 'admissao efetivada'];
+
     return vagas
       .filter((vaga) => {
         const s = normStatus(vaga.status || '');
-        if (s !== '' && s !== 'sem status') return false;
-        return true;
+        // Exclude concluded/cancelled/suspended vagas
+        if (statusConcluidos.includes(s)) return false;
+
+        // Use updated_at as the primary inactivity indicator, fallback to other dates
+        const lastActivityDate = vaga.updated_at || vaga.data_criacao || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
+        const daysInactive = calcDiasAberto(lastActivityDate);
+
+        // Show vagas without status OR vagas inactive for more than threshold
+        if (s === '' || s === 'sem status') return true;
+        return daysInactive >= STALE_THRESHOLD_DAYS;
       })
       .map((vaga) => {
-        const inclusionDate = vaga.data_criacao || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
-        const daysOpen = calcDiasAberto(inclusionDate);
+        const lastActivityDate = vaga.updated_at || vaga.data_criacao || vaga.data_importacao || vaga.data_recebimento || vaga.data_abertura;
+        const daysOpen = calcDiasAberto(lastActivityDate);
 
         return {
           ...vaga,
@@ -733,7 +744,7 @@ export default function DashboardPage() {
               <div>
                 <DialogTitle className="text-xl font-bold text-slate-900">Vagas sem Movimentação</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-slate-500">
-                  Vagas incluídas no sistema que ainda não receberam nenhuma ação dos analistas.
+                  Vagas sem status ou com mais de 10 dias sem movimentação de status/etapa.
                 </DialogDescription>
               </div>
             </div>

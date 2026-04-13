@@ -186,15 +186,22 @@ export default function FilaAnalistaEditalPage() {
 
     updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'publicado',
-      status: 'EM ANDAMENTO', // Muda o status principal da vaga para "Em Andamento" após publicar
+      status: 'EM ANDAMENTO', 
+      unidade_trabalho: unidadeTrabalho,
+      distribuicao_vagas: distribuicaoVagas,
+      unidades_banco_talentos: unidadesBanco,
       cronograma: {
         ...selectedVaga.cronograma,
         ...cronograma
       },
+      acompanhamento: {
+        ...selectedVaga.acompanhamento,
+        gerou_banco: isTalentBank,
+      },
       historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Edital PUBLICADO. Cronograma preenchido.`,
+        descricao: `Edital PUBLICADO. Unidade de trabalho definida: ${unidadeTrabalho}. ${isTalentBank ? 'Banco de talentos habilitado.' : ''}`,
         usuario: currentUser?.nome_completo || 'Analista do Edital'
       }]
     });

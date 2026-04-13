@@ -532,72 +532,99 @@ export default function UnidadePortalPage() {
           </TabsContent>
 
           {/* ==================== ABA 2: CONSULTA DE STATUS ==================== */}
-          <TabsContent value="status" className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <TabsContent value="status" className="space-y-6 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-900">Consulta de Status das Vagas</h2>
-                <p className="text-sm text-slate-500">Visão consolidada de todas as vagas da unidade (somente leitura)</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Status das Vagas</h2>
+                <p className="text-sm font-medium text-slate-500">Acompanhamento em tempo real de todas as requisições</p>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-52 bg-white font-semibold text-slate-700">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                  <SelectItem value="fila_edital">Fila de Editais</SelectItem>
-                  <SelectItem value="convocacoes">Convocações</SelectItem>
-                  <SelectItem value="concluidas">Concluídas</SelectItem>
-                  <SelectItem value="suspensa">Suspensas</SelectItem>
-                  <SelectItem value="cancelada">Canceladas</SelectItem>
-                  <SelectItem value="aguardando_unidade">Aguardando Unidade</SelectItem>
-                  <SelectItem value="documentacao">Documentação</SelectItem>
-                  <SelectItem value="em_admissao">Admissão</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="flex-1 md:w-64 bg-white font-bold text-slate-700 h-11 rounded-xl shadow-sm border-slate-200 hover:border-slate-300 transition-all">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl shadow-xl border-slate-100">
+                    <SelectItem value="all" className="font-bold">Todos os Status</SelectItem>
+                    <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                    <SelectItem value="fila_edital">Fila de Editais</SelectItem>
+                    <SelectItem value="convocacoes">Convocações</SelectItem>
+                    <SelectItem value="concluidas">Concluídas</SelectItem>
+                    <SelectItem value="suspensa">Suspensas</SelectItem>
+                    <SelectItem value="cancelada">Canceladas</SelectItem>
+                    <SelectItem value="aguardando_unidade">Aguardando Unidade</SelectItem>
+                    <SelectItem value="documentacao">Documentação</SelectItem>
+                    <SelectItem value="em_admissao">Admissão</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-slate-200/60 shadow-xl bg-white rounded-2xl overflow-hidden">
               <CardContent className="p-0">
                 {vagasParaConsulta.length === 0 ? (
-                  <div className="py-16 text-center text-slate-400">
-                    <Search className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm font-semibold">Nenhuma vaga encontrada para o filtro selecionado.</p>
+                  <div className="py-24 text-center">
+                    <div className="bg-slate-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="h-10 w-10 text-slate-300" />
+                    </div>
+                    <p className="text-base font-bold text-slate-900">Nenhuma vaga encontrada</p>
+                    <p className="text-sm text-slate-400 mt-1">Tente ajustar seus filtros para encontrar o que procura.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-slate-50/80">
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Data Abertura</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Dias Aberto</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Etapa</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Analista</TableHead>
+                        <TableRow className="bg-slate-50/80 border-b border-slate-100">
+                          <TableHead className="py-5 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Cargo</TableHead>
+                          <TableHead className="py-5 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Unidade</TableHead>
+                          <TableHead className="py-5 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Status</TableHead>
+                          <TableHead className="py-5 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 text-center">Data</TableHead>
+                          <TableHead className="py-5 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 text-center">SLA</TableHead>
+                          <TableHead className="py-5 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Etapa Atual</TableHead>
+                          <TableHead className="py-5 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Analista</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {vagasParaConsulta.map(v => {
+                        {vagasParaConsulta.map((v, idx) => {
                           const dias = calcDiasAberto(v.data_recebimento || v.data_abertura);
                           return (
-                            <TableRow key={v.id} className="hover:bg-slate-50/60">
-                              <TableCell className="font-semibold text-slate-800 text-sm">{v.cargo || '—'}</TableCell>
-                              <TableCell className="text-slate-600 text-sm">{v.unidade || '—'}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
+                            <TableRow key={v.id} className={cn(
+                              "hover:bg-blue-50/30 transition-colors border-b border-slate-50/60",
+                              idx % 2 === 0 ? "bg-white" : "bg-slate-50/20"
+                            )}>
+                              <TableCell className="py-4 px-6 font-bold text-slate-900 text-sm whitespace-nowrap">{v.cargo || '—'}</TableCell>
+                              <TableCell className="py-4 px-6 text-slate-500 text-sm font-medium">{v.unidade || '—'}</TableCell>
+                              <TableCell className="py-4 px-6">
+                                <Badge 
+                                  variant="outline" 
+                                  className={cn(
+                                    "text-[10px] font-black px-3 py-1 rounded-full border shadow-sm transition-all duration-300",
+                                    v.status?.toLowerCase().includes('concluída') ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                    v.status?.toLowerCase().includes('cancelada') || v.status?.toLowerCase().includes('suspensa') ? 'bg-rose-50 text-rose-700 border-rose-100' :
+                                    'bg-blue-50 text-blue-700 border-blue-100'
+                                  )}
+                                >
                                   {v.status || 'Sem Status'}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-slate-600 text-sm">
+                              <TableCell className="py-4 px-6 text-slate-500 text-sm font-bold text-center">
                                 {v.data_abertura ? format(new Date(v.data_abertura + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
                               </TableCell>
-                              <TableCell className="text-sm">
-                                <span className={cn('font-bold', dias > 10 ? 'text-red-600' : 'text-slate-600')}>{dias}d</span>
+                              <TableCell className="py-4 px-6 text-center">
+                                <div className={cn(
+                                  "inline-flex items-center justify-center h-8 w-12 rounded-lg font-black text-xs shadow-sm border",
+                                  dias > 15 ? "bg-rose-50 text-rose-600 border-rose-100" : 
+                                  dias > 10 ? "bg-amber-50 text-amber-600 border-amber-100" : 
+                                  "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                )}>
+                                  {dias}d
+                                </div>
                               </TableCell>
-                              <TableCell className="text-slate-600 text-sm">{v.acompanhamento?.etapa_atual || '—'}</TableCell>
-                              <TableCell className="text-slate-600 text-sm">{v.analista_responsavel || '—'}</TableCell>
+                              <TableCell className="py-4 px-6 text-slate-600 text-sm font-semibold">
+                                {v.acompanhamento?.etapa_atual || <span className="text-slate-300 italic">N/A</span>}
+                              </TableCell>
+                              <TableCell className="py-4 px-6 text-slate-500 text-sm font-medium">
+                                {v.analista_responsavel || <span className="text-slate-300 italic">Pendente</span>}
+                              </TableCell>
                             </TableRow>
                           );
                         })}
@@ -607,9 +634,14 @@ export default function UnidadePortalPage() {
                 )}
               </CardContent>
             </Card>
-            <p className="text-xs text-slate-400 text-right">
-              Exibindo {vagasParaConsulta.length} de {filteredVagas.length} vagas
-            </p>
+            <div className="flex items-center justify-between px-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Listagem Limitada aos 200 registros mais recentes
+              </p>
+              <p className="text-xs font-black text-[#0A192F] bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                Mostrando {vagasParaConsulta.length} de {filteredVagas.length} vagas
+              </p>
+            </div>
           </TabsContent>
 
           {/* ==================== ABA 3: CONVOCAÇÕES DIÁRIAS ==================== */}

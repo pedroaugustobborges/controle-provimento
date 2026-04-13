@@ -19,16 +19,28 @@ const WARNING_MS = 5 * 60 * 1000; // 5 minutes before timeout
 
 export function InactivityLogout() {
   const { signOut, isAuthenticated } = useAuth();
+  const { currentUser } = useAdminStore();
   const navigate = useNavigate();
   const [showWarning, setShowWarning] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [timeLeft, setTimeLeft] = useState(WARNING_MS / 1000);
 
   const handleLogout = useCallback(async () => {
-    setShowWarning(false);
-    await signOut();
-    navigate('/auth');
-  }, [signOut, navigate]);
+    try {
+      setShowWarning(false);
+      if (currentUser) {
+        await supabase
+          .from('user_sessions')
+          .update({ logout_at: new Date().toISOString() })
+          .eq('user_id', currentUser.id)
+          .is('logout_at', null);
+      }
+      await signOut();
+      navigate('/login');
+    } catch (e) {
+      console.error('Logout error', e);
+    }
+  }, [signOut, navigate, currentUser]);
 
   const resetTimer = useCallback(() => {
     setLastActivity(Date.now());

@@ -486,9 +486,13 @@ function AuditDiff({ oldVal, newVal }: { oldVal: any, newVal: any }) {
   const newObj = newVal || {};
   const allKeys = Array.from(new Set([...Object.keys(oldObj), ...Object.keys(newObj)]));
   
-  // Filtrar apenas os campos que foram alterados
+  const formatVal = (val: any) => {
+    if (val === null || val === undefined) return '—';
+    if (typeof val === 'object') return JSON.stringify(val);
+    return String(val);
+  };
+
   const changes = allKeys.filter(key => {
-    // Evitar comparar campos de sistema se eles existirem (opcional)
     if (['id', 'created_at', 'updated_at'].includes(key)) return false;
     return JSON.stringify(oldObj[key]) !== JSON.stringify(newObj[key]);
   });
@@ -512,11 +516,11 @@ function AuditDiff({ oldVal, newVal }: { oldVal: any, newVal: any }) {
         {changes.map(key => (
           <div key={key} className="grid grid-cols-3 gap-4 text-xs items-center p-2 bg-white rounded border border-border/20 shadow-sm">
             <div className="font-semibold text-primary truncate" title={key}>{key}</div>
-            <div className="text-red-600 line-through truncate bg-red-50/50 px-1.5 py-0.5 rounded" title={String(oldObj[key])}>
-              {oldObj[key] === undefined || oldObj[key] === null ? '—' : String(oldObj[key])}
+            <div className="text-red-600 line-through truncate bg-red-50/50 px-1.5 py-0.5 rounded" title={formatVal(oldObj[key])}>
+              {formatVal(oldObj[key])}
             </div>
-            <div className="text-green-600 font-medium truncate bg-green-50/50 px-1.5 py-0.5 rounded" title={String(newObj[key])}>
-              {newObj[key] === undefined || newObj[key] === null ? '—' : String(newObj[key])}
+            <div className="text-green-600 font-medium truncate bg-green-50/50 px-1.5 py-0.5 rounded" title={formatVal(newObj[key])}>
+              {formatVal(newObj[key])}
             </div>
           </div>
         ))}

@@ -172,7 +172,7 @@ export interface Vaga {
   salario_validado?: boolean;
   observacoes_unidade?: string;
   observacoes_edital?: string;
-  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao' | 'aprovado_administrativo' | 'publicado';
+  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao' | 'aguardando_aprovacao_gestor' | 'aprovado_administrativo' | 'publicado';
 
   historico: HistoricoItem[];
   origem: 'manual' | 'importada';

@@ -255,13 +255,15 @@ export default function VagasPage() {
       const isNew = isManualNew || isByRecebimento || isImportedFallback;
       const matchVagasNovas = !filterVagasNovas || isNew;
 
-      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas;
+      const matchComBanco = !filterComBanco || !!(v.tem_banco_valido || getBancoByVaga(v.id));
+
+      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas && matchComBanco;
     });
-  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, vacancyStatusTab]);
+  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab, getBancoByVaga]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, vacancyStatusTab]);
+  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -407,9 +409,10 @@ export default function VagasPage() {
     setFilterAssistente('all');
     setFilterLideranca('all');
     setFilterVagasNovas(false);
+    setFilterComBanco(false);
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas;
+  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas || filterComBanco;
 
   const prepareVagasForExport = (data: Vaga[]) => {
     return data.map(v => ({
@@ -694,6 +697,16 @@ export default function VagasPage() {
             >
               <Sparkles className={`h-3.5 w-3.5 ${filterVagasNovas ? 'text-white' : 'text-blue-500'}`} />
               Vagas Novas (24h) {countVagasNovas > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-blue-100 text-blue-700 border-none">{countVagasNovas}</Badge>}
+            </Button>
+
+            <Button 
+              variant={filterComBanco ? "default" : "outline"} 
+              size="sm" 
+              className={`h-9 text-[11px] font-bold gap-2 ${filterComBanco ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-slate-200 text-slate-600 bg-white'}`}
+              onClick={() => setFilterComBanco(!filterComBanco)}
+            >
+              <Database className={`h-3.5 w-3.5 ${filterComBanco ? 'text-white' : 'text-emerald-500'}`} />
+              Com Banco {countComBanco > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-emerald-100 text-emerald-700 border-none">{countComBanco}</Badge>}
             </Button>
 
             {hasFilters && (

@@ -523,7 +523,7 @@ export default function UnidadePortalPage() {
                               <TableCell className="text-sm">
                                 <span className={cn('font-bold', dias > 10 ? 'text-red-600' : 'text-slate-600')}>{dias}d</span>
                               </TableCell>
-                              <TableCell className="text-slate-600 text-sm">{v.etapa || '—'}</TableCell>
+                              <TableCell className="text-slate-600 text-sm">{v.acompanhamento?.etapa_atual || '—'}</TableCell>
                               <TableCell className="text-slate-600 text-sm">{v.analista_responsavel || '—'}</TableCell>
                             </TableRow>
                           );

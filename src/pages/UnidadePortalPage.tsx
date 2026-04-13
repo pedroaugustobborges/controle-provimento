@@ -23,7 +23,7 @@ import {
 import {
   Calendar as CalendarIcon, Download, LogOut, Building2,
   MessageSquare, CheckCircle2, AlertCircle, Clock, BarChart3,
-  Search, FileText, Edit3, Briefcase, Activity, Users
+  Search, FileText, Edit3, Briefcase, Activity, Users, Save, Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';

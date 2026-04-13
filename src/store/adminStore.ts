@@ -271,6 +271,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   addAuditLog: async (log) => {
     try {
       const newLog = {
+        usuario_id: get().currentUser?.id,
         usuario_nome: log.usuario_nome,
         usuario_email: log.usuario_email || '',
         perfil: log.perfil || '',

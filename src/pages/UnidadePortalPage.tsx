@@ -120,10 +120,6 @@ export default function UnidadePortalPage() {
     if (!obsDialog.convId) return;
     try {
       updateConvocacao(obsDialog.convId, { observacoes: obsText });
-      await (supabase as any)
-        .from('convocacoes')
-        .update({ observacoes: obsText })
-        .eq('id', obsDialog.convId);
       toast.success('Observação salva com sucesso.');
       setObsDialog({ open: false, convId: '', current: '' });
       setObsText('');

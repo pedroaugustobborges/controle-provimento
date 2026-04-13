@@ -190,11 +190,36 @@ export default function VagasPage() {
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
-  // Pre-compute set of vaga IDs that have banco (expensive lookup done once)
+  // Pre-compute set of vaga IDs that have banco (uses store's bancos for indexed matching)
   const vagasComBancoSet = useMemo(() => {
+    const { bancos } = useVagasStore.getState();
+    if (!bancos || bancos.length === 0) return new Set<string>();
+
     const set = new Set<string>();
+    
+    // Build a cargo index from bancos for fast lookup
+    const bancosByNormalizedCargo = new Map<string, typeof bancos>();
+    bancos.forEach(b => {
+      const key = (b.cargo || '').toLowerCase().trim();
+      if (!key) return;
+      const arr = bancosByNormalizedCargo.get(key) || [];
+      arr.push(b);
+      bancosByNormalizedCargo.set(key, arr);
+    });
+
     vagas.forEach(v => {
-      if (v.tem_banco_valido || getBancoByVaga(v.id)) {
+      if (v.tem_banco_valido) {
+        set.add(v.id);
+        return;
+      }
+      // Quick check: does any banco share the same cargo name?
+      const vagaCargo = (v.cargo || '').toLowerCase().trim();
+      if (vagaCargo && bancosByNormalizedCargo.has(vagaCargo)) {
+        set.add(v.id);
+        return;
+      }
+      // Fallback to full matching (only for vagas not yet matched)
+      if (getBancoByVaga(v.id)) {
         set.add(v.id);
       }
     });

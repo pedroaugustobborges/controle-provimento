@@ -460,6 +460,12 @@ export default function VagasPage() {
                     <Database className="h-3 w-3" /> Diagnóstico
                   </Button>
                 )}
+                <ExportButton 
+                  data={prepareVagasForExport(filtered)} 
+                  filename="vagas_export"
+                  label="Exportar Excel"
+                  className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl"
+                />
                 {permissions.canImport() && (
                   <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
                     <FileSpreadsheet className="h-4 w-4 text-primary/80" /> Importar Excel

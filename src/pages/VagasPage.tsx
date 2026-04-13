@@ -5,11 +5,11 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, BancoTalentos, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
 import { AcompanhamentoModal } from '@/components/AcompanhamentoModal';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
-  normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
+  normalizeCargo, normalizeUnitName, countVacancies, getStatusSummary, getCategoriaStatus,
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa,
   filterByRegionAndUnit, UNIDADES_POR_REGIAO
 } from '@/lib/vagaUtils';
@@ -81,8 +81,58 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+const BANCO_UNIT_GROUPS = [
+  ['GOIANIA', ['GOIÂNIA', 'GOIANIA', 'CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA GOIANIA', 'TEIA ANÁPOLIS', 'TEIA ANAPOLIS', 'TEIA APARECIDA', 'TEIA CANEDO', 'TEIA CEN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA PIN']],
+  ['UPA', ['UPA', 'VITÓRIA', 'VITORIA', 'SÃO PEDRO', 'SAO PEDRO', 'SUÁ', 'SUA']],
+  ['HRD', ['HRD', 'DOURADOS']],
+  ['HRC', ['HRC', 'HRCAC I', 'HRCAC II']],
+  ['CHS', ['CHS']],
+  ['HMSA', ['HMSA']],
+  ['JATAI', ['JATAÍ', 'JATAI']],
+  ['POLICLINICA', ['POLICLÍNICA', 'POLICLINICA']],
+] as const;
+
+const getUnitScope = (unit?: string | null) => {
+  const normalized = normalizeUnitName(unit || '');
+  if (!normalized) return [normalized];
+
+  for (const [canonicalUnit, aliases] of BANCO_UNIT_GROUPS) {
+    const normalizedAliases = aliases.map((alias) => normalizeUnitName(alias));
+    if (normalized === normalizeUnitName(canonicalUnit) || normalizedAliases.includes(normalized)) {
+      return [normalizeUnitName(canonicalUnit), ...normalizedAliases];
+    }
+  }
+
+  return [normalized];
+};
+
+const unitsShareBankScope = (vagaUnit?: string | null, bancoUnit?: string | null) => {
+  const vagaScope = new Set(getUnitScope(vagaUnit));
+  return getUnitScope(bancoUnit).some((unit) => vagaScope.has(unit));
+};
+
+const getLookupKeys = (value?: string | null) => {
+  const raw = String(value || '').trim();
+  const normalized = normalizeCargo(raw);
+  return Array.from(new Set([raw, normalized].filter(Boolean)));
+};
+
+const pushLookup = <T,>(map: Map<string, T[]>, key: string, value: T) => {
+  if (!key) return;
+  const list = map.get(key) || [];
+  list.push(value);
+  map.set(key, list);
+};
+
+const passesVacancyStatusTab = (category: string, tab: string) => {
+  if (tab === 'ativas') return category !== 'concluidas' && category !== 'vagas_interrompidas';
+  if (tab === 'concluidas') return category === 'concluidas' || category === 'vagas_interrompidas';
+  if (tab === 'em_andamento') return category === 'em_andamento';
+  return true;
+};
+
 export default function VagasPage() {
-  const { vagas, deleteVaga, updateVaga, getBancoByVaga, getMatchingDiagnostic, fetchVagas, fetchBancos, isLoadingVagas, isInitialLoad } = useVagasStore();
+  const { vagas, bancos, deleteVaga, updateVaga, getMatchingDiagnostic, fetchVagas, fetchBancos, isLoadingVagas, isInitialLoad } = useVagasStore();
   
   useEffect(() => {
     fetchVagas();
@@ -190,66 +240,63 @@ export default function VagasPage() {
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
-  // Pre-compute set of vaga IDs that have banco (uses store's bancos for indexed matching)
-  const vagasComBancoSet = useMemo(() => {
-    const { bancos } = useVagasStore.getState();
-    if (!bancos || bancos.length === 0) return new Set<string>();
+  const vagasComBancoMap = useMemo(() => {
+    if (!bancos.length || !vagas.length) return new Map<string, BancoTalentos>();
 
-    const set = new Set<string>();
-    
-    // 1. Build Indexes for fast lookup
-    const bancosById = new Map<string, any>();
-    const bancosByProcesso = new Map<string, any>();
-    const bancosByEdital = new Map<string, any>();
-    const bancosByNormalizedCargo = new Map<string, any[]>();
+    const bancosById = new Map<string, BancoTalentos>();
+    const bancosByProcesso = new Map<string, BancoTalentos[]>();
+    const bancosByEdital = new Map<string, BancoTalentos[]>();
+    const bancosByCargo = new Map<string, BancoTalentos[]>();
 
-    bancos.forEach(b => {
-      if (b.id) bancosById.set(b.id, b);
-      
-      const proc = (b.numero_processo || b.numero_processo_seletivo || '').trim();
-      if (proc) bancosByProcesso.set(proc, b);
-      
-      const editalNum = (b.numero_edital || '').trim();
-      if (editalNum) bancosByEdital.set(editalNum, b);
-      
-      const cargoKey = (b.cargo || '').toLowerCase().trim();
-      if (cargoKey) {
-        const list = bancosByNormalizedCargo.get(cargoKey) || [];
-        list.push(b);
-        bancosByNormalizedCargo.set(cargoKey, list);
+    bancos.forEach((banco) => {
+      if (banco.id) bancosById.set(banco.id, banco);
+
+      getLookupKeys(banco.numero_processo || banco.numero_processo_seletivo).forEach((key) => pushLookup(bancosByProcesso, key, banco));
+      getLookupKeys(banco.numero_edital).forEach((key) => pushLookup(bancosByEdital, key, banco));
+
+      const cargoKey = normalizeCargo(banco.cargo || banco.cargo_normalizado || '');
+      if (cargoKey) pushLookup(bancosByCargo, cargoKey, banco);
+    });
+
+    const matched = new Map<string, BancoTalentos>();
+
+    vagas.forEach((vaga) => {
+      let bancoMatch: BancoTalentos | undefined;
+
+      if (vaga.banco_id) {
+        bancoMatch = bancosById.get(vaga.banco_id);
+      }
+
+      if (!bancoMatch) {
+        const processCandidates = [
+          ...getLookupKeys(vaga.numero_processo),
+          ...getLookupKeys(vaga.requisicao),
+          ...getLookupKeys(vaga.numero_requisicao),
+        ].flatMap((key) => bancosByProcesso.get(key) || bancosByEdital.get(key) || []);
+
+        bancoMatch = processCandidates.find((banco) => unitsShareBankScope(vaga.unidade, banco.unidade));
+      }
+
+      if (!bancoMatch) {
+        const editalCandidates = getLookupKeys(vaga.numero_edital).flatMap((key) => bancosByEdital.get(key) || bancosByProcesso.get(key) || []);
+        bancoMatch = editalCandidates.find((banco) => unitsShareBankScope(vaga.unidade, banco.unidade));
+      }
+
+      if (!bancoMatch) {
+        const cargoKey = normalizeCargo(vaga.cargo || '');
+        const cargoCandidates = cargoKey ? (bancosByCargo.get(cargoKey) || []) : [];
+        bancoMatch = cargoCandidates.find((banco) => unitsShareBankScope(vaga.unidade, banco.unidade));
+      }
+
+      if (bancoMatch) {
+        matched.set(vaga.id, bancoMatch);
       }
     });
 
-    // 2. Perform matching for each vaga (O(1) lookups)
-    vagas.forEach(v => {
-      // a. Already marked or explicit link
-      if (v.tem_banco_valido || (v.banco_id && bancosById.has(v.banco_id))) {
-        set.add(v.id);
-        return;
-      }
-      
-      // b. Process/Edital number match
-      const vProc = (v.numero_processo || v.requisicao || v.numero_requisicao || '').trim();
-      if (vProc && (bancosByProcesso.has(vProc) || bancosByEdital.has(vProc))) {
-        set.add(v.id);
-        return;
-      }
-      
-      const vEdital = (v.numero_edital || '').trim();
-      if (vEdital && (bancosByEdital.has(vEdital) || bancosByProcesso.has(vEdital))) {
-        set.add(v.id);
-        return;
-      }
+    return matched;
+  }, [vagas, bancos]);
 
-      // c. Fast cargo name match
-      const vagaCargo = (v.cargo || '').toLowerCase().trim();
-      if (vagaCargo && bancosByNormalizedCargo.has(vagaCargo)) {
-        set.add(v.id);
-      }
-    });
-    
-    return set;
-  }, [vagas]);
+  const vagasComBancoSet = useMemo(() => new Set(vagasComBancoMap.keys()), [vagasComBancoMap]);
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
@@ -259,6 +306,10 @@ export default function VagasPage() {
     // 2. Filtragem interna da tela
     return getValidVacancyBase(baseRecords, filterUnidade, filterMes);
   }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes]);
+
+  const statusScopedBase = useMemo(() => {
+    return canonicalBase.filter((vaga) => passesVacancyStatusTab(vaga.categoria_status || getCategoriaStatus(vaga), vacancyStatusTab));
+  }, [canonicalBase, vacancyStatusTab]);
 
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {
@@ -272,12 +323,8 @@ export default function VagasPage() {
     endOfToday.setHours(23, 59, 59, 999);
     const endOfTodayTime = endOfToday.getTime();
 
-    return canonicalBase.filter((v) => {
-      // Apply status tab filter first (Performance + Logic)
+    return statusScopedBase.filter((v) => {
       const category = v.categoria_status || getCategoriaStatus(v);
-      if (vacancyStatusTab === 'ativas' && (category === 'concluidas' || category === 'vagas_interrompidas')) return false;
-      if (vacancyStatusTab === 'concluidas' && category !== 'concluidas' && category !== 'vagas_interrompidas') return false;
-      if (vacancyStatusTab === 'em_andamento' && category !== 'em_andamento') return false;
 
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || 
@@ -321,7 +368,7 @@ export default function VagasPage() {
 
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas && matchComBanco;
     });
-  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab, vagasComBancoSet]);
+  }, [statusScopedBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vagasComBancoSet]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -405,7 +452,7 @@ export default function VagasPage() {
   const countConvocacao = counts.convocacao;
   const countAguardandoUnidade = counts.aguardando_unidade;
   const countDocumentacao = counts.documentacao;
-  const countComBanco = counts.com_banco_valido;
+  const countComBanco = useMemo(() => statusScopedBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length, [statusScopedBase, vagasComBancoSet]);
   const countVagasNovas = counts.vagas_novas;
 
 
@@ -827,6 +874,7 @@ export default function VagasPage() {
               <TableBody>
                 {paginatedData.map((v) => {
                   const categoria = v.categoria_status || getCategoriaStatus(v);
+                  const bancoFound = vagasComBancoMap.get(v.id);
                   const isConsultaOnly = ['concluidas', 'cancelada', 'suspensa'].includes(categoria);
                   const canSendToEdital = ['sem_status', 'aguardando_unidade', 'em_andamento'].includes(categoria);
                   // Allow calling in initial stages, edital stages, or when specifically in "convocação" 
@@ -890,7 +938,7 @@ export default function VagasPage() {
                         {v.numero_vagas || v.quantidade || 0}
                       </TableCell>
                       <TableCell className="text-center py-3 px-4 h-14" onClick={(e) => e.stopPropagation()}>
-                        {getBancoByVaga(v.id) ? (
+                        {bancoFound ? (
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -970,7 +1018,6 @@ export default function VagasPage() {
                             {canCall && (
                               <DropdownMenuItem 
                                 onClick={() => {
-                                  const bancoFound = getBancoByVaga(v.id);
                                   if (bancoFound) {
                                     navigate(`/convocacoes?open=true&vagaId=${v.id}`);
                                   } else {
@@ -983,7 +1030,7 @@ export default function VagasPage() {
                               </DropdownMenuItem>
                             )}
 
-                            {getBancoByVaga(v.id) && (
+                            {bancoFound && (
                               <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
                                 <Database className="h-4 w-4" /> Ver Banco de Talentos
                               </DropdownMenuItem>

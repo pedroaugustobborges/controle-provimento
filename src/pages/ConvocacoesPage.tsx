@@ -138,7 +138,7 @@ export default function ConvocacoesPage() {
     if (selectedUnidade === 'all') return true;
     const normUnidade = unidade?.toUpperCase().trim() || '';
     // Vitória group: matches SÃO PEDRO, SUÁ, or VITÓRIA
-    if (selectedUnidade === 'Vitória') {
+    if (selectedUnidade.toUpperCase() === 'VITÓRIA') {
       return UNIDADES_VITORIA.some(u => u.toUpperCase() === normUnidade) ||
              normUnidade.includes('VITÓRIA') || normUnidade.includes('VITORIA');
     }

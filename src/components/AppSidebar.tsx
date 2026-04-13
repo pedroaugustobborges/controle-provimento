@@ -1,8 +1,8 @@
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  Users, 
-  CheckCircle, 
+import {
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  CheckCircle,
   TrendingUp,
   Settings,
   HelpCircle,
@@ -15,7 +15,9 @@ import {
   Check,
   Search,
   LogOut,
-  Circle
+  Circle,
+  Building2,
+  ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -159,6 +161,7 @@ export function AppSidebar() {
     { title: 'Relatórios', url: '/relatorios', icon: FileSpreadsheet, visible: isManagement || hasFullAccess },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
     { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
+    { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: isManagement || hasFullAccess, external: true },
   ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess]);
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
@@ -340,36 +343,61 @@ export function AppSidebar() {
             <SidebarMenu className="space-y-1.5">
               {secondaryItems.map((item) => {
                 const active = isParentActive(item);
+                const isExternal = (item as any).external === true;
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild tooltip={item.title}>
-                      <NavLink
-                        to={item.url}
-                        className={cn(
-                          "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                          active 
-                            ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
+                      {isExternal ? (
+                        <a
+                          href={item.url}
+                          onClick={(e) => { e.preventDefault(); navigate(item.url); }}
+                          className={cn(
+                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                            active
+                              ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20"
+                              : "text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300 hover:translate-x-1"
+                          )}
+                        >
+                          <item.icon className={cn(
+                            "h-5 w-5 shrink-0 transition-all duration-300",
+                            active ? "text-emerald-300 scale-110" : "text-slate-400 group-hover:text-emerald-300 group-hover:scale-110"
+                          )} />
+                          {!collapsed && (
+                            <>
+                              <span className="text-[13.5px] font-bold tracking-tight flex-1">{item.title}</span>
+                              <ExternalLink className="h-3 w-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+                            </>
+                          )}
+                        </a>
+                      ) : (
+                        <NavLink
+                          to={item.url}
+                          className={cn(
+                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                            active
+                              ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20"
                               : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
-                        )}
-                      >
-                        <item.icon className={cn(
-                          "h-5 w-5 shrink-0 transition-all duration-300",
-                          active 
-                            ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
-                            : "text-slate-400 group-hover:text-white group-hover:scale-110"
-                        )} />
-                        {!collapsed && (
-                          <span className={cn(
-                            "text-[13.5px] font-bold tracking-tight",
-                            !active && "group-hover:translate-x-0.5 transition-transform duration-300"
-                          )}>
-                            {item.title}
-                          </span>
-                        )}
-                        {active && !collapsed && (
-                          <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
-                        )}
-                      </NavLink>
+                          )}
+                        >
+                          <item.icon className={cn(
+                            "h-5 w-5 shrink-0 transition-all duration-300",
+                            active
+                              ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+                              : "text-slate-400 group-hover:text-white group-hover:scale-110"
+                          )} />
+                          {!collapsed && (
+                            <span className={cn(
+                              "text-[13.5px] font-bold tracking-tight",
+                              !active && "group-hover:translate-x-0.5 transition-transform duration-300"
+                            )}>
+                              {item.title}
+                            </span>
+                          )}
+                          {active && !collapsed && (
+                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
+                          )}
+                        </NavLink>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

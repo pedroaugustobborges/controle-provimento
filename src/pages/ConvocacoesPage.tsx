@@ -128,7 +128,7 @@ export default function ConvocacoesPage() {
       return [...UNIDADES_GOIANIA].sort();
     }
     if (selectedRegiao === 'outras') {
-      return [...UNIDADES_OUTRAS_AGRUPADAS].sort();
+      return [...UNIDADES_OUTRAS_AGRUPADAS];
     }
     return Object.keys(BASES_CONVOCACAO).sort();
   }, [selectedRegiao]);

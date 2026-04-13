@@ -418,6 +418,38 @@ export default function ValidacaoEditaisPage() {
                 className="min-h-[100px] resize-none"
               />
             </div>
+
+            {selectedVaga?.status_fluxo_edital === 'enviado_validacao' && (
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-3">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-amber-600" />
+                  <span className="text-xs font-bold text-amber-900">Solicitar Aprovação de Gestor</span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Select value={selectedGestorId} onValueChange={setSelectedGestorId}>
+                      <SelectTrigger className="bg-white border-amber-200">
+                        <SelectValue placeholder="Selecione um Gestor..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gestores.map(g => (
+                          <SelectItem key={g.id} value={g.id}>{g.nome_completo}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="text-amber-700 border-amber-300 hover:bg-amber-100 font-bold"
+                    onClick={() => handleRequestGestorApproval(selectedVaga.id)}
+                    disabled={!selectedGestorId}
+                  >
+                    Solicitar
+                  </Button>
+                </div>
+                <p className="text-[10px] text-amber-600 italic">O gestor selecionado receberá uma notificação para validar este edital.</p>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 flex-wrap">

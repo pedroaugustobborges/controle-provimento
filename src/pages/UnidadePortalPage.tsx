@@ -523,10 +523,10 @@ export default function UnidadePortalPage() {
                       const sla = v.data_abertura ? calcDiasAberto(v.data_abertura) : -1;
                       return (
                       <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="font-bold text-slate-900 text-sm whitespace-nowrap">{v.numero_processo_seletivo || v.numero_edital || '—'}</TableCell>
+                        <TableCell className="font-bold text-slate-900 text-sm whitespace-nowrap">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>
                         <TableCell className="font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
-                        <TableCell className="text-slate-600 text-xs font-semibold whitespace-nowrap">{v.etapa || v.status || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold whitespace-nowrap">{(v as any).etapa || v.acompanhamento?.etapa_atual || v.status || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold">{v.analista_responsavel || '—'}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-700 border-blue-100 whitespace-nowrap">

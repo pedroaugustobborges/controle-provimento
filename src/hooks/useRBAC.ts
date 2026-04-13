@@ -38,7 +38,8 @@ export function useRBAC() {
   };
 
   const isAdmin = userToUse?.perfil?.toLowerCase() === 'administrador' || userToUse?.perfil?.toLowerCase() === 'admin';
-  const isManagement = ['gestão', 'gerência', 'supervisão', 'coordenação'].includes(userToUse?.perfil?.toLowerCase() || '');
+  const isSupervisao = userToUse?.perfil?.toLowerCase() === 'supervisão';
+  const isManagement = ['gestão', 'gerência', 'coordenação'].includes(userToUse?.perfil?.toLowerCase() || '');
   const isFullAccessProfile = isAdmin || isManagement || userToUse?.perfil?.toLowerCase() === 'analista administrativo';
 
   const getPermissions = (module: string): Permissions => {
@@ -100,6 +101,7 @@ export function useRBAC() {
     error,
     hasRole,
     isAdmin,
+    isSupervisao,
     isManagement,
     isFullAccessProfile,
     getPermissions,

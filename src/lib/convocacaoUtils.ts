@@ -5,7 +5,7 @@ import { normalizeCargo } from './vagaUtils';
 export const BASES_CONVOCACAO: Record<string, string[]> = {
   'Goiânia': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'TEIA ANÁPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
   'Goiás': ['POLICLÍNICA', 'JATAÍ'],
-  'Vitória': ['VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'UPA'],
+  'Vitória': ['VITÓRIA', 'SÃO PEDRO', 'SUÁ'],
   'Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 

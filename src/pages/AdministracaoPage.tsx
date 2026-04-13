@@ -350,7 +350,7 @@ export default function AdministracaoPage() {
   const handleUploadPhoto = async (file: File, isEdit = false) => {
     try {
       const fileExt = file.name.split('.').pop();
-      const userId = isEdit ? editingUser?.id : newUser?.id || 'new';
+      const userId = isEdit ? editingUser?.id : 'new';
       const filePath = `${userId}/${Date.now()}.${fileExt}`;
       
       const { data, error: uploadError } = await supabase.storage

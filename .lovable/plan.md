@@ -1,13 +1,18 @@
 
-## Plano: Restaurar cor padrão dos cabeçalhos das tabelas
+## Plano: Corrigir cor permanente dos cabeçalhos das tabelas
 
 ### Problema
-Os `TableHead` nas 3 abas do portal estão com classes customizadas (ex: `bg-slate-50/80`, `text-slate-500`) que sobrescrevem o estilo padrão escuro (`bg-[#221f44]`, texto branco) definido em `src/components/ui/table.tsx`.
+O componente `TableHeader` em `src/components/ui/table.tsx` define `bg-[#221f44]` e `[&_tr]:hover:bg-[#221f44]` — mas o `TableRow` tem `hover:bg-slate-50/50` como estilo padrão. No estado sem hover, o `TableRow` dentro do header não tem fundo escuro explícito, ficando esbranquiçado. A cor escura só aparece no hover porque o `[&_tr]:hover:bg-[#221f44]` do `TableHeader` entra em ação.
 
 ### Solução
-No `UnidadePortalPage.tsx`, remover as classes de cor/fundo customizadas dos `TableHead` em todas as abas (Status, Convocações, Observações), deixando apenas classes de layout (padding, etc.) para que herdem o estilo padrão do componente `TableHeader`/`TableHead`.
+No `src/components/ui/table.tsx`, alterar o `TableHeader` para forçar o fundo escuro nos `<tr>` filhos **permanentemente**, não apenas no hover:
+
+**De:** `[&_tr]:hover:bg-[#221f44]`  
+**Para:** `[&_tr]:bg-[#221f44] [&_tr]:hover:bg-[#221f44]`
+
+Isso garante que o `<tr>` dentro do header sempre tenha fundo escuro, sobrescrevendo o `hover:bg-slate-50/50` do `TableRow`.
 
 ### Arquivo alterado
-- `src/pages/UnidadePortalPage.tsx`
+- `src/components/ui/table.tsx` (apenas o `TableHeader`)
 
 ### Sem alteração de banco de dados

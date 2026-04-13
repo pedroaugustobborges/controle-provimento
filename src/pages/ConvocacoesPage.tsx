@@ -243,7 +243,7 @@ export default function ConvocacoesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={view === 'diaria' && selectedRegiao ? `Convocações Diárias — ${selectedRegiao === 'goiania' ? 'Goiânia' : 'Outras Unidades'}` : 'Convocações'}
+        title={view === 'diaria' && selectedRegiao ? `Agenda ${selectedRegiao === 'goiania' ? 'Goiânia' : 'Demais Unidades'}` : 'Convocações'}
         actions={
           <>
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">

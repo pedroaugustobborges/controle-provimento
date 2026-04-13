@@ -83,10 +83,10 @@ export default function UnidadePortalPage() {
     try {
       updateConvocacao(obsDialog.convId, { observacoes: obsText });
       // Also persist to Supabase
-      await supabase
-        .from('convocacoes')
-        .update({ observacoes: obsText })
-        .eq('id', obsDialog.convId);
+      await (supabase
+        .from('convocacoes' as any)
+        .update({ observacoes: obsText } as any)
+        .eq('id', obsDialog.convId));
       toast.success('Observação salva com sucesso.');
       setObsDialog({ open: false, convId: '', current: '' });
       setObsText('');

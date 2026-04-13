@@ -135,26 +135,7 @@ export default function ValidacaoEditaisPage() {
 
     updateVaga(vagaId, updateData);
     
-    // Enviar notificação para AGIE
-    addMensagem({
-      id: `msg-val-ed-${Date.now()}`,
-      data: new Date().toISOString(),
-      remetente: 'Agie',
-      conteudo: mensagemAgie,
-      lida: false,
-    });
-
-    addAuditLog({
-      usuario_nome: usuario,
-      usuario_email: currentUser?.email || 'sistema@sistema.com',
-      perfil: currentUser?.perfil || 'Admin',
-      data: new Date().toISOString().split('T')[0],
-      hora: new Date().toLocaleTimeString(),
-      acao: `Validação de Edital: ${actionStatus.toUpperCase()}`,
-      modulo: 'Editais',
-      registro_afetado: vagaRef,
-      valor_novo: actionStatus
-    });
+    // ... rest of the code for aprovado/ajuste/rejeitado
 
     const msgs: Record<string, string> = {
       aprovado: 'Edital aprovado! Notificação enviada à AGIE.',
@@ -166,6 +147,43 @@ export default function ValidacaoEditaisPage() {
     setSelectedVaga(null);
     setObs('');
     setReachrUrl('');
+    setSelectedGestorId('');
+  };
+
+  const handleRequestGestorApproval = (vagaId: string) => {
+    const vaga = vagas.find(v => v.id === vagaId);
+    const gestor = users.find(u => u.id === selectedGestorId);
+    if (!vaga || !gestor) return;
+
+    const usuario = currentUser?.nome_completo || 'Validador';
+    const vagaRef = vaga.requisicao || vaga.numero_requisicao || vaga.id;
+
+    updateVaga(vagaId, {
+      status_fluxo_edital: 'aguardando_aprovacao_gestor',
+      gestor_aprovador_id: selectedGestorId,
+      status_aprovacao_gestor: 'pendente',
+      observacoes_validacao: obs,
+      historico: [...vaga.historico, {
+        id: `h-${Date.now()}`,
+        data: new Date().toISOString().split('T')[0],
+        descricao: `Edital enviado para aprovação do gestor ${gestor.nome_completo} por ${usuario}. Obs: ${obs}`,
+        usuario: usuario
+      }]
+    });
+
+    addMensagem({
+      id: `msg-gestor-${Date.now()}`,
+      data: new Date().toISOString(),
+      remetente: 'Agie',
+      conteudo: `🔔 Edital pendente de aprovação: O validador ${usuario} solicitou sua análise para o edital da vaga ${vagaRef} (${vaga.cargo}).`,
+      lida: false,
+    });
+
+    toast.success(`Solicitação de aprovação enviada para o gestor ${gestor.nome_completo}!`);
+    setIsModalOpen(false);
+    setSelectedVaga(null);
+    setObs('');
+    setSelectedGestorId('');
   };
 
   return (

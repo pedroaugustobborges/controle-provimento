@@ -17,7 +17,7 @@ export const UNIDADES_GOIANIA = [
 
 export const UNIDADES_OUTRAS = [
   'POLICLÍNICA', 'JATAÍ',
-  'VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'UPA',
+  'VITÓRIA', 'SÃO PEDRO', 'SUÁ',
   'DOURADOS', 'CHS', 'HMSA', 'HRCAC',
   'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
 ];

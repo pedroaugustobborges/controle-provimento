@@ -23,7 +23,7 @@ import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { ExportButton } from '@/components/ExportButton';
-import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO, getRegiaoForUnidade } from '@/lib/convocacaoUtils';
+import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO, getRegiaoForUnidade, UNIDADES_GOIANIA, UNIDADES_OUTRAS, UNIDADES_OUTRAS_AGRUPADAS, UNIDADES_VITORIA } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -61,7 +61,7 @@ export default function ConvocacoesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { vagas, convocacoes, bancos, bloqueios, getBancoByVaga } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
-  const [view, setView] = useState<'kanban' | 'list' | 'diaria'>('diaria');
+  const [view, setView] = useState<'kanban' | 'list' | 'diaria' | 'pending'>('diaria');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDevolutivaOpen, setIsDevolutivaOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<any>(null);
@@ -86,7 +86,7 @@ export default function ConvocacoesPage() {
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['kanban', 'list', 'diaria'].includes(tab)) {
+    if (tab && ['kanban', 'list', 'diaria', 'pending'].includes(tab)) {
       setView(tab as any);
     }
     // Abrir dialog de convocação automaticamente quando vindo de Todas as Vagas
@@ -124,26 +124,33 @@ export default function ConvocacoesPage() {
   };
 
   const unidades = useMemo(() => {
-    const todasBases = Object.keys(BASES_CONVOCACAO).sort();
-    // Filtrar as bases do dropdown de acordo com a região ativa
     if (selectedRegiao === 'goiania') {
-      return todasBases.filter(b => b === 'Goiânia');
+      return [...UNIDADES_GOIANIA].sort();
     }
     if (selectedRegiao === 'outras') {
-      return todasBases.filter(b => b !== 'Goiânia');
+      return [...UNIDADES_OUTRAS_AGRUPADAS];
     }
-    return todasBases;
+    return Object.keys(BASES_CONVOCACAO).sort();
   }, [selectedRegiao]);
 
   // Helper: check if a unit matches the selected base/unit filter
   const matchesUnidadeFilter = (unidade: string) => {
     if (selectedUnidade === 'all') return true;
+    const normUnidade = unidade?.toUpperCase().trim() || '';
+    // Vitória group: matches SÃO PEDRO, SUÁ, or VITÓRIA
+    if (selectedUnidade.toUpperCase() === 'VITÓRIA') {
+      return UNIDADES_VITORIA.some(u => u.toUpperCase() === normUnidade) ||
+             normUnidade.includes('VITÓRIA') || normUnidade.includes('VITORIA');
+    }
+    // Check if filter is a base (Goiânia, Goiás, etc.)
     const unidadesNaBase = BASES_CONVOCACAO[selectedUnidade];
     if (unidadesNaBase) {
-      return unidadesNaBase.some(u => u.toUpperCase() === unidade?.toUpperCase()) || 
+      return unidadesNaBase.some(u => u.toUpperCase() === normUnidade) || 
              getBaseForUnidade(unidade) === selectedUnidade;
     }
-    return unidade === selectedUnidade;
+    // Direct unit comparison
+    const normFilter = selectedUnidade.toUpperCase().trim();
+    return normUnidade.includes(normFilter) || normFilter.includes(normUnidade);
   };
 
   // Unit filtering
@@ -198,6 +205,10 @@ export default function ConvocacoesPage() {
           if (regiaoUnidade !== 'outras') return false;
         }
 
+        if (view === 'pending') {
+          return c.status === 'pendente';
+        }
+
         if (view === 'diaria') {
           return c.data_convocacao === format(selectedDate, 'yyyy-MM-dd');
         }
@@ -243,7 +254,7 @@ export default function ConvocacoesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={view === 'diaria' && selectedRegiao ? `Convocações Diárias — ${selectedRegiao === 'goiania' ? 'Goiânia' : 'Outras Unidades'}` : 'Convocações'}
+        title={view === 'diaria' && selectedRegiao ? `Agenda ${selectedRegiao === 'goiania' ? 'Goiânia' : 'Demais Unidades'}` : 'Convocações'}
         actions={
           <>
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">
@@ -522,6 +533,46 @@ export default function ConvocacoesPage() {
                     <TableRow>
                       <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
                         Nenhuma convocação registrada.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        ) : view === 'pending' ? (
+          <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <CardHeader className="bg-slate-50/50 border-b pb-3">
+              <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-500" />
+                Convocações Pendentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/80">
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Candidato</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Cargo</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Unidade</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Data</TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredConvocacoes.map((conv) => (
+                    <TableRow key={conv.id} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="font-medium text-sm">{conv.candidato}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{conv.cargo}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{conv.unidade}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{formatDate(conv.data_convocacao)}</TableCell>
+                      <TableCell><StatusBadge status={conv.status} /></TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredConvocacoes.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-medium italic">
+                        Nenhuma convocação pendente.
                       </TableCell>
                     </TableRow>
                   )}

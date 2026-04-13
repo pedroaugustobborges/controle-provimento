@@ -1,27 +1,33 @@
 
 
-## Plano — Corrigir Agenda Diária: horários, informações e separação por base
+## Plano: Corrigir upload de foto de usuário na Administração
 
-### 1. Corrigir horários fixos (`src/lib/convocacaoUtils.ts`)
-- Remover `12:30` e `13:30` — voltar para os **5 horários corretos**: `08:30, 09:30, 10:30, 11:30, 14:30`.
+### Problema
+O bucket `avatars` existe e é público para leitura, mas as políticas de INSERT e UPDATE exigem que o caminho do arquivo comece com o `auth.uid()` do usuário que faz o upload. Como o admin está fazendo upload em nome de outro usuário, e o código usa `Math.random()` como nome do arquivo (sem pasta do user), o upload é bloqueado pelo RLS.
 
-### 2. Separar lógica por base na Agenda (`src/components/AgendaDiaria.tsx`)
-- **Base Goiânia**: exibir grade fixa com 5 horários e 5 slots cada. Popover mostra detalhes completos.
-- **Outras bases** (Goiás, Vitória, Fora): sem grade fixa. Mostrar seção "Horário Livre" com lista das convocações do dia e **quantidade total agendada**.
+### Solução
 
-### 3. Melhorar informações no Popover de cada horário
-- Cada slot ocupado deve mostrar: **nome do candidato**, **cargo**, **unidade**, badge presencial/online.
-- Exibir a unidade de forma mais visível (atualmente está como `conv.cargo` mas falta `conv.unidade`).
+**Migration SQL** — Substituir as políticas restritivas por políticas que permitem:
+- Qualquer usuário autenticado pode fazer upload no bucket `avatars` (INSERT)
+- Qualquer usuário autenticado pode atualizar arquivos no bucket `avatars` (UPDATE)
+- Manter SELECT público (já existe)
 
-### 4. Indicadores visuais na grade compacta
-- Cada linha da grade deve mostrar **slots livres** (ex: "3/5 livres") em vez de só "Livre" genérico.
-- Melhorar ícones e cores: usar design mais limpo com bordas arredondadas e espaçamento adequado.
+```sql
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
 
-### 5. Receber `selectedBase` como prop ou detectar automaticamente
-- A `AgendaDiaria` precisa saber se está mostrando Goiânia ou outra base para decidir qual layout usar. Usar o filtro de unidade da `ConvocacoesPage` para determinar isso.
+CREATE POLICY "Authenticated users can upload avatars"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
 
-### Arquivos afetados
-- `src/lib/convocacaoUtils.ts` — corrigir array de horários
-- `src/components/AgendaDiaria.tsx` — reescrever com separação por base, melhorar popover e visual
-- `src/pages/ConvocacoesPage.tsx` — passar informação de base selecionada para AgendaDiaria
+CREATE POLICY "Authenticated users can update avatars"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+```
+
+**`src/pages/AdministracaoPage.tsx`** (~linha 350-373):
+- Melhorar o `handleUploadPhoto` para usar um caminho mais organizado: `avatars/{userId}/{timestamp}.{ext}` em vez de `Math.random()`
+- Isso facilita limpeza futura e organização
+
+Nenhuma outra alteração necessária.
 

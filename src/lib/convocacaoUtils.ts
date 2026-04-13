@@ -22,6 +22,15 @@ export const UNIDADES_OUTRAS = [
   'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
 ];
 
+export const UNIDADES_VITORIA = ['SÃO PEDRO', 'SUÁ'];
+
+export const UNIDADES_OUTRAS_AGRUPADAS = [
+  'POLICLÍNICA', 'JATAÍ',
+  'VITÓRIA',
+  'DOURADOS', 'CHS', 'HMSA', 'HRCAC',
+  'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
+];
+
 export function getRegiaoForUnidade(unidade: string): 'goiania' | 'outras' | null {
   const normUnidade = unidade?.toUpperCase().trim() || '';
   if (UNIDADES_GOIANIA.some(u => normUnidade.includes(u.toUpperCase()) || u.toUpperCase().includes(normUnidade))) {

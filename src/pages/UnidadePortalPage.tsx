@@ -378,23 +378,4 @@ export default function UnidadePortalPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-bold">
               <MessageSquare className="h-5 w-5 text-primary" />
-              Observação
-            </DialogTitle>
-          </DialogHeader>
-          <Textarea
-            value={obsText}
-            onChange={(e) => setObsText(e.target.value)}
-            placeholder="Digite a observação para este candidato..."
-            className="min-h-[120px] resize-none"
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setObsDialog({ open: false, convId: '', current: '' })}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveObs}>Salvar observação</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+              Observ

@@ -229,14 +229,14 @@ export default function VagasPage() {
       }
       
       // b. Process/Edital number match
-      const vProc = (v.numero_processo || v.numero_processo_seletivo || v.requisicao || '').trim();
-      if (vProc && bancosByProcesso.has(vProc)) {
+      const vProc = (v.numero_processo || v.requisicao || v.numero_requisicao || '').trim();
+      if (vProc && (bancosByProcesso.has(vProc) || bancosByEdital.has(vProc))) {
         set.add(v.id);
         return;
       }
       
       const vEdital = (v.numero_edital || '').trim();
-      if (vEdital && bancosByEdital.has(vEdital)) {
+      if (vEdital && (bancosByEdital.has(vEdital) || bancosByProcesso.has(vEdital))) {
         set.add(v.id);
         return;
       }

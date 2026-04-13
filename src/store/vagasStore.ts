@@ -64,10 +64,9 @@ const buildImportedFileFromHistory = (history: ImportHistory): ImportedFile => (
   vaga_importacao_id: history.referencia_arquivo || history.id,
 });
 
-const fetchAllRows = async (tableName: 'vagas' | 'banco_candidatos' | 'importacoes') => {
+const fetchAllRows = async (tableName: 'vagas' | 'banco_candidatos' | 'importacoes', columns: string = '*') => {
   const { supabase } = await import('@/integrations/supabase/client');
   
-  // Use a head request to get the total count first
   const { count, error: countError } = await supabase
     .from(tableName)
     .select('*', { count: 'exact', head: true });
@@ -76,29 +75,28 @@ const fetchAllRows = async (tableName: 'vagas' | 'banco_candidatos' | 'importaco
   
   if (!count || count === 0) return [];
 
-  // If the count is small enough for one request, just do it
-  if (count <= PAGE_SIZE) {
+  const CHUNK_SIZE = 1000;
+  if (count <= CHUNK_SIZE) {
     const { data, error } = await supabase
       .from(tableName)
-      .select('*')
+      .select(columns)
       .order('created_at', { ascending: false })
-      .range(0, PAGE_SIZE - 1);
+      .range(0, CHUNK_SIZE - 1);
     
     if (error) throw error;
     return data || [];
   }
 
-  // For larger datasets, fetch in parallel chunks for maximum speed
-  const numChunks = Math.ceil(count / PAGE_SIZE);
+  const numChunks = Math.ceil(count / CHUNK_SIZE);
   const promises = [];
 
   for (let i = 0; i < numChunks; i++) {
-    const from = i * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+    const from = i * CHUNK_SIZE;
+    const to = from + CHUNK_SIZE - 1;
     promises.push(
       supabase
         .from(tableName)
-        .select('*')
+        .select(columns)
         .order('created_at', { ascending: false })
         .range(from, to)
     );

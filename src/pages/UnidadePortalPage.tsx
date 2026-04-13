@@ -504,11 +504,11 @@ export default function UnidadePortalPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Cargo</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Status</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Data</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">SLA</TableHead>
+                     <TableRow>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>SLA</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -555,11 +555,11 @@ export default function UnidadePortalPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Hora</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Candidato</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Status</TableHead>
-                      <TableHead className="py-5 px-6 w-10 bg-slate-50/80"></TableHead>
+                     <TableRow>
+                      <TableHead>Hora</TableHead>
+                      <TableHead>Candidato</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -595,14 +595,14 @@ export default function UnidadePortalPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
-                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Candidato</TableHead>
-                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Unidade</TableHead>
-                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 min-w-[160px]">Status/Destino</TableHead>
-                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 min-w-[130px]">Horário/Plantão</TableHead>
-                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 text-center">Aceito</TableHead>
-                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 min-w-[200px]">Observação</TableHead>
-                        <TableHead className="py-5 px-4 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80 w-20 text-center">Ação</TableHead>
+                       <TableRow>
+                        <TableHead>Candidato</TableHead>
+                        <TableHead>Unidade</TableHead>
+                        <TableHead className="min-w-[160px]">Status/Destino</TableHead>
+                        <TableHead className="min-w-[130px]">Horário/Plantão</TableHead>
+                        <TableHead className="text-center">Aceito</TableHead>
+                        <TableHead className="min-w-[200px]">Observação</TableHead>
+                        <TableHead className="w-20 text-center">Ação</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

@@ -538,7 +538,7 @@ export const useVagasStore = create<VagasState>()(
         const vagaTokens = getCargoTokens(vaga.cargo);
 
         // Specific units for matching as requested
-        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds', 'agir', 'teia anapolis', 'teia canedo', 'teia aparecida', 'teia goiania'];
+        const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds', 'agir', 'teia anapolis', 'teia canedo', 'teia aparecida', 'teia goiania', 'teia cen', 'teia man', 'teia man 3', 'teia pin'];
         const upaUnits = ['vitoria', 'sao pedro', 'sua', 'suá', 'vitoria (sao pedro/sua)'];
 
         const found = state.bancos.find(b => {
@@ -552,7 +552,7 @@ export const useVagasStore = create<VagasState>()(
 
           if (normalizedBancoUnidade === normalizedVagaUnidade) {
             unitMatch = true;
-          } else if (normalizedBancoUnidade === 'goiania' && goianiaUnits.includes(normalizedVagaUnidade)) {
+          } else if (normalizedBancoUnidade === 'goiania' && (goianiaUnits.includes(normalizedVagaUnidade) || normalizedVagaUnidade.startsWith('teia'))) {
             unitMatch = true;
           } else if (normalizedBancoUnidade === 'upa' && upaUnits.includes(normalizedVagaUnidade)) {
             unitMatch = true;

@@ -266,11 +266,11 @@ export default function VagasPage() {
       const isNew = isManualNew || isByRecebimento || isImportedFallback;
       const matchVagasNovas = !filterVagasNovas || isNew;
 
-      const matchComBanco = !filterComBanco || !!(v.tem_banco_valido || getBancoByVaga(v.id));
+      const matchComBanco = !filterComBanco || vagasComBancoSet.has(v.id);
 
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas && matchComBanco;
     });
-  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab, getBancoByVaga]);
+  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab, vagasComBancoSet]);
 
   useEffect(() => {
     setCurrentPage(1);

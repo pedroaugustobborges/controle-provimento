@@ -99,6 +99,10 @@ export default function UnidadePortalPage() {
   });
   const [obsText, setObsText] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [obsEdits, setObsEdits] = useState<Record<string, {
+    status: string; horario_plantao: string; aceito: boolean; observacao: string;
+  }>>({});
+  const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
 
   const isAdmin = currentUser?.perfil === 'Administrador';
   const isSupervision = currentUser?.perfil === 'Supervisão';

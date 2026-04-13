@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import logoAgir from '@/assets/logo-agir.png';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
-import { getCategoriaStatus, calcDiasAberto } from '@/lib/vagaUtils';
+import { getCategoriaStatus } from '@/lib/vagaUtils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell, Legend
 } from 'recharts';
@@ -512,42 +512,24 @@ export default function UnidadePortalPage() {
                       <TableHead className="whitespace-nowrap min-w-[150px]">Unidade</TableHead>
                       <TableHead className="whitespace-nowrap min-w-[180px]">Cargo</TableHead>
                       <TableHead className="whitespace-nowrap">Etapa</TableHead>
-                      <TableHead className="whitespace-nowrap min-w-[150px]">Analista</TableHead>
                       <TableHead className="whitespace-nowrap">Status</TableHead>
-                      <TableHead className="whitespace-nowrap">Data Abertura</TableHead>
-                      <TableHead className="whitespace-nowrap">SLA</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vagasParaConsulta.map(v => {
-                      const sla = v.data_abertura ? calcDiasAberto(v.data_abertura) : -1;
-                      return (
+                    {vagasParaConsulta.map(v => (
                       <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell className="font-bold text-slate-900 text-sm whitespace-nowrap">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>
                         <TableCell className="font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold whitespace-nowrap">{(v as any).etapa || v.acompanhamento?.etapa_atual || v.status || '—'}</TableCell>
-                        <TableCell className="text-slate-600 text-xs font-semibold">{v.analista_responsavel || '—'}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-700 border-blue-100 whitespace-nowrap">
                             {v.status || 'Sem Status'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-slate-500 text-xs font-bold whitespace-nowrap">
-                          {v.data_abertura ? format(new Date(v.data_abertura + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
-                        </TableCell>
-                        <TableCell>
-                          {sla < 0 ? (
-                            <span className="text-slate-400 text-xs">—</span>
-                          ) : (
-                            <span className={cn("inline-flex h-8 min-w-[3rem] items-center justify-center rounded-lg font-black text-xs px-2", sla > 10 ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600")}>
-                              {sla}d
-                            </span>
-                          )}
-                        </TableCell>
                       </TableRow>
-                      );
-                    })}
+                    ))}
+
                   </TableBody>
                 </Table>
               </div>

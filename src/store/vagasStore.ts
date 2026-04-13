@@ -214,6 +214,7 @@ export const useVagasStore = create<VagasState>()(
           { id: 'a3', titulo: 'Edital pronto para publicação', mensagem: 'O edital de Enfermeiro está pronto para ser publicado.', tipo: 'informativo' as const, status: 'nao_lido' as const, data_criacao: `${today}T10:00:00`, destinatario: 'analista do edital', link: '/editais' },
           { id: 'a4', titulo: 'Vaga crítica sem andamento', mensagem: 'A vaga de Médico Intensivista está há 5 dias sem movimentação.', tipo: 'critico' as const, status: 'nao_lido' as const, data_criacao: `${today}T07:00:00`, destinatario: 'analista da unidade', link: '/vagas' },
           { id: 'a5', titulo: 'Validação concluída', mensagem: 'A unidade aprovou o cargo para o próximo edital.', tipo: 'validacao' as const, status: 'lido' as const, data_criacao: `${yesterday}T15:00:00`, destinatario: 'analista administrativo', link: '/editais' },
+          { id: 'a6', titulo: 'Aprovação de edital solicitada', mensagem: 'O Analista Administrativo solicita aprovação do edital #789 para publicação.', tipo: 'validacao' as const, status: 'nao_lido' as const, data_criacao: `${today}T11:00:00`, destinatario: 'supervisão', link: '/validacao' },
         ] as Alerta[];
       })(),
       historicoMensagens: (() => {
@@ -226,6 +227,8 @@ export const useVagasStore = create<VagasState>()(
           { id: 'm3', data: `${yesterday}T09:00:00`, remetente: 'Agie', conteudo: 'Lembrete: Você tem 5 convocações pendentes para hoje.', lida: false, perfil_destinatario: 'analista de convocações' },
           { id: 'm4', data: `${yesterday}T10:00:00`, remetente: 'Sistema', conteudo: 'Edital de Enfermeiro aguardando publicação.', lida: false, perfil_destinatario: 'analista do edital' },
           { id: 'm5', data: `${yesterday}T11:30:00`, remetente: 'Sistema', conteudo: 'Nova requisição de vaga recebida da unidade HUGOL.', lida: false, perfil_destinatario: 'analista da unidade' },
+          { id: 'm6', data: `${yesterday}T12:00:00`, remetente: 'Sistema', conteudo: 'Edital #789 aguarda sua aprovação para publicação.', lida: false, perfil_destinatario: 'supervisão' },
+          { id: 'm7', data: `${yesterday}T13:00:00`, remetente: 'Agie', conteudo: 'Relatório semanal de vagas disponível para revisão.', lida: false, perfil_destinatario: 'gestão' },
         ] as MensagemHistorico[];
       })(),
       temNovasMensagens: false,

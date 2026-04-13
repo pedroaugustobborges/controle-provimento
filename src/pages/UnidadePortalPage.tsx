@@ -30,7 +30,7 @@ import logoAgir from '@/assets/logo-agir.png';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { getCategoriaStatus, calcDiasAberto } from '@/lib/vagaUtils';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell, Legend
 } from 'recharts';
 
 // Flat list of all units across all bases
@@ -46,6 +46,42 @@ const STATUS_COLOR: Record<string, string> = {
   desistiu: 'bg-slate-50 text-slate-600 border-slate-100',
   faltou: 'bg-red-50 text-red-700 border-red-100',
   pendente: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+};
+
+const CHART_STATUS_COLORS: Record<string, string> = {
+  'Em Andamento': '#3b82f6', // blue-500
+  'Concluídas': '#10b981',   // emerald-500
+  'Fila Edital': '#f59e0b',  // amber-500
+  'Convocações': '#6366f1',  // indigo-500
+  'Suspensas': '#64748b',    // slate-500
+  'Canceladas': '#ef4444',   // red-500
+  'Aguardando': '#8b5cf6',   // violet-500
+  'Documentação': '#06b6d4', // cyan-500
+  'Admissão': '#ec4899',     // pink-500
+  'Liderança': '#f97316',    // orange-500
+  'Mov. Interna': '#14b8a6', // teal-500
+};
+
+const CustomChartTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0A192F] text-white p-3 rounded-xl shadow-2xl border border-white/10 backdrop-blur-md">
+        <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">{label}</p>
+        <div className="space-y-1">
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+              <p className="text-xs font-bold flex items-center gap-1.5">
+                <span className="text-white/60">{entry.name}:</span>
+                <span className="text-white">{entry.value}</span>
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
 };
 
 export default function UnidadePortalPage() {
@@ -311,18 +347,57 @@ export default function UnidadePortalPage() {
                   <CardTitle className="text-sm font-bold text-slate-700">Distribuição de Status</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={statusChartData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 10, fontWeight: 600}} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
-                        <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20}>
-                          <LabelList dataKey="value" position="right" style={{fontSize: 11, fontWeight: 800}} />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="h-[320px] w-full">
+                    {statusChartData.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
+                        <BarChart3 className="h-10 w-10 opacity-20" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={statusChartData} 
+                          layout="vertical" 
+                          margin={{ left: 10, right: 40, top: 10, bottom: 10 }}
+                        >
+                          <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke="#f1f5f9" />
+                          <XAxis type="number" hide />
+                          <YAxis 
+                            dataKey="name" 
+                            type="category" 
+                            width={110} 
+                            tick={{fontSize: 10, fontWeight: 700, fill: '#64748b'}} 
+                            axisLine={false} 
+                            tickLine={false} 
+                          />
+                          <Tooltip 
+                            cursor={{ fill: '#f8fafc' }} 
+                            content={<CustomChartTooltip />} 
+                          />
+                          <Bar 
+                            dataKey="value" 
+                            name="Quantidade"
+                            radius={[0, 8, 8, 0]} 
+                            barSize={18}
+                            animationDuration={1500}
+                            animationEasing="ease-out"
+                          >
+                            {statusChartData.map((entry: any, index: number) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={CHART_STATUS_COLORS[entry.name as string] || '#3b82f6'} 
+                              />
+                            ))}
+                            <LabelList 
+                              dataKey="value" 
+                              position="right" 
+                              style={{fontSize: 11, fontWeight: 900, fill: '#1e293b'}} 
+                              offset={12}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -332,18 +407,81 @@ export default function UnidadePortalPage() {
                   <CardTitle className="text-sm font-bold text-slate-700">Convocações por Unidade</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={convByUnitData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="name" tick={{fontSize: 8}} angle={-45} textAnchor="end" height={60} axisLine={false} tickLine={false} />
-                        <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
-                        <Bar dataKey="aceitos" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="pendentes" stackId="a" fill="#6366f1" />
-                        <Bar dataKey="recusas" stackId="a" fill="#f43f5e" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="h-[320px] w-full">
+                    {convByUnitData.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
+                        <Users className="h-10 w-10 opacity-20" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={convByUnitData} 
+                          barCategoryGap="25%" 
+                          margin={{ top: 20, right: 10, left: -20, bottom: 40 }}
+                        >
+                          <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{fontSize: 9, fontWeight: 600, fill: '#64748b'}} 
+                            angle={-30} 
+                            textAnchor="end" 
+                            interval={0}
+                            axisLine={false} 
+                            tickLine={false} 
+                            height={60}
+                          />
+                          <YAxis 
+                            tick={{fontSize: 10, fontWeight: 600, fill: '#94a3b8'}} 
+                            axisLine={false} 
+                            tickLine={false} 
+                          />
+                          <Tooltip 
+                            cursor={{ fill: '#f8fafc', opacity: 0.4 }} 
+                            content={<CustomChartTooltip />} 
+                          />
+                          <Legend 
+                            verticalAlign="top" 
+                            align="right" 
+                            height={36} 
+                            iconType="circle"
+                            wrapperStyle={{
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              paddingBottom: '20px'
+                            }}
+                          />
+                          <Bar 
+                            dataKey="aceitos" 
+                            name="Aceitos" 
+                            stackId="a" 
+                            fill="#10b981" 
+                            radius={[0, 0, 0, 0]} 
+                            animationDuration={1500}
+                          />
+                          <Bar 
+                            dataKey="pendentes" 
+                            name="Pendentes" 
+                            stackId="a" 
+                            fill="#6366f1" 
+                            radius={[0, 0, 0, 0]} 
+                            animationDuration={1500}
+                            animationBegin={300}
+                          />
+                          <Bar 
+                            dataKey="recusas" 
+                            name="Recusas" 
+                            stackId="a" 
+                            fill="#f43f5e" 
+                            radius={[6, 6, 0, 0]} 
+                            animationDuration={1500}
+                            animationBegin={600}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -645,21 +645,21 @@ export default function UnidadePortalPage() {
           </TabsContent>
 
           {/* ==================== ABA 3: CONVOCAÇÕES DIÁRIAS ==================== */}
-          <TabsContent value="convocacoes" className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <TabsContent value="convocacoes" className="space-y-6 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-slate-900">Convocações do Dia</h2>
-                <p className="text-sm text-slate-500">Visualize as convocações agendadas</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Agenda de Convocações</h2>
+                <p className="text-sm font-medium text-slate-500">Controle e acompanhamento das entrevistas agendadas</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="gap-2 font-semibold text-slate-700 bg-white">
-                      <CalendarIcon className="h-4 w-4 text-slate-400" />
+                    <Button variant="outline" className="flex-1 md:flex-none h-11 px-4 gap-3 font-bold text-slate-700 bg-white rounded-xl shadow-sm border-slate-200 hover:border-slate-300 transition-all">
+                      <CalendarIcon className="h-4 w-4 text-blue-500" />
                       {format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
+                  <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-slate-100" align="end">
                     <CalendarComponent
                       mode="single"
                       selected={selectedDate}
@@ -670,29 +670,34 @@ export default function UnidadePortalPage() {
                     />
                   </PopoverContent>
                 </Popover>
-                <Button onClick={handleExport} variant="outline" className="gap-2 font-semibold bg-white">
-                  <Download className="h-4 w-4" />
-                  Exportar
+                <Button 
+                  onClick={handleExport} 
+                  variant="outline" 
+                  className="flex-1 md:flex-none h-11 px-4 gap-3 font-bold bg-white rounded-xl shadow-sm border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all"
+                >
+                  <Download className="h-4 w-4 text-emerald-500" />
+                  <span className="hidden xs:inline">Exportar Planilha</span>
+                  <span className="xs:hidden">Exportar</span>
                 </Button>
               </div>
             </div>
 
             {/* Day stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total', value: convStats.total, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-100' },
-                { label: 'Aceitos', value: convStats.aceitos, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'Pendentes', value: convStats.pendentes, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-                { label: 'Recusas', value: convStats.recusas, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
+                { label: 'Total Hoje', value: convStats.total, icon: Users, color: 'text-slate-700', bg: 'bg-slate-100' },
+                { label: 'Confirmados', value: convStats.aceitos, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Em Aberto', value: convStats.pendentes, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                { label: 'Cancelados', value: convStats.recusas, icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
               ].map(({ label, value, icon: Icon, color, bg }) => (
-                <Card key={label} className="border-slate-200 shadow-sm">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className={cn('p-2.5 rounded-xl', bg)}>
+                <Card key={label} className="border-slate-200/60 shadow-sm rounded-2xl hover:shadow-md transition-all duration-300">
+                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+                    <div className={cn('p-3 rounded-2xl shrink-0', bg)}>
                       <Icon className={cn('h-5 w-5', color)} />
                     </div>
                     <div>
-                      <p className="text-2xl font-black text-slate-900">{value}</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+                      <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -700,78 +705,90 @@ export default function UnidadePortalPage() {
             </div>
 
             {/* Convocações table */}
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-3 border-b border-slate-100">
+            <Card className="border-slate-200/60 shadow-xl bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="py-5 px-6 bg-slate-50/50 border-b border-slate-100">
                 <CardTitle className="text-base font-bold text-slate-800 flex items-center justify-between">
-                  <span>
-                    {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                    <span className="ml-2 text-sm font-normal text-slate-400">
-                      ({todayConvocacoes.length} registro{todayConvocacoes.length !== 1 ? 's' : ''})
-                    </span>
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+                      <CalendarIcon className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <div>
+                      <span className="block text-sm font-black text-slate-900 leading-tight capitalize">
+                        {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-400">
+                        {todayConvocacoes.length} candidato{todayConvocacoes.length !== 1 ? 's' : ''} agendado{todayConvocacoes.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {todayConvocacoes.length === 0 ? (
-                  <div className="py-16 text-center text-slate-400">
-                    <CalendarIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm font-semibold">Nenhuma convocação para esta data.</p>
+                  <div className="py-24 text-center">
+                    <div className="bg-slate-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CalendarIcon className="h-10 w-10 text-slate-300" />
+                    </div>
+                    <p className="text-base font-bold text-slate-900">Agenda vazia</p>
+                    <p className="text-sm text-slate-400 mt-1">Não existem convocações agendadas para este dia.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-slate-50/80">
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 w-24">Horário</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Candidato</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
+                        <TableRow className="bg-slate-50/30 border-b border-slate-100">
+                          <TableHead className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 w-24">Horário</TableHead>
+                          <TableHead className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Candidato</TableHead>
+                          <TableHead className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Cargo</TableHead>
                           {selectedUnidade === 'all' && (
-                            <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
+                            <TableHead className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Unidade</TableHead>
                           )}
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Conv.</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Vaga</TableHead>
-                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Observação</TableHead>
-                          <TableHead className="w-10" />
+                          <TableHead className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Status Conv.</TableHead>
+                          <TableHead className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Observação</TableHead>
+                          <TableHead className="py-4 px-6 w-16" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {todayConvocacoes.map((conv) => (
-                          <TableRow key={conv.id} className="hover:bg-slate-50/60 transition-colors">
-                            <TableCell className="font-mono font-bold text-slate-700 text-sm">{conv.horario}</TableCell>
-                            <TableCell className="font-semibold text-slate-800">{conv.nome_candidato}</TableCell>
-                            <TableCell className="text-slate-600 text-sm">{conv.cargo}</TableCell>
+                        {todayConvocacoes.map((conv, idx) => (
+                          <TableRow key={conv.id} className={cn(
+                            "hover:bg-blue-50/30 transition-all border-b border-slate-50/60",
+                            idx % 2 === 0 ? "bg-white" : "bg-slate-50/20"
+                          )}>
+                            <TableCell className="py-4 px-6">
+                              <span className="inline-flex items-center justify-center bg-slate-900 text-white font-black text-xs h-8 w-14 rounded-lg shadow-sm">
+                                {conv.horario}
+                              </span>
+                            </TableCell>
+                            <TableCell className="py-4 px-6">
+                              <span className="block font-bold text-slate-900 text-sm leading-tight">{conv.nome_candidato}</span>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Candidato(a)</span>
+                            </TableCell>
+                            <TableCell className="py-4 px-6 text-slate-600 text-sm font-semibold">{conv.cargo}</TableCell>
                             {selectedUnidade === 'all' && (
-                              <TableCell className="text-slate-600 text-sm font-medium">{conv.unidade}</TableCell>
+                              <TableCell className="py-4 px-6 text-slate-500 text-sm font-bold">{conv.unidade}</TableCell>
                             )}
-                            <TableCell>
+                            <TableCell className="py-4 px-6">
                               <Badge
                                 variant="outline"
                                 className={cn(
-                                  'text-[10px] font-bold px-2 py-0.5 rounded-full border',
-                                  STATUS_COLOR[conv.status] || 'bg-slate-100 text-slate-600 border-slate-200'
+                                  'text-[10px] font-black px-3 py-1 rounded-full border shadow-sm',
+                                  STATUS_COLOR[conv.status] || 'bg-slate-50 text-slate-600 border-slate-200'
                                 )}
                               >
                                 {STATUS_CONVOCACAO_LABELS[conv.status as keyof typeof STATUS_CONVOCACAO_LABELS] || conv.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>
-                              {vagaStatusMap[conv.vaga_id] ? (
-                                <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
-                                  {vagaStatusMap[conv.vaga_id]}
-                                </Badge>
-                              ) : (
-                                <span className="text-slate-300 text-xs italic">—</span>
-                              )}
+                            <TableCell className="py-4 px-6">
+                              <p className="text-sm text-slate-500 font-medium max-w-[200px] truncate" title={conv.observacoes}>
+                                {conv.observacoes || <span className="italic text-slate-300">Sem notas</span>}
+                              </p>
                             </TableCell>
-                            <TableCell className="text-sm text-slate-500 max-w-[200px] truncate" title={conv.observacoes}>
-                              {conv.observacoes || <span className="italic text-slate-300">—</span>}
-                            </TableCell>
-                            <TableCell>
+                            <TableCell className="py-4 px-6">
                               <Button
                                 variant="ghost"
-                                size="sm"
+                                size="icon"
                                 onClick={() => handleOpenObs(conv.id, conv.observacoes || '')}
-                                className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                                className="h-9 w-9 p-0 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded-xl"
                                 title="Inserir / editar observação"
                               >
                                 <MessageSquare className="h-4 w-4" />

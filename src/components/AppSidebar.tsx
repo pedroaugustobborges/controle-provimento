@@ -55,12 +55,19 @@ export function AppSidebar() {
 
   const handleLogout = useCallback(async () => {
     try {
+      if (currentUser) {
+        await supabase
+          .from('user_sessions')
+          .update({ logout_at: new Date().toISOString() })
+          .eq('user_id', currentUser.id)
+          .is('logout_at', null);
+      }
       await signOut();
       navigate('/login');
     } catch (e) {
       console.error('Logout error', e);
     }
-  }, [signOut, navigate]);
+  }, [signOut, navigate, currentUser]);
 
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard, visible: getPermissions('vagas').canRead },

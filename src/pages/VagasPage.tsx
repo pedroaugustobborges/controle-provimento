@@ -197,34 +197,59 @@ export default function VagasPage() {
 
     const set = new Set<string>();
     
-    // Build a cargo index from bancos for fast lookup
-    const bancosByNormalizedCargo = new Map<string, typeof bancos>();
+    // 1. Build Indexes for fast lookup
+    const bancosById = new Map<string, any>();
+    const bancosByProcesso = new Map<string, any>();
+    const bancosByEdital = new Map<string, any>();
+    const bancosByNormalizedCargo = new Map<string, any[]>();
+
     bancos.forEach(b => {
-      const key = (b.cargo || '').toLowerCase().trim();
-      if (!key) return;
-      const arr = bancosByNormalizedCargo.get(key) || [];
-      arr.push(b);
-      bancosByNormalizedCargo.set(key, arr);
+      if (b.id) bancosById.set(b.id, b);
+      
+      const proc = (b.numero_processo || b.numero_processo_seletivo || '').trim();
+      if (proc) bancosByProcesso.set(proc, b);
+      
+      const editalNum = (b.numero_edital || '').trim();
+      if (editalNum) bancosByEdital.set(editalNum, b);
+      
+      const cargoKey = (b.cargo || '').toLowerCase().trim();
+      if (cargoKey) {
+        const list = bancosByNormalizedCargo.get(cargoKey) || [];
+        list.push(b);
+        bancosByNormalizedCargo.set(cargoKey, list);
+      }
     });
 
+    // 2. Perform matching for each vaga (O(1) lookups)
     vagas.forEach(v => {
-      if (v.tem_banco_valido) {
+      // a. Already marked or explicit link
+      if (v.tem_banco_valido || (v.banco_id && bancosById.has(v.banco_id))) {
         set.add(v.id);
         return;
       }
-      // Quick check: does any banco share the same cargo name?
+      
+      // b. Process/Edital number match
+      const vProc = (v.numero_processo || v.numero_processo_seletivo || v.requisicao || '').trim();
+      if (vProc && bancosByProcesso.has(vProc)) {
+        set.add(v.id);
+        return;
+      }
+      
+      const vEdital = (v.numero_edital || '').trim();
+      if (vEdital && bancosByEdital.has(vEdital)) {
+        set.add(v.id);
+        return;
+      }
+
+      // c. Fast cargo name match
       const vagaCargo = (v.cargo || '').toLowerCase().trim();
       if (vagaCargo && bancosByNormalizedCargo.has(vagaCargo)) {
         set.add(v.id);
-        return;
-      }
-      // Fallback to full matching (only for vagas not yet matched)
-      if (getBancoByVaga(v.id)) {
-        set.add(v.id);
       }
     });
+    
     return set;
-  }, [vagas, getBancoByVaga]);
+  }, [vagas]);
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {

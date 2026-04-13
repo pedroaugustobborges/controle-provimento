@@ -116,6 +116,7 @@ export default function FilaAnalistaEditalPage() {
       numero_edital: numeroEdital,
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
+      url_reachr: reachrUrl,
     });
 
     toast.success('Rascunho do edital salvo com sucesso!');

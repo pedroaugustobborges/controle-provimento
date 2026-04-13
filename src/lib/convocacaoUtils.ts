@@ -26,7 +26,7 @@ export const UNIDADES_VITORIA = ['SÃO PEDRO', 'SUÁ'];
 
 export const UNIDADES_OUTRAS_AGRUPADAS = [
   'POLICLÍNICA', 'JATAÍ',
-  'Vitória',
+  'VITÓRIA',
   'DOURADOS', 'CHS', 'HMSA', 'HRCAC',
   'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
 ];

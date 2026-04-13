@@ -22,11 +22,11 @@ export const UNIDADES_OUTRAS = [
   'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
 ];
 
-export const UNIDADES_VITORIA = ['SÃO PEDRO', 'SUÁ', 'UPA'];
+export const UNIDADES_VITORIA = ['SÃO PEDRO', 'SUÁ'];
 
 export const UNIDADES_OUTRAS_AGRUPADAS = [
   'POLICLÍNICA', 'JATAÍ',
-  'VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'UPA',
+  'VITÓRIA', 'SÃO PEDRO', 'SUÁ',
   'DOURADOS', 'CHS', 'HMSA', 'HRCAC',
   'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
 ];

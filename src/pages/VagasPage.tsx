@@ -337,14 +337,14 @@ export default function VagasPage() {
         acc.em_andamento++;
       }
 
-      // Verificação dinâmica de banco de talentos
-      if (v.tem_banco_valido || getBancoByVaga(v.id)) {
+      // Verificação via set pré-computado
+      if (vagasComBancoSet.has(v.id)) {
         acc.com_banco_valido++;
       }
     });
     
     return acc;
-  }, [canonicalBase, getBancoByVaga]);
+  }, [canonicalBase, vagasComBancoSet]);
 
   const countFilaEdital = counts.fila_edital;
   const countEmAndamento = counts.em_andamento;

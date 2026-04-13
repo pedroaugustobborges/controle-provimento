@@ -103,6 +103,9 @@ export default function UnidadePortalPage() {
     status: string; horario_plantao: string; aceito: boolean; observacao: string;
   }>>({});
   const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
+  const [obsFilterUnidade, setObsFilterUnidade] = useState('all');
+  const [obsFilterDate, setObsFilterDate] = useState<Date | undefined>(undefined);
+  const [obsCalendarOpen, setObsCalendarOpen] = useState(false);
 
   const isAdmin = currentUser?.perfil === 'Administrador';
   const isSupervision = currentUser?.perfil === 'Supervisão';

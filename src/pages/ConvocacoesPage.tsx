@@ -205,6 +205,10 @@ export default function ConvocacoesPage() {
           if (regiaoUnidade !== 'outras') return false;
         }
 
+        if (view === 'pending') {
+          return c.status === 'pendente';
+        }
+
         if (view === 'diaria') {
           return c.data_convocacao === format(selectedDate, 'yyyy-MM-dd');
         }

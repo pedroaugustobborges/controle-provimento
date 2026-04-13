@@ -1,23 +1,13 @@
 
-## Plano: Padronizar cabeçalhos e reformular aba Observações
+## Plano: Restaurar cor padrão dos cabeçalhos das tabelas
 
-### Alteração 1: Padronizar cabeçalhos das tabelas
-No `UnidadePortalPage.tsx`, unificar o estilo de `TableHead` nas 3 abas (Status, Convocações, Observações) para usar o mesmo padrão: `bg-slate-50/50`, `text-[10px] font-black uppercase tracking-widest text-slate-500`, `py-5 px-6`.
+### Problema
+Os `TableHead` nas 3 abas do portal estão com classes customizadas (ex: `bg-slate-50/80`, `text-slate-500`) que sobrescrevem o estilo padrão escuro (`bg-[#221f44]`, texto branco) definido em `src/components/ui/table.tsx`.
 
-### Alteração 2: Reformular aba Observações
-Substituir o conteúdo atual da aba "Observações" por uma tabela editável com as seguintes colunas:
-- **Candidato** (somente leitura)
-- **Unidade** (somente leitura)
-- **Status/Destino** (Select editável com opções: Aceite, Recusa por plantão, Recusa por unidade, Recusa por horário, Desistiu, Faltou, Pendente)
-- **Horário/Plantão** (Input editável)
-- **Aceito** (Switch ou checkbox sim/não)
-- **Observação** (Textarea/Input editável)
-- **Botão Salvar** (por linha, salva via `updateConvocacao`)
-
-A lógica usará um state local para rastrear edições por convocação e chamar `updateConvocacao` ao salvar cada linha.
+### Solução
+No `UnidadePortalPage.tsx`, remover as classes de cor/fundo customizadas dos `TableHead` em todas as abas (Status, Convocações, Observações), deixando apenas classes de layout (padding, etc.) para que herdem o estilo padrão do componente `TableHeader`/`TableHead`.
 
 ### Arquivo alterado
 - `src/pages/UnidadePortalPage.tsx`
 
 ### Sem alteração de banco de dados
-Os campos `status`, `horario`, `observacoes` já existem no tipo `Convocacao` e são salvos via `updateConvocacao` do store.

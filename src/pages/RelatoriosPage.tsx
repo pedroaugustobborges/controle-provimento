@@ -49,28 +49,6 @@ export default function RelatoriosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isBackingUp, setIsBackingUp] = useState(false);
 
-  const handleManualBackup = async () => {
-    setIsBackingUp(true);
-    const id = toast.loading('Iniciando backup do sistema...');
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('database-backup');
-      
-      if (error) throw error;
-      
-      toast.success('Backup concluído com sucesso!', { id });
-    } catch (err: any) {
-      console.error('Backup error:', err);
-      toast.error('Erro ao realizar backup: ' + err.message, { id });
-    } finally {
-      setIsBackingUp(false);
-    }
-  };
-
-  if (!isFullAccessProfile) {
-    return <Navigate to="/" replace />;
-  }
-
   const { data: sessions, isLoading: loadingSessions } = useQuery({
     queryKey: ['report_sessions'],
     queryFn: async () => {

@@ -251,7 +251,12 @@ export default function ValidacaoEditaisPage() {
                     <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-2 items-center">
+                      {v.status_fluxo_edital === 'aguardando_aprovacao_gestor' && (
+                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 animate-pulse">
+                          Aguardando Gestor
+                        </Badge>
+                      )}
                       <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setReachrUrl((v as any).url_reachr || ''); setIsModalOpen(true); }}>
                         <Eye className="h-3.5 w-3.5" /> Analisar
                       </Button>

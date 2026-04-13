@@ -439,6 +439,8 @@ export default function BancoTalentosPage() {
       case 'CONVOCADO': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200 text-[10px] whitespace-nowrap">Convocado</Badge>;
       default: return <Badge variant="outline" className="text-[10px] whitespace-nowrap">{status || 'Indeterminado'}</Badge>;
     }
+  };
+
   const prepareBancoForExport = (data: BancoTalentos[]) => {
     return data.map(b => ({
       'Unidade': b.unidade || '',

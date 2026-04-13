@@ -80,7 +80,28 @@ export default function RelatoriosPage() {
     }
   });
 
-  const filteredSessions = sessions?.filter(s => 
+  const handleManualBackup = async () => {
+    setIsBackingUp(true);
+    const id = toast.loading('Iniciando backup do sistema...');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('database-backup');
+      
+      if (error) throw error;
+      
+      toast.success('Backup concluído com sucesso!', { id });
+    } catch (err: any) {
+      console.error('Backup error:', err);
+      toast.error('Erro ao realizar backup: ' + err.message, { id });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  if (!isFullAccessProfile) {
+    return <Navigate to="/" replace />;
+  }
+
     s.profiles?.nome_completo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.ip_address?.includes(searchTerm)

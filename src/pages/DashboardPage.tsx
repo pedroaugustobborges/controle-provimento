@@ -77,16 +77,21 @@ const UNIT_MAPPING = [
   { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA' },
 ];
 
+const canonicalCache = new Map<string, string>();
 const resolveCanonicalName = (unitName: string) => {
   if (!unitName) return '';
+  if (canonicalCache.has(unitName)) return canonicalCache.get(unitName)!;
+
   const norm = normalizeUnitName(unitName);
   
   for (const map of UNIT_MAPPING) {
     if (normalizeUnitName(map.bank) === norm || map.vacancies.some(v => normalizeUnitName(v) === norm)) {
+      canonicalCache.set(unitName, map.display);
       return map.display;
     }
   }
   
+  canonicalCache.set(unitName, norm);
   return norm;
 };
 
@@ -427,6 +432,35 @@ export default function DashboardPage() {
       b.sortValue - a.sortValue || a.unit.localeCompare(b.unit)
     ));
   }, [vacancyAlerts, filteredBancos]);
+
+    if (isInitialLoad && isLoadingVagas) {
+    return (
+      <div className="space-y-8">
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="p-6">
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-8 w-16" />
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="h-96">
+            <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+            <CardContent><Skeleton className="h-full w-full" /></CardContent>
+          </Card>
+          <Card className="h-96">
+            <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+            <CardContent><Skeleton className="h-full w-full" /></CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">

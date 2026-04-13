@@ -412,8 +412,10 @@ export type Database = {
           data_publicacao: string | null
           data_recebimento: string | null
           detalhes_acompanhamento: string | null
+          distribuicao_vagas: Json | null
           etapa: string | null
           forma_convocacao_planilha: string | null
+          gestor_aprovador_id: string | null
           horario_convocacao_planilha: string | null
           id: string
           import_batch_id: string | null
@@ -424,18 +426,23 @@ export type Database = {
           numero_processo_seletivo: string | null
           numero_vagas: number | null
           observacao: string | null
+          observacoes_gestor: string | null
           origem: string | null
           prioridade: string | null
           publicacao: string | null
           quantidade: number | null
           secao: string | null
           status: string | null
+          status_aprovacao_gestor: string | null
           status_geral: string | null
           status_oitiva_convocacao_planilha: string | null
           tipo_vaga: string | null
           unidade: string | null
+          unidade_trabalho: string | null
+          unidades_banco_talentos: string[] | null
           updated_at: string
           updated_by: string | null
+          url_reachr: string | null
           version: number
         }
         Insert: {
@@ -457,8 +464,10 @@ export type Database = {
           data_publicacao?: string | null
           data_recebimento?: string | null
           detalhes_acompanhamento?: string | null
+          distribuicao_vagas?: Json | null
           etapa?: string | null
           forma_convocacao_planilha?: string | null
+          gestor_aprovador_id?: string | null
           horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
@@ -469,18 +478,23 @@ export type Database = {
           numero_processo_seletivo?: string | null
           numero_vagas?: number | null
           observacao?: string | null
+          observacoes_gestor?: string | null
           origem?: string | null
           prioridade?: string | null
           publicacao?: string | null
           quantidade?: number | null
           secao?: string | null
           status?: string | null
+          status_aprovacao_gestor?: string | null
           status_geral?: string | null
           status_oitiva_convocacao_planilha?: string | null
           tipo_vaga?: string | null
           unidade?: string | null
+          unidade_trabalho?: string | null
+          unidades_banco_talentos?: string[] | null
           updated_at?: string
           updated_by?: string | null
+          url_reachr?: string | null
           version?: number
         }
         Update: {
@@ -502,8 +516,10 @@ export type Database = {
           data_publicacao?: string | null
           data_recebimento?: string | null
           detalhes_acompanhamento?: string | null
+          distribuicao_vagas?: Json | null
           etapa?: string | null
           forma_convocacao_planilha?: string | null
+          gestor_aprovador_id?: string | null
           horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
@@ -514,21 +530,34 @@ export type Database = {
           numero_processo_seletivo?: string | null
           numero_vagas?: number | null
           observacao?: string | null
+          observacoes_gestor?: string | null
           origem?: string | null
           prioridade?: string | null
           publicacao?: string | null
           quantidade?: number | null
           secao?: string | null
           status?: string | null
+          status_aprovacao_gestor?: string | null
           status_geral?: string | null
           status_oitiva_convocacao_planilha?: string | null
           tipo_vaga?: string | null
           unidade?: string | null
+          unidade_trabalho?: string | null
+          unidades_banco_talentos?: string[] | null
           updated_at?: string
           updated_by?: string | null
+          url_reachr?: string | null
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vagas_gestor_aprovador_id_fkey"
+            columns: ["gestor_aprovador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

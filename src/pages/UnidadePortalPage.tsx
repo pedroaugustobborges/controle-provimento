@@ -374,4 +374,27 @@ export default function UnidadePortalPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-bold">
               <MessageSquare className="h-5 w-5 text-primary" />
-              Observ
+              Observação
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              value={obsText}
+              onChange={(e) => setObsText(e.target.value)}
+              placeholder="Digite a observação..."
+              className="min-h-[120px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setObsDialog({ open: false, convId: '', current: '' })}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveObs}>
+              Salvar Observação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

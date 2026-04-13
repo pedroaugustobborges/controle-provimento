@@ -292,90 +292,123 @@ export default function UnidadePortalPage() {
   if (!currentUser || !hasAccess) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col transition-all duration-300">
       {/* Header */}
-      <header className="bg-[#0A192F] text-white px-6 py-4 flex items-center justify-between shadow-md">
-        <div className="flex items-center gap-4">
-          <img src={logoAgir} alt="AGIR" className="h-10 w-10 rounded-lg object-contain bg-white/5 p-1" />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">Portal da Unidade</p>
-            <h1 className="text-lg font-extrabold tracking-tight leading-tight">
+      <header className="sticky top-0 z-50 bg-[#0A192F] text-white px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-lg backdrop-blur-sm border-b border-white/5">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-1.5 bg-white/10 rounded-xl hover:bg-white/20 transition-all cursor-pointer">
+            <img src={logoAgir} alt="AGIR Logo" className="h-9 w-9 object-contain" />
+          </div>
+          <div className="hidden xs:block">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-0.5">Portal da Unidade</p>
+            <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-none truncate max-w-[200px] sm:max-w-md">
               {unidadeLabel}
             </h1>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* Unit selector in header */}
           {(podeVerTodas || unidadesVinculadas.length > 1) && (
             <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
-              <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white text-sm font-semibold">
-                <Building2 className="h-4 w-4 text-white/60 mr-1.5" />
-                <SelectValue placeholder="Selecionar unidade" />
+              <SelectTrigger 
+                aria-label="Selecionar Unidade"
+                className="w-36 sm:w-48 bg-white/5 border-white/10 text-white text-xs sm:text-sm font-semibold hover:bg-white/10 focus:ring-white/20 transition-all rounded-lg"
+              >
+                <Building2 className="h-3.5 w-3.5 text-white/40 mr-1.5 shrink-0" />
+                <SelectValue placeholder="Unidade" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Unidades</SelectItem>
+              <SelectContent align="end" className="w-56 sm:w-64">
+                <SelectItem value="all" className="font-semibold">Todas as Unidades</SelectItem>
                 {unidadesDisponiveis.map(u => (
                   <SelectItem key={u} value={u}>{u}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
-          <span className="text-sm text-white/60 hidden sm:block">{currentUser?.nome_completo}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-white/70 hover:text-white hover:bg-white/10 gap-1.5"
-          >
-            <LogOut className="h-4 w-4" />
-            Sair
-          </Button>
+          
+          <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+            <div className="flex flex-col items-end hidden md:flex">
+              <span className="text-xs font-bold text-white/90 leading-tight">{currentUser?.nome_completo}</span>
+              <span className="text-[10px] font-medium text-white/40 uppercase tracking-tighter">{currentUser?.perfil}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              title="Sair do Portal"
+              aria-label="Sair"
+              className="text-white/60 hover:text-white hover:bg-rose-500/20 transition-all rounded-full h-9 w-9 shrink-0"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6 lg:py-8 space-y-6">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="bg-white border border-slate-200 shadow-sm h-12 p-1 rounded-xl">
-            <TabsTrigger value="dashboard" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
-              <BarChart3 className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="status" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
-              <Search className="h-4 w-4" />
-              Consulta de Status
-            </TabsTrigger>
-            <TabsTrigger value="convocacoes" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
-              <CalendarIcon className="h-4 w-4" />
-              Convocações Diárias
-            </TabsTrigger>
-            <TabsTrigger value="observacoes" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
-              <Edit3 className="h-4 w-4" />
-              Observações
-            </TabsTrigger>
-          </TabsList>
+          <div className="sticky top-[68px] z-40 py-2 -mt-2 bg-slate-50/80 backdrop-blur-sm sm:static sm:bg-transparent">
+            <TabsList className="bg-white/80 border border-slate-200 shadow-sm p-1.5 rounded-2xl h-auto flex flex-wrap sm:flex-nowrap gap-1">
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex-1 sm:flex-none gap-2 py-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-none data-[state=active]:shadow-md"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden xs:inline">Dashboard</span>
+                <span className="xs:hidden">Geral</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="status" 
+                className="flex-1 sm:flex-none gap-2 py-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-none data-[state=active]:shadow-md"
+              >
+                <Search className="h-4 w-4" />
+                <span className="hidden xs:inline">Status das Vagas</span>
+                <span className="xs:hidden">Vagas</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="convocacoes" 
+                className="flex-1 sm:flex-none gap-2 py-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-none data-[state=active]:shadow-md"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                <span className="hidden xs:inline">Convocações</span>
+                <span className="xs:hidden">Agenda</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="observacoes" 
+                className="flex-1 sm:flex-none gap-2 py-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-none data-[state=active]:shadow-md"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span className="hidden xs:inline">Observações</span>
+                <span className="xs:hidden">Obs</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* ==================== ABA 1: DASHBOARD ==================== */}
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-6 focus-visible:outline-none">
             {/* Stats cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {[
-                { label: 'Total de Vagas', value: dashStats.totalVagas, icon: Briefcase, color: 'text-slate-700', bg: 'bg-slate-100' },
-                { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
-                { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'Fila de Editais', value: dashStats.filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
-                { label: 'Convocações', value: dashStats.convocacoes, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
-                { label: 'Suspensas', value: dashStats.suspensas, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
-                { label: 'Aguardando', value: dashStats.aguardando, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-                { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              ].map(({ label, value, icon: Icon, color, bg }) => (
-                <Card key={label} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className={cn('p-2.5 rounded-xl', bg)}>
-                      <Icon className={cn('h-5 w-5', color)} />
+                { label: 'Total de Vagas', value: dashStats.totalVagas, icon: Briefcase, color: 'text-slate-700', bg: 'bg-slate-100/80', border: 'border-slate-200/60' },
+                { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50/80', border: 'border-blue-100/60' },
+                { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50/80', border: 'border-emerald-100/60' },
+                { label: 'Fila de Editais', value: dashStats.filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-100/60' },
+                { label: 'Convocações', value: dashStats.convocacoes, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50/80', border: 'border-purple-100/60' },
+                { label: 'Suspensas', value: dashStats.suspensas, icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100/60' },
+                { label: 'Aguardando', value: dashStats.aguardando, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50/80', border: 'border-yellow-100/60' },
+                { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-indigo-600', bg: 'bg-indigo-50/80', border: 'border-indigo-100/60' },
+              ].map(({ label, value, icon: Icon, color, bg, border }) => (
+                <Card key={label} className={cn("border bg-white shadow-sm hover:shadow-md transition-all duration-300 group rounded-2xl overflow-hidden", border)}>
+                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+                    <div className={cn('p-3 rounded-2xl shrink-0 transition-transform group-hover:scale-110 duration-300', bg)}>
+                      <Icon className={cn('h-6 w-6', color)} />
                     </div>
-                    <div>
-                      <p className="text-2xl font-black text-slate-900">{value}</p>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">{label}</p>
+                      <p className={cn("text-2xl sm:text-3xl font-black tracking-tight", color === 'text-slate-700' ? 'text-slate-900' : color)}>
+                        {value}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

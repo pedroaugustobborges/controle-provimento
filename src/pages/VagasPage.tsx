@@ -13,7 +13,9 @@ import {
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa,
   filterByRegionAndUnit, UNIDADES_POR_REGIAO
 } from '@/lib/vagaUtils';
-import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles } from 'lucide-react';
+import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles, Download } from 'lucide-react';
+import { ExportButton } from '@/components/ExportButton';
+// ... keep existing code
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -408,8 +410,21 @@ export default function VagasPage() {
 
   const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas;
 
+  const prepareVagasForExport = (data: Vaga[]) => {
+    return data.map(v => ({
+      'Requisição': v.requisicao || v.numero_requisicao || '',
+      'Unidade': v.unidade || '',
+      'Cargo': v.cargo || '',
+      'Analista': v.analista_responsavel || '',
+      'Status': v.status || '',
+      'Tipo': TIPO_VAGA_LABELS[v.tipo_vaga as TipoVaga] || v.tipo_vaga,
+      'Recebimento': v.data_recebimento ? formatDate(v.data_recebimento) : '',
+      'Dias em Aberto': calcDiasAberto(v.data_recebimento)
+    }));
+  };
 
   return (
+// ... keep existing code
     <div className="space-y-4">
       {isLoadingVagas && isInitialLoad ? (
         <PageSkeleton />
@@ -445,6 +460,12 @@ export default function VagasPage() {
                     <Database className="h-3 w-3" /> Diagnóstico
                   </Button>
                 )}
+                <ExportButton 
+                  data={prepareVagasForExport(filtered)} 
+                  filename="vagas_export"
+                  label="Exportar Excel"
+                  className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl"
+                />
                 {permissions.canImport() && (
                   <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
                     <FileSpreadsheet className="h-4 w-4 text-primary/80" /> Importar Excel

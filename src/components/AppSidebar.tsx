@@ -155,9 +155,10 @@ export function AppSidebar() {
 
   const secondaryItems = useMemo(() => [
     { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: getPermissions('monitoramento').canRead },
+    { title: 'Relatórios', url: '/relatorios', icon: FileSpreadsheet, visible: isManagement || hasFullAccess },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
     { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
-  ].filter(item => item.visible), [getPermissions]);
+  ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess]);
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [activeParent, setActiveParent] = useState<string | null>(null);

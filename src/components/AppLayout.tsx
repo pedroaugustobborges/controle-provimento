@@ -17,7 +17,7 @@ import {
   Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
   Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
-  History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera
+  History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera, FileBarChart
 } from 'lucide-react';
 import { AIAssistant } from './AIAssistant';
 import { InactivityLogout } from './InactivityLogout';
@@ -27,6 +27,8 @@ import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+// ... keep existing code
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,7 +105,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         setOnlineUsers(users);
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
-        // Handle join if needed
+        if (currentUser?.perfil === 'Administrador') {
+          newPresences.forEach((presence: any) => {
+            if (presence.id !== currentUser.id) {
+              toast.info(`${presence.nome_completo || 'Um usuário'} entrou no sistema`, {
+                icon: <User className="h-4 w-4" />,
+                duration: 4000,
+              });
+            }
+          });
+        }
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
         // Handle leave if needed
@@ -151,6 +162,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     'monitoramento': 'Monitoramento de Prazos',
     'alertas-tarefas': 'Alertas e Tarefas',
     'mensagens': 'Mensagens',
+    'relatorios': 'Módulo de Relatórios',
   };
 
   const getBreadcrumbLabel = (path: string) => {

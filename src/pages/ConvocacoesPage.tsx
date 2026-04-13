@@ -22,6 +22,7 @@ import { formatDate, getCategoriaStatus, filterByRegionAndUnit, normalizeUnitNam
 import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
+import { ExportButton } from '@/components/ExportButton';
 import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -205,6 +206,17 @@ export default function ConvocacoesPage() {
     setIsDialogOpen(true);
   };
 
+  const prepareConvocacoesForExport = (data: any[]) => {
+    return data.map(c => ({
+      'Data': c.data_convocacao ? formatDate(c.data_convocacao) : '',
+      'Hora': c.horario || '',
+      'Candidato': c.nome_candidato || '',
+      'Unidade': c.unidade || '',
+      'Cargo': c.cargo || '',
+      'Status': STATUS_CONVOCACAO_LABELS[c.status as keyof typeof STATUS_CONVOCACAO_LABELS] || c.status
+    }));
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader 
@@ -237,6 +249,12 @@ export default function ConvocacoesPage() {
                 <List className="h-3.5 w-3.5 mr-1" /> Histórico
               </Button>
             </div>
+            <ExportButton 
+              data={prepareConvocacoesForExport(filteredConvocacoes)} 
+              filename="convocacoes_export"
+              label="Exportar Excel"
+              className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
+            />
             {view === 'diaria' && (
               <Button 
                 variant="outline" 

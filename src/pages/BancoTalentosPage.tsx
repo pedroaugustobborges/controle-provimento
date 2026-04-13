@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { RequestUpdateDialog } from '@/components/RequestUpdateDialog';
+import { ExportButton } from '@/components/ExportButton';
+// ... keep existing code
 
 import { formatDate, normalizeCargo, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normalizeUnitName } from '@/lib/vagaUtils';
 import { calculateBancoStatus, calculateStats } from '@/lib/bancoTalentosUtils';
@@ -439,12 +441,28 @@ export default function BancoTalentosPage() {
     }
   };
 
+  const prepareBancoForExport = (data: BancoTalentos[]) => {
+    return data.map(b => ({
+      'Unidade': b.unidade || '',
+      'Cargo': b.cargo || '',
+      'Vigência': b.data_validade ? formatDate(b.data_validade) : '',
+      'Qtd. Candidatos': b.quantidade_banco || 0,
+      'Status': b.status || ''
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader 
         title="Banco de Talentos"
         actions={
           <>
+            <ExportButton 
+              data={prepareBancoForExport(filtered)} 
+              filename="banco_talentos_export"
+              label="Exportar Excel"
+              className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
+            />
             {permissions.canImport() && (
               <Button 
                 variant="outline" 

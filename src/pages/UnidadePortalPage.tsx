@@ -14,18 +14,24 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
 import {
   Calendar as CalendarIcon, Download, LogOut, Building2,
-  MessageSquare, CheckCircle2, AlertCircle, Clock
+  MessageSquare, CheckCircle2, AlertCircle, Clock, BarChart3,
+  Search, FileText, Edit3, Briefcase, Activity, Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import logoAgir from '@/assets/logo-agir.png';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
+import { getCategoriaStatus, normStatus, calcDiasAberto } from '@/lib/vagaUtils';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell, PieChart, Pie
+} from 'recharts';
 
 // Flat list of all units across all bases
 const TODAS_UNIDADES: string[] = (Object.values(BASES_CONVOCACAO) as string[][])
@@ -42,6 +48,8 @@ const STATUS_COLOR: Record<string, string> = {
   pendente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
 };
 
+const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'];
+
 export default function UnidadePortalPage() {
   const navigate = useNavigate();
   const { currentUser } = useAdminStore();
@@ -54,6 +62,7 @@ export default function UnidadePortalPage() {
     open: false, convId: '', current: ''
   });
   const [obsText, setObsText] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Access control
   const isAdmin = currentUser?.perfil === 'Administrador';
@@ -64,13 +73,11 @@ export default function UnidadePortalPage() {
   const unidadesVinculadas: string[] = currentUser?.unidades_vinculadas || [];
   const podeVerTodas = isAdmin || currentUser?.visualiza_todas_unidades || (isSupervision && unidadesVinculadas.length === 0);
 
-  // Unit options for the selector
   const unidadesDisponiveis = useMemo(() => {
     if (podeVerTodas) return TODAS_UNIDADES;
     return unidadesVinculadas;
   }, [podeVerTodas, unidadesVinculadas]);
 
-  // Selected unit state — default to first linked unit or 'all'
   const defaultUnit = unidadesVinculadas.length === 1 && !podeVerTodas
     ? unidadesVinculadas[0]
     : 'all';
@@ -89,24 +96,38 @@ export default function UnidadePortalPage() {
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
+  // Helper to check if a convocacao matches unit filter
+  const matchesUnit = (unidade: string | undefined) => {
+    const norm = unidade?.toLowerCase().trim() || '';
+    if (selectedUnidade === 'all') {
+      if (podeVerTodas) return true;
+      return unidadesVinculadas.some(u => norm.includes(u.toLowerCase().trim()));
+    }
+    const normSelected = selectedUnidade.toLowerCase().trim();
+    return norm.includes(normSelected) || normSelected.includes(norm);
+  };
+
+  // ====== CONVOCAÇÕES DO DIA ======
   const todayConvocacoes = useMemo(() => {
     return convocacoes.filter(c => {
       if (!c.data_convocacao || !c.horario) return false;
       if (c.data_convocacao !== dateStr) return false;
-
-      const normConvUnidade = c.unidade?.toLowerCase().trim() || '';
-
-      if (selectedUnidade === 'all') {
-        if (podeVerTodas) return true;
-        return unidadesVinculadas.some(u => normConvUnidade.includes(u.toLowerCase().trim()));
-      }
-      
-      const normSelected = selectedUnidade.toLowerCase().trim();
-      return normConvUnidade.includes(normSelected) || normSelected.includes(normConvUnidade);
+      return matchesUnit(c.unidade);
     }).sort((a, b) => a.horario.localeCompare(b.horario));
   }, [convocacoes, dateStr, selectedUnidade, podeVerTodas, unidadesVinculadas]);
 
-  const stats = useMemo(() => ({
+  // ====== ALL CONVOCAÇÕES (for unit filter) ======
+  const allFilteredConvocacoes = useMemo(() => {
+    return convocacoes.filter(c => matchesUnit(c.unidade));
+  }, [convocacoes, selectedUnidade, podeVerTodas, unidadesVinculadas]);
+
+  // ====== VAGAS DA UNIDADE ======
+  const filteredVagas = useMemo(() => {
+    return vagas.filter(v => matchesUnit(v.unidade));
+  }, [vagas, selectedUnidade, podeVerTodas, unidadesVinculadas]);
+
+  // ====== STATS ======
+  const convStats = useMemo(() => ({
     total: todayConvocacoes.length,
     aceitos: todayConvocacoes.filter(c => c.status === 'aceite').length,
     pendentes: todayConvocacoes.filter(c => c.status === 'pendente').length,
@@ -115,7 +136,96 @@ export default function UnidadePortalPage() {
     ).length,
   }), [todayConvocacoes]);
 
-  // Map vaga_id → vaga status for quick lookup
+  // ====== DASHBOARD STATS ======
+  const dashStats = useMemo(() => {
+    const counts = {
+      totalVagas: filteredVagas.length,
+      emAndamento: 0,
+      concluidas: 0,
+      filaEdital: 0,
+      convocacoes: 0,
+      suspensas: 0,
+      aguardando: 0,
+    };
+    filteredVagas.forEach(v => {
+      const cat = getCategoriaStatus(v);
+      if (cat === 'em_andamento') counts.emAndamento++;
+      else if (cat === 'concluidas') counts.concluidas++;
+      else if (cat === 'fila_edital') counts.filaEdital++;
+      else if (cat === 'convocacoes') counts.convocacoes++;
+      else if (cat === 'suspensa') counts.suspensas++;
+      else if (cat === 'aguardando_unidade') counts.aguardando++;
+    });
+    return counts;
+  }, [filteredVagas]);
+
+  // ====== CHART: status distribution ======
+  const statusChartData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredVagas.forEach(v => {
+      const cat = getCategoriaStatus(v);
+      const label = {
+        em_andamento: 'Em Andamento',
+        concluidas: 'Concluídas',
+        fila_edital: 'Fila Edital',
+        convocacoes: 'Convocações',
+        suspensa: 'Suspensas',
+        cancelada: 'Canceladas',
+        aguardando_unidade: 'Aguardando',
+        documentacao: 'Documentação',
+        em_admissao: 'Admissão',
+        vagas_lideranca: 'Liderança',
+        movimentacao_interna: 'Mov. Interna',
+      }[cat] || cat;
+      map[label] = (map[label] || 0) + 1;
+    });
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value }))
+      .filter(d => d.value > 0)
+      .sort((a, b) => b.value - a.value);
+  }, [filteredVagas]);
+
+  // ====== CHART: convocações por unidade ======
+  const convByUnitData = useMemo(() => {
+    const map: Record<string, { aceitos: number; pendentes: number; recusas: number }> = {};
+    allFilteredConvocacoes.forEach(c => {
+      const unit = c.unidade || 'Sem Unidade';
+      if (!map[unit]) map[unit] = { aceitos: 0, pendentes: 0, recusas: 0 };
+      if (c.status === 'aceite') map[unit].aceitos++;
+      else if (c.status === 'pendente') map[unit].pendentes++;
+      else map[unit].recusas++;
+    });
+    return Object.entries(map)
+      .map(([name, vals]) => ({ name, ...vals }))
+      .sort((a, b) => (b.aceitos + b.pendentes + b.recusas) - (a.aceitos + a.pendentes + a.recusas))
+      .slice(0, 10);
+  }, [allFilteredConvocacoes]);
+
+  // ====== CONSULTA STATUS ======
+  const vagasParaConsulta = useMemo(() => {
+    let result = filteredVagas;
+    if (statusFilter !== 'all') {
+      result = result.filter(v => getCategoriaStatus(v) === statusFilter);
+    }
+    return result.slice(0, 200);
+  }, [filteredVagas, statusFilter]);
+
+  // ====== OBSERVAÇÕES RECENTES ======
+  const convocacoesComObs = useMemo(() => {
+    return allFilteredConvocacoes
+      .filter(c => c.observacoes && c.observacoes.trim() !== '')
+      .sort((a, b) => (b.data_convocacao || '').localeCompare(a.data_convocacao || ''))
+      .slice(0, 50);
+  }, [allFilteredConvocacoes]);
+
+  const convocacoesSemObs = useMemo(() => {
+    return allFilteredConvocacoes
+      .filter(c => !c.observacoes || c.observacoes.trim() === '')
+      .sort((a, b) => (b.data_convocacao || '').localeCompare(a.data_convocacao || ''))
+      .slice(0, 30);
+  }, [allFilteredConvocacoes]);
+
+  // Map vaga_id → vaga status
   const vagaStatusMap = useMemo(() => {
     const map: Record<string, string> = {};
     vagas.forEach(v => { map[v.id] = v.status || ''; });
@@ -195,6 +305,21 @@ export default function UnidadePortalPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Unit selector in header */}
+          {(podeVerTodas || unidadesVinculadas.length > 1) && (
+            <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+              <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white text-sm font-semibold">
+                <Building2 className="h-4 w-4 text-white/60 mr-1.5" />
+                <SelectValue placeholder="Selecionar unidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Unidades</SelectItem>
+                {unidadesDisponiveis.map(u => (
+                  <SelectItem key={u} value={u}>{u}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <span className="text-sm text-white/60 hidden sm:block">{currentUser?.nome_completo}</span>
           <Button
             variant="ghost"
@@ -208,177 +333,483 @@ export default function UnidadePortalPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 space-y-6">
-        {/* Title + filters */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Convocações do Dia</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Visualize e gerencie as convocações da sua unidade</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Unit selector — show when user can see multiple units */}
-            {(podeVerTodas || unidadesVinculadas.length > 1) && (
-              <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
-                <SelectTrigger className="w-48 bg-white border-slate-200 font-semibold text-slate-700">
-                  <Building2 className="h-4 w-4 text-slate-400 mr-1.5" />
-                  <SelectValue placeholder="Selecionar unidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as Unidades</SelectItem>
-                  {unidadesDisponiveis.map(u => (
-                    <SelectItem key={u} value={u}>{u}</SelectItem>
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="bg-white border border-slate-200 shadow-sm h-12 p-1 rounded-xl">
+            <TabsTrigger value="dashboard" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="status" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
+              <Search className="h-4 w-4" />
+              Consulta de Status
+            </TabsTrigger>
+            <TabsTrigger value="convocacoes" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
+              <CalendarIcon className="h-4 w-4" />
+              Convocações Diárias
+            </TabsTrigger>
+            <TabsTrigger value="observacoes" className="gap-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-lg px-4 font-bold text-sm">
+              <Edit3 className="h-4 w-4" />
+              Observações
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ==================== ABA 1: DASHBOARD ==================== */}
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Stats cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[
+                { label: 'Total de Vagas', value: dashStats.totalVagas, icon: Briefcase, color: 'text-slate-700', bg: 'bg-slate-100' },
+                { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Fila de Editais', value: dashStats.filaEdital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50' },
+                { label: 'Convocações', value: dashStats.convocacoes, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+                { label: 'Suspensas', value: dashStats.suspensas, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
+                { label: 'Aguardando', value: dashStats.aguardando, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              ].map(({ label, value, icon: Icon, color, bg }) => (
+                <Card key={label} className="border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={cn('p-2.5 rounded-xl', bg)}>
+                      <Icon className={cn('h-5 w-5', color)} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900">{value}</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Status distribution */}
+              <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold text-slate-700">Distribuição de Status das Vagas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {statusChartData.length === 0 ? (
+                    <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Sem dados</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={statusChartData} layout="vertical" margin={{ left: 10, right: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis type="number" tick={{ fontSize: 11 }} />
+                        <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                          <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 700 }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Convocações por unidade */}
+              <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold text-slate-700">Convocações por Unidade (Top 10)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {convByUnitData.length === 0 ? (
+                    <div className="h-64 flex items-center justify-center text-slate-400 text-sm">Sem dados</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={convByUnitData} margin={{ left: 10, right: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="name" tick={{ fontSize: 9 }} angle={-30} textAnchor="end" height={60} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip />
+                        <Bar dataKey="aceitos" stackId="a" fill="#10b981" name="Aceitos" />
+                        <Bar dataKey="pendentes" stackId="a" fill="#f59e0b" name="Pendentes" />
+                        <Bar dataKey="recusas" stackId="a" fill="#ef4444" name="Recusas" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Today summary */}
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold text-slate-700">
+                  Resumo do Dia — {format(new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Total', value: convStats.total, color: 'text-slate-700' },
+                    { label: 'Aceitos', value: convStats.aceitos, color: 'text-emerald-600' },
+                    { label: 'Pendentes', value: convStats.pendentes, color: 'text-yellow-600' },
+                    { label: 'Recusas', value: convStats.recusas, color: 'text-red-600' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="text-center p-3 rounded-lg bg-slate-50">
+                      <p className={cn('text-3xl font-black', color)}>{value}</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">{label}</p>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* Date picker */}
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2 font-semibold text-slate-700 bg-white">
-                  <CalendarIcon className="h-4 w-4 text-slate-400" />
-                  {format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => {
-                    if (date) { setSelectedDate(date); setCalendarOpen(false); }
-                  }}
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Button onClick={handleExport} variant="outline" className="gap-2 font-semibold bg-white">
-              <Download className="h-4 w-4" />
-              Exportar
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: 'Total', value: stats.total, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-100' },
-            { label: 'Aceitos', value: stats.aceitos, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Pendentes', value: stats.pendentes, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-            { label: 'Recusas', value: stats.recusas, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
-          ].map(({ label, value, icon: Icon, color, bg }) => (
-            <Card key={label} className="border-slate-200 shadow-sm">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={cn('p-2.5 rounded-xl', bg)}>
-                  <Icon className={cn('h-5 w-5', color)} />
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-900">{value}</p>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</p>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </TabsContent>
 
-        {/* Table */}
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="pb-3 border-b border-slate-100">
-            <CardTitle className="text-base font-bold text-slate-800 flex items-center justify-between">
-              <span>
-                {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                <span className="ml-2 text-sm font-normal text-slate-400">
-                  ({todayConvocacoes.length} registro{todayConvocacoes.length !== 1 ? 's' : ''})
-                </span>
-              </span>
-              {selectedUnidade !== 'all' && (
-                <Badge variant="outline" className="text-xs font-semibold border-slate-200 text-slate-600">
-                  <Building2 className="h-3 w-3 mr-1" />
-                  {selectedUnidade}
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {todayConvocacoes.length === 0 ? (
-              <div className="py-16 text-center text-slate-400">
-                <CalendarIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-semibold">Nenhuma convocação para esta data.</p>
-                {selectedUnidade === 'all' && podeVerTodas && (
-                  <p className="text-xs text-slate-400 mt-1">Selecione uma unidade ou verifique a data.</p>
+          {/* ==================== ABA 2: CONSULTA DE STATUS ==================== */}
+          <TabsContent value="status" className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Consulta de Status das Vagas</h2>
+                <p className="text-sm text-slate-500">Visão consolidada de todas as vagas da unidade (somente leitura)</p>
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-52 bg-white font-semibold text-slate-700">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                  <SelectItem value="fila_edital">Fila de Editais</SelectItem>
+                  <SelectItem value="convocacoes">Convocações</SelectItem>
+                  <SelectItem value="concluidas">Concluídas</SelectItem>
+                  <SelectItem value="suspensa">Suspensas</SelectItem>
+                  <SelectItem value="cancelada">Canceladas</SelectItem>
+                  <SelectItem value="aguardando_unidade">Aguardando Unidade</SelectItem>
+                  <SelectItem value="documentacao">Documentação</SelectItem>
+                  <SelectItem value="em_admissao">Admissão</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Card className="border-slate-200 shadow-sm">
+              <CardContent className="p-0">
+                {vagasParaConsulta.length === 0 ? (
+                  <div className="py-16 text-center text-slate-400">
+                    <Search className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm font-semibold">Nenhuma vaga encontrada para o filtro selecionado.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50/80">
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Data Abertura</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Dias Aberto</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Etapa</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Analista</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {vagasParaConsulta.map(v => {
+                          const dias = calcDiasAberto(v.data_recebimento || v.data_abertura);
+                          return (
+                            <TableRow key={v.id} className="hover:bg-slate-50/60">
+                              <TableCell className="font-semibold text-slate-800 text-sm">{v.cargo || '—'}</TableCell>
+                              <TableCell className="text-slate-600 text-sm">{v.unidade || '—'}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
+                                  {v.status || 'Sem Status'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-slate-600 text-sm">
+                                {v.data_abertura ? format(new Date(v.data_abertura + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                <span className={cn('font-bold', dias > 10 ? 'text-red-600' : 'text-slate-600')}>{dias}d</span>
+                              </TableCell>
+                              <TableCell className="text-slate-600 text-sm">{v.acompanhamento?.etapa_atual || '—'}</TableCell>
+                              <TableCell className="text-slate-600 text-sm">{v.analista_responsavel || '—'}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
+              </CardContent>
+            </Card>
+            <p className="text-xs text-slate-400 text-right">
+              Exibindo {vagasParaConsulta.length} de {filteredVagas.length} vagas
+            </p>
+          </TabsContent>
+
+          {/* ==================== ABA 3: CONVOCAÇÕES DIÁRIAS ==================== */}
+          <TabsContent value="convocacoes" className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Convocações do Dia</h2>
+                <p className="text-sm text-slate-500">Visualize as convocações agendadas</p>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50/80">
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 w-24">Horário</TableHead>
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Candidato</TableHead>
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
-                      {selectedUnidade === 'all' && (
-                        <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
-                      )}
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Conv.</TableHead>
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Vaga</TableHead>
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Observação</TableHead>
-                      <TableHead className="w-10" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {todayConvocacoes.map((conv) => (
-                      <TableRow key={conv.id} className="hover:bg-slate-50/60 transition-colors">
-                        <TableCell className="font-mono font-bold text-slate-700 text-sm">{conv.horario}</TableCell>
-                        <TableCell className="font-semibold text-slate-800">{conv.nome_candidato}</TableCell>
-                        <TableCell className="text-slate-600 text-sm">{conv.cargo}</TableCell>
-                        {selectedUnidade === 'all' && (
-                          <TableCell className="text-slate-600 text-sm font-medium">{conv.unidade}</TableCell>
-                        )}
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-[10px] font-bold px-2 py-0.5 rounded-full border',
-                              STATUS_COLOR[conv.status] || 'bg-slate-100 text-slate-600 border-slate-200'
-                            )}
-                          >
-                            {STATUS_CONVOCACAO_LABELS[conv.status as keyof typeof STATUS_CONVOCACAO_LABELS] || conv.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {vagaStatusMap[conv.vaga_id] ? (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap"
-                            >
-                              {vagaStatusMap[conv.vaga_id]}
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-300 text-xs italic">—</span>
+              <div className="flex items-center gap-3">
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="gap-2 font-semibold text-slate-700 bg-white">
+                      <CalendarIcon className="h-4 w-4 text-slate-400" />
+                      {format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        if (date) { setSelectedDate(date); setCalendarOpen(false); }
+                      }}
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Button onClick={handleExport} variant="outline" className="gap-2 font-semibold bg-white">
+                  <Download className="h-4 w-4" />
+                  Exportar
+                </Button>
+              </div>
+            </div>
+
+            {/* Day stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: 'Total', value: convStats.total, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-100' },
+                { label: 'Aceitos', value: convStats.aceitos, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Pendentes', value: convStats.pendentes, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                { label: 'Recusas', value: convStats.recusas, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
+              ].map(({ label, value, icon: Icon, color, bg }) => (
+                <Card key={label} className="border-slate-200 shadow-sm">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={cn('p-2.5 rounded-xl', bg)}>
+                      <Icon className={cn('h-5 w-5', color)} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900">{value}</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Convocações table */}
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-base font-bold text-slate-800 flex items-center justify-between">
+                  <span>
+                    {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                    <span className="ml-2 text-sm font-normal text-slate-400">
+                      ({todayConvocacoes.length} registro{todayConvocacoes.length !== 1 ? 's' : ''})
+                    </span>
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {todayConvocacoes.length === 0 ? (
+                  <div className="py-16 text-center text-slate-400">
+                    <CalendarIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm font-semibold">Nenhuma convocação para esta data.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50/80">
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 w-24">Horário</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Candidato</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
+                          {selectedUnidade === 'all' && (
+                            <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
                           )}
-                        </TableCell>
-                        <TableCell className="text-sm text-slate-500 max-w-[200px] truncate" title={conv.observacoes}>
-                          {conv.observacoes || <span className="italic text-slate-300">—</span>}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenObs(conv.id, conv.observacoes || '')}
-                            className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                            title="Inserir / editar observação"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Conv.</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Vaga</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Observação</TableHead>
+                          <TableHead className="w-10" />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {todayConvocacoes.map((conv) => (
+                          <TableRow key={conv.id} className="hover:bg-slate-50/60 transition-colors">
+                            <TableCell className="font-mono font-bold text-slate-700 text-sm">{conv.horario}</TableCell>
+                            <TableCell className="font-semibold text-slate-800">{conv.nome_candidato}</TableCell>
+                            <TableCell className="text-slate-600 text-sm">{conv.cargo}</TableCell>
+                            {selectedUnidade === 'all' && (
+                              <TableCell className="text-slate-600 text-sm font-medium">{conv.unidade}</TableCell>
+                            )}
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                                  STATUS_COLOR[conv.status] || 'bg-slate-100 text-slate-600 border-slate-200'
+                                )}
+                              >
+                                {STATUS_CONVOCACAO_LABELS[conv.status as keyof typeof STATUS_CONVOCACAO_LABELS] || conv.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {vagaStatusMap[conv.vaga_id] ? (
+                                <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
+                                  {vagaStatusMap[conv.vaga_id]}
+                                </Badge>
+                              ) : (
+                                <span className="text-slate-300 text-xs italic">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm text-slate-500 max-w-[200px] truncate" title={conv.observacoes}>
+                              {conv.observacoes || <span className="italic text-slate-300">—</span>}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenObs(conv.id, conv.observacoes || '')}
+                                className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                                title="Inserir / editar observação"
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ==================== ABA 4: OBSERVAÇÕES ==================== */}
+          <TabsContent value="observacoes" className="space-y-6">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Observações das Convocações</h2>
+              <p className="text-sm text-slate-500">Insira ou visualize observações nas convocações agendadas</p>
+            </div>
+
+            {/* Convocações sem observação — para inserir */}
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Edit3 className="h-4 w-4 text-amber-500" />
+                  Convocações Pendentes de Observação ({convocacoesSemObs.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {convocacoesSemObs.length === 0 ? (
+                  <div className="py-10 text-center text-slate-400 text-sm">
+                    Todas as convocações possuem observação.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50/80">
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Data</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Horário</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Candidato</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status</TableHead>
+                          <TableHead className="w-10" />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {convocacoesSemObs.map(c => (
+                          <TableRow key={c.id} className="hover:bg-slate-50/60">
+                            <TableCell className="text-sm text-slate-600">
+                              {c.data_convocacao ? format(new Date(c.data_convocacao + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
+                            </TableCell>
+                            <TableCell className="font-mono font-bold text-slate-700 text-sm">{c.horario || '—'}</TableCell>
+                            <TableCell className="font-semibold text-slate-800">{c.nome_candidato || '—'}</TableCell>
+                            <TableCell className="text-slate-600 text-sm">{c.cargo || '—'}</TableCell>
+                            <TableCell className="text-slate-600 text-sm">{c.unidade || '—'}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', STATUS_COLOR[c.status] || 'bg-slate-100 text-slate-600 border-slate-200')}>
+                                {STATUS_CONVOCACAO_LABELS[c.status as keyof typeof STATUS_CONVOCACAO_LABELS] || c.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenObs(c.id, '')}
+                                className="h-8 gap-1 text-xs font-bold"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                                Inserir
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Convocações com observação */}
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-emerald-500" />
+                  Observações Registradas ({convocacoesComObs.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {convocacoesComObs.length === 0 ? (
+                  <div className="py-10 text-center text-slate-400 text-sm">
+                    Nenhuma observação registrada ainda.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50/80">
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Data</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Candidato</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
+                          <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Observação</TableHead>
+                          <TableHead className="w-10" />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {convocacoesComObs.map(c => (
+                          <TableRow key={c.id} className="hover:bg-slate-50/60">
+                            <TableCell className="text-sm text-slate-600">
+                              {c.data_convocacao ? format(new Date(c.data_convocacao + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
+                            </TableCell>
+                            <TableCell className="font-semibold text-slate-800">{c.nome_candidato || '—'}</TableCell>
+                            <TableCell className="text-slate-600 text-sm">{c.cargo || '—'}</TableCell>
+                            <TableCell className="text-slate-600 text-sm">{c.unidade || '—'}</TableCell>
+                            <TableCell className="text-sm text-slate-700 max-w-[300px]">
+                              <p className="line-clamp-2">{c.observacoes}</p>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenObs(c.id, c.observacoes || '')}
+                                className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700"
+                                title="Editar observação"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Observation dialog */}

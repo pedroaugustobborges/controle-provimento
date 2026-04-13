@@ -31,7 +31,9 @@ import {
   ShieldCheck,
   Users,
   Activity,
-  FileText
+  FileText,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { format, differenceInMinutes, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

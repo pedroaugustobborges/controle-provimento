@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,9 +55,14 @@ export default function UnidadePortalPage() {
   });
   const [obsText, setObsText] = useState('');
 
+  // Access control
+  const isAdmin = currentUser?.perfil === 'Administrador';
+  const isSupervision = currentUser?.perfil === 'Supervisão';
+  const hasAccess = isAdmin || isSupervision;
+
   // Determine accessible units
   const unidadesVinculadas: string[] = currentUser?.unidades_vinculadas || [];
-  const podeVerTodas = currentUser?.visualiza_todas_unidades || unidadesVinculadas.length === 0;
+  const podeVerTodas = isAdmin || currentUser?.visualiza_todas_unidades || (isSupervision && unidadesVinculadas.length === 0);
 
   // Unit options for the selector
   const unidadesDisponiveis = useMemo(() => {
@@ -66,13 +71,20 @@ export default function UnidadePortalPage() {
   }, [podeVerTodas, unidadesVinculadas]);
 
   // Selected unit state — default to first linked unit or 'all'
-  const defaultUnit = unidadesVinculadas.length === 1
+  const defaultUnit = unidadesVinculadas.length === 1 && !podeVerTodas
     ? unidadesVinculadas[0]
     : 'all';
   const [selectedUnidade, setSelectedUnidade] = useState<string>(defaultUnit);
 
+  useEffect(() => {
+    if (currentUser && !hasAccess) {
+      toast.error('Acesso restrito ao Portal da Unidade.');
+      navigate('/');
+    }
+  }, [currentUser, hasAccess, navigate]);
+
   const unidadeLabel = selectedUnidade === 'all'
-    ? (unidadesDisponiveis.length > 0 ? 'Todas as Unidades' : 'Sem unidade vinculada')
+    ? (podeVerTodas ? 'Todas as Unidades' : 'Minhas Unidades')
     : selectedUnidade;
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -82,16 +94,15 @@ export default function UnidadePortalPage() {
       if (!c.data_convocacao || !c.horario) return false;
       if (c.data_convocacao !== dateStr) return false;
 
+      const normConvUnidade = c.unidade?.toLowerCase().trim() || '';
+
       if (selectedUnidade === 'all') {
-        // Show all accessible units
-        if (!podeVerTodas && unidadesVinculadas.length > 0) {
-          return unidadesVinculadas.some(
-            u => u.toLowerCase() === c.unidade?.toLowerCase()
-          );
-        }
-        return true;
+        if (podeVerTodas) return true;
+        return unidadesVinculadas.some(u => normConvUnidade.includes(u.toLowerCase().trim()));
       }
-      return c.unidade?.toLowerCase() === selectedUnidade.toLowerCase();
+      
+      const normSelected = selectedUnidade.toLowerCase().trim();
+      return normConvUnidade.includes(normSelected) || normSelected.includes(normConvUnidade);
     }).sort((a, b) => a.horario.localeCompare(b.horario));
   }, [convocacoes, dateStr, selectedUnidade, podeVerTodas, unidadesVinculadas]);
 
@@ -119,7 +130,7 @@ export default function UnidadePortalPage() {
   const handleSaveObs = async () => {
     if (!obsDialog.convId) return;
     try {
-      updateConvocacao(obsDialog.convId, { observacoes: obsText });
+      await updateConvocacao(obsDialog.convId, { observacoes: obsText });
       toast.success('Observação salva com sucesso.');
       setObsDialog({ open: false, convId: '', current: '' });
       setObsText('');
@@ -167,6 +178,8 @@ export default function UnidadePortalPage() {
       navigate('/login');
     }
   };
+
+  if (!currentUser || !hasAccess) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">

@@ -5,7 +5,7 @@ import { normalizeCargo } from './vagaUtils';
 export const BASES_CONVOCACAO: Record<string, string[]> = {
   'Goiânia': ['HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'TEIA ANÁPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'],
   'Goiás': ['POLICLÍNICA', 'JATAÍ'],
-  'Vitória': ['VITÓRIA', 'SÃO PEDRO', 'SUÁ'],
+  'Vitória': ['VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'UPA'],
   'Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
@@ -17,16 +17,16 @@ export const UNIDADES_GOIANIA = [
 
 export const UNIDADES_OUTRAS = [
   'POLICLÍNICA', 'JATAÍ',
-  'VITÓRIA', 'SÃO PEDRO', 'SUÁ',
+  'VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'UPA',
   'DOURADOS', 'CHS', 'HMSA', 'HRCAC',
   'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
 ];
 
-export const UNIDADES_VITORIA = ['SÃO PEDRO', 'SUÁ'];
+export const UNIDADES_VITORIA = ['SÃO PEDRO', 'SUÁ', 'UPA'];
 
 export const UNIDADES_OUTRAS_AGRUPADAS = [
   'POLICLÍNICA', 'JATAÍ',
-  'VITÓRIA',
+  'VITÓRIA', 'SÃO PEDRO', 'SUÁ', 'UPA',
   'DOURADOS', 'CHS', 'HMSA', 'HRCAC',
   'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
 ];

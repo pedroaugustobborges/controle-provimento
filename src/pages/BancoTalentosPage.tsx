@@ -445,9 +445,9 @@ export default function BancoTalentosPage() {
     return data.map(b => ({
       'Unidade': b.unidade || '',
       'Cargo': b.cargo || '',
-      'Vigência': b.data_vigencia ? formatDate(b.data_vigencia) : '',
-      'Qtd. Candidatos': b.quantidade_candidatos || 0,
-      'Status': calculateBancoStatus(b).label
+      'Vigência': b.data_validade ? formatDate(b.data_validade) : '',
+      'Qtd. Candidatos': b.quantidade_banco || 0,
+      'Status': b.status || ''
     }));
   };
 
@@ -458,7 +458,7 @@ export default function BancoTalentosPage() {
         actions={
           <>
             <ExportButton 
-              data={prepareBancoForExport(filteredBancos)} 
+              data={prepareBancoForExport(filtered)} 
               filename="banco_talentos_export"
               label="Exportar Excel"
               className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"

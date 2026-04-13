@@ -58,6 +58,10 @@ export default function FilaAnalistaEditalPage() {
     data_entrevistas: '',
     data_resultado_final_seletivo: ''
   });
+  const [unidadeTrabalho, setUnidadeTrabalho] = useState('');
+  const [distribuicaoVagas, setDistribuicaoVagas] = useState<Record<string, number>>({});
+  const [unidadesBanco, setUnidadesBanco] = useState<string[]>([]);
+  const [isTalentBank, setIsTalentBank] = useState(false);
 
   const editalVagas = useMemo(() => {
     return vagas.filter(v => {

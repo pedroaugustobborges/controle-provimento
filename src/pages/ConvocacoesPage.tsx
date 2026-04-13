@@ -61,7 +61,7 @@ export default function ConvocacoesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { vagas, convocacoes, bancos, bloqueios, getBancoByVaga } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
-  const [view, setView] = useState<'kanban' | 'list' | 'diaria'>('diaria');
+  const [view, setView] = useState<'kanban' | 'list' | 'diaria' | 'pending'>('diaria');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDevolutivaOpen, setIsDevolutivaOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<any>(null);

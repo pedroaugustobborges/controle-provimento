@@ -103,6 +103,9 @@ export default function UnidadePortalPage() {
     status: string; horario_plantao: string; aceito: boolean; observacao: string;
   }>>({});
   const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
+  const [obsFilterUnidade, setObsFilterUnidade] = useState('all');
+  const [obsFilterDate, setObsFilterDate] = useState<Date | undefined>(undefined);
+  const [obsCalendarOpen, setObsCalendarOpen] = useState(false);
 
   const isAdmin = currentUser?.perfil === 'Administrador';
   const isSupervision = currentUser?.perfil === 'Supervisão';
@@ -505,25 +508,33 @@ export default function UnidadePortalPage() {
                 <Table>
                   <TableHeader>
                      <TableRow>
+                      <TableHead>Requisição</TableHead>
+                      <TableHead>Unidade</TableHead>
                       <TableHead>Cargo</TableHead>
+                      <TableHead>Etapa</TableHead>
+                      <TableHead>Analista</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Data</TableHead>
+                      <TableHead>Data Abertura</TableHead>
                       <TableHead>SLA</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {vagasParaConsulta.map(v => (
                       <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="py-4 px-6 font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
-                        <TableCell className="py-4 px-6">
+                        <TableCell className="font-bold text-slate-900 text-sm">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>
+                        <TableCell className="font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.acompanhamento?.etapa_atual || v.status || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.analista_responsavel || '—'}</TableCell>
+                        <TableCell>
                           <Badge variant="outline" className="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-700 border-blue-100">
                             {v.status || 'Sem Status'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-4 px-6 text-slate-500 text-xs font-bold">
+                        <TableCell className="text-slate-500 text-xs font-bold">
                           {v.data_abertura ? format(new Date(v.data_abertura + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
                         </TableCell>
-                        <TableCell className="py-4 px-6">
+                        <TableCell>
                           <span className={cn("inline-flex h-8 w-12 items-center justify-center rounded-lg font-black text-xs", calcDiasAberto(v.data_recebimento || v.data_abertura) > 10 ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600")}>
                             {calcDiasAberto(v.data_recebimento || v.data_abertura)}d
                           </span>
@@ -586,10 +597,46 @@ export default function UnidadePortalPage() {
           <TabsContent value="observacoes" className="space-y-6 animate-in fade-in duration-500">
             <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-4 px-6">
-                <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Edit3 className="h-4 w-4 text-slate-400" />
-                  Devolutiva das Convocações
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Edit3 className="h-4 w-4 text-slate-400" />
+                    Devolutiva das Convocações
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Select value={obsFilterUnidade} onValueChange={setObsFilterUnidade}>
+                      <SelectTrigger className="w-44 h-9 text-xs font-semibold rounded-lg border-slate-200">
+                        <Building2 className="h-3.5 w-3.5 text-slate-400 mr-1.5 shrink-0" />
+                        <SelectValue placeholder="Filtrar unidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="font-semibold text-xs">Todas as Unidades</SelectItem>
+                        {unidadesDisponiveis.map(u => <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Popover open={obsCalendarOpen} onOpenChange={setObsCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="h-9 rounded-lg font-semibold gap-1.5 text-xs border-slate-200">
+                          <CalendarIcon className="h-3.5 w-3.5" />
+                          {obsFilterDate ? format(obsFilterDate, 'dd/MM/yyyy') : 'Todas as datas'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 rounded-2xl overflow-hidden border-none shadow-2xl w-auto" align="end">
+                        <CalendarComponent
+                          mode="single"
+                          selected={obsFilterDate}
+                          onSelect={(d) => { setObsFilterDate(d); setObsCalendarOpen(false); }}
+                          locale={ptBR}
+                          className="pointer-events-auto"
+                        />
+                        {obsFilterDate && (
+                          <div className="p-2 border-t">
+                            <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => { setObsFilterDate(undefined); setObsCalendarOpen(false); }}>Limpar filtro</Button>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -606,17 +653,30 @@ export default function UnidadePortalPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allFilteredConvocacoes.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="py-12 text-center text-slate-400">
-                            <div className="flex flex-col items-center gap-2">
-                              <Edit3 className="h-8 w-8 opacity-20" />
-                              <p className="text-xs font-bold">Nenhuma convocação encontrada</p>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        allFilteredConvocacoes.slice(0, 100).map(c => {
+                      {(() => {
+                        let filtered = allFilteredConvocacoes;
+                        if (obsFilterUnidade !== 'all') {
+                          const normU = obsFilterUnidade.toLowerCase().trim();
+                          filtered = filtered.filter(c => (c.unidade || '').toLowerCase().trim().includes(normU));
+                        }
+                        if (obsFilterDate) {
+                          const dateFilterStr = format(obsFilterDate, 'yyyy-MM-dd');
+                          filtered = filtered.filter(c => c.data_convocacao === dateFilterStr);
+                        }
+                        const sliced = filtered.slice(0, 100);
+                        if (sliced.length === 0) {
+                          return (
+                            <TableRow>
+                              <TableCell colSpan={7} className="py-12 text-center text-slate-400">
+                                <div className="flex flex-col items-center gap-2">
+                                  <Edit3 className="h-8 w-8 opacity-20" />
+                                  <p className="text-xs font-bold">Nenhuma convocação encontrada</p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                        return sliced.map(c => {
                           const edit = getObsEdit(c);
                           const isSaving = savingObs[c.id] || false;
                           const hasChanges = !!obsEdits[c.id];
@@ -694,8 +754,8 @@ export default function UnidadePortalPage() {
                               </TableCell>
                             </TableRow>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </TableBody>
                   </Table>
                 </div>

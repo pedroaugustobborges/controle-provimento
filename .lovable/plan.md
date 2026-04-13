@@ -1,22 +1,23 @@
 
 
-## Plano: Ajustar visibilidade por perfil em Alertas e Tarefas
+## Plano: Unificar unidades de Vitória na vinculação de usuários
 
-### Arquivos a modificar
+### Problema
+Em `UNIDADES_POR_REGIAO` (arquivo `src/lib/vagaUtils.ts`), a região "Vitória" lista `['SÃO PEDRO', 'SUÁ', 'UPA']` como unidades separadas. Na tela de Administração, ao vincular unidades a usuários, essas aparecem individualmente em vez de agrupadas sob "VITÓRIA".
 
-**`src/hooks/useRBAC.ts`**:
-- Separar `isManagement` para não incluir "Supervisão" — criar flag `isSupervisao` à parte
+### Solução
 
-**`src/pages/AlertasTarefasPage.tsx`**:
-- Remover Gestão e Supervisão do `showAll` (apenas Admin vê tudo)
-- Gestão: filtrar tarefas e alertas para vazio, mensagens pelo perfil
-- Supervisão: filtrar tarefas para vazio, alertas apenas com destinatário `'supervisão'`, mensagens pelo perfil
-- Demais perfis: filtrar tarefas, alertas e mensagens pelo `perfil_destinatario` correspondente
+**`src/lib/vagaUtils.ts`**:
+- Alterar `UNIDADES_POR_REGIAO['Vitória']` de `['SÃO PEDRO', 'SUÁ', 'UPA']` para `['VITÓRIA']`
+- Manter `VITORIA_SUB_UNIDADES` como está (para que filtros de dados continuem reconhecendo São Pedro, Suá etc. vindos do banco)
+- Garantir que `normalizeUnitName` e `getRegionForUnit` continuem mapeando "São Pedro", "Suá" para a região "Vitória"
 
-**`src/store/vagasStore.ts`**:
-- Adicionar alertas/tarefas mock com `destinatario: 'supervisão'` para aprovação de edital
-- Garantir que cada alerta/tarefa/mensagem tem `perfil_destinatario` ou `destinatario` correto
-- Bump version para `5` com migration para limpar cache
+**`src/pages/AdministracaoPage.tsx`**:
+- A lista de unidades para vinculação (`REGIOES_SELECAO`) já puxa de `UNIDADES_POR_REGIAO`, então automaticamente mostrará apenas "VITÓRIA"
+- Quando um usuário estiver vinculado a "VITÓRIA", os filtros de dados devem englobar São Pedro e Suá automaticamente (já funciona via `VITORIA_SUB_UNIDADES`)
+
+### Dúvida pendente
+- **UPA**: preciso confirmar com você — UPA pertence a Vitória ou é uma unidade independente? Isso define se UPA fica englobada em "VITÓRIA" ou vai para "Demais Unidades".
 
 Nenhuma alteração de banco de dados necessária.
 

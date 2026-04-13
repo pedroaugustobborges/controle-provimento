@@ -520,11 +520,11 @@ export default function UnidadePortalPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Hora</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Candidato</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Status</TableHead>
-                      <TableHead className="py-5 px-6 w-10"></TableHead>
+                    <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Hora</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Candidato</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Status</TableHead>
+                      <TableHead className="py-5 px-6 w-10 bg-slate-50/80"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

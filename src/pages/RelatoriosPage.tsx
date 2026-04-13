@@ -30,7 +30,8 @@ import {
   Download,
   Filter,
   Search,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  BarChart as FileBarChart
 } from 'lucide-react';
 import { format, differenceInMinutes, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -64,7 +65,7 @@ export default function RelatoriosPage() {
         .limit(500);
       
       if (error) throw error;
-      return data;
+      return data as any[];
     }
   });
 
@@ -79,7 +80,7 @@ export default function RelatoriosPage() {
         .limit(500);
       
       if (error) throw error;
-      return data;
+      return data as any[];
     }
   });
 

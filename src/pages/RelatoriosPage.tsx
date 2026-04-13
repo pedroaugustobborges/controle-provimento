@@ -50,6 +50,7 @@ export default function RelatoriosPage() {
   const { isFullAccessProfile, isAdmin, isManagement } = useRBAC();
   const [searchTerm, setSearchTerm] = useState('');
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
   const { data: sessions, isLoading: loadingSessions } = useQuery({
     queryKey: ['report_sessions'],

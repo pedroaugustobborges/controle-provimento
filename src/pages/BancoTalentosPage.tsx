@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { RequestUpdateDialog } from '@/components/RequestUpdateDialog';
+import { ExportButton } from '@/components/ExportButton';
+// ... keep existing code
 
 import { formatDate, normalizeCargo, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normalizeUnitName } from '@/lib/vagaUtils';
 import { calculateBancoStatus, calculateStats } from '@/lib/bancoTalentosUtils';
@@ -437,6 +439,14 @@ export default function BancoTalentosPage() {
       case 'CONVOCADO': return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold border-purple-200 text-[10px] whitespace-nowrap">Convocado</Badge>;
       default: return <Badge variant="outline" className="text-[10px] whitespace-nowrap">{status || 'Indeterminado'}</Badge>;
     }
+  const prepareBancoForExport = (data: BancoTalentos[]) => {
+    return data.map(b => ({
+      'Unidade': b.unidade || '',
+      'Cargo': b.cargo || '',
+      'Vigência': b.data_vigencia ? formatDate(b.data_vigencia) : '',
+      'Qtd. Candidatos': b.quantidade_candidatos || 0,
+      'Status': calculateBancoStatus(b).label
+    }));
   };
 
   return (
@@ -445,6 +455,12 @@ export default function BancoTalentosPage() {
         title="Banco de Talentos"
         actions={
           <>
+            <ExportButton 
+              data={prepareBancoForExport(filteredBancos)} 
+              filename="banco_talentos_export"
+              label="Exportar Excel"
+              className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
+            />
             {permissions.canImport() && (
               <Button 
                 variant="outline" 

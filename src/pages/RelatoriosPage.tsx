@@ -31,7 +31,9 @@ import {
   Filter,
   Search,
   Calendar as CalendarIcon,
-  BarChart as FileBarChart
+  BarChart as FileBarChart,
+  ShieldCheck,
+  RefreshCw
 } from 'lucide-react';
 import { format, differenceInMinutes, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -41,10 +43,31 @@ import { Button } from '@/components/ui/button';
 import { useRBAC } from '@/hooks/useRBAC';
 import { Navigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 export default function RelatoriosPage() {
   const { isFullAccessProfile, isAdmin, isManagement } = useRBAC();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isBackingUp, setIsBackingUp] = useState(false);
+
+  const handleManualBackup = async () => {
+    setIsBackingUp(true);
+    const id = toast.loading('Iniciando backup do sistema...');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('database-backup');
+      
+      if (error) throw error;
+      
+      toast.success('Backup concluído com sucesso!', { id });
+    } catch (err: any) {
+      console.error('Backup error:', err);
+      toast.error('Erro ao realizar backup: ' + err.message, { id });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+// ... keep existing code
 
   // Perfil protection
   if (!isFullAccessProfile) {
@@ -147,7 +170,20 @@ export default function RelatoriosPage() {
         </div>
         
         <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
+              onClick={handleManualBackup}
+              disabled={isBackingUp}
+            >
+              <ShieldCheck className={`h-4 w-4 ${isBackingUp ? 'animate-spin' : ''}`} />
+              Backup do Sistema
+            </Button>
+          )}
           <div className="relative w-64">
+// ... keep existing code
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Buscar nos relatórios..." 

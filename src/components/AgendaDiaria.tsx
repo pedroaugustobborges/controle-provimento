@@ -63,30 +63,51 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, selectedBas
     );
   }
 
-  // For non-Goiânia bases: free schedule view
+  // For non-Goiânia bases: free schedule view grouped by time
   if (!isGoianiaBase) {
+    // Group convocações by horário, sorted chronologically
+    const byHorario: Record<string, Convocacao[]> = {};
+    const sortedConvs = [...convocacoes].sort((a, b) => a.horario.localeCompare(b.horario));
+    sortedConvs.forEach(c => {
+      if (!byHorario[c.horario]) byHorario[c.horario] = [];
+      byHorario[c.horario].push(c);
+    });
+    const horariosOrdenados = Object.keys(byHorario).sort();
+
     return (
       <div className="space-y-4">
         <DayHeader date={selectedDate} total={totalAgendados} blocked={0} />
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="px-5 py-3 bg-muted/40 border-b border-border flex items-center justify-between">
-            <span className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              Horário Livre — {totalAgendados} convocação{totalAgendados !== 1 ? 'ões' : ''} agendada{totalAgendados !== 1 ? 's' : ''}
-            </span>
+        {convocacoes.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground text-sm italic">
+            Nenhuma convocação agendada para este dia.
           </div>
-          {convocacoes.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm italic">
-              Nenhuma convocação agendada para este dia.
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {convocacoes.map(conv => (
-                <ConvocacaoRow key={conv.id} conv={conv} onEdit={onEditConvocacao} onDevolutiva={onDevolutiva} />
-              ))}
-            </div>
-          )}
-        </div>
+        ) : (
+          <div className="space-y-3">
+            {horariosOrdenados.map((horario) => {
+              const convsNoHorario = byHorario[horario];
+              return (
+                <div key={horario} className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+                  {/* Horário header */}
+                  <div className="px-5 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between">
+                    <span className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-primary" />
+                      {horario}
+                    </span>
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      {convsNoHorario.length} agendamento{convsNoHorario.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  {/* Convocações nesse horário */}
+                  <div className="divide-y divide-border">
+                    {convsNoHorario.map(conv => (
+                      <ConvocacaoRow key={conv.id} conv={conv} onEdit={onEditConvocacao} onDevolutiva={onDevolutiva} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }

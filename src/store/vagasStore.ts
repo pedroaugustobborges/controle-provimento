@@ -622,13 +622,18 @@ export const useVagasStore = create<VagasState>()(
     }),
     {
       name: 'hospital-recruitment-store',
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version: number) => {
         if (version < 2 && persistedState?.historicoMensagens) {
           persistedState.historicoMensagens = persistedState.historicoMensagens.map((m: any) => ({
             ...m,
             remetente: m.remetente === 'AIDE' || m.remetente === 'Aide' ? 'Agie' : m.remetente,
           }));
+        }
+        if (version < 3) {
+          // Force regeneration of alertas and historicoMensagens with dynamic dates
+          delete persistedState.alertas;
+          delete persistedState.historicoMensagens;
         }
         return persistedState;
       },

@@ -762,7 +762,17 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vacancyAlerts.length > 0 ? (
+                {isLoadingVagas && allVagas.length === 0 ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i} className="border-slate-100">
+                      <TableCell className="py-4 px-6"><Skeleton className="h-4 w-16" /></TableCell>
+                      <TableCell className="py-4 px-6"><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell className="py-4 px-6"><Skeleton className="h-4 w-48" /></TableCell>
+                      <TableCell className="py-4 px-6"><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
+                      <TableCell className="py-4 px-6 text-center"><Skeleton className="h-6 w-16 mx-auto rounded-md" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : vacancyAlerts.length > 0 ? (
                   vacancyAlerts.map((vaga) => (
                     <TableRow key={vaga.id} className="group hover:bg-slate-50/50 transition-colors border-slate-100">
                       <TableCell className="py-4 px-6 font-mono text-[11px] font-bold text-slate-400 group-hover:text-primary transition-colors">

@@ -23,7 +23,7 @@ import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { ExportButton } from '@/components/ExportButton';
-import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO, getRegiaoForUnidade } from '@/lib/convocacaoUtils';
+import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO, getRegiaoForUnidade, UNIDADES_GOIANIA, UNIDADES_OUTRAS } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -124,26 +124,28 @@ export default function ConvocacoesPage() {
   };
 
   const unidades = useMemo(() => {
-    const todasBases = Object.keys(BASES_CONVOCACAO).sort();
-    // Filtrar as bases do dropdown de acordo com a região ativa
     if (selectedRegiao === 'goiania') {
-      return todasBases.filter(b => b === 'Goiânia');
+      return [...UNIDADES_GOIANIA].sort();
     }
     if (selectedRegiao === 'outras') {
-      return todasBases.filter(b => b !== 'Goiânia');
+      return [...UNIDADES_OUTRAS].sort();
     }
-    return todasBases;
+    return Object.keys(BASES_CONVOCACAO).sort();
   }, [selectedRegiao]);
 
   // Helper: check if a unit matches the selected base/unit filter
   const matchesUnidadeFilter = (unidade: string) => {
     if (selectedUnidade === 'all') return true;
+    const normFilter = selectedUnidade.toUpperCase().trim();
+    const normUnidade = unidade?.toUpperCase().trim() || '';
+    // Check if filter is a base (Goiânia, Goiás, etc.)
     const unidadesNaBase = BASES_CONVOCACAO[selectedUnidade];
     if (unidadesNaBase) {
-      return unidadesNaBase.some(u => u.toUpperCase() === unidade?.toUpperCase()) || 
+      return unidadesNaBase.some(u => u.toUpperCase() === normUnidade) || 
              getBaseForUnidade(unidade) === selectedUnidade;
     }
-    return unidade === selectedUnidade;
+    // Direct unit comparison
+    return normUnidade.includes(normFilter) || normFilter.includes(normUnidade);
   };
 
   // Unit filtering

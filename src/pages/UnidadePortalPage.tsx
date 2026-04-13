@@ -469,11 +469,11 @@ export default function UnidadePortalPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Cargo</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Status</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">Data</TableHead>
-                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500">SLA</TableHead>
+                    <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Cargo</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Status</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">Data</TableHead>
+                      <TableHead className="py-5 px-6 font-black uppercase tracking-widest text-[10px] text-slate-500 bg-slate-50/80">SLA</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

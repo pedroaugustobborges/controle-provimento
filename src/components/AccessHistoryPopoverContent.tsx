@@ -39,8 +39,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
           cargo
         )
       `) as any)
-      .gte('login_at', start)
-      .lte('login_at', end)
+      .or(`login_at.gte.${start},and(login_at.lte.${end},last_activity_at.gte.${start})`)
       .order('login_at', { ascending: false });
 
     if (error) {

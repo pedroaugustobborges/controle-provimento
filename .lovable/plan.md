@@ -1,22 +1,30 @@
 
-## Plano: Corrigir regressões — sidebar, agenda, histórico e auditoria
 
-### Alteração 1: Remover avatar/foto da sidebar inferior
-No `src/components/AppSidebar.tsx` (linhas 420-451), no `SidebarFooter`, remover o bloco do avatar (imagem/ícone com initiais) que aparece junto ao nome do usuário. Manter apenas o nome, perfil, botões "Acessar Perfil" e "Sair". A foto fica somente no header superior direito (AppLayout).
+## Plano: Otimizar performance e corrigir layout
 
-### Alteração 2: Corrigir texto cortado "Agenda Demais Unidades" na sidebar
-No `src/components/AppSidebar.tsx` (linha 117), o submenu item `'Agenda Demais Unidades'` pode estar sendo cortado pelo `whitespace-nowrap`. Ajustar para permitir quebra ou reduzir o texto para `'Demais Unidades'` no submenu. Verificar também no `PageHeader` em `ConvocacoesPage.tsx` (linha 257).
+### Investigação necessária
+1. Verificar `VagasPage.tsx` e `DashboardPage.tsx` — identificar queries lentas, chamadas redundantes e falta de paginação
+2. Verificar `DashboardService.ts` — são 7 queries separadas executadas em série (sem paralelização)
+3. Revisar se os últimos ajustes quebraram algum layout
 
-### Alteração 3: Corrigir histórico de acessos no popover
-No `src/components/AccessHistoryPopoverContent.tsx`, a query usa `as any` para contornar tipos. Verificar se a RLS policy de `user_sessions` está permitindo a leitura para o perfil logado (a policy "Admins can view all user sessions" usa `profiles.perfil = 'Administrador'` — confirmar que o usuário logado tem exatamente esse perfil). Se o problema for de tipo TypeScript causando query incorreta, corrigir o casting.
+### Alterações previstas
 
-### Alteração 4: Corrigir dados de auditoria no módulo Relatórios
-No `src/pages/RelatoriosPage.tsx`, a query de `audit_logs` tem `.limit(500)`. Se os logs mais recentes não aparecem, pode ser que a RLS policy (`has_role(auth.uid(), 'admin')`) esteja restringindo. Verificar se o usuário tem a role `admin` na tabela `user_roles`. Se não tiver, a query retorna vazio. Ajustar a policy ou garantir que o usuário tenha a role correta. Também verificar se o `useAudit` hook está realmente inserindo no banco (ele usa `addAuditLog` do store local, não do Supabase — pode ser que os logs não estejam sendo persistidos no banco).
+**Performance — `DashboardService.ts`:**
+- Paralelizar as 7 queries com `Promise.all()` em vez de executá-las sequencialmente
+- Adicionar tratamento de erro individual para cada query
 
-### Arquivos alterados
-- `src/components/AppSidebar.tsx`
-- `src/components/AccessHistoryPopoverContent.tsx`
-- `src/pages/RelatoriosPage.tsx`
-- `src/pages/ConvocacoesPage.tsx` (se necessário ajustar título da agenda)
+**Performance — `VagasPage.tsx`:**
+- Revisar a lógica de filtragem (especialmente o novo filtro "Com Banco" que pode estar fazendo chamadas extras por vaga)
+- Implementar memoização com `useMemo` nos dados filtrados
+- Garantir que skeleton/loading é exibido imediatamente
+
+**Layout — Verificar regressões:**
+- Revisar os arquivos alterados recentemente (`AppSidebar.tsx`, `VagasPage.tsx`, `RelatoriosPage.tsx`) para identificar problemas de layout
+
+### Arquivos a alterar
+- `src/services/dashboardService.ts`
+- `src/pages/VagasPage.tsx`
+- `src/pages/DashboardPage.tsx` (se necessário)
 
 ### Sem alteração de banco de dados
+

@@ -41,6 +41,7 @@ export default function FilaAnalistaEditalPage() {
   const [nomeArquivo, setNomeArquivo] = useState('');
   const [numeroEdital, setNumeroEdital] = useState('');
   const [numeroProcesso, setNumeroProcesso] = useState('');
+  const [reachrUrl, setReachrUrl] = useState('');
 
   // Modal de Publicação / Cronograma
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);

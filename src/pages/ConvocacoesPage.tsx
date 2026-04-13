@@ -23,7 +23,7 @@ import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { ExportButton } from '@/components/ExportButton';
-import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO, getRegiaoForUnidade, UNIDADES_GOIANIA, UNIDADES_OUTRAS } from '@/lib/convocacaoUtils';
+import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO, getRegiaoForUnidade, UNIDADES_GOIANIA, UNIDADES_OUTRAS, UNIDADES_OUTRAS_AGRUPADAS, UNIDADES_VITORIA } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -86,7 +86,7 @@ export default function ConvocacoesPage() {
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['kanban', 'list', 'diaria'].includes(tab)) {
+    if (tab && ['kanban', 'list', 'diaria', 'pending'].includes(tab)) {
       setView(tab as any);
     }
     // Abrir dialog de convocação automaticamente quando vindo de Todas as Vagas
@@ -128,7 +128,7 @@ export default function ConvocacoesPage() {
       return [...UNIDADES_GOIANIA].sort();
     }
     if (selectedRegiao === 'outras') {
-      return [...UNIDADES_OUTRAS].sort();
+      return [...UNIDADES_OUTRAS_AGRUPADAS].sort();
     }
     return Object.keys(BASES_CONVOCACAO).sort();
   }, [selectedRegiao]);
@@ -136,8 +136,12 @@ export default function ConvocacoesPage() {
   // Helper: check if a unit matches the selected base/unit filter
   const matchesUnidadeFilter = (unidade: string) => {
     if (selectedUnidade === 'all') return true;
-    const normFilter = selectedUnidade.toUpperCase().trim();
     const normUnidade = unidade?.toUpperCase().trim() || '';
+    // Vitória group: matches SÃO PEDRO, SUÁ, or VITÓRIA
+    if (selectedUnidade === 'Vitória') {
+      return UNIDADES_VITORIA.some(u => u.toUpperCase() === normUnidade) ||
+             normUnidade.includes('VITÓRIA') || normUnidade.includes('VITORIA');
+    }
     // Check if filter is a base (Goiânia, Goiás, etc.)
     const unidadesNaBase = BASES_CONVOCACAO[selectedUnidade];
     if (unidadesNaBase) {
@@ -145,6 +149,7 @@ export default function ConvocacoesPage() {
              getBaseForUnidade(unidade) === selectedUnidade;
     }
     // Direct unit comparison
+    const normFilter = selectedUnidade.toUpperCase().trim();
     return normUnidade.includes(normFilter) || normFilter.includes(normUnidade);
   };
 

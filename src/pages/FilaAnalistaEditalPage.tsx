@@ -142,6 +142,7 @@ export default function FilaAnalistaEditalPage() {
       numero_edital: numeroEdital,
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
+      url_reachr: reachrUrl,
       historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],

@@ -148,8 +148,10 @@ export default function RelatoriosPage() {
       'Ação': a.acao || 'N/A',
       'Módulo': a.modulo || 'N/A',
       'Registro': a.registro_afetado || 'N/A',
-      'Data/Hora': format(parseISO(a.created_at), 'dd/MM/yyyy HH:mm:ss'),
-      'IP': a.ip || 'N/A'
+      'Data/Hora': format(parseISO(a.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }),
+      'IP': a.ip || 'N/A',
+      'Valor Anterior': a.valor_anterior ? JSON.stringify(a.valor_anterior) : '—',
+      'Valor Novo': a.valor_novo ? JSON.stringify(a.valor_novo) : '—'
     }));
   };
 

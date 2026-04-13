@@ -744,7 +744,7 @@ export default function DashboardPage() {
               <div>
                 <DialogTitle className="text-xl font-bold text-slate-900">Vagas sem Movimentação</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-slate-500">
-                  Vagas incluídas no sistema que ainda não receberam nenhuma ação dos analistas.
+                  Vagas sem status ou com mais de 10 dias sem movimentação de status/etapa.
                 </DialogDescription>
               </div>
             </div>

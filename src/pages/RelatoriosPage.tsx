@@ -408,6 +408,7 @@ export default function RelatoriosPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-primary hover:bg-primary transition-none border-b border-white/10">
+                        <TableHead className="w-10"></TableHead>
                         <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Usuário</TableHead>
                         <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Ação / Módulo</TableHead>
                         <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Registro</TableHead>
@@ -417,37 +418,56 @@ export default function RelatoriosPage() {
                     <TableBody>
                       {filteredAudit?.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                          <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                             Nenhum registro encontrado.
                           </TableCell>
                         </TableRow>
                       )}
                       {filteredAudit?.map((a) => (
-                        <TableRow key={a.id} className="hover:bg-muted/10 transition-colors">
-                          <TableCell>
-                            <div className="font-medium text-sm text-foreground">{a.usuario_nome}</div>
-                            <div className="text-xs text-muted-foreground">{a.perfil}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Badge 
-                                variant="outline"
-                                className={`text-[10px] uppercase font-bold px-1.5 py-0.5 border-0 ${
-                                  a.acao === 'INSERT' ? 'bg-green-100 text-green-700' :
-                                  a.acao === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
-                                  'bg-red-100 text-red-700'
-                                }`}
-                              >
-                                {a.acao}
-                              </Badge>
-                              <span className="text-sm text-foreground">{a.modulo}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground max-w-[220px] truncate">{a.registro_afetado}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                            {format(parseISO(a.created_at), "dd/MM/yyyy HH:mm:ss")}
-                          </TableCell>
-                        </TableRow>
+                        <React.Fragment key={a.id}>
+                          <TableRow 
+                            className="hover:bg-muted/10 transition-colors cursor-pointer"
+                            onClick={() => setExpandedLogId(expandedLogId === a.id ? null : a.id)}
+                          >
+                            <TableCell className="py-4 px-4">
+                              {expandedLogId === a.id ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-sm text-foreground">{a.usuario_nome}</div>
+                              <div className="text-xs text-muted-foreground">{a.perfil}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  variant="outline"
+                                  className={`text-[10px] uppercase font-bold px-1.5 py-0.5 border-0 ${
+                                    a.acao === 'INSERT' ? 'bg-green-100 text-green-700' :
+                                    a.acao === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-red-100 text-red-700'
+                                  }`}
+                                >
+                                  {a.acao}
+                                </Badge>
+                                <span className="text-sm text-foreground">{a.modulo}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[220px] truncate">{a.registro_afetado}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                              {format(parseISO(a.created_at), "dd/MM/yyyy HH:mm:ss")}
+                            </TableCell>
+                          </TableRow>
+                          {expandedLogId === a.id && (
+                            <TableRow className="bg-muted/5 hover:bg-muted/5">
+                              <TableCell colSpan={5} className="p-4 pt-0">
+                                <AuditDiff oldVal={a.valor_anterior} newVal={a.valor_novo} />
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
                       ))}
                     </TableBody>
                   </Table>
@@ -457,6 +477,50 @@ export default function RelatoriosPage() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function AuditDiff({ oldVal, newVal }: { oldVal: any, newVal: any }) {
+  const oldObj = oldVal || {};
+  const newObj = newVal || {};
+  const allKeys = Array.from(new Set([...Object.keys(oldObj), ...Object.keys(newObj)]));
+  
+  // Filtrar apenas os campos que foram alterados
+  const changes = allKeys.filter(key => {
+    // Evitar comparar campos de sistema se eles existirem (opcional)
+    if (['id', 'created_at', 'updated_at'].includes(key)) return false;
+    return JSON.stringify(oldObj[key]) !== JSON.stringify(newObj[key]);
+  });
+
+  if (changes.length === 0) {
+    return (
+      <div className="p-3 bg-muted/30 rounded-lg text-xs text-muted-foreground italic border border-border/40">
+        Nenhuma alteração detalhada disponível ou todos os campos são idênticos.
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-3 bg-muted/30 rounded-lg space-y-2 border border-border/40">
+      <div className="grid grid-cols-3 gap-4 font-bold text-[10px] uppercase text-muted-foreground px-2">
+        <div>Campo</div>
+        <div>Valor Anterior</div>
+        <div>Novo Valor</div>
+      </div>
+      <div className="space-y-1">
+        {changes.map(key => (
+          <div key={key} className="grid grid-cols-3 gap-4 text-xs items-center p-2 bg-white rounded border border-border/20 shadow-sm">
+            <div className="font-semibold text-primary truncate" title={key}>{key}</div>
+            <div className="text-red-600 line-through truncate bg-red-50/50 px-1.5 py-0.5 rounded" title={String(oldObj[key])}>
+              {oldObj[key] === undefined || oldObj[key] === null ? '—' : String(oldObj[key])}
+            </div>
+            <div className="text-green-600 font-medium truncate bg-green-50/50 px-1.5 py-0.5 rounded" title={String(newObj[key])}>
+              {newObj[key] === undefined || newObj[key] === null ? '—' : String(newObj[key])}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

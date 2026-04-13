@@ -754,8 +754,8 @@ export default function UnidadePortalPage() {
                               </TableCell>
                             </TableRow>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </TableBody>
                   </Table>
                 </div>

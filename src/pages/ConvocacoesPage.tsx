@@ -23,7 +23,7 @@ import { STATUS_CONVOCACAO_LABELS } from '@/types/vaga';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { ExportButton } from '@/components/ExportButton';
-import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
+import { getBaseForUnidade, HORARIOS_FIXOS_CONVOCACAO, BASES_CONVOCACAO, getRegiaoForUnidade } from '@/lib/convocacaoUtils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -77,6 +77,8 @@ export default function ConvocacoesPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedUnidade, setSelectedUnidade] = useState<string>('all');
 
+  const selectedRegiao = searchParams.get('regiao') as 'goiania' | 'outras' | null;
+
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['kanban', 'list', 'diaria'].includes(tab)) {
@@ -102,7 +104,9 @@ export default function ConvocacoesPage() {
 
   const handleViewChange = (newView: string) => {
     setView(newView as any);
-    setSearchParams({ tab: newView });
+    const params: Record<string, string> = { tab: newView };
+    if (selectedRegiao && newView === 'diaria') params.regiao = selectedRegiao;
+    setSearchParams(params);
   };
 
   const handleDelete = () => {
@@ -175,6 +179,15 @@ export default function ConvocacoesPage() {
           return false;
         }
 
+        // Filter by region (goiania / outras) when coming from split submenu
+        if (selectedRegiao === 'goiania') {
+          const regiaoUnidade = getRegiaoForUnidade(c.unidade);
+          if (regiaoUnidade !== 'goiania') return false;
+        } else if (selectedRegiao === 'outras') {
+          const regiaoUnidade = getRegiaoForUnidade(c.unidade);
+          if (regiaoUnidade !== 'outras') return false;
+        }
+
         if (view === 'diaria') {
           return c.data_convocacao === format(selectedDate, 'yyyy-MM-dd');
         }
@@ -199,7 +212,7 @@ export default function ConvocacoesPage() {
         return true;
       })
       .sort((a, b) => new Date(b.data_convocacao).getTime() - new Date(a.data_convocacao).getTime());
-  }, [convocacoes, currentUser, search, selectedUnidade, dateRange, selectedRegion, globalUnit, view, selectedDate]);
+  }, [convocacoes, currentUser, search, selectedUnidade, dateRange, selectedRegion, globalUnit, view, selectedDate, selectedRegiao]);
 
   const handleNewConvocacao = (vaga?: any) => {
     setSelectedVaga(vaga || null);
@@ -219,8 +232,8 @@ export default function ConvocacoesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader 
-        title="Convocações"
+      <PageHeader
+        title={view === 'diaria' && selectedRegiao ? `Convocações Diárias — ${selectedRegiao === 'goiania' ? 'Goiânia' : 'Outras Unidades'}` : 'Convocações'}
         actions={
           <>
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">

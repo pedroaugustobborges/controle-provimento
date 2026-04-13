@@ -26,6 +26,7 @@ const RelatoriosPage = lazy(() => import("@/pages/RelatoriosPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const UnidadePortalPage = lazy(() => import("@/pages/UnidadePortalPage"));
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,28 @@ function ProtectedRouteWrapper() {
         <Outlet />
       </Suspense>
     </AppLayout>
+  );
+}
+
+function UnidadeRouteWrapper() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+      <Outlet />
+    </Suspense>
   );
 }
 
@@ -87,6 +110,10 @@ const App = () => (
               <Route path="/mensagens" element={<MensagensPage />} />
               <Route path="/relatorios" element={<RelatoriosPage />} />
               <Route path="/editais" element={<EditaisPage />} />
+            </Route>
+
+            <Route element={<UnidadeRouteWrapper />}>
+              <Route path="/portal-unidade" element={<UnidadePortalPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

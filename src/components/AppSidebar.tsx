@@ -105,13 +105,14 @@ export function AppSidebar() {
         { title: 'Bancos Vencidos', url: '/banco-talentos?tab=vencidos' },
       ]
     },
-    { 
-      title: 'Convocações', 
-      url: '/convocacoes', 
-      icon: Calendar, 
+    {
+      title: 'Convocações',
+      url: '/convocacoes',
+      icon: Calendar,
       visible: getPermissions('convocacoes').canRead,
       subMenu: [
-        { title: 'Convocações Diárias', url: '/convocacoes?tab=diaria' },
+        { title: 'Diárias — Goiânia', url: '/convocacoes?tab=diaria&regiao=goiania' },
+        { title: 'Diárias — Outras', url: '/convocacoes?tab=diaria&regiao=outras' },
         { title: 'Histórico', url: '/convocacoes?tab=list' },
         { title: 'Pendentes', url: '/convocacoes?tab=pending' },
       ]

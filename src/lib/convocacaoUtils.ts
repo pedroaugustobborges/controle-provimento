@@ -9,6 +9,30 @@ export const BASES_CONVOCACAO: Record<string, string[]> = {
   'Fora': ['DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
+// Grouping for daily convocações view split
+export const UNIDADES_GOIANIA = [
+  'HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS',
+  'TEIA ANÁPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'
+];
+
+export const UNIDADES_OUTRAS = [
+  'POLICLÍNICA', 'JATAÍ',
+  'VITÓRIA', 'SÃO PEDRO', 'SUÁ',
+  'DOURADOS', 'CHS', 'HMSA', 'HRCAC',
+  'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
+];
+
+export function getRegiaoForUnidade(unidade: string): 'goiania' | 'outras' | null {
+  const normUnidade = unidade?.toUpperCase().trim() || '';
+  if (UNIDADES_GOIANIA.some(u => normUnidade.includes(u.toUpperCase()) || u.toUpperCase().includes(normUnidade))) {
+    return 'goiania';
+  }
+  if (UNIDADES_OUTRAS.some(u => normUnidade.includes(u.toUpperCase()) || u.toUpperCase().includes(normUnidade))) {
+    return 'outras';
+  }
+  return null;
+}
+
 export function getBaseForUnidade(unidade: string): string {
   const normUnidade = normalizeCargo(unidade);
   

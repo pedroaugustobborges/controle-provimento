@@ -249,12 +249,123 @@ function AccessRequestModal({ open, onClose }: { open: boolean; onClose: () => v
   );
 }
 
+// ─── Unit Login Modal ───
+function UnidadeLoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [phase, setPhase] = useState<'form' | 'loading' | 'error'>('form');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    if (open) { setPhase('form'); setErrorMsg(''); }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) { toast.error('Preencha e-mail e senha.'); return; }
+    setPhase('loading');
+    try {
+      await new Promise(r => setTimeout(r, 1200));
+      await signIn(email, password);
+      // Navigate to unit portal instead of main app
+      navigate('/portal-unidade', { replace: true });
+    } catch (err: any) {
+      const msg = err.message?.includes('Invalid login')
+        ? 'E-mail ou senha incorretos.'
+        : err.message || 'Erro ao fazer login.';
+      setErrorMsg(msg);
+      setPhase('error');
+      setTimeout(() => setPhase('form'), 3000);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+      <div className="absolute inset-0 bg-black/30 animate-[fadeIn_0.3s_ease-out]" onMouseDown={(e) => e.preventDefault()} onClick={(e) => e.preventDefault()} />
+      <div className="relative w-full max-w-[480px] animate-[modalIn_0.6s_cubic-bezier(0.34,1.56,0.64,1)]" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-emerald-500/20 via-transparent to-emerald-900/20 blur-sm" />
+        <div className="relative rounded-2xl bg-white/[0.08] backdrop-blur-sm border border-white/[0.15] shadow-2xl shadow-black/40 overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <img src={logoWhite} alt="AGIR" className="h-7 brightness-110" />
+              <div className="h-4 w-px bg-white/20" />
+              <span className="text-white/90 text-xs font-semibold tracking-wide">Acesso da Unidade</span>
+            </div>
+            <button onClick={onClose} className="text-white/50 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
+          </div>
+          <div className="p-8 py-10">
+            {phase === 'loading' ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center shadow-lg animate-pulse">
+                  <img src={logoWhite} alt="" className="h-8 w-8 object-contain brightness-110" />
+                </div>
+                <p className="text-sm text-[hsl(210,20%,55%)] mt-5 font-medium">Autenticando...</p>
+              </div>
+            ) : phase === 'error' ? (
+              <div className="flex flex-col items-center justify-center py-10">
+                <div className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <X className="h-7 w-7 text-red-400" />
+                </div>
+                <p className="text-sm text-red-400 mt-4 font-medium">{errorMsg}</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-1 mb-6">
+                  <h2 className="text-lg font-bold text-white">Acesso da Unidade</h2>
+                  <p className="text-sm text-[hsl(210,20%,50%)]">Portal exclusivo para RHs de unidade</p>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">E-mail</Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-emerald-400 transition-colors" />
+                      <input type="email" placeholder="rh.unidade@agir.org.br" value={email} onChange={(e) => setEmail(e.target.value)}
+                        className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all" autoComplete="email" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">Senha</Label>
+                    <div className="relative group">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-emerald-400 transition-colors" />
+                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
+                        className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all" autoComplete="current-password" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,40%)] hover:text-white/70 transition-colors">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <button type="submit" className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] mt-2">
+                    <LogIn className="h-4 w-4" /> Entrar como Unidade
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Landing Page ───
 export default function LoginPage() {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const [showAccess, setShowAccess] = useState(false);
+  const [showUnidadeLogin, setShowUnidadeLogin] = useState(false);
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
@@ -298,6 +409,10 @@ export default function LoginPage() {
               className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white/60 hover:text-white/90 border border-white/[0.06] hover:border-white/[0.12] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
               <UserPlus className="h-3.5 w-3.5" /> Solicitar acesso
             </button>
+            <button onClick={() => setShowUnidadeLogin(true)}
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all">
+              <Building2 className="h-3.5 w-3.5" /> Acesso Unidade
+            </button>
             <button onClick={() => setShowLogin(true)}
               className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/20 transition-all active:scale-[0.97]">
               <LogIn className="h-3.5 w-3.5" /> Entrar
@@ -340,8 +455,12 @@ export default function LoginPage() {
               <div className="flex flex-col sm:flex-row gap-3 pt-2 justify-center lg:justify-start">
                 <button onClick={() => setShowLogin(true)}
                   className="flex items-center justify-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
-                  <LogIn className="h-4 w-4" /> Acessar o painel
+                  <LogIn className="h-4 w-4" /> Login Provimento
                   <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
+                </button>
+                <button onClick={() => setShowUnidadeLogin(true)}
+                  className="flex items-center justify-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
+                  <Building2 className="h-4 w-4" /> Login Unidade
                 </button>
                 <button onClick={() => setShowAccess(true)}
                   className="flex items-center justify-center gap-2 px-7 py-3 rounded-xl text-sm font-medium text-white/70 border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
@@ -370,6 +489,7 @@ export default function LoginPage() {
       {/* Modals */}
       <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
       <AccessRequestModal open={showAccess} onClose={() => setShowAccess(false)} />
+      <UnidadeLoginModal open={showUnidadeLogin} onClose={() => setShowUnidadeLogin(false)} />
 
       <style>{`
         @keyframes scanline {

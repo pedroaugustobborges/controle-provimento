@@ -524,7 +524,110 @@ export default function FilaAnalistaEditalPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              {/* Distribuição e Unidade de Trabalho (Item 4) */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Distribuição e Ordem de Trabalho</h4>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase">Unidade da vez (Trabalha a vaga agora)</Label>
+                    <Select value={unidadeTrabalho} onValueChange={setUnidadeTrabalho}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Selecione a unidade..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={selectedVaga.unidade}>{selectedVaga.unidade} (Original)</SelectItem>
+                        {UNIDADES_GOIANIA.filter(u => u !== selectedVaga.unidade).map(u => (
+                          <SelectItem key={u} value={u}>{u}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col justify-end pb-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="isTalentBank" 
+                        checked={isTalentBank} 
+                        onCheckedChange={(checked) => setIsTalentBank(checked as boolean)} 
+                      />
+                      <Label htmlFor="isTalentBank" className="text-sm font-bold cursor-pointer">Haverá Banco de Talentos</Label>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedVaga.numero_vagas && selectedVaga.numero_vagas > 1 && (
+                  <div className="space-y-3 pt-2 border-t border-slate-100">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase">Distribuir Vagas por Unidade ({selectedVaga.numero_vagas} total)</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      {UNIDADES_GOIANIA.filter(u => u === selectedVaga.unidade || true).map(u => {
+                        const count = distribuicaoVagas[u] || 0;
+                        if (count === 0 && !UNIDADES_GOIANIA.includes(u)) return null;
+                        return (
+                          <div key={u} className="flex items-center justify-between bg-white p-2 rounded border border-slate-100">
+                            <span className="text-[10px] font-medium text-slate-600 truncate mr-1">{u}</span>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-5 w-5" 
+                                onClick={() => setDistribuicaoVagas({...distribuicaoVagas, [u]: Math.max(0, count - 1)})}
+                              >
+                                <Minus className="h-2 w-2" />
+                              </Button>
+                              <span className="text-xs font-bold w-4 text-center">{count}</span>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-5 w-5" 
+                                onClick={() => {
+                                  const totalDist = Object.values(distribuicaoVagas).reduce((a, b) => a + b, 0);
+                                  if (totalDist < (selectedVaga.numero_vagas || 0)) {
+                                    setDistribuicaoVagas({...distribuicaoVagas, [u]: count + 1});
+                                  } else {
+                                    toast.error('Limite de vagas atingido.');
+                                  }
+                                }}
+                              >
+                                <Plus className="h-2 w-2" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {isTalentBank && (
+                  <div className="space-y-2 pt-2 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase">Unidades que podem convocar do banco</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {UNIDADES_GOIANIA.map(u => (
+                        <Badge 
+                          key={u} 
+                          variant={unidadesBanco.includes(u) ? "default" : "outline"}
+                          className={`cursor-pointer text-[10px] ${unidadesBanco.includes(u) ? 'bg-primary' : 'bg-white'}`}
+                          onClick={() => {
+                            if (unidadesBanco.includes(u)) {
+                              setUnidadesBanco(unidadesBanco.filter(item => item !== u));
+                            } else {
+                              setUnidadesBanco([...unidadesBanco, u]);
+                            }
+                          }}
+                        >
+                          {u}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-4 border-t border-slate-100">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold text-slate-500 uppercase">Data de Publicação</Label>
                   <Input 

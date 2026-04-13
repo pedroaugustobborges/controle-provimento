@@ -74,7 +74,7 @@ const UNIT_MAPPING = [
   { bank: 'JATAÍ', vacancies: ['JATAÍ'], display: 'JATAÍ' },
   { bank: 'POLICLÍNICA', vacancies: ['POLICLÍNICA'], display: 'POLICLÍNICA' },
   { bank: 'GOIÂNIA', vacancies: ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR'], display: 'GOIÂNIA (HOSPITAIS)' },
-  { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA (UPA/PA)' },
+  { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA' },
 ];
 
 const resolveCanonicalName = (unitName: string) => {
@@ -653,14 +653,14 @@ export default function DashboardPage() {
                     />
                   </Bar>
                   <Bar
-                    dataKey="bancosCR"
+                    dataKey="bancosDisponiveis"
                     name="Banco (Cadastro Reserva)"
                     fill="#10b981"
                     radius={[0, 4, 4, 0]}
                     barSize={12}
                   >
                     <LabelList
-                      dataKey="bancosCR"
+                      dataKey="bancosDisponiveis"
                       position="right"
                       style={{ fill: '#10b981', fontSize: '10px', fontWeight: 'bold' }}
                       offset={10}

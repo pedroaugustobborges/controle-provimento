@@ -11,7 +11,8 @@ import {
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
-  FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw
+  FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw,
+  Minus, Plus
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';

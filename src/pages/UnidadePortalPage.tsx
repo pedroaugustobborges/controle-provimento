@@ -28,7 +28,7 @@ import logoAgir from '@/assets/logo-agir.png';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 
 // Flat list of all units across all bases
-const TODAS_UNIDADES: string[] = Object.values(BASES_CONVOCACAO)
+const TODAS_UNIDADES: string[] = (Object.values(BASES_CONVOCACAO) as string[][])
   .flat()
   .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 

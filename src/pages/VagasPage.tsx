@@ -190,6 +190,17 @@ export default function VagasPage() {
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
+  // Pre-compute set of vaga IDs that have banco (expensive lookup done once)
+  const vagasComBancoSet = useMemo(() => {
+    const set = new Set<string>();
+    vagas.forEach(v => {
+      if (v.tem_banco_valido || getBancoByVaga(v.id)) {
+        set.add(v.id);
+      }
+    });
+    return set;
+  }, [vagas, getBancoByVaga]);
+
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
     // 1. Filtragem por Região e Unidade Global (Sidebar)
@@ -255,11 +266,11 @@ export default function VagasPage() {
       const isNew = isManualNew || isByRecebimento || isImportedFallback;
       const matchVagasNovas = !filterVagasNovas || isNew;
 
-      const matchComBanco = !filterComBanco || !!(v.tem_banco_valido || getBancoByVaga(v.id));
+      const matchComBanco = !filterComBanco || vagasComBancoSet.has(v.id);
 
       return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas && matchComBanco;
     });
-  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab, getBancoByVaga]);
+  }, [canonicalBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab, vagasComBancoSet]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -326,14 +337,14 @@ export default function VagasPage() {
         acc.em_andamento++;
       }
 
-      // Verificação dinâmica de banco de talentos
-      if (v.tem_banco_valido || getBancoByVaga(v.id)) {
+      // Verificação via set pré-computado
+      if (vagasComBancoSet.has(v.id)) {
         acc.com_banco_valido++;
       }
     });
     
     return acc;
-  }, [canonicalBase, getBancoByVaga]);
+  }, [canonicalBase, vagasComBancoSet]);
 
   const countFilaEdital = counts.fila_edital;
   const countEmAndamento = counts.em_andamento;

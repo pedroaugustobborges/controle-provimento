@@ -597,10 +597,46 @@ export default function UnidadePortalPage() {
           <TabsContent value="observacoes" className="space-y-6 animate-in fade-in duration-500">
             <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-4 px-6">
-                <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Edit3 className="h-4 w-4 text-slate-400" />
-                  Devolutiva das Convocações
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Edit3 className="h-4 w-4 text-slate-400" />
+                    Devolutiva das Convocações
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Select value={obsFilterUnidade} onValueChange={setObsFilterUnidade}>
+                      <SelectTrigger className="w-44 h-9 text-xs font-semibold rounded-lg border-slate-200">
+                        <Building2 className="h-3.5 w-3.5 text-slate-400 mr-1.5 shrink-0" />
+                        <SelectValue placeholder="Filtrar unidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="font-semibold text-xs">Todas as Unidades</SelectItem>
+                        {unidadesDisponiveis.map(u => <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Popover open={obsCalendarOpen} onOpenChange={setObsCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="h-9 rounded-lg font-semibold gap-1.5 text-xs border-slate-200">
+                          <CalendarIcon className="h-3.5 w-3.5" />
+                          {obsFilterDate ? format(obsFilterDate, 'dd/MM/yyyy') : 'Todas as datas'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 rounded-2xl overflow-hidden border-none shadow-2xl w-auto" align="end">
+                        <CalendarComponent
+                          mode="single"
+                          selected={obsFilterDate}
+                          onSelect={(d) => { setObsFilterDate(d); setObsCalendarOpen(false); }}
+                          locale={ptBR}
+                          className="pointer-events-auto"
+                        />
+                        {obsFilterDate && (
+                          <div className="p-2 border-t">
+                            <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => { setObsFilterDate(undefined); setObsCalendarOpen(false); }}>Limpar filtro</Button>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -617,17 +653,30 @@ export default function UnidadePortalPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allFilteredConvocacoes.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="py-12 text-center text-slate-400">
-                            <div className="flex flex-col items-center gap-2">
-                              <Edit3 className="h-8 w-8 opacity-20" />
-                              <p className="text-xs font-bold">Nenhuma convocação encontrada</p>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        allFilteredConvocacoes.slice(0, 100).map(c => {
+                      {(() => {
+                        let filtered = allFilteredConvocacoes;
+                        if (obsFilterUnidade !== 'all') {
+                          const normU = obsFilterUnidade.toLowerCase().trim();
+                          filtered = filtered.filter(c => (c.unidade || '').toLowerCase().trim().includes(normU));
+                        }
+                        if (obsFilterDate) {
+                          const dateFilterStr = format(obsFilterDate, 'yyyy-MM-dd');
+                          filtered = filtered.filter(c => c.data_convocacao === dateFilterStr);
+                        }
+                        const sliced = filtered.slice(0, 100);
+                        if (sliced.length === 0) {
+                          return (
+                            <TableRow>
+                              <TableCell colSpan={7} className="py-12 text-center text-slate-400">
+                                <div className="flex flex-col items-center gap-2">
+                                  <Edit3 className="h-8 w-8 opacity-20" />
+                                  <p className="text-xs font-bold">Nenhuma convocação encontrada</p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                        return sliced.map(c => {
                           const edit = getObsEdit(c);
                           const isSaving = savingObs[c.id] || false;
                           const hasChanges = !!obsEdits[c.id];

@@ -79,6 +79,11 @@ export default function ConvocacoesPage() {
 
   const selectedRegiao = searchParams.get('regiao') as 'goiania' | 'outras' | null;
 
+  // Reset unit filter when region changes to avoid incompatible selection
+  useEffect(() => {
+    setSelectedUnidade('all');
+  }, [selectedRegiao]);
+
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['kanban', 'list', 'diaria'].includes(tab)) {
@@ -119,11 +124,16 @@ export default function ConvocacoesPage() {
   };
 
   const unidades = useMemo(() => {
-    // Usar as bases de convocação para agrupar unidades
-    // Goiânia agrupa HECAD, HUGOL, CRER, HDS, AGIR, CONDOMÍNIO
-    // Demais bases aparecem com nome próprio
-    return Object.keys(BASES_CONVOCACAO).sort();
-  }, []);
+    const todasBases = Object.keys(BASES_CONVOCACAO).sort();
+    // Filtrar as bases do dropdown de acordo com a região ativa
+    if (selectedRegiao === 'goiania') {
+      return todasBases.filter(b => b === 'Goiânia');
+    }
+    if (selectedRegiao === 'outras') {
+      return todasBases.filter(b => b !== 'Goiânia');
+    }
+    return todasBases;
+  }, [selectedRegiao]);
 
   // Helper: check if a unit matches the selected base/unit filter
   const matchesUnidadeFilter = (unidade: string) => {

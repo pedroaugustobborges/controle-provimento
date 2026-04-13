@@ -190,6 +190,17 @@ export default function VagasPage() {
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);
 
+  // Pre-compute set of vaga IDs that have banco (expensive lookup done once)
+  const vagasComBancoSet = useMemo(() => {
+    const set = new Set<string>();
+    vagas.forEach(v => {
+      if (v.tem_banco_valido || getBancoByVaga(v.id)) {
+        set.add(v.id);
+      }
+    });
+    return set;
+  }, [vagas, getBancoByVaga]);
+
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
     // 1. Filtragem por Região e Unidade Global (Sidebar)

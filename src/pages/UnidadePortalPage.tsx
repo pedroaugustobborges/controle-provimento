@@ -48,6 +48,42 @@ const STATUS_COLOR: Record<string, string> = {
   pendente: 'bg-indigo-50 text-indigo-700 border-indigo-100',
 };
 
+const CHART_STATUS_COLORS: Record<string, string> = {
+  'Em Andamento': '#3b82f6', // blue-500
+  'Concluídas': '#10b981',   // emerald-500
+  'Fila Edital': '#f59e0b',  // amber-500
+  'Convocações': '#6366f1',  // indigo-500
+  'Suspensas': '#64748b',    // slate-500
+  'Canceladas': '#ef4444',   // red-500
+  'Aguardando': '#8b5cf6',   // violet-500
+  'Documentação': '#06b6d4', // cyan-500
+  'Admissão': '#ec4899',     // pink-500
+  'Liderança': '#f97316',    // orange-500
+  'Mov. Interna': '#14b8a6', // teal-500
+};
+
+const CustomChartTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0A192F] text-white p-3 rounded-xl shadow-2xl border border-white/10 backdrop-blur-md">
+        <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">{label}</p>
+        <div className="space-y-1">
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+              <p className="text-xs font-bold flex items-center gap-1.5">
+                <span className="text-white/60">{entry.name}:</span>
+                <span className="text-white">{entry.value}</span>
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function UnidadePortalPage() {
   const navigate = useNavigate();
   const { currentUser } = useAdminStore();

@@ -16,7 +16,7 @@ import {
 import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
-import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
+import { STATUS_EDITAL_COLORS, StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 

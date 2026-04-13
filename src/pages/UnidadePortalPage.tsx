@@ -508,25 +508,33 @@ export default function UnidadePortalPage() {
                 <Table>
                   <TableHeader>
                      <TableRow>
+                      <TableHead>Requisição</TableHead>
+                      <TableHead>Unidade</TableHead>
                       <TableHead>Cargo</TableHead>
+                      <TableHead>Etapa</TableHead>
+                      <TableHead>Analista</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Data</TableHead>
+                      <TableHead>Data Abertura</TableHead>
                       <TableHead>SLA</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {vagasParaConsulta.map(v => (
                       <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="py-4 px-6 font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
-                        <TableCell className="py-4 px-6">
+                        <TableCell className="font-bold text-slate-900 text-sm">{v.numero_processo_seletivo || v.numero_edital || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>
+                        <TableCell className="font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.etapa || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.analista_responsavel || '—'}</TableCell>
+                        <TableCell>
                           <Badge variant="outline" className="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-700 border-blue-100">
                             {v.status || 'Sem Status'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-4 px-6 text-slate-500 text-xs font-bold">
+                        <TableCell className="text-slate-500 text-xs font-bold">
                           {v.data_abertura ? format(new Date(v.data_abertura + 'T12:00:00'), 'dd/MM/yyyy') : '—'}
                         </TableCell>
-                        <TableCell className="py-4 px-6">
+                        <TableCell>
                           <span className={cn("inline-flex h-8 w-12 items-center justify-center rounded-lg font-black text-xs", calcDiasAberto(v.data_recebimento || v.data_abertura) > 10 ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600")}>
                             {calcDiasAberto(v.data_recebimento || v.data_abertura)}d
                           </span>

@@ -87,11 +87,11 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, selectedBas
               const convsNoHorario = byHorario[horario];
               return (
                 <div key={horario} className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
-                  {/* Horário header */}
+                  {/* Horário header com título descritivo */}
                   <div className="px-5 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between">
                     <span className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Clock className="h-4 w-4 text-primary" />
-                      {horario}
+                      Horário: {horario}
                     </span>
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
                       {convsNoHorario.length} agendamento{convsNoHorario.length !== 1 ? 's' : ''}
@@ -100,7 +100,7 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, selectedBas
                   {/* Convocações nesse horário */}
                   <div className="divide-y divide-border">
                     {convsNoHorario.map(conv => (
-                      <ConvocacaoRow key={conv.id} conv={conv} onEdit={onEditConvocacao} onDevolutiva={onDevolutiva} />
+                      <ConvocacaoRow key={conv.id} conv={conv} onEdit={onEditConvocacao} onDevolutiva={onDevolutiva} showHorario={false} />
                     ))}
                   </div>
                 </div>

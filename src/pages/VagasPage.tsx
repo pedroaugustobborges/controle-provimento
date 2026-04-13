@@ -439,8 +439,11 @@ export default function VagasPage() {
     const excelCounted = analyzed.filter(r => r.includedByExcelParity);
     
     // Identify divergences
-    const excludedByAppButIncludedByExcel = excelCounted.filter(e => !canonicalBase.find(a => a.id === e.id));
-    const includedByAppButExcludedByExcel = canonicalBase.filter(a => !excelCounted.find(e => e.id === a.id));
+    const canonicalBaseIds = new Set(canonicalBase.map(a => a.id));
+    const excelCountedIds = new Set(excelCounted.map(e => e.id));
+    
+    const excludedByAppButIncludedByExcel = excelCounted.filter(e => !canonicalBaseIds.has(e.id));
+    const includedByAppButExcludedByExcel = canonicalBase.filter(a => !excelCountedIds.has(a.id));
 
     return {
       selUnit,

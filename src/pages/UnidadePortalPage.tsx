@@ -189,20 +189,17 @@ export default function UnidadePortalPage() {
     return Object.entries(map).map(([name, value]) => ({ name, value })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
   }, [filteredVagas]);
 
-  const convByUnitData = useMemo(() => {
-    const map: Record<string, { aceitos: number; pendentes: number; recusas: number }> = {};
-    allFilteredConvocacoes.forEach(c => {
-      const unit = c.unidade || 'Sem Unidade';
-      if (!map[unit]) map[unit] = { aceitos: 0, pendentes: 0, recusas: 0 };
-      if (c.status === 'aceite') map[unit].aceitos++;
-      else if (c.status === 'pendente') map[unit].pendentes++;
-      else map[unit].recusas++;
+  const top5CargosData = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredVagas.forEach(v => {
+      const cargo = v.cargo || 'Sem Cargo';
+      map[cargo] = (map[cargo] || 0) + 1;
     });
     return Object.entries(map)
-      .map(([name, vals]) => ({ name, ...vals }))
-      .sort((a, b) => (b.aceitos + b.pendentes + b.recusas) - (a.aceitos + a.pendentes + a.recusas))
-      .slice(0, 10);
-  }, [allFilteredConvocacoes]);
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [filteredVagas]);
 
   const vagasParaConsulta = useMemo(() => {
     let result = filteredVagas;
@@ -312,10 +309,11 @@ export default function UnidadePortalPage() {
         <Tabs defaultValue="dashboard" className="space-y-6">
           <div className="sticky top-[68px] z-40 py-2 -mt-2 bg-slate-50/80 backdrop-blur-sm sm:static sm:bg-transparent">
             <TabsList className="bg-white/80 border border-slate-200 shadow-sm p-1.5 rounded-2xl h-auto flex flex-wrap sm:flex-nowrap gap-1">
-              {[{v:'dashboard',i:BarChart3,l:'Dashboard'},{v:'status',i:Search,l:'Status'},{v:'convocacoes',i:CalendarIcon,l:'Agenda'},{v:'observacoes',i:Edit3,l:'Obs'}].map(t => (
+              {[{v:'dashboard',i:BarChart3,l:'Dashboard',lm:'Dash'},{v:'status',i:Search,l:'Status das Vagas',lm:'Status'},{v:'convocacoes',i:CalendarIcon,l:'Convocações Diárias',lm:'Conv.'},{v:'observacoes',i:Edit3,l:'Observações',lm:'Obs'}].map(t => (
                 <TabsTrigger key={t.v} value={t.v} className="flex-1 sm:flex-none gap-2 py-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-none data-[state=active]:shadow-md">
                   <t.i className="h-4 w-4" />
-                  <span className="hidden xs:inline">{t.l}</span>
+                  <span className="sm:hidden">{t.lm}</span>
+                  <span className="hidden sm:inline">{t.l}</span>
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -404,81 +402,57 @@ export default function UnidadePortalPage() {
 
               <Card className="rounded-2xl border-slate-200/60 shadow-sm overflow-hidden">
                 <CardHeader className="bg-slate-50/50 py-4 px-6 border-b border-slate-100">
-                  <CardTitle className="text-sm font-bold text-slate-700">Convocações por Unidade</CardTitle>
+                  <CardTitle className="text-sm font-bold text-slate-700">Top 5 Cargos com Mais Vagas</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="h-[320px] w-full">
-                    {convByUnitData.length === 0 ? (
+                    {top5CargosData.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
-                        <Users className="h-10 w-10 opacity-20" />
+                        <Briefcase className="h-10 w-10 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart 
-                          data={convByUnitData} 
-                          barCategoryGap="25%" 
-                          margin={{ top: 20, right: 10, left: -20, bottom: 40 }}
+                          data={top5CargosData} 
+                          layout="vertical" 
+                          margin={{ left: 10, right: 40, top: 10, bottom: 10 }}
                         >
-                          <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
-                          <XAxis 
-                            dataKey="name" 
-                            tick={{fontSize: 9, fontWeight: 600, fill: '#64748b'}} 
-                            angle={-30} 
-                            textAnchor="end" 
-                            interval={0}
-                            axisLine={false} 
-                            tickLine={false} 
-                            height={60}
-                          />
+                          <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke="#f1f5f9" />
+                          <XAxis type="number" hide />
                           <YAxis 
-                            tick={{fontSize: 10, fontWeight: 600, fill: '#94a3b8'}} 
+                            dataKey="name" 
+                            type="category" 
+                            width={130} 
+                            tick={{fontSize: 10, fontWeight: 700, fill: '#64748b'}} 
                             axisLine={false} 
                             tickLine={false} 
                           />
                           <Tooltip 
-                            cursor={{ fill: '#f8fafc', opacity: 0.4 }} 
+                            cursor={{ fill: '#f8fafc' }} 
                             content={<CustomChartTooltip />} 
                           />
-                          <Legend 
-                            verticalAlign="top" 
-                            align="right" 
-                            height={36} 
-                            iconType="circle"
-                            wrapperStyle={{
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                              paddingBottom: '20px'
-                            }}
-                          />
                           <Bar 
-                            dataKey="aceitos" 
-                            name="Aceitos" 
-                            stackId="a" 
-                            fill="#10b981" 
-                            radius={[0, 0, 0, 0]} 
+                            dataKey="value" 
+                            name="Vagas"
+                            radius={[0, 8, 8, 0]} 
+                            barSize={22}
                             animationDuration={1500}
-                          />
-                          <Bar 
-                            dataKey="pendentes" 
-                            name="Pendentes" 
-                            stackId="a" 
-                            fill="#6366f1" 
-                            radius={[0, 0, 0, 0]} 
-                            animationDuration={1500}
-                            animationBegin={300}
-                          />
-                          <Bar 
-                            dataKey="recusas" 
-                            name="Recusas" 
-                            stackId="a" 
-                            fill="#f43f5e" 
-                            radius={[6, 6, 0, 0]} 
-                            animationDuration={1500}
-                            animationBegin={600}
-                          />
+                            animationEasing="ease-out"
+                          >
+                            {top5CargosData.map((_: any, index: number) => (
+                              <Cell 
+                                key={`cargo-${index}`} 
+                                fill={['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4'][index] || '#3b82f6'} 
+                              />
+                            ))}
+                            <LabelList 
+                              dataKey="value" 
+                              position="right" 
+                              style={{fontSize: 12, fontWeight: 900, fill: '#1e293b'}} 
+                              offset={12}
+                            />
+                          </Bar>
                         </BarChart>
                       </ResponsiveContainer>
                     )}

@@ -1,23 +1,33 @@
 
 
-## Plano: Unificar unidades de Vitória na vinculação de usuários
+## Plano: Corrigir upload de foto de usuário na Administração
 
 ### Problema
-Em `UNIDADES_POR_REGIAO` (arquivo `src/lib/vagaUtils.ts`), a região "Vitória" lista `['SÃO PEDRO', 'SUÁ', 'UPA']` como unidades separadas. Na tela de Administração, ao vincular unidades a usuários, essas aparecem individualmente em vez de agrupadas sob "VITÓRIA".
+O bucket `avatars` existe e é público para leitura, mas as políticas de INSERT e UPDATE exigem que o caminho do arquivo comece com o `auth.uid()` do usuário que faz o upload. Como o admin está fazendo upload em nome de outro usuário, e o código usa `Math.random()` como nome do arquivo (sem pasta do user), o upload é bloqueado pelo RLS.
 
 ### Solução
 
-**`src/lib/vagaUtils.ts`**:
-- Alterar `UNIDADES_POR_REGIAO['Vitória']` de `['SÃO PEDRO', 'SUÁ', 'UPA']` para `['VITÓRIA']`
-- Manter `VITORIA_SUB_UNIDADES` como está (para que filtros de dados continuem reconhecendo São Pedro, Suá etc. vindos do banco)
-- Garantir que `normalizeUnitName` e `getRegionForUnit` continuem mapeando "São Pedro", "Suá" para a região "Vitória"
+**Migration SQL** — Substituir as políticas restritivas por políticas que permitem:
+- Qualquer usuário autenticado pode fazer upload no bucket `avatars` (INSERT)
+- Qualquer usuário autenticado pode atualizar arquivos no bucket `avatars` (UPDATE)
+- Manter SELECT público (já existe)
 
-**`src/pages/AdministracaoPage.tsx`**:
-- A lista de unidades para vinculação (`REGIOES_SELECAO`) já puxa de `UNIDADES_POR_REGIAO`, então automaticamente mostrará apenas "VITÓRIA"
-- Quando um usuário estiver vinculado a "VITÓRIA", os filtros de dados devem englobar São Pedro e Suá automaticamente (já funciona via `VITORIA_SUB_UNIDADES`)
+```sql
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
 
-### Dúvida pendente
-- **UPA**: preciso confirmar com você — UPA pertence a Vitória ou é uma unidade independente? Isso define se UPA fica englobada em "VITÓRIA" ou vai para "Demais Unidades".
+CREATE POLICY "Authenticated users can upload avatars"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
 
-Nenhuma alteração de banco de dados necessária.
+CREATE POLICY "Authenticated users can update avatars"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+```
+
+**`src/pages/AdministracaoPage.tsx`** (~linha 350-373):
+- Melhorar o `handleUploadPhoto` para usar um caminho mais organizado: `avatars/{userId}/{timestamp}.{ext}` em vez de `Math.random()`
+- Isso facilita limpeza futura e organização
+
+Nenhuma outra alteração necessária.
 

@@ -1,7 +1,7 @@
 import { StatusVaga, StatusValidacao, EtapaEdital, StatusPublicacao, Vaga, VagaCronograma } from '@/types/vaga';
 
 export const VITORIA_SUB_UNIDADES = [
-  'sao pedro', 'suá', 'sua', 'bento ferreira', 'jardim da penha', 
+  'sao pedro', 'suá', 'sua', 'upa', 'bento ferreira', 'jardim da penha', 
   'maruípe', 'maruipe', 'vitoria', 'vitória', 'vix', 'espirito santo', 
   'es', 'serra', 'cariacica', 'vila velha', 'viana'
 ];

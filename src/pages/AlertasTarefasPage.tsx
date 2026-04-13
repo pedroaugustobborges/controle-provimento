@@ -180,7 +180,7 @@ export default function AlertasTarefasPage() {
                 </CardContent>
               </Card>
             ))}
-            {alertas.length === 0 && (
+            {filteredAlertas.length === 0 && (
               <div className="py-12 text-center text-slate-400 italic">
                 Nenhum alerta encontrado no momento.
               </div>

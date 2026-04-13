@@ -274,11 +274,11 @@ export default function RelatoriosPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Usuário</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Data/Hora</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">IP</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Dispositivo</TableHead>
+                      <TableRow className="bg-primary hover:bg-primary transition-none border-b border-white/10">
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Usuário</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Data/Hora</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">IP</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 hidden md:table-cell">Dispositivo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -336,11 +336,11 @@ export default function RelatoriosPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Usuário</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Início</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fim</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Duração</TableHead>
+                      <TableRow className="bg-primary hover:bg-primary transition-none border-b border-white/10">
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Usuário</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Início</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Fim</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Duração</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -402,11 +402,11 @@ export default function RelatoriosPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Usuário</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Ação / Módulo</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Registro</TableHead>
-                        <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Data/Hora</TableHead>
+                      <TableRow className="bg-primary hover:bg-primary transition-none border-b border-white/10">
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Usuário</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Ação / Módulo</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Registro</TableHead>
+                        <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12">Data/Hora</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

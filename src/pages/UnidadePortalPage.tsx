@@ -15,13 +15,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
+import {
   Calendar as CalendarIcon, Download, LogOut, Building2,
-  MessageSquare, CheckCircle2, AlertCircle, Clock
+  MessageSquare, CheckCircle2, AlertCircle, Clock, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import logoAgir from '@/assets/logo-agir.png';
+import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
+
+// Flat list of all units across all bases
+const TODAS_UNIDADES: string[] = Object.values(BASES_CONVOCACAO)
+  .flat()
+  .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
 const STATUS_COLOR: Record<string, string> = {
   aceite: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -36,7 +45,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function UnidadePortalPage() {
   const navigate = useNavigate();
   const { currentUser } = useAdminStore();
-  const { convocacoes, updateConvocacao } = useVagasStore();
+  const { convocacoes, vagas, updateConvocacao } = useVagasStore();
   const { signOut } = useAuth();
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -46,23 +55,45 @@ export default function UnidadePortalPage() {
   });
   const [obsText, setObsText] = useState('');
 
-  // Units this user can see
+  // Determine accessible units
   const unidadesVinculadas: string[] = currentUser?.unidades_vinculadas || [];
-  const unidadeLabel = unidadesVinculadas.length === 1
+  const podeVerTodas = currentUser?.visualiza_todas_unidades || unidadesVinculadas.length === 0;
+
+  // Unit options for the selector
+  const unidadesDisponiveis = useMemo(() => {
+    if (podeVerTodas) return TODAS_UNIDADES;
+    return unidadesVinculadas;
+  }, [podeVerTodas, unidadesVinculadas]);
+
+  // Selected unit state — default to first linked unit or 'all'
+  const defaultUnit = unidadesVinculadas.length === 1
     ? unidadesVinculadas[0]
-    : unidadesVinculadas.join(', ');
+    : 'all';
+  const [selectedUnidade, setSelectedUnidade] = useState<string>(defaultUnit);
+
+  const unidadeLabel = selectedUnidade === 'all'
+    ? (unidadesDisponiveis.length > 0 ? 'Todas as Unidades' : 'Sem unidade vinculada')
+    : selectedUnidade;
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
   const todayConvocacoes = useMemo(() => {
     return convocacoes.filter(c => {
       if (!c.data_convocacao || !c.horario) return false;
-      const belongsToUnit = unidadesVinculadas.length === 0
-        ? true
-        : unidadesVinculadas.some(u => u.toLowerCase() === c.unidade?.toLowerCase());
-      return belongsToUnit && c.data_convocacao === dateStr;
+      if (c.data_convocacao !== dateStr) return false;
+
+      if (selectedUnidade === 'all') {
+        // Show all accessible units
+        if (!podeVerTodas && unidadesVinculadas.length > 0) {
+          return unidadesVinculadas.some(
+            u => u.toLowerCase() === c.unidade?.toLowerCase()
+          );
+        }
+        return true;
+      }
+      return c.unidade?.toLowerCase() === selectedUnidade.toLowerCase();
     }).sort((a, b) => a.horario.localeCompare(b.horario));
-  }, [convocacoes, dateStr, unidadesVinculadas]);
+  }, [convocacoes, dateStr, selectedUnidade, podeVerTodas, unidadesVinculadas]);
 
   const stats = useMemo(() => ({
     total: todayConvocacoes.length,
@@ -73,6 +104,13 @@ export default function UnidadePortalPage() {
     ).length,
   }), [todayConvocacoes]);
 
+  // Map vaga_id → vaga status for quick lookup
+  const vagaStatusMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    vagas.forEach(v => { map[v.id] = v.status || ''; });
+    return map;
+  }, [vagas]);
+
   const handleOpenObs = (convId: string, current: string) => {
     setObsDialog({ open: true, convId, current });
     setObsText(current || '');
@@ -82,7 +120,6 @@ export default function UnidadePortalPage() {
     if (!obsDialog.convId) return;
     try {
       updateConvocacao(obsDialog.convId, { observacoes: obsText });
-      // Also persist to Supabase
       await supabase
         .from('convocacoes')
         .update({ observacoes: obsText })
@@ -90,7 +127,7 @@ export default function UnidadePortalPage() {
       toast.success('Observação salva com sucesso.');
       setObsDialog({ open: false, convId: '', current: '' });
       setObsText('');
-    } catch (e) {
+    } catch {
       toast.error('Erro ao salvar observação. Tente novamente.');
     }
   };
@@ -130,7 +167,7 @@ export default function UnidadePortalPage() {
       }
       await signOut();
       navigate('/login');
-    } catch (e) {
+    } catch {
       navigate('/login');
     }
   };
@@ -144,7 +181,7 @@ export default function UnidadePortalPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">Portal da Unidade</p>
             <h1 className="text-lg font-extrabold tracking-tight leading-tight">
-              {unidadeLabel || 'Unidade'}
+              {unidadeLabel}
             </h1>
           </div>
         </div>
@@ -163,16 +200,33 @@ export default function UnidadePortalPage() {
       </header>
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 space-y-6">
-        {/* Date picker + actions */}
+        {/* Title + filters */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Convocações do Dia</h2>
             <p className="text-sm text-slate-500 mt-0.5">Visualize e gerencie as convocações da sua unidade</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Unit selector — show when user can see multiple units */}
+            {(podeVerTodas || unidadesVinculadas.length > 1) && (
+              <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
+                <SelectTrigger className="w-48 bg-white border-slate-200 font-semibold text-slate-700">
+                  <Building2 className="h-4 w-4 text-slate-400 mr-1.5" />
+                  <SelectValue placeholder="Selecionar unidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Unidades</SelectItem>
+                  {unidadesDisponiveis.map(u => (
+                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Date picker */}
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2 font-semibold text-slate-700">
+                <Button variant="outline" className="gap-2 font-semibold text-slate-700 bg-white">
                   <CalendarIcon className="h-4 w-4 text-slate-400" />
                   {format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })}
                 </Button>
@@ -182,16 +236,14 @@ export default function UnidadePortalPage() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => {
-                    if (date) {
-                      setSelectedDate(date);
-                      setCalendarOpen(false);
-                    }
+                    if (date) { setSelectedDate(date); setCalendarOpen(false); }
                   }}
                   locale={ptBR}
                 />
               </PopoverContent>
             </Popover>
-            <Button onClick={handleExport} variant="outline" className="gap-2 font-semibold">
+
+            <Button onClick={handleExport} variant="outline" className="gap-2 font-semibold bg-white">
               <Download className="h-4 w-4" />
               Exportar
             </Button>
@@ -223,11 +275,19 @@ export default function UnidadePortalPage() {
         {/* Table */}
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="pb-3 border-b border-slate-100">
-            <CardTitle className="text-base font-bold text-slate-800">
-              {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
-              <span className="ml-2 text-sm font-normal text-slate-400">
-                ({todayConvocacoes.length} registro{todayConvocacoes.length !== 1 ? 's' : ''})
+            <CardTitle className="text-base font-bold text-slate-800 flex items-center justify-between">
+              <span>
+                {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                <span className="ml-2 text-sm font-normal text-slate-400">
+                  ({todayConvocacoes.length} registro{todayConvocacoes.length !== 1 ? 's' : ''})
+                </span>
               </span>
+              {selectedUnidade !== 'all' && (
+                <Badge variant="outline" className="text-xs font-semibold border-slate-200 text-slate-600">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  {selectedUnidade}
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -235,6 +295,9 @@ export default function UnidadePortalPage() {
               <div className="py-16 text-center text-slate-400">
                 <CalendarIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
                 <p className="text-sm font-semibold">Nenhuma convocação para esta data.</p>
+                {selectedUnidade === 'all' && podeVerTodas && (
+                  <p className="text-xs text-slate-400 mt-1">Selecione uma unidade ou verifique a data.</p>
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -244,9 +307,13 @@ export default function UnidadePortalPage() {
                       <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 w-24">Horário</TableHead>
                       <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Candidato</TableHead>
                       <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Cargo</TableHead>
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status</TableHead>
+                      {selectedUnidade === 'all' && (
+                        <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Unidade</TableHead>
+                      )}
+                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Conv.</TableHead>
+                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Status Vaga</TableHead>
                       <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500">Observação</TableHead>
-                      <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 w-16"></TableHead>
+                      <TableHead className="w-10" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -255,6 +322,9 @@ export default function UnidadePortalPage() {
                         <TableCell className="font-mono font-bold text-slate-700 text-sm">{conv.horario}</TableCell>
                         <TableCell className="font-semibold text-slate-800">{conv.nome_candidato}</TableCell>
                         <TableCell className="text-slate-600 text-sm">{conv.cargo}</TableCell>
+                        {selectedUnidade === 'all' && (
+                          <TableCell className="text-slate-600 text-sm font-medium">{conv.unidade}</TableCell>
+                        )}
                         <TableCell>
                           <Badge
                             variant="outline"
@@ -265,6 +335,18 @@ export default function UnidadePortalPage() {
                           >
                             {STATUS_CONVOCACAO_LABELS[conv.status as keyof typeof STATUS_CONVOCACAO_LABELS] || conv.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {vagaStatusMap[conv.vaga_id] ? (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap"
+                            >
+                              {vagaStatusMap[conv.vaga_id]}
+                            </Badge>
+                          ) : (
+                            <span className="text-slate-300 text-xs italic">—</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm text-slate-500 max-w-[200px] truncate" title={conv.observacoes}>
                           {conv.observacoes || <span className="italic text-slate-300">—</span>}

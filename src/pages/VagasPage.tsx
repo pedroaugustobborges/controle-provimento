@@ -874,6 +874,7 @@ export default function VagasPage() {
               <TableBody>
                 {paginatedData.map((v) => {
                   const categoria = v.categoria_status || getCategoriaStatus(v);
+                  const bancoFound = vagasComBancoMap.get(v.id);
                   const isConsultaOnly = ['concluidas', 'cancelada', 'suspensa'].includes(categoria);
                   const canSendToEdital = ['sem_status', 'aguardando_unidade', 'em_andamento'].includes(categoria);
                   // Allow calling in initial stages, edital stages, or when specifically in "convocação" 
@@ -937,7 +938,7 @@ export default function VagasPage() {
                         {v.numero_vagas || v.quantidade || 0}
                       </TableCell>
                       <TableCell className="text-center py-3 px-4 h-14" onClick={(e) => e.stopPropagation()}>
-                        {getBancoByVaga(v.id) ? (
+                        {bancoFound ? (
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -1017,7 +1018,6 @@ export default function VagasPage() {
                             {canCall && (
                               <DropdownMenuItem 
                                 onClick={() => {
-                                  const bancoFound = getBancoByVaga(v.id);
                                   if (bancoFound) {
                                     navigate(`/convocacoes?open=true&vagaId=${v.id}`);
                                   } else {
@@ -1030,7 +1030,7 @@ export default function VagasPage() {
                               </DropdownMenuItem>
                             )}
 
-                            {getBancoByVaga(v.id) && (
+                            {bancoFound && (
                               <DropdownMenuItem onClick={() => navigate(`/banco-talentos?search=${v.cargo}`)} className="gap-2 text-primary">
                                 <Database className="h-4 w-4" /> Ver Banco de Talentos
                               </DropdownMenuItem>

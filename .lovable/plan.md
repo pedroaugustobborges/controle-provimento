@@ -1,21 +1,24 @@
 
 
-## Plano: Corrigir filtro de unidades e adicionar filtro por unidade na Agenda Goiânia
+## Plano: Corrigir aba Pendentes e agrupar Vitória no filtro de Demais Unidades
 
-### Problema identificado
-1. O dropdown de filtro usa as **bases** de `BASES_CONVOCACAO` (Goiânia, Goiás, Vitória, Fora) — quando `selectedRegiao === 'goiania'`, mostra apenas "Goiânia" (que é redundante). Quando `selectedRegiao === 'outras'`, mostra Goiás/Vitória/Fora mas **não** as unidades individuais.
-2. Na Agenda Goiânia, não existe filtro por unidade individual (HECAD, CRER, etc.).
+### Problemas identificados
+
+1. **Aba "Pendentes"** no sidebar (`AppSidebar.tsx` linha 119) aponta para `?tab=pending`, mas `ConvocacoesPage` só reconhece 'kanban', 'list' e 'diaria'. Como 'pending' não é reconhecido, o componente cai no view padrão ('diaria') sem filtro de região, mostrando os mesmos dados da Agenda Goiânia.
+
+2. **Vitória no filtro "Demais Unidades"**: Quando `selectedRegiao === 'outras'`, o dropdown lista individualmente 'VITÓRIA', 'SÃO PEDRO' e 'SUÁ'. O correto é mostrar **"Vitória"** como opção única que, ao ser selecionada, filtra convocações de ambas as unidades (SUÁ e SÃO PEDRO).
 
 ### Alterações
 
-**`src/pages/ConvocacoesPage.tsx`** — ajustar o `useMemo` de `unidades` (linhas 126-136):
-- Quando `selectedRegiao === 'goiania'`: listar as **unidades individuais** de Goiânia (HECAD, CRER, AGIR, HUGOL, HDS, TEIA ANÁPOLIS, TEIA CANEDO, TEIA APARECIDA, TEIA GOIÂNIA) importadas de `UNIDADES_GOIANIA` do `convocacaoUtils`
-- Quando `selectedRegiao === 'outras'`: listar as **unidades individuais** das demais regiões (POLICLÍNICA, JATAÍ, VITÓRIA, SÃO PEDRO, SUÁ, DOURADOS, CHS, HMSA, HRCAC, TEIA CEN, TEIA PIN, TEIA MAN, TEIA MAN 2, TEIA MAN 3) importadas de `UNIDADES_OUTRAS`
-- Sem região: manter as bases (Goiânia, Goiás, Vitória, Fora)
+**`src/pages/ConvocacoesPage.tsx`**:
+1. Adicionar `'pending'` como view válida (linha 89)
+2. Criar uma nova seção de renderização para `view === 'pending'` que mostra apenas convocações com `status === 'pendente'` — sem filtro de região, mostrando **todas** as pendentes do usuário
+3. Alterar o `useMemo` de `unidades` (linhas 126-134): quando `selectedRegiao === 'outras'`, usar lista que agrupa Vitória: `['POLICLÍNICA', 'JATAÍ', 'Vitória', 'DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']`
+4. Alterar `matchesUnidadeFilter` (linhas 137-149): quando `selectedUnidade === 'Vitória'`, retornar `true` se a unidade da convocação for 'SUÁ', 'SÃO PEDRO' ou 'VITÓRIA' (case-insensitive)
 
-**`src/pages/ConvocacoesPage.tsx`** — ajustar `matchesUnidadeFilter` (linhas 139-147):
-- Quando o filtro é uma unidade individual (ex: "HECAD"), comparar diretamente com a unidade da convocação (case-insensitive)
-- Manter lógica de bases quando o filtro é uma base
+**`src/lib/convocacaoUtils.ts`**:
+5. Criar constante `UNIDADES_OUTRAS_AGRUPADAS` que substitui 'VITÓRIA', 'SÃO PEDRO', 'SUÁ' por apenas 'Vitória'
+6. Criar constante `UNIDADES_VITORIA = ['SÃO PEDRO', 'SUÁ']` para uso no filtro
 
 Nenhuma alteração de banco de dados necessária.
 

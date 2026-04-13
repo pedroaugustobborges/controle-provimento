@@ -407,18 +407,81 @@ export default function UnidadePortalPage() {
                   <CardTitle className="text-sm font-bold text-slate-700">Convocações por Unidade</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={convByUnitData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="name" tick={{fontSize: 8}} angle={-45} textAnchor="end" height={60} axisLine={false} tickLine={false} />
-                        <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
-                        <Bar dataKey="aceitos" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="pendentes" stackId="a" fill="#6366f1" />
-                        <Bar dataKey="recusas" stackId="a" fill="#f43f5e" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="h-[320px] w-full">
+                    {convByUnitData.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
+                        <Users className="h-10 w-10 opacity-20" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={convByUnitData} 
+                          barCategoryGap="25%" 
+                          margin={{ top: 20, right: 10, left: -20, bottom: 40 }}
+                        >
+                          <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{fontSize: 9, fontWeight: 600, fill: '#64748b'}} 
+                            angle={-30} 
+                            textAnchor="end" 
+                            interval={0}
+                            axisLine={false} 
+                            tickLine={false} 
+                            height={60}
+                          />
+                          <YAxis 
+                            tick={{fontSize: 10, fontWeight: 600, fill: '#94a3b8'}} 
+                            axisLine={false} 
+                            tickLine={false} 
+                          />
+                          <Tooltip 
+                            cursor={{ fill: '#f8fafc', opacity: 0.4 }} 
+                            content={<CustomChartTooltip />} 
+                          />
+                          <Legend 
+                            verticalAlign="top" 
+                            align="right" 
+                            height={36} 
+                            iconType="circle"
+                            wrapperStyle={{
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              paddingBottom: '20px'
+                            }}
+                          />
+                          <Bar 
+                            dataKey="aceitos" 
+                            name="Aceitos" 
+                            stackId="a" 
+                            fill="#10b981" 
+                            radius={[0, 0, 0, 0]} 
+                            animationDuration={1500}
+                          />
+                          <Bar 
+                            dataKey="pendentes" 
+                            name="Pendentes" 
+                            stackId="a" 
+                            fill="#6366f1" 
+                            radius={[0, 0, 0, 0]} 
+                            animationDuration={1500}
+                            animationBegin={300}
+                          />
+                          <Bar 
+                            dataKey="recusas" 
+                            name="Recusas" 
+                            stackId="a" 
+                            fill="#f43f5e" 
+                            radius={[6, 6, 0, 0]} 
+                            animationDuration={1500}
+                            animationBegin={600}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </CardContent>
               </Card>

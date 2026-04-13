@@ -521,10 +521,10 @@ export default function UnidadePortalPage() {
                   <TableBody>
                     {vagasParaConsulta.map(v => (
                       <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="font-bold text-slate-900 text-sm">{v.numero_processo_seletivo || v.numero_edital || '—'}</TableCell>
+                        <TableCell className="font-bold text-slate-900 text-sm">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>
                         <TableCell className="font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
-                        <TableCell className="text-slate-600 text-xs font-semibold">{v.etapa || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.acompanhamento?.etapa_atual || v.status || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold">{v.analista_responsavel || '—'}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-700 border-blue-100">

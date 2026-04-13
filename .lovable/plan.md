@@ -1,15 +1,21 @@
 
 
-## Plano de Implementação
+## Plano: Corrigir filtro de unidades e adicionar filtro por unidade na Agenda Goiânia
 
-### 1. Corrigir erro de build em `UnidadePortalPage.tsx` (linha 87-88)
-- Verificar a tipagem do parâmetro na chamada e ajustar para o tipo correto.
+### Problema identificado
+1. O dropdown de filtro usa as **bases** de `BASES_CONVOCACAO` (Goiânia, Goiás, Vitória, Fora) — quando `selectedRegiao === 'goiania'`, mostra apenas "Goiânia" (que é redundante). Quando `selectedRegiao === 'outras'`, mostra Goiás/Vitória/Fora mas **não** as unidades individuais.
+2. Na Agenda Goiânia, não existe filtro por unidade individual (HECAD, CRER, etc.).
 
-### 2. Filtro de unidades na região "Outras"
-- No `ConvocacoesPage.tsx`, o `useMemo` de `unidades` já filtra por região — confirmar que está funcionando corretamente após a última diff (que já implementa essa lógica). Se o problema persistir, revisar a lógica de `BASES_CONVOCACAO`.
+### Alterações
 
-### 3. Renomear abas da Agenda Diária
-- Localizar no `ConvocacoesPage.tsx` ou `AgendaDiaria.tsx` os textos "Diárias - Goiânia" e "Diárias - Fora" e renomear para **"Agenda Goiânia"** e **"Agenda Demais Unidades"**.
+**`src/pages/ConvocacoesPage.tsx`** — ajustar o `useMemo` de `unidades` (linhas 126-136):
+- Quando `selectedRegiao === 'goiania'`: listar as **unidades individuais** de Goiânia (HECAD, CRER, AGIR, HUGOL, HDS, TEIA ANÁPOLIS, TEIA CANEDO, TEIA APARECIDA, TEIA GOIÂNIA) importadas de `UNIDADES_GOIANIA` do `convocacaoUtils`
+- Quando `selectedRegiao === 'outras'`: listar as **unidades individuais** das demais regiões (POLICLÍNICA, JATAÍ, VITÓRIA, SÃO PEDRO, SUÁ, DOURADOS, CHS, HMSA, HRCAC, TEIA CEN, TEIA PIN, TEIA MAN, TEIA MAN 2, TEIA MAN 3) importadas de `UNIDADES_OUTRAS`
+- Sem região: manter as bases (Goiânia, Goiás, Vitória, Fora)
 
-Vou primeiro ler os arquivos relevantes para confirmar os pontos exatos de alteração.
+**`src/pages/ConvocacoesPage.tsx`** — ajustar `matchesUnidadeFilter` (linhas 139-147):
+- Quando o filtro é uma unidade individual (ex: "HECAD"), comparar diretamente com a unidade da convocação (case-insensitive)
+- Manter lógica de bases quando o filtro é uma base
+
+Nenhuma alteração de banco de dados necessária.
 

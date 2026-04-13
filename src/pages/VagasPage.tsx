@@ -334,7 +334,6 @@ export default function VagasPage() {
 
   const totalPages = Math.ceil(filtered.length / pageSize);
 
-  // 3. Vacancy summary - strictly using the same canonical base and unified logic as Dashboard
   const counts = useMemo(() => {
     const acc = {
       fila_edital: 0,
@@ -349,29 +348,30 @@ export default function VagasPage() {
       vagas_novas: 0
     };
     
-    const now = new Date().getTime();
+    const nowTime = new Date().getTime();
+    const startOfYesterday = new Date(nowTime);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    startOfYesterday.setHours(0, 0, 0, 0);
+    const startOfYesterdayTime = startOfYesterday.getTime();
+    
+    const endOfToday = new Date(nowTime);
+    endOfToday.setHours(23, 59, 59, 999);
+    const endOfTodayTime = endOfToday.getTime();
     
     canonicalBase.forEach(v => {
       const cat = v.categoria_status || getCategoriaStatus(v);
       
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
-      
-      const startOfYesterday = new Date(now);
-      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-      startOfYesterday.setHours(0, 0, 0, 0);
-      const endOfToday = new Date(now);
-      endOfToday.setHours(23, 59, 59, 999);
-
-      const isManualNew = v.origem === 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000;
+      const isManualNew = v.origem === 'manual' && creationDate && (nowTime - creationTime) < 86400000;
       
       let isByRecebimento = false;
       if (v.data_recebimento) {
-        const receivedDate = new Date(v.data_recebimento);
-        isByRecebimento = receivedDate >= startOfYesterday && receivedDate <= endOfToday;
+        const receivedTime = new Date(v.data_recebimento).getTime();
+        isByRecebimento = receivedTime >= startOfYesterdayTime && receivedTime <= endOfTodayTime;
       }
       
-      const isImportedFallback = v.origem !== 'manual' && creationDate && (now - creationTime) < 24 * 60 * 60 * 1000 && (!v.status || v.status.trim() === '');
+      const isImportedFallback = v.origem !== 'manual' && creationDate && (nowTime - creationTime) < 86400000 && (!v.status || v.status.trim() === '');
       
       if (isManualNew || isByRecebimento || isImportedFallback) {
         acc.vagas_novas++;

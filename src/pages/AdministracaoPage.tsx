@@ -529,9 +529,9 @@ export default function AdministracaoPage() {
                       <TableHead>Nome / E-mail</TableHead>
                       <TableHead>Perfil / Cargo</TableHead>
                       <TableHead>Unidades</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Último Acesso</TableHead>
-                      <TableHead className="text-right pr-6"></TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -565,7 +565,7 @@ export default function AdministracaoPage() {
                             <span className="text-[11px] text-slate-500">{user.unidades_vinculadas?.length || 0} unid.</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell>
                           <Badge className={`${getStatusBadge(user.status)} font-bold text-[11px] uppercase border-0`}>
                             {user.status}
                           </Badge>
@@ -573,7 +573,7 @@ export default function AdministracaoPage() {
                         <TableCell className="text-xs text-slate-500 font-medium">
                           {user.ultimo_acesso ? new Date(user.ultimo_acesso).toLocaleDateString('pt-BR') : 'Nunca'}
                         </TableCell>
-                        <TableCell className="text-right pr-6">
+                        <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4 text-slate-400" /></Button>
@@ -640,17 +640,17 @@ export default function AdministracaoPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Usuário</TableHead>
-                    <TableHead >Unidades com Acesso</TableHead>
-                    <TableHead className="text-center">Ações Permitidas</TableHead>
-                    <TableHead className="text-right pr-6"></TableHead>
+                   <TableRow>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Unidades com Acesso</TableHead>
+                    <TableHead>Ações Permitidas</TableHead>
+                    <TableHead className="text-right">Ajuste</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="pl-6 py-4">
+                      <TableCell className="py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-700">{user.nome_completo}</span>
                           <Badge variant="outline" className="w-fit text-[9px] h-4 mt-1">{user.perfil}</Badge>

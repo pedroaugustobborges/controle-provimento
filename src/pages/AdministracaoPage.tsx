@@ -494,7 +494,7 @@ export default function AdministracaoPage() {
           if (val === 'usuarios') fetchUsers();
           if (val === 'auditoria') fetchAuditLogs();
           if (val === 'feedback') fetchFeedbacks();
-          if (val === 'suporte') fetchSupportConfigs();
+          if (val === 'suporte') { fetchUsers(); fetchSupportConfigs(); }
         }} className="space-y-4">
         <TabsList className="bg-slate-100 p-1 flex-wrap h-auto">
           <TabsTrigger value="usuarios" className="gap-2 font-bold px-4 py-2">

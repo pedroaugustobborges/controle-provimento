@@ -259,10 +259,10 @@ export default function FilaEditaisPage() {
                   <TableHead>Unidade</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Tipo</TableHead>
-                  <TableHead>Vagas</TableHead>
+                  <TableHead className="text-center">Vagas</TableHead>
                   <TableHead>Recebimento</TableHead>
-                  <TableHead>Dias Aberto</TableHead>
-                  <TableHead>Status Atual</TableHead>
+                  <TableHead className="text-center">Dias Aberto</TableHead>
+                  <TableHead className="text-center">Status Atual</TableHead>
                   <TableHead>Responsável</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -341,7 +341,7 @@ export default function FilaEditaisPage() {
                     <TableCell className="text-center font-bold text-slate-700">
                       {calcDiasAberto(v.data_recebimento || v.data_abertura)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-200">
                         {v.status || v.status_geral || 'Sem Status'}
                       </Badge>

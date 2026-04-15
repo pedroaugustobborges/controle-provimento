@@ -362,6 +362,7 @@ function UnidadeLoginModal({ open, onClose }: { open: boolean; onClose: () => vo
 const slidesData = [
   {
     state: 'Goiás',
+    subtitle: 'Unidades Hospitalares',
     color: 'hsl(200,70%,40%)',
     sections: [
       {
@@ -375,6 +376,13 @@ const slidesData = [
           { name: 'HEJ', desc: 'Hospital Estadual de Jataí Dr. Serafim de Carvalho — Jataí' },
         ],
       },
+    ],
+  },
+  {
+    state: 'Goiás',
+    subtitle: 'Rede Teia Agir',
+    color: 'hsl(200,70%,40%)',
+    sections: [
       {
         title: 'Rede Teia Agir',
         units: [
@@ -501,74 +509,53 @@ function UnitsCarousel() {
         </div>
 
         {/* Slide content */}
-        <div className="p-6 min-h-[320px]" key={current}>
+        <div className="p-6 h-[380px] overflow-hidden" key={current}>
           <div className="flex items-center gap-2 mb-4 animate-[fadeIn_0.4s_ease-out]">
             <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
             <span className="text-base font-bold text-white">{slide.state}</span>
+            {(slide as any).subtitle && (
+              <span className="text-xs text-white/50 font-medium">— {(slide as any).subtitle}</span>
+            )}
             <div className="flex-1 h-px bg-white/[0.06]" />
             <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
           </div>
 
-          {slide.sections.length >= 2 && slide.state === 'Goiás' ? (
-            <div className="grid grid-cols-2 gap-4 animate-[fadeIn_0.5s_ease-out]">
-              {slide.sections.map((section) => (
-                <div key={section.title}>
-                  <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
-                    {section.title}
-                  </span>
-                  <div className="space-y-1">
-                    {section.units.map((u, i) => (
-                      <div
-                        key={u.name}
-                        className="group px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
-                        style={{ animationDelay: `${i * 50}ms` }}
-                      >
-                        <div className="text-[11px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
-                        <div className="text-[9px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
-                      </div>
-                    ))}
-                  </div>
+          <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
+            {slide.sections.map((section) => (
+              <div key={section.title}>
+                <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
+                  {section.title}
+                </span>
+                <div className="space-y-1.5">
+                  {section.units.map((u, i) => (
+                    <div
+                      key={u.name}
+                      className="group px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
+                      style={{ animationDelay: `${i * 50}ms` }}
+                    >
+                      <div className="text-[12px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
+                      <div className="text-[10px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
-              {slide.sections.map((section) => (
-                <div key={section.title}>
-                  <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
-                    {section.title}
-                  </span>
-                  <div className="space-y-1.5">
-                    {section.units.map((u, i) => (
-                      <div
-                        key={u.name}
-                        className="group px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
-                        style={{ animationDelay: `${i * 50}ms` }}
-                      >
-                        <div className="text-[12px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
-                        <div className="text-[10px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Footer with dots */}
         <div className="px-6 py-3 border-t border-white/[0.06] flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
+           <div className="flex items-center gap-1.5">
             {slidesData.map((s, i) => (
               <button
-                key={s.state}
+                key={`${s.state}-${i}`}
                 onClick={() => goTo(i)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   i === current
                     ? 'w-5 bg-[hsl(200,70%,50%)]'
                     : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
                 }`}
-                title={s.state}
+                title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
               />
             ))}
           </div>

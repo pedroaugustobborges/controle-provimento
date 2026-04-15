@@ -487,8 +487,12 @@ export function AppSidebar() {
                     analysts.map((analyst) => (
                       <div key={analyst.id} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white">
-                            {analyst.nome_completo?.charAt(0) || '?'}
+                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white overflow-hidden">
+                            {analyst.avatar_url ? (
+                              <img src={analyst.avatar_url} alt={analyst.nome_completo} className="h-full w-full object-cover" />
+                            ) : (
+                              analyst.nome_completo?.charAt(0) || '?'
+                            )}
                           </div>
                           <div>
                             <h4 className="font-bold text-white leading-tight">{analyst.nome_completo}</h4>

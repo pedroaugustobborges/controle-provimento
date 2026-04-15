@@ -21,7 +21,7 @@ export type StatusVaga =
   | 'AGUARDANDO UNIDADE'
   | 'ESTRATÉGICAS'
   | 'CANCELADAS'
-  | 'SEM STATUS'
+  
   | 'sem_status' 
   | 'publicar_novo_edital' 
   | 'em_edital' 

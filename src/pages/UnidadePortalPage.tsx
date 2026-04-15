@@ -109,18 +109,29 @@ export default function UnidadePortalPage() {
 
   const isAdmin = currentUser?.perfil === 'Administrador';
   const isSupervision = currentUser?.perfil === 'Supervisão';
-  const hasAccess = isAdmin || isSupervision;
+  const isCoordination = currentUser?.perfil === 'Coordenação';
+  const isGestao = ['Gestão', 'Gerência', 'Gestor', 'Gerente'].includes(currentUser?.perfil || '') || 
+                  ['Gestor(a)', 'Gerente'].includes(currentUser?.cargo || '');
+  const isAnalistaAdministrativo = currentUser?.cargo === 'Analista Administrativo';
+  
+  // Requirement 3: Full access profiles
+  const podeVerTodas = isAdmin || 
+    currentUser?.visualiza_todas_unidades === true || 
+    isSupervision || 
+    isCoordination || 
+    isGestao || 
+    isAnalistaAdministrativo;
+
+  // Requirement 1 & 2: Analysts and Unit Users (ponta)
+  const isAnalista = currentUser?.perfil?.toLowerCase().includes('analista') || 
+                    currentUser?.cargo?.toLowerCase().includes('analista');
+  const isUnidadeUser = currentUser?.perfil === 'Usuário da Unidade' || 
+                       currentUser?.cargo === 'Usuário da Unidade' ||
+                       currentUser?.perfil === 'Ponta';
+
+  const hasAccess = podeVerTodas || isAnalista || isUnidadeUser;
 
   const unidadesVinculadas: string[] = currentUser?.unidades_vinculadas || [];
-  const podeVerTodas = isAdmin || currentUser?.visualiza_todas_unidades || (isSupervision && unidadesVinculadas.length === 0);
-
-  const unidadesDisponiveis = useMemo(() => {
-    if (podeVerTodas) return TODAS_UNIDADES;
-    return unidadesVinculadas;
-  }, [podeVerTodas, unidadesVinculadas]);
-
-  const defaultUnit = unidadesVinculadas.length === 1 && !podeVerTodas ? unidadesVinculadas[0] : 'all';
-  const [selectedUnidade, setSelectedUnidade] = useState<string>(defaultUnit);
 
   useEffect(() => {
     if (currentUser && !hasAccess) {

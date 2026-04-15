@@ -464,14 +464,14 @@ export default function ConvocacoesPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader >
-                  <TableRow>
-                    <TableHead >Candidato</TableHead>
-                    <TableHead >Vaga / Cargo</TableHead>
-                    <TableHead className="text-center">Data/Hora</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead >Unidade</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
+                    <TableRow>
+                     <TableHead>Candidato</TableHead>
+                     <TableHead>Vaga / Cargo</TableHead>
+                     <TableHead>Data/Hora</TableHead>
+                     <TableHead>Status</TableHead>
+                     <TableHead>Unidade</TableHead>
+                     <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredConvocacoes.map((c) => (
@@ -551,12 +551,12 @@ export default function ConvocacoesPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50/80">
-                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Candidato</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Cargo</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Unidade</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Data</TableHead>
-                    <TableHead className="text-[11px] font-bold uppercase text-slate-500">Status</TableHead>
+                   <TableRow>
+                    <TableHead>Candidato</TableHead>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Unidade</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

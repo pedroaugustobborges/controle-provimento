@@ -1344,6 +1344,19 @@ export default function AdministracaoPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {newUser.cargo === 'Analista Administrativo' && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Região de Suporte</Label>
+                  <Select value={newUser.regiao_suporte || ''} onValueChange={(v) => setNewUser(p => ({ ...p, regiao_suporte: v || null }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione a região..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="goiania">Unidades Goiânia</SelectItem>
+                      <SelectItem value="espirito_santo">Unidades Espírito Santo</SelectItem>
+                      <SelectItem value="demais">Demais Unidades</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">Status</Label>
                 <Select value={newUser.status} onValueChange={(v: any) => setNewUser(p => ({ ...p, status: v }))}>
@@ -1628,6 +1641,19 @@ export default function AdministracaoPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                {editingUser.cargo === 'Analista Administrativo' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">Região de Suporte</Label>
+                    <Select value={editingUser.regiao_suporte || ''} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, regiao_suporte: v || null }))}>
+                      <SelectTrigger><SelectValue placeholder="Selecione a região..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="goiania">Unidades Goiânia</SelectItem>
+                        <SelectItem value="espirito_santo">Unidades Espírito Santo</SelectItem>
+                        <SelectItem value="demais">Demais Unidades</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 border-t pt-4">

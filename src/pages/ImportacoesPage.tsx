@@ -309,7 +309,7 @@ export default function ImportacoesPage() {
                           {h.tipo_importacao || 'vagas'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell>
                         <div className="flex items-center justify-center gap-2">
                           <div className="flex flex-col items-center">
                             <span className="text-xs font-bold text-green-600">{h.total_novos}</span>

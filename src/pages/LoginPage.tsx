@@ -545,7 +545,7 @@ function UnitsCarouselInline() {
         </div>
         <div className="flex items-center gap-1">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] text-emerald-400/80 font-medium">6 estados · 20+ unidades</span>
+          <span className="text-[10px] text-emerald-400/80 font-medium">Sistema de Controle de Provimento</span>
         </div>
       </div>
     </div>
@@ -642,7 +642,7 @@ export default function LoginPage() {
                     {/* Stats */}
                     <div className="grid grid-cols-4 gap-3 mb-6">
                       {highlights.map((h) => (
-                        <div key={h.label} className="text-center lg:text-left">
+                        <div key={h.label} className="flex flex-col items-center text-center">
                           <div className="text-lg lg:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">{h.value}</div>
                           <div className="text-[9px] uppercase tracking-[0.12em] text-[hsl(210,20%,42%)] font-medium mt-0.5 leading-tight">{h.label}</div>
                         </div>

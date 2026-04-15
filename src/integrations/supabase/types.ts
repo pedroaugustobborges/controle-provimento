@@ -280,6 +280,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          acesso_portal_unidade: boolean
           avatar_url: string | null
           cargo: string | null
           created_at: string
@@ -300,6 +301,7 @@ export type Database = {
           visualiza_todas_unidades: boolean
         }
         Insert: {
+          acesso_portal_unidade?: boolean
           avatar_url?: string | null
           cargo?: string | null
           created_at?: string
@@ -320,6 +322,7 @@ export type Database = {
           visualiza_todas_unidades?: boolean
         }
         Update: {
+          acesso_portal_unidade?: boolean
           avatar_url?: string | null
           cargo?: string | null
           created_at?: string

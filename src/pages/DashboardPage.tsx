@@ -788,10 +788,10 @@ export default function DashboardPage() {
             <Table>
               <TableHeader className="sticky top-0 z-10">
                 <TableRow>
-                  <TableHead>Requisição</TableHead>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Requisição</TableHead>
+                  <TableHead className="text-center">Unidade</TableHead>
+                  <TableHead className="text-center">Cargo</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Dias Parado</TableHead>
                 </TableRow>
               </TableHeader>

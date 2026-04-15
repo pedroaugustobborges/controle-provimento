@@ -469,11 +469,33 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Right map */}
+            {/* Right map with interactive zoom */}
             <div className="hidden lg:flex flex-1 items-center justify-center max-w-[520px]">
-              <div className="relative">
-                <div className="absolute inset-0 bg-[hsl(200,70%,40%)]/8 rounded-full blur-[80px] scale-110" />
-                <img src={mapaNobg} alt="Presença AGIR no Brasil" className="relative w-[504px] h-auto drop-shadow-2xl" />
+              <div
+                className="relative overflow-hidden rounded-2xl cursor-zoom-in"
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                  const img = e.currentTarget.querySelector('img') as HTMLImageElement;
+                  if (img) {
+                    img.style.transformOrigin = `${x}% ${y}%`;
+                    img.style.transform = 'scale(2)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  const img = e.currentTarget.querySelector('img') as HTMLImageElement;
+                  if (img) {
+                    img.style.transform = 'scale(1)';
+                  }
+                }}
+              >
+                <div className="absolute inset-0 bg-[hsl(200,70%,40%)]/8 rounded-full blur-[80px] scale-110 pointer-events-none" />
+                <img
+                  src={mapaNobg}
+                  alt="Presença AGIR no Brasil"
+                  className="relative w-[504px] h-auto drop-shadow-2xl transition-transform duration-300 ease-out"
+                />
               </div>
             </div>
           </div>

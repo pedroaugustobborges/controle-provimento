@@ -470,7 +470,6 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   'AGUARDANDO UNIDADE': 'Aguardando Unidade',
   'ESTRATÉGICAS': 'Estratégicas',
   'CANCELADAS': 'Canceladas',
-  'SEM STATUS': 'Sem Status',
   sem_status: 'Sem Status',
   publicar_novo_edital: 'Publicar Novo Edital',
   em_edital: 'Em Edital',

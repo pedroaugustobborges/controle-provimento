@@ -477,7 +477,12 @@ export default function AdministracaoPage() {
       />
 
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(val) => {
+          setActiveTab(val);
+          if (val === 'usuarios') fetchUsers();
+          if (val === 'auditoria') fetchAuditLogs();
+          if (val === 'feedback' || val === 'suporte') fetchFeedbacks();
+        }} className="space-y-4">
         <TabsList className="bg-slate-100 p-1 flex-wrap h-auto">
           <TabsTrigger value="usuarios" className="gap-2 font-bold px-4 py-2">
             <Users className="h-4 w-4" /> Usuários
@@ -517,9 +522,14 @@ export default function AdministracaoPage() {
                 <CardTitle className="text-lg font-bold">Usuários Cadastrados</CardTitle>
                 <CardDescription>Gerencie quem tem acesso ao sistema, perfis, permissões e senhas.</CardDescription>
               </div>
-              <Button onClick={() => { resetNewUserForm(); setIsNewUserOpen(true); }} className="gap-2 bg-primary">
-                <UserPlus className="h-4 w-4" /> Incluir novo usuário
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => fetchUsers()} className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Atualizar lista
+                </Button>
+                <Button onClick={() => { resetNewUserForm(); setIsNewUserOpen(true); }} className="gap-2 bg-primary">
+                  <UserPlus className="h-4 w-4" /> Incluir novo usuário
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">

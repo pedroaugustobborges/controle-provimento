@@ -347,7 +347,7 @@ export function normalizeCargo(cargo: string): string {
 
 export function normalizeStatus(statusText: string): StatusVaga {
   if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan' || statusText === '0') {
-    return 'SEM STATUS' as StatusVaga;
+    return 'sem_status' as StatusVaga;
   }
   
   const text = normStatus(statusText);
@@ -374,7 +374,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text.includes('andamento')) return 'EM ANDAMENTO' as StatusVaga;
   if (text.includes('edital')) return 'EM EDITAL' as StatusVaga;
 
-  return 'SEM STATUS' as StatusVaga;
+  return 'sem_status' as StatusVaga;
 }
 
 const normalizeUnitNameCache = new Map<string, string>();
@@ -579,7 +579,7 @@ export function getStatusSummary(records: any[], selectedUnit: string, selectedM
   const validVacancies = getValidVacancyBase(records, selectedUnit, selectedMonth);
   const summary: Record<string, number> = {};
   validVacancies.forEach(row => {
-    const statusVal = row.status || row.status_geral || 'SEM STATUS';
+    const statusVal = row.status || row.status_geral || 'sem_status';
     const status = normStatus(String(statusVal)).toUpperCase();
     summary[status] = (summary[status] || 0) + 1;
   });

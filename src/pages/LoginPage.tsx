@@ -542,11 +542,6 @@ function UnitsCarousel() {
             ))}
           </div>
         </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* Footer with dots */}
         <div className="px-6 py-3 border-t border-white/[0.06] flex items-center justify-between">

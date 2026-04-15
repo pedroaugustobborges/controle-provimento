@@ -299,6 +299,7 @@ export default function UnidadePortalPage() {
     horario_plantao: c.horario_trabalho || c.carga_horaria || '',
     aceito: c.devolutiva === 'aceitou',
     observacao: c.observacoes || '',
+    unidade_destino: c.unidade_alternativa || '',
   };
 
   const setObsField = (id: string, c: any, field: string, value: any) => {
@@ -315,6 +316,7 @@ export default function UnidadePortalPage() {
         horario_trabalho: edit.horario_plantao,
         devolutiva: edit.aceito ? 'aceitou' : 'recusou',
         observacoes: edit.observacao,
+        unidade_alternativa: edit.unidade_destino,
       });
       toast.success('Devolutiva salva com sucesso.');
       setObsEdits(prev => { const n = { ...prev }; delete n[c.id]; return n; });

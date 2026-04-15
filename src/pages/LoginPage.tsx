@@ -492,7 +492,7 @@ function UnitsCarouselInline() {
     <div className="flex flex-col h-full">
       {/* Slide content */}
       <div className="flex-1 overflow-hidden flex flex-col" key={current}>
-        <div className="flex items-center gap-2 mb-2 animate-[fadeIn_0.4s_ease-out]">
+        <div className="flex items-center justify-center gap-2 mb-2 animate-[fadeIn_0.4s_ease-out]">
           <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
           <span className="text-sm font-bold text-white">{slide.state}</span>
           {(slide as any).subtitle && (
@@ -502,10 +502,10 @@ function UnitsCarouselInline() {
           <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
         </div>
 
-        <div className={`flex-1 flex flex-col ${totalUnits <= 4 ? 'justify-center' : 'justify-start'}`}>
-          <div className={`${totalUnits > 5 ? 'space-y-1.5' : 'space-y-3'} animate-[fadeIn_0.5s_ease-out]`}>
+        <div className={`flex-1 flex flex-col items-center ${totalUnits <= 4 ? 'justify-center' : 'justify-start'}`}>
+          <div className={`w-full ${totalUnits > 5 ? 'space-y-1.5' : 'space-y-3'} animate-[fadeIn_0.5s_ease-out]`}>
             {slide.sections.map((section) => (
-              <div key={section.title}>
+              <div key={section.title} className="text-center">
                 <span className={`${totalUnits > 5 ? 'text-[8px] mb-1' : 'text-[9px] mb-1.5'} font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] block`}>
                   {section.title}
                 </span>
@@ -513,7 +513,7 @@ function UnitsCarouselInline() {
                   {section.units.map((u, i) => (
                     <div
                       key={u.name}
-                      className={`group px-2.5 ${totalUnits > 5 ? 'py-1' : 'py-1.5'} rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default`}
+                      className={`group px-2.5 ${totalUnits > 5 ? 'py-1' : 'py-1.5'} rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default text-center`}
                       style={{ animationDelay: `${i * 50}ms` }}
                     >
                       <div className={`${totalUnits > 5 ? 'text-[10px]' : 'text-[11px]'} font-semibold text-white/80 group-hover:text-white transition-colors`}>{u.name}</div>

@@ -1188,7 +1188,7 @@ export default function BancoTalentosPage() {
                       <TableHead className="whitespace-nowrap">Unidade</TableHead>
                       <TableHead className="text-center whitespace-nowrap">Class.</TableHead>
                       <TableHead className="whitespace-nowrap">Validade</TableHead>
-                      <TableHead className="whitespace-nowrap">Status</TableHead>
+                      <TableHead className="text-center whitespace-nowrap">Status</TableHead>
                       <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1207,7 +1207,7 @@ export default function BancoTalentosPage() {
                         <TableCell className="text-xs font-bold text-red-600">
                           {b.data_validade ? formatDate(b.data_validade) : '-'}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-center">
                           {getStatusBadge(b.status)}
                         </TableCell>
                         <TableCell className="text-right">

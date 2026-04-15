@@ -452,19 +452,19 @@ export default function LoginPage() {
               </div>
 
               {/* CTA buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-2.5 pt-2 justify-center lg:justify-start">
                 <button onClick={() => setShowLogin(true)}
-                  className="flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
-                  <LogIn className="h-5 w-5" /> Login Provimento
-                  <ChevronRight className="h-4 w-4 ml-0.5 opacity-60" />
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
+                  <LogIn className="h-4 w-4" /> Login Provimento
+                  <ChevronRight className="h-3.5 w-3.5 opacity-60" />
                 </button>
                 <button onClick={() => setShowUnidadeLogin(true)}
-                  className="flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-semibold text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
-                  <Building2 className="h-5 w-5" /> Login Unidade
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-emerald-300 whitespace-nowrap border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
+                  <Building2 className="h-4 w-4" /> Login Unidade
                 </button>
                 <button onClick={() => setShowAccess(true)}
-                  className="flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-medium text-white/70 border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-                  <UserPlus className="h-5 w-5" /> Solicitar acesso
+                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-white/70 whitespace-nowrap border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
+                  <UserPlus className="h-4 w-4" /> Solicitar acesso
                 </button>
               </div>
             </div>

@@ -133,6 +133,14 @@ export default function UnidadePortalPage() {
 
   const unidadesVinculadas: string[] = currentUser?.unidades_vinculadas || [];
 
+  const unidadesDisponiveis = useMemo(() => {
+    if (podeVerTodas) return TODAS_UNIDADES;
+    return unidadesVinculadas;
+  }, [podeVerTodas, unidadesVinculadas]);
+
+  const defaultUnit = unidadesVinculadas.length === 1 && !podeVerTodas ? unidadesVinculadas[0] : 'all';
+  const [selectedUnidade, setSelectedUnidade] = useState<string>(defaultUnit);
+
   useEffect(() => {
     if (currentUser && !hasAccess) {
       toast.error('Acesso restrito ao Portal da Unidade.');

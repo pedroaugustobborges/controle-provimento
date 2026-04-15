@@ -235,7 +235,12 @@ export const UNIDADES_GOIANIA = [
   'TEIA ANÁPOLIS',
   'TEIA CANEDO',
   'TEIA APARECIDA',
-  'TEIA GOIÂNIA'
+  'TEIA GOIÂNIA',
+  'SUÁ',
+  'SÃO PEDRO',
+  'JATAÍ',
+  'POLICLÍNICA',
+  'VITÓRIA'
 ];
 
 export interface BancoTalentos {

@@ -1,13 +1,10 @@
 
 
-## Plano: Centralizar conteúdo dos cards no carrossel de unidades
+## Plano: Remover filtro "Sem Status" duplicado/não funcional
 
-### Alteração em `src/pages/LoginPage.tsx` — função `UnitsCarouselInline`
+### Diagnóstico
+Preciso localizar em `src/pages/VagasPage.tsx` onde os filtros de status são definidos para identificar as duas instâncias de "Sem Status" e determinar qual funciona e qual não.
 
-1. **Centralizar o bloco de conteúdo horizontalmente** — adicionar `text-center items-center` ao container principal e aos sub-containers
-2. **Centralizar nome da unidade e descrição** — adicionar `text-center` nos textos do nome (`u.name`) e descrição (`u.desc`) dentro de cada card
-3. **Centralizar título da seção** — adicionar `text-center` no `section.title`
-4. **Centralizar o cabeçalho do slide** (estado + contador) — adicionar `justify-center`
-
-Linhas afetadas: ~505-527 (container do conteúdo e cards individuais)
+### Próximo passo
+Vou examinar o arquivo para encontrar as opções de filtro duplicadas.
 

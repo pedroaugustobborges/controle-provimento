@@ -347,7 +347,7 @@ export function normalizeCargo(cargo: string): string {
 
 export function normalizeStatus(statusText: string): StatusVaga {
   if (!statusText || statusText === '' || statusText === 'null' || statusText === 'undefined' || statusText === 'nan' || statusText === '0') {
-    return 'sem_status' as StatusVaga;
+    return 'SEM STATUS' as StatusVaga;
   }
   
   const text = normStatus(statusText);
@@ -374,7 +374,7 @@ export function normalizeStatus(statusText: string): StatusVaga {
   if (text.includes('andamento')) return 'EM ANDAMENTO' as StatusVaga;
   if (text.includes('edital')) return 'EM EDITAL' as StatusVaga;
 
-  return 'sem_status' as StatusVaga;
+  return 'SEM STATUS' as StatusVaga;
 }
 
 const normalizeUnitNameCache = new Map<string, string>();

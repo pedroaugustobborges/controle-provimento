@@ -335,7 +335,7 @@ export default function VagasPage() {
 
       const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
         if (s === v.status || s === v.status_geral) return true;
-        if ((s === 'SEM STATUS' || s === 'sem_status') && (!v.status_geral || v.status_geral.trim() === '')) return true;
+        if (s === 'sem_status' && (!v.status_geral || v.status_geral.trim() === '')) return true;
         if (s === 'CONVOCAÇÕES' && category === 'convocacao') return true;
         if (s === 'DOCUMENTAÇÃO' && category === 'documentacao') return true;
         if (s === 'FILA DE EDITAIS' && category === 'fila_edital') return true;

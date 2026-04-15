@@ -129,7 +129,7 @@ export default function UnidadePortalPage() {
                        currentUser?.cargo === 'Usuário da Unidade' ||
                        currentUser?.perfil === 'Ponta';
 
-  const hasAccess = podeVerTodas || isAnalista || isUnidadeUser;
+  const hasAccess = podeVerTodas || currentUser?.acesso_portal_unidade === true;
 
   const unidadesVinculadas: string[] = currentUser?.unidades_vinculadas || [];
 
@@ -690,7 +690,20 @@ export default function UnidadePortalPage() {
                         return sliced.map(c => {
                           const edit = getObsEdit(c);
                           const isSaving = savingObs[c.id] || false;
-                          const hasChanges = !!obsEdits[c.id];
+                          const originalState = {
+                            status: c.status || 'pendente',
+                            horario_plantao: c.horario_trabalho || c.carga_horaria || '',
+                            aceito: c.devolutiva === 'aceitou',
+                            observacao: c.observacoes || '',
+                            unidade_destino: c.unidade_alternativa || '',
+                          };
+                          const hasChanges = !!obsEdits[c.id] && (
+                            edit.status !== originalState.status ||
+                            edit.horario_plantao !== originalState.horario_plantao ||
+                            edit.aceito !== originalState.aceito ||
+                            edit.observacao !== originalState.observacao ||
+                            edit.unidade_destino !== originalState.unidade_destino
+                          );
                           return (
                             <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
                               <TableCell className="py-3 px-4 font-bold text-slate-900 text-sm">{c.nome_candidato || '—'}</TableCell>

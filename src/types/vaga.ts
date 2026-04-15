@@ -235,7 +235,12 @@ export const UNIDADES_GOIANIA = [
   'TEIA ANÁPOLIS',
   'TEIA CANEDO',
   'TEIA APARECIDA',
-  'TEIA GOIÂNIA'
+  'TEIA GOIÂNIA',
+  'SUÁ',
+  'SÃO PEDRO',
+  'JATAÍ',
+  'POLICLÍNICA',
+  'VITÓRIA'
 ];
 
 export interface BancoTalentos {
@@ -271,7 +276,7 @@ export interface BancoTalentos {
   import_batch_id?: string;
   data_importacao?: string;
   origem_importacao?: string;
-  regiao?: 'GO_ES' | 'OUTRAS_UNIDADES';
+  regiao?: 'GO_ES' | 'AMAZONAS' | 'OUTRAS_UNIDADES';
 }
 
 export type TipoAtendimento = 'presencial' | 'online';

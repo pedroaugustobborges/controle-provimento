@@ -106,7 +106,7 @@ export function AIAssistant() {
   const [currentView, setCurrentView] = useState<PopoverView>('menu');
 
   // Message sub-state
-  const [selectedRegion, setSelectedRegion] = useState<'GOIÁS E VITÓRIA' | 'OUTRAS UNIDADES' | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<'GOIÁS E ESPÍRITO SANTO' | 'AMAZONAS' | 'OUTRAS UNIDADES' | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
@@ -353,8 +353,11 @@ export function AIAssistant() {
                     {/* BY REGION */}
                     {currentView === 'msg-by-region' && (
                       <div className="space-y-2">
-                        <Button variant="outline" className="w-full justify-between h-12" onClick={() => { setSelectedRegion('GOIÁS E VITÓRIA'); setCurrentView('msg-by-unit'); }}>
-                          Goiás e Vitória <ChevronRight className="h-4 w-4" />
+                        <Button variant="outline" className="w-full justify-between h-12" onClick={() => { setSelectedRegion('GOIÁS E ESPÍRITO SANTO'); setCurrentView('msg-by-unit'); }}>
+                          Goiás e Espírito Santo <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" className="w-full justify-between h-12" onClick={() => { setSelectedRegion('AMAZONAS'); setCurrentView('msg-by-unit'); }}>
+                          Amazonas <ChevronRight className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" className="w-full justify-between h-12" onClick={() => { setSelectedRegion('OUTRAS UNIDADES'); setCurrentView('msg-by-unit'); }}>
                           Outras Unidades <ChevronRight className="h-4 w-4" />

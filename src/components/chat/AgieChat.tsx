@@ -25,7 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const AgieChat = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<ChatStep>('INITIAL');
-  const [selectedRegion, setSelectedRegion] = useState<'GOIÁS E VITÓRIA' | 'OUTRAS UNIDADES' | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<'GOIÁS E ESPÍRITO SANTO' | 'AMAZONAS' | 'OUTRAS UNIDADES' | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
@@ -331,41 +331,18 @@ export const AgieChat = memo(() => {
                     </div>
                   )}
 
-                  {step === 'COMMUNICATION_HUB' && (
+                  {step === 'BY_REGION' && (
                     <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Selecione o Destinatário</p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Selecione a Região</p>
                       <div className="grid gap-2">
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start gap-3 h-12 bg-white"
-                          onClick={() => setStep('BY_REGION')}
-                        >
-                          <MapPin className="w-4 h-4 text-primary" />
-                          <div className="text-left font-semibold text-sm">Por Unidade</div>
+                        <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('GOIÁS E ESPÍRITO SANTO'); setStep('BY_UNIT'); }}>
+                          GOIÁS E ESPÍRITO SANTO <ChevronLeft className="w-4 h-4 rotate-180" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start gap-3 h-12 bg-white"
-                          onClick={() => setStep('BY_ROLE')}
-                        >
-                          <Users className="w-4 h-4 text-purple-600" />
-                          <div className="text-left font-semibold text-sm">Por Cargo</div>
+                        <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('AMAZONAS'); setStep('BY_UNIT'); }}>
+                          AMAZONAS <ChevronLeft className="w-4 h-4 rotate-180" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start gap-3 h-12 bg-white"
-                          onClick={() => setStep('SUPERVISION')}
-                        >
-                          <Shield className="w-4 h-4 text-red-600" />
-                          <div className="text-left font-semibold text-sm">Falar com a Supervisão</div>
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start gap-3 h-12 bg-white"
-                          onClick={() => setStep('BY_USER')}
-                        >
-                          <Search className="w-4 h-4 text-slate-600" />
-                          <div className="text-left font-semibold text-sm">Buscar Usuário Específico</div>
+                        <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('OUTRAS UNIDADES'); setStep('BY_UNIT'); }}>
+                          OUTRAS UNIDADES <ChevronLeft className="w-4 h-4 rotate-180" />
                         </Button>
                       </div>
                     </div>
@@ -514,8 +491,11 @@ export const AgieChat = memo(() => {
                   {step === 'BY_REGION' && (
                     <div className="pt-8 space-y-3">
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Selecione a Região</p>
-                      <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('GOIÁS E VITÓRIA'); setStep('BY_UNIT'); }}>
-                        GOIÁS E VITÓRIA <ChevronLeft className="w-4 h-4 rotate-180" />
+                      <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('GOIÁS E ESPÍRITO SANTO'); setStep('BY_UNIT'); }}>
+                        GOIÁS E ESPÍRITO SANTO <ChevronLeft className="w-4 h-4 rotate-180" />
+                      </Button>
+                      <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('AMAZONAS'); setStep('BY_UNIT'); }}>
+                        AMAZONAS <ChevronLeft className="w-4 h-4 rotate-180" />
                       </Button>
                       <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('OUTRAS UNIDADES'); setStep('BY_UNIT'); }}>
                         OUTRAS UNIDADES <ChevronLeft className="w-4 h-4 rotate-180" />

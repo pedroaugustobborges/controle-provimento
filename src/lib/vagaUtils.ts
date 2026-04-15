@@ -7,15 +7,18 @@ export const VITORIA_SUB_UNIDADES = [
 ];
 
 export const UNIDADES_POR_REGIAO: Record<string, string[]> = {
-  'Goiânia': ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 'TEIA APARECIDA', 'TEIA CANEDO', 'TEIA CEN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA PIN'],
-  'Vitória': ['SUÁ', 'SÃO PEDRO'],
-  'Demais Unidades': ['CHS', 'HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'JATAÍ', 'DOURADOS', 'POLICLÍNICA']
+  'Goiás e Espírito Santo': [
+    'CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 
+    'TEIA APARECIDA', 'TEIA CANEDO', 'SUÁ', 'SÃO PEDRO', 'JATAÍ', 'POLICLÍNICA', 'VITÓRIA'
+  ],
+  'Amazonas': ['CHS', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'],
+  'Demais Unidades': ['HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'DOURADOS', 'TEIA CEN', 'TEIA PIN']
 };
 
 const REGION_ALIASES: Record<string, string[]> = {
-  'Goiânia': ['GOIÂNIA', 'GOIANIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS'],
-  'Vitória': ['VITÓRIA', 'VITORIA', 'VIX', 'ES', 'UPA'],
-  'Demais Unidades': ['OUTRAS UNIDADES'],
+  'Goiás e Espírito Santo': ['GOIÂNIA', 'GOIANIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS', 'VITÓRIA', 'VITORIA', 'VIX', 'ES', 'UPA', 'GOIÁS', 'ESPÍRITO SANTO'],
+  'Amazonas': ['MANAUS', 'AM', 'AMAZONAS'],
+  'Demais Unidades': ['OUTRAS UNIDADES', 'FORA'],
 };
 
 export function removeAccents(str: string): string {

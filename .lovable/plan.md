@@ -1,25 +1,25 @@
 
 
-## Plano: Restaurar filtro "Sem Status" funcional
+## Plano: Unificar acesso do Portal e corrigir botão Salvar
 
-### Problema
-A correção anterior removeu a chave `'SEM STATUS'` do `STATUS_VAGA_LABELS` e manteve apenas `'sem_status'`. Vagas importadas de planilhas têm `status_geral = 'SEM STATUS'` como string literal. O filtro com chave `'sem_status'` não corresponde a essa string na comparação `s === v.status_geral` (linha 337), e a verificação de vazio na linha 338 também não pega porque o campo não está vazio — contém literalmente `'SEM STATUS'`.
+### Parte 1 — Flag "acesso ao portal" no cadastro de usuário
 
-### Solução (2 alterações)
+1. **Adicionar coluna `acesso_portal_unidade` (boolean, default false)** na tabela `profiles` via migração
+2. **Atualizar `src/types/auth.ts`** — adicionar `acesso_portal_unidade?: boolean` na interface `User`
+3. **Atualizar formulário de criação/edição de usuário** em `AdministracaoPage.tsx` — adicionar checkbox "Habilitar acesso ao Portal da Unidade"
+4. **Atualizar edge function `admin-user-management`** — incluir `acesso_portal_unidade` no create/update
+5. **Atualizar `UnidadePortalPage.tsx`** — verificar `currentUser?.acesso_portal_unidade === true` (ou perfil com acesso total) no controle de acesso, usando as mesmas `unidades_vinculadas` do cadastro principal
 
-**1. `src/types/vaga.ts`** — Restaurar `'SEM STATUS'` no tipo `StatusVaga` e no `STATUS_VAGA_LABELS`:
-- Adicionar de volta `'SEM STATUS'` ao union type `StatusVaga`
-- Adicionar de volta `'SEM STATUS': 'Sem Status'` ao `STATUS_VAGA_LABELS`
-- **Remover** `sem_status` do union type e do `STATUS_VAGA_LABELS` (eliminar o duplicado que não funciona)
+### Parte 2 — Corrigir botão Salvar na devolutiva
 
-**2. `src/pages/VagasPage.tsx`** — Atualizar a lógica de matchStatus (linha 338):
-- Mudar de `s === 'sem_status'` para `s === 'SEM STATUS'`
-- Manter a verificação de vazio para cobrir ambos os casos (vaga com status literal `'SEM STATUS'` ou vaga com status vazio/null)
+1. **Em `UnidadePortalPage.tsx`** — criar estado `originalObs` que armazena o valor inicial de cada linha ao montar
+2. **Comparar `obsEdits[id]` com `originalObs[id]`** — se forem iguais (nenhuma mudança real), desabilitar o botão Salvar (cinza/disabled)
+3. **Só habilitar (verde)** quando houver diferença entre o estado editado e o original
 
-```typescript
-// Linha 338
-if (s === 'SEM STATUS' && (!v.status_geral || v.status_geral.trim() === '' || v.status_geral === 'SEM STATUS' || v.status === 'SEM STATUS')) return true;
-```
-
-Isso garante uma única opção "Sem Status" no dropdown que funciona tanto para vagas com a string literal quanto para vagas sem status.
+### Arquivos afetados
+- Migração SQL (nova coluna)
+- `src/types/auth.ts`
+- `src/pages/UnidadePortalPage.tsx`
+- `src/pages/AdministracaoPage.tsx`
+- `supabase/functions/admin-user-management/index.ts`
 

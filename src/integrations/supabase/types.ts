@@ -344,6 +344,45 @@ export type Database = {
         }
         Relationships: []
       }
+      support_configs: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          mensagem: string | null
+          regiao: string
+          responsavel: string
+          status: string
+          teams_user: string | null
+          unidades: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          id?: string
+          mensagem?: string | null
+          regiao: string
+          responsavel?: string
+          status?: string
+          teams_user?: string | null
+          unidades?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          mensagem?: string | null
+          regiao?: string
+          responsavel?: string
+          status?: string
+          teams_user?: string | null
+          unidades?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

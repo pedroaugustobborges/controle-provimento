@@ -117,7 +117,8 @@ export default function AdministracaoPage() {
   const { 
     users, auditLogs, supportConfigs, backups, feedbacks, loading,
     addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, 
-    sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, updateFeedbackStatus, generateBackup 
+    sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchSupportConfigs,
+    addSupportConfig, updateSupportConfig, deleteSupportConfig, updateFeedbackStatus, generateBackup 
   } = useAdminStore();
 
   const { vagas } = useVagasStore();
@@ -143,7 +144,14 @@ export default function AdministracaoPage() {
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [sendEmailAfterPassword, setSendEmailAfterPassword] = useState(true);
 
-  // Form state for new user
+  // Support config state
+  const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
+  const [editingSupportConfig, setEditingSupportConfig] = useState<any>(null);
+  const [supportForm, setSupportForm] = useState({
+    regiao: '', responsavel: '', email: '', teams_user: '', mensagem: '', status: 'ativo' as 'ativo' | 'inativo', unidades: [] as string[]
+  });
+  const resetSupportForm = () => setSupportForm({ regiao: '', responsavel: '', email: '', teams_user: '', mensagem: '', status: 'ativo' as 'ativo' | 'inativo', unidades: [] });
+
   const [newUser, setNewUser] = useState({
     nome_completo: '',
     email: '',
@@ -477,11 +485,13 @@ export default function AdministracaoPage() {
       />
 
 
+
       <Tabs value={activeTab} onValueChange={(val) => {
           setActiveTab(val);
           if (val === 'usuarios') fetchUsers();
           if (val === 'auditoria') fetchAuditLogs();
-          if (val === 'feedback' || val === 'suporte') fetchFeedbacks();
+          if (val === 'feedback') fetchFeedbacks();
+          if (val === 'suporte') fetchSupportConfigs();
         }} className="space-y-4">
         <TabsList className="bg-slate-100 p-1 flex-wrap h-auto">
           <TabsTrigger value="usuarios" className="gap-2 font-bold px-4 py-2">
@@ -706,9 +716,18 @@ export default function AdministracaoPage() {
                 <CardTitle className="text-lg font-bold">Configuração de Suporte</CardTitle>
                 <CardDescription>Defina os contatos de suporte fixos para cada região ou grupo de unidades.</CardDescription>
               </div>
-              <Button className="gap-2 bg-primary"><Plus className="h-4 w-4" /> Novo Suporte</Button>
+              <Button className="gap-2 bg-primary" onClick={() => { resetSupportForm(); setEditingSupportConfig(null); setIsSupportDialogOpen(true); }}>
+                <Plus className="h-4 w-4" /> Novo Suporte
+              </Button>
             </CardHeader>
             <CardContent className="p-0">
+              {supportConfigs.length === 0 ? (
+                <div className="p-8 text-center text-slate-400">
+                  <Bell className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                  <p className="font-medium">Nenhuma configuração de suporte cadastrada.</p>
+                  <p className="text-sm mt-1">Clique em "Novo Suporte" para adicionar.</p>
+                </div>
+              ) : (
               <Table>
                 <TableHeader>
                    <TableRow>
@@ -736,7 +755,9 @@ export default function AdministracaoPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className="bg-green-100 text-green-700 font-bold text-[11px]">Ativo</Badge>
+                        <Badge className={config.status === 'ativo' ? "bg-green-100 text-green-700 font-bold text-[11px]" : "bg-red-100 text-red-700 font-bold text-[11px]"}>
+                          {config.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -749,15 +770,89 @@ export default function AdministracaoPage() {
                           >
                             {testEmailLoading === config.id ? 'Enviando...' : <><Play className="h-3 w-3" /> Testar E-mail</>}
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><Edit2 className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                            setEditingSupportConfig(config);
+                            setSupportForm({
+                              regiao: config.regiao, responsavel: config.responsavel, email: config.email,
+                              teams_user: config.teams_user, mensagem: config.mensagem, status: config.status,
+                              unidades: config.unidades || []
+                            });
+                            setIsSupportDialogOpen(true);
+                          }}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              )}
             </CardContent>
           </Card>
+
+          {/* Dialog para criar/editar suporte */}
+          <Dialog open={isSupportDialogOpen} onOpenChange={setIsSupportDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingSupportConfig ? 'Editar Configuração de Suporte' : 'Nova Configuração de Suporte'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1">
+                  <Label>Região</Label>
+                  <Input value={supportForm.regiao} onChange={(e) => setSupportForm(f => ({ ...f, regiao: e.target.value }))} placeholder="Ex: Goiás e Vitória" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Responsável</Label>
+                  <Input value={supportForm.responsavel} onChange={(e) => setSupportForm(f => ({ ...f, responsavel: e.target.value }))} placeholder="Nome do analista responsável" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label>E-mail</Label>
+                    <Input value={supportForm.email} onChange={(e) => setSupportForm(f => ({ ...f, email: e.target.value }))} placeholder="email@sistema.com" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Usuário Teams</Label>
+                    <Input value={supportForm.teams_user} onChange={(e) => setSupportForm(f => ({ ...f, teams_user: e.target.value }))} placeholder="usuario.teams" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Mensagem</Label>
+                  <Input value={supportForm.mensagem} onChange={(e) => setSupportForm(f => ({ ...f, mensagem: e.target.value }))} placeholder="Horário de atendimento, observações..." />
+                </div>
+                <div className="space-y-1">
+                  <Label>Unidades (separadas por vírgula)</Label>
+                  <Input value={supportForm.unidades.join(', ')} onChange={(e) => setSupportForm(f => ({ ...f, unidades: e.target.value.split(',').map(u => u.trim()).filter(Boolean) }))} placeholder="CRER, HUGOL, HECAD..." />
+                </div>
+                <div className="space-y-1">
+                  <Label>Status</Label>
+                  <select className="w-full border rounded-md px-3 py-2 text-sm" value={supportForm.status} onChange={(e) => setSupportForm(f => ({ ...f, status: e.target.value as 'ativo' | 'inativo' }))}>
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsSupportDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={async () => {
+                  try {
+                    if (editingSupportConfig) {
+                      await updateSupportConfig(editingSupportConfig.id, supportForm);
+                      toast.success('Configuração atualizada!');
+                    } else {
+                      await addSupportConfig(supportForm);
+                      toast.success('Configuração criada!');
+                    }
+                    setIsSupportDialogOpen(false);
+                  } catch (err: any) {
+                    toast.error(err.message || 'Erro ao salvar');
+                  }
+                }}>
+                  {editingSupportConfig ? 'Salvar' : 'Criar'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* AUDITORIA */}

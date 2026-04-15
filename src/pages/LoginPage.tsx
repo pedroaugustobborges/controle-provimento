@@ -545,17 +545,17 @@ function UnitsCarousel() {
 
         {/* Footer with dots */}
         <div className="px-6 py-3 border-t border-white/[0.06] flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
+           <div className="flex items-center gap-1.5">
             {slidesData.map((s, i) => (
               <button
-                key={s.state}
+                key={`${s.state}-${i}`}
                 onClick={() => goTo(i)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   i === current
                     ? 'w-5 bg-[hsl(200,70%,50%)]'
                     : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
                 }`}
-                title={s.state}
+                title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
               />
             ))}
           </div>

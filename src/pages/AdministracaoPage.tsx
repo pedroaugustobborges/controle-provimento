@@ -701,18 +701,18 @@ export default function AdministracaoPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Região / Unidades</TableHead>
-                    <TableHead >Responsável</TableHead>
-                    <TableHead >Contato</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-right pr-6">Ações</TableHead>
+                   <TableRow>
+                    <TableHead>Região / Unidades</TableHead>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead>Contato</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {supportConfigs.map((config) => (
                     <TableRow key={config.id}>
-                      <TableCell className="pl-6 py-4">
+                      <TableCell className="py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-700">{config.regiao}</span>
                           <span className="text-[11px] text-slate-400 mt-1">{config.unidades.join(', ')}</span>
@@ -725,10 +725,10 @@ export default function AdministracaoPage() {
                           <span className="flex items-center gap-1.5 mt-1 text-blue-600"><Users className="h-3 w-3" /> @{config.teams_user}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell>
                         <Badge className="bg-green-100 text-green-700 font-bold text-[11px]">Ativo</Badge>
                       </TableCell>
-                      <TableCell className="text-right pr-6">
+                      <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button 
                             variant="outline" 

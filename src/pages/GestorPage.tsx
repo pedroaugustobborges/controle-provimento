@@ -206,10 +206,10 @@ export default function GestorPage() {
                     <TableHead>Data/Hora</TableHead>
                     <TableHead>Usuário</TableHead>
                     <TableHead>Arquivo</TableHead>
-                    <TableHead className="text-center">Registros</TableHead>
-                    <TableHead className="text-center">Novos</TableHead>
-                    <TableHead className="text-center">Repetições</TableHead>
-                    <TableHead className="text-center">Erros</TableHead>
+                    <TableHead>Registros</TableHead>
+                    <TableHead>Novos</TableHead>
+                    <TableHead>Repetições</TableHead>
+                    <TableHead>Erros</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
                 </TableHeader>

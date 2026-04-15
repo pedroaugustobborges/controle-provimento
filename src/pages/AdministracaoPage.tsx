@@ -529,9 +529,9 @@ export default function AdministracaoPage() {
                       <TableHead>Nome / E-mail</TableHead>
                       <TableHead>Perfil / Cargo</TableHead>
                       <TableHead>Unidades</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Último Acesso</TableHead>
-                      <TableHead className="text-right pr-6"></TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -565,7 +565,7 @@ export default function AdministracaoPage() {
                             <span className="text-[11px] text-slate-500">{user.unidades_vinculadas?.length || 0} unid.</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell>
                           <Badge className={`${getStatusBadge(user.status)} font-bold text-[11px] uppercase border-0`}>
                             {user.status}
                           </Badge>
@@ -573,7 +573,7 @@ export default function AdministracaoPage() {
                         <TableCell className="text-xs text-slate-500 font-medium">
                           {user.ultimo_acesso ? new Date(user.ultimo_acesso).toLocaleDateString('pt-BR') : 'Nunca'}
                         </TableCell>
-                        <TableCell className="text-right pr-6">
+                        <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4 text-slate-400" /></Button>
@@ -640,17 +640,17 @@ export default function AdministracaoPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Usuário</TableHead>
-                    <TableHead >Unidades com Acesso</TableHead>
-                    <TableHead className="text-center">Ações Permitidas</TableHead>
-                    <TableHead className="text-right pr-6"></TableHead>
+                   <TableRow>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Unidades com Acesso</TableHead>
+                    <TableHead>Ações Permitidas</TableHead>
+                    <TableHead className="text-right">Ajuste</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="pl-6 py-4">
+                      <TableCell className="py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-700">{user.nome_completo}</span>
                           <Badge variant="outline" className="w-fit text-[9px] h-4 mt-1">{user.perfil}</Badge>
@@ -677,7 +677,7 @@ export default function AdministracaoPage() {
                           {user.pode_editar_configuracoes && <Badge className="bg-amber-50 text-amber-700 border-amber-100 text-[9px]">Config</Badge>}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right pr-6">
+                      <TableCell className="text-right">
                         <Button variant="ghost" size="sm" className="gap-2 text-primary font-bold"><Settings className="h-3.5 w-3.5" /> Ajustar</Button>
                       </TableCell>
                     </TableRow>
@@ -701,18 +701,18 @@ export default function AdministracaoPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">Região / Unidades</TableHead>
-                    <TableHead >Responsável</TableHead>
-                    <TableHead >Contato</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-right pr-6">Ações</TableHead>
+                   <TableRow>
+                    <TableHead>Região / Unidades</TableHead>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead>Contato</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {supportConfigs.map((config) => (
                     <TableRow key={config.id}>
-                      <TableCell className="pl-6 py-4">
+                      <TableCell className="py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-700">{config.regiao}</span>
                           <span className="text-[11px] text-slate-400 mt-1">{config.unidades.join(', ')}</span>
@@ -725,10 +725,10 @@ export default function AdministracaoPage() {
                           <span className="flex items-center gap-1.5 mt-1 text-blue-600"><Users className="h-3 w-3" /> @{config.teams_user}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell>
                         <Badge className="bg-green-100 text-green-700 font-bold text-[11px]">Ativo</Badge>
                       </TableCell>
-                      <TableCell className="text-right pr-6">
+                      <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button 
                             variant="outline" 
@@ -773,7 +773,7 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow>
-                      <TableHead className="pl-6">Data / Hora</TableHead>
+                      <TableHead>Data / Hora</TableHead>
                       <TableHead >Usuário</TableHead>
                       <TableHead >Ação / Módulo</TableHead>
                       <TableHead >Registro</TableHead>
@@ -783,7 +783,7 @@ export default function AdministracaoPage() {
                   <TableBody>
                     {auditLogs.map((log) => (
                       <TableRow key={log.id} className="text-xs">
-                        <TableCell className="pl-6 font-mono text-slate-500">
+                        <TableCell className="font-mono text-slate-500">
                           {log.created_at ? new Date(log.created_at).toLocaleDateString('pt-BR') : log.data} <br/> 
                           {log.created_at ? new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : log.hora}
                         </TableCell>
@@ -836,9 +836,9 @@ export default function AdministracaoPage() {
               <Table>
                 <TableHeader className="sticky top-0 z-10">
                   <TableRow>
-                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider">Status Original Importado</TableHead>
-                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider text-center">Quantidade</TableHead>
-                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider">Grupo/Card de Destino</TableHead>
+                    <TableHead>Status Original Importado</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Grupo/Card de Destino</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-slate-50 font-medium">
@@ -868,13 +868,13 @@ export default function AdministracaoPage() {
                       .sort((a, b) => b[1].count - a[1].count)
                       .map(([status, data]) => (
                         <TableRow key={status} className="hover:bg-slate-50/50 transition-colors h-14">
-                          <TableCell className="px-6 py-4 text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
-                          <TableCell className="px-6 py-4 text-center">
+                          <TableCell className="text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
+                          <TableCell>
                             <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold text-xs">
                               {data.count}
                             </span>
                           </TableCell>
-                          <TableCell className="px-6 py-4">
+                          <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={`h-2 w-2 rounded-full ${
                                 data.group.includes('Fila') ? 'bg-amber-400' : 
@@ -961,24 +961,24 @@ export default function AdministracaoPage() {
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="pl-6 text-[11px] font-bold uppercase">Data / Hora</TableHead>
-                        <TableHead className="text-center">Registros</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-right pr-6">Ações</TableHead>
+                       <TableRow>
+                        <TableHead>Data / Hora</TableHead>
+                        <TableHead>Registros</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {backups.map((b) => (
                         <TableRow key={b.id}>
-                          <TableCell className="pl-6 font-mono text-xs">{b.data_hora}</TableCell>
-                          <TableCell className="text-center font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="font-mono text-xs">{b.data_hora}</TableCell>
+                          <TableCell className="font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
+                          <TableCell>
                             <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[11px]">
                               <CheckCircle className="h-3 w-3" /> Sucesso
                             </div>
                           </TableCell>
-                          <TableCell className="text-right pr-6">
+                          <TableCell className="text-right">
                             <Button variant="ghost" size="sm" className="h-8 gap-2 text-blue-600 font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
                           </TableCell>
                         </TableRow>
@@ -1074,8 +1074,8 @@ export default function AdministracaoPage() {
                       <TableHead className="w-[200px]">Usuário</TableHead>
                       <TableHead className="w-[120px]">Tipo</TableHead>
                       <TableHead>Mensagem</TableHead>
-                      <TableHead className="w-[120px] text-center">Status</TableHead>
-                      <TableHead className="w-[100px] text-right pr-6">Ação</TableHead>
+                      <TableHead className="w-[120px]">Status</TableHead>
+                      <TableHead className="w-[100px] text-right">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1107,7 +1107,7 @@ export default function AdministracaoPage() {
                               {item.mensagem}
                             </p>
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell>
                             <Badge className={cn(
                               "text-[10px] font-bold uppercase",
                               item.status === 'pendente' ? "bg-slate-100 text-slate-500" :
@@ -1117,7 +1117,7 @@ export default function AdministracaoPage() {
                               {item.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right pr-6">
+                          <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">

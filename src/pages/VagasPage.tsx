@@ -858,18 +858,18 @@ export default function VagasPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-primary hover:bg-primary transition-none border-b border-white/10">
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[100px]">Abertura</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[100px]">Recebimento</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[120px]">Requisição</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[250px]">Cargo</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[120px]">Tipo</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[180px]">Unidade</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 min-w-[150px]">Seção</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-center min-w-[150px]">Status</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-center min-w-[80px]">Vaga(s)</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-center min-w-[80px]">Banco</TableHead>
-                  <TableHead className="text-[11px] font-bold text-white uppercase py-4 px-4 h-12 text-right min-w-[80px]">Ações</TableHead>
+                <TableRow>
+                  <TableHead className="min-w-[100px]">Abertura</TableHead>
+                  <TableHead className="min-w-[100px]">Recebimento</TableHead>
+                  <TableHead className="min-w-[120px]">Requisição</TableHead>
+                  <TableHead className="min-w-[250px]">Cargo</TableHead>
+                  <TableHead className="min-w-[120px]">Tipo</TableHead>
+                  <TableHead className="min-w-[180px]">Unidade</TableHead>
+                  <TableHead className="min-w-[150px]">Seção</TableHead>
+                  <TableHead className="min-w-[150px]">Status</TableHead>
+                  <TableHead className="min-w-[80px]">Vaga(s)</TableHead>
+                  <TableHead className="min-w-[80px]">Banco</TableHead>
+                  <TableHead className="text-right min-w-[80px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1338,20 +1338,19 @@ function AcompanhamentoEditalList() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-[#1a1738] border-none">
-                <TableRow className="hover:bg-[#1a1738] border-none transition-none">
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Unidade</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Cargo</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Nº Edital</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none">Etapa Atual</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Situação</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Inscritos</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Triagem</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Avaliação</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Entrevista</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-center">Final</TableHead>
-                  <TableHead className="text-white font-black text-[11px] uppercase tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] py-4 px-6 h-14 border-none text-right">Ação Rápida</TableHead>
-
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Nº Edital</TableHead>
+                  <TableHead>Etapa Atual</TableHead>
+                  <TableHead>Situação</TableHead>
+                  <TableHead>Inscritos</TableHead>
+                  <TableHead>Triagem</TableHead>
+                  <TableHead>Avaliação</TableHead>
+                  <TableHead>Entrevista</TableHead>
+                  <TableHead>Final</TableHead>
+                  <TableHead className="text-right">Ação Rápida</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -259,9 +259,9 @@ export default function FilaEditaisPage() {
                   <TableHead>Unidade</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Tipo</TableHead>
-                  <TableHead className="text-center">Vagas</TableHead>
+                  <TableHead>Vagas</TableHead>
                   <TableHead>Recebimento</TableHead>
-                  <TableHead className="text-center">Dias Aberto</TableHead>
+                  <TableHead>Dias Aberto</TableHead>
                   <TableHead>Status Atual</TableHead>
                   <TableHead>Responsável</TableHead>
                   <TableHead className="text-right">Ações</TableHead>

@@ -286,12 +286,12 @@ export default function ImportacoesPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead >Lote / Arquivo</TableHead>
-                    <TableHead >Tipo</TableHead>
-                    <TableHead className="text-center">Registros</TableHead>
-                    <TableHead >Status</TableHead>
-                    <TableHead >Data/Hora</TableHead>
+                   <TableRow>
+                    <TableHead>Lote / Arquivo</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Registros</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Data/Hora</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -309,7 +309,7 @@ export default function ImportacoesPage() {
                           {h.tipo_importacao || 'vagas'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell>
                         <div className="flex items-center justify-center gap-2">
                           <div className="flex flex-col items-center">
                             <span className="text-xs font-bold text-green-600">{h.total_novos}</span>
@@ -380,12 +380,12 @@ export default function ImportacoesPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead >Nome do Arquivo</TableHead>
-                    <TableHead >Data de Upload</TableHead>
-                    <TableHead >Usuário</TableHead>
-                    <TableHead >Tamanho</TableHead>
-                    <TableHead >Status</TableHead>
+                   <TableRow>
+                    <TableHead>Nome do Arquivo</TableHead>
+                    <TableHead>Data de Upload</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Tamanho</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>

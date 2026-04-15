@@ -201,8 +201,8 @@ export default function MonitoramentoAdminPage() {
                   <TableHead>Unidade</TableHead>
                   <TableHead>Analista Responsável</TableHead>
                   <TableHead>Etapa Atual</TableHead>
-                  <TableHead className="text-center">Data Prevista</TableHead>
-                  <TableHead className="text-center">Status Hoje</TableHead>
+                  <TableHead>Data Prevista</TableHead>
+                  <TableHead>Status Hoje</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>

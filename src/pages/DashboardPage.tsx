@@ -533,7 +533,7 @@ export default function DashboardPage() {
                       }
                       setSelectedUnits(newUnits);
                     }}
-                    className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 ${
+                    className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 whitespace-nowrap ${
                       isSelected
                         ? 'bg-primary/5 text-primary border-primary shadow-sm'
                         : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 hover:bg-slate-50'

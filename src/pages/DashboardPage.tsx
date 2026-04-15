@@ -786,13 +786,13 @@ export default function DashboardPage() {
           
           <div className="flex-1 overflow-auto p-0">
             <Table>
-              <TableHeader className="bg-slate-50 sticky top-0 z-10">
-                <TableRow className="hover:bg-transparent border-slate-200">
-                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Requisição</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Unidade</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Cargo</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6">Status</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-wider text-slate-400 py-4 px-6 text-center">Dias Parado</TableHead>
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow>
+                  <TableHead>Requisição</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Dias Parado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

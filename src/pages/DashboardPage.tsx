@@ -471,14 +471,14 @@ export default function DashboardPage() {
               Visão Geral do Provimento
             </h1>
             <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5">
-              <Activity className="h-3 w-3 text-primary animate-pulse" /> Monitoramento em Tempo Real
+              <Activity className="h-3.5 w-3.5 text-primary animate-pulse" /> Monitoramento em Tempo Real
             </p>
           </div>
         </div>
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
-              <Filter className="h-3.5 w-3.5 text-slate-500" />
+              <Filter className="h-4 w-4 text-slate-500" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Região</span>
             </div>
             
@@ -559,8 +559,8 @@ export default function DashboardPage() {
             <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
               <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
               <CardContent className="p-5">
-                <div className={`p-2 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <div className={`p-2.5 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
                 <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
                 <div className="flex flex-col gap-0.5">
@@ -584,8 +584,8 @@ export default function DashboardPage() {
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">
             <div>
               <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Building2 className="h-4 w-4 text-primary" />
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building2 className="h-5 w-5 text-primary" />
                 </div>
                 Visão Estratégica {chartMode === 'regiao' ? 'por Grupo Regional' : 'por Unidade'}
               </CardTitle>

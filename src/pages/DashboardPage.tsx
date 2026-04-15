@@ -809,19 +809,19 @@ export default function DashboardPage() {
                 ) : vacancyAlerts.length > 0 ? (
                   vacancyAlerts.map((vaga) => (
                     <TableRow key={vaga.id} className="group hover:bg-slate-50/50 transition-colors border-slate-100">
-                      <TableCell className="py-4 px-6 font-mono text-[11px] font-bold text-slate-400 group-hover:text-primary transition-colors">
+                      <TableCell className="py-4 px-6 text-center font-mono text-[11px] font-bold text-slate-400 group-hover:text-primary transition-colors">
                         #{vaga.displayId}
                       </TableCell>
-                      <TableCell className="py-4 px-6">
-                        <div className="flex items-center gap-2">
+                      <TableCell className="py-4 px-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
                           <Building2 className="h-3 w-3 text-slate-300" />
                           <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{normalizeUnitName(vaga.unidade)}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-4 px-6">
+                      <TableCell className="py-4 px-6 text-center">
                         <span className="text-xs font-bold text-slate-700">{vaga.cargo || 'Não informado'}</span>
                       </TableCell>
-                      <TableCell className="py-4 px-6">
+                      <TableCell className="py-4 px-6 text-center">
                         <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-tighter bg-white border-slate-200 text-slate-500">
                           {vaga.status || 'Sem status'}
                         </Badge>

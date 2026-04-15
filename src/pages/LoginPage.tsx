@@ -474,8 +474,8 @@ const slidesData = [
   },
 ];
 
-// ─── Units Carousel Component ───
-function UnitsCarousel() {
+// ─── Units Carousel Component (inline, no outer card) ───
+function UnitsCarouselInline() {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -485,84 +485,65 @@ function UnitsCarousel() {
     return () => clearInterval(timer);
   }, []);
 
-  const goTo = (idx: number) => {
-    setCurrent(idx);
-  };
-
   const slide = slidesData[current];
   const totalUnits = slide.sections.reduce((sum, s) => sum + s.units.length, 0);
 
   return (
-    <div className="relative w-full animate-fade-in">
-      <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
-
-      <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
-            <MapPin className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-white">Presença Nacional</h3>
-            <p className="text-[10px] text-[hsl(210,20%,45%)] uppercase tracking-[0.15em]">Unidades geridas pela AGIR</p>
-          </div>
+    <div className="flex flex-col h-full">
+      {/* Slide content */}
+      <div className="flex-1 overflow-hidden" key={current}>
+        <div className="flex items-center gap-2 mb-3 animate-[fadeIn_0.4s_ease-out]">
+          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
+          <span className="text-sm font-bold text-white">{slide.state}</span>
+          {(slide as any).subtitle && (
+            <span className="text-[10px] text-white/50 font-medium">— {(slide as any).subtitle}</span>
+          )}
+          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
         </div>
 
-        {/* Slide content */}
-        <div className="p-6 h-[380px] overflow-hidden" key={current}>
-          <div className="flex items-center gap-2 mb-4 animate-[fadeIn_0.4s_ease-out]">
-            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
-            <span className="text-base font-bold text-white">{slide.state}</span>
-            {(slide as any).subtitle && (
-              <span className="text-xs text-white/50 font-medium">— {(slide as any).subtitle}</span>
-            )}
-            <div className="flex-1 h-px bg-white/[0.06]" />
-            <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
-          </div>
-
-          <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
-            {slide.sections.map((section) => (
-              <div key={section.title}>
-                <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
-                  {section.title}
-                </span>
-                <div className="space-y-1.5">
-                  {section.units.map((u, i) => (
-                    <div
-                      key={u.name}
-                      className="group px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
-                      style={{ animationDelay: `${i * 50}ms` }}
-                    >
-                      <div className="text-[12px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
-                      <div className="text-[10px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
-                    </div>
-                  ))}
-                </div>
+        <div className="space-y-3 animate-[fadeIn_0.5s_ease-out]">
+          {slide.sections.map((section) => (
+            <div key={section.title}>
+              <span className="text-[9px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-1.5 block">
+                {section.title}
+              </span>
+              <div className="space-y-1">
+                {section.units.map((u, i) => (
+                  <div
+                    key={u.name}
+                    className="group px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
+                    <div className="text-[11px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
+                    <div className="text-[9px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Footer with dots */}
-        <div className="px-6 py-3 border-t border-white/[0.06] flex items-center justify-between">
-           <div className="flex items-center gap-1.5">
-            {slidesData.map((s, i) => (
-              <button
-                key={`${s.state}-${i}`}
-                onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === current
-                    ? 'w-5 bg-[hsl(200,70%,50%)]'
-                    : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
-                }`}
-                title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] text-emerald-400/80 font-medium">6 estados · 20+ unidades</span>
-          </div>
+      {/* Dots */}
+      <div className="flex items-center justify-between pt-3 mt-auto">
+        <div className="flex items-center gap-1.5">
+          {slidesData.map((s, i) => (
+            <button
+              key={`${s.state}-${i}`}
+              onClick={() => setCurrent(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === current
+                  ? 'w-5 bg-[hsl(200,70%,50%)]'
+                  : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
+              }`}
+              title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
+            />
+          ))}
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[10px] text-emerald-400/80 font-medium">6 estados · 20+ unidades</span>
         </div>
       </div>
     </div>
@@ -630,58 +611,75 @@ export default function LoginPage() {
           </div>
         </header>
 
-        {/* Main area */}
+        {/* Main area — unified card */}
         <main className="flex-1 flex items-center px-6 lg:px-12 pb-12">
-          <div className="w-full max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-            {/* Left text */}
-            <div className="flex-1 space-y-6 text-center lg:text-left max-w-[560px]">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[hsl(200,60%,55%)] text-[10px] font-semibold uppercase tracking-[0.2em]">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Sistema ativo
-              </div>
+          <div className="w-full max-w-[1100px] mx-auto">
+            {/* Unified glassmorphism card */}
+            <div className="relative">
+              <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
+              <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
+                <div className="flex flex-col lg:flex-row">
+                  {/* Left column — info + CTAs */}
+                  <div className="flex-[45] p-8 lg:p-10 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-white/[0.06]">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[hsl(200,60%,55%)] text-[10px] font-semibold uppercase tracking-[0.2em] w-fit mb-5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Sistema ativo
+                    </div>
 
-              <h1 className="text-3xl lg:text-5xl font-bold text-white leading-[1.15]">
-                Controle de{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(190,80%,55%)] to-[hsl(210,80%,60%)]">
-                  Provimento
-                </span>
-              </h1>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-white leading-[1.15] mb-3">
+                      Controle de{' '}
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(190,80%,55%)] to-[hsl(210,80%,60%)]">
+                        Provimento
+                      </span>
+                    </h1>
 
-              <p className="text-[hsl(210,20%,52%)] text-sm lg:text-base leading-relaxed">
-                Referência nacional na gestão de unidades de saúde, a AGIR atua com rigor técnico, eficiência administrativa e inovação em hospitais, clínicas e policlínicas distribuídos em 6 estados brasileiros.
-              </p>
+                    <p className="text-[hsl(210,20%,52%)] text-sm leading-relaxed mb-5">
+                      Referência nacional na gestão de unidades de saúde, a AGIR atua com rigor técnico e eficiência em hospitais, clínicas e policlínicas em 6 estados.
+                    </p>
 
-              {/* Stats */}
-              <div className="grid grid-cols-4 gap-4 pt-2">
-                {highlights.map((h) => (
-                  <div key={h.label} className="text-center lg:text-left">
-                    <div className="text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">{h.value}</div>
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-[hsl(210,20%,42%)] font-medium mt-0.5 leading-tight">{h.label}</div>
+                    {/* Stats */}
+                    <div className="grid grid-cols-4 gap-3 mb-6">
+                      {highlights.map((h) => (
+                        <div key={h.label} className="text-center lg:text-left">
+                          <div className="text-lg lg:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">{h.value}</div>
+                          <div className="text-[9px] uppercase tracking-[0.12em] text-[hsl(210,20%,42%)] font-medium mt-0.5 leading-tight">{h.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA buttons */}
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => setShowLogin(true)}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
+                        <LogIn className="h-4 w-4" /> Login Provimento
+                        <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                      </button>
+                      <button onClick={() => setShowUnidadeLogin(true)}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-300 whitespace-nowrap border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
+                        <Building2 className="h-4 w-4" /> Login Unidade
+                      </button>
+                      <button onClick={() => setShowAccess(true)}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white/70 whitespace-nowrap border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
+                        <UserPlus className="h-4 w-4" /> Solicitar acesso
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
 
-              {/* CTA buttons */}
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-2 justify-center lg:justify-start">
-                <button onClick={() => setShowLogin(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
-                  <LogIn className="h-4 w-4" /> Login Provimento
-                  <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                </button>
-                <button onClick={() => setShowUnidadeLogin(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-emerald-300 whitespace-nowrap border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
-                  <Building2 className="h-4 w-4" /> Login Unidade
-                </button>
-                <button onClick={() => setShowAccess(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-white/70 whitespace-nowrap border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-                  <UserPlus className="h-4 w-4" /> Solicitar acesso
-                </button>
+                  {/* Right column — carousel */}
+                  <div className="flex-[55] p-6 lg:p-8 h-[420px]">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
+                        <MapPin className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-white">Presença Nacional</h3>
+                        <p className="text-[9px] text-[hsl(210,20%,45%)] uppercase tracking-[0.15em]">Unidades geridas pela AGIR</p>
+                      </div>
+                    </div>
+                    <UnitsCarouselInline />
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Right – Interactive Carousel */}
-            <div className="hidden lg:flex flex-1 items-center justify-center max-w-[520px]">
-              <UnitsCarousel />
             </div>
           </div>
         </main>

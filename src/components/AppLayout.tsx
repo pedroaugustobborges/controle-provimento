@@ -79,9 +79,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
 
+  const { fetchVagas, fetchBancos } = useVagasStore();
+
   useEffect(() => {
     fetchCurrentProfile();
-  }, [fetchCurrentProfile]);
+    // Prefetch dados principais para evitar tela em branco ao navegar
+    fetchVagas();
+    fetchBancos();
+  }, [fetchCurrentProfile, fetchVagas, fetchBancos]);
 
   useEffect(() => {
     if (!currentUser) return;

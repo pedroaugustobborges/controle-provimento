@@ -474,8 +474,8 @@ const slidesData = [
   },
 ];
 
-// ─── Units Carousel Component ───
-function UnitsCarousel() {
+// ─── Units Carousel Component (inline, no outer card) ───
+function UnitsCarouselInline() {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -485,84 +485,65 @@ function UnitsCarousel() {
     return () => clearInterval(timer);
   }, []);
 
-  const goTo = (idx: number) => {
-    setCurrent(idx);
-  };
-
   const slide = slidesData[current];
   const totalUnits = slide.sections.reduce((sum, s) => sum + s.units.length, 0);
 
   return (
-    <div className="relative w-full animate-fade-in">
-      <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
-
-      <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
-            <MapPin className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-white">Presença Nacional</h3>
-            <p className="text-[10px] text-[hsl(210,20%,45%)] uppercase tracking-[0.15em]">Unidades geridas pela AGIR</p>
-          </div>
+    <div className="flex flex-col h-full">
+      {/* Slide content */}
+      <div className="flex-1 overflow-hidden" key={current}>
+        <div className="flex items-center gap-2 mb-3 animate-[fadeIn_0.4s_ease-out]">
+          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
+          <span className="text-sm font-bold text-white">{slide.state}</span>
+          {(slide as any).subtitle && (
+            <span className="text-[10px] text-white/50 font-medium">— {(slide as any).subtitle}</span>
+          )}
+          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
         </div>
 
-        {/* Slide content */}
-        <div className="p-6 h-[380px] overflow-hidden" key={current}>
-          <div className="flex items-center gap-2 mb-4 animate-[fadeIn_0.4s_ease-out]">
-            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
-            <span className="text-base font-bold text-white">{slide.state}</span>
-            {(slide as any).subtitle && (
-              <span className="text-xs text-white/50 font-medium">— {(slide as any).subtitle}</span>
-            )}
-            <div className="flex-1 h-px bg-white/[0.06]" />
-            <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
-          </div>
-
-          <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
-            {slide.sections.map((section) => (
-              <div key={section.title}>
-                <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
-                  {section.title}
-                </span>
-                <div className="space-y-1.5">
-                  {section.units.map((u, i) => (
-                    <div
-                      key={u.name}
-                      className="group px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
-                      style={{ animationDelay: `${i * 50}ms` }}
-                    >
-                      <div className="text-[12px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
-                      <div className="text-[10px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
-                    </div>
-                  ))}
-                </div>
+        <div className="space-y-3 animate-[fadeIn_0.5s_ease-out]">
+          {slide.sections.map((section) => (
+            <div key={section.title}>
+              <span className="text-[9px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-1.5 block">
+                {section.title}
+              </span>
+              <div className="space-y-1">
+                {section.units.map((u, i) => (
+                  <div
+                    key={u.name}
+                    className="group px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
+                    <div className="text-[11px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
+                    <div className="text-[9px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Footer with dots */}
-        <div className="px-6 py-3 border-t border-white/[0.06] flex items-center justify-between">
-           <div className="flex items-center gap-1.5">
-            {slidesData.map((s, i) => (
-              <button
-                key={`${s.state}-${i}`}
-                onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === current
-                    ? 'w-5 bg-[hsl(200,70%,50%)]'
-                    : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
-                }`}
-                title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] text-emerald-400/80 font-medium">6 estados · 20+ unidades</span>
-          </div>
+      {/* Dots */}
+      <div className="flex items-center justify-between pt-3 mt-auto">
+        <div className="flex items-center gap-1.5">
+          {slidesData.map((s, i) => (
+            <button
+              key={`${s.state}-${i}`}
+              onClick={() => setCurrent(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === current
+                  ? 'w-5 bg-[hsl(200,70%,50%)]'
+                  : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
+              }`}
+              title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
+            />
+          ))}
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[10px] text-emerald-400/80 font-medium">6 estados · 20+ unidades</span>
         </div>
       </div>
     </div>

@@ -90,6 +90,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   loading: false,
 
   fetchUsers: async () => {
+    set({ loading: true });
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -99,6 +100,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       set({ users: (data || []) as User[] });
     } catch (err) {
       console.error('Erro ao buscar usuários:', err);
+    } finally {
+      set({ loading: false });
     }
   },
 

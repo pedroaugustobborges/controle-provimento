@@ -28,7 +28,16 @@ const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const UnidadePortalPage = lazy(() => import("@/pages/UnidadePortalPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,   // 5 min — dados ficam "frescos" por 5 min
+      gcTime: 10 * 60 * 1000,     // 10 min — cache mantido por 10 min
+      refetchOnWindowFocus: false, // evita refetch ao alternar janelas
+      retry: 1,
+    },
+  },
+});
 
 function ProtectedRouteWrapper() {
   const { isAuthenticated, loading } = useAuth();

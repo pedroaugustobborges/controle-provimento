@@ -294,6 +294,7 @@ export type Database = {
           pode_excluir_requisicoes: boolean
           pode_gerenciar_usuarios: boolean
           pode_incluir_registros: boolean
+          regiao_suporte: string | null
           status: string
           ultimo_acesso: string | null
           unidades_vinculadas: string[]
@@ -315,6 +316,7 @@ export type Database = {
           pode_excluir_requisicoes?: boolean
           pode_gerenciar_usuarios?: boolean
           pode_incluir_registros?: boolean
+          regiao_suporte?: string | null
           status?: string
           ultimo_acesso?: string | null
           unidades_vinculadas?: string[]
@@ -336,6 +338,7 @@ export type Database = {
           pode_excluir_requisicoes?: boolean
           pode_gerenciar_usuarios?: boolean
           pode_incluir_registros?: boolean
+          regiao_suporte?: string | null
           status?: string
           ultimo_acesso?: string | null
           unidades_vinculadas?: string[]

@@ -8,8 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { format, startOfDay, endOfDay, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from 'sonner';
 
 interface AccessHistoryPopoverContentProps {
   onlineUsers: any[];
@@ -29,44 +29,62 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
     const start = startOfDay(date).toISOString();
     const end = endOfDay(date).toISOString();
 
-    const { data: sessions, error } = await (supabase
-      .from('user_sessions' as any)
+    // Fetch sessions with profile join via the new FK
+    const { data: sessions, error } = await supabase
+      .from('user_sessions')
       .select(`
         *,
-        profiles:user_id (
+        profiles!user_sessions_profile_fkey (
           nome_completo,
           perfil,
           cargo
         )
-      `) as any)
+      `)
       .lte('login_at', end)
       .gte('last_activity_at', start)
       .order('login_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching history:', error);
+      toast.error('Erro ao carregar histórico de acessos');
       setLoading(false);
       return;
     }
 
-    // Fetch audit logs for these users in this timeframe to calculate interactivity
-    const { data: auditLogs, error: auditError } = await (supabase
-      .from('audit_logs' as any)
-      .select('usuario_id, created_at, acao, modulo, registro_afetado') as any)
+    // Fallback: if profiles came back null, fetch them separately
+    const sessionsWithProfiles = sessions || [];
+    const missingProfileIds = sessionsWithProfiles
+      .filter(s => !s.profiles)
+      .map(s => s.user_id);
+
+    let profilesMap: Record<string, any> = {};
+    if (missingProfileIds.length > 0) {
+      const uniqueIds = [...new Set(missingProfileIds)];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, nome_completo, perfil, cargo')
+        .in('id', uniqueIds);
+
+      if (profilesData) {
+        profilesData.forEach(p => { profilesMap[p.id] = p; });
+      }
+    }
+
+    // Fetch audit logs for interactivity
+    const { data: auditLogs } = await supabase
+      .from('audit_logs')
+      .select('usuario_id, created_at, acao, modulo, registro_afetado')
       .gte('created_at', start)
       .lte('created_at', end);
 
-    if (auditError) {
-      console.error('Error fetching audit logs:', auditError);
-    }
-
-    const historyWithActivity = (sessions || []).map((session: any) => {
+    const historyWithActivity = sessionsWithProfiles.map((session) => {
+      const profile = session.profiles || profilesMap[session.user_id] || null;
       const sessionStart = new Date(session.login_at);
       const sessionEnd = session.logout_at ? new Date(session.logout_at) : new Date(session.last_activity_at);
-      
-      const sessionLogs = (auditLogs || []).filter((log: any) => 
-        log.usuario_id === session.user_id && 
-        new Date(log.created_at) >= sessionStart && 
+
+      const sessionLogs = (auditLogs || []).filter((log) =>
+        log.usuario_id === session.user_id &&
+        new Date(log.created_at) >= sessionStart &&
         new Date(log.created_at) <= sessionEnd
       );
 
@@ -74,9 +92,10 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
 
       return {
         ...session,
+        profiles: profile,
         duration,
         hasActivity: sessionLogs.length > 0,
-        activityDetails: sessionLogs.slice(0, 5).map((log: any) => `${log.acao} em ${log.modulo}${log.registro_afetado ? ` (${log.registro_afetado})` : ''}`).join('\n') + (sessionLogs.length > 5 ? '\n...' : '')
+        activityDetails: sessionLogs.slice(0, 5).map((log) => `${log.acao} em ${log.modulo}${log.registro_afetado ? ` (${log.registro_afetado})` : ''}`).join('\n') + (sessionLogs.length > 5 ? '\n...' : '')
       };
     });
 
@@ -186,8 +205,8 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
                             {session.profiles?.nome_completo?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || 'US'}
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-slate-800">{session.profiles?.nome_completo}</p>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-tight">{session.profiles?.perfil} · {session.profiles?.cargo || 'Sem cargo'}</p>
+                            <p className="text-xs font-semibold text-slate-800">{session.profiles?.nome_completo || 'Usuário desconhecido'}</p>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-tight">{session.profiles?.perfil || '—'} · {session.profiles?.cargo || 'Sem cargo'}</p>
                           </div>
                         </div>
                         <div className="text-right">

@@ -160,6 +160,7 @@ export default function AdministracaoPage() {
     pode_excluir_requisicoes: false,
     pode_editar_configuracoes: false,
     pode_gerenciar_usuarios: false,
+    acesso_portal_unidade: false,
     sendWelcomeEmail: true,
   });
 
@@ -188,7 +189,7 @@ export default function AdministracaoPage() {
       permissoes_modulo: DEFAULT_PERMISSIONS_BY_PROFILE['Analista de RH'].perms,
       pode_incluir_registros: false, pode_excluir_requisicoes: false,
       pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
-      sendWelcomeEmail: true,
+      acesso_portal_unidade: false, sendWelcomeEmail: true,
     });
   };
 
@@ -304,6 +305,7 @@ export default function AdministracaoPage() {
         pode_excluir_requisicoes: editingUser.pode_excluir_requisicoes,
         pode_editar_configuracoes: editingUser.pode_editar_configuracoes,
         pode_gerenciar_usuarios: editingUser.pode_gerenciar_usuarios,
+        acesso_portal_unidade: editingUser.acesso_portal_unidade,
         avatar_url: editingUser.avatar_url,
         modulos_acesso: editingUser.modulos_acesso,
         permissoes_modulo: editingUser.permissoes_modulo,
@@ -1408,6 +1410,13 @@ export default function AdministracaoPage() {
                   <Label className="text-xs font-bold">Pode gerenciar usuários</Label>
                 </div>
               </div>
+              <div className="flex items-center gap-3 mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <Switch checked={newUser.acesso_portal_unidade} onCheckedChange={(v) => setNewUser(p => ({ ...p, acesso_portal_unidade: v }))} />
+                <div>
+                  <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
+                  <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
+                </div>
+              </div>
             </div>
 
             {/* E-mail de boas-vindas */}
@@ -1594,6 +1603,13 @@ export default function AdministracaoPage() {
                   <div className="flex items-center gap-2">
                     <Switch checked={editingUser.pode_gerenciar_usuarios} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_gerenciar_usuarios: v }))} />
                     <Label className="text-xs font-bold">Pode gerenciar usuários</Label>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <Switch checked={editingUser?.acesso_portal_unidade || false} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, acesso_portal_unidade: v }))} />
+                  <div>
+                    <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
+                    <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
                   </div>
                 </div>
               </div>

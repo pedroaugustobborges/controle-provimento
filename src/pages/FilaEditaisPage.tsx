@@ -275,7 +275,7 @@ export default function FilaEditaisPage() {
                       <TableCell colSpan={2} className="font-bold text-blue-800">
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4" /> 
-                          Agrupado Goiânia ({group.unidades.length} unidades)
+                          Agrupado Goiás e Espírito Santo ({group.unidades.length} unidades)
                         </div>
                       </TableCell>
                       <TableCell className="font-bold text-blue-900">{group.cargo}</TableCell>

@@ -19,6 +19,7 @@ import {
   MessageSquare, Camera, Upload, User as UserIcon
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import { cn } from '@/lib/utils';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -114,7 +115,7 @@ const DEFAULT_PERMISSIONS_BY_PROFILE: Record<string, { modulos: string[], perms:
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
   const { 
-    users, auditLogs, supportConfigs, backups, feedbacks, 
+    users, auditLogs, supportConfigs, backups, feedbacks, loading,
     addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, 
     sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, updateFeedbackStatus, generateBackup 
   } = useAdminStore();
@@ -468,6 +469,10 @@ export default function AdministracaoPage() {
     };
     return map[status] || 'bg-slate-100 text-slate-500';
   };
+
+  if (loading && users.length === 0) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-6 pb-10">

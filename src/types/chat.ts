@@ -1,7 +1,7 @@
 export interface Unit {
   id: string;
   name: string;
-  region: 'GOIÁS E VITÓRIA' | 'OUTRAS UNIDADES';
+  region: 'GOIÁS E ESPÍRITO SANTO' | 'AMAZONAS' | 'OUTRAS UNIDADES';
   analysts: string[];
   assistants: string[];
 }

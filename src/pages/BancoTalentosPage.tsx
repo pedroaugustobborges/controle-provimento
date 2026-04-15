@@ -36,6 +36,7 @@ import { BancoTalentosForm } from '@/components/BancoTalentosForm';
 import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { BancoTalentos } from '@/types/vaga';
 import {

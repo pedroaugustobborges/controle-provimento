@@ -16,6 +16,8 @@ export type UserProfile =
   | 'Analista de convocações' 
   | 'Gestão' 
   | 'Gerência'
+  | 'Usuário da Unidade'
+  | 'Ponta'
   | 'Analista' | 'Admin';
 
 export const PERFIS_ACESSO: { value: string; label: string }[] = [

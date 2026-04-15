@@ -1,15 +1,23 @@
 
 
-## Plano: Padronizar cabeçalho da tabela "Vagas sem Movimentação"
+## Plano: Corrigir filtro "Sem Status" na página de Controle de Vagas
 
-### Diagnóstico necessário
-Preciso localizar onde a tabela "Vagas sem Movimentação" é renderizada para verificar se usa o componente `Table` padrão ou tem estilos customizados no header.
+### Problema
+Quando o usuário seleciona "SEM STATUS" no filtro, a lógica compara `s === v.status || s === v.status_geral` (linha 337). Vagas sem status têm `status_geral = ''` ou `null`, então nunca correspondem à string `'SEM STATUS'`. Também não há handler de categoria para esse caso (linhas 338-345).
 
-### Alterações previstas
+### Alteração em `src/pages/VagasPage.tsx`
 
-**Arquivo a identificar (provavelmente `DashboardPage.tsx` ou `VagasPage.tsx`):**
-- Garantir que a tabela usa `TableHeader`/`TableHead` de `@/components/ui/table` sem classes extras que sobrescrevam o estilo padrão (fundo `#221f44`, texto branco uppercase `11px` bold)
-- Remover quaisquer classes inline que alterem cor de fundo, cor de texto ou tamanho de fonte do cabeçalho
+Na lógica de `matchStatus` (linha 336-346), adicionar uma condição para tratar "SEM STATUS" e "sem_status":
 
-O componente `Table` em `src/components/ui/table.tsx` já define o estilo correto — basta garantir que não há sobreposição.
+```typescript
+const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
+  if (s === v.status || s === v.status_geral) return true;
+  // Novo: tratar filtro "Sem Status"
+  if ((s === 'SEM STATUS' || s === 'sem_status') && (!v.status_geral || v.status_geral.trim() === '')) return true;
+  if (s === 'CONVOCAÇÕES' && category === 'convocacao') return true;
+  // ... restante igual
+});
+```
+
+Isso garante que ao selecionar "Sem Status", vagas com `status_geral` vazio, nulo ou apenas espaços sejam exibidas.
 

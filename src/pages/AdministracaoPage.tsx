@@ -535,8 +535,8 @@ export default function AdministracaoPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome / E-mail</TableHead>
+                     <TableRow>
+                      <TableHead className="text-left">Nome / E-mail</TableHead>
                       <TableHead>Perfil / Cargo</TableHead>
                       <TableHead>Unidades</TableHead>
                       <TableHead>Status</TableHead>
@@ -547,7 +547,7 @@ export default function AdministracaoPage() {
                   <TableBody>
                     {users.map((user) => (
                       <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell>
+                        <TableCell className="text-left">
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
                               {user.avatar_url ? (

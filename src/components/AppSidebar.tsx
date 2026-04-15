@@ -45,6 +45,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useCallback, useEffect } from 'react';
+import type { Tables } from '@/integrations/supabase/types';
 
 export function AppSidebar() {
   const { state } = useSidebar();

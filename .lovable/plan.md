@@ -1,30 +1,15 @@
 
 
-## Plano: Otimizar performance e corrigir layout
+## Plano: Implementar Zoom Interativo no Mapa da Página de Login
 
-### Investigação necessária
-1. Verificar `VagasPage.tsx` e `DashboardPage.tsx` — identificar queries lentas, chamadas redundantes e falta de paginação
-2. Verificar `DashboardService.ts` — são 7 queries separadas executadas em série (sem paralelização)
-3. Revisar se os últimos ajustes quebraram algum layout
+### O que será feito
+Adicionar um efeito de lupa/zoom ao passar o mouse sobre a imagem do mapa na `LoginPage.tsx`. O zoom acompanhará a posição do cursor, permitindo ao usuário ver detalhes que não são legíveis no tamanho padrão.
 
-### Alterações previstas
-
-**Performance — `DashboardService.ts`:**
-- Paralelizar as 7 queries com `Promise.all()` em vez de executá-las sequencialmente
-- Adicionar tratamento de erro individual para cada query
-
-**Performance — `VagasPage.tsx`:**
-- Revisar a lógica de filtragem (especialmente o novo filtro "Com Banco" que pode estar fazendo chamadas extras por vaga)
-- Implementar memoização com `useMemo` nos dados filtrados
-- Garantir que skeleton/loading é exibido imediatamente
-
-**Layout — Verificar regressões:**
-- Revisar os arquivos alterados recentemente (`AppSidebar.tsx`, `VagasPage.tsx`, `RelatoriosPage.tsx`) para identificar problemas de layout
-
-### Arquivos a alterar
-- `src/services/dashboardService.ts`
-- `src/pages/VagasPage.tsx`
-- `src/pages/DashboardPage.tsx` (se necessário)
-
-### Sem alteração de banco de dados
+### Alterações
+**`src/pages/LoginPage.tsx`:**
+- Envolver a imagem do mapa em um container com `overflow-hidden` e `cursor-zoom-in`
+- Adicionar handler `onMouseMove` para capturar coordenadas do cursor e calcular `transform-origin` dinâmico (em %)
+- Aplicar `transform: scale(2)` no hover via estado React (`isHovering`)
+- Adicionar `onMouseLeave` para resetar o zoom
+- Transição suave com `transition: transform 0.3s ease`
 

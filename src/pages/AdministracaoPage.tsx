@@ -563,9 +563,9 @@ export default function AdministracaoPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-left">
-                          <div className="flex flex-col gap-1">
-                            <Badge variant="outline" className="w-fit text-[11px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100">{user.perfil}</Badge>
-                            <span className="text-[11px] text-slate-500 font-medium">{user.cargo}</span>
+                          <div className="flex flex-col gap-0.5 items-start">
+                            <Badge variant="outline" className="w-fit text-[10px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100 uppercase tracking-tighter">{user.perfil}</Badge>
+                            <span className="text-[11px] text-slate-500 font-medium ml-0.5">{user.cargo}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-left">

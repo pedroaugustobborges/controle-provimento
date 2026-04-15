@@ -22,7 +22,7 @@ export type StatusVaga =
   | 'ESTRATÉGICAS'
   | 'CANCELADAS'
   
-  | 'sem_status' 
+  | 'SEM STATUS' 
   | 'publicar_novo_edital' 
   | 'em_edital' 
   | 'em_documentacao' 
@@ -470,7 +470,7 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
   'AGUARDANDO UNIDADE': 'Aguardando Unidade',
   'ESTRATÉGICAS': 'Estratégicas',
   'CANCELADAS': 'Canceladas',
-  sem_status: 'Sem Status',
+  'SEM STATUS': 'Sem Status',
   publicar_novo_edital: 'Publicar Novo Edital',
   em_edital: 'Em Edital',
   em_documentacao: 'Em Documentação',

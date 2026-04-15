@@ -38,9 +38,11 @@ interface AdminState {
   // Audit actions
   addAuditLog: (log: Omit<AuditLog, 'id'>) => void;
 
-  // Support actions (still local for now)
-  addSupportConfig: (config: SupportConfig) => void;
-  updateSupportConfig: (id: string, data: Partial<SupportConfig>) => void;
+  // Support actions
+  fetchSupportConfigs: () => Promise<void>;
+  addSupportConfig: (config: Omit<SupportConfig, 'id'>) => Promise<void>;
+  updateSupportConfig: (id: string, data: Partial<SupportConfig>) => Promise<void>;
+  deleteSupportConfig: (id: string) => Promise<void>;
 
   // Backup actions
   generateBackup: () => void;
@@ -49,26 +51,6 @@ interface AdminState {
   toggleUserStatus: (id: string) => Promise<void>;
 }
 
-const GO_VIT_UNITS = [
-  'HECAD', 'CRER', 'AGIR', 'HUGOL', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'VITÓRIA (SÃO PEDRO/SUÁ)',
-  'TEIA ANAPOLIS', 'TEIA CANEDO', 'TEIA APARECIDA', 'TEIA GOIÂNIA'
-];
-const FORA_UNITS = [
-  'DOURADOS', 'CHS', 'HMSA', 'HRCAC', 'TEIA CEN', 'TEIA PIN', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'
-];
-
-const defaultSupportConfigs: SupportConfig[] = [
-  {
-    id: '1', regiao: 'Goiás e Vitória', responsavel: 'Ricardo Oliveira',
-    email: 'suporte.go@sistema.com', teams_user: 'ricardo.oliveira.teams',
-    mensagem: 'Atendimento das 08:00 às 18:00.', status: 'ativo', unidades: GO_VIT_UNITS
-  },
-  {
-    id: '2', regiao: 'OUTRAS UNIDADES', responsavel: 'Fernanda Souza',
-    email: 'suporte.es@sistema.com', teams_user: 'fernanda.souza.teams',
-    mensagem: 'Suporte remoto especializado.', status: 'ativo', unidades: FORA_UNITS
-  }
-];
 
 function generateTempPassword(): string {
   const nums = Math.floor(1000 + Math.random() * 9000);
@@ -80,7 +62,7 @@ export { generateTempPassword };
 export const useAdminStore = create<AdminState>((set, get) => ({
   users: [],
   auditLogs: [],
-  supportConfigs: defaultSupportConfigs,
+  supportConfigs: [],
   backups: [],
   feedbacks: [],
   currentUser: null,
@@ -310,10 +292,36 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   },
 
-  addSupportConfig: (config) => set((s) => ({ supportConfigs: [config, ...s.supportConfigs] })),
-  updateSupportConfig: (id, data) => set((s) => ({
-    supportConfigs: s.supportConfigs.map((c) => c.id === id ? { ...c, ...data } : c),
-  })),
+  fetchSupportConfigs: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('support_configs')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      set({ supportConfigs: (data || []) as SupportConfig[] });
+    } catch (err) {
+      console.error('Erro ao buscar configurações de suporte:', err);
+    }
+  },
+
+  addSupportConfig: async (config) => {
+    const { error } = await supabase.from('support_configs').insert(config);
+    if (error) throw error;
+    await get().fetchSupportConfigs();
+  },
+
+  updateSupportConfig: async (id, data) => {
+    const { error } = await supabase.from('support_configs').update(data).eq('id', id);
+    if (error) throw error;
+    await get().fetchSupportConfigs();
+  },
+
+  deleteSupportConfig: async (id) => {
+    const { error } = await supabase.from('support_configs').delete().eq('id', id);
+    if (error) throw error;
+    await get().fetchSupportConfigs();
+  },
 
   generateBackup: () => set((s) => {
     const newBackup: BackupRecord = {

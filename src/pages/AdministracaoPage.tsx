@@ -971,14 +971,14 @@ export default function AdministracaoPage() {
                     <TableBody>
                       {backups.map((b) => (
                         <TableRow key={b.id}>
-                          <TableCell className="pl-6 font-mono text-xs">{b.data_hora}</TableCell>
-                          <TableCell className="text-center font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="font-mono text-xs">{b.data_hora}</TableCell>
+                          <TableCell className="font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
+                          <TableCell>
                             <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[11px]">
                               <CheckCircle className="h-3 w-3" /> Sucesso
                             </div>
                           </TableCell>
-                          <TableCell className="text-right pr-6">
+                          <TableCell className="text-right">
                             <Button variant="ghost" size="sm" className="h-8 gap-2 text-blue-600 font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
                           </TableCell>
                         </TableRow>

@@ -117,7 +117,8 @@ export default function AdministracaoPage() {
   const { 
     users, auditLogs, supportConfigs, backups, feedbacks, loading,
     addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, 
-    sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, updateFeedbackStatus, generateBackup 
+    sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchSupportConfigs,
+    addSupportConfig, updateSupportConfig, deleteSupportConfig, updateFeedbackStatus, generateBackup 
   } = useAdminStore();
 
   const { vagas } = useVagasStore();
@@ -481,7 +482,8 @@ export default function AdministracaoPage() {
           setActiveTab(val);
           if (val === 'usuarios') fetchUsers();
           if (val === 'auditoria') fetchAuditLogs();
-          if (val === 'feedback' || val === 'suporte') fetchFeedbacks();
+          if (val === 'feedback') fetchFeedbacks();
+          if (val === 'suporte') fetchSupportConfigs();
         }} className="space-y-4">
         <TabsList className="bg-slate-100 p-1 flex-wrap h-auto">
           <TabsTrigger value="usuarios" className="gap-2 font-bold px-4 py-2">

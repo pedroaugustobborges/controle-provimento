@@ -548,7 +548,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         {stats.map((stat, idx) => {
           const isVagasStat = !stat.label.includes('CR');
           const isBancosStat = stat.label.includes('CR');
@@ -558,7 +558,7 @@ export default function DashboardPage() {
           return (
             <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
               <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
-              <CardContent className="p-5">
+              <CardContent className="p-3.5">
                 <div className={`p-2.5 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>

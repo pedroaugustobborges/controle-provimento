@@ -1,16 +1,27 @@
 
 
-## Plano: Corrigir alinhamento das tabelas
+## Plano: Corrigir dados desatualizados na tabela de Usuários
 
-### Problema
-A última alteração no `table.tsx` pode ter introduzido inconsistências. Preciso primeiro ver o estado atual do componente e das páginas com tabelas para identificar exatamente o que piorou.
+### Diagnóstico
+A tabela de Usuários na aba "Usuários" da página de Administração exibe dados de perfil/cargo e nome/email que podem estar desatualizados. As causas prováveis:
 
-### Passos
-1. Verificar o estado atual de `src/components/ui/table.tsx`
-2. Revisar as páginas com tabelas para identificar desalinhamentos
-3. Corrigir o componente base e overrides específicos nas páginas
+1. **Email não sincronizado**: O campo `email` na tabela `profiles` pode não estar sincronizado com o email real do `auth.users` (ex: se o email foi alterado via auth mas não no profiles)
+2. **Trigger de sincronização ausente**: Não existe um trigger para manter `profiles.email` atualizado quando o email muda no auth
+3. **Dados antigos**: Perfis criados antes das últimas alterações podem ter campos vazios ou desatualizados
 
-### Arquivos a revisar
-- `src/components/ui/table.tsx`
-- Páginas com tabelas: `VagasPage`, `AdministracaoPage`, `BancoTalentosPage`, `ConvocacoesPage`, `EditaisPage`, `UnidadePortalPage`, `FilaEditaisPage`
+### Solução
+
+**1. Forçar re-fetch ao entrar na aba de Usuários**
+- Garantir que `fetchUsers()` seja chamado ao clicar na aba "Usuários", não apenas no mount da página
+
+**2. Sincronizar email do auth com profiles**  
+- No `fetchCurrentProfile`, atualizar o `email` no profiles se estiver diferente do auth
+- Adicionar trigger de sincronização no banco para manter email/metadata em sync
+
+**3. Adicionar botão de atualizar na tabela**
+- Botão "Atualizar lista" para forçar refetch manual quando necessário
+
+### Arquivos afetados
+- `src/pages/AdministracaoPage.tsx` — re-fetch ao trocar tab + botão atualizar
+- `src/store/adminStore.ts` — melhorar `fetchCurrentProfile` com sync de email
 

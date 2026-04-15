@@ -961,11 +961,11 @@ export default function AdministracaoPage() {
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="pl-6 text-[11px] font-bold uppercase">Data / Hora</TableHead>
-                        <TableHead className="text-center">Registros</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-right pr-6">Ações</TableHead>
+                       <TableRow>
+                        <TableHead>Data / Hora</TableHead>
+                        <TableHead>Registros</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

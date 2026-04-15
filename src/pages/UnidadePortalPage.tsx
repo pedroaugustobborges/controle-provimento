@@ -658,9 +658,9 @@ export default function UnidadePortalPage() {
                         <TableHead className="min-w-[140px]">Status</TableHead>
                         <TableHead className="min-w-[140px]">Unidade Destino</TableHead>
                         <TableHead className="min-w-[130px]">Horário/Plantão</TableHead>
-                        <TableHead className="text-center">Aceito</TableHead>
+                        <TableHead>Aceito</TableHead>
                         <TableHead className="min-w-[200px]">Observação</TableHead>
-                        <TableHead className="w-20 text-center">Ação</TableHead>
+                        <TableHead className="w-20">Ação</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

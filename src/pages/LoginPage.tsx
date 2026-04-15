@@ -358,6 +358,206 @@ function UnidadeLoginModal({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
+// ─── Units Carousel Data ───
+const slidesData = [
+  {
+    state: 'Goiás',
+    color: 'hsl(200,70%,40%)',
+    sections: [
+      {
+        title: 'Unidades Hospitalares',
+        units: [
+          { name: 'CRER', desc: 'Centro Estadual de Reabilitação e Readaptação Dr. Henrique Santillo — Goiânia' },
+          { name: 'HDS', desc: 'Hospital Estadual de Dermatologia Sanitária Colônia Santa Marta — Goiânia' },
+          { name: 'HUGOL', desc: 'Hospital Estadual de Urgências Gov. Otávio Lage de Siqueira — Goiânia' },
+          { name: 'HECAD', desc: 'Hospital Estadual da Criança e do Adolescente — Goiânia' },
+          { name: 'Policlínica', desc: 'Policlínica Estadual Brasil Bruno de Bastos Neto — Cidade de Goiás' },
+          { name: 'HEJ', desc: 'Hospital Estadual de Jataí Dr. Serafim de Carvalho — Jataí' },
+        ],
+      },
+      {
+        title: 'Rede Teia Agir',
+        units: [
+          { name: 'Teia Goiânia', desc: 'Clínica Teia — Unidade Goiânia' },
+          { name: 'Teia Aparecida', desc: 'Clínica Teia — Unidade Aparecida de Goiânia' },
+          { name: 'Teia Canedo', desc: 'Clínica Teia — Unidade Senador Canedo' },
+          { name: 'Teia Anápolis', desc: 'Clínica-Escola do Autista — Anápolis' },
+        ],
+      },
+    ],
+  },
+  {
+    state: 'Amazonas',
+    color: 'hsl(150,60%,35%)',
+    sections: [
+      {
+        title: 'Unidades Hospitalares',
+        units: [
+          { name: 'CHS', desc: 'Complexo Hospitalar Sul — Hospital e Pronto-Socorro 28 de Agosto e Instituto da Mulher Dona Lindu — Manaus' },
+        ],
+      },
+      {
+        title: 'Rede Teia Agir',
+        units: [
+          { name: 'Caic TEA Dr. José Contente', desc: 'Clínica Teia — Manaus' },
+          { name: 'Caic TEA Dr. Gilson Moreira', desc: 'Clínica Teia — Manaus' },
+          { name: 'Caic TEA Dr. Afrânio Soares', desc: 'Clínica Teia — Manaus' },
+        ],
+      },
+    ],
+  },
+  {
+    state: 'São Paulo',
+    color: 'hsl(0,65%,45%)',
+    sections: [
+      {
+        title: 'Unidades Hospitalares',
+        units: [
+          { name: 'HMSA', desc: 'Hospital e Maternidade Municipal Santa Ana — Santana de Parnaíba' },
+        ],
+      },
+      {
+        title: 'Rede Teia Agir',
+        units: [
+          { name: 'Caism Philippe Pinel', desc: 'Clínica Teia — São Paulo' },
+          { name: 'Centro TEA Paulista', desc: 'Clínica Teia — São Paulo' },
+        ],
+      },
+    ],
+  },
+  {
+    state: 'Mato Grosso do Sul',
+    color: 'hsl(45,70%,40%)',
+    sections: [
+      {
+        title: 'Unidades Hospitalares',
+        units: [
+          { name: 'HRD — Unidade I', desc: 'Hospital Regional de Dourados Olga Castoldi Parizotto — Matriz' },
+          { name: 'HRD — Unidade II', desc: 'Hospital Regional de Cirurgias da Grande Dourados' },
+          { name: 'HRD — Unidade III', desc: 'Centro de Especialidades e Diagnóstico' },
+        ],
+      },
+    ],
+  },
+  {
+    state: 'Mato Grosso',
+    color: 'hsl(30,65%,42%)',
+    sections: [
+      {
+        title: 'Unidades Hospitalares',
+        units: [
+          { name: 'HRAF', desc: 'Hospital Regional de Cáceres Dr. Antônio Fontes' },
+        ],
+      },
+    ],
+  },
+  {
+    state: 'Espírito Santo',
+    color: 'hsl(160,50%,40%)',
+    sections: [
+      {
+        title: 'Prontos Atendimentos',
+        units: [
+          { name: 'P.A. Praia do Suá', desc: 'Pronto Atendimento — Vitória' },
+          { name: 'P.A. São Pedro', desc: 'Pronto Atendimento — Vitória' },
+        ],
+      },
+    ],
+  },
+];
+
+// ─── Units Carousel Component ───
+function UnitsCarousel() {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((c) => (c + 1) % slidesData.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const goTo = (idx: number) => {
+    setCurrent(idx);
+  };
+
+  const slide = slidesData[current];
+  const totalUnits = slide.sections.reduce((sum, s) => sum + s.units.length, 0);
+
+  return (
+    <div className="relative w-full animate-fade-in">
+      <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
+
+      <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
+            <MapPin className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">Presença Nacional</h3>
+            <p className="text-[10px] text-[hsl(210,20%,45%)] uppercase tracking-[0.15em]">Unidades geridas pela AGIR</p>
+          </div>
+        </div>
+
+        {/* Slide content */}
+        <div className="p-6 min-h-[320px]" key={current}>
+          <div className="flex items-center gap-2 mb-4 animate-[fadeIn_0.4s_ease-out]">
+            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
+            <span className="text-base font-bold text-white">{slide.state}</span>
+            <div className="flex-1 h-px bg-white/[0.06]" />
+            <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
+          </div>
+
+          <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
+            {slide.sections.map((section) => (
+              <div key={section.title}>
+                <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
+                  {section.title}
+                </span>
+                <div className="space-y-1.5">
+                  {section.units.map((u, i) => (
+                    <div
+                      key={u.name}
+                      className="group px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
+                      style={{ animationDelay: `${i * 50}ms` }}
+                    >
+                      <div className="text-[12px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
+                      <div className="text-[10px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer with dots */}
+        <div className="px-6 py-3 border-t border-white/[0.06] flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            {slidesData.map((s, i) => (
+              <button
+                key={s.state}
+                onClick={() => goTo(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === current
+                    ? 'w-5 bg-[hsl(200,70%,50%)]'
+                    : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
+                }`}
+                title={s.state}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] text-emerald-400/80 font-medium">6 estados · 20+ unidades</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Landing Page ───
 export default function LoginPage() {
   const { isAuthenticated, loading } = useAuth();

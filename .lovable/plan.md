@@ -1,23 +1,28 @@
 
 
-## Plano: Corrigir filtro "Sem Status" na página de Controle de Vagas
+## Plano: Corrigir deslogamento durante uso ativo
 
 ### Problema
-Quando o usuário seleciona "SEM STATUS" no filtro, a lógica compara `s === v.status || s === v.status_geral` (linha 337). Vagas sem status têm `status_geral = ''` ou `null`, então nunca correspondem à string `'SEM STATUS'`. Também não há handler de categoria para esse caso (linhas 338-345).
+O `InactivityLogout` escuta apenas `mousedown`, `mousemove`, `keypress`, `scroll`, `touchstart` sem `capture: true`. Componentes Radix UI (dropdowns, selects, dialogs) chamam `stopPropagation()`, impedindo que os eventos cheguem ao `window` e resetem o timer.
 
-### Alteração em `src/pages/VagasPage.tsx`
+### Alterações em `src/components/InactivityLogout.tsx`
 
-Na lógica de `matchStatus` (linha 336-346), adicionar uma condição para tratar "SEM STATUS" e "sem_status":
+1. **Expandir lista de eventos** — adicionar `click`, `input`, `change`, `focus`, `pointerdown`, `pointerup`
+2. **Usar `{ capture: true }`** em todos os listeners para interceptar eventos antes de qualquer `stopPropagation()`
+3. Manter timeout de 30min e aviso de 5min inalterados
 
 ```typescript
-const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
-  if (s === v.status || s === v.status_geral) return true;
-  // Novo: tratar filtro "Sem Status"
-  if ((s === 'SEM STATUS' || s === 'sem_status') && (!v.status_geral || v.status_geral.trim() === '')) return true;
-  if (s === 'CONVOCAÇÕES' && category === 'convocacao') return true;
-  // ... restante igual
+const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click', 'input', 'change', 'focus', 'pointerdown', 'pointerup'];
+
+events.forEach(event => {
+  window.addEventListener(event, handleEvent, { capture: true });
+});
+
+// cleanup
+events.forEach(event => {
+  window.removeEventListener(event, handleEvent, { capture: true });
 });
 ```
 
-Isso garante que ao selecionar "Sem Status", vagas com `status_geral` vazio, nulo ou apenas espaços sejam exibidas.
+Sem outras alterações necessárias.
 

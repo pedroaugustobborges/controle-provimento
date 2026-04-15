@@ -454,17 +454,17 @@ export default function LoginPage() {
               {/* CTA buttons */}
               <div className="flex flex-col sm:flex-row gap-3 pt-2 justify-center lg:justify-start">
                 <button onClick={() => setShowLogin(true)}
-                  className="flex items-center justify-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
-                  <LogIn className="h-4 w-4" /> Login Provimento
-                  <ChevronRight className="h-4 w-4 ml-1 opacity-60" />
+                  className="flex items-center justify-center gap-2.5 px-7 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
+                  <LogIn className="h-[18px] w-[18px]" /> Login Provimento
+                  <ChevronRight className="h-4 w-4 ml-0.5 opacity-60" />
                 </button>
                 <button onClick={() => setShowUnidadeLogin(true)}
-                  className="flex items-center justify-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
-                  <Building2 className="h-4 w-4" /> Login Unidade
+                  className="flex items-center justify-center gap-2.5 px-7 py-3 rounded-xl text-sm font-semibold text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
+                  <Building2 className="h-[18px] w-[18px]" /> Login Unidade
                 </button>
                 <button onClick={() => setShowAccess(true)}
-                  className="flex items-center justify-center gap-2 px-7 py-3 rounded-xl text-sm font-medium text-white/70 border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-                  <UserPlus className="h-4 w-4" /> Solicitar acesso
+                  className="flex items-center justify-center gap-2.5 px-7 py-3 rounded-xl text-sm font-medium text-white/70 border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
+                  <UserPlus className="h-[18px] w-[18px]" /> Solicitar acesso
                 </button>
               </div>
             </div>

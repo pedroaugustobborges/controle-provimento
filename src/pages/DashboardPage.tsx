@@ -562,7 +562,7 @@ export default function DashboardPage() {
                 <div className={`p-2.5 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
-                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
+                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight whitespace-nowrap">{stat.label}</p>
                 <div className="flex flex-col gap-0.5">
                   {showSkeleton ? (
                     <Skeleton className="h-8 w-16 my-0.5" />

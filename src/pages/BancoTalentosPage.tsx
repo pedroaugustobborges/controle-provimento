@@ -20,7 +20,9 @@ const getRegiaoFromUnit = (unidade: string): string | undefined => {
   const normalized = normalizeUnitName(unidade);
   for (const [regiao, units] of Object.entries(UNIDADES_POR_REGIAO)) {
     if (units.some(u => normalizeUnitName(u) === normalized || normalized.includes(normalizeUnitName(u)) || normalizeUnitName(u).includes(normalized))) {
-      return regiao === 'Goiás e Vitória' ? 'GO_ES' : 'OUTRAS_UNIDADES';
+      if (regiao === 'Goiás e Espírito Santo') return 'GO_ES';
+      if (regiao === 'Amazonas') return 'AMAZONAS';
+      return 'OUTRAS_UNIDADES';
     }
   }
   return undefined;

@@ -714,148 +714,65 @@ export default function AdministracaoPage() {
         {/* SUPORTE */}
         <TabsContent value="suporte">
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between border-b space-y-0">
-              <div>
-                <CardTitle className="text-lg font-bold">Configuração de Suporte</CardTitle>
-                <CardDescription>Defina os contatos de suporte fixos para cada região ou grupo de unidades.</CardDescription>
-              </div>
-              <Button className="gap-2 bg-primary" onClick={() => { resetSupportForm(); setEditingSupportConfig(null); setIsSupportDialogOpen(true); }}>
-                <Plus className="h-4 w-4" /> Novo Suporte
-              </Button>
+            <CardHeader className="border-b">
+              <CardTitle className="text-lg font-bold">Suporte Técnico</CardTitle>
+              <CardDescription>Analistas administrativos responsáveis por cada região. Para alterar, edite o cadastro do usuário na aba "Usuários" e defina o cargo como "Analista Administrativo" com a região de suporte.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              {supportConfigs.length === 0 ? (
-                <div className="p-8 text-center text-slate-400">
-                  <Bell className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                  <p className="font-medium">Nenhuma configuração de suporte cadastrada.</p>
-                  <p className="text-sm mt-1">Clique em "Novo Suporte" para adicionar.</p>
-                </div>
-              ) : (
-              <Table>
-                <TableHeader>
-                   <TableRow>
-                    <TableHead>Região / Unidades</TableHead>
-                    <TableHead>Responsável</TableHead>
-                    <TableHead>Contato</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {supportConfigs.map((config) => (
-                    <TableRow key={config.id}>
-                      <TableCell className="py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-700">{config.regiao}</span>
-                          <span className="text-[11px] text-slate-400 mt-1">{config.unidades.join(', ')}</span>
+            <CardContent className="p-6">
+              {(() => {
+                const analistas = users.filter(u => u.cargo === 'Analista Administrativo' && u.regiao_suporte && u.status === 'ativo');
+                const regiaoLabels: Record<string, string> = {
+                  goiania: 'Unidades Goiânia',
+                  espirito_santo: 'Unidades Espírito Santo',
+                  demais: 'Demais Unidades',
+                };
+                const regiaoUnidades: Record<string, string[]> = {
+                  goiania: REGIOES_SELECAO['Goiânia'] || [],
+                  espirito_santo: REGIOES_SELECAO['Vitória (ES)'] || [],
+                  demais: REGIOES_SELECAO['Demais Unidades'] || [],
+                };
+
+                if (analistas.length === 0) {
+                  return (
+                    <div className="p-8 text-center text-slate-400">
+                      <Bell className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                      <p className="font-medium">Nenhum analista administrativo com região de suporte definida.</p>
+                      <p className="text-sm mt-1">Vá à aba "Usuários", edite um usuário com cargo "Analista Administrativo" e defina a região de suporte.</p>
+                    </div>
+                  );
+                }
+
+                const regioes = ['goiania', 'espirito_santo', 'demais'];
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {regioes.map(regiao => {
+                      const responsaveis = analistas.filter(a => a.regiao_suporte === regiao);
+                      return (
+                        <div key={regiao} className="border rounded-xl p-5 bg-slate-50/50">
+                          <h3 className="font-bold text-sm text-primary mb-1">{regiaoLabels[regiao]}</h3>
+                          <p className="text-[10px] text-slate-400 mb-4">{(regiaoUnidades[regiao] || []).join(', ')}</p>
+                          {responsaveis.length === 0 ? (
+                            <p className="text-xs text-slate-400 italic">Nenhum responsável definido</p>
+                          ) : (
+                            <div className="space-y-3">
+                              {responsaveis.map(resp => (
+                                <div key={resp.id} className="bg-white rounded-lg p-3 border shadow-sm">
+                                  <p className="font-bold text-sm text-slate-700">{resp.nome_completo}</p>
+                                  <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
+                                    <Mail className="h-3 w-3" /> {resp.email}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell className="font-medium text-slate-600">{config.responsavel}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-xs">
-                          <span className="flex items-center gap-1.5"><Mail className="h-3 w-3 text-slate-400" /> {config.email}</span>
-                          <span className="flex items-center gap-1.5 mt-1 text-blue-600"><Users className="h-3 w-3" /> @{config.teams_user}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={config.status === 'ativo' ? "bg-green-100 text-green-700 font-bold text-[11px]" : "bg-red-100 text-red-700 font-bold text-[11px]"}>
-                          {config.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 gap-1.5 text-[11px] font-bold"
-                            onClick={() => { setTestEmailLoading(config.id); setTimeout(() => { setTestEmailLoading(null); toast.success('E-mail de teste enviado!'); }, 1500); }}
-                            disabled={testEmailLoading === config.id}
-                          >
-                            {testEmailLoading === config.id ? 'Enviando...' : <><Play className="h-3 w-3" /> Testar E-mail</>}
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                            setEditingSupportConfig(config);
-                            setSupportForm({
-                              regiao: config.regiao, responsavel: config.responsavel, email: config.email,
-                              teams_user: config.teams_user, mensagem: config.mensagem, status: config.status,
-                              unidades: config.unidades || []
-                            });
-                            setIsSupportDialogOpen(true);
-                          }}>
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              )}
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
-
-          {/* Dialog para criar/editar suporte */}
-          <Dialog open={isSupportDialogOpen} onOpenChange={setIsSupportDialogOpen}>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>{editingSupportConfig ? 'Editar Configuração de Suporte' : 'Nova Configuração de Suporte'}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-1">
-                  <Label>Região</Label>
-                  <Input value={supportForm.regiao} onChange={(e) => setSupportForm(f => ({ ...f, regiao: e.target.value }))} placeholder="Ex: Goiás e Vitória" />
-                </div>
-                <div className="space-y-1">
-                  <Label>Responsável</Label>
-                  <Input value={supportForm.responsavel} onChange={(e) => setSupportForm(f => ({ ...f, responsavel: e.target.value }))} placeholder="Nome do analista responsável" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label>E-mail</Label>
-                    <Input value={supportForm.email} onChange={(e) => setSupportForm(f => ({ ...f, email: e.target.value }))} placeholder="email@sistema.com" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Usuário Teams</Label>
-                    <Input value={supportForm.teams_user} onChange={(e) => setSupportForm(f => ({ ...f, teams_user: e.target.value }))} placeholder="usuario.teams" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label>Mensagem</Label>
-                  <Input value={supportForm.mensagem} onChange={(e) => setSupportForm(f => ({ ...f, mensagem: e.target.value }))} placeholder="Horário de atendimento, observações..." />
-                </div>
-                <div className="space-y-1">
-                  <Label>Unidades (separadas por vírgula)</Label>
-                  <Input value={supportForm.unidades.join(', ')} onChange={(e) => setSupportForm(f => ({ ...f, unidades: e.target.value.split(',').map(u => u.trim()).filter(Boolean) }))} placeholder="CRER, HUGOL, HECAD..." />
-                </div>
-                <div className="space-y-1">
-                  <Label>Status</Label>
-                  <select className="w-full border rounded-md px-3 py-2 text-sm" value={supportForm.status} onChange={(e) => setSupportForm(f => ({ ...f, status: e.target.value as 'ativo' | 'inativo' }))}>
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
-                  </select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsSupportDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={async () => {
-                  try {
-                    if (editingSupportConfig) {
-                      await updateSupportConfig(editingSupportConfig.id, supportForm);
-                      toast.success('Configuração atualizada!');
-                    } else {
-                      await addSupportConfig(supportForm);
-                      toast.success('Configuração criada!');
-                    }
-                    setIsSupportDialogOpen(false);
-                  } catch (err: any) {
-                    toast.error(err.message || 'Erro ao salvar');
-                  }
-                }}>
-                  {editingSupportConfig ? 'Salvar' : 'Criar'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </TabsContent>
 
         {/* AUDITORIA */}

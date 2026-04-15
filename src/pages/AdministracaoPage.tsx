@@ -677,7 +677,7 @@ export default function AdministracaoPage() {
                           {user.pode_editar_configuracoes && <Badge className="bg-amber-50 text-amber-700 border-amber-100 text-[9px]">Config</Badge>}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right pr-6">
+                      <TableCell className="text-right">
                         <Button variant="ghost" size="sm" className="gap-2 text-primary font-bold"><Settings className="h-3.5 w-3.5" /> Ajustar</Button>
                       </TableCell>
                     </TableRow>

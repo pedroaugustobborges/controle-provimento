@@ -306,7 +306,7 @@ export default function FilaAnalistaEditalPage() {
                   <TableHead>Cargo</TableHead>
                   <TableHead>Obs. Unidade</TableHead>
                   <TableHead>Recebimento</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -331,7 +331,7 @@ export default function FilaAnalistaEditalPage() {
                     <TableCell className="text-slate-500 whitespace-nowrap text-xs">
                       {formatDate(v.data_recebimento!)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {v.status_fluxo_edital === 'enviado_validacao' ? (
                         <Badge variant="outline" className="text-[10px] uppercase font-bold bg-purple-50 text-purple-600 border-purple-200">
                           Em Validação

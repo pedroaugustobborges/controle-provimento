@@ -58,7 +58,7 @@ export default function MensagensPage() {
 
   // Communication Hub State
   const [step, setStep] = useState<ChatStep>('INITIAL');
-  const [selectedRegion, setSelectedRegion] = useState<'GOIÁS E VITÓRIA' | 'OUTRAS UNIDADES' | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<'GOIÁS E ESPÍRITO SANTO' | 'AMAZONAS' | 'OUTRAS UNIDADES' | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [selectedRecipient, setSelectedRecipient] = useState<string | null>(null);
@@ -263,8 +263,11 @@ export default function MensagensPage() {
                       <h2 className="text-xl font-bold">Selecione a Região</h2>
                     </div>
                     <div className="grid grid-cols-1 gap-4">
-                      <Button variant="outline" className="h-16 justify-between px-6 text-lg" onClick={() => { setSelectedRegion('GOIÁS E VITÓRIA'); setStep('BY_UNIT'); }}>
-                        Goiás e Vitória <ChevronRight className="h-5 w-5" />
+                      <Button variant="outline" className="h-16 justify-between px-6 text-lg" onClick={() => { setSelectedRegion('GOIÁS E ESPÍRITO SANTO'); setStep('BY_UNIT'); }}>
+                        Goiás e Espírito Santo <ChevronRight className="h-5 w-5" />
+                      </Button>
+                      <Button variant="outline" className="h-16 justify-between px-6 text-lg" onClick={() => { setSelectedRegion('AMAZONAS'); setStep('BY_UNIT'); }}>
+                        Amazonas <ChevronRight className="h-5 w-5" />
                       </Button>
                       <Button variant="outline" className="h-16 justify-between px-6 text-lg" onClick={() => { setSelectedRegion('OUTRAS UNIDADES'); setStep('BY_UNIT'); }}>
                         Outras Unidades <ChevronRight className="h-5 w-5" />

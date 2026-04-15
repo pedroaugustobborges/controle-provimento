@@ -477,6 +477,14 @@ export default function AdministracaoPage() {
         title="Configurações do Sistema"
       />
 
+  // Support config state
+  const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
+  const [editingSupportConfig, setEditingSupportConfig] = useState<any>(null);
+  const [supportForm, setSupportForm] = useState({
+    regiao: '', responsavel: '', email: '', teams_user: '', mensagem: '', status: 'ativo', unidades: [] as string[]
+  });
+  const resetSupportForm = () => setSupportForm({ regiao: '', responsavel: '', email: '', teams_user: '', mensagem: '', status: 'ativo', unidades: [] });
+
 
       <Tabs value={activeTab} onValueChange={(val) => {
           setActiveTab(val);

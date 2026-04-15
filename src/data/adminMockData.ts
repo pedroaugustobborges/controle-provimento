@@ -88,7 +88,7 @@ export const mockAuditLogs: AuditLog[] = [
 export const mockSupportConfigs: SupportConfig[] = [
   {
     id: '1',
-    regiao: 'Goiás e Vitória',
+    regiao: 'Goiás e Espírito Santo',
     responsavel: 'Ricardo Oliveira',
     email: 'suporte.go@sistema.com',
     teams_user: 'ricardo.oliveira.teams',

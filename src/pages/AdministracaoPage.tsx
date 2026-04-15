@@ -171,6 +171,7 @@ export default function AdministracaoPage() {
     pode_gerenciar_usuarios: false,
     acesso_portal_unidade: false,
     sendWelcomeEmail: true,
+    regiao_suporte: null as string | null,
   });
 
   useEffect(() => {
@@ -190,7 +191,7 @@ export default function AdministracaoPage() {
 
   const resetNewUserForm = () => {
     setNewUser({
-      nome_completo: '', email: '', password: '', passwordMode: 'temp',
+    nome_completo: '', email: '', password: '', passwordMode: 'temp',
       perfil: 'Analista de RH', cargo: '', status: 'ativo',
       avatar_url: '',
       visualiza_todas_unidades: false, unidades_vinculadas: [],
@@ -199,6 +200,7 @@ export default function AdministracaoPage() {
       pode_incluir_registros: false, pode_excluir_requisicoes: false,
       pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
       acesso_portal_unidade: false, sendWelcomeEmail: true,
+      regiao_suporte: null as string | null,
     });
   };
 

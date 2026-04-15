@@ -473,33 +473,47 @@ export function AppSidebar() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            {useAdminStore.getState().supportConfigs
-              .filter(c => c.status === 'ativo' && (selectedRegion === 'all' || c.regiao === selectedRegion))
-              .map((config) => (
-                <div key={config.id} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{config.regiao}</span>
-                    <div className="px-2 py-0.5 rounded-full bg-white/10 text-[9px] font-bold text-white">RESPONSÁVEL</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white">
-                      {config.responsavel.charAt(0)}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white leading-tight">{config.responsavel}</h4>
-                      <p className="text-xs text-white/50">{config.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 pt-1">
-                    <Button variant="outline" size="sm" className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs">
-                      Teams
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs">
-                      E-mail
-                    </Button>
-                  </div>
+            {[
+              { key: 'go_es', label: 'Goiás e Espírito Santo' },
+              { key: 'demais', label: 'Demais Unidades' },
+            ].map((regiao) => {
+              const analysts = supportAnalysts.filter(a => a.regiao_suporte === regiao.key);
+              return (
+                <div key={regiao.key} className="space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{regiao.label}</span>
+                  {analysts.length === 0 ? (
+                    <p className="text-xs text-white/40 italic">Nenhum responsável cadastrado</p>
+                  ) : (
+                    analysts.map((analyst) => (
+                      <div key={analyst.id} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white">
+                            {analyst.nome_completo?.charAt(0) || '?'}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white leading-tight">{analyst.nome_completo}</h4>
+                            <p className="text-xs text-white/50">{analyst.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <Button variant="outline" size="sm" className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs">
+                            Teams
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs"
+                            onClick={() => window.open(`mailto:${analyst.email}`, '_blank')}
+                          >
+                            E-mail
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-            ))}
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>

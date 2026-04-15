@@ -535,12 +535,12 @@ export default function AdministracaoPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                     <TableRow>
+                    <TableRow>
                       <TableHead className="text-left">Nome / E-mail</TableHead>
-                      <TableHead>Perfil / Cargo</TableHead>
-                      <TableHead>Unidades</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Último Acesso</TableHead>
+                      <TableHead className="text-left">Perfil / Cargo</TableHead>
+                      <TableHead className="text-left">Unidades</TableHead>
+                      <TableHead className="text-left">Status</TableHead>
+                      <TableHead className="text-left">Último Acesso</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -562,25 +562,25 @@ export default function AdministracaoPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <Badge variant="outline" className="w-fit text-[11px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100">{user.perfil}</Badge>
-                            <span className="text-[11px] text-slate-500 font-medium">{user.cargo}</span>
+                        <TableCell className="text-left">
+                          <div className="flex flex-col gap-0.5 items-start">
+                            <Badge variant="outline" className="w-fit text-[10px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100 uppercase tracking-tighter">{user.perfil}</Badge>
+                            <span className="text-[11px] text-slate-500 font-medium ml-0.5">{user.cargo}</span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-left">
                           {user.visualiza_todas_unidades ? (
                             <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Todas</Badge>
                           ) : (
                             <span className="text-[11px] text-slate-500">{user.unidades_vinculadas?.length || 0} unid.</span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-left">
                           <Badge className={`${getStatusBadge(user.status)} font-bold text-[11px] uppercase border-0`}>
                             {user.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-slate-500 font-medium">
+                        <TableCell className="text-left text-xs text-slate-500 font-medium">
                           {user.ultimo_acesso ? new Date(user.ultimo_acesso).toLocaleDateString('pt-BR') : 'Nunca'}
                         </TableCell>
                         <TableCell className="text-right">

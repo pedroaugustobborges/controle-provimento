@@ -826,7 +826,7 @@ export default function AdministracaoPage() {
                 </div>
                 <div className="space-y-1">
                   <Label>Status</Label>
-                  <select className="w-full border rounded-md px-3 py-2 text-sm" value={supportForm.status} onChange={(e) => setSupportForm(f => ({ ...f, status: e.target.value }))}>
+                  <select className="w-full border rounded-md px-3 py-2 text-sm" value={supportForm.status} onChange={(e) => setSupportForm(f => ({ ...f, status: e.target.value as 'ativo' | 'inativo' }))}>
                     <option value="ativo">Ativo</option>
                     <option value="inativo">Inativo</option>
                   </select>

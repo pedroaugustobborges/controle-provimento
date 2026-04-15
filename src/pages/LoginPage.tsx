@@ -509,27 +509,51 @@ function UnitsCarousel() {
             <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
           </div>
 
-          <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
-            {slide.sections.map((section) => (
-              <div key={section.title}>
-                <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
-                  {section.title}
-                </span>
-                <div className="space-y-1.5">
-                  {section.units.map((u, i) => (
-                    <div
-                      key={u.name}
-                      className="group px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
-                      style={{ animationDelay: `${i * 50}ms` }}
-                    >
-                      <div className="text-[12px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
-                      <div className="text-[10px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
-                    </div>
-                  ))}
+          {slide.sections.length >= 2 && slide.state === 'Goiás' ? (
+            <div className="grid grid-cols-2 gap-4 animate-[fadeIn_0.5s_ease-out]">
+              {slide.sections.map((section) => (
+                <div key={section.title}>
+                  <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
+                    {section.title}
+                  </span>
+                  <div className="space-y-1">
+                    {section.units.map((u, i) => (
+                      <div
+                        key={u.name}
+                        className="group px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
+                        style={{ animationDelay: `${i * 50}ms` }}
+                      >
+                        <div className="text-[11px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
+                        <div className="text-[9px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4 animate-[fadeIn_0.5s_ease-out]">
+              {slide.sections.map((section) => (
+                <div key={section.title}>
+                  <span className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] mb-2 block">
+                    {section.title}
+                  </span>
+                  <div className="space-y-1.5">
+                    {section.units.map((u, i) => (
+                      <div
+                        key={u.name}
+                        className="group px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default"
+                        style={{ animationDelay: `${i * 50}ms` }}
+                      >
+                        <div className="text-[12px] font-semibold text-white/80 group-hover:text-white transition-colors">{u.name}</div>
+                        <div className="text-[10px] text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug">{u.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Footer with dots */}

@@ -1,21 +1,14 @@
 
 
-## Plano: Centralizar slides com poucas unidades e corrigir corte em slides densos
+## Plano: Centralizar stats e atualizar rodapé do card
 
 ### O que será feito
-1. Centralizar verticalmente o conteúdo nos slides que têm poucas unidades (ES, MS, etc.)
-2. Reduzir padding/fonte nos slides com muitas unidades para eliminar corte (GO Hospitalares)
+1. Centralizar números e labels dos 4 stats na coluna esquerda do card unificado
+2. Substituir o texto redundante "6 estados · 20+ unidades" no canto inferior direito por texto institucional
 
 ### Alterações em `src/pages/LoginPage.tsx`
 
-**Centralização vertical:**
-- Envolver o conteúdo de cada slide em `flex flex-col justify-center h-full` para que slides com poucas unidades fiquem centralizados no espaço disponível
-
-**Eliminar corte em slides densos:**
-- Reduzir padding dos itens de unidade de `py-1.5` para `py-1`
-- Reduzir `gap` entre itens
-- Reduzir fonte do nome para `text-[10px]` e descrição para `text-[8px]` se necessário
-- Compactar o header do slide (título + subtítulo) para liberar mais espaço vertical
-
-**Resultado:** Todos os slides visualmente equilibrados — poucos itens centralizados, muitos itens compactos mas completos — sem alterar a altura do card.
+- Adicionar `text-center` e `items-center` nos containers de cada stat para centralizar número + label
+- Substituir o texto do rodapé inferior direito por algo como "Sistema de Controle de Provimento" ou "Gestão Integrada AGIR"
+- Manter todo o restante inalterado
 

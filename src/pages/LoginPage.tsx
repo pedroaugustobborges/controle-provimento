@@ -362,6 +362,7 @@ function UnidadeLoginModal({ open, onClose }: { open: boolean; onClose: () => vo
 const slidesData = [
   {
     state: 'Goiás',
+    subtitle: 'Unidades Hospitalares',
     color: 'hsl(200,70%,40%)',
     sections: [
       {
@@ -375,6 +376,13 @@ const slidesData = [
           { name: 'HEJ', desc: 'Hospital Estadual de Jataí Dr. Serafim de Carvalho — Jataí' },
         ],
       },
+    ],
+  },
+  {
+    state: 'Goiás',
+    subtitle: 'Rede Teia Agir',
+    color: 'hsl(200,70%,40%)',
+    sections: [
       {
         title: 'Rede Teia Agir',
         units: [

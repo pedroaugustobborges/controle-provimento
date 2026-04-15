@@ -866,9 +866,9 @@ export default function VagasPage() {
                   <TableHead className="min-w-[120px]">Tipo</TableHead>
                   <TableHead className="min-w-[180px]">Unidade</TableHead>
                   <TableHead className="min-w-[150px]">Seção</TableHead>
-                  <TableHead className="min-w-[150px]">Status</TableHead>
-                  <TableHead className="min-w-[80px]">Vaga(s)</TableHead>
-                  <TableHead className="min-w-[80px]">Banco</TableHead>
+                  <TableHead className="min-w-[150px] text-center">Status</TableHead>
+                  <TableHead className="min-w-[80px] text-center">Vaga(s)</TableHead>
+                  <TableHead className="min-w-[80px] text-center">Banco</TableHead>
                   <TableHead className="text-right min-w-[80px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>

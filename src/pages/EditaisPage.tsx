@@ -53,8 +53,8 @@ export default function EditaisPage() {
                   <TableHead>Nº Processo</TableHead>
                   <TableHead>Nº Edital</TableHead>
                   <TableHead>Abertura</TableHead>
-                  <TableHead>Etapa</TableHead>
-                  <TableHead>Publicação</TableHead>
+                  <TableHead className="text-center">Etapa</TableHead>
+                  <TableHead className="text-center">Publicação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -72,10 +72,10 @@ export default function EditaisPage() {
                     <TableCell className="font-mono text-xs text-slate-700">{e.numero_processo || '—'}</TableCell>
                     <TableCell className="font-mono text-xs text-primary font-bold">{e.numero_edital || '—'}</TableCell>
                     <TableCell className="text-xs text-slate-600">{formatDate(e.data_abertura_edital)}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Badge className={`${getEtapaColor(e.etapa_atual)} font-bold text-[11px]`}>{ETAPA_LABELS[e.etapa_atual]}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Badge className={`${getPublicacaoColor(e.status_publicacao)} font-bold text-[11px]`}>
                         {e.status_publicacao === 'pendente' ? 'Pendente' : e.status_publicacao === 'publicado' ? 'Publicado' : 'Encerrado'}
                       </Badge>

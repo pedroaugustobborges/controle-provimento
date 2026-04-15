@@ -611,58 +611,75 @@ export default function LoginPage() {
           </div>
         </header>
 
-        {/* Main area */}
+        {/* Main area — unified card */}
         <main className="flex-1 flex items-center px-6 lg:px-12 pb-12">
-          <div className="w-full max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-            {/* Left text */}
-            <div className="flex-1 space-y-6 text-center lg:text-left max-w-[560px]">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[hsl(200,60%,55%)] text-[10px] font-semibold uppercase tracking-[0.2em]">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Sistema ativo
-              </div>
+          <div className="w-full max-w-[1100px] mx-auto">
+            {/* Unified glassmorphism card */}
+            <div className="relative">
+              <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
+              <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
+                <div className="flex flex-col lg:flex-row">
+                  {/* Left column — info + CTAs */}
+                  <div className="flex-[45] p-8 lg:p-10 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-white/[0.06]">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[hsl(200,60%,55%)] text-[10px] font-semibold uppercase tracking-[0.2em] w-fit mb-5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Sistema ativo
+                    </div>
 
-              <h1 className="text-3xl lg:text-5xl font-bold text-white leading-[1.15]">
-                Controle de{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(190,80%,55%)] to-[hsl(210,80%,60%)]">
-                  Provimento
-                </span>
-              </h1>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-white leading-[1.15] mb-3">
+                      Controle de{' '}
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(190,80%,55%)] to-[hsl(210,80%,60%)]">
+                        Provimento
+                      </span>
+                    </h1>
 
-              <p className="text-[hsl(210,20%,52%)] text-sm lg:text-base leading-relaxed">
-                Referência nacional na gestão de unidades de saúde, a AGIR atua com rigor técnico, eficiência administrativa e inovação em hospitais, clínicas e policlínicas distribuídos em 6 estados brasileiros.
-              </p>
+                    <p className="text-[hsl(210,20%,52%)] text-sm leading-relaxed mb-5">
+                      Referência nacional na gestão de unidades de saúde, a AGIR atua com rigor técnico e eficiência em hospitais, clínicas e policlínicas em 6 estados.
+                    </p>
 
-              {/* Stats */}
-              <div className="grid grid-cols-4 gap-4 pt-2">
-                {highlights.map((h) => (
-                  <div key={h.label} className="text-center lg:text-left">
-                    <div className="text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">{h.value}</div>
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-[hsl(210,20%,42%)] font-medium mt-0.5 leading-tight">{h.label}</div>
+                    {/* Stats */}
+                    <div className="grid grid-cols-4 gap-3 mb-6">
+                      {highlights.map((h) => (
+                        <div key={h.label} className="text-center lg:text-left">
+                          <div className="text-lg lg:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">{h.value}</div>
+                          <div className="text-[9px] uppercase tracking-[0.12em] text-[hsl(210,20%,42%)] font-medium mt-0.5 leading-tight">{h.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA buttons */}
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => setShowLogin(true)}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
+                        <LogIn className="h-4 w-4" /> Login Provimento
+                        <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                      </button>
+                      <button onClick={() => setShowUnidadeLogin(true)}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-300 whitespace-nowrap border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
+                        <Building2 className="h-4 w-4" /> Login Unidade
+                      </button>
+                      <button onClick={() => setShowAccess(true)}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white/70 whitespace-nowrap border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
+                        <UserPlus className="h-4 w-4" /> Solicitar acesso
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
 
-              {/* CTA buttons */}
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-2 justify-center lg:justify-start">
-                <button onClick={() => setShowLogin(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
-                  <LogIn className="h-4 w-4" /> Login Provimento
-                  <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                </button>
-                <button onClick={() => setShowUnidadeLogin(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-emerald-300 whitespace-nowrap border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
-                  <Building2 className="h-4 w-4" /> Login Unidade
-                </button>
-                <button onClick={() => setShowAccess(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-white/70 whitespace-nowrap border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-                  <UserPlus className="h-4 w-4" /> Solicitar acesso
-                </button>
+                  {/* Right column — carousel */}
+                  <div className="flex-[55] p-6 lg:p-8 h-[420px]">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
+                        <MapPin className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-white">Presença Nacional</h3>
+                        <p className="text-[9px] text-[hsl(210,20%,45%)] uppercase tracking-[0.15em]">Unidades geridas pela AGIR</p>
+                      </div>
+                    </div>
+                    <UnitsCarouselInline />
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Right – Interactive Carousel */}
-            <div className="hidden lg:flex flex-1 items-center justify-center max-w-[520px]">
-              <UnitsCarousel />
             </div>
           </div>
         </main>

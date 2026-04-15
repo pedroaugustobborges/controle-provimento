@@ -470,9 +470,7 @@ export default function AdministracaoPage() {
     return map[status] || 'bg-slate-100 text-slate-500';
   };
 
-  return loading && users.length === 0 ? (
-    <PageSkeleton />
-  ) : (
+  return (
     <div className="space-y-6 pb-10">
       <PageHeader 
         title="Configurações do Sistema"

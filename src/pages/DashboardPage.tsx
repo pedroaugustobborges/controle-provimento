@@ -570,7 +570,7 @@ export default function DashboardPage() {
                     <p className="text-2xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
                   )}
                   {stat.description && (
-                    <p className="text-[9px] font-bold text-slate-400 italic leading-none">{stat.description}</p>
+                    <p className="text-[9px] font-bold text-slate-400 italic leading-none whitespace-nowrap">{stat.description}</p>
                   )}
                 </div>
               </CardContent>

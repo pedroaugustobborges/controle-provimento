@@ -467,8 +467,8 @@ export default function ConvocacoesPage() {
                     <TableRow>
                      <TableHead>Candidato</TableHead>
                      <TableHead>Vaga / Cargo</TableHead>
-                     <TableHead>Data/Hora</TableHead>
-                     <TableHead>Status</TableHead>
+                     <TableHead className="text-center">Data/Hora</TableHead>
+                     <TableHead className="text-center">Status</TableHead>
                      <TableHead>Unidade</TableHead>
                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
@@ -556,7 +556,7 @@ export default function ConvocacoesPage() {
                     <TableHead>Cargo</TableHead>
                     <TableHead>Unidade</TableHead>
                     <TableHead>Data</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -566,7 +566,7 @@ export default function ConvocacoesPage() {
                       <TableCell className="text-sm text-slate-600">{conv.cargo}</TableCell>
                       <TableCell className="text-sm text-slate-600">{conv.unidade}</TableCell>
                       <TableCell className="text-sm text-slate-600">{formatDate(conv.data_convocacao)}</TableCell>
-                      <TableCell><StatusBadge status={conv.status} /></TableCell>
+                      <TableCell className="text-center"><StatusBadge status={conv.status} /></TableCell>
                     </TableRow>
                   ))}
                   {filteredConvocacoes.length === 0 && (

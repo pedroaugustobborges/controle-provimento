@@ -56,6 +56,20 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [showSupport, setShowSupport] = useState(false);
+  const [supportAnalysts, setSupportAnalysts] = useState<Tables<'profiles'>[]>([]);
+
+  useEffect(() => {
+    if (showSupport) {
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('status', 'ativo')
+        .not('regiao_suporte', 'is', null)
+        .then(({ data }) => {
+          setSupportAnalysts(data || []);
+        });
+    }
+  }, [showSupport]);
 
   const handleLogout = useCallback(async () => {
     try {

@@ -1,103 +1,126 @@
 import { Unit, Role } from "@/types/chat";
 
 export const UNITS: Unit[] = [
-  // GOIÁS E VITÓRIA
+  // GOIÁS E ESPÍRITO SANTO
   { 
     id: 'hecad', 
     name: 'HECAD', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Thays Silva'], 
     assistants: ['Ana Julia'] 
   },
   { 
     id: 'crer', 
     name: 'CRER', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Samara Silva'], 
     assistants: ['Ana Caroline'] 
   },
   { 
     id: 'agir', 
     name: 'AGIR', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'hugol', 
     name: 'HUGOL', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Sannya Laryssa'], 
     assistants: ['Eduarda Oliveira', 'Flavia Vaz'] 
   },
   { 
     id: 'hds', 
     name: 'HDS', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'policlinica', 
     name: 'POLICLÍNICA', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'jatai', 
     name: 'JATAÍ', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Geovana Miranda'], 
     assistants: ['Nara Rubia'] 
   },
   { 
     id: 'vitoria', 
     name: 'VITÓRIA (SÃO PEDRO/SUÁ)', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Geovana Miranda'], 
     assistants: ['Nara Rubia'] 
   },
   { 
     id: 'teia-anapolis', 
     name: 'TEIA ANAPOLIS', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'teia-canedo', 
     name: 'TEIA CANEDO', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'teia-aparecida', 
     name: 'TEIA APARECIDA', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   { 
     id: 'teia-goiania', 
     name: 'TEIA GOIÂNIA', 
-    region: 'GOIÁS E VITÓRIA', 
+    region: 'GOIÁS E ESPÍRITO SANTO', 
     analysts: ['Julyana Marçal'], 
     assistants: ['Karielly Alves'] 
   },
   
-  // OUTRAS UNIDADES
+  // AMAZONAS
   { 
-    id: 'dourados', 
-    name: 'DOURADOS', 
-    region: 'OUTRAS UNIDADES', 
+    id: 'chs', 
+    name: 'CHS', 
+    region: 'AMAZONAS', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
   },
   { 
-    id: 'chs', 
-    name: 'CHS', 
+    id: 'teia-man', 
+    name: 'TEIA MAN', 
+    region: 'AMAZONAS', 
+    analysts: ['Beatriz Almeida Pontes'], 
+    assistants: [] 
+  },
+  { 
+    id: 'teia-man-2', 
+    name: 'TEIA MAN 2', 
+    region: 'AMAZONAS', 
+    analysts: ['Beatriz Almeida Pontes'], 
+    assistants: [] 
+  },
+  { 
+    id: 'teia-man-3', 
+    name: 'TEIA MAN 3', 
+    region: 'AMAZONAS', 
+    analysts: ['Beatriz Almeida Pontes'], 
+    assistants: [] 
+  },
+
+  // OUTRAS UNIDADES
+  { 
+    id: 'dourados', 
+    name: 'DOURADOS', 
     region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 
@@ -126,27 +149,6 @@ export const UNITS: Unit[] = [
   { 
     id: 'teia-pin', 
     name: 'TEIA PIN', 
-    region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'teia-man', 
-    name: 'TEIA MAN', 
-    region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'teia-man-2', 
-    name: 'TEIA MAN 2', 
-    region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'teia-man-3', 
-    name: 'TEIA MAN 3', 
     region: 'OUTRAS UNIDADES', 
     analysts: ['Beatriz Almeida Pontes'], 
     assistants: [] 

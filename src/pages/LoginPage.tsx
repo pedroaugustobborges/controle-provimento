@@ -468,33 +468,77 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Right map with interactive zoom */}
+            {/* Right – Interactive Units Card */}
             <div className="hidden lg:flex flex-1 items-center justify-center max-w-[520px]">
-              <div
-                className="relative overflow-hidden rounded-2xl cursor-zoom-in"
-                onMouseMove={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = ((e.clientX - rect.left) / rect.width) * 100;
-                  const y = ((e.clientY - rect.top) / rect.height) * 100;
-                  const img = e.currentTarget.querySelector('img') as HTMLImageElement;
-                  if (img) {
-                    img.style.transformOrigin = `${x}% ${y}%`;
-                    img.style.transform = 'scale(2)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  const img = e.currentTarget.querySelector('img') as HTMLImageElement;
-                  if (img) {
-                    img.style.transform = 'scale(1)';
-                  }
-                }}
-              >
-                <div className="absolute inset-0 bg-[hsl(200,70%,40%)]/8 rounded-full blur-[80px] scale-110 pointer-events-none" />
-                <img
-                  src={mapaNobg}
-                  alt="Presença AGIR no Brasil"
-                  className="relative w-[504px] h-auto drop-shadow-2xl transition-transform duration-300 ease-out"
-                />
+              <div className="relative w-full animate-fade-in">
+                {/* Glow */}
+                <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
+
+                <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
+                  {/* Header */}
+                  <div className="px-6 py-4 border-b border-white/[0.06] flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
+                      <MapPin className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Presença Nacional</h3>
+                      <p className="text-[10px] text-[hsl(210,20%,45%)] uppercase tracking-[0.15em]">Unidades geridas pela AGIR</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-5">
+                    {/* Goiás */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="h-3.5 w-3.5 text-[hsl(200,70%,55%)]" />
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-[0.12em]">Goiás</span>
+                        <div className="flex-1 h-px bg-white/[0.06]" />
+                        <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">10 unidades</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {['CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLÍNICA', 'JATAÍ', 'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO'].map((u, i) => (
+                          <span
+                            key={u}
+                            className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/[0.05] border border-white/[0.08] text-white/70 hover:bg-[hsl(200,70%,40%)]/20 hover:border-[hsl(200,70%,50%)]/30 hover:text-white hover:scale-105 transition-all duration-200 cursor-default"
+                            style={{ animationDelay: `${i * 60}ms` }}
+                          >
+                            {u}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Espírito Santo */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="h-3.5 w-3.5 text-emerald-400" />
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-[0.12em]">Espírito Santo — Vitória</span>
+                        <div className="flex-1 h-px bg-white/[0.06]" />
+                        <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">2 unidades</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {['SÃO PEDRO', 'SUÁ'].map((u, i) => (
+                          <span
+                            key={u}
+                            className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/[0.05] border border-white/[0.08] text-white/70 hover:bg-emerald-500/20 hover:border-emerald-500/30 hover:text-white hover:scale-105 transition-all duration-200 cursor-default"
+                            style={{ animationDelay: `${(i + 10) * 60}ms` }}
+                          >
+                            {u}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-3 border-t border-white/[0.06] flex items-center justify-between">
+                    <span className="text-[10px] text-[hsl(210,15%,35%)]">6 estados · 20+ unidades</span>
+                    <div className="flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[10px] text-emerald-400/80 font-medium">Operacional</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

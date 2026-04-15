@@ -467,10 +467,10 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 whitespace-nowrap">
               Visão Geral do Provimento
             </h1>
-            <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+            <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
               <Activity className="h-3.5 w-3.5 text-primary animate-pulse" /> Monitoramento em Tempo Real
             </p>
           </div>
@@ -533,7 +533,7 @@ export default function DashboardPage() {
                       }
                       setSelectedUnits(newUnits);
                     }}
-                    className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 ${
+                    className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 whitespace-nowrap ${
                       isSelected
                         ? 'bg-primary/5 text-primary border-primary shadow-sm'
                         : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 hover:bg-slate-50'
@@ -548,7 +548,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         {stats.map((stat, idx) => {
           const isVagasStat = !stat.label.includes('CR');
           const isBancosStat = stat.label.includes('CR');
@@ -558,11 +558,11 @@ export default function DashboardPage() {
           return (
             <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
               <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
-              <CardContent className="p-5">
+              <CardContent className="p-3.5">
                 <div className={`p-2.5 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
-                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight">{stat.label}</p>
+                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight whitespace-nowrap">{stat.label}</p>
                 <div className="flex flex-col gap-0.5">
                   {showSkeleton ? (
                     <Skeleton className="h-8 w-16 my-0.5" />
@@ -570,7 +570,7 @@ export default function DashboardPage() {
                     <p className="text-2xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
                   )}
                   {stat.description && (
-                    <p className="text-[9px] font-bold text-slate-400 italic leading-none">{stat.description}</p>
+                    <p className="text-[9px] font-bold text-slate-400 italic leading-none whitespace-nowrap">{stat.description}</p>
                   )}
                 </div>
               </CardContent>

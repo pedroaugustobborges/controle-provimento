@@ -142,7 +142,17 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         .eq('id', user.id)
         .maybeSingle();
       if (error) throw error;
-      if (profile) set({ currentUser: profile as User });
+      if (profile) {
+        // Sync email from auth if different
+        if (user.email && profile.email !== user.email) {
+          await supabase
+            .from('profiles')
+            .update({ email: user.email })
+            .eq('id', user.id);
+          (profile as any).email = user.email;
+        }
+        set({ currentUser: profile as User });
+      }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
     }

@@ -1683,7 +1683,7 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
                 <TableHead >Data/Hora</TableHead>
                 <TableHead >Candidato</TableHead>
                 <TableHead className="text-center">Class.</TableHead>
-                <TableHead >Status</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead >E-doc</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
@@ -1704,7 +1704,7 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
                     </div>
                   </TableCell>
                   <TableCell className="text-center font-bold text-slate-600">{c.classificacao}º</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="outline" className="text-[11px] font-bold">
                       {String(c.status || 'SEM STATUS').toUpperCase()}
                     </Badge>

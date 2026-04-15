@@ -52,12 +52,12 @@ export function InactivityLogout() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click', 'input', 'change', 'focus', 'pointerdown', 'pointerup'];
     
     const handleEvent = () => resetTimer();
 
     events.forEach(event => {
-      window.addEventListener(event, handleEvent);
+      window.addEventListener(event, handleEvent, { capture: true });
     });
 
     const interval = setInterval(() => {
@@ -74,7 +74,7 @@ export function InactivityLogout() {
 
     return () => {
       events.forEach(event => {
-        window.removeEventListener(event, handleEvent);
+        window.removeEventListener(event, handleEvent, { capture: true });
       });
       clearInterval(interval);
     };

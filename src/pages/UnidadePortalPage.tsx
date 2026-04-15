@@ -100,7 +100,7 @@ export default function UnidadePortalPage() {
   const [obsText, setObsText] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [obsEdits, setObsEdits] = useState<Record<string, {
-    status: string; horario_plantao: string; aceito: boolean; observacao: string;
+    status: string; horario_plantao: string; aceito: boolean; observacao: string; unidade_destino: string;
   }>>({});
   const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
   const [obsFilterUnidade, setObsFilterUnidade] = useState('all');
@@ -655,7 +655,8 @@ export default function UnidadePortalPage() {
                        <TableRow>
                         <TableHead>Candidato</TableHead>
                         <TableHead>Unidade</TableHead>
-                        <TableHead className="min-w-[160px]">Status/Destino</TableHead>
+                        <TableHead className="min-w-[140px]">Status</TableHead>
+                        <TableHead className="min-w-[140px]">Unidade Destino</TableHead>
                         <TableHead className="min-w-[130px]">Horário/Plantão</TableHead>
                         <TableHead className="text-center">Aceito</TableHead>
                         <TableHead className="min-w-[200px]">Observação</TableHead>
@@ -677,7 +678,7 @@ export default function UnidadePortalPage() {
                         if (sliced.length === 0) {
                           return (
                             <TableRow>
-                              <TableCell colSpan={7} className="py-12 text-center text-slate-400">
+                              <TableCell colSpan={8} className="py-12 text-center text-slate-400">
                                 <div className="flex flex-col items-center gap-2">
                                   <Edit3 className="h-8 w-8 opacity-20" />
                                   <p className="text-xs font-bold">Nenhuma convocação encontrada</p>
@@ -713,6 +714,14 @@ export default function UnidadePortalPage() {
                                     ))}
                                   </SelectContent>
                                 </Select>
+                              </TableCell>
+                              <TableCell className="py-3 px-4">
+                                <Input
+                                  value={edit.unidade_destino || ''}
+                                  onChange={(e) => setObsField(c.id, c, 'unidade_destino', e.target.value)}
+                                  placeholder="Unidade Destino"
+                                  className="h-9 text-xs rounded-lg border-slate-200"
+                                />
                               </TableCell>
                               <TableCell className="py-3 px-4">
                                 <Input

@@ -161,7 +161,7 @@ export function AppSidebar() {
     { title: 'Relatórios', url: '/relatorios', icon: FileSpreadsheet, visible: isManagement || hasFullAccess },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
     { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
-    { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: isManagement || hasFullAccess, external: true },
+    { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: true, external: true },
   ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess]);
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);

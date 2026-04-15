@@ -1,26 +1,21 @@
 
 
-## Plano: Layout unificado premium — Login + Carrossel integrados
+## Plano: Centralizar slides com poucas unidades e corrigir corte em slides densos
 
 ### O que será feito
-1. **Corrigir unidades cortadas em GO**: Reduzir padding/espaçamento dos itens para que todas caibam no `h-[380px]` sem corte
-2. **Unificar login + carrossel em um único card premium**: Substituir o layout atual (texto à esquerda + carrossel à direita) por um **único container glassmorphism** com duas colunas integradas
+1. Centralizar verticalmente o conteúdo nos slides que têm poucas unidades (ES, MS, etc.)
+2. Reduzir padding/fonte nos slides com muitas unidades para eliminar corte (GO Hospitalares)
 
 ### Alterações em `src/pages/LoginPage.tsx`
 
-**Layout unificado (seção `main`):**
-- Criar um **único card glassmorphism grande** que ocupe a área central da página
-- **Coluna esquerda** (~45%): Título "Controle de Provimento", descrição da AGIR, stats (20+ unidades, 6 estados, etc.), e os 3 botões de ação (Login Provimento, Login Unidade, Solicitar Acesso)
-- **Coluna direita** (~55%): Carrossel de unidades integrado — sem borda/card próprio, flui naturalmente dentro do container unificado
-- Separador vertical sutil (linha `border-white/[0.06]`) entre as duas colunas
-- Tudo dentro do mesmo `backdrop-blur`, mesmas bordas, mesma sombra
+**Centralização vertical:**
+- Envolver o conteúdo de cada slide em `flex flex-col justify-center h-full` para que slides com poucas unidades fiquem centralizados no espaço disponível
 
-**Correção das unidades cortadas:**
-- Reduzir `py-2` para `py-1.5` nos itens de unidade
-- Reduzir `text-[12px]` para `text-[11px]` no nome
-- Ajustar `h-[380px]` para `h-[420px]` se necessário para acomodar o slide de GO com 6 unidades
+**Eliminar corte em slides densos:**
+- Reduzir padding dos itens de unidade de `py-1.5` para `py-1`
+- Reduzir `gap` entre itens
+- Reduzir fonte do nome para `text-[10px]` e descrição para `text-[8px]` se necessário
+- Compactar o header do slide (título + subtítulo) para liberar mais espaço vertical
 
-**Responsivo:**
-- Em telas `< lg`: layout empilhado (login em cima, carrossel embaixo)
-- Manter modais inalterados
+**Resultado:** Todos os slides visualmente equilibrados — poucos itens centralizados, muitos itens compactos mas completos — sem alterar a altura do card.
 

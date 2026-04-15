@@ -860,7 +860,7 @@ export default function AdministracaoPage() {
                 <TableHeader className="sticky top-0 z-10">
                   <TableRow>
                     <TableHead>Status Original Importado</TableHead>
-                    <TableHead>Quantidade</TableHead>
+                    <TableHead className="text-center">Quantidade</TableHead>
                     <TableHead>Grupo/Card de Destino</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -892,7 +892,7 @@ export default function AdministracaoPage() {
                       .map(([status, data]) => (
                         <TableRow key={status} className="hover:bg-slate-50/50 transition-colors h-14">
                           <TableCell className="text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold text-xs">
                               {data.count}
                             </span>
@@ -1095,9 +1095,9 @@ export default function AdministracaoPage() {
                     <TableRow>
                       <TableHead className="w-[150px]">Data</TableHead>
                       <TableHead className="w-[200px]">Usuário</TableHead>
-                      <TableHead className="w-[120px]">Tipo</TableHead>
+                      <TableHead className="w-[120px] text-center">Tipo</TableHead>
                       <TableHead>Mensagem</TableHead>
-                      <TableHead className="w-[120px]">Status</TableHead>
+                      <TableHead className="w-[120px] text-center">Status</TableHead>
                       <TableHead className="w-[100px] text-right">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1114,7 +1114,7 @@ export default function AdministracaoPage() {
                               <span className="text-[10px] text-slate-400 font-medium">{item.user_email}</span>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge className={cn(
                               "text-[10px] font-bold uppercase",
                               item.tipo === 'sugestao' ? "bg-blue-100 text-blue-700" :
@@ -1130,7 +1130,7 @@ export default function AdministracaoPage() {
                               {item.mensagem}
                             </p>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge className={cn(
                               "text-[10px] font-bold uppercase",
                               item.status === 'pendente' ? "bg-slate-100 text-slate-500" :

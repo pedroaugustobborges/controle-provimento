@@ -789,8 +789,8 @@ export default function DashboardPage() {
               <TableHeader className="sticky top-0 z-10">
                 <TableRow>
                   <TableHead className="text-center">Requisição</TableHead>
-                  <TableHead className="text-center">Unidade</TableHead>
-                  <TableHead className="text-center">Cargo</TableHead>
+                  <TableHead className="text-left">Unidade</TableHead>
+                  <TableHead className="text-left">Cargo</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Dias Parado</TableHead>
                 </TableRow>
@@ -812,13 +812,13 @@ export default function DashboardPage() {
                       <TableCell className="py-4 px-6 text-center font-mono text-[11px] font-bold text-slate-400 group-hover:text-primary transition-colors">
                         #{vaga.displayId}
                       </TableCell>
-                      <TableCell className="py-4 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      <TableCell className="py-4 px-6 text-left">
+                        <div className="flex items-center gap-2">
                           <Building2 className="h-3 w-3 text-slate-300" />
                           <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{normalizeUnitName(vaga.unidade)}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-4 px-6 text-center">
+                      <TableCell className="py-4 px-6 text-left">
                         <span className="text-xs font-bold text-slate-700">{vaga.cargo || 'Não informado'}</span>
                       </TableCell>
                       <TableCell className="py-4 px-6 text-center">

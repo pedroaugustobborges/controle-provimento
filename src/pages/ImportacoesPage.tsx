@@ -289,8 +289,8 @@ export default function ImportacoesPage() {
                    <TableRow>
                     <TableHead>Lote / Arquivo</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Registros</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Registros</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                     <TableHead>Data/Hora</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -327,7 +327,7 @@ export default function ImportacoesPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{getStatusBadge(h.status)}</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(h.status)}</TableCell>
                       <TableCell className="text-xs text-slate-500 font-medium">
                         {formatDate(h.data_hora || h.data || '')}
                         <p className="text-[9px] text-slate-400">{h.usuario}</p>
@@ -385,7 +385,7 @@ export default function ImportacoesPage() {
                     <TableHead>Data de Upload</TableHead>
                     <TableHead>Usuário</TableHead>
                     <TableHead>Tamanho</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -415,7 +415,7 @@ export default function ImportacoesPage() {
                       <TableCell className="text-xs text-slate-500">
                         {(f.tamanho / 1024).toFixed(1)} KB
                       </TableCell>
-                      <TableCell>{getFileStatusBadge(f.status)}</TableCell>
+                      <TableCell className="text-center">{getFileStatusBadge(f.status)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

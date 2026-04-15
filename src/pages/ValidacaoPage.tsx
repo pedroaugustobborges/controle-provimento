@@ -156,19 +156,19 @@ export default function ValidacaoPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data/Hora</TableHead>
+                <TableHead className="text-center">Data/Hora</TableHead>
                 <TableHead>Candidato</TableHead>
                 <TableHead>Unidade / Cargo</TableHead>
                 <TableHead>Requisição</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pendentes.map((c) => (
                 <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <TableCell>
-                    <div className="flex flex-col">
+                  <TableCell className="text-center">
+                    <div className="flex flex-col items-center">
                       <span className="text-sm font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
                       <span className="text-[11px] text-slate-400 font-medium">{c.horario}</span>
                     </div>
@@ -186,7 +186,7 @@ export default function ValidacaoPage() {
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs text-primary font-bold">{c.requisicao}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[11px] font-bold">
                       {STATUS_CONVOCACAO_LABELS[c.status]}
                     </Badge>

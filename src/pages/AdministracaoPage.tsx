@@ -773,7 +773,7 @@ export default function AdministracaoPage() {
                 <Table>
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow>
-                      <TableHead className="pl-6">Data / Hora</TableHead>
+                      <TableHead>Data / Hora</TableHead>
                       <TableHead >Usuário</TableHead>
                       <TableHead >Ação / Módulo</TableHead>
                       <TableHead >Registro</TableHead>
@@ -783,7 +783,7 @@ export default function AdministracaoPage() {
                   <TableBody>
                     {auditLogs.map((log) => (
                       <TableRow key={log.id} className="text-xs">
-                        <TableCell className="pl-6 font-mono text-slate-500">
+                        <TableCell className="font-mono text-slate-500">
                           {log.created_at ? new Date(log.created_at).toLocaleDateString('pt-BR') : log.data} <br/> 
                           {log.created_at ? new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : log.hora}
                         </TableCell>
@@ -836,9 +836,9 @@ export default function AdministracaoPage() {
               <Table>
                 <TableHeader className="sticky top-0 z-10">
                   <TableRow>
-                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider">Status Original Importado</TableHead>
-                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider text-center">Quantidade</TableHead>
-                    <TableHead className="px-6 py-4 font-bold text-[11px] text-slate-400 uppercase tracking-wider">Grupo/Card de Destino</TableHead>
+                    <TableHead>Status Original Importado</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Grupo/Card de Destino</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-slate-50 font-medium">
@@ -868,13 +868,13 @@ export default function AdministracaoPage() {
                       .sort((a, b) => b[1].count - a[1].count)
                       .map(([status, data]) => (
                         <TableRow key={status} className="hover:bg-slate-50/50 transition-colors h-14">
-                          <TableCell className="px-6 py-4 text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
-                          <TableCell className="px-6 py-4 text-center">
+                          <TableCell className="text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
+                          <TableCell>
                             <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold text-xs">
                               {data.count}
                             </span>
                           </TableCell>
-                          <TableCell className="px-6 py-4">
+                          <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={`h-2 w-2 rounded-full ${
                                 data.group.includes('Fila') ? 'bg-amber-400' : 
@@ -1074,8 +1074,8 @@ export default function AdministracaoPage() {
                       <TableHead className="w-[200px]">Usuário</TableHead>
                       <TableHead className="w-[120px]">Tipo</TableHead>
                       <TableHead>Mensagem</TableHead>
-                      <TableHead className="w-[120px] text-center">Status</TableHead>
-                      <TableHead className="w-[100px] text-right pr-6">Ação</TableHead>
+                      <TableHead className="w-[120px]">Status</TableHead>
+                      <TableHead className="w-[100px] text-right">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1107,7 +1107,7 @@ export default function AdministracaoPage() {
                               {item.mensagem}
                             </p>
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell>
                             <Badge className={cn(
                               "text-[10px] font-bold uppercase",
                               item.status === 'pendente' ? "bg-slate-100 text-slate-500" :
@@ -1117,7 +1117,7 @@ export default function AdministracaoPage() {
                               {item.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right pr-6">
+                          <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">

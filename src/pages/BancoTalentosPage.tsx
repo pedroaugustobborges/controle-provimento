@@ -867,6 +867,7 @@ export default function BancoTalentosPage() {
                     <SelectContent>
                       <SelectItem value="todas">Todas Regiões</SelectItem>
                       <SelectItem value="GO_ES">GO e ES</SelectItem>
+                      <SelectItem value="AMAZONAS">Amazonas</SelectItem>
                       <SelectItem value="OUTRAS_UNIDADES">Outras Unidades</SelectItem>
                     </SelectContent>
                   </Select>
@@ -901,8 +902,13 @@ export default function BancoTalentosPage() {
                        <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
                       <TableCell>
                         {group.regiao ? (
-                          <Badge variant="outline" className={`text-[10px] font-bold ${group.regiao === 'GO_ES' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
-                            {group.regiao === 'GO_ES' ? 'GO/ES' : 'OUTRAS'}
+                          <Badge variant="outline" className={cn(
+                            "text-[10px] font-bold",
+                            group.regiao === 'GO_ES' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                            group.regiao === 'AMAZONAS' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            'bg-slate-50 text-slate-600 border-slate-200'
+                          )}>
+                            {group.regiao === 'GO_ES' ? 'GO/ES' : group.regiao === 'AMAZONAS' ? 'AMAZONAS' : 'OUTRAS'}
                           </Badge>
                         ) : (
                           <span className="text-slate-300">—</span>

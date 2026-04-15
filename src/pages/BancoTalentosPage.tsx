@@ -1262,7 +1262,7 @@ export default function BancoTalentosPage() {
                   <TableHead >Arquivo</TableHead>
                   <TableHead className="text-center">Registros</TableHead>
                   <TableHead >Usuário</TableHead>
-                  <TableHead >Status</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1278,7 +1278,7 @@ export default function BancoTalentosPage() {
                     </TableCell>
                     <TableCell className="text-xs text-center font-bold">{h.total_novos}</TableCell>
                     <TableCell className="text-xs text-slate-500">{h.usuario}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">Concluído</Badge>
                     </TableCell>
                     <TableCell className="text-right">

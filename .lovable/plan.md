@@ -1,30 +1,15 @@
 
 
-## Plano: Corrigir painel de Histórico de Acessos e Usuários Online
+## Plano: Padronizar cabeçalho da tabela "Vagas sem Movimentação"
 
-### Problemas identificados
+### Diagnóstico necessário
+Preciso localizar onde a tabela "Vagas sem Movimentação" é renderizada para verificar se usa o componente `Table` padrão ou tem estilos customizados no header.
 
-1. **Join quebrado no histórico**: O `AccessHistoryPopoverContent` tenta fazer `profiles:user_id(...)` no select, mas `user_sessions.user_id` tem FK para `auth.users`, não para `profiles`. O Supabase exige FK direta para joins automáticos — o join falha silenciosamente e retorna `profiles: null`.
+### Alterações previstas
 
-2. **Cast `as any`**: As queries usam `from('user_sessions' as any)` que mascara erros de tipo e impede detecção de problemas.
+**Arquivo a identificar (provavelmente `DashboardPage.tsx` ou `VagasPage.tsx`):**
+- Garantir que a tabela usa `TableHeader`/`TableHead` de `@/components/ui/table` sem classes extras que sobrescrevam o estilo padrão (fundo `#221f44`, texto branco uppercase `11px` bold)
+- Remover quaisquer classes inline que alterem cor de fundo, cor de texto ou tamanho de fonte do cabeçalho
 
-### Alterações
-
-**Migração SQL — adicionar FK de `user_sessions` para `profiles`:**
-```sql
-ALTER TABLE public.user_sessions 
-ADD CONSTRAINT user_sessions_profile_fkey 
-FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
-```
-Isso permite o join `profiles:user_id(...)` funcionar.
-
-**`src/components/AccessHistoryPopoverContent.tsx`:**
-- Remover os casts `as any` das queries
-- Usar o join correto com a nova FK: `profiles!user_sessions_profile_fkey(nome_completo, perfil, cargo)`
-- Adicionar fallback: se o join retornar null, buscar profiles separadamente por user_id
-- Adicionar tratamento de erro visível (toast) em vez de só console.error
-
-**Sem alterações em `UserSessionTracker.tsx`** — está funcionando corretamente (17 sessões registradas no banco).
-
-**Sem alterações no "Online Agora"** — usa Presence (tempo real, sem banco) e funciona quando os usuários estão na mesma página.
+O componente `Table` em `src/components/ui/table.tsx` já define o estilo correto — basta garantir que não há sobreposição.
 

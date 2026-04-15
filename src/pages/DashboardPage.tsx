@@ -470,7 +470,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-black tracking-tight text-slate-900">
               Visão Geral do Provimento
             </h1>
-            <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+            <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
               <Activity className="h-3.5 w-3.5 text-primary animate-pulse" /> Monitoramento em Tempo Real
             </p>
           </div>

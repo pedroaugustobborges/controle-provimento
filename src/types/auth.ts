@@ -76,6 +76,7 @@ export interface User {
   pode_excluir_requisicoes: boolean;
   pode_editar_configuracoes: boolean;
   pode_gerenciar_usuarios: boolean;
+  regiao_suporte?: string | null;
   acesso_portal_unidade?: boolean;
   ultimo_acesso?: string;
   created_at?: string;

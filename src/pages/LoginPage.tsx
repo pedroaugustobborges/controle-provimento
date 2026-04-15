@@ -495,7 +495,6 @@ export default function LoginPage() {
                   src={mapaNobg}
                   alt="Presença AGIR no Brasil"
                   className="relative w-[504px] h-auto drop-shadow-2xl transition-transform duration-300 ease-out"
-                  style={{ filter: 'drop-shadow(0 0 2px white) drop-shadow(0 0 4px white)' }}
                 />
               </div>
             </div>

@@ -883,8 +883,8 @@ export default function BancoTalentosPage() {
                     <TableHead className="whitespace-nowrap">Proc. Seletivo</TableHead>
                     <TableHead className="whitespace-nowrap">Cargo</TableHead>
                     <TableHead className="whitespace-nowrap">Unidade</TableHead>
-                    <TableHead className="whitespace-nowrap">Região</TableHead>
-                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap text-center">Região</TableHead>
+                    <TableHead className="whitespace-nowrap text-center">Status</TableHead>
                     <TableHead className="whitespace-nowrap text-center">Qtd.</TableHead>
                     <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
                   </TableRow>
@@ -901,7 +901,7 @@ export default function BancoTalentosPage() {
                         <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
                        <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         {group.regiao ? (
                           <Badge variant="outline" className={cn(
                             "text-[10px] font-bold",
@@ -915,7 +915,7 @@ export default function BancoTalentosPage() {
                           <span className="text-slate-300">—</span>
                         )}
                       </TableCell>
-                      <TableCell>{getStatusBadge(group.status)}</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(group.status)}</TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline" className="font-bold bg-slate-50 text-[10px]">{group.qtdBanco || group.candidatos.length}</Badge>
                       </TableCell>

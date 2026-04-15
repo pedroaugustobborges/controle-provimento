@@ -491,8 +491,11 @@ export const AgieChat = memo(() => {
                   {step === 'BY_REGION' && (
                     <div className="pt-8 space-y-3">
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Selecione a Região</p>
-                      <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('GOIÁS E VITÓRIA'); setStep('BY_UNIT'); }}>
-                        GOIÁS E VITÓRIA <ChevronLeft className="w-4 h-4 rotate-180" />
+                      <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('GOIÁS E ESPÍRITO SANTO'); setStep('BY_UNIT'); }}>
+                        GOIÁS E ESPÍRITO SANTO <ChevronLeft className="w-4 h-4 rotate-180" />
+                      </Button>
+                      <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('AMAZONAS'); setStep('BY_UNIT'); }}>
+                        AMAZONAS <ChevronLeft className="w-4 h-4 rotate-180" />
                       </Button>
                       <Button variant="outline" className="w-full justify-between h-12 bg-white" onClick={() => { setSelectedRegion('OUTRAS UNIDADES'); setStep('BY_UNIT'); }}>
                         OUTRAS UNIDADES <ChevronLeft className="w-4 h-4 rotate-180" />

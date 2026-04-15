@@ -722,13 +722,11 @@ export default function AdministracaoPage() {
               {(() => {
                 const analistas = users.filter(u => u.cargo === 'Analista Administrativo' && u.regiao_suporte && u.status === 'ativo');
                 const regiaoLabels: Record<string, string> = {
-                  goiania: 'Unidades Goiânia',
-                  espirito_santo: 'Unidades Espírito Santo',
+                  go_es: 'Goiás e Espírito Santo',
                   demais: 'Demais Unidades',
                 };
                 const regiaoUnidades: Record<string, string[]> = {
-                  goiania: REGIOES_SELECAO['Goiânia'] || [],
-                  espirito_santo: REGIOES_SELECAO['Vitória (ES)'] || [],
+                  go_es: [...(REGIOES_SELECAO['Goiânia'] || []), ...(REGIOES_SELECAO['Vitória (ES)'] || [])],
                   demais: REGIOES_SELECAO['Demais Unidades'] || [],
                 };
 
@@ -742,9 +740,9 @@ export default function AdministracaoPage() {
                   );
                 }
 
-                const regioes = ['goiania', 'espirito_santo', 'demais'];
+                const regioes = ['go_es', 'demais'];
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {regioes.map(regiao => {
                       const responsaveis = analistas.filter(a => a.regiao_suporte === regiao);
                       return (
@@ -1268,8 +1266,7 @@ export default function AdministracaoPage() {
                   <Select value={newUser.regiao_suporte || ''} onValueChange={(v) => setNewUser(p => ({ ...p, regiao_suporte: v || null }))}>
                     <SelectTrigger><SelectValue placeholder="Selecione a região..." /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="goiania">Unidades Goiânia</SelectItem>
-                      <SelectItem value="espirito_santo">Unidades Espírito Santo</SelectItem>
+                      <SelectItem value="go_es">Goiás e Espírito Santo</SelectItem>
                       <SelectItem value="demais">Demais Unidades</SelectItem>
                     </SelectContent>
                   </Select>
@@ -1565,8 +1562,7 @@ export default function AdministracaoPage() {
                     <Select value={editingUser.regiao_suporte || ''} onValueChange={(v) => setEditingUser((p: any) => ({ ...p, regiao_suporte: v || null }))}>
                       <SelectTrigger><SelectValue placeholder="Selecione a região..." /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="goiania">Unidades Goiânia</SelectItem>
-                        <SelectItem value="espirito_santo">Unidades Espírito Santo</SelectItem>
+                        <SelectItem value="go_es">Goiás e Espírito Santo</SelectItem>
                         <SelectItem value="demais">Demais Unidades</SelectItem>
                       </SelectContent>
                     </Select>

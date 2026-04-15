@@ -320,6 +320,7 @@ export default function AdministracaoPage() {
         avatar_url: editingUser.avatar_url,
         modulos_acesso: editingUser.modulos_acesso,
         permissoes_modulo: editingUser.permissoes_modulo,
+        regiao_suporte: editingUser.cargo === 'Analista Administrativo' ? editingUser.regiao_suporte : null,
       });
       toast.success('Dados do usuário atualizados.');
       setIsEditUserOpen(false);

@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { LogIn, Mail, Lock, Eye, EyeOff, X, UserPlus, ChevronRight, Building2, Briefcase, User, MessageSquare, Users } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, X, UserPlus, ChevronRight, Building2, Briefcase, User, MessageSquare, Users, MapPin } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import logoWhite from '@/assets/logo-agir-white.png';
-import mapaNobg from '@/assets/mapa-agir-nobg.png';
 
 // ─── Login Modal ───
 function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {

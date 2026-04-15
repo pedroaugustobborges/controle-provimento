@@ -118,8 +118,8 @@ export default function FilaEditaisPage() {
     
     // Labels conforme solicitado
     const REGION_LABELS: Record<string, string> = {
-      'Goiânia': 'Goiás',
-      'Vitória': 'Vitória (ES)',
+      'Goiás e Espírito Santo': 'Goiás e Espírito Santo',
+      'Amazonas': 'Amazonas',
       'Demais Unidades': 'Outras Unidades'
     };
 

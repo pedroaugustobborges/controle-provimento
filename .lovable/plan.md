@@ -1,19 +1,26 @@
 
 
-## Plano: Dividir Goiás em 2 slides e fixar altura do card
+## Plano: Layout unificado premium — Login + Carrossel integrados
 
 ### O que será feito
-Corrigir a variação de tamanho do carrossel e dividir o slide de Goiás em dois slides independentes (Hospitalares e Rede Teia), mantendo layout consistente.
+1. **Corrigir unidades cortadas em GO**: Reduzir padding/espaçamento dos itens para que todas caibam no `h-[380px]` sem corte
+2. **Unificar login + carrossel em um único card premium**: Substituir o layout atual (texto à esquerda + carrossel à direita) por um **único container glassmorphism** com duas colunas integradas
 
-### Alterações
+### Alterações em `src/pages/LoginPage.tsx`
 
-**`src/pages/LoginPage.tsx`:**
-- Separar o objeto Goiás no `slidesData` em dois entries:
-  - `{ state: 'Goiás', subtitle: 'Unidades Hospitalares', units: [CRER, HDS, HUGOL, HECAD, Policlínica, HEJ] }`
-  - `{ state: 'Goiás', subtitle: 'Rede Teia Agir', units: [Teia Goiânia, Teia Aparecida, Teia Senador Canedo, Teia Anápolis] }`
-- Remover o layout condicional `grid-cols-2` para Goiás — todos os slides usam o mesmo layout de coluna única
-- Definir **altura fixa** no container do slide (`h-[380px]` ou similar) para evitar redimensionamento
-- Usar `overflow-hidden` para garantir que nenhum conteúdo extrapole
-- Atualizar contagem de dots de navegação para refletir o novo total de slides
-- Ordem: GO Hospitais → GO Teia → AM → SP → MS → MT → ES
+**Layout unificado (seção `main`):**
+- Criar um **único card glassmorphism grande** que ocupe a área central da página
+- **Coluna esquerda** (~45%): Título "Controle de Provimento", descrição da AGIR, stats (20+ unidades, 6 estados, etc.), e os 3 botões de ação (Login Provimento, Login Unidade, Solicitar Acesso)
+- **Coluna direita** (~55%): Carrossel de unidades integrado — sem borda/card próprio, flui naturalmente dentro do container unificado
+- Separador vertical sutil (linha `border-white/[0.06]`) entre as duas colunas
+- Tudo dentro do mesmo `backdrop-blur`, mesmas bordas, mesma sombra
+
+**Correção das unidades cortadas:**
+- Reduzir `py-2` para `py-1.5` nos itens de unidade
+- Reduzir `text-[12px]` para `text-[11px]` no nome
+- Ajustar `h-[380px]` para `h-[420px]` se necessário para acomodar o slide de GO com 6 unidades
+
+**Responsivo:**
+- Em telas `< lg`: layout empilhado (login em cima, carrossel embaixo)
+- Manter modais inalterados
 

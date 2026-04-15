@@ -1,29 +1,27 @@
 
 
-## Plano: Vincular Suporte Técnico aos Analistas Administrativos
+## Plano: Corrigir opções de Região de Suporte para apenas 2
 
 ### Problema
-A aba "Suporte Técnico" está vazia e desconectada dos usuários reais. O fluxo correto é:
-1. Na gestão de usuários, ao cadastrar/editar um usuário com cargo "Analista Administrativo", deve haver uma opção para definir a **região de responsabilidade** (Goiânia, Espírito Santo, Demais Unidades)
-2. A aba "Suporte Técnico" deve **puxar automaticamente** os analistas administrativos e exibir seus dados organizados por região
+No formulário de editar/criar usuário, a opção "Região de Suporte" mostra 3 opções separadas (Goiânia, Espírito Santo, Demais) quando deveria ter apenas **2 opções**:
+- **Goiás e Espírito Santo** (uma única região)
+- **Demais Unidades**
 
-### Solução
+A aba "Suporte Técnico" também está dividida incorretamente em 3 regiões.
 
-**1. Adicionar campo `regiao_suporte` na tabela `profiles`** (migration)
-- Novo campo `regiao_suporte TEXT` (valores: `'goiania'`, `'espirito_santo'`, `'demais'`, ou `null`)
-- Identifica quais analistas são responsáveis por qual região
+### Correções em `src/pages/AdministracaoPage.tsx`
 
-**2. Atualizar formulário de usuário em `AdministracaoPage.tsx`**
-- Quando o cargo for "Analista Administrativo", exibir um Select para escolher a região de suporte: "Unidades Goiânia", "Unidades Espírito Santo", "Demais Unidades"
-- Salvar no campo `regiao_suporte` do perfil
+**1. Formulário de Novo Usuário (linha ~1271)** — Substituir as 3 opções por:
+- `<SelectItem value="go_es">Goiás e Espírito Santo</SelectItem>`
+- `<SelectItem value="demais">Demais Unidades</SelectItem>`
 
-**3. Atualizar aba "Suporte Técnico"**
-- Em vez de configurações manuais, buscar diretamente da tabela `profiles` os usuários que têm `regiao_suporte` preenchido
-- Exibir cards por região mostrando: nome, email, Teams do analista responsável
-- Manter a tabela `support_configs` para mensagens adicionais/configurações extras se necessário
+**2. Formulário de Editar Usuário (linha ~1568)** — Mesma correção acima.
+
+**3. Aba Suporte Técnico (linha ~725)** — Unificar as regiões `goiania` e `espirito_santo` em uma só (`go_es`), com label "Goiás e Espírito Santo" e unidades de ambas as regiões juntas. Remover a iteração sobre 3 regiões, usar apenas 2.
+
+**4. Migration** — Atualizar valores existentes no banco: converter `goiania` e `espirito_santo` para `go_es`.
 
 ### Arquivos afetados
-- Nova migration: adicionar coluna `regiao_suporte` em `profiles`
-- `src/pages/AdministracaoPage.tsx` — formulário de usuário + aba suporte
-- `src/store/adminStore.ts` — incluir `regiao_suporte` nos dados do usuário
+- `src/pages/AdministracaoPage.tsx` — formulários + aba suporte
+- Nova migration SQL — normalizar dados existentes
 

@@ -74,7 +74,7 @@ export function InactivityLogout() {
 
     return () => {
       events.forEach(event => {
-        window.removeEventListener(event, handleEvent);
+        window.removeEventListener(event, handleEvent, { capture: true });
       });
       clearInterval(interval);
     };

@@ -121,6 +121,8 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
       numero_vagas: 1,
       secao: '',
       data_abertura: new Date().toISOString().split('T')[0],
+      is_pcd: false,
+      is_teia: false,
     });
   };
 

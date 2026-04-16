@@ -495,6 +495,78 @@ export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
 
 export const STATUS_LABELS = STATUS_VAGA_LABELS;
 
+// Mapeamento simplificado para filtros - agrupa status sinônimos
+export const STATUS_FILTER_OPTIONS: Record<string, { label: string; matches: StatusVaga[] }> = {
+  'CONCLUÍDA': {
+    label: 'Concluída',
+    matches: ['CONCLUÍDAS', 'CONCLUÍDA', 'admissao_efetivada'],
+  },
+  'MOVIMENTAÇÃO INTERNA': {
+    label: 'Movimentação Interna',
+    matches: ['MOV. INTERNA', 'MOVIMENTAÇÃO INTERNA', 'movimentacao_interna'],
+  },
+  'ADMISSÃO': {
+    label: 'Admissão',
+    matches: ['ADMISSÃO ENVIADA', 'ADMISSÃO', 'em_admissao', 'admissao_enviada'],
+  },
+  'EM EDITAL': {
+    label: 'Em Edital',
+    matches: ['EM ANDAMENTO', 'EM EDITAL', 'em_edital', 'em_triagem', 'entrevista', 'aberta'],
+  },
+  'FILA DE EDITAIS': {
+    label: 'Fila de Editais',
+    matches: ['FILA DE EDITAIS', 'PUBLICAR EDITAL', 'PUBLICAR NOVO EDITAL', 'publicar_novo_edital'],
+  },
+  'REALIZAR CONVOCAÇÃO': {
+    label: 'Realizar Convocação',
+    matches: ['REALIZAR CONVOCAÇÃO', 'CONVOCAÇÕES', 'realizar_convocacao'],
+  },
+  'DOCUMENTAÇÃO': {
+    label: 'Documentação',
+    matches: ['DOCUMENTAÇÃO', 'documentacao_ok_azul_pendente', 'documentacao_pendente_azul_ok', 'em_documentacao'],
+  },
+  'VAGA DE LIDERANÇA': {
+    label: 'Vaga de Liderança',
+    matches: ['VAGA DE LIDERANÇA', 'ESTRATÉGICAS', 'vaga_lideranca'],
+  },
+  'AGUARDANDO UNIDADE': {
+    label: 'Aguardando Unidade',
+    matches: ['AGUARDANDO UNIDADE', 'aguardar_unidade', 'aguardar_anuencia'],
+  },
+  'SUSPENSA': {
+    label: 'Suspensa',
+    matches: ['SUSPENSA', 'PAUSADA'],
+  },
+  'CANCELADAS': {
+    label: 'Canceladas',
+    matches: ['CANCELADAS', 'cancelada', 'dispensa'],
+  },
+  'SEM STATUS': {
+    label: 'Sem Status',
+    matches: ['SEM STATUS'],
+  },
+};
+
+// Mapeamento de qualquer status para seu label unificado de exibição
+export const STATUS_DISPLAY_MAP: Record<string, string> = {};
+Object.entries(STATUS_FILTER_OPTIONS).forEach(([_key, { label, matches }]) => {
+  matches.forEach(m => {
+    STATUS_DISPLAY_MAP[m] = label;
+  });
+});
+// Adicionar labels uppercase também
+Object.entries(STATUS_VAGA_LABELS).forEach(([k]) => {
+  if (!STATUS_DISPLAY_MAP[k]) {
+    // Tentar encontrar pelo agrupamento
+    for (const { label, matches } of Object.values(STATUS_FILTER_OPTIONS)) {
+      if (matches.includes(k as StatusVaga)) {
+        STATUS_DISPLAY_MAP[k] = label;
+        break;
+      }
+    }
+  }
+});
+
 export const STATUS_CONVOCACAO_LABELS: Record<StatusConvocacao, string> = {
   aceite: 'Aceite',
   recusa_plantao: 'Recusa Plantão',

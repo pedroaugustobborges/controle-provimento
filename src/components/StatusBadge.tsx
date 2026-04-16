@@ -1,4 +1,4 @@
-import { STATUS_LABELS } from '@/types/vaga';
+import { STATUS_LABELS, STATUS_DISPLAY_MAP } from '@/types/vaga';
 import { getStatusColor } from '@/lib/vagaUtils';
 import type { StatusGeral } from '@/types/vaga';
 
@@ -11,9 +11,11 @@ export function StatusBadge({ status }: { status: StatusGeral }) {
     );
   }
 
+  const displayLabel = STATUS_DISPLAY_MAP[status] || STATUS_LABELS[status] || status || 'Sem Status';
+
   return (
     <span className={`status-badge ${getStatusColor(status)}`}>
-      {STATUS_LABELS[status] || status || 'Sem Status'}
+      {displayLabel}
     </span>
   );
 }

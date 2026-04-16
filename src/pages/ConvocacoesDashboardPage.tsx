@@ -181,32 +181,28 @@ export default function ConvocacoesDashboardPage() {
         <Card className="lg:col-span-2 shadow-sm border-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-primary" />
-              Distribuição por Status
+              <TrendingUp className="h-4 w-4 text-primary" />
+              Histórico de Convocações
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={dynamicPieConfig} className="h-[320px] w-full">
-              <PieChart>
-                <Pie
-                  data={statusDistribution}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={110}
-                  innerRadius={50}
-                  dataKey="value"
-                  nameKey="name"
-                  strokeWidth={2}
-                  stroke="hsl(var(--background))"
-                >
-                  {statusDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-              </PieChart>
-            </ChartContainer>
+            {historicoConvocacoes.length === 0 ? (
+              <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground">
+                Sem convocações registradas ainda.
+              </div>
+            ) : (
+              <ChartContainer config={historicoChartConfig} className="h-[320px] w-full">
+                <LineChart data={historicoConvocacoes} margin={{ left: 8, right: 24, top: 16, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <ChartTooltip cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '3 3' }} content={<HistoricoTooltip />} />
+                  <Line type="monotone" dataKey="total" stroke="var(--color-total)" strokeWidth={2.5} dot={{ r: 4, fill: 'hsl(221, 50%, 62%)', strokeWidth: 0 }} activeDot={{ r: 6 }}>
+                    <LabelList dataKey="total" position="top" fontSize={11} fontWeight={600} className="fill-foreground" />
+                  </Line>
+                </LineChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </div>

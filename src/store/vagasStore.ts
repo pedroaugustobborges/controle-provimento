@@ -4,6 +4,7 @@ import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Ale
 import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
+import { toast } from 'sonner';
 
 const PAGE_SIZE = 1000;
 
@@ -138,8 +139,11 @@ interface VagasState {
   fetchBancos: (incremental?: boolean) => Promise<void>;
   fetchAll: () => Promise<void>;
   fetchImportHistory: () => Promise<void>;
+  fetchNotificacoes: () => Promise<void>;
+  createNotificacao: (notif: { titulo: string; mensagem: string; tipo?: string; unidade?: string; registro_id?: string; regiao?: string }) => Promise<void>;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
+  updateVagaAsync: (id: string, data: Partial<Vaga>) => Promise<boolean>;
   deleteVaga: (id: string) => void;
   addBanco: (banco: BancoTalentos) => void;
   addBancos: (bancos: BancoTalentos[]) => void;
@@ -194,6 +198,7 @@ export const useVagasStore = create<VagasState>()(
       validacoes: mockValidacoes,
       importHistory: [],
       importedFiles: [],
+      notificacoes: [],
       tarefas: (() => {
         const now = new Date();
         const today = now.toISOString().slice(0, 10);
@@ -233,7 +238,6 @@ export const useVagasStore = create<VagasState>()(
         ] as MensagemHistorico[];
       })(),
       temNovasMensagens: false,
-      notificacoes: [],
       isLoading: false,
       isInitialLoad: true,
       isLoadingVagas: false,
@@ -243,10 +247,7 @@ export const useVagasStore = create<VagasState>()(
       setVagas: (vagas) => set({ vagas }),
       fetchVagas: async (incremental = false) => {
         if (get().isLoadingVagas) return;
-        
-        // Evita múltiplas chamadas simultâneas ou redundantes
         if (!incremental && get().vagas.length > 0 && !get().isInitialLoad) return;
-        if (get().isLoadingVagas) return;
 
         set({ isLoadingVagas: true });
         try {
@@ -264,9 +265,7 @@ export const useVagasStore = create<VagasState>()(
       },
       fetchBancos: async (incremental = false) => {
         if (get().isLoadingBancos) return;
-        
         if (!incremental && get().bancos.length > 0 && !get().isInitialLoad) return;
-        if (get().isLoadingBancos) return;
 
         set({ isLoadingBancos: true });
         try {
@@ -288,7 +287,8 @@ export const useVagasStore = create<VagasState>()(
           await Promise.all([
             get().fetchVagas(),
             get().fetchBancos(),
-            get().fetchImportHistory()
+            get().fetchImportHistory(),
+            get().fetchNotificacoes()
           ]);
         } finally {
           set({ isLoading: false, isInitialLoad: false });
@@ -347,7 +347,6 @@ export const useVagasStore = create<VagasState>()(
             } as ImportHistory;
           });
 
-          // Deduplication Logic: Show only one entry per file/user/day in UI, but don't delete from DB
           const filtered = mapped.filter((item, index) => {
             const dateStr = item.data_hora ? new Date(item.data_hora).toISOString().split('T')[0] : '';
             const key = `${item.arquivo}_${item.usuario_id}_${dateStr}`;
@@ -366,10 +365,88 @@ export const useVagasStore = create<VagasState>()(
           set({ importHistory: [], importedFiles: [] });
         }
       },
+      fetchNotificacoes: async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data, error } = await supabase
+            .from('notificacoes')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+          
+          if (error) throw error;
+          set({ notificacoes: data || [] });
+        } catch (err) {
+          console.error('Error fetching notifications:', err);
+        }
+      },
+      createNotificacao: async (notif) => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { useAdminStore } = await import('./adminStore');
+          const { currentUser } = useAdminStore.getState();
+          
+          await supabase.from('notificacoes').insert({
+            ...notif,
+            remetente_id: currentUser?.id,
+            remetente_nome: currentUser?.nome_completo,
+            created_at: new Date().toISOString()
+          });
+        } catch (err) {
+          console.error('Error creating notification:', err);
+        }
+      },
       addVagas: (newVagas) => set((s) => ({ vagas: [...newVagas, ...s.vagas] })),
       updateVaga: (id, data) => set((s) => ({
         vagas: s.vagas.map((v) => v.id === id ? { ...v, ...data } : v),
       })),
+      updateVagaAsync: async (id, data) => {
+        const { DatabaseService } = await import('@/services/databaseService');
+        const { useAdminStore } = await import('./adminStore');
+        const { currentUser } = useAdminStore.getState();
+        
+        if (!currentUser) {
+          toast.error("Usuário não autenticado.");
+          return false;
+        }
+
+        const currentVaga = get().vagas.find(v => v.id === id);
+        if (!currentVaga) return false;
+
+        const { data: updated, error } = await DatabaseService.saveWithConcurrency('vagas', {
+          ...currentVaga,
+          ...data,
+          id,
+          version: currentVaga.version || 0
+        }, currentUser.id);
+
+        if (error) {
+          if (error.message.includes('concorrência')) {
+            toast.error("Este registro foi atualizado por outro usuário enquanto você editava. Recarregue para ver a versão mais recente.", {
+              duration: 5000,
+            });
+          } else {
+            toast.error(error.message || "Erro ao atualizar vaga.");
+          }
+          return false;
+        }
+
+        if (updated) {
+          get().updateVaga(id, mapDbVaga(updated));
+          
+          // Emit internal notification
+          get().createNotificacao({
+            titulo: "Vaga Atualizada",
+            mensagem: `${currentUser.nome_completo} atualizou a vaga ${currentVaga.cargo} (${currentVaga.unidade})`,
+            unidade: currentVaga.unidade,
+            registro_id: id,
+            tipo: 'info'
+          });
+          
+          return true;
+        }
+        return false;
+      },
       deleteVaga: (id) => set((s) => ({
         vagas: s.vagas.filter((v) => v.id !== id),
       })),
@@ -405,7 +482,6 @@ export const useVagasStore = create<VagasState>()(
         try {
           const { DatabaseService } = await import('@/services/databaseService');
           const { success, error } = await DatabaseService.deleteImportBatch(id);
-          
           if (success) {
             set((s) => ({
               importedFiles: s.importedFiles.filter((f) => f.id !== id),
@@ -433,12 +509,9 @@ export const useVagasStore = create<VagasState>()(
         try {
           const { DatabaseService } = await import('@/services/databaseService');
           const { success, error } = await DatabaseService.deleteImportBatch(batchId);
-          
           if (success) {
             set((s) => {
-              // Find if we are deleting vagas or bancos to handle dependencies
               const vagasToRemove = s.vagas.filter(v => v.import_batch_id === batchId).map(v => v.id);
-              
               return {
                 vagas: s.vagas.filter((v) => v.import_batch_id !== batchId),
                 bancos: s.bancos.filter((b) => b.import_batch_id !== batchId),
@@ -486,7 +559,8 @@ export const useVagasStore = create<VagasState>()(
         importHistory: [], 
         importedFiles: [],
         tarefas: [],
-        alertas: []
+        alertas: [],
+        notificacoes: []
       }),
       getVaga: (id) => get().vagas.find((v) => v.id === id),
       getEditalByVaga: (vagaId) => get().editais.find((e) => e.vaga_id === vagaId),
@@ -494,19 +568,13 @@ export const useVagasStore = create<VagasState>()(
       getBancoByVaga: (vagaId) => {
         const state = get();
         const vaga = state.vagas.find(v => v.id === vagaId);
-        
         if (!vaga) return undefined;
-        
-        // 1. Try by ID first (Explicit link)
         if (vaga.banco_id) {
           const banco = state.bancos.find(b => b.id === vaga.banco_id);
           if (banco) return banco;
         }
-
         const vProc = (vaga.numero_processo || vaga.numero_requisicao || vaga.requisicao || '').trim();
         const vEdital = (vaga.numero_edital || '').trim();
-
-        // 2. Try by process number or edital number (Exact match)
         if (vProc || vEdital) {
           const matchedByNumber = state.bancos.find(b => {
              const bProc = (b.numero_processo || b.numero_processo_seletivo || '').trim();
@@ -516,18 +584,13 @@ export const useVagasStore = create<VagasState>()(
           });
           if (matchedByNumber) return matchedByNumber;
         }
-        
-        // Fallback: match by cargo and unit scope - relaxed matching
         const normalizedVagaCargo = normalizeCargo(vaga.cargo);
-        const normalizedVagaUnidade = normalizeCargo(vaga.unidade);
-        
         const getCargoTokens = (cargo: string) => {
           if (!cargo) return [];
           return normalizeCargo(cargo)
             .split(' ')
             .filter(word => word.length > 2 && !['das', 'dos', 'com', 'para', 'pela', 'pelo', 'uma', 'uns', 'nas', 'nos', 'est', 'estadual', 'hospital'].includes(word))
             .map(word => {
-              // Common abbreviations
               if (word === 'tec') return 'tecnico';
               if (word === 'aux') return 'auxiliar';
               if (word === 'esp') return 'especialista';
@@ -539,22 +602,15 @@ export const useVagasStore = create<VagasState>()(
               return word;
             });
         };
-        
         const vagaTokens = getCargoTokens(vaga.cargo);
-
-        // Specific units for matching as requested
         const goianiaUnits = ['crer', 'hugol', 'hecad', 'hds', 'agir', 'teia anapolis', 'teia canedo', 'teia aparecida', 'teia goiania', 'teia cen', 'teia man', 'teia man 3', 'teia pin'];
         const upaUnits = ['vitoria', 'sao pedro', 'sua', 'suá', 'vitoria (sao pedro/sua)'];
-
         const found = state.bancos.find(b => {
           const normalizedBancoUnidade = normalizeCargo(b.unidade || '');
           const normalizedVagaUnidade = normalizeCargo(vaga.unidade || '');
           const normalizedBancoCargo = normalizeCargo(b.cargo || '');
           const normalizedVagaCargo = normalizeCargo(vaga.cargo || '');
-
-          // --- Unit Matching conforme Item 8 ---
           let unitMatch = false;
-
           if (normalizedBancoUnidade === normalizedVagaUnidade) {
             unitMatch = true;
           } else if (normalizedBancoUnidade === 'goiania' && (goianiaUnits.includes(normalizedVagaUnidade) || normalizedVagaUnidade.startsWith('teia'))) {
@@ -568,71 +624,50 @@ export const useVagasStore = create<VagasState>()(
           } else if (normalizedBancoUnidade.includes('corporativo') || normalizedBancoUnidade.includes('agir')) {
             unitMatch = true;
           }
-
           if (!unitMatch) return false;
-
-          // --- Cargo Matching ---
           const hasStringMatch = normalizedBancoCargo === normalizedVagaCargo || 
                                 normalizedBancoCargo.includes(normalizedVagaCargo) || 
                                 normalizedVagaCargo.includes(normalizedBancoCargo);
-          
           if (hasStringMatch) return true;
-
           const bancoTokens = getCargoTokens(b.cargo);
           const commonTokens = vagaTokens.filter(t => bancoTokens.some(bt => bt.includes(t) || t.includes(bt)));
           const hasTokenMatch = vagaTokens.length > 0 && (
             commonTokens.length >= Math.ceil(vagaTokens.length * 0.4) || 
             (vagaTokens.length === 1 && commonTokens.length === 1)
           );
-
           return hasTokenMatch;
         });
-
         return found;
       },
       getConvocacoesByVaga: (vagaId) => get().convocacoes.filter(c => c.vaga_id === vagaId),
       getMatchingDiagnostic: () => {
         const state = get();
         const pendingVagas = state.vagas.filter(v => getCategoriaStatus(v) !== 'concluidas' && getCategoriaStatus(v) !== 'suspensa' && getCategoriaStatus(v) !== 'cancelada');
-        
         return pendingVagas.map(v => {
           const matchedBanco = get().getBancoByVaga(v.id);
           if (matchedBanco) return null;
-          
           const potentialBancos = state.bancos.filter(b => {
             const normV = (v.cargo || '').toLowerCase();
             const normB = (b.cargo || '').toLowerCase();
             return (b.unidade === v.unidade) || (normB && normV && (normB.includes(normV) || normV.includes(normB)));
           }).slice(0, 10);
-
           return {
             vagaId: v.id,
             vagaCargo: v.cargo,
             vagaUnidade: v.unidade,
             vagaReq: v.requisicao || v.numero_requisicao,
-            potentialBancos: potentialBancos.map(b => ({
-              cargo: b.cargo,
-              unidade: b.unidade,
-              status: b.status
-            }))
+            potentialBancos: potentialBancos.map(b => ({ cargo: b.cargo, unidade: b.unidade, status: b.status }))
           };
-        }).filter(Boolean);
+        }).filter(Boolean) as any[];
       },
       fixWrongImportBatches: () => {
         const state = get();
-        // Identify batches that are BANCO but should be VAGAS based on filename
         const wrongBatches = state.importHistory.filter(h => 
           h.tipo_importacao === 'banco' && 
           (h.arquivo || h.nome_arquivo || '').toLowerCase().includes('vagas')
         );
-
         if (wrongBatches.length > 0) {
-          console.log(`[FIX] Encontrados ${wrongBatches.length} lotes de importação incorretos.`);
-          
           wrongBatches.forEach(batch => {
-            console.log(`- Removendo lote ${batch.id} (${batch.arquivo}) do tipo BANCO...`);
-            // We can't automatically convert because the data structure is incompatible,
-            // so we delete them to allow a clean re-import with the new logic.
             get().deleteImportBatch(batch.id);
           });
         }
@@ -691,10 +726,41 @@ export const useVagasStore = create<VagasState>()(
             )
             .on(
               'postgres_changes',
+              { event: '*', schema: 'public', table: 'notificacoes' },
+              (payload) => {
+                const { eventType, new: newRow } = payload;
+                if (eventType === 'INSERT') {
+                  set((s) => {
+                    if (s.notificacoes.some(n => n.id === newRow.id)) return s;
+                    
+                    const newAlert = {
+                      id: newRow.id,
+                      titulo: newRow.titulo,
+                      mensagem: newRow.mensagem,
+                      tipo: newRow.tipo || 'informativo',
+                      status: 'nao_lido' as const,
+                      data_criacao: newRow.created_at,
+                      destinatario: newRow.usuario_id || 'todos',
+                      link: newRow.registro_id ? `/vagas/${newRow.registro_id}` : undefined
+                    };
+
+                    toast.info(newRow.titulo, {
+                      description: newRow.mensagem,
+                    });
+
+                    return {
+                      notificacoes: [newRow, ...s.notificacoes].slice(0, 50),
+                      alertas: [newAlert, ...s.alertas]
+                    };
+                  });
+                }
+              }
+            )
+            .on(
+              'postgres_changes',
               { event: '*', schema: 'public', table: 'importacoes' },
               (payload) => {
                 const { eventType } = payload;
-                // Re-fetch import history on any change since mapping is complex
                 if (eventType === 'INSERT' || eventType === 'UPDATE' || eventType === 'DELETE') {
                   get().fetchImportHistory();
                 }
@@ -702,7 +768,6 @@ export const useVagasStore = create<VagasState>()(
             )
             .subscribe();
 
-          // Store channel reference for cleanup
           (window as any).__realtimeChannel = channel;
         });
       },
@@ -727,7 +792,6 @@ export const useVagasStore = create<VagasState>()(
           }));
         }
         if (version < 4) {
-          // Force regeneration with profile-targeted alerts
           delete persistedState.alertas;
           delete persistedState.historicoMensagens;
           delete persistedState.tarefas;
@@ -746,9 +810,6 @@ export const useVagasStore = create<VagasState>()(
         removeItem: (name: string) => localStorage.removeItem(name),
       })),
       partialize: (state) => ({
-        // We only persist small UI state or configurations.
-        // Large arrays (vagas, bancos) are REMOVED from persistence to ensure
-        // instant app startup and prevent UI freezing from large JSON parsing/serialization.
         editais: state.editais,
         validacoes: state.validacoes,
         convocacoes: state.convocacoes,

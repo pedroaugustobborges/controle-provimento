@@ -292,7 +292,7 @@ function HorarioRow({ horario, convocacoes, blocked, blockedCount = 0, blocks = 
                  </span>
                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   {convocacoes.slice(0, 2).map(c => (
-                    <span key={c.id} className="flex items-center gap-1 truncate max-w-[120px]">
+                    <span key={c.id} className="flex items-center gap-1 break-words leading-tight max-w-[150px]">
                       <User className="h-2.5 w-2.5 shrink-0 text-muted-foreground/60" />
                       {c.nome_candidato}
                     </span>

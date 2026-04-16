@@ -140,7 +140,8 @@ export default function VagasPage() {
   }, [fetchVagas, fetchBancos]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'list';
-  const filtroEspecial = searchParams.get('filtro'); // 'teias' | 'pcd' | null
+  const rawFiltroEspecial = searchParams.get('filtro');
+  const filtroEspecial = rawFiltroEspecial === 'teia' ? 'teias' : rawFiltroEspecial; // 'teias' | 'pcd' | null
   const { currentUser, addAuditLog, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const navigate = useNavigate();
   const location = useLocation();

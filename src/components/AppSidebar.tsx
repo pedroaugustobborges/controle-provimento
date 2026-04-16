@@ -96,7 +96,7 @@ export function AppSidebar() {
       visible: getPermissions('vagas').canRead,
       subMenu: [
         { title: 'Todas as Vagas', url: '/vagas' },
-        { title: 'Unidades TEIAs', url: '/vagas?filtro=teia' },
+        { title: 'Unidades TEIAs', url: '/vagas?filtro=teias' },
         { title: 'Vagas PCD', url: '/vagas?filtro=pcd' },
       ]
     },

@@ -47,6 +47,10 @@ interface AdminState {
   // Backup actions
   generateBackup: () => void;
 
+  // Realtime
+  subscribeRealtime: () => void;
+  unsubscribeRealtime: () => void;
+
   // Legacy compat
   toggleUserStatus: (id: string) => Promise<void>;
 }
@@ -333,4 +337,80 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     };
     return { backups: [newBackup, ...s.backups] };
   }),
+
+  subscribeRealtime: () => {
+    const channel = supabase
+      .channel('realtime-admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        (payload) => {
+          const { eventType, new: newRow, old: oldRow } = payload;
+          if (eventType === 'INSERT' || eventType === 'UPDATE') {
+            const row = newRow as any;
+            set((s) => {
+              const exists = s.users.some((u) => u.id === row.id);
+              const mapped: User = {
+                id: row.id,
+                nome_completo: row.nome_completo || '',
+                email: row.email || '',
+                perfil: row.perfil || 'Analista',
+                cargo: row.cargo || '',
+                status: row.status || 'ativo',
+                visualiza_todas_unidades: row.visualiza_todas_unidades || false,
+                unidades_vinculadas: row.unidades_vinculadas || [],
+                pode_incluir_registros: row.pode_incluir_registros || false,
+                pode_excluir_requisicoes: row.pode_excluir_requisicoes || false,
+                pode_editar_configuracoes: row.pode_editar_configuracoes || false,
+                pode_gerenciar_usuarios: row.pode_gerenciar_usuarios || false,
+                ultimo_acesso: row.ultimo_acesso || '',
+                created_at: row.created_at || '',
+                avatar_url: row.avatar_url || '',
+                modulos_acesso: row.modulos_acesso || [],
+                permissoes_modulo: row.permissoes_modulo || {},
+                acesso_portal_unidade: row.acesso_portal_unidade || false,
+                regiao_suporte: row.regiao_suporte || '',
+              };
+              if (exists) {
+                const updatedUsers = s.users.map((u) => u.id === mapped.id ? mapped : u);
+                const updatedCurrent = s.currentUser?.id === mapped.id ? mapped : s.currentUser;
+                return { users: updatedUsers, currentUser: updatedCurrent };
+              }
+              return { users: [mapped, ...s.users] };
+            });
+          } else if (eventType === 'DELETE') {
+            const deletedId = (oldRow as any)?.id;
+            if (deletedId) {
+              set((s) => ({ users: s.users.filter((u) => u.id !== deletedId) }));
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'audit_logs' },
+        () => { get().fetchAuditLogs(); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedbacks' },
+        () => { get().fetchFeedbacks(); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_configs' },
+        () => { get().fetchSupportConfigs(); }
+      )
+      .subscribe();
+
+    (window as any).__realtimeAdminChannel = channel;
+  },
+
+  unsubscribeRealtime: () => {
+    const channel = (window as any).__realtimeAdminChannel;
+    if (channel) {
+      supabase.removeChannel(channel);
+      delete (window as any).__realtimeAdminChannel;
+    }
+  },
 }));

@@ -687,6 +687,17 @@ export const useVagasStore = create<VagasState>()(
                 }
               }
             )
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'importacoes' },
+              (payload) => {
+                const { eventType } = payload;
+                // Re-fetch import history on any change since mapping is complex
+                if (eventType === 'INSERT' || eventType === 'UPDATE' || eventType === 'DELETE') {
+                  get().fetchImportHistory();
+                }
+              }
+            )
             .subscribe();
 
           // Store channel reference for cleanup

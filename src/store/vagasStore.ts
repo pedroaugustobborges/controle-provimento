@@ -334,11 +334,8 @@ export const useVagasStore = create<VagasState>()(
         }, currentUser.id);
 
         if (error) {
-          if (error.message.includes('concorrência')) {
-            toast.error("Este registro foi atualizado por outro usuário. Recarregue.");
-          } else {
-            toast.error("Erro ao atualizar vaga.");
-          }
+          console.error('[updateVagaAsync] Error:', error);
+          toast.error(error.message || "Erro ao atualizar vaga.");
           return false;
         }
 

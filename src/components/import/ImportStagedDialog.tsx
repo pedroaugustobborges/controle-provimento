@@ -393,7 +393,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {sheetNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                      {sheetNames.filter(Boolean).map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

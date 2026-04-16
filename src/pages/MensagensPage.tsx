@@ -461,18 +461,18 @@ export default function MensagensPage() {
                   <div className="space-y-6 animate-in fade-in duration-300">
                     <h2 className="text-xl font-bold">O que há de novo no Sistema AGIR</h2>
                     <div className="space-y-4">
-                      {alertas.filter(a => a.tipo === 'informativo' || a.tipo === 'info').length === 0 ? (
+                      {alertas.filter(a => a.tipo === 'informativo').length === 0 ? (
                         <div className="py-20 text-center text-muted-foreground italic">
                           Nenhuma novidade cadastrada no momento.
                         </div>
                       ) : (
-                        alertas.filter(a => a.tipo === 'informativo' || a.tipo === 'info').map((alerta) => (
+                        alertas.filter(a => a.tipo === 'informativo').map((alerta) => (
                           <NewsItem 
                             key={alerta.id}
                             title={alerta.titulo}
                             date={format(parseISO(alerta.data_criacao), "d 'de' MMM", { locale: ptBR })}
                             content={alerta.mensagem || ''}
-                            tag={alerta.tipo === 'informativo' ? 'Novidade' : 'Aviso'}
+                            tag="Novidade"
                           />
                         ))
                       )}

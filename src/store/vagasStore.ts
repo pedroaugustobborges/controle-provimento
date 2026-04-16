@@ -126,6 +126,7 @@ interface VagasState {
   tarefas: Tarefa[];
   alertas: Alerta[];
   notificacoes: any[];
+  editingUsers: Record<string, any>;
   historicoMensagens: MensagemHistorico[];
   temNovasMensagens: boolean;
   isLoading: boolean;
@@ -185,6 +186,8 @@ interface VagasState {
   fixWrongImportBatches: () => void;
   subscribeRealtime: () => void;
   unsubscribeRealtime: () => void;
+  trackEditing: (recordId: string) => Promise<void>;
+  stopTrackingEditing: () => Promise<void>;
 }
 
 export const useVagasStore = create<VagasState>()(
@@ -732,7 +735,35 @@ export const useVagasStore = create<VagasState>()(
                 if (eventType === 'INSERT') {
                   set((s) => {
                     if (s.notificacoes.some(n => n.id === newRow.id)) return s;
-                    
+      trackEditing: async (recordId) => {
+        const channel = (window as any).__realtimeChannel;
+        if (channel) {
+          const { currentUser } = (await import('./adminStore')).useAdminStore.getState();
+          if (currentUser) {
+            await channel.track({
+              userId: currentUser.id,
+              userName: currentUser.nome_completo,
+              editingRecordId: recordId,
+              online_at: new Date().toISOString(),
+            });
+          }
+        }
+      },
+      stopTrackingEditing: async () => {
+        const channel = (window as any).__realtimeChannel;
+        if (channel) {
+          const { currentUser } = (await import('./adminStore')).useAdminStore.getState();
+          if (currentUser) {
+            await channel.track({
+              userId: currentUser.id,
+              userName: currentUser.nome_completo,
+              editingRecordId: null,
+              online_at: new Date().toISOString(),
+            });
+          }
+        }
+      },
+
                     const newAlert = {
                       id: newRow.id,
                       titulo: newRow.titulo,
@@ -766,6 +797,16 @@ export const useVagasStore = create<VagasState>()(
                 }
               }
             )
+            .on('presence', { event: 'sync' }, () => {
+              const state = channel.presenceState();
+              const activeEditing: Record<string, any> = {};
+              Object.values(state).flat().forEach((pres: any) => {
+                if (pres.editingRecordId) {
+                  activeEditing[pres.editingRecordId] = pres;
+                }
+              });
+              set({ editingUsers: activeEditing });
+            })
             .subscribe();
 
           (window as any).__realtimeChannel = channel;

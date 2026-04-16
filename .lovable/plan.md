@@ -1,16 +1,29 @@
 
 
-## Plano: Refinar visual do Dashboard de Convocações
+## Plano: Corrigir erro 404 em URLs diretas no domínio personalizado
 
-### Arquivo: `src/pages/ConvocacoesDashboardPage.tsx`
+### Diagnóstico
 
-1. **Labels em negrito** — Adicionar `fontWeight: 'bold'` nos ticks do `YAxis` dos gráficos de barras (nomes de unidades e cargos)
+O domínio `provimento.painelagirsaude.com` não está configurado como domínio personalizado no Lovable — o projeto **não está publicado** via Lovable. Isso significa que o site provavelmente está hospedado em outro provedor (Vercel, Netlify, etc.), e o problema de 404 é causado pela **configuração de SPA routing no servidor de hospedagem**.
 
-2. **Cores menos saturadas** — Reduzir saturação da paleta HSL em todos os gráficos:
-   - Trocar cores como `hsl(221, 83%, 53%)` por versões mais suaves como `hsl(221, 55%, 58%)`
-   - Aplicar tanto no `pieChartConfig`, `PIE_COLORS`, quanto nos configs de barras
+O Lovable já possui SPA fallback automático embutido — qualquer rota que não seja um arquivo estático é redirecionada para `index.html`. Mas isso **só funciona quando o site é publicado/hospedado pelo Lovable**.
 
-3. **Legenda do gráfico de pizza** — O `ChartConfig` (`pieChartConfig`) só define 5 status fixos (CONVOCADO, CADASTRO RESERVA, VENCIDO, DESISTIU, FALTOU), mas os dados reais podem ter mais status. Tornar o config dinâmico: gerar o `pieChartConfig` a partir dos dados reais (`statusDistribution`) para que toda chave de status tenha label e cor na legenda
+### Solução recomendada
 
-4. **Garantir todos os rótulos visíveis** — Verificar que `ChartTooltipContent` e `ChartLegendContent` recebem `nameKey="name"` corretamente para mapear cada entrada
+**Opção 1 (Recomendada): Publicar pelo Lovable e configurar domínio personalizado**
+- Publicar o projeto via Lovable
+- Configurar `provimento.painelagirsaude.com` como domínio personalizado no Lovable
+- O SPA routing funcionará automaticamente — sem necessidade de `vercel.json` ou `_redirects`
+
+**Opção 2: Se mantiver hospedagem externa (Vercel/Netlify)**
+- O `vercel.json` já tem o rewrite correto (`/* → /index.html`)
+- O `public/_redirects` já tem a regra Netlify correta
+- O problema provavelmente está na **configuração do provedor de hospedagem** (DNS, build settings, etc.) — isso precisa ser verificado diretamente no painel do provedor
+
+### Ação no código (independente da hospedagem)
+- Nenhuma alteração de código é necessária — o `BrowserRouter` e as rotas do React Router estão corretamente configurados em `App.tsx`
+- Os arquivos `vercel.json` e `_redirects` já existem com as regras de fallback SPA corretas
+
+### Próximo passo
+Preciso saber: **onde o site está hospedado atualmente?** (Vercel, Netlify, outro?) — ou prefere publicar pelo Lovable e configurar o domínio personalizado aqui?
 

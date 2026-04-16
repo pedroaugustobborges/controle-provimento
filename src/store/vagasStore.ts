@@ -356,6 +356,37 @@ export const useVagasStore = create<VagasState>()(
       addBanco: (banco) => set((s) => ({ bancos: [banco, ...s.bancos] })),
       addBancos: (newBancos) => set((s) => ({ bancos: [...newBancos, ...s.bancos] })),
       updateBanco: (id, data) => set((s) => ({ bancos: s.bancos.map((b) => b.id === id ? { ...b, ...data } : b) })),
+      updateBancoAsync: async (id, data) => {
+        const { DatabaseService } = await import('@/services/databaseService');
+        const { useAdminStore } = await import('./adminStore');
+        const { currentUser } = useAdminStore.getState();
+        if (!currentUser) return false;
+
+        const currentBanco = get().bancos.find(b => b.id === id);
+        if (!currentBanco) return false;
+
+        // Optimistic local update for snappy UX
+        get().updateBanco(id, data);
+
+        const { data: updated, error } = await DatabaseService.saveWithConcurrency('banco_candidatos', {
+          ...currentBanco,
+          ...data,
+          id,
+          version: (currentBanco as any).version || 0
+        }, currentUser.id);
+
+        if (error) {
+          console.error('[updateBancoAsync] Error:', error);
+          toast.error(error.message || 'Erro ao atualizar registro do banco.');
+          return false;
+        }
+
+        if (updated) {
+          get().updateBanco(id, mapDbBanco(updated));
+          return true;
+        }
+        return false;
+      },
       deleteBanco: (id) => set((s) => ({ bancos: s.bancos.filter((b) => b.id !== id) })),
       addConvocacao: (convocacao) => set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] })),
       updateConvocacao: (id, data) => set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === id ? { ...c, ...data } : c) })),

@@ -443,14 +443,9 @@ export interface ValidacaoEdital {
   status_validacao: StatusValidacao;
 }
 
-export const TIPO_VAGA_LABELS: Record<TipoVaga, string> = {
+export const TIPO_VAGA_LABELS: Partial<Record<TipoVaga, string>> = {
   substituicao: 'Substituição',
   aumento: 'Aumento',
-  lideranca: 'Liderança',
-  movimentacao_interna: 'Movimentação Interna',
-  quadro: 'Quadro',
-  banco_talentos: 'Banco de Talentos',
-  edital: 'Edital',
 };
 
 export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {

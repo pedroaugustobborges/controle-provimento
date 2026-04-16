@@ -196,8 +196,6 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
                 <SelectContent>
                   <SelectItem value="substituicao">Substituição</SelectItem>
                   <SelectItem value="aumento">Aumento de Quadro</SelectItem>
-                  <SelectItem value="lideranca">Liderança</SelectItem>
-                  <SelectItem value="movimentacao_interna">Movimentação Interna</SelectItem>
                 </SelectContent>
               </Select>
             </div>

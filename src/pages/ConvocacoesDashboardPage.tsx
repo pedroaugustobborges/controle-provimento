@@ -1,32 +1,15 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
-import { supabase } from '@/integrations/supabase/client';
+import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, LabelList } from 'recharts';
+import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
+import { filterByRegionAndUnit } from '@/lib/vagaUtils';
 
 const truncateLabel = (value: string, max = 22) =>
   value && value.length > max ? `${value.slice(0, max - 1)}…` : value;
-import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
-
-interface ConvocacaoData {
-  status: string | null;
-  unidade: string | null;
-  cargo: string | null;
-  unidade_convocacao: string | null;
-  data_convocacao: string | null;
-}
-
-const SOFT_COLORS = [
-  'hsl(221, 50%, 62%)',
-  'hsl(152, 45%, 50%)',
-  'hsl(0, 55%, 62%)',
-  'hsl(30, 60%, 58%)',
-  'hsl(270, 40%, 58%)',
-  'hsl(199, 50%, 55%)',
-  'hsl(340, 45%, 58%)',
-  'hsl(180, 40%, 50%)',
-];
 
 const unidadesChartConfig: ChartConfig = {
   value: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
@@ -36,73 +19,78 @@ const cargosChartConfig: ChartConfig = {
   value: { label: 'Convocações', color: 'hsl(152, 45%, 50%)' },
 };
 
+const historicoChartConfig: ChartConfig = {
+  total: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
+};
+
 export default function ConvocacoesDashboardPage() {
-  const [data, setData] = useState<ConvocacaoData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { convocacoes } = useVagasStore();
+  const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: rows, error } = await supabase
-        .from('banco_candidatos')
-        .select('status, unidade, cargo, unidade_convocacao, data_convocacao')
-        .not('status', 'is', null);
-
-      if (!error && rows) {
-        setData(rows as ConvocacaoData[]);
+  // Mesma fonte e mesmos filtros de permissão usados em ConvocacoesPage
+  const visibleConvocacoes = useMemo(() => {
+    const base = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
+    return base.filter(c => {
+      if (!c.data_convocacao) return false;
+      if (
+        currentUser &&
+        !currentUser.visualiza_todas_unidades &&
+        !currentUser.unidades_vinculadas.includes(c.unidade)
+      ) {
+        return false;
       }
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+      return true;
+    });
+  }, [convocacoes, currentUser, selectedRegion, globalUnit]);
 
   const metrics = useMemo(() => {
-    const total = data.length;
-    const convocados = data.filter(d => d.status?.toUpperCase() === 'CONVOCADO').length;
-    const cadastroReserva = data.filter(d => d.status?.toUpperCase() === 'CADASTRO RESERVA').length;
-    const vencidos = data.filter(d => d.status?.toUpperCase() === 'VENCIDO').length;
-    return { total, convocados, cadastroReserva, vencidos };
-  }, [data]);
+    const total = visibleConvocacoes.length;
+    const aceites = visibleConvocacoes.filter(c => c.status === 'aceite').length;
+    const pendentes = visibleConvocacoes.filter(c => c.status === 'pendente').length;
+    const recusas = visibleConvocacoes.filter(c =>
+      ['recusa_plantao', 'recusa_unidade', 'recusa_horario', 'desistiu', 'faltou'].includes(c.status)
+    ).length;
+    return { total, aceites, pendentes, recusas };
+  }, [visibleConvocacoes]);
 
   const topUnidades = useMemo(() => {
     const counts: Record<string, number> = {};
-    data.forEach(d => {
-      const u = (d.unidade_convocacao || d.unidade || 'Não informada').toUpperCase().trim();
+    visibleConvocacoes.forEach(c => {
+      const u = (c.unidade || 'Não informada').toUpperCase().trim();
       counts[u] = (counts[u] || 0) + 1;
     });
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([name, value]) => ({ name, value }));
-  }, [data]);
+  }, [visibleConvocacoes]);
 
   const topCargos = useMemo(() => {
     const counts: Record<string, number> = {};
-    data.forEach(d => {
-      const c = (d.cargo || 'Não informado').toUpperCase().trim();
-      counts[c] = (counts[c] || 0) + 1;
+    visibleConvocacoes.forEach(c => {
+      const cargo = (c.cargo || 'Não informado').toUpperCase().trim();
+      counts[cargo] = (counts[cargo] || 0) + 1;
     });
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([name, value]) => ({ name, value }));
-  }, [data]);
+  }, [visibleConvocacoes]);
 
   const historicoConvocacoes = useMemo(() => {
     const byDate: Record<string, { total: number; unidades: Record<string, number> }> = {};
-    data
-      .filter(d => d.status?.toUpperCase() === 'CONVOCADO' && d.data_convocacao)
-      .forEach(d => {
-        const date = (d.data_convocacao || '').slice(0, 10);
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
-        const unidade = (d.unidade_convocacao || d.unidade || 'Não informada').toUpperCase().trim();
-        if (!byDate[date]) byDate[date] = { total: 0, unidades: {} };
-        byDate[date].total += 1;
-        byDate[date].unidades[unidade] = (byDate[date].unidades[unidade] || 0) + 1;
-      });
+    visibleConvocacoes.forEach(c => {
+      const date = (c.data_convocacao || '').slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+      const unidade = (c.unidade || 'Não informada').toUpperCase().trim();
+      if (!byDate[date]) byDate[date] = { total: 0, unidades: {} };
+      byDate[date].total += 1;
+      byDate[date].unidades[unidade] = (byDate[date].unidades[unidade] || 0) + 1;
+    });
     return Object.entries(byDate)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, info]) => {
-        const [y, m, d] = date.split('-');
+        const [, m, d] = date.split('-');
         return {
           date,
           label: `${d}/${m}`,
@@ -110,29 +98,17 @@ export default function ConvocacoesDashboardPage() {
           unidades: Object.entries(info.unidades).sort(([, a], [, b]) => b - a),
         };
       });
-  }, [data]);
-
-  const historicoChartConfig: ChartConfig = {
-    total: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  }, [visibleConvocacoes]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Dashboard de Convocações" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard icon={Users} label="Total de Registros" value={metrics.total} color="text-primary" bg="bg-primary/10" />
-        <MetricCard icon={CheckCircle2} label="Convocados" value={metrics.convocados} color="text-emerald-500" bg="bg-emerald-500/10" />
-        <MetricCard icon={Clock} label="Cadastro Reserva" value={metrics.cadastroReserva} color="text-blue-500" bg="bg-blue-500/10" />
-        <MetricCard icon={XCircle} label="Vencidos" value={metrics.vencidos} color="text-destructive" bg="bg-destructive/10" />
+        <MetricCard icon={Users} label="Total de Convocações" value={metrics.total} color="text-primary" bg="bg-primary/10" />
+        <MetricCard icon={CheckCircle2} label="Aceites" value={metrics.aceites} color="text-emerald-500" bg="bg-emerald-500/10" />
+        <MetricCard icon={Clock} label="Pendentes" value={metrics.pendentes} color="text-blue-500" bg="bg-blue-500/10" />
+        <MetricCard icon={XCircle} label="Recusas / Faltas" value={metrics.recusas} color="text-destructive" bg="bg-destructive/10" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

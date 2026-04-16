@@ -147,6 +147,7 @@ export default function VagasPage() {
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
+  const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
   const [filterMes, setFilterMes] = useState('all');
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
   const [filterTipo, setFilterTipo] = useState('all');

@@ -137,6 +137,7 @@ export function AppSidebar() {
         { title: 'Demais Unidades', url: '/convocacoes?tab=diaria&regiao=outras' },
         { title: 'Histórico', url: '/convocacoes?tab=list' },
         { title: 'Pendentes', url: '/convocacoes?tab=pending' },
+        { title: 'Dashboard', url: '/convocacoes/dashboard' },
       ]
     },
     { 

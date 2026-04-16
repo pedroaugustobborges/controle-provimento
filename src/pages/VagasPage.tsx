@@ -324,7 +324,7 @@ export default function VagasPage() {
     
     // 3. Filtragem interna da tela
     return getValidVacancyBase(baseRecords, filterUnidade, filterMes);
-  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes, filtroEspecial]);
+  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes, filtroEspecial, pcdRegiao]);
 
   const statusScopedBase = useMemo(() => {
     return canonicalBase.filter((vaga) => passesVacancyStatusTab(vaga.categoria_status || getCategoriaStatus(vaga), vacancyStatusTab));

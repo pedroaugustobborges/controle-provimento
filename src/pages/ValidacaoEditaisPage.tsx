@@ -39,7 +39,7 @@ import { toast } from 'sonner';
 
 
 export default function ValidacaoEditaisPage() {
-  const { vagas, updateVagaAsync, addMensagem } = useVagasStore();
+  const { vagas, updateVagaAsync, addMensagem, notificarMovimentacaoEdital } = useVagasStore();
   const updateVaga = updateVagaAsync;
   const { currentUser, addAuditLog, users, fetchUsers } = useAdminStore();
   const [search, setSearch] = useState('');

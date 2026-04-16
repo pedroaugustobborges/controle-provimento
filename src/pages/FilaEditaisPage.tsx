@@ -560,7 +560,24 @@ export default function FilaEditaisPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs font-medium text-slate-600">
-                        {v.analista_responsavel}
+                        {v.analista_responsavel || <span className="italic text-slate-400">—</span>}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={v.validado_por || ''}
+                          onValueChange={(val) => handleSetResponsavelPublicacao(v, val)}
+                        >
+                          <SelectTrigger className="h-8 text-xs w-[180px] bg-white">
+                            <SelectValue placeholder="Atribuir..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {analistasPublicacao.map((u: any) => (
+                              <SelectItem key={u.id} value={u.id} className="text-xs">
+                                {u.nome_completo}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

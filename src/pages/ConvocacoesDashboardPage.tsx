@@ -2,18 +2,19 @@ import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList } from 'recharts';
+import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, LabelList, Tooltip as RTooltip } from 'recharts';
 
 const truncateLabel = (value: string, max = 22) =>
   value && value.length > max ? `${value.slice(0, max - 1)}…` : value;
-import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
 
 interface ConvocacaoData {
   status: string | null;
   unidade: string | null;
   cargo: string | null;
   unidade_convocacao: string | null;
+  data_convocacao: string | null;
 }
 
 const SOFT_COLORS = [
@@ -43,7 +44,7 @@ export default function ConvocacoesDashboardPage() {
     const fetchData = async () => {
       const { data: rows, error } = await supabase
         .from('banco_candidatos')
-        .select('status, unidade, cargo, unidade_convocacao')
+        .select('status, unidade, cargo, unidade_convocacao, data_convocacao')
         .not('status', 'is', null);
 
       if (!error && rows) {

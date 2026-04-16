@@ -24,6 +24,7 @@ import {
   verticalListSortingStrategy,
   useSortable
 } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import {
   Dialog,

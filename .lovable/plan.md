@@ -1,25 +1,22 @@
 
-## Problema
-No Dashboard de Convocações, os rótulos (labels) dos gráficos não estão aparecendo — provavelmente nos eixos das barras (Top 5 Unidades, Top 5 Cargos) e/ou na legenda do gráfico de pizza (Distribuição por Status).
+## Mudanças no Dashboard de Convocações
 
-## Causa provável
-No `ConvocacoesDashboardPage.tsx`:
-- Os `YAxis` das barras horizontais usam `width={130}` e `width={150}` com `fontSize: 10` — nomes longos de unidades/cargos em maiúsculas podem estar sendo truncados ou não exibidos por falta de espaço.
-- Os ticks podem estar sendo cortados por margens insuficientes.
-- A legenda da pizza pode não estar renderizando os nomes corretamente.
+**1. Remover** o gráfico "Distribuição por Status" (PieChart).
 
-## Plano de correção
+**2. Adicionar** novo gráfico "Histórico de Convocações" (LineChart):
+- Eixo X: datas (dia/mês)
+- Eixo Y: quantidade de convocações no dia
+- Tooltip ao passar o mouse: lista as unidades convocadas naquele dia + total
+- Atualização automática conforme novos dados entram no banco
 
-1. **Aumentar largura do YAxis** nos dois gráficos de barras (de 130/150 para ~180) para acomodar nomes longos como "TEIA APARECIDA" ou "POLICLÍNICA".
-2. **Adicionar formatador de tick** que trunca nomes muito longos com reticências, garantindo que sempre apareçam.
-3. **Aumentar margem esquerda** dos `BarChart` para dar respiro ao label.
-4. **Garantir legenda visível** no `PieChart` com os nomes dos status e cores correspondentes.
-5. **Adicionar rótulos de valor** (LabelList) nas pontas das barras para mostrar o número de convocações de cada item diretamente no gráfico.
+**3. Fonte de dados:** preciso confirmar qual coluna usar para a data da convocação. Verificarei no schema do `banco_candidatos` (provavelmente `data_convocacao` ou `updated_at`) e filtrarei apenas registros com status `CONVOCADO`.
+
+**4. Ajustes de rótulos** já aplicados anteriormente serão mantidos nos gráficos de barras (Top Unidades / Top Cargos).
 
 ## Arquivo afetado
-- `src/pages/ConvocacoesDashboardPage.tsx` (único arquivo)
+- `src/pages/ConvocacoesDashboardPage.tsx`
 
 ## Resultado esperado
-- Nomes de unidades e cargos visíveis ao lado de cada barra (com truncamento elegante se muito longos).
-- Valor numérico aparecendo no fim de cada barra.
-- Legenda da pizza mostrando claramente cada status com sua cor.
+- Gráfico de linha mostrando evolução diária de convocações
+- Tooltip rico mostrando unidades de cada dia
+- Gráfico de pizza removido

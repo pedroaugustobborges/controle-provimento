@@ -1,10 +1,18 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Outlet } from 'react-router-dom';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAdminStore } from '@/store/adminStore';
 
 export function Layout() {
+  const { currentUser } = useAdminStore();
+  
+  const userName = currentUser?.nome_completo || 'Usuário';
+  const initials = currentUser?.nome_completo
+    ? currentUser.nome_completo.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+    : 'US';
+
   return (
     <div className="flex h-screen bg-background text-foreground">
       <div className="w-64 flex-shrink-0">
@@ -23,12 +31,12 @@ export function Layout() {
             </button>
             <div className="flex items-center gap-3 border-l pl-6">
               <div className="text-right">
-                <p className="text-sm font-medium">João Silva</p>
-                <p className="text-xs text-muted-foreground italic">Administrador</p>
+                <p className="text-sm font-medium">{userName}</p>
+                <p className="text-xs text-muted-foreground italic">{currentUser?.perfil || 'Usuário'}</p>
               </div>
               <Avatar className="h-10 w-10 ring-2 ring-border">
-                <AvatarImage src="" alt="João Silva" />
-                <AvatarFallback className="bg-primary text-primary-foreground font-bold">JS</AvatarFallback>
+                <AvatarImage src={currentUser?.avatar_url || ''} alt={userName} />
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold">{initials}</AvatarFallback>
               </Avatar>
             </div>
           </div>

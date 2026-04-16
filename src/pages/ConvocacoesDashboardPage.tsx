@@ -1,12 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend 
-} from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from 'recharts';
 import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
 
 interface ConvocacaoData {
@@ -16,15 +13,31 @@ interface ConvocacaoData {
   unidade_convocacao: string | null;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  'CONVOCADO': 'hsl(var(--primary))',
-  'CADASTRO RESERVA': 'hsl(142, 76%, 36%)',
-  'VENCIDO': 'hsl(0, 84%, 60%)',
-  'DESISTIU': 'hsl(25, 95%, 53%)',
-  'FALTOU': 'hsl(280, 67%, 51%)',
+const pieChartConfig: ChartConfig = {
+  value: { label: 'Quantidade' },
+  CONVOCADO: { label: 'Convocado', color: 'hsl(221, 83%, 53%)' },
+  'CADASTRO RESERVA': { label: 'Cadastro Reserva', color: 'hsl(142, 76%, 36%)' },
+  VENCIDO: { label: 'Vencido', color: 'hsl(0, 84%, 60%)' },
+  DESISTIU: { label: 'Desistiu', color: 'hsl(25, 95%, 53%)' },
+  FALTOU: { label: 'Faltou', color: 'hsl(280, 67%, 51%)' },
 };
 
-const PIE_COLORS = ['hsl(var(--primary))', 'hsl(142, 76%, 36%)', 'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(280, 67%, 51%)', 'hsl(199, 89%, 48%)'];
+const PIE_COLORS = [
+  'hsl(221, 83%, 53%)',
+  'hsl(142, 76%, 36%)',
+  'hsl(0, 84%, 60%)',
+  'hsl(25, 95%, 53%)',
+  'hsl(280, 67%, 51%)',
+  'hsl(199, 89%, 48%)',
+];
+
+const unidadesChartConfig: ChartConfig = {
+  value: { label: 'Convocações', color: 'hsl(221, 83%, 53%)' },
+};
+
+const cargosChartConfig: ChartConfig = {
+  value: { label: 'Convocações', color: 'hsl(142, 76%, 36%)' },
+};
 
 export default function ConvocacoesDashboardPage() {
   const [data, setData] = useState<ConvocacaoData[]>([]);
@@ -36,7 +49,7 @@ export default function ConvocacoesDashboardPage() {
         .from('banco_candidatos')
         .select('status, unidade, cargo, unidade_convocacao')
         .not('status', 'is', null);
-      
+
       if (!error && rows) {
         setData(rows as ConvocacaoData[]);
       }
@@ -85,7 +98,7 @@ export default function ConvocacoesDashboardPage() {
     });
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([name, value]) => ({ name, value }));
+      .map(([name, value]) => ({ name, value, fill: PIE_COLORS[Object.keys(counts).indexOf(name) % PIE_COLORS.length] }));
   }, [data]);
 
   if (loading) {
@@ -100,93 +113,81 @@ export default function ConvocacoesDashboardPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="Dashboard de Convocações" />
 
-      {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard icon={Users} label="Total de Registros" value={metrics.total} color="text-primary" />
-        <MetricCard icon={CheckCircle2} label="Convocados" value={metrics.convocados} color="text-green-600" />
-        <MetricCard icon={Clock} label="Cadastro Reserva" value={metrics.cadastroReserva} color="text-blue-600" />
-        <MetricCard icon={XCircle} label="Vencidos" value={metrics.vencidos} color="text-red-600" />
+        <MetricCard icon={Users} label="Total de Registros" value={metrics.total} color="text-primary" bg="bg-primary/10" />
+        <MetricCard icon={CheckCircle2} label="Convocados" value={metrics.convocados} color="text-emerald-500" bg="bg-emerald-500/10" />
+        <MetricCard icon={Clock} label="Cadastro Reserva" value={metrics.cadastroReserva} color="text-blue-500" bg="bg-blue-500/10" />
+        <MetricCard icon={XCircle} label="Vencidos" value={metrics.vencidos} color="text-destructive" bg="bg-destructive/10" />
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top 5 Unidades */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" />
               Top 5 Unidades com Mais Convocações
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topUnidades} layout="vertical" margin={{ left: 10, right: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={unidadesChartConfig} className="h-[280px] w-full">
+              <BarChart data={topUnidades} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
+                <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
-        {/* Top 5 Cargos */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-primary" />
               Top 5 Cargos Mais Convocados
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topCargos} layout="vertical" margin={{ left: 10, right: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(142, 76%, 36%)" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={cargosChartConfig} className="h-[280px] w-full">
+              <BarChart data={topCargos} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
+                <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
-        {/* Status Distribution */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
+        <Card className="lg:col-span-2 shadow-sm border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-primary" />
               Distribuição por Status
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie 
-                    data={statusDistribution} 
-                    cx="50%" 
-                    cy="50%" 
-                    outerRadius={100} 
-                    dataKey="value" 
-                    nameKey="name"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    labelLine
-                  >
-                    {statusDistribution.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={pieChartConfig} className="h-[320px] w-full">
+              <PieChart>
+                <Pie
+                  data={statusDistribution}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={110}
+                  innerRadius={50}
+                  dataKey="value"
+                  nameKey="name"
+                  strokeWidth={2}
+                  stroke="hsl(var(--background))"
+                >
+                  {statusDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+              </PieChart>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
@@ -194,16 +195,16 @@ export default function ConvocacoesDashboardPage() {
   );
 }
 
-function MetricCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
+function MetricCard({ icon: Icon, label, value, color, bg }: { icon: any; label: string; value: number; color: string; bg: string }) {
   return (
-    <Card>
+    <Card className="shadow-sm border-border/50 hover:shadow-md transition-shadow">
       <CardContent className="p-5 flex items-center gap-4">
-        <div className={`p-3 rounded-xl bg-muted ${color}`}>
-          <Icon className="h-5 w-5" />
+        <div className={`p-3 rounded-xl ${bg}`}>
+          <Icon className={`h-5 w-5 ${color}`} />
         </div>
         <div>
           <p className="text-xs text-muted-foreground font-medium">{label}</p>
-          <p className="text-2xl font-bold">{value.toLocaleString('pt-BR')}</p>
+          <p className="text-2xl font-bold tracking-tight">{value.toLocaleString('pt-BR')}</p>
         </div>
       </CardContent>
     </Card>

@@ -555,6 +555,21 @@ export default function FilaEditaisPage() {
         </CardContent>
       </Card>
 
+      {regroupableCargos.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white shadow-2xl rounded-full px-5 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <CheckSquare className="h-4 w-4" />
+          <span className="text-sm font-medium">
+            {selectedRows.size} selecionada(s) — {regroupableCargos.length} cargo(s) elegível(is)
+          </span>
+          <Button size="sm" variant="secondary" className="h-8 bg-white text-blue-700 hover:bg-blue-50 font-semibold" onClick={handleRegroupSelected}>
+            <Link2 className="h-4 w-4 mr-1" /> Agrupar selecionados
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8 text-white hover:bg-blue-700" onClick={() => setSelectedRows(new Set())}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
 
       <Dialog open={isSendModalOpen} onOpenChange={setIsSendModalOpen}>

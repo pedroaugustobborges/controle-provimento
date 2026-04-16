@@ -501,36 +501,33 @@ export const useVagasStore = create<VagasState>()(
 
           const { id, ...rest } = banco as any;
           
-          // Whitelist only valid DB columns for banco_candidatos
+          // Whitelist ONLY columns that exist in banco_candidatos table
+          const qtd = rest.quantidade_banco;
+          const qtdNum = qtd === '' || qtd == null ? null : (isNaN(Number(qtd)) ? null : Number(qtd));
           const payload: any = {
             unidade: rest.unidade || null,
             cargo: rest.cargo || null,
             cargo_normalizado: rest.cargo_normalizado || null,
-            secao: rest.secao || null,
             numero_edital: rest.numero_edital || null,
-            numero_processo: rest.numero_processo || null,
+            numero_processo_seletivo: rest.numero_processo_seletivo || rest.numero_processo || null,
             nome: rest.nome || null,
             classificacao: rest.classificacao || null,
-            quantidade_banco: rest.quantidade_banco || null,
-            status_import: rest.status_import || null,
-            data_abertura_edital: rest.data_abertura_edital || null,
-            data_publicacao: rest.data_publicacao || null,
+            quantidade_banco: qtdNum,
+            data_publicacao: rest.data_publicacao || rest.data_abertura_edital || null,
             data_validade: rest.data_validade || null,
             is_prorrogado: !!rest.is_prorrogado,
             prorrogacao: rest.prorrogacao || null,
-            nova_data_validade: rest.nova_data_validade || null,
             data_convocacao: rest.data_convocacao || null,
             unidade_convocacao: rest.unidade_convocacao || null,
             numero_chamada: rest.numero_chamada || null,
-            numero_processo_seletivo: rest.numero_processo_seletivo || null,
-            numero_vaga_aproveitamento: rest.numero_vaga_aproveitamento || null,
-            status: rest.status || 'valido',
+            status: rest.status || 'CADASTRO RESERVA',
             status_original: rest.status_original || null,
             status_calculado: rest.status_calculado || null,
             motivo_do_calculo: rest.motivo_do_calculo || null,
             data_base_do_calculo: rest.data_base_do_calculo || null,
             data_referencia_usada: rest.data_referencia_usada || null,
-            observacoes: rest.observacoes || null,
+            observacao: rest.observacoes || rest.observacao || null,
+            origem: 'manual',
             created_by: authUser.id,
             updated_by: authUser.id,
           };

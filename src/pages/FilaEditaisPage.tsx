@@ -379,7 +379,8 @@ export default function FilaEditaisPage() {
                   <TableHead>Recebimento</TableHead>
                   <TableHead className="text-center">Dias Aberto</TableHead>
                   <TableHead className="text-center">Status Atual</TableHead>
-                  <TableHead>Responsável</TableHead>
+                  <TableHead>Enviado por</TableHead>
+                  <TableHead>Responsável pela publicação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>

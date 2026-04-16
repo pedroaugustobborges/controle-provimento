@@ -526,23 +526,6 @@ export default function FilaEditaisPage() {
                       <TableCell className="text-xs font-medium text-slate-600">
                         {v.analista_responsavel || <span className="italic text-slate-400">—</span>}
                       </TableCell>
-                      <TableCell>
-                        <Select
-                          value={v.validado_por || ''}
-                          onValueChange={(val) => handleSetResponsavelPublicacao(v, val)}
-                        >
-                          <SelectTrigger className="h-8 text-xs w-[180px] bg-white">
-                            <SelectValue placeholder="Atribuir..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {analistasPublicacao.map((u: any) => (
-                              <SelectItem key={u.id} value={u.id} className="text-xs">
-                                {u.nome_completo}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
@@ -558,7 +541,7 @@ export default function FilaEditaisPage() {
                 })}
                 {pendingVagas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={12} className="px-6 py-20 text-center">
+                    <TableCell colSpan={11} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
                         <p className="text-slate-500 font-medium">Nenhuma pendência encontrada na fila de editais.</p>

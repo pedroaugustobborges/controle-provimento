@@ -315,6 +315,11 @@ export default function VagasPage() {
       baseRecords = baseRecords.filter(v => 
         (v.is_pcd === true) || (v.cargo || '').toUpperCase().includes('PCD')
       );
+      // Filter by PCD region if selected
+      if (pcdRegiao && PCD_REGIOES[pcdRegiao]) {
+        const regionUnits = PCD_REGIOES[pcdRegiao].map(u => normalizeUnitName(u));
+        baseRecords = baseRecords.filter(v => regionUnits.includes(normalizeUnitName(v.unidade)));
+      }
     }
     
     // 3. Filtragem interna da tela

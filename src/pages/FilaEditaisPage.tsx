@@ -40,7 +40,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
-  const { vagas, updateVaga } = useVagasStore();
+  const { vagas, updateVaga, updateVagaAsync, notificarMovimentacaoEdital } = useVagasStore();
   const { currentUser } = useAdminStore();
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
@@ -224,7 +224,7 @@ export default function FilaEditaisPage() {
     setIsSendModalOpen(true);
   };
 
-  const handleConfirmSend = () => {
+  const handleConfirmSend = async () => {
     if (!selectedVaga) return;
 
     if (!cargoValidado || !cargaValidada || !salarioValidado) {
@@ -232,20 +232,26 @@ export default function FilaEditaisPage() {
       return;
     }
 
-    updateVaga(selectedVaga.id, { 
+    const ok = await updateVagaAsync(selectedVaga.id, {
       status: 'ACOMPANHAMENTO DE EDITAL',
       status_fluxo_edital: 'encaminhado_edital',
+      etapa: 'encaminhado_edital',
       cargo_validado: true,
       carga_horaria_validada: true,
       salario_validado: true,
       observacoes_unidade: obsUnidade,
-      historico: [...selectedVaga.historico, {
+      historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao: `Vaga encaminhada para redação e publicação do edital. Obs: ${obsUnidade || 'Sem observações'}`,
         usuario: currentUser?.nome_completo || 'Analista da Unidade'
       }]
-    });
+    } as any);
+
+    if (!ok) return;
+
+    // Notify Administrativos, Analistas do Edital and the original requester
+    notificarMovimentacaoEdital(selectedVaga.id, 'encaminhado_edital', obsUnidade ? `Obs: ${obsUnidade}` : '');
 
     setIsSendModalOpen(false);
     toast.success('Vaga encaminhada com sucesso para a redação do edital!');

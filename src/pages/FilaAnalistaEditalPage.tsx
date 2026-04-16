@@ -32,7 +32,7 @@ import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
-  const { vagas, updateVagaAsync } = useVagasStore();
+  const { vagas, updateVagaAsync, notificarMovimentacaoEdital } = useVagasStore();
   const updateVaga = updateVagaAsync;
   const { currentUser, users } = useAdminStore();
   const [search, setSearch] = useState('');
@@ -143,22 +143,26 @@ export default function FilaAnalistaEditalPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!selectedVaga) return;
 
-    updateVaga(selectedVaga.id, { 
+    const ok = await updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'em_redacao',
+      etapa: 'em_redacao',
       observacoes_edital: obsEdital,
       numero_edital: numeroEdital,
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
-    });
+    } as any);
 
-    toast.success('Rascunho do edital salvo com sucesso!');
+    if (ok) {
+      notificarMovimentacaoEdital(selectedVaga.id, 'em_redacao', 'Rascunho salvo.');
+      toast.success('Rascunho do edital salvo com sucesso!');
+    }
   };
 
-  const handleSendToValidation = () => {
+  const handleSendToValidation = async () => {
     if (!selectedVaga) return;
 
     if (!nomeArquivo) {
@@ -179,8 +183,9 @@ export default function FilaAnalistaEditalPage() {
     const respUser = (users || []).find((u: any) => u.id === responsavelValidacao);
     const respNome = respUser?.nome_completo || 'Não atribuído';
 
-    updateVaga(selectedVaga.id, {
+    const ok = await updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'enviado_validacao',
+      etapa: 'enviado_validacao',
       status_validacao: 'pendente',
       observacoes_edital: obsEdital,
       numero_edital: numeroEdital,
@@ -188,14 +193,17 @@ export default function FilaAnalistaEditalPage() {
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
       validado_por: responsavelValidacao,
-      historico: [...selectedVaga.historico, {
+      historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}. Responsável pela validação: ${respNome}.`,
         usuario: currentUser?.nome_completo || 'Analista do Edital'
       }]
-    });
+    } as any);
 
+    if (!ok) return;
+
+    notificarMovimentacaoEdital(selectedVaga.id, 'enviado_validacao', `Responsável: ${respNome}.`);
     setIsEditModalOpen(false);
     toast.success(`Edital enviado para validação de ${respNome}.`);
   };
@@ -222,12 +230,13 @@ export default function FilaAnalistaEditalPage() {
     setIsPublishModalOpen(true);
   };
 
-  const handleFinalizePublication = () => {
+  const handleFinalizePublication = async () => {
     if (!selectedVaga) return;
 
-    updateVaga(selectedVaga.id, {
+    const ok = await updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'publicado',
-      status: 'EM ANDAMENTO', 
+      etapa: 'publicado',
+      status: 'EM ANDAMENTO',
       unidade_trabalho: unidadeTrabalho,
       distribuicao_vagas: distribuicaoVagas,
       unidades_banco_talentos: unidadesBanco,
@@ -239,14 +248,16 @@ export default function FilaAnalistaEditalPage() {
         ...selectedVaga.acompanhamento,
         gerou_banco: isTalentBank,
       },
-      historico: [...selectedVaga.historico, {
+      historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao: `Edital PUBLICADO. Unidade de trabalho definida: ${unidadeTrabalho}. ${isTalentBank ? 'Banco de talentos habilitado.' : ''}`,
         usuario: currentUser?.nome_completo || 'Analista do Edital'
       }]
-    });
+    } as any);
 
+    if (!ok) return;
+    notificarMovimentacaoEdital(selectedVaga.id, 'publicado', `Unidade: ${unidadeTrabalho}.`);
     setIsPublishModalOpen(false);
     toast.success('Edital publicado e cronograma salvo com sucesso!');
   };

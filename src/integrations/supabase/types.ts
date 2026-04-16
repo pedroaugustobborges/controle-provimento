@@ -827,9 +827,12 @@ export type Database = {
           admissao_efetivada_acompanhamento: string | null
           admissao_enviada_acompanhamento: string | null
           analista_responsavel: string | null
+          arquivo_edital: string | null
           assistentes: string | null
           candidato_convocado_planilha: string | null
+          carga_horaria_validada: boolean | null
           cargo: string | null
+          cargo_validado: boolean | null
           classificacao_convocacao_planilha: string | null
           created_at: string
           created_by: string | null
@@ -841,12 +844,14 @@ export type Database = {
           data_importacao: string | null
           data_publicacao: string | null
           data_recebimento: string | null
+          data_validacao: string | null
           deleted_at: string | null
           detalhes_acompanhamento: string | null
           distribuicao_vagas: Json | null
           etapa: string | null
           forma_convocacao_planilha: string | null
           gestor_aprovador_id: string | null
+          historico: Json | null
           horario_convocacao_planilha: string | null
           id: string
           import_batch_id: string | null
@@ -859,14 +864,19 @@ export type Database = {
           numero_processo_seletivo: string | null
           numero_vagas: number | null
           observacao: string | null
+          observacoes_edital: string | null
           observacoes_gestor: string | null
+          observacoes_unidade: string | null
+          observacoes_validacao: string | null
           origem: string | null
           prioridade: string | null
           publicacao: string | null
           quantidade: number | null
+          salario_validado: boolean | null
           secao: string | null
           status: string | null
           status_aprovacao_gestor: string | null
+          status_fluxo_edital: string | null
           status_geral: string | null
           status_oitiva_convocacao_planilha: string | null
           tipo_vaga: string | null
@@ -876,15 +886,19 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           url_reachr: string | null
+          validado_por: string | null
           version: number
         }
         Insert: {
           admissao_efetivada_acompanhamento?: string | null
           admissao_enviada_acompanhamento?: string | null
           analista_responsavel?: string | null
+          arquivo_edital?: string | null
           assistentes?: string | null
           candidato_convocado_planilha?: string | null
+          carga_horaria_validada?: boolean | null
           cargo?: string | null
+          cargo_validado?: boolean | null
           classificacao_convocacao_planilha?: string | null
           created_at?: string
           created_by?: string | null
@@ -896,12 +910,14 @@ export type Database = {
           data_importacao?: string | null
           data_publicacao?: string | null
           data_recebimento?: string | null
+          data_validacao?: string | null
           deleted_at?: string | null
           detalhes_acompanhamento?: string | null
           distribuicao_vagas?: Json | null
           etapa?: string | null
           forma_convocacao_planilha?: string | null
           gestor_aprovador_id?: string | null
+          historico?: Json | null
           horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
@@ -914,14 +930,19 @@ export type Database = {
           numero_processo_seletivo?: string | null
           numero_vagas?: number | null
           observacao?: string | null
+          observacoes_edital?: string | null
           observacoes_gestor?: string | null
+          observacoes_unidade?: string | null
+          observacoes_validacao?: string | null
           origem?: string | null
           prioridade?: string | null
           publicacao?: string | null
           quantidade?: number | null
+          salario_validado?: boolean | null
           secao?: string | null
           status?: string | null
           status_aprovacao_gestor?: string | null
+          status_fluxo_edital?: string | null
           status_geral?: string | null
           status_oitiva_convocacao_planilha?: string | null
           tipo_vaga?: string | null
@@ -931,15 +952,19 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           url_reachr?: string | null
+          validado_por?: string | null
           version?: number
         }
         Update: {
           admissao_efetivada_acompanhamento?: string | null
           admissao_enviada_acompanhamento?: string | null
           analista_responsavel?: string | null
+          arquivo_edital?: string | null
           assistentes?: string | null
           candidato_convocado_planilha?: string | null
+          carga_horaria_validada?: boolean | null
           cargo?: string | null
+          cargo_validado?: boolean | null
           classificacao_convocacao_planilha?: string | null
           created_at?: string
           created_by?: string | null
@@ -951,12 +976,14 @@ export type Database = {
           data_importacao?: string | null
           data_publicacao?: string | null
           data_recebimento?: string | null
+          data_validacao?: string | null
           deleted_at?: string | null
           detalhes_acompanhamento?: string | null
           distribuicao_vagas?: Json | null
           etapa?: string | null
           forma_convocacao_planilha?: string | null
           gestor_aprovador_id?: string | null
+          historico?: Json | null
           horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
@@ -969,14 +996,19 @@ export type Database = {
           numero_processo_seletivo?: string | null
           numero_vagas?: number | null
           observacao?: string | null
+          observacoes_edital?: string | null
           observacoes_gestor?: string | null
+          observacoes_unidade?: string | null
+          observacoes_validacao?: string | null
           origem?: string | null
           prioridade?: string | null
           publicacao?: string | null
           quantidade?: number | null
+          salario_validado?: boolean | null
           secao?: string | null
           status?: string | null
           status_aprovacao_gestor?: string | null
+          status_fluxo_edital?: string | null
           status_geral?: string | null
           status_oitiva_convocacao_planilha?: string | null
           tipo_vaga?: string | null
@@ -986,6 +1018,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           url_reachr?: string | null
+          validado_por?: string | null
           version?: number
         }
         Relationships: [

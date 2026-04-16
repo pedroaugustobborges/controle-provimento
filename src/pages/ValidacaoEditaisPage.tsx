@@ -39,7 +39,7 @@ import { toast } from 'sonner';
 
 
 export default function ValidacaoEditaisPage() {
-  const { vagas, updateVagaAsync, addMensagem } = useVagasStore();
+  const { vagas, updateVagaAsync, addMensagem, notificarMovimentacaoEdital } = useVagasStore();
   const updateVaga = updateVagaAsync;
   const { currentUser, addAuditLog, users, fetchUsers } = useAdminStore();
   const [search, setSearch] = useState('');
@@ -90,7 +90,7 @@ export default function ValidacaoEditaisPage() {
   }, [vagas, currentUser, search]);
 
 
-  const handleAction = (vagaId: string, actionStatus: 'aprovado' | 'reprovado' | 'ajuste') => {
+  const handleAction = async (vagaId: string, actionStatus: 'aprovado' | 'reprovado' | 'ajuste') => {
     const vaga = vagas.find(v => v.id === vagaId);
     if (!vaga) return;
 
@@ -119,10 +119,11 @@ export default function ValidacaoEditaisPage() {
     const updateData: any = {
       status_validacao: actionStatus === 'ajuste' ? 'pendente' : actionStatus,
       status_fluxo_edital: newFluxoStatus,
+      etapa: newFluxoStatus,
       validado_por: usuario,
       data_validacao: new Date().toISOString(),
       observacoes_validacao: obs,
-      historico: [...vaga.historico, {
+      historico: [...(vaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao,
@@ -134,9 +135,10 @@ export default function ValidacaoEditaisPage() {
       updateData.url_reachr = reachrUrl;
     }
 
-    updateVaga(vagaId, updateData);
-    
-    // ... rest of the code for aprovado/ajuste/rejeitado
+    const ok = await updateVaga(vagaId, updateData);
+    if (!ok) return;
+
+    notificarMovimentacaoEdital(vagaId, newFluxoStatus, obs ? `Obs: ${obs}` : '');
 
     const msgs: Record<string, string> = {
       aprovado: 'Edital aprovado! Notificação enviada à AGIE.',
@@ -151,7 +153,7 @@ export default function ValidacaoEditaisPage() {
     setSelectedGestorId('');
   };
 
-  const handleRequestGestorApproval = (vagaId: string) => {
+  const handleRequestGestorApproval = async (vagaId: string) => {
     const vaga = vagas.find(v => v.id === vagaId);
     const gestor = users.find(u => u.id === selectedGestorId);
     if (!vaga || !gestor) return;
@@ -159,18 +161,23 @@ export default function ValidacaoEditaisPage() {
     const usuario = currentUser?.nome_completo || 'Validador';
     const vagaRef = vaga.requisicao || vaga.numero_requisicao || vaga.id;
 
-    updateVaga(vagaId, {
+    const ok = await updateVaga(vagaId, {
       status_fluxo_edital: 'aguardando_aprovacao_gestor',
+      etapa: 'aguardando_aprovacao_gestor',
       gestor_aprovador_id: selectedGestorId,
       status_aprovacao_gestor: 'pendente',
       observacoes_validacao: obs,
-      historico: [...vaga.historico, {
+      historico: [...(vaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao: `Edital enviado para aprovação do gestor ${gestor.nome_completo} por ${usuario}. Obs: ${obs}`,
         usuario: usuario
       }]
-    });
+    } as any);
+
+    if (!ok) return;
+
+    notificarMovimentacaoEdital(vagaId, 'aguardando_aprovacao_gestor', `Gestor: ${gestor.nome_completo}.`);
 
     addMensagem({
       id: `msg-gestor-${Date.now()}`,

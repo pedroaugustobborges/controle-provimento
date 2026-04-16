@@ -1,13 +1,32 @@
 
 
-## Plano: Limitar tipos de vaga a Substituição e Aumento
+## Plano: Simplificar e agrupar status de vagas
 
-### Arquivos a verificar/alterar
-- `src/types/vaga.ts` — verificar o objeto `TIPO_VAGA_LABELS` e limitar às opções desejadas
-- `src/pages/VagasPage.tsx` — verificar o filtro de tipo de vaga e garantir que só exiba Substituição e Aumento
+### Análise necessária
+Preciso verificar todos os locais que referenciam os status para garantir consistência:
+- `src/types/vaga.ts` — tipos e labels
+- `src/pages/VagasPage.tsx` — filtro de status
+- `src/lib/vagaUtils.ts` — cores e utilitários
+- `src/components/StatusBadge.tsx` — exibição
+- Demais componentes que usem `StatusVaga`
 
-### Alterações
-1. Em `TIPO_VAGA_LABELS` (ou onde os tipos são definidos), manter apenas as chaves correspondentes a "Substituição" e "Aumento"
-2. No filtro `<Select>` de tipo de vaga em `VagasPage.tsx`, garantir que apenas essas duas opções apareçam
-3. Verificar se outros componentes (como `AddVagaDialog`, `ConvocacaoDialog`, etc.) referenciam os tipos de vaga e ajustar se necessário
+### Alterações planejadas
+
+**1. `src/types/vaga.ts`**
+- Manter o type `StatusVaga` com todos os valores (para compatibilidade com dados existentes)
+- Criar um mapeamento `STATUS_DISPLAY_MAP` que agrupa status sinônimos para um label unificado
+- Atualizar `STATUS_VAGA_LABELS` para refletir os nomes corretos
+
+**2. `src/pages/VagasPage.tsx`**
+- Alterar o filtro de status para usar apenas os status agrupados/simplificados
+- Quando filtrar por "Concluída", incluir tanto "CONCLUÍDAS" quanto "CONCLUÍDA"
+- Quando filtrar por "Documentação", incluir os 3 sub-status
+- Remover "ACOMPANHAMENTO DE EDITAL" e "PUBLICAR NOVO EDITAL" do filtro
+- Renomear "EM ANDAMENTO" para "Em Edital"
+
+**3. `src/lib/vagaUtils.ts`**
+- Ajustar `getStatusColor` para os status agrupados
+
+**4. `src/components/StatusBadge.tsx`**
+- Usar o mapeamento unificado para exibição
 

@@ -402,7 +402,7 @@ export default function FilaEditaisPage() {
                             {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                           </Button>
                         </TableCell>
-                        <TableCell colSpan={9} className="py-3">
+                        <TableCell colSpan={10} className="py-3">
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                             <div className="flex items-center gap-2 min-w-0">
                               <Briefcase className="h-4 w-4 text-blue-700 shrink-0" />

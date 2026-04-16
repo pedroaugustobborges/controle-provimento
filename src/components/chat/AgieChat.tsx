@@ -170,35 +170,78 @@ export const AgieChat = memo(() => {
     }
   };
 
-  const sendMessage = () => {
-    if (!inputText.trim()) return;
-    
-    const newMessage: Message = {
-      id: Math.random().toString(36).substr(2, 9),
-      senderId: 'current-user',
-      senderName: 'Você',
-      senderRole: 'Usuário',
-      content: inputText,
-      timestamp: new Date(),
-    };
-
-    setMessages([...messages, newMessage]);
+  const sendMessage = async () => {
+    if (!inputText.trim() || !selectedRecipient) return;
+    const conteudo = inputText.trim();
     setInputText("");
 
-    // Simulate response
-    setTimeout(() => {
-      const response: Message = {
-        id: Math.random().toString(36).substr(2, 9),
-        senderId: 'agie',
-        senderName: 'Agie',
-        senderRole: 'Assistente',
-        content: `Recebi sua mensagem! Vou encaminhar para ${selectedRecipient} agora mesmo.`,
-        timestamp: new Date(),
-        isReply: true,
-      };
-      setMessages(prev => [...prev, response]);
-    }, 1000);
+    // Optimistic UI bubble in this conversation
+    const optimisticId = Math.random().toString(36).substr(2, 9);
+    const newMessage: Message = {
+      id: optimisticId,
+      senderId: 'current-user',
+      senderName: userProfile?.nome_completo || 'Você',
+      senderRole: 'Usuário',
+      content: conteudo,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+
+    try {
+      // Resolve recipient name -> profile.id (case-insensitive, trimmed)
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('id, nome_completo')
+        .ilike('nome_completo', selectedRecipient.trim())
+        .eq('status', 'ativo')
+        .maybeSingle();
+
+      if (profileErr || !profile) {
+        toast.error(`Não foi possível localizar "${selectedRecipient}" no sistema.`);
+        setMessages((prev) => prev.filter(m => m.id !== optimisticId));
+        return;
+      }
+
+      await useVagasStore.getState().addMensagem({
+        id: optimisticId,
+        destinatario_id: profile.id,
+        destinatario_nome: profile.nome_completo,
+        conteudo,
+        remetente: userProfile?.nome_completo || 'Você',
+        remetente_nome: userProfile?.nome_completo || 'Você',
+        titulo: `Mensagem de ${userProfile?.nome_completo || 'colega'}`,
+      });
+    } catch (e: any) {
+      console.error('[AgieChat sendMessage]', e);
+      toast.error('Erro ao enviar mensagem.');
+      setMessages((prev) => prev.filter(m => m.id !== optimisticId));
+    }
   };
+
+  // Load conversation history with the selected recipient (live from store)
+  useEffect(() => {
+    if (step !== 'CONVERSATION' || !selectedRecipient || !userProfile) return;
+    const myId = userProfile.id;
+    const recipientName = selectedRecipient.trim().toLowerCase();
+    const convo = historicoMensagens
+      .filter(m => {
+        const remetenteName = (m.remetente || '').trim().toLowerCase();
+        const isFromMeToThem = m.remetente_id === myId && (m.destinatario_nome || '').trim().toLowerCase() === recipientName;
+        const isFromThemToMe = m.destinatario_id === myId && remetenteName === recipientName;
+        return isFromMeToThem || isFromThemToMe;
+      })
+      .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+      .map<Message>(m => ({
+        id: m.id,
+        senderId: m.remetente_id === myId ? 'current-user' : 'other',
+        senderName: m.remetente_id === myId ? (userProfile?.nome_completo || 'Você') : m.remetente,
+        senderRole: '',
+        content: m.conteudo,
+        timestamp: new Date(m.data),
+      }));
+    setMessages(convo);
+  }, [step, selectedRecipient, userProfile, historicoMensagens]);
+
 
   const currentTooltipMessage = useMemo(() => {
     if (hasNewRealNotification) {

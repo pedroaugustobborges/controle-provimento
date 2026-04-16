@@ -171,7 +171,7 @@ interface VagasState {
   addBloqueio: (bloqueio: BloqueioHorario) => void;
   removeBloqueio: (id: string) => void;
   updateAlerta: (id: string, data: Partial<Alerta>) => void;
-  addMensagem: (mensagem: MensagemHistorico) => void;
+  addMensagem: (mensagem: any) => Promise<void>;
   marcarMensagemLida: (id: string) => void;
   setTemNovasMensagens: (has: boolean) => void;
   deleteImportBatch: (batchId: string) => Promise<void>;
@@ -296,8 +296,29 @@ export const useVagasStore = create<VagasState>()(
       fetchNotificacoes: async () => {
         try {
           const { supabase } = await import('@/integrations/supabase/client');
-          const { data, error } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(50);
-          if (!error) set({ notificacoes: data || [] });
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          const { data, error } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(200);
+          if (!error && data) {
+            set({ notificacoes: data.slice(0, 50) });
+            // Build chat history: messages either sent by me or addressed to me
+            const myId = authUser?.id;
+            const mensagens: MensagemHistorico[] = data
+              .filter((n: any) => n.tipo === 'mensagem' && (n.usuario_id === myId || n.remetente_id === myId))
+              .map((n: any) => ({
+                id: n.id,
+                data: n.created_at || new Date().toISOString(),
+                remetente: n.remetente_nome || 'Colega',
+                remetente_id: n.remetente_id || null,
+                destinatario_id: n.usuario_id || null,
+                conteudo: n.mensagem || '',
+                lida: n.remetente_id === myId ? true : Boolean(n.lida),
+                titulo: n.titulo,
+              }));
+            set({
+              historicoMensagens: mensagens,
+              temNovasMensagens: mensagens.some(m => !m.lida),
+            });
+          }
         } catch (err) {
           console.error('Error fetching notifications:', err);
         }
@@ -768,25 +789,54 @@ export const useVagasStore = create<VagasState>()(
       removeBloqueio: (id) => set((s) => ({ bloqueios: s.bloqueios.filter(b => b.id !== id) })),
       updateAlerta: (id, data) => set((s) => ({ alertas: s.alertas.map((a) => a.id === id ? { ...a, ...data } : a) })),
       addMensagem: async (mensagem: any) => {
-        // Mensagens viram notificações persistidas (mensagens internas Agie)
-        set((s) => ({ historicoMensagens: [mensagem, ...s.historicoMensagens], temNovasMensagens: true }));
+        // Persist message in Supabase notificacoes (used as a chat backend).
+        // Optimistic local update for the sender's own history.
         try {
           const { supabase } = await import('@/integrations/supabase/client');
-          const { data: { user: authUser } } = await supabase.auth.getUser();
+          const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
+          if (authErr || !authUser) {
+            toast.error('Sessão expirada. Faça login novamente para enviar mensagens.');
+            return;
+          }
           const destinatarioId = mensagem.destinatario_id || mensagem.usuario_id || null;
-          if (!destinatarioId) return; // mensagem geral fica só local
+          const conteudo = mensagem.conteudo || mensagem.mensagem || '';
+          if (!destinatarioId) {
+            toast.error('Destinatário não encontrado. Não foi possível enviar a mensagem.');
+            return;
+          }
+          if (!conteudo.trim()) return;
+
+          // Optimistic: add to sender's local history immediately
+          const optimistic: MensagemHistorico = {
+            id: mensagem.id || `tmp-${Date.now()}`,
+            data: new Date().toISOString(),
+            remetente: mensagem.remetente || 'Você',
+            remetente_id: authUser.id,
+            destinatario_id: destinatarioId,
+            destinatario_nome: mensagem.destinatario_nome || null,
+            conteudo,
+            lida: true, // sender's own message is always "read" for them
+            titulo: mensagem.titulo || 'Mensagem',
+          };
+          set((s) => ({ historicoMensagens: [optimistic, ...s.historicoMensagens] }));
+
           const { error } = await supabase.from('notificacoes').insert({
             usuario_id: destinatarioId,
-            titulo: mensagem.titulo || 'Nova mensagem',
-            mensagem: mensagem.conteudo || mensagem.mensagem || '',
+            titulo: mensagem.titulo || `Mensagem de ${mensagem.remetente_nome || 'colega'}`,
+            mensagem: conteudo,
             tipo: 'mensagem',
-            registro_id: mensagem.id || null,
-            remetente_id: authUser?.id || null,
-            remetente_nome: mensagem.remetente_nome || null,
+            remetente_id: authUser.id,
+            remetente_nome: mensagem.remetente_nome || mensagem.remetente || null,
           });
-          if (error) console.error('addMensagem notificacao error:', error);
+          if (error) {
+            console.error('[addMensagem] insert error:', error);
+            toast.error('Falha ao enviar mensagem: ' + error.message);
+            // rollback optimistic
+            set((s) => ({ historicoMensagens: s.historicoMensagens.filter(m => m.id !== optimistic.id) }));
+          }
         } catch (e: any) {
-          console.error('addMensagem exception:', e);
+          console.error('[addMensagem] exception:', e);
+          toast.error('Erro inesperado ao enviar mensagem.');
         }
       },
       marcarMensagemLida: (id) => set((s) => {
@@ -902,12 +952,38 @@ export const useVagasStore = create<VagasState>()(
                 set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== oldRow.id) }));
               }
             })
-            // Notificações
+            // Notificações (inclui mensagens internas tipo='mensagem')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
               const newRow = payload.new as any;
-              console.log('[Realtime] New Notification:', newRow.titulo);
-              toast.info(newRow.titulo, { description: newRow.mensagem });
+              console.log('[Realtime] New Notification:', newRow.titulo, 'tipo=', newRow.tipo);
               set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));
+
+              if (newRow.tipo === 'mensagem') {
+                // Add to chat history & flag unread
+                const mensagem: MensagemHistorico = {
+                  id: newRow.id,
+                  data: newRow.created_at || new Date().toISOString(),
+                  remetente: newRow.remetente_nome || 'Colega',
+                  remetente_id: newRow.remetente_id || null,
+                  destinatario_id: newRow.usuario_id || null,
+                  conteudo: newRow.mensagem || '',
+                  lida: false,
+                  titulo: newRow.titulo,
+                };
+                set((s) => {
+                  // dedupe (sender's optimistic insert already added it)
+                  if (s.historicoMensagens.some(m => m.id === newRow.id)) return s;
+                  return {
+                    historicoMensagens: [mensagem, ...s.historicoMensagens],
+                    temNovasMensagens: true,
+                  };
+                });
+                toast.info(`Nova mensagem de ${newRow.remetente_nome || 'colega'}`, {
+                  description: (newRow.mensagem || '').slice(0, 80),
+                });
+              } else {
+                toast.info(newRow.titulo, { description: newRow.mensagem });
+              }
             })
             // Alertas
             .on('postgres_changes', { event: '*', schema: 'public', table: 'alertas' }, (payload) => {

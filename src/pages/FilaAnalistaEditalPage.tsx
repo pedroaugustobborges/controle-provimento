@@ -619,7 +619,9 @@ export default function FilaAnalistaEditalPage() {
                         <SelectValue placeholder="Selecione a unidade..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={selectedVaga.unidade}>{selectedVaga.unidade} (Original)</SelectItem>
+                        {selectedVaga.unidade && (
+                          <SelectItem value={selectedVaga.unidade}>{selectedVaga.unidade} (Original)</SelectItem>
+                        )}
                         {UNIDADES_GOIANIA.filter(u => u !== selectedVaga.unidade).map(u => (
                           <SelectItem key={u} value={u}>{u}</SelectItem>
                         ))}

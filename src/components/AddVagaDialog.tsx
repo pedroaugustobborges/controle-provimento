@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { 
+import { Checkbox } from '@/components/ui/checkbox';
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,8 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
     numero_vagas: vaga?.numero_vagas || vaga?.quantidade || 1,
     secao: vaga?.secao || '',
     data_abertura: vaga?.data_abertura || new Date().toISOString().split('T')[0],
+    is_pcd: vaga?.is_pcd || false,
+    is_teia: vaga?.is_teia || (vaga?.unidade || '').toUpperCase().includes('TEIA'),
   });
 
   React.useEffect(() => {
@@ -44,6 +47,8 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
         numero_vagas: vaga.numero_vagas || vaga.quantidade || 1,
         secao: vaga.secao || '',
         data_abertura: vaga.data_abertura || new Date().toISOString().split('T')[0],
+        is_pcd: vaga.is_pcd || false,
+        is_teia: vaga.is_teia || (vaga.unidade || '').toUpperCase().includes('TEIA'),
       });
     } else {
       resetForm();

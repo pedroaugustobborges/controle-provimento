@@ -64,6 +64,10 @@ export class DatabaseService {
       'forma_convocacao_planilha', 'classificacao_convocacao_planilha',
       'candidato_convocado_planilha', 'horario_convocacao_planilha',
       'data_convocacao_planilha', 'secao',
+      // Edital workflow columns
+      'status_fluxo_edital', 'observacoes_unidade', 'observacoes_edital',
+      'observacoes_validacao', 'validado_por', 'data_validacao', 'arquivo_edital',
+      'cargo_validado', 'carga_horaria_validada', 'salario_validado', 'historico',
     ],
     banco_candidatos: [
       'nome', 'cargo', 'cargo_normalizado', 'unidade', 'status', 'numero_edital',

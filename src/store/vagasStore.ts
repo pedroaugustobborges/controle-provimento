@@ -143,7 +143,7 @@ interface VagasState {
   fetchNotificacoes: () => Promise<void>;
   createNotificacao: (notif: { titulo: string; mensagem: string; tipo?: string; unidade?: string; registro_id?: string; regiao?: string; usuario_id?: string | null }) => Promise<void>;
   notificarMovimentacaoEdital: (vagaId: string, novaEtapa: string, mensagemExtra?: string) => Promise<void>;
-  addVagas: (vagas: Vaga[]) => void;
+  addVagas: (vagas: Vaga[]) => Promise<void> | void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
   updateVagaAsync: (id: string, data: Partial<Vaga>) => Promise<boolean>;
   deleteVaga: (id: string) => void;
@@ -911,6 +911,28 @@ export const useVagasStore = create<VagasState>()(
               console.log('[Realtime] New Notification:', newRow.titulo);
               toast.info(newRow.titulo, { description: newRow.mensagem });
               set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));
+            })
+            // Alertas
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'alertas' }, (payload) => {
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                set((s) => s.alertas.some((a: any) => a.id === newRow.id) ? s : ({ alertas: [newRow as any, ...s.alertas] }));
+              } else if (eventType === 'UPDATE') {
+                set((s) => ({ alertas: s.alertas.map((a: any) => a.id === newRow.id ? { ...a, ...newRow } : a) }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ alertas: s.alertas.filter((a: any) => a.id !== oldRow.id) }));
+              }
+            })
+            // Tarefas
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas' }, (payload) => {
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                set((s) => s.tarefas.some((t: any) => t.id === newRow.id) ? s : ({ tarefas: [newRow as any, ...s.tarefas] }));
+              } else if (eventType === 'UPDATE') {
+                set((s) => ({ tarefas: s.tarefas.map((t: any) => t.id === newRow.id ? { ...t, ...newRow } : t) }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ tarefas: s.tarefas.filter((t: any) => t.id !== oldRow.id) }));
+              }
             })
             // Importações
             .on('postgres_changes', { event: '*', schema: 'public', table: 'importacoes' }, (payload) => {

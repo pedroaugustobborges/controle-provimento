@@ -384,7 +384,63 @@ export const useVagasStore = create<VagasState>()(
           console.error('[notificarMovimentacaoEdital] error:', err);
         }
       },
-      addVagas: (newVagas) => set((s) => ({ vagas: [...newVagas, ...s.vagas] })),
+      addVagas: async (newVagas) => {
+        // Optimistic
+        set((s) => ({ vagas: [...newVagas, ...s.vagas] }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (!authUser) {
+            toast.error('Sessão expirada. Faça login novamente para salvar a vaga.');
+            const ids = new Set(newVagas.map((v: any) => v.id));
+            set((s) => ({ vagas: s.vagas.filter((v) => !ids.has(v.id)) }));
+            return;
+          }
+
+          const ALLOWED = new Set([
+            'unidade','cargo','status','status_geral','tipo_vaga','numero_vagas','quantidade','motivo','observacao','observacoes',
+            'analista_responsavel','assistentes','nome_substituido','data_abertura','data_recebimento','data_envio_edital','data_publicacao',
+            'data_homologacao','data_convocacao','secao','numero_edital','numero_processo_seletivo','etapa','publicacao','prioridade',
+            'mes_referencia','origem','unidade_trabalho','unidades_banco_talentos','is_pcd','is_teia','status_fluxo_edital',
+            'observacoes_unidade','observacoes_edital','observacoes_validacao','arquivo_edital','historico','distribuicao_vagas','url_reachr'
+          ]);
+
+          const payloads = newVagas.map((v: any) => {
+            const p: any = { created_by: authUser.id, updated_by: authUser.id };
+            for (const k of Object.keys(v)) {
+              if (k === 'id' && typeof v.id === 'string' && v.id.startsWith('vaga-manual-')) continue;
+              if (k === 'requisicao' || k === 'numero_requisicao') {
+                p.numero_processo_seletivo = v[k] || p.numero_processo_seletivo || null;
+                continue;
+              }
+              if (k === 'assistentes' && Array.isArray(v[k])) { p.assistentes = v[k].join(', '); continue; }
+              if (ALLOWED.has(k) && v[k] !== undefined) p[k] = v[k];
+            }
+            return p;
+          });
+
+          const { data, error } = await supabase.from('vagas').insert(payloads).select();
+          if (error) {
+            console.error('addVagas persist error:', error, 'payload:', payloads);
+            toast.error(`Falha ao salvar vaga: ${error.message}`);
+            const ids = new Set(newVagas.map((v: any) => v.id));
+            set((s) => ({ vagas: s.vagas.filter((v) => !ids.has(v.id)) }));
+            return;
+          }
+
+          // Replace temp rows with persisted versions
+          if (data && data.length) {
+            const tempIds = newVagas.map((v: any) => v.id);
+            set((s) => {
+              const filtered = s.vagas.filter((v) => !tempIds.includes(v.id));
+              return { vagas: [...data.map(mapDbVaga), ...filtered] };
+            });
+          }
+        } catch (e: any) {
+          console.error('addVagas exception:', e);
+          toast.error(`Erro ao salvar vaga: ${e?.message || 'desconhecido'}`);
+        }
+      },
       updateVaga: (id, data) => set((s) => ({
         vagas: s.vagas.map((v) => v.id === id ? { ...v, ...data } : v),
       })),
@@ -652,14 +708,90 @@ export const useVagasStore = create<VagasState>()(
         const { success } = await DatabaseService.deleteImportBatch(id);
         if (success) set((s) => ({ importedFiles: s.importedFiles.filter((f) => f.id !== id), importHistory: s.importHistory.filter((h) => h.id !== id) }));
       },
-      addTarefa: (tarefa) => set((s) => ({ tarefas: [tarefa, ...s.tarefas] })),
+      addTarefa: async (tarefa: any) => {
+        const tempId = tarefa.id;
+        set((s) => ({ tarefas: [tarefa, ...s.tarefas] }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const payload: any = {
+            titulo: tarefa.titulo,
+            descricao: tarefa.descricao || null,
+            status: tarefa.status || 'pendente',
+            prioridade: tarefa.prioridade || 'media',
+            atribuido_a: tarefa.atribuido_a || null,
+            perfil_destinatario: tarefa.perfil_destinatario || null,
+            data_vencimento: tarefa.data_vencimento || null,
+            data_criacao: tarefa.data_criacao || new Date().toISOString(),
+            relacionado_a_id: tarefa.relacionado_a_id || null,
+            relacionado_a_tipo: tarefa.relacionado_a_tipo || null,
+          };
+          const { data, error } = await supabase.from('tarefas').insert(payload).select().single();
+          if (error) {
+            console.error('addTarefa persist error:', error);
+            toast.error(`Falha ao salvar tarefa: ${error.message}`);
+            set((s) => ({ tarefas: s.tarefas.filter((t) => t.id !== tempId) }));
+            return;
+          }
+          set((s) => ({ tarefas: s.tarefas.map((t) => t.id === tempId ? (data as any) : t) }));
+        } catch (e: any) {
+          console.error('addTarefa exception:', e);
+          set((s) => ({ tarefas: s.tarefas.filter((t) => t.id !== tempId) }));
+        }
+      },
       updateTarefa: (id, data) => set((s) => ({ tarefas: s.tarefas.map((t) => t.id === id ? { ...t, ...data } : t) })),
       deleteTarefa: (id) => set((s) => ({ tarefas: s.tarefas.filter((t) => t.id !== id) })),
-      addAlerta: (alerta) => set((s) => ({ alertas: [alerta, ...s.alertas] })),
+      addAlerta: async (alerta: any) => {
+        const tempId = alerta.id;
+        set((s) => ({ alertas: [alerta, ...s.alertas] }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const payload: any = {
+            titulo: alerta.titulo,
+            mensagem: alerta.mensagem || null,
+            tipo: alerta.tipo || 'informativo',
+            status: alerta.status || 'nao_lido',
+            destinatario: alerta.destinatario || null,
+            link: alerta.link || null,
+            data_criacao: alerta.data_criacao || new Date().toISOString(),
+          };
+          const { data, error } = await supabase.from('alertas').insert(payload).select().single();
+          if (error) {
+            console.error('addAlerta persist error:', error);
+            toast.error(`Falha ao salvar alerta: ${error.message}`);
+            set((s) => ({ alertas: s.alertas.filter((a) => a.id !== tempId) }));
+            return;
+          }
+          set((s) => ({ alertas: s.alertas.map((a) => a.id === tempId ? (data as any) : a) }));
+        } catch (e: any) {
+          console.error('addAlerta exception:', e);
+          set((s) => ({ alertas: s.alertas.filter((a) => a.id !== tempId) }));
+        }
+      },
       addBloqueio: (bloqueio) => set((s) => ({ bloqueios: [bloqueio, ...s.bloqueios] })),
       removeBloqueio: (id) => set((s) => ({ bloqueios: s.bloqueios.filter(b => b.id !== id) })),
       updateAlerta: (id, data) => set((s) => ({ alertas: s.alertas.map((a) => a.id === id ? { ...a, ...data } : a) })),
-      addMensagem: (mensagem) => set((s) => ({ historicoMensagens: [mensagem, ...s.historicoMensagens], temNovasMensagens: true })),
+      addMensagem: async (mensagem: any) => {
+        // Mensagens viram notificações persistidas (mensagens internas Agie)
+        set((s) => ({ historicoMensagens: [mensagem, ...s.historicoMensagens], temNovasMensagens: true }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          const destinatarioId = mensagem.destinatario_id || mensagem.usuario_id || null;
+          if (!destinatarioId) return; // mensagem geral fica só local
+          const { error } = await supabase.from('notificacoes').insert({
+            usuario_id: destinatarioId,
+            titulo: mensagem.titulo || 'Nova mensagem',
+            mensagem: mensagem.conteudo || mensagem.mensagem || '',
+            tipo: 'mensagem',
+            registro_id: mensagem.id || null,
+            remetente_id: authUser?.id || null,
+            remetente_nome: mensagem.remetente_nome || null,
+          });
+          if (error) console.error('addMensagem notificacao error:', error);
+        } catch (e: any) {
+          console.error('addMensagem exception:', e);
+        }
+      },
       marcarMensagemLida: (id) => set((s) => {
         const newHistory = s.historicoMensagens.map((m) => m.id === id ? { ...m, lida: true } : m);
         return { historicoMensagens: newHistory, temNovasMensagens: newHistory.some(m => !m.lida) };

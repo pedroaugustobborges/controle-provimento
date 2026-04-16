@@ -134,34 +134,75 @@ export default function MensagensPage() {
     }
   };
 
-  const sendMessage = () => {
-    if (!inputText.trim()) return;
-    
-    const newMessage: Message = {
-      id: Math.random().toString(36).substr(2, 9),
-      senderId: 'current-user',
-      senderName: 'Você',
-      senderRole: 'Usuário',
-      content: inputText,
-      timestamp: new Date(),
-    };
-
-    setChatMessages([...chatMessages, newMessage]);
+  const sendMessage = async () => {
+    if (!inputText.trim() || !selectedRecipient) return;
+    const conteudo = inputText.trim();
     setInputText("");
 
-    setTimeout(() => {
-      const response: Message = {
-        id: Math.random().toString(36).substr(2, 9),
-        senderId: 'agie',
-        senderName: 'Agie',
-        senderRole: 'Assistente',
-        content: `Recebi sua mensagem! Vou encaminhar para ${selectedRecipient} agora mesmo.`,
-        timestamp: new Date(),
-        isReply: true,
-      };
-      setChatMessages(prev => [...prev, response]);
-    }, 1000);
+    const optimisticId = Math.random().toString(36).substr(2, 9);
+    const newMessage: Message = {
+      id: optimisticId,
+      senderId: 'current-user',
+      senderName: currentUser?.nome_completo || 'Você',
+      senderRole: 'Usuário',
+      content: conteudo,
+      timestamp: new Date(),
+    };
+    setChatMessages((prev) => [...prev, newMessage]);
+
+    try {
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('id, nome_completo')
+        .ilike('nome_completo', selectedRecipient.trim())
+        .eq('status', 'ativo')
+        .maybeSingle();
+
+      if (profileErr || !profile) {
+        toast.error(`Não foi possível localizar "${selectedRecipient}" no sistema.`);
+        setChatMessages((prev) => prev.filter(m => m.id !== optimisticId));
+        return;
+      }
+
+      await useVagasStore.getState().addMensagem({
+        id: optimisticId,
+        destinatario_id: profile.id,
+        destinatario_nome: profile.nome_completo,
+        conteudo,
+        remetente: currentUser?.nome_completo || 'Você',
+        remetente_nome: currentUser?.nome_completo || 'Você',
+        titulo: `Mensagem de ${currentUser?.nome_completo || 'colega'}`,
+      });
+    } catch (e: any) {
+      console.error('[MensagensPage sendMessage]', e);
+      toast.error('Erro ao enviar mensagem.');
+      setChatMessages((prev) => prev.filter(m => m.id !== optimisticId));
+    }
   };
+
+  // Live conversation history with selected recipient
+  useEffect(() => {
+    if (step !== 'CONVERSATION' || !selectedRecipient || !currentUser) return;
+    const myId = currentUser.id;
+    const recipientName = selectedRecipient.trim().toLowerCase();
+    const convo = historicoMensagens
+      .filter(m => {
+        const remetenteName = (m.remetente || '').trim().toLowerCase();
+        const isFromMeToThem = m.remetente_id === myId && (m.destinatario_nome || '').trim().toLowerCase() === recipientName;
+        const isFromThemToMe = m.destinatario_id === myId && remetenteName === recipientName;
+        return isFromMeToThem || isFromThemToMe;
+      })
+      .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+      .map<Message>(m => ({
+        id: m.id,
+        senderId: m.remetente_id === myId ? 'current-user' : 'other',
+        senderName: m.remetente_id === myId ? (currentUser?.nome_completo || 'Você') : m.remetente,
+        senderRole: '',
+        content: m.conteudo,
+        timestamp: new Date(m.data),
+      }));
+    setChatMessages(convo);
+  }, [step, selectedRecipient, currentUser, historicoMensagens]);
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">

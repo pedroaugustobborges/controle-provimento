@@ -796,13 +796,55 @@ export default function VagasPage() {
                 <Input placeholder="Buscar cargo, requisição ou unidade..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-white" />
               </div>
             </div>
-            <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-              <SelectTrigger className="w-[180px] bg-white"><SelectValue placeholder="Unidade" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas Unidades</SelectItem>
-                {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {filtroEspecial === 'pcd' ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-slate-400" />
+                  {Object.keys(PCD_REGIOES).map(regiao => (
+                    <Button
+                      key={regiao}
+                      variant={pcdRegiao === regiao ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 text-xs font-bold rounded-xl"
+                      onClick={() => {
+                        setPcdRegiao(pcdRegiao === regiao ? null : regiao);
+                        setFilterUnidade('all');
+                      }}
+                    >
+                      {regiao}
+                    </Button>
+                  ))}
+                  {pcdRegiao && (
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400" onClick={() => { setPcdRegiao(null); setFilterUnidade('all'); }}>
+                      <X className="h-3 w-3 mr-1" /> Limpar
+                    </Button>
+                  )}
+                </div>
+                {pcdRegiao && pcdUnidadesComVagas[pcdRegiao] && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {pcdUnidadesComVagas[pcdRegiao].map(unit => (
+                      <Button
+                        key={unit}
+                        variant={filterUnidade === unit ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 text-[11px] font-medium rounded-lg px-3"
+                        onClick={() => setFilterUnidade(filterUnidade === unit ? 'all' : unit)}
+                      >
+                        {unit}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+                <SelectTrigger className="w-[180px] bg-white"><SelectValue placeholder="Unidade" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas Unidades</SelectItem>
+                  {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={filterMes} onValueChange={setFilterMes}>
               <SelectTrigger className="w-[160px] bg-white text-xs">
                 <div className="flex items-center gap-2">

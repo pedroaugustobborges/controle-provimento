@@ -271,21 +271,64 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="carga_horaria">Carga Horária</Label>
-                  <Input 
-                    id="carga_horaria" 
-                    value={formData.carga_horaria || ''} 
-                    onChange={e => setFormData({...formData, carga_horaria: e.target.value})}
-                    placeholder="Ex: 44h/semana"
-                  />
+                  <Select
+                    value={formData.carga_horaria || ''}
+                    onValueChange={v => setFormData({...formData, carga_horaria: v})}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="20h/semana">20h/semana</SelectItem>
+                      <SelectItem value="30h/semana">30h/semana</SelectItem>
+                      <SelectItem value="40h/semana">40h/semana</SelectItem>
+                      <SelectItem value="44h/semana">44h/semana</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="horario_trabalho">Horário de Trabalho</Label>
-                  <Input 
-                    id="horario_trabalho" 
-                    value={formData.horario_trabalho || ''} 
-                    onChange={e => setFormData({...formData, horario_trabalho: e.target.value})}
-                    placeholder="Ex: 08:00 às 18:00"
-                  />
+                  <Label>Horário de Trabalho</Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={formData.horario_trabalho?.split(' às ')[0] || ''}
+                      onValueChange={v => {
+                        const fim = formData.horario_trabalho?.split(' às ')[1] || '';
+                        setFormData({...formData, horario_trabalho: fim ? `${v} às ${fim}` : v});
+                      }}
+                    >
+                      <SelectTrigger className="bg-white flex-1">
+                        <SelectValue placeholder="Início" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({length: 33}, (_, i) => {
+                          const h = Math.floor(i / 2) + 6;
+                          const m = i % 2 === 0 ? '00' : '30';
+                          const val = `${String(h).padStart(2, '0')}:${m}`;
+                          return <SelectItem key={val} value={val}>{val}</SelectItem>;
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-sm text-slate-500 font-medium">às</span>
+                    <Select
+                      value={formData.horario_trabalho?.split(' às ')[1] || ''}
+                      onValueChange={v => {
+                        const inicio = formData.horario_trabalho?.split(' às ')[0] || '';
+                        setFormData({...formData, horario_trabalho: inicio ? `${inicio} às ${v}` : `às ${v}`});
+                      }}
+                    >
+                      <SelectTrigger className="bg-white flex-1">
+                        <SelectValue placeholder="Fim" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({length: 33}, (_, i) => {
+                          const h = Math.floor(i / 2) + 6;
+                          const m = i % 2 === 0 ? '00' : '30';
+                          const val = `${String(h).padStart(2, '0')}:${m}`;
+                          return <SelectItem key={val} value={val}>{val}</SelectItem>;
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 

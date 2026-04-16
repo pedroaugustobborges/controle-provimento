@@ -52,7 +52,7 @@ import {
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateVagaAsync, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const permissions = usePermissions();
   
@@ -189,8 +189,8 @@ export default function VagaDetalhePage() {
       toast.info('Banco de Talentos criado e tarefas atribuídas à assistência');
     }
 
-    updateVaga(vaga.id, updateData);
-    
+    await updateVagaAsync(vaga.id, updateData);
+
     addAuditLog({
       usuario_nome: currentUser?.nome_completo || 'Sistema',
       usuario_email: currentUser?.email || 'sistema@sistema.com',

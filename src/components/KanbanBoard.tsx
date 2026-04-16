@@ -61,7 +61,7 @@ const KanbanColumn = ({ id, title, icon: Icon, count, color, children }: KanbanC
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
-    <div className={`flex flex-col min-w-[320px] max-w-[320px] h-full bg-slate-50/50 rounded-xl border transition-colors ${isOver ? 'border-primary/50 bg-primary/5' : 'border-slate-200/50'}`}>
+    <div className={`flex flex-col min-w-[200px] flex-1 h-full bg-slate-50/50 rounded-xl border transition-colors ${isOver ? 'border-primary/50 bg-primary/5' : 'border-slate-200/50'}`}>
       <div className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className={`p-1.5 rounded-lg ${color} bg-opacity-10`}>

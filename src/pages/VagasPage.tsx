@@ -334,17 +334,27 @@ export default function VagasPage() {
         (v.unidade || '').toLowerCase().includes(searchTerm) ||
         (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
-      const matchStatus = filterStatuses.length === 0 || filterStatuses.some(s => {
-        if (s === v.status || s === v.status_geral) return true;
-        if (s === 'SEM STATUS' && (!v.status_geral || v.status_geral.trim() === '' || v.status_geral === 'SEM STATUS' || v.status === 'SEM STATUS')) return true;
-        if (s === 'CONVOCAÇÕES' && category === 'convocacao') return true;
-        if (s === 'DOCUMENTAÇÃO' && category === 'documentacao') return true;
-        if (s === 'FILA DE EDITAIS' && category === 'fila_edital') return true;
-        if (s === 'EM ANDAMENTO' && category === 'em_andamento') return true;
-        if (s === 'CONCLUÍDAS' && category === 'concluidas') return true;
-        if (s === 'ESTRATÉGICAS' && category === 'vagas_lideranca') return true;
-        if (s === 'CANCELADAS' && category === 'vagas_interrompidas') return true;
-        if (s === 'AGUARDANDO UNIDADE' && category === 'aguardando_unidade') return true;
+      const matchStatus = filterStatuses.length === 0 || filterStatuses.some(filterKey => {
+        const filterOption = STATUS_FILTER_OPTIONS[filterKey];
+        if (!filterOption) return false;
+        const statusValue = v.status_geral || v.status || '';
+        // Check direct match with any of the grouped statuses
+        if (filterOption.matches.includes(statusValue as any)) return true;
+        // Check SEM STATUS special case
+        if (filterKey === 'SEM STATUS' && (!statusValue || statusValue.trim() === '' || statusValue === 'SEM STATUS')) return true;
+        // Check by category
+        const category = v.categoria_status || getCategoriaStatus(v);
+        if (filterKey === 'CONCLUÍDA' && (category === 'concluidas')) return true;
+        if (filterKey === 'CONVOCAÇÕES' && category === 'convocacao') return true;
+        if (filterKey === 'DOCUMENTAÇÃO' && category === 'documentacao') return true;
+        if (filterKey === 'FILA DE EDITAIS' && category === 'fila_edital') return true;
+        if (filterKey === 'EM EDITAL' && category === 'em_andamento') return true;
+        if (filterKey === 'VAGA DE LIDERANÇA' && category === 'vagas_lideranca') return true;
+        if (filterKey === 'CANCELADAS' && (category === 'vagas_interrompidas' || category === 'cancelada')) return true;
+        if (filterKey === 'AGUARDANDO UNIDADE' && category === 'aguardando_unidade') return true;
+        if (filterKey === 'MOVIMENTAÇÃO INTERNA' && category === 'movimentacao_interna') return true;
+        if (filterKey === 'ADMISSÃO' && category === 'em_admissao') return true;
+        if (filterKey === 'SUSPENSA' && category === 'suspensa') return true;
         return false;
       });
       const matchTipo = filterTipo === 'all' || v.tipo_vaga === filterTipo;
@@ -787,7 +797,7 @@ export default function VagasPage() {
                   </div>
                   <div className="h-px bg-slate-100 my-1" />
                   <div className="max-h-[300px] overflow-y-auto space-y-1">
-                    {Object.entries(STATUS_LABELS).map(([k, v]) => {
+                    {Object.entries(STATUS_FILTER_OPTIONS).map(([k, { label }]) => {
                       const isSelected = filterStatuses.includes(k);
                       return (
                         <div 
@@ -802,7 +812,7 @@ export default function VagasPage() {
                           }}
                         >
                           <Checkbox checked={isSelected} onCheckedChange={() => {}} className="pointer-events-none" />
-                          <span className="text-xs">{v}</span>
+                          <span className="text-xs">{label}</span>
                         </div>
                       );
                     })}

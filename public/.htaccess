@@ -1,8 +1,28 @@
+# Single Page Application Routing
+# This file handles routing for Apache and compatible servers (like Hostinger/LiteSpeed)
+# It ensures all direct requests are sent to index.html so the client-side router can handle them
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+  
+  # If the requested file or directory exists, serve it directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  
+  # Otherwise, rewrite all other requests to index.html
+  RewriteRule ^ /index.html [L]
+</IfModule>
+
+# Fallback for systems that use ErrorDocument for 404s
+ErrorDocument 404 /index.html
+
+# Simple fallback for modern Apache 2.4+
+<IfModule mod_dir.c>
+  DirectoryIndex index.html
+</IfModule>
+
+<IfModule mod_negotiation.c>
+  Options -MultiViews
 </IfModule>

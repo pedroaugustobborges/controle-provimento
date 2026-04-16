@@ -13,30 +13,23 @@ interface ConvocacaoData {
   unidade_convocacao: string | null;
 }
 
-const pieChartConfig: ChartConfig = {
-  value: { label: 'Quantidade' },
-  CONVOCADO: { label: 'Convocado', color: 'hsl(221, 83%, 53%)' },
-  'CADASTRO RESERVA': { label: 'Cadastro Reserva', color: 'hsl(142, 76%, 36%)' },
-  VENCIDO: { label: 'Vencido', color: 'hsl(0, 84%, 60%)' },
-  DESISTIU: { label: 'Desistiu', color: 'hsl(25, 95%, 53%)' },
-  FALTOU: { label: 'Faltou', color: 'hsl(280, 67%, 51%)' },
-};
-
-const PIE_COLORS = [
-  'hsl(221, 83%, 53%)',
-  'hsl(142, 76%, 36%)',
-  'hsl(0, 84%, 60%)',
-  'hsl(25, 95%, 53%)',
-  'hsl(280, 67%, 51%)',
-  'hsl(199, 89%, 48%)',
+const SOFT_COLORS = [
+  'hsl(221, 50%, 62%)',
+  'hsl(152, 45%, 50%)',
+  'hsl(0, 55%, 62%)',
+  'hsl(30, 60%, 58%)',
+  'hsl(270, 40%, 58%)',
+  'hsl(199, 50%, 55%)',
+  'hsl(340, 45%, 58%)',
+  'hsl(180, 40%, 50%)',
 ];
 
 const unidadesChartConfig: ChartConfig = {
-  value: { label: 'Convocações', color: 'hsl(221, 83%, 53%)' },
+  value: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
 };
 
 const cargosChartConfig: ChartConfig = {
-  value: { label: 'Convocações', color: 'hsl(142, 76%, 36%)' },
+  value: { label: 'Convocações', color: 'hsl(152, 45%, 50%)' },
 };
 
 export default function ConvocacoesDashboardPage() {
@@ -98,8 +91,16 @@ export default function ConvocacoesDashboardPage() {
     });
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([name, value]) => ({ name, value, fill: PIE_COLORS[Object.keys(counts).indexOf(name) % PIE_COLORS.length] }));
+      .map(([name, value], index) => ({ name, value, fill: SOFT_COLORS[index % SOFT_COLORS.length] }));
   }, [data]);
+
+  const dynamicPieConfig = useMemo<ChartConfig>(() => {
+    const config: ChartConfig = { value: { label: 'Quantidade' } };
+    statusDistribution.forEach((item, index) => {
+      config[item.name] = { label: item.name, color: SOFT_COLORS[index % SOFT_COLORS.length] };
+    });
+    return config;
+  }, [statusDistribution]);
 
   if (loading) {
     return (
@@ -132,7 +133,7 @@ export default function ConvocacoesDashboardPage() {
             <ChartContainer config={unidadesChartConfig} className="h-[280px] w-full">
               <BarChart data={topUnidades} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
               </BarChart>
@@ -151,7 +152,7 @@ export default function ConvocacoesDashboardPage() {
             <ChartContainer config={cargosChartConfig} className="h-[280px] w-full">
               <BarChart data={topCargos} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
               </BarChart>
@@ -167,7 +168,7 @@ export default function ConvocacoesDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={pieChartConfig} className="h-[320px] w-full">
+            <ChartContainer config={dynamicPieConfig} className="h-[320px] w-full">
               <PieChart>
                 <Pie
                   data={statusDistribution}

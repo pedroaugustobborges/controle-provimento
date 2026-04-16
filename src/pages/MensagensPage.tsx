@@ -190,8 +190,9 @@ export default function MensagensPage() {
     const convo = historicoMensagens
       .filter(m => {
         const remetenteName = (m.remetente || '').trim().toLowerCase();
-        const isFromMeToThem = m.remetente_id === myId && (m.destinatario_nome || '').trim().toLowerCase() === recipientName;
-        const isFromThemToMe = m.destinatario_id === myId && remetenteName === recipientName;
+        const destName = (m.destinatario_nome || '').trim().toLowerCase();
+        const isFromMeToThem = m.remetente_id === myId && (destName === recipientName || destName.includes(recipientName));
+        const isFromThemToMe = m.destinatario_id === myId && (remetenteName === recipientName || remetenteName.includes(recipientName));
         return isFromMeToThem || isFromThemToMe;
       })
       .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())

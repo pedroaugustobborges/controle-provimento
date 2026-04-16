@@ -6,3 +6,14 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# Fallback for systems that use ErrorDocument for 404s
+ErrorDocument 404 /index.html
+
+# Simple fallback for modern Apache 2.4+
+<IfModule mod_dir.c>
+  DirectoryIndex index.html
+</IfModule>
+<IfModule mod_negotiation.c>
+  Options -MultiViews
+</IfModule>

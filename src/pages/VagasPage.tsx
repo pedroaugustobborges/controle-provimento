@@ -13,7 +13,7 @@ import {
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa,
   filterByRegionAndUnit, UNIDADES_POR_REGIAO
 } from '@/lib/vagaUtils';
-import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles, Download, Accessibility } from 'lucide-react';
+import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles, Download, Accessibility, ArrowLeft } from 'lucide-react';
 import { ExportButton } from '@/components/ExportButton';
 // ... keep existing code
 
@@ -307,7 +307,7 @@ export default function VagasPage() {
     let baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
     
     // 2. Filtragem especial (TEIAs ou PCD)
-    if (filtroEspecial === 'teia') {
+    if (filtroEspecial === 'teias') {
       baseRecords = baseRecords.filter(v => 
         (v.is_teia === true) || (v.unidade || '').toUpperCase().includes('TEIA')
       );
@@ -320,6 +320,13 @@ export default function VagasPage() {
         const regionUnits = PCD_REGIOES[pcdRegiao].map(u => normalizeUnitName(u));
         baseRecords = baseRecords.filter(v => regionUnits.includes(normalizeUnitName(v.unidade)));
       }
+    } else {
+      // Visão padrão: excluir TEIAs e PCDs
+      baseRecords = baseRecords.filter(v => {
+        const isTeia = (v.is_teia === true) || (v.unidade || '').toUpperCase().includes('TEIA');
+        const isPcd = (v.is_pcd === true) || (v.cargo || '').toUpperCase().includes('PCD');
+        return !isTeia && !isPcd;
+      });
     }
     
     // 3. Filtragem interna da tela
@@ -770,7 +777,7 @@ export default function VagasPage() {
         </Card>
       )}
 
-      {/* Cards removidos conforme solicitação */}
+      {/* Card resumo com botões de atalho contextuais */}
       <div className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2">
         <div 
           className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-all"
@@ -785,26 +792,65 @@ export default function VagasPage() {
             <TrendingUp className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">Resumo: Vagas em Andamento</h3>
+            <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">
+              {filtroEspecial === 'pcd' ? 'Resumo: Vagas PCD' : filtroEspecial === 'teias' ? 'Resumo: Vagas TEIAs' : 'Resumo: Vagas em Andamento'}
+            </h3>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-blue-700">{countEmAndamento}</span>
               <span className="text-[11px] text-blue-600/80 font-medium">vagas sendo processadas no momento</span>
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-auto flex items-center gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-800 font-bold rounded-lg"
-          title="Vagas PCD"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate('/vagas?filtro=pcd');
-          }}
-        >
-          <Accessibility className="h-4 w-4" />
-          <span className="hidden sm:inline text-xs">Vagas PCD</span>
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          {/* Botão Voltar ao Controle de Vagas - só aparece em sub-filtros */}
+          {filtroEspecial && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-800 font-bold rounded-lg"
+              title="Voltar ao Controle de Vagas"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/vagas');
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Controle de Vagas</span>
+            </Button>
+          )}
+          {/* Botão TEIAs - aparece quando NÃO está em teias */}
+          {filtroEspecial !== 'teias' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 font-bold rounded-lg"
+              title="Vagas TEIAs"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/vagas?filtro=teias');
+              }}
+            >
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Vagas TEIAs</span>
+            </Button>
+          )}
+          {/* Botão PCD - aparece quando NÃO está em pcd */}
+          {filtroEspecial !== 'pcd' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-800 font-bold rounded-lg"
+              title="Vagas PCD"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/vagas?filtro=pcd');
+              }}
+            >
+              <Accessibility className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Vagas PCD</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">

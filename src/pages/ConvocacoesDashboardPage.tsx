@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList } from 'recharts';
+
+const truncateLabel = (value: string, max = 22) =>
+  value && value.length > max ? `${value.slice(0, max - 1)}…` : value;
 import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
 
 interface ConvocacaoData {

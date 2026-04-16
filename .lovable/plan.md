@@ -1,16 +1,13 @@
 
 
-## Plano: Corrigir opções de Carga Horária para formato semanal
+## Plano: Limitar tipos de vaga a Substituição e Aumento
 
-### Arquivo afetado
-- `src/components/ConvocacaoDialog.tsx`
+### Arquivos a verificar/alterar
+- `src/types/vaga.ts` — verificar o objeto `TIPO_VAGA_LABELS` e limitar às opções desejadas
+- `src/pages/VagasPage.tsx` — verificar o filtro de tipo de vaga e garantir que só exiba Substituição e Aumento
 
-### Alteração
-Localizar o `<Select>` do campo Carga Horária e substituir as opções atuais (que podem estar com valores mensais) pelas opções semanais corretas:
-- `20h/semana`
-- `30h/semana`
-- `40h/semana`
-- `44h/semana`
-
-Verificar tanto os `value` quanto os `label` de cada `<SelectItem>` para garantir consistência.
+### Alterações
+1. Em `TIPO_VAGA_LABELS` (ou onde os tipos são definidos), manter apenas as chaves correspondentes a "Substituição" e "Aumento"
+2. No filtro `<Select>` de tipo de vaga em `VagasPage.tsx`, garantir que apenas essas duas opções apareçam
+3. Verificar se outros componentes (como `AddVagaDialog`, `ConvocacaoDialog`, etc.) referenciam os tipos de vaga e ajustar se necessário
 

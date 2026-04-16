@@ -542,11 +542,7 @@ export const useVagasStore = create<VagasState>()(
           console.log(`[Realtime] Initiating subscription on channel: ${channelName}`);
           
           const channel = supabase
-            .channel(channelName, {
-              config: {
-                postgres_changes: [{ event: '*', schema: 'public' }],
-              }
-            })
+            .channel(channelName)
             // Vagas
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vagas' }, (payload) => {
               const { eventType, new: newRow, old: oldRow } = payload as any;

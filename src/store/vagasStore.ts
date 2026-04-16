@@ -839,11 +839,31 @@ export const useVagasStore = create<VagasState>()(
           toast.error('Erro inesperado ao enviar mensagem.');
         }
       },
-      marcarMensagemLida: (id) => set((s) => {
-        const newHistory = s.historicoMensagens.map((m) => m.id === id ? { ...m, lida: true } : m);
-        return { historicoMensagens: newHistory, temNovasMensagens: newHistory.some(m => !m.lida) };
-      }),
-      marcarTodasLidas: () => set((s) => ({ historicoMensagens: s.historicoMensagens.map((m) => ({ ...m, lida: true })), temNovasMensagens: false })),
+      marcarMensagemLida: async (id) => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+          
+          set((s) => {
+            const newHistory = s.historicoMensagens.map((m) => m.id === id ? { ...m, lida: true } : m);
+            return { historicoMensagens: newHistory, temNovasMensagens: newHistory.some(m => !m.lida) };
+          });
+        } catch (err) {
+          console.error('[marcarMensagemLida] error:', err);
+        }
+      },
+      marcarTodasLidas: async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('notificacoes').update({ lida: true }).eq('usuario_id', user.id);
+          }
+          set((s) => ({ historicoMensagens: s.historicoMensagens.map((m) => ({ ...m, lida: true })), temNovasMensagens: false }));
+        } catch (err) {
+          console.error('[marcarTodasLidas] error:', err);
+        }
+      },
       setTemNovasMensagens: (has) => set({ temNovasMensagens: has }),
       deleteImportBatch: async (batchId) => {
         const { DatabaseService } = await import('@/services/databaseService');
@@ -953,13 +973,21 @@ export const useVagasStore = create<VagasState>()(
               }
             })
             // Notificações (inclui mensagens internas tipo='mensagem')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, async (payload) => {
               const newRow = payload.new as any;
+              const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
+              const myId = user?.id;
+              
               console.log('[Realtime] New Notification:', newRow.titulo, 'tipo=', newRow.tipo);
+              
+              // Only show if it's for me OR I sent it (to keep history updated)
+              if (newRow.usuario_id !== myId && newRow.remetente_id !== myId && newRow.usuario_id !== null) return;
+
               set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));
 
               if (newRow.tipo === 'mensagem') {
-                // Add to chat history & flag unread
+                const isFromMe = newRow.remetente_id === myId;
+                
                 const mensagem: MensagemHistorico = {
                   id: newRow.id,
                   data: newRow.created_at || new Date().toISOString(),
@@ -967,22 +995,27 @@ export const useVagasStore = create<VagasState>()(
                   remetente_id: newRow.remetente_id || null,
                   destinatario_id: newRow.usuario_id || null,
                   conteudo: newRow.mensagem || '',
-                  lida: false,
+                  lida: isFromMe ? true : Boolean(newRow.lida),
                   titulo: newRow.titulo,
                 };
+                
                 set((s) => {
-                  // dedupe (sender's optimistic insert already added it)
                   if (s.historicoMensagens.some(m => m.id === newRow.id)) return s;
                   return {
                     historicoMensagens: [mensagem, ...s.historicoMensagens],
-                    temNovasMensagens: true,
+                    temNovasMensagens: isFromMe ? s.temNovasMensagens : true,
                   };
                 });
-                toast.info(`Nova mensagem de ${newRow.remetente_nome || 'colega'}`, {
-                  description: (newRow.mensagem || '').slice(0, 80),
-                });
+                
+                if (!isFromMe) {
+                  toast.info(`Nova mensagem de ${newRow.remetente_nome || 'colega'}`, {
+                    description: (newRow.mensagem || '').slice(0, 80),
+                  });
+                }
               } else {
-                toast.info(newRow.titulo, { description: newRow.mensagem });
+                if (newRow.usuario_id === myId || newRow.usuario_id === null) {
+                  toast.info(newRow.titulo, { description: newRow.mensagem });
+                }
               }
             })
             // Alertas

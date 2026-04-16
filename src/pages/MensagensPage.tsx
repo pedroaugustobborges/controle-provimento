@@ -151,18 +151,20 @@ export default function MensagensPage() {
     setChatMessages((prev) => [...prev, newMessage]);
 
     try {
-      const { data: profile, error: profileErr } = await supabase
+      const { data: profiles, error: profileErr } = await supabase
         .from('profiles')
         .select('id, nome_completo')
-        .ilike('nome_completo', selectedRecipient.trim())
-        .eq('status', 'ativo')
-        .maybeSingle();
+        .ilike('nome_completo', `%${selectedRecipient.trim()}%`)
+        .eq('status', 'ativo');
 
-      if (profileErr || !profile) {
+      if (profileErr || !profiles || profiles.length === 0) {
         toast.error(`Não foi possível localizar "${selectedRecipient}" no sistema.`);
         setChatMessages((prev) => prev.filter(m => m.id !== optimisticId));
         return;
       }
+
+      const profile = profiles[0];
+      setSelectedRecipient(profile.nome_completo); // Update to full name for better filtering
 
       await useVagasStore.getState().addMensagem({
         id: optimisticId,
@@ -188,8 +190,9 @@ export default function MensagensPage() {
     const convo = historicoMensagens
       .filter(m => {
         const remetenteName = (m.remetente || '').trim().toLowerCase();
-        const isFromMeToThem = m.remetente_id === myId && (m.destinatario_nome || '').trim().toLowerCase() === recipientName;
-        const isFromThemToMe = m.destinatario_id === myId && remetenteName === recipientName;
+        const destName = (m.destinatario_nome || '').trim().toLowerCase();
+        const isFromMeToThem = m.remetente_id === myId && (destName === recipientName || destName.includes(recipientName));
+        const isFromThemToMe = m.destinatario_id === myId && (remetenteName === recipientName || remetenteName.includes(recipientName));
         return isFromMeToThem || isFromThemToMe;
       })
       .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
@@ -460,18 +463,21 @@ export default function MensagensPage() {
                   <div className="space-y-6 animate-in fade-in duration-300">
                     <h2 className="text-xl font-bold">O que há de novo no Sistema AGIR</h2>
                     <div className="space-y-4">
-                      <NewsItem 
-                        title="Novo Painel de Monitoramento"
-                        date="Hoje"
-                        content="Agora você pode visualizar métricas em tempo real de todas as unidades integradas."
-                        tag="Novo"
-                      />
-                      <NewsItem 
-                        title="Integração com Supabase"
-                        date="Há 2 dias"
-                        content="Melhorias significativas na velocidade de sincronização de dados."
-                        tag="Melhoria"
-                      />
+                      {alertas.filter(a => a.tipo === 'informativo').length === 0 ? (
+                        <div className="py-20 text-center text-muted-foreground italic">
+                          Nenhuma novidade cadastrada no momento.
+                        </div>
+                      ) : (
+                        alertas.filter(a => a.tipo === 'informativo').map((alerta) => (
+                          <NewsItem 
+                            key={alerta.id}
+                            title={alerta.titulo}
+                            date={format(parseISO(alerta.data_criacao), "d 'de' MMM", { locale: ptBR })}
+                            content={alerta.mensagem || ''}
+                            tag="Novidade"
+                          />
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

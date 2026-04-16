@@ -59,6 +59,42 @@ export type Database = {
         }
         Relationships: []
       }
+      auditoria_logs: {
+        Row: {
+          acao: string | null
+          contexto_adicional: Json | null
+          created_at: string | null
+          id: string
+          modulo: string | null
+          registro_id: string | null
+          usuario_id: string | null
+          valor_anterior: Json | null
+          valor_novo: Json | null
+        }
+        Insert: {
+          acao?: string | null
+          contexto_adicional?: Json | null
+          created_at?: string | null
+          id?: string
+          modulo?: string | null
+          registro_id?: string | null
+          usuario_id?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Update: {
+          acao?: string | null
+          contexto_adicional?: Json | null
+          created_at?: string | null
+          id?: string
+          modulo?: string | null
+          registro_id?: string | null
+          usuario_id?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+        }
+        Relationships: []
+      }
       banco_candidatos: {
         Row: {
           cargo: string | null
@@ -274,6 +310,51 @@ export type Database = {
           tabela_destino?: string | null
           tipo?: string | null
           updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      notificacoes: {
+        Row: {
+          created_at: string | null
+          id: string
+          lida: boolean | null
+          mensagem: string
+          regiao: string | null
+          registro_id: string | null
+          remetente_id: string | null
+          remetente_nome: string | null
+          tipo: string | null
+          titulo: string
+          unidade: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lida?: boolean | null
+          mensagem: string
+          regiao?: string | null
+          registro_id?: string | null
+          remetente_id?: string | null
+          remetente_nome?: string | null
+          tipo?: string | null
+          titulo: string
+          unidade?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lida?: boolean | null
+          mensagem?: string
+          regiao?: string | null
+          registro_id?: string | null
+          remetente_id?: string | null
+          remetente_nome?: string | null
+          tipo?: string | null
+          titulo?: string
+          unidade?: string | null
           usuario_id?: string | null
         }
         Relationships: []

@@ -1,22 +1,26 @@
 
-## Mudanças no Dashboard de Convocações
+## Problema
+Ao tentar redefinir a senha da usuária Luana (e potencialmente outras), o frontend recebe `Edge Function returned a non-2xx status code` sem detalhes do erro real.
 
-**1. Remover** o gráfico "Distribuição por Status" (PieChart).
+## Causa
+A edge function `admin-user-management` faz `throw error` no caso `reset_password`, o que cai no `catch` final retornando status 500. Como o Supabase SDK descarta o body em respostas não-2xx em alguns casos, o usuário só vê a mensagem genérica — sem saber se é senha curta, usuário inexistente, política de senha do Supabase, etc.
 
-**2. Adicionar** novo gráfico "Histórico de Convocações" (LineChart):
-- Eixo X: datas (dia/mês)
-- Eixo Y: quantidade de convocações no dia
-- Tooltip ao passar o mouse: lista as unidades convocadas naquele dia + total
-- Atualização automática conforme novos dados entram no banco
+Os logs da edge function (`admin-user-management`) só mostram "booted" — sem stack trace do erro real, o que confirma que precisamos de logging melhor.
 
-**3. Fonte de dados:** preciso confirmar qual coluna usar para a data da convocação. Verificarei no schema do `banco_candidatos` (provavelmente `data_convocacao` ou `updated_at`) e filtrarei apenas registros com status `CONVOCADO`.
+## Plano
 
-**4. Ajustes de rótulos** já aplicados anteriormente serão mantidos nos gráficos de barras (Top Unidades / Top Cargos).
+**Arquivo:** `supabase/functions/admin-user-management/index.ts`
 
-## Arquivo afetado
-- `src/pages/ConvocacoesDashboardPage.tsx`
+1. **Sempre retornar status 200** com payload `{ ok: false, error: "mensagem detalhada" }` em caso de falha (padrão da Stack Overflow do Lovable), para que o cliente consiga ler a mensagem.
+2. **Adicionar logs detalhados** (`console.log` / `console.error`) no caso `reset_password`: user_id recebido, tamanho da senha, resposta da API admin do Supabase.
+3. **Validar entrada** no `reset_password`: garantir que `user_id` é UUID válido e `new_password` tem ≥ 6 caracteres, retornando erro claro antes de chamar a Admin API.
+4. **Capturar erro específico** do `supabaseAdmin.auth.admin.updateUserById` e propagar a mensagem original (ex: "Password should be at least 6 characters", "User not found", etc.).
+
+**Arquivo:** `src/pages/AdministracaoPage.tsx` (ou onde a chamada é feita — vou localizar)
+
+5. **Tratar o novo formato** `{ ok, error }` no frontend: se `ok: false`, exibir `error` no toast em vez da mensagem genérica.
 
 ## Resultado esperado
-- Gráfico de linha mostrando evolução diária de convocações
-- Tooltip rico mostrando unidades de cada dia
-- Gráfico de pizza removido
+- Toast mostrará a causa real (ex: "Senha deve ter no mínimo 6 caracteres", "Usuário não encontrado no auth", etc.)
+- Logs da edge function permitirão diagnosticar problemas futuros rapidamente
+- O reset de senha da Luana funcionará ou exibirá exatamente por que não funciona

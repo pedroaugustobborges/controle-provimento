@@ -178,6 +178,8 @@ interface VagasState {
   getMatchingDiagnostic: () => { vagaId: string; vagaCargo: string; vagaUnidade: string; vagaReq: string; potentialBancos: any[] }[];
   marcarTodasLidas: () => void;
   fixWrongImportBatches: () => void;
+  subscribeRealtime: () => void;
+  unsubscribeRealtime: () => void;
 }
 
 export const useVagasStore = create<VagasState>()(

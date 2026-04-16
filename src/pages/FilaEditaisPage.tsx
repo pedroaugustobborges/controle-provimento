@@ -594,7 +594,7 @@ export default function FilaEditaisPage() {
                 })}
                 {pendingVagas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="px-6 py-20 text-center">
+                    <TableCell colSpan={12} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
                         <p className="text-slate-500 font-medium">Nenhuma pendência encontrada na fila de editais.</p>

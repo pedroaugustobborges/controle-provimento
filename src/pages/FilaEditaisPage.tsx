@@ -121,33 +121,83 @@ export default function FilaEditaisPage() {
 
     const grouped: Record<string, {
       cargo: string;
+      cargoKey: string;
       vagas: Vaga[];
       totalVagas: number;
       unidades: string[];
+      regioes: string[];
     }> = {};
 
+    const computeRegion = (unidade: string): string => {
+      const u = normalizeUnitName(unidade);
+      for (const [regiao, units] of Object.entries(UNIDADES_POR_REGIAO)) {
+        if (units.map(x => normalizeUnitName(x)).includes(u)) return regiao;
+      }
+      return 'Outras';
+    };
+
     goianiaVagas.forEach(v => {
-      const cargo = v.cargo.toUpperCase().trim();
-      if (!grouped[cargo]) {
-        grouped[cargo] = {
+      const cargoKey = v.cargo.toUpperCase().trim();
+      if (!grouped[cargoKey]) {
+        grouped[cargoKey] = {
           cargo: v.cargo,
+          cargoKey,
           vagas: [],
           totalVagas: 0,
-          unidades: []
+          unidades: [],
+          regioes: [],
         };
       }
-      grouped[cargo].vagas.push(v);
-      grouped[cargo].totalVagas += (v.numero_vagas || v.quantidade || 1);
-      if (!grouped[cargo].unidades.includes(v.unidade)) {
-        grouped[cargo].unidades.push(v.unidade);
+      grouped[cargoKey].vagas.push(v);
+      grouped[cargoKey].totalVagas += (v.numero_vagas || v.quantidade || 1);
+      if (!grouped[cargoKey].unidades.includes(v.unidade)) {
+        grouped[cargoKey].unidades.push(v.unidade);
+      }
+      const reg = computeRegion(v.unidade);
+      if (!grouped[cargoKey].regioes.includes(reg)) {
+        grouped[cargoKey].regioes.push(reg);
+      }
+    });
+
+    // Apply ungrouped: those cargos go into otherVagas individually
+    const activeGroups: typeof grouped[string][] = [];
+    const expandedAsIndividuals: Vaga[] = [];
+    Object.values(grouped).forEach(g => {
+      if (ungrouped.has(g.cargoKey) || g.vagas.length < 2) {
+        expandedAsIndividuals.push(...g.vagas);
+      } else {
+        activeGroups.push(g);
       }
     });
 
     return {
-      groupedGoiania: Object.values(grouped),
-      otherVagas
+      groupedGoiania: activeGroups,
+      otherVagas: [...otherVagas, ...expandedAsIndividuals],
     };
-  }, [pendingVagas]);
+  }, [pendingVagas, ungrouped]);
+
+  // Selected rows -> cargos eligible to regroup (only cargos currently in ungrouped set with 2+ selected of same cargo)
+  const regroupableCargos = useMemo(() => {
+    const counts: Record<string, number> = {};
+    selectedRows.forEach(id => {
+      const v = pendingVagas.find(x => x.id === id);
+      if (!v) return;
+      const goiania = UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade));
+      if (!goiania) return;
+      const k = v.cargo.toUpperCase().trim();
+      if (!ungrouped.has(k)) return;
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return Object.keys(counts).filter(k => counts[k] >= 2);
+  }, [selectedRows, pendingVagas, ungrouped]);
+
+  const handleRegroupSelected = () => {
+    const next = new Set(ungrouped);
+    regroupableCargos.forEach(c => next.delete(c));
+    persistUngrouped(next);
+    setSelectedRows(new Set());
+    toast.success('Requisições reagrupadas.');
+  };
 
   const unidadesAgrupadas = useMemo(() => {
     const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean);

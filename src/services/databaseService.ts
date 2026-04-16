@@ -226,13 +226,15 @@ export class DatabaseService {
         logId = logData.id;
       }
 
-      // Step 3: Delete existing
-      onProgress?.(15, "Limpando base antiga para substituição...");
+      // Step 3: Delete existing — PRESERVE manual records (origem='manual')
+      // Only soft-delete records that came from previous imports.
+      onProgress?.(15, "Limpando base antiga (preservando registros manuais)...");
       const { error: deleteError } = await this.withRetry(async () => {
         const { error } = await supabase
           .from(tableName)
-          .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000');
+          .update({ deleted_at: new Date().toISOString() })
+          .eq('origem', 'importada')
+          .is('deleted_at', null);
         return { data: null, error };
       });
 

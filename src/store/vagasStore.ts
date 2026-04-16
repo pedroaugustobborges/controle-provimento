@@ -151,9 +151,10 @@ interface VagasState {
   updateBanco: (id: string, data: Partial<BancoTalentos>) => void;
   updateBancoAsync: (id: string, data: Partial<BancoTalentos>) => Promise<boolean>;
   deleteBanco: (id: string) => void;
-  addConvocacao: (convocacao: Convocacao) => void;
-  updateConvocacao: (id: string, data: Partial<Convocacao>) => void;
-  deleteConvocacao: (id: string) => void;
+  addConvocacao: (convocacao: Convocacao) => Promise<void>;
+  updateConvocacao: (id: string, data: Partial<Convocacao>) => Promise<void>;
+  deleteConvocacao: (id: string) => Promise<void>;
+  fetchConvocacoes: () => Promise<void>;
   updateEdital: (id: string, data: Partial<Edital>) => void;
   updateValidacao: (id: string, data: Partial<ValidacaoEdital>) => void;
   addEdital: (edital: Edital) => void;
@@ -196,7 +197,7 @@ export const useVagasStore = create<VagasState>()(
     (set, get) => ({
       vagas: [],
       bancos: [],
-      convocacoes: mockConvocacoes,
+      convocacoes: [],
       bloqueios: [] as BloqueioHorario[],
       editais: mockEditais,
       validacoes: mockValidacoes,
@@ -248,7 +249,8 @@ export const useVagasStore = create<VagasState>()(
             get().fetchVagas(),
             get().fetchBancos(),
             get().fetchImportHistory(),
-            get().fetchNotificacoes()
+            get().fetchNotificacoes(),
+            get().fetchConvocacoes(),
           ]);
         } finally {
           set({ isLoading: false, isInitialLoad: false });
@@ -392,9 +394,86 @@ export const useVagasStore = create<VagasState>()(
         return false;
       },
       deleteBanco: (id) => set((s) => ({ bancos: s.bancos.filter((b) => b.id !== id) })),
-      addConvocacao: (convocacao) => set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] })),
-      updateConvocacao: (id, data) => set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === id ? { ...c, ...data } : c) })),
-      deleteConvocacao: (id) => set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== id) })),
+      addConvocacao: async (convocacao) => {
+        // Optimistic update
+        set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { useAdminStore } = await import('./adminStore');
+          const { currentUser } = useAdminStore.getState();
+          const { id, vaga_id, banco_id, ...rest } = convocacao as any;
+          const payload: any = {
+            ...rest,
+            vaga_id: vaga_id && /^[0-9a-f-]{36}$/i.test(vaga_id) ? vaga_id : null,
+            banco_id: banco_id && /^[0-9a-f-]{36}$/i.test(banco_id) ? banco_id : null,
+            created_by: currentUser?.id || null,
+            updated_by: currentUser?.id || null,
+          };
+          // Drop undefined / non-DB fields
+          delete payload.requisicao;
+          delete payload.edital_relacionado;
+          const { data, error } = await supabase.from('convocacoes' as any).insert(payload).select().single();
+          if (error) {
+            console.error('addConvocacao persist error:', error);
+            toast.error('Falha ao salvar convocação no servidor. Verifique sua conexão.');
+            // Rollback optimistic
+            set((s) => ({ convocacoes: s.convocacoes.filter(c => c.id !== id) }));
+            return;
+          }
+          // Replace temp id with DB id
+          set((s) => ({ convocacoes: s.convocacoes.map(c => c.id === id ? { ...c, ...(data as any) } as Convocacao : c) }));
+        } catch (e) {
+          console.error('addConvocacao exception:', e);
+          toast.error('Erro ao salvar convocação.');
+        }
+      },
+      updateConvocacao: async (id, data) => {
+        set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === id ? { ...c, ...data } : c) }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { useAdminStore } = await import('./adminStore');
+          const { currentUser } = useAdminStore.getState();
+          const payload: any = { ...data, updated_by: currentUser?.id || null };
+          delete payload.id;
+          delete payload.requisicao;
+          delete payload.edital_relacionado;
+          delete payload.vaga_id;
+          delete payload.banco_id;
+          delete payload.created_at;
+          delete payload.created_by;
+          delete payload.version;
+          const { error } = await supabase.from('convocacoes' as any).update(payload).eq('id', id);
+          if (error) {
+            console.error('updateConvocacao error:', error);
+            toast.error('Falha ao atualizar convocação no servidor.');
+          }
+        } catch (e) {
+          console.error('updateConvocacao exception:', e);
+        }
+      },
+      deleteConvocacao: async (id) => {
+        set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== id) }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          // Soft delete
+          const { error } = await supabase.from('convocacoes' as any).update({ deleted_at: new Date().toISOString() }).eq('id', id);
+          if (error) console.error('deleteConvocacao error:', error);
+        } catch (e) {
+          console.error('deleteConvocacao exception:', e);
+        }
+      },
+      fetchConvocacoes: async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data, error } = await supabase.from('convocacoes' as any).select('*').is('deleted_at', null).order('data_convocacao', { ascending: false }).limit(2000);
+          if (error) { console.error('fetchConvocacoes error:', error); return; }
+          if (data && Array.isArray(data)) {
+            set({ convocacoes: data as any });
+          }
+        } catch (e) {
+          console.error('fetchConvocacoes exception:', e);
+        }
+      },
       updateEdital: (id, data) => set((s) => ({ editais: s.editais.map((e) => e.id === id ? { ...e, ...data } : e) })),
       updateValidacao: (id, data) => set((s) => ({ validacoes: s.validacoes.map((v) => v.id === id ? { ...v, ...data } : v) })),
       addEdital: (edital) => set((s) => ({ editais: [...s.editais, edital] })),
@@ -487,6 +566,21 @@ export const useVagasStore = create<VagasState>()(
                 set((s) => ({ bancos: s.bancos.filter((b) => b.id !== oldRow.id) }));
               }
             })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'convocacoes' }, (payload) => {
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                if (newRow.deleted_at) return;
+                set((s) => s.convocacoes.some(c => c.id === newRow.id) ? s : ({ convocacoes: [newRow as any, ...s.convocacoes] }));
+              } else if (eventType === 'UPDATE') {
+                if (newRow.deleted_at) {
+                  set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== newRow.id) }));
+                  return;
+                }
+                set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === newRow.id ? { ...c, ...newRow } as any : c) }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== oldRow.id) }));
+              }
+            })
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
               const newRow = payload.new;
               toast.info(newRow.titulo, { description: newRow.mensagem });
@@ -528,7 +622,7 @@ export const useVagasStore = create<VagasState>()(
       name: 'hospital-recruitment-store',
       version: 5,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ editais: state.editais, validacoes: state.validacoes, convocacoes: state.convocacoes, bloqueios: state.bloqueios, tarefas: state.tarefas, alertas: state.alertas, historicoMensagens: state.historicoMensagens, temNovasMensagens: state.temNovasMensagens }),
+      partialize: (state) => ({ editais: state.editais, validacoes: state.validacoes, bloqueios: state.bloqueios, tarefas: state.tarefas, alertas: state.alertas, historicoMensagens: state.historicoMensagens, temNovasMensagens: state.temNovasMensagens }),
     }
   )
 );

@@ -108,6 +108,7 @@ export type Database = {
           data_publicacao: string | null
           data_referencia_usada: string | null
           data_validade: string | null
+          deleted_at: string | null
           email: string | null
           id: string
           import_batch_id: string | null
@@ -143,6 +144,7 @@ export type Database = {
           data_publicacao?: string | null
           data_referencia_usada?: string | null
           data_validade?: string | null
+          deleted_at?: string | null
           email?: string | null
           id?: string
           import_batch_id?: string | null
@@ -178,6 +180,7 @@ export type Database = {
           data_publicacao?: string | null
           data_referencia_usada?: string | null
           data_validade?: string | null
+          deleted_at?: string | null
           email?: string | null
           id?: string
           import_batch_id?: string | null
@@ -199,6 +202,105 @@ export type Database = {
           unidade_convocacao?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      convocacoes: {
+        Row: {
+          banco_id: string | null
+          carga_horaria: string | null
+          cargo: string | null
+          classificacao: number | null
+          created_at: string
+          created_by: string | null
+          data_convocacao: string
+          data_devolutiva: string | null
+          deleted_at: string | null
+          devolutiva: string | null
+          edital_relacionado: string | null
+          edoc: string | null
+          horario: string
+          horario_trabalho: string | null
+          id: string
+          link_teams: string | null
+          nome_candidato: string
+          observacoes: string | null
+          requisicao: string | null
+          responsavel: string | null
+          secao: string | null
+          status: string | null
+          tipo_atendimento: string | null
+          tipo_convocacao: string | null
+          unidade: string | null
+          unidade_alternativa: string | null
+          updated_at: string
+          updated_by: string | null
+          vaga_id: string | null
+          version: number
+        }
+        Insert: {
+          banco_id?: string | null
+          carga_horaria?: string | null
+          cargo?: string | null
+          classificacao?: number | null
+          created_at?: string
+          created_by?: string | null
+          data_convocacao: string
+          data_devolutiva?: string | null
+          deleted_at?: string | null
+          devolutiva?: string | null
+          edital_relacionado?: string | null
+          edoc?: string | null
+          horario: string
+          horario_trabalho?: string | null
+          id?: string
+          link_teams?: string | null
+          nome_candidato: string
+          observacoes?: string | null
+          requisicao?: string | null
+          responsavel?: string | null
+          secao?: string | null
+          status?: string | null
+          tipo_atendimento?: string | null
+          tipo_convocacao?: string | null
+          unidade?: string | null
+          unidade_alternativa?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vaga_id?: string | null
+          version?: number
+        }
+        Update: {
+          banco_id?: string | null
+          carga_horaria?: string | null
+          cargo?: string | null
+          classificacao?: number | null
+          created_at?: string
+          created_by?: string | null
+          data_convocacao?: string
+          data_devolutiva?: string | null
+          deleted_at?: string | null
+          devolutiva?: string | null
+          edital_relacionado?: string | null
+          edoc?: string | null
+          horario?: string
+          horario_trabalho?: string | null
+          id?: string
+          link_teams?: string | null
+          nome_candidato?: string
+          observacoes?: string | null
+          requisicao?: string | null
+          responsavel?: string | null
+          secao?: string | null
+          status?: string | null
+          tipo_atendimento?: string | null
+          tipo_convocacao?: string | null
+          unidade?: string | null
+          unidade_alternativa?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vaga_id?: string | null
           version?: number
         }
         Relationships: []
@@ -545,6 +647,7 @@ export type Database = {
           data_importacao: string | null
           data_publicacao: string | null
           data_recebimento: string | null
+          deleted_at: string | null
           detalhes_acompanhamento: string | null
           distribuicao_vagas: Json | null
           etapa: string | null
@@ -599,6 +702,7 @@ export type Database = {
           data_importacao?: string | null
           data_publicacao?: string | null
           data_recebimento?: string | null
+          deleted_at?: string | null
           detalhes_acompanhamento?: string | null
           distribuicao_vagas?: Json | null
           etapa?: string | null
@@ -653,6 +757,7 @@ export type Database = {
           data_importacao?: string | null
           data_publicacao?: string | null
           data_recebimento?: string | null
+          deleted_at?: string | null
           detalhes_acompanhamento?: string | null
           distribuicao_vagas?: Json | null
           etapa?: string | null

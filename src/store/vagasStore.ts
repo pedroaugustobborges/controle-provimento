@@ -411,20 +411,45 @@ export const useVagasStore = create<VagasState>()(
       getMatchingDiagnostic: () => [],
       fixWrongImportBatches: () => {},
       subscribeRealtime: () => {
+        // Avoid duplicate subscriptions
+        if ((window as any).__realtimeChannel) return;
         import('@/integrations/supabase/client').then(({ supabase }) => {
+          if ((window as any).__realtimeChannel) return;
+          const channelName = `realtime-vagas-bancos-${Math.random().toString(36).slice(2, 8)}`;
           const channel = supabase
-            .channel('realtime-vagas-bancos')
+            .channel(channelName)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vagas' }, (payload) => {
-              const { eventType, new: newRow, old: oldRow } = payload;
-              if (eventType === 'INSERT') set((s) => ({ vagas: [mapDbVaga(newRow), ...s.vagas] }));
-              else if (eventType === 'UPDATE') set((s) => ({ vagas: s.vagas.map((v) => v.id === newRow.id ? mapDbVaga(newRow) : v) }));
-              else if (eventType === 'DELETE') set((s) => ({ vagas: s.vagas.filter((v) => v.id !== oldRow.id) }));
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                set((s) => s.vagas.some(v => v.id === newRow.id) ? s : ({ vagas: [mapDbVaga(newRow), ...s.vagas] }));
+              } else if (eventType === 'UPDATE') {
+                set((s) => ({
+                  vagas: s.vagas.map((v) => {
+                    if (v.id !== newRow.id) return v;
+                    // Preserve newer local optimistic version
+                    if ((v.version || 0) > (newRow.version || 0)) return v;
+                    return mapDbVaga(newRow);
+                  })
+                }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ vagas: s.vagas.filter((v) => v.id !== oldRow.id) }));
+              }
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'banco_candidatos' }, (payload) => {
-              const { eventType, new: newRow, old: oldRow } = payload;
-              if (eventType === 'INSERT') set((s) => ({ bancos: [mapDbBanco(newRow), ...s.bancos] }));
-              else if (eventType === 'UPDATE') set((s) => ({ bancos: s.bancos.map((b) => b.id === newRow.id ? mapDbBanco(newRow) : b) }));
-              else if (eventType === 'DELETE') set((s) => ({ bancos: s.bancos.filter((b) => b.id !== oldRow.id) }));
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                set((s) => s.bancos.some(b => b.id === newRow.id) ? s : ({ bancos: [mapDbBanco(newRow), ...s.bancos] }));
+              } else if (eventType === 'UPDATE') {
+                set((s) => ({
+                  bancos: s.bancos.map((b) => {
+                    if (b.id !== newRow.id) return b;
+                    if (((b as any).version || 0) > (newRow.version || 0)) return b;
+                    return mapDbBanco(newRow);
+                  })
+                }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ bancos: s.bancos.filter((b) => b.id !== oldRow.id) }));
+              }
             })
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
               const newRow = payload.new;

@@ -114,8 +114,7 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
       }]
     };
 
-    addVagas([newVaga]);
-    toast.success('Vaga criada com sucesso.');
+    await addVagas([newVaga]);
     onOpenChange(false);
     resetForm();
   };

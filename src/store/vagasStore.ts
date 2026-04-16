@@ -171,7 +171,7 @@ interface VagasState {
   addBloqueio: (bloqueio: BloqueioHorario) => void;
   removeBloqueio: (id: string) => void;
   updateAlerta: (id: string, data: Partial<Alerta>) => void;
-  addMensagem: (mensagem: MensagemHistorico) => void;
+  addMensagem: (mensagem: any) => Promise<void>;
   marcarMensagemLida: (id: string) => void;
   setTemNovasMensagens: (has: boolean) => void;
   deleteImportBatch: (batchId: string) => Promise<void>;

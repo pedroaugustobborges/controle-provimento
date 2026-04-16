@@ -133,7 +133,7 @@ export default function ConvocacoesDashboardPage() {
             <ChartContainer config={unidadesChartConfig} className="h-[280px] w-full">
               <BarChart data={topUnidades} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
               </BarChart>
@@ -152,7 +152,7 @@ export default function ConvocacoesDashboardPage() {
             <ChartContainer config={cargosChartConfig} className="h-[280px] w-full">
               <BarChart data={topCargos} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
               </BarChart>

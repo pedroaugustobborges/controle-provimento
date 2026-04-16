@@ -8,36 +8,45 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function jsonOk(payload: Record<string, unknown> = {}) {
+  return new Response(JSON.stringify({ ok: true, ...payload }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function jsonFail(error: string, extra: Record<string, unknown> = {}) {
+  // Always return 200 so the Supabase JS SDK does not swallow the body.
+  return new Response(JSON.stringify({ ok: false, error, ...extra }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Verify the calling user is admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonFail("Não autorizado: token ausente.");
     }
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify caller is admin
     const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       auth: { autoRefreshToken: false, persistSession: false },
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user: caller } } = await callerClient.auth.getUser();
     if (!caller) {
-      return new Response(JSON.stringify({ error: "Não autorizado" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonFail("Não autorizado: sessão inválida.");
     }
 
     const { data: callerRole } = await supabaseAdmin
@@ -48,10 +57,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!callerRole) {
-      return new Response(JSON.stringify({ error: "Acesso negado. Somente administradores." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonFail("Acesso negado. Somente administradores.");
     }
 
     const body = await req.json();
@@ -61,7 +67,6 @@ Deno.serve(async (req) => {
       case "create_user": {
         const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, modulos_acesso, permissoes_modulo, avatar_url, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios, acesso_portal_unidade, regiao_suporte } = body;
 
-        // Create auth user with admin API (won't affect current session)
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
@@ -69,10 +74,9 @@ Deno.serve(async (req) => {
           user_metadata: { nome_completo },
         });
 
-        if (createError) throw createError;
-        if (!newUser.user) throw new Error("Falha ao criar usuário");
+        if (createError) return jsonFail(createError.message);
+        if (!newUser.user) return jsonFail("Falha ao criar usuário");
 
-        // Update profile
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
           .upsert({
@@ -97,7 +101,6 @@ Deno.serve(async (req) => {
 
         if (profileError) console.error("Profile error:", profileError);
 
-        // Set role based on profile
         const roleMap: Record<string, string> = {
           "Administrador": "admin",
           "Admin": "admin",
@@ -116,35 +119,65 @@ Deno.serve(async (req) => {
           role: appRole,
         }, { onConflict: "user_id,role" });
 
-        return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk({ user_id: newUser.user.id });
       }
 
       case "reset_password": {
         const { user_id, new_password } = body;
-        const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
+        console.log("[reset_password] called", {
+          user_id,
+          password_length: typeof new_password === "string" ? new_password.length : null,
+          caller: caller.id,
+        });
+
+        if (!user_id || typeof user_id !== "string" || !UUID_RE.test(user_id)) {
+          console.error("[reset_password] invalid user_id", user_id);
+          return jsonFail("ID de usuário inválido.");
+        }
+        if (!new_password || typeof new_password !== "string") {
+          return jsonFail("Nova senha não informada.");
+        }
+        if (new_password.length < 6) {
+          return jsonFail("A senha deve ter no mínimo 6 caracteres.");
+        }
+
+        // Verify the auth user actually exists before attempting update
+        const { data: existing, error: getErr } = await supabaseAdmin.auth.admin.getUserById(user_id);
+        if (getErr) {
+          console.error("[reset_password] getUserById error", getErr);
+          return jsonFail(`Erro ao localizar usuário: ${getErr.message}`);
+        }
+        if (!existing?.user) {
+          console.error("[reset_password] auth user not found", user_id);
+          return jsonFail("Usuário não encontrado no sistema de autenticação. Pode ter sido removido — recrie o usuário.");
+        }
+
+        const { data: updated, error } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
           password: new_password,
         });
-        if (error) throw error;
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (error) {
+          console.error("[reset_password] updateUserById error", {
+            message: error.message,
+            status: (error as any).status,
+            name: error.name,
+          });
+          return jsonFail(error.message || "Falha ao atualizar a senha.");
+        }
+        console.log("[reset_password] success", { user_id: updated?.user?.id });
+        return jsonOk();
       }
 
       case "update_status": {
         const { user_id, new_status } = body;
-        // Update profile status
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
           .update({ status: new_status })
           .eq("id", user_id);
-        if (profileError) throw profileError;
+        if (profileError) return jsonFail(profileError.message);
 
-        // If suspended or inactive, ban the user in auth; if active, unban
         if (new_status === "suspenso" || new_status === "inativo") {
           await supabaseAdmin.auth.admin.updateUserById(user_id, {
-            ban_duration: "876600h", // ~100 years
+            ban_duration: "876600h",
           });
         } else if (new_status === "ativo") {
           await supabaseAdmin.auth.admin.updateUserById(user_id, {
@@ -152,30 +185,20 @@ Deno.serve(async (req) => {
           });
         }
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk();
       }
 
       case "delete_user": {
         const { user_id } = body;
-        // Delete profile first
         await supabaseAdmin.from("profiles").delete().eq("id", user_id);
         await supabaseAdmin.from("user_roles").delete().eq("user_id", user_id);
-        // Delete auth user
         const { error } = await supabaseAdmin.auth.admin.deleteUser(user_id);
-        if (error) throw error;
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (error) return jsonFail(error.message);
+        return jsonOk();
       }
 
       case "send_welcome_email": {
         const { user_email, user_name, password, site_url } = body;
-
-        // Use Lovable AI to send email via a simple approach
-        // For now, we'll use Supabase's built-in email or log it
-        // The email content is prepared here for the admin to see
         const emailContent = {
           to: user_email,
           subject: "Painel de Controle de Provimento",
@@ -200,24 +223,14 @@ Ficamos felizes em contar com você no Painel de Controle de Provimento da AGIR.
 Se precisar de suporte, entre em contato com a administração do sistema:
 Isaac - izac.jesus@agirsaude.org.br`,
         };
-
-        // Try to send via Supabase's built-in invite or just log success
-        // For MVP, we store the email info and mark it as sent
-        return new Response(JSON.stringify({ success: true, email_content: emailContent }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonOk({ email_content: emailContent });
       }
 
       default:
-        return new Response(JSON.stringify({ error: "Ação desconhecida" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonFail("Ação desconhecida");
     }
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message || "Erro interno" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("[admin-user-management] unexpected error", err);
+    return jsonFail(err?.message || "Erro interno");
   }
 });

@@ -28,12 +28,13 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
+import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
   const { vagas, updateVagaAsync } = useVagasStore();
   const updateVaga = updateVagaAsync;
-  const { currentUser } = useAdminStore();
+  const { currentUser, users } = useAdminStore();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
 
@@ -45,6 +46,7 @@ export default function FilaAnalistaEditalPage() {
   const [numeroEdital, setNumeroEdital] = useState('');
   const [numeroProcesso, setNumeroProcesso] = useState('');
   const [reachrUrl, setReachrUrl] = useState('');
+  const [responsavelValidacao, setResponsavelValidacao] = useState<string>('');
 
   // Modal de Publicação / Cronograma
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);

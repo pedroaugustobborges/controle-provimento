@@ -32,7 +32,7 @@ import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
-  const { vagas, updateVagaAsync } = useVagasStore();
+  const { vagas, updateVagaAsync, notificarMovimentacaoEdital } = useVagasStore();
   const updateVaga = updateVagaAsync;
   const { currentUser, users } = useAdminStore();
   const [search, setSearch] = useState('');
@@ -143,19 +143,23 @@ export default function FilaAnalistaEditalPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!selectedVaga) return;
 
-    updateVaga(selectedVaga.id, { 
+    const ok = await updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'em_redacao',
+      etapa: 'em_redacao',
       observacoes_edital: obsEdital,
       numero_edital: numeroEdital,
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
-    });
+    } as any);
 
-    toast.success('Rascunho do edital salvo com sucesso!');
+    if (ok) {
+      notificarMovimentacaoEdital(selectedVaga.id, 'em_redacao', 'Rascunho salvo.');
+      toast.success('Rascunho do edital salvo com sucesso!');
+    }
   };
 
   const handleSendToValidation = () => {

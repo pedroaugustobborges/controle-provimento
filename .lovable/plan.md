@@ -1,22 +1,27 @@
 
 
-## Plano: Corrigir drag-and-drop no Kanban de Convocações
+## Plano: Corrigir layout Kanban + Criar Dashboard de Convocações
 
-### Problema
-O Kanban Board (`KanbanBoard.tsx`) não persiste a movimentação de cards. Ao arrastar um card entre colunas, ele volta à posição original. Isso acontece porque o componente recebe `convocacoes` como prop e usa `initialConvocacoes` diretamente para renderizar — mas a atualização via `updateConvocacao` no store pode não estar refletindo nos dados exibidos se o componente pai não re-renderiza com os dados atualizados.
+### 1. Corrigir layout do Kanban Board
+**Arquivo:** `src/components/KanbanBoard.tsx`
+- Ajustar o container flex para garantir que todas as 5 colunas sejam visíveis
+- Reduzir `min-w` das colunas ou tornar responsivo para caber todas no viewport
+- Garantir scroll horizontal funcional quando necessário
 
-### Investigação necessária
-1. Verificar como `ConvocacoesPage.tsx` passa as convocações para o `KanbanBoard` — se usa dados do store ou dados locais
-2. Verificar se `updateConvocacao` no `vagasStore` está realmente atualizando o estado que alimenta o Kanban
-3. Verificar se o modal de confirmação de movimentação está funcionando (o drag-and-drop exige confirmação via dialog antes de efetivar)
+### 2. Criar Dashboard de Convocações
+**Novo arquivo:** `src/pages/ConvocacoesDashboardPage.tsx`
+- Painel com cards de métricas: total de convocações, por status (aceite, recusa, faltou, desistiu)
+- Gráfico/lista: Top 5 unidades com mais convocações
+- Gráfico/lista: Top 5 cargos mais convocados
+- Distribuição por status (gráfico de pizza ou barras)
+- Dados vindos da tabela `banco_candidatos` (que contém convocações)
 
-### Correção prevista
-- Garantir que o `KanbanBoard` leia os dados diretamente do store (ou que o componente pai repasse dados reativos do store)
-- Garantir que após `confirmMove()`, o estado do store seja atualizado e o componente re-renderize com os novos dados
-- Se necessário, remover a prop `initialConvocacoes` e usar dados do store diretamente dentro do componente
+### 3. Adicionar submenu no Sidebar
+**Arquivo:** `src/components/AppSidebar.tsx`
+- Adicionar item "Dashboard" no submenu de Convocações, após "Pendentes"
+- Rota: `/convocacoes/dashboard`
 
-### Arquivos a alterar
-- `src/components/KanbanBoard.tsx` — lógica de renderização e atualização
-- `src/pages/ConvocacoesPage.tsx` — verificar como os dados são passados ao Kanban
-- `src/store/vagasStore.ts` — verificar `updateConvocacao`
+### 4. Registrar rota
+**Arquivo:** `src/App.tsx`
+- Adicionar rota `/convocacoes/dashboard` apontando para `ConvocacoesDashboardPage`
 

@@ -41,7 +41,36 @@ import { usePermissions } from '@/hooks/usePermissions';
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
   const { vagas, updateVaga } = useVagasStore();
-  const { currentUser } = useAdminStore();
+  const { currentUser, users } = useAdminStore();
+
+  // Analistas elegíveis para serem responsáveis pela publicação do edital
+  const analistasPublicacao = useMemo(() => {
+    return (users || []).filter((u: any) => {
+      const perfil = (u.perfil || '').toLowerCase();
+      const status = (u.status || 'ativo').toLowerCase();
+      return status === 'ativo' && (
+        perfil.includes('analista') || perfil.includes('admin') || perfil.includes('gestor')
+      );
+    });
+  }, [users]);
+
+  const handleSetResponsavelPublicacao = (vaga: Vaga, userId: string) => {
+    const user = (users || []).find((u: any) => u.id === userId);
+    const nome = user?.nome_completo || 'Não atribuído';
+    updateVaga(vaga.id, {
+      validado_por: userId,
+      historico: [
+        ...(vaga.historico || []),
+        {
+          id: `h-${Date.now()}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Responsável pela publicação do edital atribuído: ${nome}`,
+          usuario: currentUser?.nome_completo || 'Sistema',
+        },
+      ],
+    });
+    toast.success(`Responsável atualizado: ${nome}`);
+  };
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');

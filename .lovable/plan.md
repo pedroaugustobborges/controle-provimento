@@ -1,12 +1,12 @@
 
 
-## Plano: Ajustar filtros de unidades por contexto
+## Plano: Corrigir estado ativo duplicado no submenu
 
-### Alteração em `src/pages/VagasPage.tsx`
+### Contexto
+Ao clicar em "Unidades TEIAs" (`/vagas?filtro=teias`), o item "Todas as Vagas" (`/vagas`) também fica marcado como ativo porque ambas as rotas compartilham o path `/vagas` e a lógica de active state provavelmente usa apenas `pathname` sem considerar os query params.
 
-1. **Na visão padrão (Controle de Vagas):** Filtrar o dropdown de unidades para **excluir** unidades cujo nome contenha "TEIA"
-2. **Na visão TEIAs (`filtro=teias`):** Filtrar o dropdown de unidades para mostrar **apenas** unidades cujo nome contenha "TEIA"
-3. Identificar onde o array de unidades é gerado/filtrado para o componente de seleção e aplicar a lógica condicional baseada em `filtroEspecial`
-
-Preciso inspecionar o código atual para localizar exatamente onde o filtro de unidades é renderizado.
+### Alteração em `src/components/AppSidebar.tsx`
+1. Localizar a lógica que determina o estado ativo dos itens do submenu de Controle de Vagas
+2. Ajustar para que "Todas as Vagas" (`/vagas`) só fique ativo quando **não** houver query param `filtro`
+3. "Unidades TEIAs" (`/vagas?filtro=teias`) só fica ativo quando o param `filtro=teias` estiver presente
 

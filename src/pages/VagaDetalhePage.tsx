@@ -52,7 +52,7 @@ import {
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateVagaAsync, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao, trackEditing, stopTrackingEditing, editingUsers } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const permissions = usePermissions();
   
@@ -102,6 +102,18 @@ export default function VagaDetalhePage() {
       });
     }
   }, [vaga?.id]);
+  
+  useEffect(() => {
+    if (id) {
+      trackEditing(id);
+      return () => {
+        stopTrackingEditing();
+      };
+    }
+  }, [id, trackEditing, stopTrackingEditing]);
+
+  const editingUser = id ? editingUsers[id] : null;
+  const isAnotherUserEditing = editingUser && editingUser.userId !== currentUser?.id;
 
   if (!vaga) return <div className="p-8 text-center text-muted-foreground">Vaga não encontrada.</div>;
 
@@ -122,7 +134,7 @@ export default function VagaDetalhePage() {
     applyStatusChange(newStatus);
   };
 
-  const applyStatusChange = (newStatus: string, createBanco = false) => {
+  const applyStatusChange = async (newStatus: string, createBanco = false) => {
     const oldStatus = vaga.status || vaga.status_geral;
     const now = new Date().toISOString();
     const today = now.split('T')[0];
@@ -189,8 +201,8 @@ export default function VagaDetalhePage() {
       toast.info('Banco de Talentos criado e tarefas atribuídas à assistência');
     }
 
-    updateVaga(vaga.id, updateData);
-    
+    await updateVagaAsync(vaga.id, updateData);
+
     addAuditLog({
       usuario_nome: currentUser?.nome_completo || 'Sistema',
       usuario_email: currentUser?.email || 'sistema@sistema.com',
@@ -329,7 +341,6 @@ export default function VagaDetalhePage() {
         status_publicacao: 'pendente'
       });
     }
-
     addAuditLog({
       usuario_nome: currentUser?.nome_completo || 'Sistema',
       usuario_email: currentUser?.email || 'sistema@sistema.com',
@@ -348,6 +359,14 @@ export default function VagaDetalhePage() {
       navigate('/fila-editais');
     }, 1500);
   };
+      {isAnotherUserEditing && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3 text-amber-800 animate-pulse">
+          <User className="h-5 w-5" />
+          <span className="text-sm font-semibold">
+            {editingUser.userName} está visualizando/editando este registro agora.
+          </span>
+        </div>
+      )}
 
   const handleSaveIndicators = () => {
     updateVaga(vaga.id, indicators);

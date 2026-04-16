@@ -138,6 +138,7 @@ export interface VagaAcompanhamento {
 
 export interface Vaga {
   id: string;
+  version?: number;
   data_abertura: string;
   data_recebimento?: string;
   data_criacao: string;
@@ -247,6 +248,7 @@ export const UNIDADES_GOIANIA = [
 
 export interface BancoTalentos {
   id: string;
+  version?: number;
   unidade: string;
   cargo: string;
   secao?: string;
@@ -297,6 +299,7 @@ export interface BloqueioHorario {
 
 export interface Convocacao {
   id: string;
+  version?: number;
   vaga_id: string;
   data_convocacao: string;
   horario: string;

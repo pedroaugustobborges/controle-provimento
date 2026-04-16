@@ -149,6 +149,7 @@ interface VagasState {
   addBanco: (banco: BancoTalentos) => void;
   addBancos: (bancos: BancoTalentos[]) => void;
   updateBanco: (id: string, data: Partial<BancoTalentos>) => void;
+  updateBancoAsync: (id: string, data: Partial<BancoTalentos>) => Promise<boolean>;
   deleteBanco: (id: string) => void;
   addConvocacao: (convocacao: Convocacao) => void;
   updateConvocacao: (id: string, data: Partial<Convocacao>) => void;

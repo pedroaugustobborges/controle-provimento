@@ -1,50 +1,51 @@
 
-## Entendimento
+## Plano de investigação e correção — Perda de dados em Convocações
 
-A coluna **"Responsável pela publicação"** na **Fila de Editais** está no lugar errado no fluxo. O correto é:
+### Fase 1 — Investigação forense (read-only, antes de qualquer alteração)
 
-1. **Fila de Editais** = lista de vagas aguardando o analista do edital pegar. Aqui **não** precisa ter "Responsável pela publicação" — só "Enviado por".
-2. O analista do edital pega a vaga e a encaminha para **Redação**.
-3. **Na hora do envio para Validação** (em Redação) é que se atribui o **Responsável pela Validação**, com sugestão automática:
-   - Vagas de **Goiás + Espírito Santo** → **Isaac** (analista administrativo dessas regiões).
-   - Vagas das **Demais Unidades** → analista administrativo correspondente.
-   - Permitir override manual pelo analista do edital.
+1. **Inspecionar logs de auditoria** via `supabase--read_query`:
+   - `SELECT * FROM auditoria_logs WHERE acao ILIKE '%DELETE%' OR acao ILIKE '%IMPORT%' ORDER BY created_at DESC LIMIT 100;`
+   - `SELECT * FROM audit_logs WHERE modulo IN ('vagas','convocacoes','banco_candidatos') ORDER BY created_at DESC LIMIT 100;`
+   - `SELECT * FROM importacoes ORDER BY created_at DESC LIMIT 30;` para ver se houve `importBySubstitution` recente (que faz DELETE total).
+2. **Buscar a convocação de Goiânia do dia 17**:
+   - `SELECT * FROM vagas WHERE unidade ILIKE '%goi%' AND (data_convocacao_planilha ILIKE '%17%' OR horario_convocacao_planilha ILIKE '%17%');`
+   - Verificar `created_at`/`updated_at` para entender quando foi tocada por último.
+3. **Mapear onde existem convocações** no schema atual: a tabela `vagas` tem campos `*_convocacao_planilha`, mas **não existe tabela dedicada `convocacoes`**. Confirmar com o usuário onde as convocações manuais estão sendo persistidas (provável que estejam na própria `vagas` ou em estado local não persistido — possível causa raiz).
+4. **Revisar o código** de `src/components/AgendaDiaria.tsx`, `src/components/ConvocacaoDialog.tsx`, `src/services/databaseService.ts` (função `importBySubstitution` faz `DELETE` total da tabela!) e `src/lib/convocacaoUtils.ts` para entender o fluxo de salvamento.
 
-## Plano
+### Fase 2 — Diagnóstico da causa raiz (hipóteses prováveis)
 
-**1. Remover coluna "Responsável pela publicação" da Fila de Editais**
-- Em `src/pages/FilaEditaisPage.tsx`, remover a coluna e o Select correspondente (manter apenas "Enviado por").
-- Ajustar `colSpan` e sub-itens dos grupos consolidados.
+- **H1 (mais provável):** `importBySubstitution` faz `DELETE FROM vagas WHERE id != '00000000...'` — apaga **tudo** antes de reinserir. Qualquer convocação manual feita após a última importação é perdida na próxima importação.
+- **H2:** Convocações estão sendo salvas apenas em estado local (Zustand) sem persistência real no banco.
+- **H3:** Falta de tabela dedicada `convocacoes` — dados estão em campos da `vagas` que são sobrescritos por importações.
 
-**2. Criar mapeamento região → analista administrativo**
-- Novo arquivo `src/data/analistasAdministrativos.ts` exportando:
-  ```ts
-  ANALISTA_ADM_POR_REGIAO = {
-    'goias_es': { nome: 'Isaac', id: '...' },
-    'demais': { nome: '...', id: '...' }
-  }
-  function sugerirResponsavelValidacao(unidade): { nome, id }
-  ```
-- Pedir ao usuário (via ask_questions na próxima rodada se necessário) o nome do analista das "Demais Unidades", OU deixar configurável e iniciar só com Isaac mapeado.
+### Fase 3 — Correções estruturais (após confirmação da causa)
 
-**3. Atribuição no envio para Validação (Redação → Validação)**
-- Localizar a tela/ação de "enviar para validação" (provavelmente em `src/pages/ValidacaoEditaisPage.tsx` ou um botão na Fila do Analista do Edital — `FilaAnalistaEditalPage.tsx`).
-- Ao clicar em "Enviar para validação", abrir um pequeno **dialog**:
-  - Campo **Responsável pela Validação** (Select), pré-preenchido com a sugestão automática baseada na região da vaga.
-  - Permitir trocar manualmente.
-  - Confirmar → grava em `validado_por` + entrada no `historico`.
+1. **Refatorar `importBySubstitution`** para nunca apagar registros com `origem = 'manual'`:
+   ```sql
+   DELETE FROM vagas WHERE origem = 'importada' AND import_batch_id IS DISTINCT FROM novo_batch;
+   ```
+2. **Implementar soft delete** em `vagas` e `banco_candidatos`: adicionar coluna `deleted_at TIMESTAMPTZ`, criar políticas RLS que filtrem `deleted_at IS NULL`, e substituir todos os `.delete()` por update de `deleted_at`.
+3. **Criar tabela dedicada `convocacoes`** (se confirmado que não existe persistência adequada) com FK para `vagas`, RLS apropriada e trigger de auditoria.
+4. **Trigger de auditoria universal** em `vagas`, `banco_candidatos`, `convocacoes`: registrar `OLD` completo em `auditoria_logs` em todo `UPDATE`/`DELETE`.
+5. **Validar edge function `database-backup`**: confirmar agendamento, retenção e que o bucket `backups` está recebendo snapshots diários.
 
-**4. Persistência**
-- Continuar usando `validado_por` na tabela `vagas` (campo já existente conforme uso anterior).
+### Fase 4 — Recuperação dos dados perdidos
 
-## Verificação
+- Listar snapshots disponíveis no bucket `backups`.
+- Restaurar registros apagados para uma tabela temporária e fazer merge com o estado atual sem sobrescrever dados novos.
+- Reportar ao usuário exatamente o que foi recuperado.
 
-- Fila de Editais não exibe mais a coluna "Responsável pela publicação", só "Enviado por".
-- Ao enviar uma vaga de CRER (Goiás) para validação, o dialog sugere **Isaac** automaticamente.
-- Ao enviar uma vaga de uma unidade "Demais", sugere o analista correspondente.
-- O analista do edital pode trocar manualmente antes de confirmar.
-- Mudança persiste e aparece na tela de Validação de Editais em tempo real.
+### Fase 5 — Verificação
 
-## Pergunta a ser feita após aprovação
+- Inserir uma convocação manual de teste.
+- Rodar uma importação de planilha.
+- Confirmar que a convocação manual **continua intacta**.
+- Confirmar entrada correspondente em `auditoria_logs`.
+- Confirmar que `deleted_at` impede DELETE físico.
 
-Para completar o mapeamento, preciso saber: **quem é o analista administrativo responsável pelas "Demais Unidades"** (HUGOL, HECAD, HDS, Policlínica, Jataí, etc.)? Posso perguntar ao usuário com `ask_questions` na próxima rodada, ou deixar configurável via tela de Administração.
+### Pergunta antes de executar
+
+Preciso que o usuário aprove o plano e confirme se posso:
+(a) executar as queries de investigação no banco de produção;
+(b) prosseguir com as alterações estruturais (soft delete + refator do importBySubstitution + nova tabela `convocacoes` se necessária) em seguida.

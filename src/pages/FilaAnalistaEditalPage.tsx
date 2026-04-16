@@ -31,7 +31,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
-  const { vagas, updateVaga } = useVagasStore();
+  const { vagas, updateVagaAsync } = useVagasStore();
+  const updateVaga = updateVagaAsync;
   const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');

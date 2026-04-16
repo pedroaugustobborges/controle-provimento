@@ -24,7 +24,7 @@ interface ConvocacaoDialogProps {
 }
 
 export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }: ConvocacaoDialogProps) {
-  const { addConvocacao, updateConvocacao, updateVaga, updateBanco, addAlerta, convocacoes } = useVagasStore();
+  const { addConvocacao, updateConvocacao, updateVagaAsync, updateBancoAsync, addAlerta, convocacoes } = useVagasStore();
   const { currentUser } = useAdminStore();
   
   const [formData, setFormData] = useState<Partial<Convocacao>>({
@@ -104,18 +104,18 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
       addConvocacao(newConvocacao);
       toast.success('Convocação criada e enviada para o módulo diário');
 
-      // Atualizar registro do banco para CONVOCADO
+      // Atualizar registro do banco para CONVOCADO (persistido — sincroniza em tempo real)
       if (formData.banco_relacionado) {
-        updateBanco(formData.banco_relacionado, {
+        updateBancoAsync(formData.banco_relacionado, {
           status: 'CONVOCADO',
           data_convocacao: formData.data_convocacao,
           unidade_convocacao: formData.unidade || vaga?.unidade,
         });
       }
 
-      // Se tiver vaga vinculada, atualizar status para CONVOCAÇÕES
+      // Se tiver vaga vinculada, atualizar status para CONVOCAÇÕES (persistido)
       if (vaga) {
-        updateVaga(vaga.id, { status: 'CONVOCAÇÕES' });
+        updateVagaAsync(vaga.id, { status: 'CONVOCAÇÕES' });
       }
     }
     

@@ -149,6 +149,7 @@ interface VagasState {
   addBanco: (banco: BancoTalentos) => void;
   addBancos: (bancos: BancoTalentos[]) => void;
   updateBanco: (id: string, data: Partial<BancoTalentos>) => void;
+  updateBancoAsync: (id: string, data: Partial<BancoTalentos>) => Promise<boolean>;
   deleteBanco: (id: string) => void;
   addConvocacao: (convocacao: Convocacao) => void;
   updateConvocacao: (id: string, data: Partial<Convocacao>) => void;
@@ -326,6 +327,9 @@ export const useVagasStore = create<VagasState>()(
         const currentVaga = get().vagas.find(v => v.id === id);
         if (!currentVaga) return false;
 
+        // Optimistic local update so UI feels instant
+        get().updateVaga(id, data);
+
         const { data: updated, error } = await DatabaseService.saveWithConcurrency('vagas', {
           ...currentVaga,
           ...data,
@@ -340,7 +344,8 @@ export const useVagasStore = create<VagasState>()(
         }
 
         if (updated) {
-          get().updateVaga(id, mapDbVaga(updated));
+          // Merge: preserve any local-only fields (cronograma, historico, etc.) not present in DB row
+          get().updateVaga(id, { ...mapDbVaga(updated), ...data });
           get().createNotificacao({
             titulo: "Vaga Atualizada",
             mensagem: `${currentUser.nome_completo} atualizou a vaga ${currentVaga.cargo}`,
@@ -355,6 +360,37 @@ export const useVagasStore = create<VagasState>()(
       addBanco: (banco) => set((s) => ({ bancos: [banco, ...s.bancos] })),
       addBancos: (newBancos) => set((s) => ({ bancos: [...newBancos, ...s.bancos] })),
       updateBanco: (id, data) => set((s) => ({ bancos: s.bancos.map((b) => b.id === id ? { ...b, ...data } : b) })),
+      updateBancoAsync: async (id, data) => {
+        const { DatabaseService } = await import('@/services/databaseService');
+        const { useAdminStore } = await import('./adminStore');
+        const { currentUser } = useAdminStore.getState();
+        if (!currentUser) return false;
+
+        const currentBanco = get().bancos.find(b => b.id === id);
+        if (!currentBanco) return false;
+
+        // Optimistic local update for snappy UX
+        get().updateBanco(id, data);
+
+        const { data: updated, error } = await DatabaseService.saveWithConcurrency('banco_candidatos', {
+          ...currentBanco,
+          ...data,
+          id,
+          version: (currentBanco as any).version || 0
+        }, currentUser.id);
+
+        if (error) {
+          console.error('[updateBancoAsync] Error:', error);
+          toast.error(error.message || 'Erro ao atualizar registro do banco.');
+          return false;
+        }
+
+        if (updated) {
+          get().updateBanco(id, mapDbBanco(updated));
+          return true;
+        }
+        return false;
+      },
       deleteBanco: (id) => set((s) => ({ bancos: s.bancos.filter((b) => b.id !== id) })),
       addConvocacao: (convocacao) => set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] })),
       updateConvocacao: (id, data) => set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === id ? { ...c, ...data } : c) })),
@@ -411,20 +447,45 @@ export const useVagasStore = create<VagasState>()(
       getMatchingDiagnostic: () => [],
       fixWrongImportBatches: () => {},
       subscribeRealtime: () => {
+        // Avoid duplicate subscriptions
+        if ((window as any).__realtimeChannel) return;
         import('@/integrations/supabase/client').then(({ supabase }) => {
+          if ((window as any).__realtimeChannel) return;
+          const channelName = `realtime-vagas-bancos-${Math.random().toString(36).slice(2, 8)}`;
           const channel = supabase
-            .channel('realtime-vagas-bancos')
+            .channel(channelName)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vagas' }, (payload) => {
-              const { eventType, new: newRow, old: oldRow } = payload;
-              if (eventType === 'INSERT') set((s) => ({ vagas: [mapDbVaga(newRow), ...s.vagas] }));
-              else if (eventType === 'UPDATE') set((s) => ({ vagas: s.vagas.map((v) => v.id === newRow.id ? mapDbVaga(newRow) : v) }));
-              else if (eventType === 'DELETE') set((s) => ({ vagas: s.vagas.filter((v) => v.id !== oldRow.id) }));
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                set((s) => s.vagas.some(v => v.id === newRow.id) ? s : ({ vagas: [mapDbVaga(newRow), ...s.vagas] }));
+              } else if (eventType === 'UPDATE') {
+                set((s) => ({
+                  vagas: s.vagas.map((v) => {
+                    if (v.id !== newRow.id) return v;
+                    // Preserve newer local optimistic version
+                    if ((v.version || 0) > (newRow.version || 0)) return v;
+                    return mapDbVaga(newRow);
+                  })
+                }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ vagas: s.vagas.filter((v) => v.id !== oldRow.id) }));
+              }
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'banco_candidatos' }, (payload) => {
-              const { eventType, new: newRow, old: oldRow } = payload;
-              if (eventType === 'INSERT') set((s) => ({ bancos: [mapDbBanco(newRow), ...s.bancos] }));
-              else if (eventType === 'UPDATE') set((s) => ({ bancos: s.bancos.map((b) => b.id === newRow.id ? mapDbBanco(newRow) : b) }));
-              else if (eventType === 'DELETE') set((s) => ({ bancos: s.bancos.filter((b) => b.id !== oldRow.id) }));
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                set((s) => s.bancos.some(b => b.id === newRow.id) ? s : ({ bancos: [mapDbBanco(newRow), ...s.bancos] }));
+              } else if (eventType === 'UPDATE') {
+                set((s) => ({
+                  bancos: s.bancos.map((b) => {
+                    if (b.id !== newRow.id) return b;
+                    if (((b as any).version || 0) > (newRow.version || 0)) return b;
+                    return mapDbBanco(newRow);
+                  })
+                }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ bancos: s.bancos.filter((b) => b.id !== oldRow.id) }));
+              }
             })
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
               const newRow = payload.new;

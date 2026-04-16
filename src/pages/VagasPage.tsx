@@ -399,7 +399,8 @@ export default function VagasPage() {
       aguardando_unidade: 0,
       documentacao: 0,
       com_banco_valido: 0,
-      vagas_novas: 0
+      vagas_novas: 0,
+      sem_movimentacao: 0
     };
     
     const nowTime = new Date().getTime();
@@ -429,6 +430,13 @@ export default function VagasPage() {
       
       if (isManualNew || isByRecebimento || isImportedFallback) {
         acc.vagas_novas++;
+      }
+
+      // Sem Movimentação logic
+      if ((!v.status || v.status === 'SEM STATUS' || !v.status_geral || v.status_geral === 'SEM STATUS') && 
+          (!v.historico || v.historico.length === 0) &&
+          (creationTime > (nowTime - 30 * 86400000))) {
+        acc.sem_movimentacao++;
       }
 
       // Correção do mapeamento de categorias para os cards

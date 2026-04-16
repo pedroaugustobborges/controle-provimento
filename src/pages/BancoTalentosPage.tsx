@@ -845,7 +845,7 @@ export default function BancoTalentosPage() {
                     <SelectContent className="max-h-[300px]">
                       <SelectItem value="todas">Todas Unidades</SelectItem>
                       {/* Units are now derived from the bancos list or common units */}
-                      {Array.from(new Set(bancos.map(b => b.unidade))).sort().map(unit => (
+                      {Array.from(new Set(bancos.map(b => b.unidade).filter(Boolean))).sort().map(unit => (
                         <SelectItem key={unit} value={unit}>{unit}</SelectItem>
                       ))}
                     </SelectContent>

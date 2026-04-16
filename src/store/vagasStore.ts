@@ -397,34 +397,64 @@ export const useVagasStore = create<VagasState>()(
       addConvocacao: async (convocacao) => {
         // Optimistic update
         set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] }));
+        const tempId = (convocacao as any).id;
         try {
           const { supabase } = await import('@/integrations/supabase/client');
-          const { useAdminStore } = await import('./adminStore');
-          const { currentUser } = useAdminStore.getState();
+          // CRITICAL: Use auth.uid() (real Supabase auth), not adminStore.currentUser.id
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (!authUser) {
+            console.error('addConvocacao: no authenticated user');
+            toast.error('Sessão expirada. Faça login novamente para salvar a convocação.');
+            set((s) => ({ convocacoes: s.convocacoes.filter(c => c.id !== tempId) }));
+            return;
+          }
+
           const { id, vaga_id, banco_id, ...rest } = convocacao as any;
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+          // Whitelist only DB columns to avoid PGRST204 ("column not found") errors
           const payload: any = {
-            ...rest,
-            vaga_id: vaga_id && /^[0-9a-f-]{36}$/i.test(vaga_id) ? vaga_id : null,
-            banco_id: banco_id && /^[0-9a-f-]{36}$/i.test(banco_id) ? banco_id : null,
-            created_by: currentUser?.id || null,
-            updated_by: currentUser?.id || null,
+            vaga_id: vaga_id && uuidRegex.test(vaga_id) ? vaga_id : null,
+            banco_id: banco_id && uuidRegex.test(banco_id) ? banco_id : null,
+            edital_relacionado: rest.edital_relacionado || null,
+            requisicao: rest.requisicao || null,
+            nome_candidato: rest.nome_candidato,
+            cargo: rest.cargo || null,
+            unidade: rest.unidade || null,
+            unidade_alternativa: rest.unidade_alternativa || null,
+            secao: rest.secao || null,
+            classificacao: rest.classificacao != null ? Number(rest.classificacao) : null,
+            data_convocacao: rest.data_convocacao,
+            horario: rest.horario,
+            carga_horaria: rest.carga_horaria || null,
+            horario_trabalho: rest.horario_trabalho || null,
+            edoc: rest.edoc || null,
+            tipo_convocacao: rest.tipo_convocacao || 'Presencial',
+            tipo_atendimento: rest.tipo_atendimento || 'presencial',
+            link_teams: rest.link_teams || null,
+            status: rest.status || 'pendente',
+            devolutiva: rest.devolutiva || null,
+            data_devolutiva: rest.data_devolutiva || null,
+            responsavel: rest.responsavel || null,
+            observacoes: rest.observacoes || null,
+            created_by: authUser.id,
+            updated_by: authUser.id,
           };
-          // Drop undefined / non-DB fields
-          delete payload.requisicao;
-          delete payload.edital_relacionado;
-          const { data, error } = await supabase.from('convocacoes' as any).insert(payload).select().single();
+
+          const { data, error } = await supabase.from('convocacoes').insert(payload).select().single();
           if (error) {
-            console.error('addConvocacao persist error:', error);
-            toast.error('Falha ao salvar convocação no servidor. Verifique sua conexão.');
-            // Rollback optimistic
-            set((s) => ({ convocacoes: s.convocacoes.filter(c => c.id !== id) }));
+            console.error('addConvocacao persist error:', error, 'payload:', payload);
+            toast.error(`Falha ao salvar convocação: ${error.message}`);
+            set((s) => ({ convocacoes: s.convocacoes.filter(c => c.id !== tempId) }));
             return;
           }
           // Replace temp id with DB id
-          set((s) => ({ convocacoes: s.convocacoes.map(c => c.id === id ? { ...c, ...(data as any) } as Convocacao : c) }));
-        } catch (e) {
+          set((s) => ({ convocacoes: s.convocacoes.map(c => c.id === tempId ? { ...c, ...(data as any) } as Convocacao : c) }));
+          console.log('[addConvocacao] Saved successfully:', data.id);
+        } catch (e: any) {
           console.error('addConvocacao exception:', e);
-          toast.error('Erro ao salvar convocação.');
+          toast.error(`Erro ao salvar convocação: ${e?.message || 'desconhecido'}`);
+          set((s) => ({ convocacoes: s.convocacoes.filter(c => c.id !== tempId) }));
         }
       },
       updateConvocacao: async (id, data) => {

@@ -202,11 +202,11 @@ function ConvocacaoRow({ conv, onEdit, onDevolutiva, showHorario = true }: { con
       )}
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <User className="h-4 w-4 text-muted-foreground shrink-0" />
-        <span className="text-sm font-semibold text-foreground truncate">{conv.nome_candidato}</span>
-        <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
+        <span className="text-sm font-semibold text-foreground break-words leading-tight">{conv.nome_candidato}</span>
+        <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
           <Briefcase className="h-3 w-3" /> {conv.cargo}
         </span>
-        <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
+        <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
           <MapPin className="h-3 w-3" /> {conv.unidade}
         </span>
         {conv.tipo_atendimento === 'online' && (

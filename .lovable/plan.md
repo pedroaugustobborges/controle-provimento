@@ -1,29 +1,25 @@
 
+## Problema
+No Dashboard de Convocações, os rótulos (labels) dos gráficos não estão aparecendo — provavelmente nos eixos das barras (Top 5 Unidades, Top 5 Cargos) e/ou na legenda do gráfico de pizza (Distribuição por Status).
 
-## Plano: Corrigir erro 404 em URLs diretas no domínio personalizado
+## Causa provável
+No `ConvocacoesDashboardPage.tsx`:
+- Os `YAxis` das barras horizontais usam `width={130}` e `width={150}` com `fontSize: 10` — nomes longos de unidades/cargos em maiúsculas podem estar sendo truncados ou não exibidos por falta de espaço.
+- Os ticks podem estar sendo cortados por margens insuficientes.
+- A legenda da pizza pode não estar renderizando os nomes corretamente.
 
-### Diagnóstico
+## Plano de correção
 
-O domínio `provimento.painelagirsaude.com` não está configurado como domínio personalizado no Lovable — o projeto **não está publicado** via Lovable. Isso significa que o site provavelmente está hospedado em outro provedor (Vercel, Netlify, etc.), e o problema de 404 é causado pela **configuração de SPA routing no servidor de hospedagem**.
+1. **Aumentar largura do YAxis** nos dois gráficos de barras (de 130/150 para ~180) para acomodar nomes longos como "TEIA APARECIDA" ou "POLICLÍNICA".
+2. **Adicionar formatador de tick** que trunca nomes muito longos com reticências, garantindo que sempre apareçam.
+3. **Aumentar margem esquerda** dos `BarChart` para dar respiro ao label.
+4. **Garantir legenda visível** no `PieChart` com os nomes dos status e cores correspondentes.
+5. **Adicionar rótulos de valor** (LabelList) nas pontas das barras para mostrar o número de convocações de cada item diretamente no gráfico.
 
-O Lovable já possui SPA fallback automático embutido — qualquer rota que não seja um arquivo estático é redirecionada para `index.html`. Mas isso **só funciona quando o site é publicado/hospedado pelo Lovable**.
+## Arquivo afetado
+- `src/pages/ConvocacoesDashboardPage.tsx` (único arquivo)
 
-### Solução recomendada
-
-**Opção 1 (Recomendada): Publicar pelo Lovable e configurar domínio personalizado**
-- Publicar o projeto via Lovable
-- Configurar `provimento.painelagirsaude.com` como domínio personalizado no Lovable
-- O SPA routing funcionará automaticamente — sem necessidade de `vercel.json` ou `_redirects`
-
-**Opção 2: Se mantiver hospedagem externa (Vercel/Netlify)**
-- O `vercel.json` já tem o rewrite correto (`/* → /index.html`)
-- O `public/_redirects` já tem a regra Netlify correta
-- O problema provavelmente está na **configuração do provedor de hospedagem** (DNS, build settings, etc.) — isso precisa ser verificado diretamente no painel do provedor
-
-### Ação no código (independente da hospedagem)
-- Nenhuma alteração de código é necessária — o `BrowserRouter` e as rotas do React Router estão corretamente configurados em `App.tsx`
-- Os arquivos `vercel.json` e `_redirects` já existem com as regras de fallback SPA corretas
-
-### Próximo passo
-Preciso saber: **onde o site está hospedado atualmente?** (Vercel, Netlify, outro?) — ou prefere publicar pelo Lovable e configurar o domínio personalizado aqui?
-
+## Resultado esperado
+- Nomes de unidades e cargos visíveis ao lado de cada barra (com truncamento elegante se muito longos).
+- Valor numérico aparecendo no fim de cada barra.
+- Legenda da pizza mostrando claramente cada status com sua cor.

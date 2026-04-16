@@ -46,26 +46,78 @@ export class DatabaseService {
   }
 
   /**
+   * Allowed columns per table for safe UPDATE payloads.
+   * Prevents PostgREST errors caused by sending non-existent or computed columns.
+   */
+  private static ALLOWED_COLUMNS: Record<string, string[]> = {
+    vagas: [
+      'unidade', 'cargo', 'status', 'status_geral', 'tipo_vaga', 'is_teia', 'is_pcd',
+      'quantidade', 'numero_vagas', 'motivo', 'observacao', 'analista_responsavel',
+      'assistentes', 'nome_substituido', 'data_abertura', 'data_recebimento',
+      'data_envio_edital', 'data_publicacao', 'data_homologacao', 'data_convocacao',
+      'numero_edital', 'numero_processo_seletivo', 'etapa', 'publicacao', 'prioridade',
+      'mes_referencia', 'import_batch_id', 'origem', 'data_importacao',
+      'unidade_trabalho', 'unidades_banco_talentos', 'distribuicao_vagas',
+      'observacoes_gestor', 'status_aprovacao_gestor', 'gestor_aprovador_id',
+      'url_reachr', 'detalhes_acompanhamento', 'admissao_efetivada_acompanhamento',
+      'admissao_enviada_acompanhamento', 'status_oitiva_convocacao_planilha',
+      'forma_convocacao_planilha', 'classificacao_convocacao_planilha',
+      'candidato_convocado_planilha', 'horario_convocacao_planilha',
+      'data_convocacao_planilha', 'secao',
+    ],
+    banco_candidatos: [
+      'nome', 'cargo', 'cargo_normalizado', 'unidade', 'status', 'numero_edital',
+      'numero_processo_seletivo', 'classificacao', 'data_validade', 'data_convocacao',
+      'is_prorrogado', 'quantidade_banco', 'unidade_convocacao', 'telefone', 'email',
+      'observacao', 'import_batch_id', 'data_importacao', 'origem', 'numero_chamada',
+      'data_publicacao', 'prorrogacao', 'status_original', 'status_calculado',
+      'motivo_do_calculo', 'data_base_do_calculo', 'data_referencia_usada',
+    ],
+  };
+
+  private static sanitizePayload(table: string, data: any): Record<string, any> {
+    const allowed = this.ALLOWED_COLUMNS[table];
+    if (!allowed) return data;
+    const clean: Record<string, any> = {};
+    for (const key of allowed) {
+      if (key in data && data[key] !== undefined) {
+        let value = data[key];
+        // Convert array assistentes to string for vagas table
+        if (table === 'vagas' && key === 'assistentes' && Array.isArray(value)) {
+          value = value.join(', ');
+        }
+        clean[key] = value;
+      }
+    }
+    return clean;
+  }
+
+  /**
    * Generic save with optimistic concurrency (versioning)
    */
-  static async saveWithConcurrency<T extends { id: string; version: number }>(
+  static async saveWithConcurrency<T extends { id: string; version?: number }>(
     table: string,
     data: T,
     userId: string
   ): Promise<{ data: T | null; error: PostgrestError | Error | null }> {
-    const { id, version, ...updateData } = data as any;
-    
+    const { id, version } = data as any;
+    const currentVersion = typeof version === 'number' ? version : 0;
+
+    const sanitized = this.sanitizePayload(table, data);
+
+    const payload = {
+      ...sanitized,
+      updated_by: userId,
+      updated_at: new Date().toISOString(),
+      version: currentVersion + 1,
+    };
+
     const operation = async () => {
       return await supabase
         .from(table)
-        .update({
-          ...updateData,
-          updated_by: userId,
-          updated_at: new Date().toISOString(),
-          version: (version || 0) + 1,
-        })
+        .update(payload)
         .eq('id', id)
-        .eq('version', version)
+        .eq('version', currentVersion)
         .select()
         .single();
     };
@@ -73,14 +125,34 @@ export class DatabaseService {
     const { data: updated, error } = await this.withRetry(operation);
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return { data: null, error: new Error('Erro de concorrência: O registro foi modificado por outro usuário.') };
+      // Log full error details for debugging
+      console.error(`[saveWithConcurrency] Failed to update ${table}#${id}:`, {
+        message: error.message,
+        code: (error as any).code,
+        details: (error as any).details,
+        hint: (error as any).hint,
+        payload,
+        expectedVersion: currentVersion,
+      });
+
+      if ((error as any).code === 'PGRST116') {
+        // Could be concurrency mismatch OR RLS blocking the row
+        // Verify by checking if row exists
+        const { data: rowCheck } = await supabase
+          .from(table)
+          .select('version')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (rowCheck && (rowCheck as any).version !== currentVersion) {
+          return { data: null, error: new Error('Erro de concorrência: O registro foi modificado por outro usuário. Recarregue a página.') };
+        }
+        return { data: null, error: new Error('Sem permissão para atualizar este registro ou registro não encontrado.') };
       }
       return { data: null, error };
     }
 
-    // Log to audit (async)
-    this.logAudit(table, id, 'UPDATE', userId, { version }, updated);
+    this.logAudit(table, id, 'UPDATE', userId, { version: currentVersion }, updated);
 
     return { data: updated as T, error: null };
   }

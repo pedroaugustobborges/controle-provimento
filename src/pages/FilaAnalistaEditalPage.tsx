@@ -514,6 +514,34 @@ export default function FilaAnalistaEditalPage() {
                 )}
               </div>
 
+              <div className="space-y-2 p-3 rounded-md border border-blue-100 bg-blue-50/40">
+                <Label htmlFor="respValidacao" className="text-sm font-semibold flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-blue-600" />
+                  Responsável pela Validação
+                </Label>
+                <Select value={responsavelValidacao} onValueChange={setResponsavelValidacao}>
+                  <SelectTrigger id="respValidacao" className="bg-white">
+                    <SelectValue placeholder="Selecione o analista validador..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {analistasValidacao.map((u: any) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.nome_completo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedVaga && (() => {
+                  const sugestao = sugerirResponsavelValidacao(selectedVaga.unidade);
+                  if (!sugestao?.nome) return null;
+                  return (
+                    <p className="text-[11px] text-blue-700 italic">
+                      Sugestão automática para {selectedVaga.unidade}: <strong>{sugestao.nome}</strong>
+                    </p>
+                  );
+                })()}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="obsAnalista" className="text-sm font-semibold">Observações do Analista do Edital</Label>
                 <Textarea 

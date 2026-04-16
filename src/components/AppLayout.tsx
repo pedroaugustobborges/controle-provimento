@@ -74,17 +74,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const { alertas, updateAlerta, fetchVagas, fetchBancos } = useVagasStore();
+  const { alertas, updateAlerta, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime } = useVagasStore();
   const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length;
   const mainRef = useRef<HTMLDivElement>(null);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCurrentProfile();
-    // Prefetch dados principais para evitar tela em branco ao navegar
     fetchVagas();
     fetchBancos();
-  }, [fetchCurrentProfile, fetchVagas, fetchBancos]);
+    subscribeRealtime();
+    return () => {
+      unsubscribeRealtime();
+    };
+  }, [fetchCurrentProfile, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime]);
 
   useEffect(() => {
     if (!currentUser) return;

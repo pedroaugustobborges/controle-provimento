@@ -178,6 +178,8 @@ interface VagasState {
   getMatchingDiagnostic: () => { vagaId: string; vagaCargo: string; vagaUnidade: string; vagaReq: string; potentialBancos: any[] }[];
   marcarTodasLidas: () => void;
   fixWrongImportBatches: () => void;
+  subscribeRealtime: () => void;
+  unsubscribeRealtime: () => void;
 }
 
 export const useVagasStore = create<VagasState>()(
@@ -631,6 +633,73 @@ export const useVagasStore = create<VagasState>()(
             // so we delete them to allow a clean re-import with the new logic.
             get().deleteImportBatch(batch.id);
           });
+        }
+      },
+      subscribeRealtime: () => {
+        import('@/integrations/supabase/client').then(({ supabase }) => {
+          const channel = supabase
+            .channel('realtime-vagas-bancos')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'vagas' },
+              (payload) => {
+                const { eventType, new: newRow, old: oldRow } = payload;
+                if (eventType === 'INSERT') {
+                  const mapped = mapDbVaga(newRow);
+                  set((s) => {
+                    if (s.vagas.some((v) => v.id === mapped.id)) return s;
+                    return { vagas: [mapped, ...s.vagas] };
+                  });
+                } else if (eventType === 'UPDATE') {
+                  const mapped = mapDbVaga(newRow);
+                  set((s) => ({
+                    vagas: s.vagas.map((v) => v.id === mapped.id ? mapped : v),
+                  }));
+                } else if (eventType === 'DELETE') {
+                  const deletedId = (oldRow as any)?.id;
+                  if (deletedId) {
+                    set((s) => ({ vagas: s.vagas.filter((v) => v.id !== deletedId) }));
+                  }
+                }
+              }
+            )
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'banco_candidatos' },
+              (payload) => {
+                const { eventType, new: newRow, old: oldRow } = payload;
+                if (eventType === 'INSERT') {
+                  const mapped = mapDbBanco(newRow);
+                  set((s) => {
+                    if (s.bancos.some((b) => b.id === mapped.id)) return s;
+                    return { bancos: [mapped, ...s.bancos] };
+                  });
+                } else if (eventType === 'UPDATE') {
+                  const mapped = mapDbBanco(newRow);
+                  set((s) => ({
+                    bancos: s.bancos.map((b) => b.id === mapped.id ? mapped : b),
+                  }));
+                } else if (eventType === 'DELETE') {
+                  const deletedId = (oldRow as any)?.id;
+                  if (deletedId) {
+                    set((s) => ({ bancos: s.bancos.filter((b) => b.id !== deletedId) }));
+                  }
+                }
+              }
+            )
+            .subscribe();
+
+          // Store channel reference for cleanup
+          (window as any).__realtimeChannel = channel;
+        });
+      },
+      unsubscribeRealtime: () => {
+        const channel = (window as any).__realtimeChannel;
+        if (channel) {
+          import('@/integrations/supabase/client').then(({ supabase }) => {
+            supabase.removeChannel(channel);
+          });
+          delete (window as any).__realtimeChannel;
         }
       },
     }),

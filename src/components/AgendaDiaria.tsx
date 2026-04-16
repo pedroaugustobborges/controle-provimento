@@ -202,11 +202,11 @@ function ConvocacaoRow({ conv, onEdit, onDevolutiva, showHorario = true }: { con
       )}
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <User className="h-4 w-4 text-muted-foreground shrink-0" />
-        <span className="text-sm font-semibold text-foreground truncate">{conv.nome_candidato}</span>
-        <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
+        <span className="text-sm font-semibold text-foreground break-words leading-tight">{conv.nome_candidato}</span>
+        <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
           <Briefcase className="h-3 w-3" /> {conv.cargo}
         </span>
-        <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
+        <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
           <MapPin className="h-3 w-3" /> {conv.unidade}
         </span>
         {conv.tipo_atendimento === 'online' && (
@@ -292,7 +292,7 @@ function HorarioRow({ horario, convocacoes, blocked, blockedCount = 0, blocks = 
                  </span>
                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   {convocacoes.slice(0, 2).map(c => (
-                    <span key={c.id} className="flex items-center gap-1 truncate max-w-[120px]">
+                    <span key={c.id} className="flex items-center gap-1 break-words leading-tight max-w-[150px]">
                       <User className="h-2.5 w-2.5 shrink-0 text-muted-foreground/60" />
                       {c.nome_candidato}
                     </span>
@@ -303,7 +303,7 @@ function HorarioRow({ horario, convocacoes, blocked, blockedCount = 0, blocks = 
             ) : count > 0 ? (
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 {convocacoes.slice(0, 3).map(c => (
-                  <span key={c.id} className="flex items-center gap-1 truncate max-w-[140px]">
+                  <span key={c.id} className="flex items-center gap-1 break-words leading-tight max-w-[160px]">
                     <User className="h-3 w-3 shrink-0 text-muted-foreground/60" />
                     {c.nome_candidato}
                   </span>

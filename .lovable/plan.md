@@ -1,33 +1,18 @@
 
 
-## Plano: Submenus "Unidades TEIAs" e "Vagas PCD" no Controle de Vagas
+## Plano: Filtro hierárquico por região na página Vagas PCD
 
 ### Alterações
 
-**1. Sidebar/Navegação (`src/components/AppSidebar.tsx`)**
-- Adicionar sub-itens sob "Vagas":
-  - **Todas as Vagas** → `/vagas`
-  - **Unidades TEIAs** → `/vagas?filtro=teia` (ícone: `Building2`)
-  - **Vagas PCD** → `/vagas?filtro=pcd` (ícone: `Accessibility`)
+**1. `src/pages/VagasPage.tsx`**
+- Corrigir título: remover travessão, exibir apenas "Vagas PCD" quando `filtro=pcd`
+- Quando `filtro=pcd`, substituir o Select de unidades por um componente de filtro hierárquico:
+  - Dois botões de região: "Goiás" e "Vitória (ES)"
+  - Ao selecionar região, exibir chips/botões pequenos das unidades daquela região que possuam vagas PCD
+  - Ao clicar numa unidade, filtrar a tabela por aquela unidade
+  - Usar as listas de unidades já definidas no Core Memory do projeto
 
-**2. Página de Vagas (`src/pages/VagasPage.tsx`)**
-- Ler query param `filtro` da URL
-- Se `filtro=teia`: filtrar vagas onde `unidade` contém "TEIA"
-- Se `filtro=pcd`: filtrar vagas onde `cargo` contém "PCD" **ou** flag `is_pcd = true`
-- Adicionar botões/tabs visuais no topo da página para alternar entre os 3 modos
-- Ajustar título da página conforme o filtro ativo
-
-**3. Formulário de Vaga (`src/components/AddVagaDialog.tsx`)**
-- Adicionar checkbox **"Vaga PCD?"** (`is_pcd: boolean`)
-- Adicionar checkbox **"Vaga TEIA?"** (`is_teia: boolean`) — preenchido automaticamente se a unidade selecionada contiver "TEIA", mas editável
-
-**4. Banco de dados (migração)**
-- Adicionar colunas à tabela `vagas`:
-  - `is_pcd boolean DEFAULT false`
-  - `is_teia boolean DEFAULT false`
-- Atualizar registros existentes: `UPDATE vagas SET is_pcd = true WHERE cargo ILIKE '%pcd%'`
-- Atualizar registros existentes: `UPDATE vagas SET is_teia = true WHERE unidade ILIKE '%teia%'`
-
-**5. Tipos (`src/types/vaga.ts`)**
-- Adicionar `is_pcd` e `is_teia` ao tipo `Vaga`
+**2. Lógica de filtragem**
+- Calcular dinamicamente quais unidades de cada região têm vagas PCD (baseado nos dados carregados)
+- Permitir desmarcar unidade para voltar a ver todas as vagas PCD da região
 

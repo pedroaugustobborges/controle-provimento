@@ -589,7 +589,7 @@ export default function VagasPage() {
       ) : (
         <>
            <PageHeader 
-            title={filtroEspecial === 'teia' ? 'Controle de Vagas — Unidades TEIAs' : filtroEspecial === 'pcd' ? 'Controle de Vagas — Vagas PCD' : 'Controle de Vagas'}
+            title={filtroEspecial === 'teia' ? 'Unidades TEIAs' : filtroEspecial === 'pcd' ? 'Vagas PCD' : 'Controle de Vagas'}
             helpContent={<HelpGuide />}
             actions={
               <>

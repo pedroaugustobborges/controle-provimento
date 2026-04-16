@@ -90,7 +90,7 @@ export default function ValidacaoEditaisPage() {
   }, [vagas, currentUser, search]);
 
 
-  const handleAction = (vagaId: string, actionStatus: 'aprovado' | 'reprovado' | 'ajuste') => {
+  const handleAction = async (vagaId: string, actionStatus: 'aprovado' | 'reprovado' | 'ajuste') => {
     const vaga = vagas.find(v => v.id === vagaId);
     if (!vaga) return;
 
@@ -153,7 +153,7 @@ export default function ValidacaoEditaisPage() {
     setSelectedGestorId('');
   };
 
-  const handleRequestGestorApproval = (vagaId: string) => {
+  const handleRequestGestorApproval = async (vagaId: string) => {
     const vaga = vagas.find(v => v.id === vagaId);
     const gestor = users.find(u => u.id === selectedGestorId);
     if (!vaga || !gestor) return;
@@ -161,18 +161,23 @@ export default function ValidacaoEditaisPage() {
     const usuario = currentUser?.nome_completo || 'Validador';
     const vagaRef = vaga.requisicao || vaga.numero_requisicao || vaga.id;
 
-    updateVaga(vagaId, {
+    const ok = await updateVaga(vagaId, {
       status_fluxo_edital: 'aguardando_aprovacao_gestor',
+      etapa: 'aguardando_aprovacao_gestor',
       gestor_aprovador_id: selectedGestorId,
       status_aprovacao_gestor: 'pendente',
       observacoes_validacao: obs,
-      historico: [...vaga.historico, {
+      historico: [...(vaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao: `Edital enviado para aprovação do gestor ${gestor.nome_completo} por ${usuario}. Obs: ${obs}`,
         usuario: usuario
       }]
-    });
+    } as any);
+
+    if (!ok) return;
+
+    notificarMovimentacaoEdital(vagaId, 'aguardando_aprovacao_gestor', `Gestor: ${gestor.nome_completo}.`);
 
     addMensagem({
       id: `msg-gestor-${Date.now()}`,

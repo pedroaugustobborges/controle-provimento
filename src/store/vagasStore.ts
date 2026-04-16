@@ -527,21 +527,39 @@ export const useVagasStore = create<VagasState>()(
       fixWrongImportBatches: () => {},
       subscribeRealtime: () => {
         // Avoid duplicate subscriptions
-        if ((window as any).__realtimeChannel) return;
+        if ((window as any).__realtimeChannel) {
+          const currentChannel = (window as any).__realtimeChannel;
+          if (currentChannel.state === 'joined') {
+            console.log('[Realtime] Subscription already active and joined.');
+            return;
+          }
+          console.log('[Realtime] Channel exists but state is:', currentChannel.state, '- Re-subscribing...');
+          get().unsubscribeRealtime();
+        }
+
         import('@/integrations/supabase/client').then(({ supabase }) => {
-          if ((window as any).__realtimeChannel) return;
           const channelName = `realtime-vagas-bancos-${Math.random().toString(36).slice(2, 8)}`;
+          console.log(`[Realtime] Initiating subscription on channel: ${channelName}`);
+          
           const channel = supabase
-            .channel(channelName)
+            .channel(channelName, {
+              config: {
+                postgres_changes: [{ event: '*', schema: 'public' }],
+              }
+            })
+            // Vagas
             .on('postgres_changes', { event: '*', schema: 'public', table: 'vagas' }, (payload) => {
               const { eventType, new: newRow, old: oldRow } = payload as any;
+              console.log('[Realtime] Vagas Change:', eventType, newRow?.id || oldRow?.id);
+              
               if (eventType === 'INSERT') {
-                set((s) => s.vagas.some(v => v.id === newRow.id) ? s : ({ vagas: [mapDbVaga(newRow), ...s.vagas] }));
+                set((s) => s.vagas.some(v => v.id === newRow.id) ? s : ({ 
+                  vagas: [mapDbVaga(newRow), ...s.vagas] 
+                }));
               } else if (eventType === 'UPDATE') {
                 set((s) => ({
                   vagas: s.vagas.map((v) => {
                     if (v.id !== newRow.id) return v;
-                    // Preserve newer local optimistic version
                     if ((v.version || 0) > (newRow.version || 0)) return v;
                     return mapDbVaga(newRow);
                   })
@@ -550,10 +568,15 @@ export const useVagasStore = create<VagasState>()(
                 set((s) => ({ vagas: s.vagas.filter((v) => v.id !== oldRow.id) }));
               }
             })
+            // Banco de Candidatos
             .on('postgres_changes', { event: '*', schema: 'public', table: 'banco_candidatos' }, (payload) => {
               const { eventType, new: newRow, old: oldRow } = payload as any;
+              console.log('[Realtime] Banco Change:', eventType, newRow?.id || oldRow?.id);
+
               if (eventType === 'INSERT') {
-                set((s) => s.bancos.some(b => b.id === newRow.id) ? s : ({ bancos: [mapDbBanco(newRow), ...s.bancos] }));
+                set((s) => s.bancos.some(b => b.id === newRow.id) ? s : ({ 
+                  bancos: [mapDbBanco(newRow), ...s.bancos] 
+                }));
               } else if (eventType === 'UPDATE') {
                 set((s) => ({
                   bancos: s.bancos.map((b) => {
@@ -566,41 +589,74 @@ export const useVagasStore = create<VagasState>()(
                 set((s) => ({ bancos: s.bancos.filter((b) => b.id !== oldRow.id) }));
               }
             })
+            // Convocações
             .on('postgres_changes', { event: '*', schema: 'public', table: 'convocacoes' }, (payload) => {
               const { eventType, new: newRow, old: oldRow } = payload as any;
+              console.log('[Realtime] Convocacoes Change:', eventType, newRow?.id || oldRow?.id);
+
               if (eventType === 'INSERT') {
                 if (newRow.deleted_at) return;
-                set((s) => s.convocacoes.some(c => c.id === newRow.id) ? s : ({ convocacoes: [newRow as any, ...s.convocacoes] }));
+                set((s) => s.convocacoes.some(c => c.id === newRow.id) ? s : ({ 
+                  convocacoes: [newRow as any, ...s.convocacoes] 
+                }));
               } else if (eventType === 'UPDATE') {
                 if (newRow.deleted_at) {
                   set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== newRow.id) }));
                   return;
                 }
-                set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === newRow.id ? { ...c, ...newRow } as any : c) }));
+                set((s) => ({ 
+                  convocacoes: s.convocacoes.map((c) => c.id === newRow.id ? { ...c, ...newRow } as any : c) 
+                }));
               } else if (eventType === 'DELETE') {
                 set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== oldRow.id) }));
               }
             })
+            // Notificações
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
-              const newRow = payload.new;
+              const newRow = payload.new as any;
+              console.log('[Realtime] New Notification:', newRow.titulo);
               toast.info(newRow.titulo, { description: newRow.mensagem });
               set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));
             })
+            // Importações
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'importacoes' }, (payload) => {
+              const { eventType } = payload;
+              console.log('[Realtime] Importacoes Change detected, refetching history...');
+              get().fetchImportHistory();
+            })
+            // Presence
             .on('presence', { event: 'sync' }, () => {
               const state = channel.presenceState();
               const editing: Record<string, any> = {};
-              Object.values(state).flat().forEach((p: any) => { if (p.editingRecordId) editing[p.editingRecordId] = p; });
+              Object.values(state).flat().forEach((p: any) => { 
+                if (p.editingRecordId) editing[p.editingRecordId] = p; 
+              });
               set({ editingUsers: editing });
             })
-            .subscribe();
+            .subscribe((status, err) => {
+              console.log(`[Realtime] Channel status: ${status}`);
+              if (err) console.error(`[Realtime] Subscription error:`, err);
+              
+              if (status === 'CHANNEL_ERROR') {
+                console.error('[Realtime] Channel error detected, attempting to reconnect in 5s...');
+                setTimeout(() => {
+                  get().unsubscribeRealtime();
+                  get().subscribeRealtime();
+                }, 5000);
+              }
+            });
+
           (window as any).__realtimeChannel = channel;
         });
       },
       unsubscribeRealtime: () => {
         const channel = (window as any).__realtimeChannel;
         if (channel) {
-          import('@/integrations/supabase/client').then(({ supabase }) => supabase.removeChannel(channel));
-          delete (window as any).__realtimeChannel;
+          console.log('[Realtime] Unsubscribing from channel...');
+          import('@/integrations/supabase/client').then(({ supabase }) => {
+            supabase.removeChannel(channel);
+            delete (window as any).__realtimeChannel;
+          });
         }
       },
       trackEditing: async (recordId) => {

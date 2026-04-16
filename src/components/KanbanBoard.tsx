@@ -24,6 +24,7 @@ import {
   verticalListSortingStrategy,
   useSortable
 } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import {
   Dialog,
@@ -57,8 +58,10 @@ interface KanbanColumnProps {
 }
 
 const KanbanColumn = ({ id, title, icon: Icon, count, color, children }: KanbanColumnProps) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
+
   return (
-    <div className="flex flex-col min-w-[320px] max-w-[320px] h-full bg-slate-50/50 rounded-xl border border-slate-200/50">
+    <div className={`flex flex-col min-w-[320px] max-w-[320px] h-full bg-slate-50/50 rounded-xl border transition-colors ${isOver ? 'border-primary/50 bg-primary/5' : 'border-slate-200/50'}`}>
       <div className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className={`p-1.5 rounded-lg ${color} bg-opacity-10`}>
@@ -73,7 +76,7 @@ const KanbanColumn = ({ id, title, icon: Icon, count, color, children }: KanbanC
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </div>
-      <div className="p-3 flex flex-col gap-3 overflow-y-auto scrollbar-hide flex-1">
+      <div ref={setNodeRef} className="p-3 flex flex-col gap-3 overflow-y-auto scrollbar-hide flex-1">
         {children}
       </div>
     </div>
@@ -232,18 +235,25 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
     const conv = initialConvocacoes.find(c => c.id === activeId);
     if (!conv) return;
 
-    // Check if dropped over a column or an item in a column
-    let targetColId = overId;
-    const overItem = initialConvocacoes.find(c => c.id === overId);
-    if (overItem) {
+    // Check if dropped over a column directly or over a card in a column
+    const columnIds = columns.map(c => c.id);
+    let targetColId: string;
+    
+    if (columnIds.includes(overId)) {
+      // Dropped directly on a column
+      targetColId = overId;
+    } else {
+      // Dropped on a card — find which column that card belongs to
+      const overItem = initialConvocacoes.find(c => c.id === overId);
+      if (!overItem) return;
       targetColId = overItem.status;
-      // Normalizar status de recusa para a coluna 'recusa'
+      // Normalize recusa statuses to the 'recusa' column
       if (['recusa_plantao', 'recusa_unidade', 'recusa_horario'].includes(targetColId)) {
         targetColId = 'recusa';
       }
     }
 
-    // Se o status atual já é o de destino (considerando agrupamento de recusa), não faz nada
+    // If current status matches target (considering recusa grouping), do nothing
     const currentBaseStatus = ['recusa_plantao', 'recusa_unidade', 'recusa_horario'].includes(conv.status) ? 'recusa' : conv.status;
     
     if (currentBaseStatus !== targetColId) {

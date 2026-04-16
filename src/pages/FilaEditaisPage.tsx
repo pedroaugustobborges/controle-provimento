@@ -46,7 +46,40 @@ export default function FilaEditaisPage() {
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
-  
+
+  // Grouping control
+  const storageKey = `fila-editais-ungrouped:${currentUser?.id || 'anon'}`;
+  const [ungrouped, setUngrouped] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setUngrouped(new Set(JSON.parse(raw)));
+    } catch {}
+  }, [storageKey]);
+
+  const persistUngrouped = (next: Set<string>) => {
+    setUngrouped(next);
+    try { localStorage.setItem(storageKey, JSON.stringify(Array.from(next))); } catch {}
+  };
+
+  const toggleExpand = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const handleUngroup = (cargoKey: string) => {
+    const next = new Set(ungrouped);
+    next.add(cargoKey);
+    persistUngrouped(next);
+    toast.success('Grupo desfeito. Requisições agora aparecem individualmente.');
+  };
+
   // Modal de envio
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);

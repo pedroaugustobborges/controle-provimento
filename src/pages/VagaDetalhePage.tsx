@@ -329,6 +329,14 @@ export default function VagaDetalhePage() {
         status_publicacao: 'pendente'
       });
     }
+      {isAnotherUserEditing && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3 text-amber-800 animate-pulse">
+          <User className="h-5 w-5" />
+          <span className="text-sm font-semibold">
+            {editingUser.userName} está visualizando/editando este registro agora.
+          </span>
+        </div>
+      )}
 
     addAuditLog({
       usuario_nome: currentUser?.nome_completo || 'Sistema',

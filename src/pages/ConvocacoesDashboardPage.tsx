@@ -13,30 +13,23 @@ interface ConvocacaoData {
   unidade_convocacao: string | null;
 }
 
-const pieChartConfig: ChartConfig = {
-  value: { label: 'Quantidade' },
-  CONVOCADO: { label: 'Convocado', color: 'hsl(221, 83%, 53%)' },
-  'CADASTRO RESERVA': { label: 'Cadastro Reserva', color: 'hsl(142, 76%, 36%)' },
-  VENCIDO: { label: 'Vencido', color: 'hsl(0, 84%, 60%)' },
-  DESISTIU: { label: 'Desistiu', color: 'hsl(25, 95%, 53%)' },
-  FALTOU: { label: 'Faltou', color: 'hsl(280, 67%, 51%)' },
-};
-
-const PIE_COLORS = [
-  'hsl(221, 83%, 53%)',
-  'hsl(142, 76%, 36%)',
-  'hsl(0, 84%, 60%)',
-  'hsl(25, 95%, 53%)',
-  'hsl(280, 67%, 51%)',
-  'hsl(199, 89%, 48%)',
+const SOFT_COLORS = [
+  'hsl(221, 50%, 62%)',
+  'hsl(152, 45%, 50%)',
+  'hsl(0, 55%, 62%)',
+  'hsl(30, 60%, 58%)',
+  'hsl(270, 40%, 58%)',
+  'hsl(199, 50%, 55%)',
+  'hsl(340, 45%, 58%)',
+  'hsl(180, 40%, 50%)',
 ];
 
 const unidadesChartConfig: ChartConfig = {
-  value: { label: 'Convocações', color: 'hsl(221, 83%, 53%)' },
+  value: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
 };
 
 const cargosChartConfig: ChartConfig = {
-  value: { label: 'Convocações', color: 'hsl(142, 76%, 36%)' },
+  value: { label: 'Convocações', color: 'hsl(152, 45%, 50%)' },
 };
 
 export default function ConvocacoesDashboardPage() {

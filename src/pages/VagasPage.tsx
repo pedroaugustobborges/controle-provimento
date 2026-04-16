@@ -92,6 +92,18 @@ const BANCO_UNIT_GROUPS = [
   ['POLICLINICA', ['POLICLÍNICA', 'POLICLINICA']],
 ] as const;
 
+const PCD_REGIOES: Record<string, string[]> = {
+  'Goiás e Vitória (ES)': [
+    'CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'POLICLÍNICA', 'JATAÍ',
+    'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO',
+    'SÃO PEDRO', 'SUÁ'
+  ],
+  'Demais Unidades': [
+    'HRD', 'HMSA', 'CHS', 'HRC', 'HRCAC I', 'HRCAC II', 'DOURADOS',
+    'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA CEN', 'TEIA PIN'
+  ],
+};
+
 const getUnitScope = (unit?: string | null) => {
   const normalized = normalizeUnitName(unit || '');
   if (!normalized) return [normalized];

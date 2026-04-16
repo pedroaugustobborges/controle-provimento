@@ -553,6 +553,7 @@ export default function VagasPage() {
   const clearFilters = () => {
     setSearch('');
     setFilterUnidade('all');
+    setPcdRegiao(null);
     setFilterMes('all');
     setFilterStatuses([]);
     setFilterTipo('all');
@@ -563,6 +564,32 @@ export default function VagasPage() {
     setFilterComBanco(false);
     setFilterSemMovimentacao(false);
   };
+
+  const PCD_REGIOES: Record<string, string[]> = {
+    'Goiás e Vitória (ES)': [
+      'CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'POLICLÍNICA', 'JATAÍ',
+      'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO',
+      'SÃO PEDRO', 'SUÁ'
+    ],
+    'Demais Unidades': [
+      'HRD', 'HMSA', 'CHS', 'HRC', 'HRCAC I', 'HRCAC II', 'DOURADOS',
+      'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA CEN', 'TEIA PIN'
+    ],
+  };
+
+  const pcdUnidadesComVagas = useMemo(() => {
+    if (filtroEspecial !== 'pcd') return {};
+    const result: Record<string, string[]> = {};
+    for (const [regiao, units] of Object.entries(PCD_REGIOES)) {
+      const unitsWithVagas = units.filter(unit => 
+        canonicalBase.some(v => normalizeUnitName(v.unidade) === normalizeUnitName(unit))
+      );
+      if (unitsWithVagas.length > 0) {
+        result[regiao] = unitsWithVagas;
+      }
+    }
+    return result;
+  }, [filtroEspecial, canonicalBase]);
 
   const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas || filterComBanco || filterSemMovimentacao;
 

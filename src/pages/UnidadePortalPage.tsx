@@ -350,7 +350,7 @@ export default function UnidadePortalPage() {
               </SelectTrigger>
               <SelectContent align="end" className="w-56 sm:w-64">
                 <SelectItem value="all" className="font-semibold">Todas as Unidades</SelectItem>
-                {unidadesDisponiveis.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                {unidadesDisponiveis.filter(Boolean).map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
               </SelectContent>
             </Select>
           )}

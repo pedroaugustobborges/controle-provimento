@@ -1,4 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChevronDown, ChevronRight, Unlink, Link2, MapPin as MapPinIcon } from 'lucide-react';
 import { HelpGuide } from '@/components/HelpGuide';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useVagasStore } from '@/store/vagasStore';
@@ -43,7 +46,40 @@ export default function FilaEditaisPage() {
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [isImportOpen, setIsImportOpen] = useState(false);
-  
+
+  // Grouping control
+  const storageKey = `fila-editais-ungrouped:${currentUser?.id || 'anon'}`;
+  const [ungrouped, setUngrouped] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setUngrouped(new Set(JSON.parse(raw)));
+    } catch {}
+  }, [storageKey]);
+
+  const persistUngrouped = (next: Set<string>) => {
+    setUngrouped(next);
+    try { localStorage.setItem(storageKey, JSON.stringify(Array.from(next))); } catch {}
+  };
+
+  const toggleExpand = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const handleUngroup = (cargoKey: string) => {
+    const next = new Set(ungrouped);
+    next.add(cargoKey);
+    persistUngrouped(next);
+    toast.success('Grupo desfeito. Requisições agora aparecem individualmente.');
+  };
+
   // Modal de envio
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
@@ -85,33 +121,83 @@ export default function FilaEditaisPage() {
 
     const grouped: Record<string, {
       cargo: string;
+      cargoKey: string;
       vagas: Vaga[];
       totalVagas: number;
       unidades: string[];
+      regioes: string[];
     }> = {};
 
+    const computeRegion = (unidade: string): string => {
+      const u = normalizeUnitName(unidade);
+      for (const [regiao, units] of Object.entries(UNIDADES_POR_REGIAO)) {
+        if (units.map(x => normalizeUnitName(x)).includes(u)) return regiao;
+      }
+      return 'Outras';
+    };
+
     goianiaVagas.forEach(v => {
-      const cargo = v.cargo.toUpperCase().trim();
-      if (!grouped[cargo]) {
-        grouped[cargo] = {
+      const cargoKey = v.cargo.toUpperCase().trim();
+      if (!grouped[cargoKey]) {
+        grouped[cargoKey] = {
           cargo: v.cargo,
+          cargoKey,
           vagas: [],
           totalVagas: 0,
-          unidades: []
+          unidades: [],
+          regioes: [],
         };
       }
-      grouped[cargo].vagas.push(v);
-      grouped[cargo].totalVagas += (v.numero_vagas || v.quantidade || 1);
-      if (!grouped[cargo].unidades.includes(v.unidade)) {
-        grouped[cargo].unidades.push(v.unidade);
+      grouped[cargoKey].vagas.push(v);
+      grouped[cargoKey].totalVagas += (v.numero_vagas || v.quantidade || 1);
+      if (!grouped[cargoKey].unidades.includes(v.unidade)) {
+        grouped[cargoKey].unidades.push(v.unidade);
+      }
+      const reg = computeRegion(v.unidade);
+      if (!grouped[cargoKey].regioes.includes(reg)) {
+        grouped[cargoKey].regioes.push(reg);
+      }
+    });
+
+    // Apply ungrouped: those cargos go into otherVagas individually
+    const activeGroups: typeof grouped[string][] = [];
+    const expandedAsIndividuals: Vaga[] = [];
+    Object.values(grouped).forEach(g => {
+      if (ungrouped.has(g.cargoKey) || g.vagas.length < 2) {
+        expandedAsIndividuals.push(...g.vagas);
+      } else {
+        activeGroups.push(g);
       }
     });
 
     return {
-      groupedGoiania: Object.values(grouped),
-      otherVagas
+      groupedGoiania: activeGroups,
+      otherVagas: [...otherVagas, ...expandedAsIndividuals],
     };
-  }, [pendingVagas]);
+  }, [pendingVagas, ungrouped]);
+
+  // Selected rows -> cargos eligible to regroup (only cargos currently in ungrouped set with 2+ selected of same cargo)
+  const regroupableCargos = useMemo(() => {
+    const counts: Record<string, number> = {};
+    selectedRows.forEach(id => {
+      const v = pendingVagas.find(x => x.id === id);
+      if (!v) return;
+      const goiania = UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade));
+      if (!goiania) return;
+      const k = v.cargo.toUpperCase().trim();
+      if (!ungrouped.has(k)) return;
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return Object.keys(counts).filter(k => counts[k] >= 2);
+  }, [selectedRows, pendingVagas, ungrouped]);
+
+  const handleRegroupSelected = () => {
+    const next = new Set(ungrouped);
+    regroupableCargos.forEach(c => next.delete(c));
+    persistUngrouped(next);
+    setSelectedRows(new Set());
+    toast.success('Requisições reagrupadas.');
+  };
 
   const unidadesAgrupadas = useMemo(() => {
     const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean);
@@ -255,6 +341,7 @@ export default function FilaEditaisPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10"></TableHead>
                   <TableHead>Requisição</TableHead>
                   <TableHead>Unidade</TableHead>
                   <TableHead>Cargo</TableHead>
@@ -268,102 +355,193 @@ export default function FilaEditaisPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* Vagas Agrupadas de Goiânia */}
-                {groupedVagas.groupedGoiania.map((group) => (
-                  <React.Fragment key={group.cargo}>
-                    <TableRow className="bg-blue-50/50 hover:bg-blue-50/70 border-l-4 border-l-blue-500">
-                      <TableCell colSpan={2} className="font-bold text-blue-800">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" /> 
-                          Agrupado Goiás e Espírito Santo ({group.unidades.length} unidades)
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-bold text-blue-900">{group.cargo}</TableCell>
-                      <TableCell colSpan={1}></TableCell>
-                      <TableCell className="text-center">
-                        <Badge className="bg-blue-600 text-white font-bold">{group.totalVagas}</Badge>
-                      </TableCell>
-                      <TableCell colSpan={2}></TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">CONSOLIDADO</Badge>
-                      </TableCell>
-                      <TableCell colSpan={1}></TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="text-blue-600 font-bold hover:bg-blue-100" onClick={() => handleOpenSendModal(group.vagas[0])}>
-                          <Send className="h-4 w-4 mr-1" /> Preparar Consolidado
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {group.vagas.map(v => (
-                      <TableRow key={v.id} className="group bg-white opacity-80 hover:opacity-100">
-                        <TableCell className="pl-10 font-mono text-[10px] text-slate-400">
-                          {v.requisicao || v.numero_requisicao}
+                {/* Vagas Agrupadas (Consolidadas) */}
+                {groupedVagas.groupedGoiania.map((group) => {
+                  const isExpanded = expandedGroups.has(group.cargoKey);
+                  return (
+                    <React.Fragment key={group.cargoKey}>
+                      <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50/40 hover:from-blue-100/70 hover:to-indigo-50/60 border-l-4 border-l-blue-500">
+                        <TableCell className="align-middle">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-blue-700 hover:bg-blue-100"
+                            onClick={() => toggleExpand(group.cargoKey)}
+                            title={isExpanded ? 'Recolher' : 'Expandir requisições'}
+                          >
+                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </Button>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 ml-6">
-                            <Building2 className="h-3 w-3 text-slate-300" />
-                            <span className="text-xs text-slate-500">{v.unidade}</span>
+                        <TableCell colSpan={9} className="py-3">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Briefcase className="h-4 w-4 text-blue-700 shrink-0" />
+                              <span className="font-bold text-blue-900 text-base truncate">{group.cargo}</span>
+                              <Badge className="bg-blue-600 text-white font-semibold uppercase tracking-wide text-[10px]">
+                                Consolidado · {group.vagas.length} req.
+                              </Badge>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {group.regioes.map(r => (
+                                <Badge key={r} variant="outline" className="bg-white text-blue-700 border-blue-300 text-[10px] font-semibold flex items-center gap-1">
+                                  <MapPinIcon className="h-3 w-3" /> {r}
+                                </Badge>
+                              ))}
+                            </div>
+
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-7 text-xs bg-white border-blue-200 text-blue-700 hover:bg-blue-50">
+                                  <Building2 className="h-3.5 w-3.5 mr-1" />
+                                  {group.unidades.length} unidade{group.unidades.length > 1 ? 's' : ''}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 p-3">
+                                <p className="text-xs font-bold text-slate-600 uppercase mb-2">Unidades incluídas</p>
+                                <ul className="space-y-1">
+                                  {group.unidades.map(u => {
+                                    const qty = group.vagas
+                                      .filter(v => v.unidade === u)
+                                      .reduce((s, v) => s + (v.numero_vagas || v.quantidade || 1), 0);
+                                    return (
+                                      <li key={u} className="flex items-center justify-between text-xs">
+                                        <span className="text-slate-700">{u}</span>
+                                        <Badge variant="outline" className="text-[10px]">{qty} vaga{qty > 1 ? 's' : ''}</Badge>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </PopoverContent>
+                            </Popover>
+
+                            <Badge className="bg-blue-600 text-white font-bold">
+                              <Users className="h-3 w-3 mr-1" /> {group.totalVagas} vagas no total
+                            </Badge>
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs text-slate-600 italic pl-10">{v.cargo}</TableCell>
-                        <TableCell className="text-[10px] text-slate-400">{v.tipo_vaga}</TableCell>
-                        <TableCell className="text-center text-xs">{v.numero_vagas || v.quantidade}</TableCell>
-                        <TableCell className="text-[10px] text-slate-400">{formatDate(v.data_recebimento!)}</TableCell>
-                        <TableCell className="text-center text-[10px]">{calcDiasAberto(v.data_recebimento || v.data_abertura)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-[9px] uppercase bg-slate-50 text-slate-400 border-slate-200">Individual</Badge>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <div className="flex justify-end gap-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                                    onClick={() => handleUngroup(group.cargoKey)}
+                                  >
+                                    <Unlink className="h-3.5 w-3.5 mr-1" /> Desagrupar
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Tratar cada requisição como edital separado</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                              onClick={() => handleOpenSendModal(group.vagas[0])}
+                            >
+                              <Send className="h-3.5 w-3.5 mr-1" /> Preparar Consolidado
+                            </Button>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-[10px] text-slate-400">{v.analista_responsavel}</TableCell>
-                        <TableCell></TableCell>
                       </TableRow>
-                    ))}
-                  </React.Fragment>
-                ))}
+                      {isExpanded && group.vagas.map(v => (
+                        <TableRow key={v.id} className="bg-slate-50/40 hover:bg-slate-50">
+                          <TableCell></TableCell>
+                          <TableCell className="pl-8 font-mono text-[10px] text-slate-500">
+                            {v.requisicao || v.numero_requisicao}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-3 w-3 text-slate-400" />
+                              <span className="text-xs text-slate-600">{v.unidade}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-600 italic">{v.cargo}</TableCell>
+                          <TableCell className="text-[10px] text-slate-400">{v.tipo_vaga}</TableCell>
+                          <TableCell className="text-center text-xs">{v.numero_vagas || v.quantidade}</TableCell>
+                          <TableCell className="text-[10px] text-slate-400">{formatDate(v.data_recebimento!)}</TableCell>
+                          <TableCell className="text-center text-[10px]">{calcDiasAberto(v.data_recebimento || v.data_abertura)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[9px] uppercase bg-slate-50 text-slate-500 border-slate-200">Sub-item</Badge>
+                          </TableCell>
+                          <TableCell className="text-[10px] text-slate-500">{v.analista_responsavel}</TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
 
-                {/* Demais Vagas */}
-                {groupedVagas.otherVagas.map((v) => (
-                  <TableRow key={v.id} className="group">
-                    <TableCell className="font-mono text-xs text-primary font-bold">
-                      {v.requisicao || v.numero_requisicao}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="font-medium text-slate-700">{v.unidade}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
-                    <TableCell className="text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</TableCell>
-                    <TableCell className="text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</TableCell>
-                    <TableCell className="text-slate-500 whitespace-nowrap">
-                      {formatDate(v.data_recebimento!)}
-                    </TableCell>
-                    <TableCell className="text-center font-bold text-slate-700">
-                      {calcDiasAberto(v.data_recebimento || v.data_abertura)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-200">
-                        {v.status || v.status_geral || 'Sem Status'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs font-medium text-slate-600">
-                      {v.analista_responsavel}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {/* Demais Vagas (incluindo desagrupadas) */}
+                {groupedVagas.otherVagas.map((v) => {
+                  const goianiaCargo = UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade));
+                  const cargoKey = v.cargo.toUpperCase().trim();
+                  const isUngroupedFromConsolidated = goianiaCargo && ungrouped.has(cargoKey);
+                  const isSelected = selectedRows.has(v.id);
+                  return (
+                    <TableRow key={v.id} className="group">
+                      <TableCell className="align-middle">
+                        {isUngroupedFromConsolidated && (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              setSelectedRows(prev => {
+                                const next = new Set(prev);
+                                if (checked) next.add(v.id); else next.delete(v.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-primary font-bold">
+                        {v.requisicao || v.numero_requisicao}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="font-medium text-slate-700">{v.unidade}</span>
+                          {isUngroupedFromConsolidated && (
+                            <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-700 border-amber-200">desagrupado</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
+                      <TableCell className="text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</TableCell>
+                      <TableCell className="text-slate-500 whitespace-nowrap">
+                        {formatDate(v.data_recebimento!)}
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-slate-700">
+                        {calcDiasAberto(v.data_recebimento || v.data_abertura)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-200">
+                          {v.status || v.status_geral || 'Sem Status'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs font-medium text-slate-600">
+                        {v.analista_responsavel}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {pendingVagas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="px-6 py-20 text-center">
+                    <TableCell colSpan={11} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
                         <p className="text-slate-500 font-medium">Nenhuma pendência encontrada na fila de editais.</p>
@@ -376,6 +554,21 @@ export default function FilaEditaisPage() {
           </div>
         </CardContent>
       </Card>
+
+      {regroupableCargos.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white shadow-2xl rounded-full px-5 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <CheckSquare className="h-4 w-4" />
+          <span className="text-sm font-medium">
+            {selectedRows.size} selecionada(s) — {regroupableCargos.length} cargo(s) elegível(is)
+          </span>
+          <Button size="sm" variant="secondary" className="h-8 bg-white text-blue-700 hover:bg-blue-50 font-semibold" onClick={handleRegroupSelected}>
+            <Link2 className="h-4 w-4 mr-1" /> Agrupar selecionados
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8 text-white hover:bg-blue-700" onClick={() => setSelectedRows(new Set())}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
 

@@ -735,40 +735,12 @@ export const useVagasStore = create<VagasState>()(
                 if (eventType === 'INSERT') {
                   set((s) => {
                     if (s.notificacoes.some(n => n.id === newRow.id)) return s;
-      trackEditing: async (recordId) => {
-        const channel = (window as any).__realtimeChannel;
-        if (channel) {
-          const { currentUser } = (await import('./adminStore')).useAdminStore.getState();
-          if (currentUser) {
-            await channel.track({
-              userId: currentUser.id,
-              userName: currentUser.nome_completo,
-              editingRecordId: recordId,
-              online_at: new Date().toISOString(),
-            });
-          }
-        }
-      },
-      stopTrackingEditing: async () => {
-        const channel = (window as any).__realtimeChannel;
-        if (channel) {
-          const { currentUser } = (await import('./adminStore')).useAdminStore.getState();
-          if (currentUser) {
-            await channel.track({
-              userId: currentUser.id,
-              userName: currentUser.nome_completo,
-              editingRecordId: null,
-              online_at: new Date().toISOString(),
-            });
-          }
-        }
-      },
-
+                    
                     const newAlert = {
                       id: newRow.id,
                       titulo: newRow.titulo,
                       mensagem: newRow.mensagem,
-                      tipo: newRow.tipo || 'informativo',
+                      tipo: (newRow.tipo || 'informativo') as any,
                       status: 'nao_lido' as const,
                       data_criacao: newRow.created_at,
                       destinatario: newRow.usuario_id || 'todos',
@@ -821,6 +793,35 @@ export const useVagasStore = create<VagasState>()(
           delete (window as any).__realtimeChannel;
         }
       },
+      trackEditing: async (recordId) => {
+        const channel = (window as any).__realtimeChannel;
+        if (channel) {
+          const { currentUser } = (await import('./adminStore')).useAdminStore.getState();
+          if (currentUser) {
+            await channel.track({
+              userId: currentUser.id,
+              userName: currentUser.nome_completo,
+              editingRecordId: recordId,
+              online_at: new Date().toISOString(),
+            });
+          }
+        }
+      },
+      stopTrackingEditing: async () => {
+        const channel = (window as any).__realtimeChannel;
+        if (channel) {
+          const { currentUser } = (await import('./adminStore')).useAdminStore.getState();
+          if (currentUser) {
+            await channel.track({
+              userId: currentUser.id,
+              userName: currentUser.nome_completo,
+              editingRecordId: null,
+              online_at: new Date().toISOString(),
+            });
+          }
+        }
+      },
+
     }),
     {
       name: 'hospital-recruitment-store',

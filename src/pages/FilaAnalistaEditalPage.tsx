@@ -171,7 +171,15 @@ export default function FilaAnalistaEditalPage() {
       return;
     }
 
-    updateVaga(selectedVaga.id, { 
+    if (!responsavelValidacao) {
+      toast.error('Selecione o responsável pela validação do edital.');
+      return;
+    }
+
+    const respUser = (users || []).find((u: any) => u.id === responsavelValidacao);
+    const respNome = respUser?.nome_completo || 'Não atribuído';
+
+    updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'enviado_validacao',
       status_validacao: 'pendente',
       observacoes_edital: obsEdital,
@@ -179,16 +187,17 @@ export default function FilaAnalistaEditalPage() {
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
+      validado_por: responsavelValidacao,
       historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}`,
+        descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}. Responsável pela validação: ${respNome}.`,
         usuario: currentUser?.nome_completo || 'Analista do Edital'
       }]
     });
 
     setIsEditModalOpen(false);
-    toast.success('Edital enviado com sucesso para validação administrativa!');
+    toast.success(`Edital enviado para validação de ${respNome}.`);
   };
 
   const handleOpenPublishModal = (vaga: Vaga) => {

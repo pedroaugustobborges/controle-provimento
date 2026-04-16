@@ -10,6 +10,35 @@ const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+function isWeakPasswordError(error: { message?: string; name?: string } | null | undefined) {
+  const normalizedMessage = (error?.message || '').toLowerCase();
+
+  return error?.name === 'AuthWeakPasswordError'
+    || normalizedMessage.includes('known to be weak')
+    || normalizedMessage.includes('easy to guess')
+    || normalizedMessage.includes('weak password');
+}
+
+function getWeakPasswordMessage() {
+  return 'Essa senha foi bloqueada por segurança porque já apareceu em vazamentos conhecidos. Gere uma nova senha forte ou escolha outra com letra, número e símbolo.';
+}
+
+function validatePasswordStrength(password: unknown) {
+  if (!password || typeof password !== 'string') {
+    return 'Nova senha não informada.';
+  }
+
+  if (password.length < 8) {
+    return 'A senha deve ter no mínimo 8 caracteres.';
+  }
+
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    return 'Use uma senha com letra, número e símbolo.';
+  }
+
+  return null;
+}
+
 function jsonOk(payload: Record<string, unknown> = {}) {
   return new Response(JSON.stringify({ ok: true, ...payload }), {
     status: 200,
@@ -67,6 +96,11 @@ Deno.serve(async (req) => {
       case "create_user": {
         const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, modulos_acesso, permissoes_modulo, avatar_url, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios, acesso_portal_unidade, regiao_suporte } = body;
 
+        const passwordValidationError = validatePasswordStrength(password);
+        if (passwordValidationError) {
+          return jsonFail(passwordValidationError);
+        }
+
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
@@ -74,7 +108,9 @@ Deno.serve(async (req) => {
           user_metadata: { nome_completo },
         });
 
-        if (createError) return jsonFail(createError.message);
+        if (createError) {
+          return jsonFail(isWeakPasswordError(createError) ? getWeakPasswordMessage() : createError.message);
+        }
         if (!newUser.user) return jsonFail("Falha ao criar usuário");
 
         const { error: profileError } = await supabaseAdmin
@@ -134,11 +170,9 @@ Deno.serve(async (req) => {
           console.error("[reset_password] invalid user_id", user_id);
           return jsonFail("ID de usuário inválido.");
         }
-        if (!new_password || typeof new_password !== "string") {
-          return jsonFail("Nova senha não informada.");
-        }
-        if (new_password.length < 6) {
-          return jsonFail("A senha deve ter no mínimo 6 caracteres.");
+        const passwordValidationError = validatePasswordStrength(new_password);
+        if (passwordValidationError) {
+          return jsonFail(passwordValidationError);
         }
 
         // Verify the auth user actually exists before attempting update
@@ -161,7 +195,9 @@ Deno.serve(async (req) => {
             status: (error as any).status,
             name: error.name,
           });
-          return jsonFail(error.message || "Falha ao atualizar a senha.");
+          return jsonFail(isWeakPasswordError(error)
+            ? getWeakPasswordMessage()
+            : error.message || "Falha ao atualizar a senha.");
         }
         console.log("[reset_password] success", { user_id: updated?.user?.id });
         return jsonOk();

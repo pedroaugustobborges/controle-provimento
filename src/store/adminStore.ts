@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User, AuditLog, SupportConfig, BackupRecord, Feedback } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { generateTempPassword, getAdminPasswordErrorMessage } from '@/lib/adminPasswordUtils';
 
 interface AdminState {
   users: User[];
@@ -55,13 +56,7 @@ interface AdminState {
   toggleUserStatus: (id: string) => Promise<void>;
 }
 
-
-function generateTempPassword(): string {
-  const nums = Math.floor(1000 + Math.random() * 9000);
-  return `agirprovimento${nums}`;
-}
-
-export { generateTempPassword };
+export { generateTempPassword } from '@/lib/adminPasswordUtils';
 
 export const useAdminStore = create<AdminState>((set, get) => ({
   users: [],
@@ -170,8 +165,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       },
     });
 
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (error) throw new Error(getAdminPasswordErrorMessage(error.message));
+    if (data?.error) throw new Error(getAdminPasswordErrorMessage(data.error));
 
     // Send welcome email if requested
     if (sendWelcomeEmail && data?.user_id) {
@@ -223,8 +218,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const { data, error } = await supabase.functions.invoke('admin-user-management', {
       body: { action: 'reset_password', user_id: userId, new_password: newPassword },
     });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (error) throw new Error(getAdminPasswordErrorMessage(error.message));
+    if (data?.error) throw new Error(getAdminPasswordErrorMessage(data.error));
   },
 
   sendWelcomeEmail: async (userId, password) => {

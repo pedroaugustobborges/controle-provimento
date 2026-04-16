@@ -1388,7 +1388,47 @@ function AcompanhamentoEditalList() {
             </Select>
           </div>
 
-          {canFilterByUnit && (
+          {canFilterByUnit && filtroEspecial === 'pcd' ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-slate-400" />
+                {Object.keys(PCD_REGIOES).map(regiao => (
+                  <Button
+                    key={regiao}
+                    variant={pcdRegiao === regiao ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 text-xs font-bold rounded-xl"
+                    onClick={() => {
+                      setPcdRegiao(pcdRegiao === regiao ? null : regiao);
+                      setFilterUnidade('all');
+                    }}
+                  >
+                    {regiao}
+                  </Button>
+                ))}
+                {pcdRegiao && (
+                  <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400" onClick={() => { setPcdRegiao(null); setFilterUnidade('all'); }}>
+                    <X className="h-3 w-3 mr-1" /> Limpar
+                  </Button>
+                )}
+              </div>
+              {pcdRegiao && pcdUnidadesComVagas[pcdRegiao] && (
+                <div className="flex flex-wrap gap-1.5 ml-6">
+                  {pcdUnidadesComVagas[pcdRegiao].map(unit => (
+                    <Button
+                      key={unit}
+                      variant={filterUnidade === unit ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-7 text-[11px] font-medium rounded-lg px-3"
+                      onClick={() => setFilterUnidade(filterUnidade === unit ? 'all' : unit)}
+                    >
+                      {unit}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : canFilterByUnit ? (
             <div className="flex items-center gap-2 bg-white p-2 h-10 rounded-xl shadow-sm border border-slate-200">
               <Building2 className="h-4 w-4 text-slate-400 ml-2" />
               <Select value={filterUnidade} onValueChange={setFilterUnidade}>
@@ -1403,7 +1443,7 @@ function AcompanhamentoEditalList() {
                 </SelectContent>
               </Select>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 

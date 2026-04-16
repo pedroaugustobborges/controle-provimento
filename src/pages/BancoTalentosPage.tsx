@@ -180,7 +180,7 @@ export default function BancoTalentosPage() {
   }, [bancos, currentUser, convocadosSearch, convocadosUnidadeFilter, convocadosCargoFilter]);
 
   const convocadosCargos = useMemo(() => {
-    const cargos = [...new Set(bancos.filter(b => b.status === 'CONVOCADO').map(b => b.cargo))];
+    const cargos = [...new Set(bancos.filter(b => b.status === 'CONVOCADO').map(b => b.cargo).filter(Boolean))];
     return cargos.sort();
   }, [bancos]);
 

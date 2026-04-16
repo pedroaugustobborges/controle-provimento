@@ -164,6 +164,7 @@ export default function MensagensPage() {
       }
 
       const profile = profiles[0];
+      setSelectedRecipient(profile.nome_completo); // Update to full name for better filtering
 
       await useVagasStore.getState().addMensagem({
         id: optimisticId,

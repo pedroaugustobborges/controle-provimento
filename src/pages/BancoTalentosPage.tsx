@@ -20,8 +20,7 @@ const getRegiaoFromUnit = (unidade: string): string | undefined => {
   const normalized = normalizeUnitName(unidade);
   for (const [regiao, units] of Object.entries(UNIDADES_POR_REGIAO)) {
     if (units.some(u => normalizeUnitName(u) === normalized || normalized.includes(normalizeUnitName(u)) || normalizeUnitName(u).includes(normalized))) {
-      if (regiao === 'Goiás e Espírito Santo') return 'GO_ES';
-      if (regiao === 'Amazonas') return 'AMAZONAS';
+      if (regiao === 'GO/ES') return 'GO_ES';
       return 'OUTRAS_UNIDADES';
     }
   }
@@ -843,11 +842,12 @@ export default function BancoTalentosPage() {
                     <SelectTrigger className="w-[140px] h-9 bg-white text-xs">
                       <SelectValue placeholder="Unidade" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[300px]">
                       <SelectItem value="todas">Todas Unidades</SelectItem>
-                      <SelectItem value="HGG">HGG</SelectItem>
-                      <SelectItem value="HUGO">HUGO</SelectItem>
-                      <SelectItem value="HEAPA">HEAPA</SelectItem>
+                      {/* Units are now derived from the bancos list or common units */}
+                      {Array.from(new Set(bancos.map(b => b.unidade))).sort().map(unit => (
+                        <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                    <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -868,7 +868,6 @@ export default function BancoTalentosPage() {
                     <SelectContent>
                       <SelectItem value="todas">Todas Regiões</SelectItem>
                       <SelectItem value="GO_ES">GO e ES</SelectItem>
-                      <SelectItem value="AMAZONAS">Amazonas</SelectItem>
                       <SelectItem value="OUTRAS_UNIDADES">Outras Unidades</SelectItem>
                     </SelectContent>
                   </Select>

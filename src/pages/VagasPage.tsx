@@ -238,8 +238,14 @@ export default function VagasPage() {
   }, [currentUser, allUnidades, selectedRegion]);
 
   const unidades = useMemo(() => {
-    return allUnidades.filter(u => visibleUnidades.includes(u)).sort();
-  }, [allUnidades, visibleUnidades]);
+    let base = allUnidades.filter(u => visibleUnidades.includes(u));
+    if (filtroEspecial === 'teias') {
+      base = base.filter(u => u.toUpperCase().includes('TEIA'));
+    } else if (!filtroEspecial) {
+      base = base.filter(u => !u.toUpperCase().includes('TEIA'));
+    }
+    return base.sort();
+  }, [allUnidades, visibleUnidades, filtroEspecial]);
 
   const analistas = useMemo(() => [...new Set(vagas.map((v) => v.analista_responsavel))].filter(Boolean).sort(), [vagas]);
   const assistentes = useMemo(() => [...new Set(vagas.flatMap((v) => v.assistentes || []))].filter(Boolean).sort(), [vagas]);

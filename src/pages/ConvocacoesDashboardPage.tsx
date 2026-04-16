@@ -2,8 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
-import { ChartContainer, ChartTooltip, type ChartConfig } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, LabelList, Tooltip as RTooltip } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, LabelList } from 'recharts';
 
 const truncateLabel = (value: string, max = 22) =>
   value && value.length > max ? `${value.slice(0, max - 1)}…` : value;
@@ -87,24 +87,34 @@ export default function ConvocacoesDashboardPage() {
       .map(([name, value]) => ({ name, value }));
   }, [data]);
 
-  const statusDistribution = useMemo(() => {
-    const counts: Record<string, number> = {};
-    data.forEach(d => {
-      const s = (d.status || 'Não informado').toUpperCase().trim();
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([name, value], index) => ({ name, value, fill: SOFT_COLORS[index % SOFT_COLORS.length] }));
+  const historicoConvocacoes = useMemo(() => {
+    const byDate: Record<string, { total: number; unidades: Record<string, number> }> = {};
+    data
+      .filter(d => d.status?.toUpperCase() === 'CONVOCADO' && d.data_convocacao)
+      .forEach(d => {
+        const date = (d.data_convocacao || '').slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+        const unidade = (d.unidade_convocacao || d.unidade || 'Não informada').toUpperCase().trim();
+        if (!byDate[date]) byDate[date] = { total: 0, unidades: {} };
+        byDate[date].total += 1;
+        byDate[date].unidades[unidade] = (byDate[date].unidades[unidade] || 0) + 1;
+      });
+    return Object.entries(byDate)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, info]) => {
+        const [y, m, d] = date.split('-');
+        return {
+          date,
+          label: `${d}/${m}`,
+          total: info.total,
+          unidades: Object.entries(info.unidades).sort(([, a], [, b]) => b - a),
+        };
+      });
   }, [data]);
 
-  const dynamicPieConfig = useMemo<ChartConfig>(() => {
-    const config: ChartConfig = { value: { label: 'Quantidade' } };
-    statusDistribution.forEach((item, index) => {
-      config[item.name] = { label: item.name, color: SOFT_COLORS[index % SOFT_COLORS.length] };
-    });
-    return config;
-  }, [statusDistribution]);
+  const historicoChartConfig: ChartConfig = {
+    total: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
+  };
 
   if (loading) {
     return (

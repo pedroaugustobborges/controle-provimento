@@ -303,11 +303,22 @@ export default function VagasPage() {
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
     // 1. Filtragem por Região e Unidade Global (Sidebar)
-    const baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
+    let baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
     
-    // 2. Filtragem interna da tela
+    // 2. Filtragem especial (TEIAs ou PCD)
+    if (filtroEspecial === 'teia') {
+      baseRecords = baseRecords.filter(v => 
+        (v.is_teia === true) || (v.unidade || '').toUpperCase().includes('TEIA')
+      );
+    } else if (filtroEspecial === 'pcd') {
+      baseRecords = baseRecords.filter(v => 
+        (v.is_pcd === true) || (v.cargo || '').toUpperCase().includes('PCD')
+      );
+    }
+    
+    // 3. Filtragem interna da tela
     return getValidVacancyBase(baseRecords, filterUnidade, filterMes);
-  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes]);
+  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes, filtroEspecial]);
 
   const statusScopedBase = useMemo(() => {
     return canonicalBase.filter((vaga) => passesVacancyStatusTab(vaga.categoria_status || getCategoriaStatus(vaga), vacancyStatusTab));
@@ -577,7 +588,7 @@ export default function VagasPage() {
       ) : (
         <>
            <PageHeader 
-            title="Controle de Vagas"
+            title={filtroEspecial === 'teia' ? 'Controle de Vagas — Unidades TEIAs' : filtroEspecial === 'pcd' ? 'Controle de Vagas — Vagas PCD' : 'Controle de Vagas'}
             helpContent={<HelpGuide />}
             actions={
               <>

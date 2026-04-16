@@ -620,7 +620,7 @@ export default function UnidadePortalPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all" className="font-semibold text-xs">Todas as Unidades</SelectItem>
-                        {unidadesDisponiveis.map(u => <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>)}
+                        {unidadesDisponiveis.filter(Boolean).map(u => <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <Popover open={obsCalendarOpen} onOpenChange={setObsCalendarOpen}>

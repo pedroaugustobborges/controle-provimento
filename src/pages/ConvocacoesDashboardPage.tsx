@@ -168,7 +168,7 @@ export default function ConvocacoesDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={pieChartConfig} className="h-[320px] w-full">
+            <ChartContainer config={dynamicPieConfig} className="h-[320px] w-full">
               <PieChart>
                 <Pie
                   data={statusDistribution}

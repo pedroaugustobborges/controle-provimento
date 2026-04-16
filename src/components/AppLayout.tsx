@@ -112,17 +112,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           );
         setOnlineUsers(users);
       })
-      .on('presence', { event: 'join' }, ({ newPresences }) => {
-        if (currentUser?.perfil === 'Administrador') {
-          newPresences.forEach((presence: any) => {
-            if (presence.id !== currentUser.id) {
-              toast.info(`${presence.nome_completo || 'Um usuário'} entrou no sistema`, {
-                icon: <User className="h-4 w-4" />,
-                duration: 4000,
-              });
-            }
-          });
-        }
+      .on('presence', { event: 'join' }, () => {
+        // Presence join events are reflected in the online users counter only.
+        // Toasts intentionally suppressed to avoid flicker from reconnects/sync.
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
         // Handle leave if needed

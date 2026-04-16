@@ -327,6 +327,9 @@ export const useVagasStore = create<VagasState>()(
         const currentVaga = get().vagas.find(v => v.id === id);
         if (!currentVaga) return false;
 
+        // Optimistic local update so UI feels instant
+        get().updateVaga(id, data);
+
         const { data: updated, error } = await DatabaseService.saveWithConcurrency('vagas', {
           ...currentVaga,
           ...data,
@@ -341,7 +344,8 @@ export const useVagasStore = create<VagasState>()(
         }
 
         if (updated) {
-          get().updateVaga(id, mapDbVaga(updated));
+          // Merge: preserve any local-only fields (cronograma, historico, etc.) not present in DB row
+          get().updateVaga(id, { ...mapDbVaga(updated), ...data });
           get().createNotificacao({
             titulo: "Vaga Atualizada",
             mensagem: `${currentUser.nome_completo} atualizou a vaga ${currentVaga.cargo}`,

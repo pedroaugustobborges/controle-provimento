@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useVagasStore } from '@/store/vagasStore';
-import { useAdminStore, generateTempPassword } from '@/store/adminStore';
+import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
 import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
+import { generateTempPassword, getAdminPasswordErrorMessage, validateAdminPassword } from '@/lib/adminPasswordUtils';
 
 const REGIOES_SELECAO = {
   'Goiânia': UNIDADES_POR_REGIAO['Goiânia'] || [],
@@ -209,8 +210,9 @@ export default function AdministracaoPage() {
       toast.error('Preencha nome, e-mail e senha.');
       return;
     }
-    if (newUser.password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres.');
+    const passwordError = validateAdminPassword(newUser.password);
+    if (passwordError) {
+      toast.error(passwordError);
       return;
     }
     setSaving(true);
@@ -224,7 +226,7 @@ export default function AdministracaoPage() {
       setIsNewUserOpen(false);
       resetNewUserForm();
     } catch (err: any) {
-      toast.error(`Erro ao criar usuário: ${err.message}`);
+      toast.error(`Erro ao criar usuário: ${getAdminPasswordErrorMessage(err?.message)}`);
     } finally {
       setSaving(false);
     }
@@ -260,8 +262,9 @@ export default function AdministracaoPage() {
   const handleResetPassword = async () => {
     if (!passwordUser) return;
     const pwd = passwordMode === 'temp' ? generatedPassword : manualPassword;
-    if (!pwd || pwd.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres.');
+    const passwordError = validateAdminPassword(pwd);
+    if (passwordError) {
+      toast.error(passwordError);
       return;
     }
     setSaving(true);
@@ -276,7 +279,7 @@ export default function AdministracaoPage() {
       setIsPasswordDialogOpen(false);
       setPasswordUser(null);
     } catch (err: any) {
-      toast.error(`Erro: ${err.message}`);
+      toast.error(getAdminPasswordErrorMessage(err?.message));
     } finally {
       setSaving(false);
     }
@@ -291,7 +294,7 @@ export default function AdministracaoPage() {
       await sendWelcomeEmail(user.id, tempPwd);
       toast.success('E-mail de boas-vindas reenviado com nova senha temporária.');
     } catch (err: any) {
-      toast.error(`Erro ao reenviar e-mail: ${err.message}`);
+      toast.error(`Erro ao reenviar e-mail: ${getAdminPasswordErrorMessage(err?.message)}`);
     } finally {
       setTestEmailLoading(null);
     }
@@ -1311,11 +1314,21 @@ export default function AdministracaoPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="relative">
-                  <Input type={showNewPassword ? 'text' : 'password'} placeholder="Mínimo 6 caracteres" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} className="pr-10" />
-                  <button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Input type={showNewPassword ? 'text' : 'password'} placeholder="Use 8+ caracteres com letra, número e símbolo" value={newUser.password} onChange={(e) => setNewUser(p => ({ ...p, password: e.target.value }))} className="pr-10" />
+                      <button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={() => { setNewUser(p => ({ ...p, password: generateTempPassword() })); setShowNewPassword(false); }}>
+                      Gerar senha forte
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Senhas conhecidas em vazamentos públicos podem ser bloqueadas automaticamente.
+                  </p>
                 </div>
               )}
             </div>
@@ -1707,11 +1720,21 @@ export default function AdministracaoPage() {
                 </Button>
               </div>
             ) : (
-              <div className="relative">
-                <Input type={showResetPassword ? 'text' : 'password'} placeholder="Nova senha (mín. 6 caracteres)" value={manualPassword} onChange={(e) => setManualPassword(e.target.value)} className="pr-10" />
-                <button type="button" onClick={() => setShowResetPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input type={showResetPassword ? 'text' : 'password'} placeholder="Nova senha com 8+ caracteres, letra, número e símbolo" value={manualPassword} onChange={(e) => setManualPassword(e.target.value)} className="pr-10" />
+                    <button type="button" onClick={() => setShowResetPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setManualPassword(generateTempPassword()); setShowResetPassword(false); }}>
+                    Gerar senha forte
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Se a senha já tiver aparecido em vazamentos conhecidos, ela será recusada por segurança.
+                </p>
               </div>
             )}
             <div className="flex items-center gap-3 pt-2">

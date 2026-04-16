@@ -1,25 +1,25 @@
 
 
-## Plano: Sincronização Realtime para todas as tabelas do sistema
+## Plano: Corrigir exibição de avatar por usuário
 
-### 1. Migração SQL — Habilitar Realtime nas tabelas restantes
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.importacoes;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.audit_logs;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.feedbacks;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.support_configs;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.user_sessions;
-```
+### Análise
+Preciso verificar como o avatar está sendo carregado no header (`AppLayout.tsx` ou `Layout.tsx`) e se está usando o `currentUser` correto do store/auth.
 
-### 2. `src/store/vagasStore.ts` — Expandir subscriptions
-- Adicionar listeners Realtime para `profiles`, `importacoes`, `audit_logs`, `feedbacks`, `support_configs` e `user_sessions`
-- Para cada tabela, tratar eventos INSERT, UPDATE e DELETE atualizando o state local correspondente
-- Reaproveitar o canal existente ou criar canais adicionais conforme necessário
+### Passos
 
-### 3. `src/components/AppLayout.tsx`
-- Garantir que o `useEffect` existente já cubra as novas subscriptions (o cleanup do `unsubscribeRealtime` já deve cobrir tudo)
+**1. Revisar `src/components/AppLayout.tsx` e `src/components/Layout.tsx`**
+- Verificar como o avatar é renderizado — se está hardcoded ou usando dados do usuário logado
+- Garantir que usa `currentUser.avatar_url` do store/auth
 
-### Resultado
-Qualquer alteração em qualquer módulo será propagada em tempo real para todos os usuários conectados.
+**2. Revisar `src/hooks/useAuth.ts` e `src/store/adminStore.ts`**
+- Verificar se o `currentUser` carrega corretamente o `avatar_url` do perfil autenticado
+- Garantir que o avatar_url é buscado da tabela `profiles` com base no `auth.uid()`
+
+**3. Revisar upload de avatar**
+- Verificar se o upload salva a URL correta no campo `avatar_url` do perfil do usuário correto
+- Verificar se o bucket `avatars` está público (já está conforme config)
+
+**4. Corrigir o componente que exibe o avatar**
+- Usar `currentUser.avatar_url` no `<AvatarImage>` do header
+- Usar as iniciais do nome do `currentUser` no `<AvatarFallback>`
 

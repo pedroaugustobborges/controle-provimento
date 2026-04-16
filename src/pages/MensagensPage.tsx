@@ -151,18 +151,19 @@ export default function MensagensPage() {
     setChatMessages((prev) => [...prev, newMessage]);
 
     try {
-      const { data: profile, error: profileErr } = await supabase
+      const { data: profiles, error: profileErr } = await supabase
         .from('profiles')
         .select('id, nome_completo')
-        .ilike('nome_completo', selectedRecipient.trim())
-        .eq('status', 'ativo')
-        .maybeSingle();
+        .ilike('nome_completo', `%${selectedRecipient.trim()}%`)
+        .eq('status', 'ativo');
 
-      if (profileErr || !profile) {
+      if (profileErr || !profiles || profiles.length === 0) {
         toast.error(`Não foi possível localizar "${selectedRecipient}" no sistema.`);
         setChatMessages((prev) => prev.filter(m => m.id !== optimisticId));
         return;
       }
+
+      const profile = profiles[0];
 
       await useVagasStore.getState().addMensagem({
         id: optimisticId,

@@ -229,6 +229,25 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is_pcd" 
+                checked={formData.is_pcd} 
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_pcd: checked === true }))}
+              />
+              <Label htmlFor="is_pcd">Vaga PCD?</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is_teia" 
+                checked={formData.is_teia} 
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_teia: checked === true }))}
+              />
+              <Label htmlFor="is_teia">Vaga TEIA?</Label>
+            </div>
+          </div>
+
           <DialogFooter className="pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button type="submit">Criar Vaga</Button>

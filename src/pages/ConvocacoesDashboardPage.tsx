@@ -91,8 +91,16 @@ export default function ConvocacoesDashboardPage() {
     });
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([name, value]) => ({ name, value, fill: PIE_COLORS[Object.keys(counts).indexOf(name) % PIE_COLORS.length] }));
+      .map(([name, value], index) => ({ name, value, fill: SOFT_COLORS[index % SOFT_COLORS.length] }));
   }, [data]);
+
+  const dynamicPieConfig = useMemo<ChartConfig>(() => {
+    const config: ChartConfig = { value: { label: 'Quantidade' } };
+    statusDistribution.forEach((item, index) => {
+      config[item.name] = { label: item.name, color: SOFT_COLORS[index % SOFT_COLORS.length] };
+    });
+    return config;
+  }, [statusDistribution]);
 
   if (loading) {
     return (

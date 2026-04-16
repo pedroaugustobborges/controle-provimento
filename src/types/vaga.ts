@@ -416,6 +416,10 @@ export interface MensagemHistorico {
   conteudo: string;
   lida: boolean;
   perfil_destinatario?: string;
+  remetente_id?: string | null;
+  destinatario_id?: string | null;
+  destinatario_nome?: string | null;
+  titulo?: string;
 }
 
 

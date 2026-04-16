@@ -193,8 +193,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const { data, error } = await supabase.functions.invoke('admin-user-management', {
       body: { action: 'delete_user', user_id: id },
     });
-    if (error) throw new Error(getAdminPasswordErrorMessage(error.message));
-    if (data?.error) throw new Error(getAdminPasswordErrorMessage(data.error));
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
     await get().fetchUsers();
   },
 
@@ -218,8 +218,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const { data, error } = await supabase.functions.invoke('admin-user-management', {
       body: { action: 'reset_password', user_id: userId, new_password: newPassword },
     });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (error) throw new Error(getAdminPasswordErrorMessage(error.message));
+    if (data?.error) throw new Error(getAdminPasswordErrorMessage(data.error));
   },
 
   sendWelcomeEmail: async (userId, password) => {

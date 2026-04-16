@@ -845,7 +845,7 @@ export default function VagasPage() {
               onClick={() => setFilterSemMovimentacao(!filterSemMovimentacao)}
             >
               <AlertCircle className={`h-3.5 w-3.5 ${filterSemMovimentacao ? 'text-white' : 'text-orange-500'}`} />
-              Vagas Paradas {countSemMovimentacao > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-orange-100 text-orange-700 border-none">{countSemMovimentacao}</Badge>}
+              Sem Movimentação {countSemMovimentacao > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-orange-100 text-orange-700 border-none">{countSemMovimentacao}</Badge>}
             </Button>
 
             {hasFilters && (

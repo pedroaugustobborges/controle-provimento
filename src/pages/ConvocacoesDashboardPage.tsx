@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList } from 'recharts';
+
+const truncateLabel = (value: string, max = 22) =>
+  value && value.length > max ? `${value.slice(0, max - 1)}…` : value;
 import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
 
 interface ConvocacaoData {
@@ -130,12 +133,14 @@ export default function ConvocacoesDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={unidadesChartConfig} className="h-[280px] w-full">
-              <BarChart data={topUnidades} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
+            <ChartContainer config={unidadesChartConfig} className="h-[320px] w-full">
+              <BarChart data={topUnidades} layout="vertical" margin={{ left: 16, right: 40, top: 8, bottom: 8 }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={190} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))', fontWeight: 600 }} axisLine={false} tickLine={false} interval={0} tickFormatter={(v: string) => truncateLabel(v, 24)} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
+                <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28}>
+                  <LabelList dataKey="value" position="right" className="fill-foreground" fontSize={11} fontWeight={600} />
+                </Bar>
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -149,12 +154,14 @@ export default function ConvocacoesDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={cargosChartConfig} className="h-[280px] w-full">
-              <BarChart data={topCargos} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
+            <ChartContainer config={cargosChartConfig} className="h-[320px] w-full">
+              <BarChart data={topCargos} layout="vertical" margin={{ left: 16, right: 40, top: 8, bottom: 8 }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" width={210} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))', fontWeight: 600 }} axisLine={false} tickLine={false} interval={0} tickFormatter={(v: string) => truncateLabel(v, 26)} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28} />
+                <Bar dataKey="value" fill="var(--color-value)" radius={[0, 8, 8, 0]} barSize={28}>
+                  <LabelList dataKey="value" position="right" className="fill-foreground" fontSize={11} fontWeight={600} />
+                </Bar>
               </BarChart>
             </ChartContainer>
           </CardContent>

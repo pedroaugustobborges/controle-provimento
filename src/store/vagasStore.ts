@@ -581,6 +581,7 @@ export const useVagasStore = create<VagasState>()(
                 set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== oldRow.id) }));
               }
             })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
               const newRow = payload.new;
               toast.info(newRow.titulo, { description: newRow.mensagem });
               set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));

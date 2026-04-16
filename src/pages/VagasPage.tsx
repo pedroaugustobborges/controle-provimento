@@ -1189,8 +1189,8 @@ export default function VagasPage() {
 
                             {canSendToEdital && (
                               <DropdownMenuItem 
-                                onClick={() => {
-                                  updateVaga(v.id, { 
+                                onClick={async () => {
+                                  const success = await useVagasStore.getState().updateVagaAsync(v.id, { 
                                     status: 'PUBLICAR EDITAL',
                                     historico: [...v.historico, { 
                                       id: `h-${Date.now()}`, 
@@ -1199,7 +1199,9 @@ export default function VagasPage() {
                                       usuario: currentUser?.nome_completo || 'Analista' 
                                     }]
                                   });
-                                  toast.success('Vaga enviada para Fila de Editais');
+                                  if (success) {
+                                    toast.success('Vaga enviada para Fila de Editais');
+                                  }
                                 }} 
                                 className="gap-2 text-amber-600"
                               >

@@ -5,7 +5,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, BancoTalentos, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, STATUS_FILTER_OPTIONS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, BancoTalentos, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
 import { AcompanhamentoModal } from '@/components/AcompanhamentoModal';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 

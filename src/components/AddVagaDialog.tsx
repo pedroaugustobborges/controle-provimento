@@ -22,7 +22,7 @@ interface AddVagaDialogProps {
 }
 
 export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) {
-  const { addVagas, updateVaga } = useVagasStore();
+  const { addVagas, updateVaga, updateVagaAsync } = useVagasStore();
   const { currentUser } = useAdminStore();
   
   const [formData, setFormData] = React.useState({
@@ -70,7 +70,7 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.unidade || !formData.cargo || !formData.requisicao) {

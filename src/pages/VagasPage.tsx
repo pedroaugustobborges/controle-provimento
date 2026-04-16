@@ -13,7 +13,7 @@ import {
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa,
   filterByRegionAndUnit, UNIDADES_POR_REGIAO
 } from '@/lib/vagaUtils';
-import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles, Download } from 'lucide-react';
+import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles, Download, Accessibility } from 'lucide-react';
 import { ExportButton } from '@/components/ExportButton';
 // ... keep existing code
 
@@ -771,25 +771,40 @@ export default function VagasPage() {
       )}
 
       {/* Cards removidos conforme solicitação */}
-      <div 
-        className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2 cursor-pointer hover:bg-blue-50 transition-all"
-        onClick={() => {
-          setVacancyStatusTab('em_andamento');
-          const newParams = new URLSearchParams(searchParams);
-          newParams.set('statusTab', 'em_andamento');
-          navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
-        }}
-      >
-        <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
-          <TrendingUp className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">Resumo: Vagas em Andamento</h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-blue-700">{countEmAndamento}</span>
-            <span className="text-[11px] text-blue-600/80 font-medium">vagas sendo processadas no momento</span>
+      <div className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2">
+        <div 
+          className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-all"
+          onClick={() => {
+            setVacancyStatusTab('em_andamento');
+            const newParams = new URLSearchParams(searchParams);
+            newParams.set('statusTab', 'em_andamento');
+            navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
+          }}
+        >
+          <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
+            <TrendingUp className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">Resumo: Vagas em Andamento</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-blue-700">{countEmAndamento}</span>
+              <span className="text-[11px] text-blue-600/80 font-medium">vagas sendo processadas no momento</span>
+            </div>
           </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto flex items-center gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-800 font-bold rounded-lg"
+          title="Vagas PCD"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/vagas?filtro=pcd');
+          }}
+        >
+          <Accessibility className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs">Vagas PCD</span>
+        </Button>
       </div>
 
       <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">

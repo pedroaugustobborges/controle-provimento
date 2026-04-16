@@ -472,6 +472,8 @@ export type Database = {
           horario_convocacao_planilha: string | null
           id: string
           import_batch_id: string | null
+          is_pcd: boolean | null
+          is_teia: boolean | null
           mes_referencia: string | null
           motivo: string | null
           nome_substituido: string | null
@@ -524,6 +526,8 @@ export type Database = {
           horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
+          is_pcd?: boolean | null
+          is_teia?: boolean | null
           mes_referencia?: string | null
           motivo?: string | null
           nome_substituido?: string | null
@@ -576,6 +580,8 @@ export type Database = {
           horario_convocacao_planilha?: string | null
           id?: string
           import_batch_id?: string | null
+          is_pcd?: boolean | null
+          is_teia?: boolean | null
           mes_referencia?: string | null
           motivo?: string | null
           nome_substituido?: string | null

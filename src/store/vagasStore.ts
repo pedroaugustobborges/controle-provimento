@@ -307,14 +307,80 @@ export const useVagasStore = create<VagasState>()(
           const { supabase } = await import('@/integrations/supabase/client');
           const { useAdminStore } = await import('./adminStore');
           const { currentUser } = useAdminStore.getState();
+          const { data: { user } } = await supabase.auth.getUser();
           await supabase.from('notificacoes').insert({
             ...notif,
-            remetente_id: currentUser?.id,
+            usuario_id: notif.usuario_id ?? null,
+            remetente_id: user?.id ?? currentUser?.id,
             remetente_nome: currentUser?.nome_completo,
             created_at: new Date().toISOString()
           });
         } catch (err) {
           console.error('Error creating notification:', err);
+        }
+      },
+      notificarMovimentacaoEdital: async (vagaId, novaEtapa, mensagemExtra) => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { useAdminStore } = await import('./adminStore');
+          const { currentUser } = useAdminStore.getState();
+          const { data: { user } } = await supabase.auth.getUser();
+
+          const vaga = get().vagas.find(v => v.id === vagaId);
+          if (!vaga) return;
+
+          // Identify recipients: all active Admin / Analista Administrativo / Analista do Edital
+          const PERFIS_DESTINO = [
+            'Administrador', 'Admin',
+            'Analista Administrativo', 'Analista administrativo',
+            'Analista do Edital', 'Analista de Edital', 'Analista do edital',
+          ];
+          const { data: destinatarios } = await supabase
+            .from('profiles')
+            .select('id')
+            .in('perfil', PERFIS_DESTINO)
+            .eq('status', 'ativo');
+
+          const recipientIds = new Set<string>((destinatarios || []).map((d: any) => d.id));
+          // Also include the original requester (created_by) so they track progress
+          if (vaga.created_by && typeof vaga.created_by === 'string' && vaga.created_by.length === 36) {
+            recipientIds.add(vaga.created_by);
+          }
+          // Don't notify the actor themselves (they did the action)
+          if (user?.id) recipientIds.delete(user.id);
+
+          const ETAPA_LABELS_LOCAL: Record<string, string> = {
+            encaminhado_edital: 'Redação de Edital',
+            em_redacao: 'Redação de Edital',
+            enviado_validacao: 'Validação de Edital',
+            aguardando_aprovacao_gestor: 'Aprovação do Gestor',
+            aprovado_administrativo: 'Aprovado para Publicação',
+            publicado: 'Publicado',
+          };
+          const etapaLabel = ETAPA_LABELS_LOCAL[novaEtapa] || novaEtapa;
+          const titulo = `Vaga movida → ${etapaLabel}`;
+          const cargoRef = vaga.cargo || 'Vaga';
+          const unidadeRef = vaga.unidade || '';
+          const autor = currentUser?.nome_completo || 'Sistema';
+          const mensagem = `${cargoRef}${unidadeRef ? ' • ' + unidadeRef : ''} foi movida por ${autor}.${mensagemExtra ? ' ' + mensagemExtra : ''}`;
+
+          const rows = Array.from(recipientIds).map((uid) => ({
+            usuario_id: uid,
+            titulo,
+            mensagem,
+            tipo: 'movimentacao_edital',
+            registro_id: vagaId,
+            unidade: vaga.unidade || null,
+            remetente_id: user?.id ?? currentUser?.id ?? null,
+            remetente_nome: currentUser?.nome_completo ?? null,
+          }));
+
+          if (rows.length > 0) {
+            const { error } = await supabase.from('notificacoes').insert(rows);
+            if (error) console.error('[notificarMovimentacaoEdital] insert error:', error);
+          }
+        } catch (err) {
+          console.error('[notificarMovimentacaoEdital] error:', err);
         }
       },
       addVagas: (newVagas) => set((s) => ({ vagas: [...newVagas, ...s.vagas] })),

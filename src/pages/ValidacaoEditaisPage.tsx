@@ -119,10 +119,11 @@ export default function ValidacaoEditaisPage() {
     const updateData: any = {
       status_validacao: actionStatus === 'ajuste' ? 'pendente' : actionStatus,
       status_fluxo_edital: newFluxoStatus,
+      etapa: newFluxoStatus,
       validado_por: usuario,
       data_validacao: new Date().toISOString(),
       observacoes_validacao: obs,
-      historico: [...vaga.historico, {
+      historico: [...(vaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao,
@@ -134,9 +135,10 @@ export default function ValidacaoEditaisPage() {
       updateData.url_reachr = reachrUrl;
     }
 
-    updateVaga(vagaId, updateData);
-    
-    // ... rest of the code for aprovado/ajuste/rejeitado
+    const ok = await updateVaga(vagaId, updateData);
+    if (!ok) return;
+
+    notificarMovimentacaoEdital(vagaId, newFluxoStatus, obs ? `Obs: ${obs}` : '');
 
     const msgs: Record<string, string> = {
       aprovado: 'Edital aprovado! Notificação enviada à AGIE.',

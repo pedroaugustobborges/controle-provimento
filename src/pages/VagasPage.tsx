@@ -13,7 +13,7 @@ import {
   getMonthNamePtBrUpper, getValidVacancyBase, checkVacancyParity, getEtapaColor, getAutoEtapa,
   filterByRegionAndUnit, UNIDADES_POR_REGIAO
 } from '@/lib/vagaUtils';
-import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles, Download } from 'lucide-react';
+import { Calendar, Bug, ChevronDown, ChevronUp, Info, Sparkles, Download, Accessibility } from 'lucide-react';
 import { ExportButton } from '@/components/ExportButton';
 // ... keep existing code
 

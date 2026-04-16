@@ -151,9 +151,10 @@ interface VagasState {
   updateBanco: (id: string, data: Partial<BancoTalentos>) => void;
   updateBancoAsync: (id: string, data: Partial<BancoTalentos>) => Promise<boolean>;
   deleteBanco: (id: string) => void;
-  addConvocacao: (convocacao: Convocacao) => void;
-  updateConvocacao: (id: string, data: Partial<Convocacao>) => void;
-  deleteConvocacao: (id: string) => void;
+  addConvocacao: (convocacao: Convocacao) => Promise<void>;
+  updateConvocacao: (id: string, data: Partial<Convocacao>) => Promise<void>;
+  deleteConvocacao: (id: string) => Promise<void>;
+  fetchConvocacoes: () => Promise<void>;
   updateEdital: (id: string, data: Partial<Edital>) => void;
   updateValidacao: (id: string, data: Partial<ValidacaoEdital>) => void;
   addEdital: (edital: Edital) => void;
@@ -196,7 +197,7 @@ export const useVagasStore = create<VagasState>()(
     (set, get) => ({
       vagas: [],
       bancos: [],
-      convocacoes: mockConvocacoes,
+      convocacoes: [],
       bloqueios: [] as BloqueioHorario[],
       editais: mockEditais,
       validacoes: mockValidacoes,
@@ -248,7 +249,8 @@ export const useVagasStore = create<VagasState>()(
             get().fetchVagas(),
             get().fetchBancos(),
             get().fetchImportHistory(),
-            get().fetchNotificacoes()
+            get().fetchNotificacoes(),
+            get().fetchConvocacoes(),
           ]);
         } finally {
           set({ isLoading: false, isInitialLoad: false });

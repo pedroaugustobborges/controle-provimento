@@ -225,3 +225,24 @@ function MetricCard({ icon: Icon, label, value, color, bg }: { icon: any; label:
     </Card>
   );
 }
+
+function HistoricoTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0].payload as { label: string; total: number; unidades: [string, number][] };
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[200px]">
+      <div className="flex items-center justify-between gap-3 pb-1.5 mb-1.5 border-b border-border/40">
+        <span className="font-semibold">Dia {item.label}</span>
+        <span className="font-bold text-primary">{item.total} convocação{item.total !== 1 ? 'ões' : ''}</span>
+      </div>
+      <div className="space-y-0.5 max-h-[180px] overflow-y-auto">
+        {item.unidades.map(([unidade, qtd]) => (
+          <div key={unidade} className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground truncate">{unidade}</span>
+            <span className="font-medium tabular-nums">{qtd}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

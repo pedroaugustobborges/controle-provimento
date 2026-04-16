@@ -427,7 +427,75 @@ export const useVagasStore = create<VagasState>()(
         return false;
       },
       deleteVaga: (id) => set((s) => ({ vagas: s.vagas.filter((v) => v.id !== id) })),
-      addBanco: (banco) => set((s) => ({ bancos: [banco, ...s.bancos] })),
+      addBanco: async (banco) => {
+        // Optimistic update
+        const tempId = banco.id;
+        set((s) => ({ bancos: [banco, ...s.bancos] }));
+        
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          
+          if (!authUser) {
+            console.error('addBanco: no authenticated user');
+            toast.error('Sessão expirada. Faça login novamente para salvar o banco.');
+            set((s) => ({ bancos: s.bancos.filter(b => b.id !== tempId) }));
+            return;
+          }
+
+          const { id, ...rest } = banco as any;
+          
+          // Whitelist only valid DB columns for banco_candidatos
+          const payload: any = {
+            unidade: rest.unidade || null,
+            cargo: rest.cargo || null,
+            cargo_normalizado: rest.cargo_normalizado || null,
+            secao: rest.secao || null,
+            numero_edital: rest.numero_edital || null,
+            numero_processo: rest.numero_processo || null,
+            nome: rest.nome || null,
+            classificacao: rest.classificacao || null,
+            quantidade_banco: rest.quantidade_banco || null,
+            status_import: rest.status_import || null,
+            data_abertura_edital: rest.data_abertura_edital || null,
+            data_publicacao: rest.data_publicacao || null,
+            data_validade: rest.data_validade || null,
+            is_prorrogado: !!rest.is_prorrogado,
+            prorrogacao: rest.prorrogacao || null,
+            nova_data_validade: rest.nova_data_validade || null,
+            data_convocacao: rest.data_convocacao || null,
+            unidade_convocacao: rest.unidade_convocacao || null,
+            numero_chamada: rest.numero_chamada || null,
+            numero_processo_seletivo: rest.numero_processo_seletivo || null,
+            numero_vaga_aproveitamento: rest.numero_vaga_aproveitamento || null,
+            status: rest.status || 'valido',
+            status_original: rest.status_original || null,
+            status_calculado: rest.status_calculado || null,
+            motivo_do_calculo: rest.motivo_do_calculo || null,
+            data_base_do_calculo: rest.data_base_do_calculo || null,
+            data_referencia_usada: rest.data_referencia_usada || null,
+            observacoes: rest.observacoes || null,
+            created_by: authUser.id,
+            updated_by: authUser.id,
+          };
+
+          const { data, error } = await supabase.from('banco_candidatos').insert(payload).select().single();
+          
+          if (error) {
+            console.error('addBanco persist error:', error, 'payload:', payload);
+            toast.error(`Falha ao salvar banco de talentos: ${error.message}`);
+            set((s) => ({ bancos: s.bancos.filter(b => b.id !== tempId) }));
+            return;
+          }
+
+          // Replace temp id with DB id
+          set((s) => ({ bancos: s.bancos.map(b => b.id === tempId ? mapDbBanco(data) : b) }));
+        } catch (e: any) {
+          console.error('addBanco exception:', e);
+          toast.error(`Erro ao salvar banco de talentos: ${e?.message || 'desconhecido'}`);
+          set((s) => ({ bancos: s.bancos.filter(b => b.id !== tempId) }));
+        }
+      },
       addBancos: (newBancos) => set((s) => ({ bancos: [...newBancos, ...s.bancos] })),
       updateBanco: (id, data) => set((s) => ({ bancos: s.bancos.map((b) => b.id === id ? { ...b, ...data } : b) })),
       updateBancoAsync: async (id, data) => {

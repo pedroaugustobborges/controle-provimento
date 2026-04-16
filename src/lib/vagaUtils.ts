@@ -7,18 +7,16 @@ export const VITORIA_SUB_UNIDADES = [
 ];
 
 export const UNIDADES_POR_REGIAO: Record<string, string[]> = {
-  'Goiás e Espírito Santo': [
+  'GO/ES': [
     'CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 
     'TEIA APARECIDA', 'TEIA CANEDO', 'SUÁ', 'SÃO PEDRO', 'JATAÍ', 'POLICLÍNICA', 'VITÓRIA'
   ],
-  'Amazonas': ['CHS', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'],
-  'Demais Unidades': ['HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'DOURADOS', 'TEIA CEN', 'TEIA PIN']
+  'OUTRAS': ['HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'DOURADOS', 'TEIA CEN', 'TEIA PIN', 'CHS', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3']
 };
 
 const REGION_ALIASES: Record<string, string[]> = {
-  'Goiás e Espírito Santo': ['GOIÂNIA', 'GOIANIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS', 'VITÓRIA', 'VITORIA', 'VIX', 'ES', 'UPA', 'GOIÁS', 'ESPÍRITO SANTO'],
-  'Amazonas': ['MANAUS', 'AM', 'AMAZONAS'],
-  'Demais Unidades': ['OUTRAS UNIDADES', 'FORA'],
+  'GO/ES': ['GOIÂNIA', 'GOIANIA', 'TEIA ANAPOLIS', 'TEIA ANÁPOLIS', 'VITÓRIA', 'VITORIA', 'VIX', 'ES', 'UPA', 'GOIÁS', 'ESPÍRITO SANTO'],
+  'OUTRAS': ['OUTRAS UNIDADES', 'FORA', 'AMAZONAS', 'MANAUS', 'AM', 'CHS', 'TEIA MAN'],
 };
 
 export function removeAccents(str: string): string {
@@ -65,7 +63,7 @@ export const REGION_MAP: Record<string, string> = Object.fromEntries(
 export function getRegionForUnit(unitName: string): string {
   const normalizedUnit = removeAccents(String(unitName || '').toUpperCase().trim().replace(/\s+/g, ' '));
 
-  if (!normalizedUnit) return 'Demais Unidades';
+  if (!normalizedUnit) return 'OUTRAS';
 
   const exactMatch = REGION_MAP[normalizedUnit];
   if (exactMatch) return exactMatch;
@@ -74,7 +72,7 @@ export function getRegionForUnit(unitName: string): string {
     normalizedUnit.includes(key) || key.includes(normalizedUnit)
   ));
 
-  return partialMatch?.[1] || 'Demais Unidades';
+  return partialMatch?.[1] || 'OUTRAS';
 }
 
 export function isVitoriaUnit(unidade: string): boolean {

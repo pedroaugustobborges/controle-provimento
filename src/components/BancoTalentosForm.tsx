@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,9 +12,8 @@ import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { toast } from 'sonner';
 import { BancoTalentos } from '@/types/vaga';
-import { normalizeCargo } from '@/lib/vagaUtils';
+import { normalizeCargo, UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { calculateBancoStatus } from '@/lib/bancoTalentosUtils';
-
 
 const formSchema = z.object({
   unidade: z.string().min(1, 'Unidade é obrigatória'),
@@ -26,7 +25,7 @@ const formSchema = z.object({
   classificacao: z.string().optional(),
   quantidade_banco: z.string().optional(),
   status_import: z.string().optional(),
-  data_abertura_edital: z.string().min(1, 'Data de abertura é obrigatória'),
+  data_abertura_edital: z.string().min(1, 'Data do resultado final é obrigatória'),
   data_validade: z.string().min(1, 'Data de validade é obrigatória'),
   is_prorrogado: z.boolean().default(false),
   nova_data_validade: z.string().optional(),
@@ -44,7 +43,7 @@ interface BancoTalentosFormProps {
 }
 
 export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProps) {
-  const { addBanco } = useVagasStore();
+  const { addBanco, vagas } = useVagasStore();
   const { currentUser } = useAdminStore();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,18 +71,34 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
     },
   });
 
-  const isProrrogado = form.watch('is_prorrogado');
+  const dataResultado = form.watch('data_abertura_edital');
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  useEffect(() => {
+    if (dataResultado) {
+      const date = new Date(dataResultado);
+      if (!isNaN(date.getTime())) {
+        date.setMonth(date.getMonth() + 6);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        form.setValue('data_validade', `${year}-${month}-${day}`);
+      }
+    }
+  }, [dataResultado, form]);
+
+  const allUnidades = React.useMemo(() => {
+    const fromVagas = new Set(vagas.map(v => v.unidade));
+    const fromRegions = new Set(Object.values(UNIDADES_POR_REGIAO).flat());
+    return Array.from(new Set([...fromVagas, ...fromRegions])).filter(Boolean).sort();
+  }, [vagas]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const statusOriginal = (values.status_import || 'CADASTRO RESERVA').toUpperCase();
-    
-    // Prorrogação manual input
-    const prorrogacaoVal = values.nova_data_validade || (values.is_prorrogado ? 'SIM' : '');
     
     const calculation = calculateBancoStatus({
       status: statusOriginal,
       status_original: statusOriginal,
-      prorrogacao: prorrogacaoVal,
+      prorrogacao: '',
       data_publicacao: values.data_abertura_edital,
       data_validade: values.data_validade,
       data_convocacao: values.data_convocacao
@@ -102,11 +117,11 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
       quantidade_banco: values.quantidade_banco,
       status_import: values.status_import,
       data_abertura_edital: values.data_abertura_edital,
-      data_publicacao: values.data_abertura_edital, // Mapping to the new field
+      data_publicacao: values.data_abertura_edital,
       data_validade: values.data_validade,
-      is_prorrogado: calculation.status === 'prorrogado',
-      prorrogacao: prorrogacaoVal,
-      nova_data_validade: values.nova_data_validade,
+      is_prorrogado: false,
+      prorrogacao: '',
+      nova_data_validade: '',
       data_convocacao: values.data_convocacao,
       unidade_convocacao: values.unidade_convocacao,
       numero_chamada: values.numero_chamada,
@@ -121,8 +136,7 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
       observacoes: values.observacoes || '',
     };
 
-    addBanco(newBanco);
-    toast.success('Banco de talentos cadastrado com sucesso!');
+    await addBanco(newBanco);
     onSuccess();
   }
 
@@ -143,27 +157,9 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="max-h-[300px]">
-                    <SelectItem value="HECAD">HECAD</SelectItem>
-                    <SelectItem value="CRER">CRER</SelectItem>
-                    <SelectItem value="AGIR">AGIR</SelectItem>
-                    <SelectItem value="HUGOL">HUGOL</SelectItem>
-                    <SelectItem value="HDS">HDS</SelectItem>
-                    <SelectItem value="POLICLÍNICA">POLICLÍNICA</SelectItem>
-                    <SelectItem value="JATAÍ">JATAÍ</SelectItem>
-                    <SelectItem value="VITÓRIA (SÃO PEDRO/SUÁ)">VITÓRIA (SÃO PEDRO/SUÁ)</SelectItem>
-                    <SelectItem value="TEIA ANAPOLIS">TEIA ANAPOLIS</SelectItem>
-                    <SelectItem value="TEIA CANEDO">TEIA CANEDO</SelectItem>
-                    <SelectItem value="TEIA APARECIDA">TEIA APARECIDA</SelectItem>
-                    <SelectItem value="TEIA GOIÂNIA">TEIA GOIÂNIA</SelectItem>
-                    <SelectItem value="DOURADOS">DOURADOS</SelectItem>
-                    <SelectItem value="CHS">CHS</SelectItem>
-                    <SelectItem value="HMSA">HMSA</SelectItem>
-                    <SelectItem value="HRCAC">HRCAC</SelectItem>
-                    <SelectItem value="TEIA CEN">TEIA CEN</SelectItem>
-                    <SelectItem value="TEIA PIN">TEIA PIN</SelectItem>
-                    <SelectItem value="TEIA MAN">TEIA MAN</SelectItem>
-                    <SelectItem value="TEIA MAN 2">TEIA MAN 2</SelectItem>
-                    <SelectItem value="TEIA MAN 3">TEIA MAN 3</SelectItem>
+                    {allUnidades.map(unidade => (
+                      <SelectItem key={unidade} value={unidade}>{unidade}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -218,7 +214,7 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
             name="data_abertura_edital"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Data de Abertura do Edital</FormLabel>
+                <FormLabel>Data do Resultado Final</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -234,7 +230,7 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
               <FormItem>
                 <FormLabel>Data de Validade</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} readOnly className="bg-slate-50 cursor-not-allowed" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -242,43 +238,7 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
           />
         </div>
 
-        <div className="flex items-center space-x-2 bg-slate-50 p-3 rounded-md border border-slate-200">
-          <FormField
-            control={form.control}
-            name="is_prorrogado"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="font-bold text-slate-700">
-                    Banco prorrogado?
-                  </FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {isProrrogado && (
-          <FormField
-            control={form.control}
-            name="nova_data_validade"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nova Data Final (Prorrogação)</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Removido campos de prorrogação do cadastro conforme solicitado */}
 
         <FormField
           control={form.control}
@@ -303,17 +263,8 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
             Cancelar
           </Button>
           <div className="flex gap-2">
-            <Button 
-              type="button" 
-              variant="secondary" 
-              onClick={() => {
-                form.handleSubmit(onSubmit)();
-              }}
-            >
-              Salvar e Continuar
-            </Button>
             <Button type="submit">
-              Salvar
+              Salvar Banco
             </Button>
           </div>
         </div>

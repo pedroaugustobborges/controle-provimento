@@ -124,6 +124,7 @@ interface VagasState {
   importedFiles: ImportedFile[];
   tarefas: Tarefa[];
   alertas: Alerta[];
+  notificacoes: any[];
   historicoMensagens: MensagemHistorico[];
   temNovasMensagens: boolean;
   isLoading: boolean;
@@ -232,6 +233,7 @@ export const useVagasStore = create<VagasState>()(
         ] as MensagemHistorico[];
       })(),
       temNovasMensagens: false,
+      notificacoes: [],
       isLoading: false,
       isInitialLoad: true,
       isLoadingVagas: false,

@@ -58,8 +58,10 @@ interface KanbanColumnProps {
 }
 
 const KanbanColumn = ({ id, title, icon: Icon, count, color, children }: KanbanColumnProps) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
+
   return (
-    <div className="flex flex-col min-w-[320px] max-w-[320px] h-full bg-slate-50/50 rounded-xl border border-slate-200/50">
+    <div className={`flex flex-col min-w-[320px] max-w-[320px] h-full bg-slate-50/50 rounded-xl border transition-colors ${isOver ? 'border-primary/50 bg-primary/5' : 'border-slate-200/50'}`}>
       <div className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className={`p-1.5 rounded-lg ${color} bg-opacity-10`}>
@@ -74,7 +76,7 @@ const KanbanColumn = ({ id, title, icon: Icon, count, color, children }: KanbanC
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </div>
-      <div className="p-3 flex flex-col gap-3 overflow-y-auto scrollbar-hide flex-1">
+      <div ref={setNodeRef} className="p-3 flex flex-col gap-3 overflow-y-auto scrollbar-hide flex-1">
         {children}
       </div>
     </div>

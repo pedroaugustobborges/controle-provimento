@@ -497,7 +497,13 @@ export default function FilaEditaisPage() {
                           <TableCell>
                             <Badge variant="outline" className="text-[9px] uppercase bg-slate-50 text-slate-500 border-slate-200">Sub-item</Badge>
                           </TableCell>
-                          <TableCell className="text-[10px] text-slate-500">{v.analista_responsavel}</TableCell>
+                          <TableCell className="text-[10px] text-slate-500">{v.analista_responsavel || '—'}</TableCell>
+                          <TableCell className="text-[10px] text-slate-500">
+                            {(() => {
+                              const u = (users || []).find((x: any) => x.id === v.validado_por);
+                              return u?.nome_completo || <span className="italic text-slate-400">não atribuído</span>;
+                            })()}
+                          </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
                       ))}

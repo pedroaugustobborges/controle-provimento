@@ -47,6 +47,10 @@ interface AdminState {
   // Backup actions
   generateBackup: () => void;
 
+  // Realtime
+  subscribeRealtime: () => void;
+  unsubscribeRealtime: () => void;
+
   // Legacy compat
   toggleUserStatus: (id: string) => Promise<void>;
 }

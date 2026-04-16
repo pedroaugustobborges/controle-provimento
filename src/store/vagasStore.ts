@@ -296,8 +296,29 @@ export const useVagasStore = create<VagasState>()(
       fetchNotificacoes: async () => {
         try {
           const { supabase } = await import('@/integrations/supabase/client');
-          const { data, error } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(50);
-          if (!error) set({ notificacoes: data || [] });
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          const { data, error } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(200);
+          if (!error && data) {
+            set({ notificacoes: data.slice(0, 50) });
+            // Build chat history: messages either sent by me or addressed to me
+            const myId = authUser?.id;
+            const mensagens: MensagemHistorico[] = data
+              .filter((n: any) => n.tipo === 'mensagem' && (n.usuario_id === myId || n.remetente_id === myId))
+              .map((n: any) => ({
+                id: n.id,
+                data: n.created_at || new Date().toISOString(),
+                remetente: n.remetente_nome || 'Colega',
+                remetente_id: n.remetente_id || null,
+                destinatario_id: n.usuario_id || null,
+                conteudo: n.mensagem || '',
+                lida: n.remetente_id === myId ? true : Boolean(n.lida),
+                titulo: n.titulo,
+              }));
+            set({
+              historicoMensagens: mensagens,
+              temNovasMensagens: mensagens.some(m => !m.lida),
+            });
+          }
         } catch (err) {
           console.error('Error fetching notifications:', err);
         }

@@ -61,7 +61,13 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'unidade') {
+        updated.is_teia = value.toUpperCase().includes('TEIA');
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

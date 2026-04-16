@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      alertas: {
+        Row: {
+          created_at: string | null
+          data_criacao: string | null
+          destinatario: string | null
+          id: string
+          link: string | null
+          mensagem: string | null
+          status: string | null
+          tipo: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_criacao?: string | null
+          destinatario?: string | null
+          id?: string
+          link?: string | null
+          mensagem?: string | null
+          status?: string | null
+          tipo?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_criacao?: string | null
+          destinatario?: string | null
+          id?: string
+          link?: string | null
+          mensagem?: string | null
+          status?: string | null
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           acao: string
@@ -206,6 +245,45 @@ export type Database = {
         }
         Relationships: []
       }
+      bloqueios_horario: {
+        Row: {
+          created_at: string | null
+          criado_por: string | null
+          data: string
+          dia_inteiro: boolean | null
+          horario: string | null
+          id: string
+          link_teams: string | null
+          motivo: string | null
+          updated_at: string | null
+          vagas_bloqueadas: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          criado_por?: string | null
+          data: string
+          dia_inteiro?: boolean | null
+          horario?: string | null
+          id?: string
+          link_teams?: string | null
+          motivo?: string | null
+          updated_at?: string | null
+          vagas_bloqueadas?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          criado_por?: string | null
+          data?: string
+          dia_inteiro?: boolean | null
+          horario?: string | null
+          id?: string
+          link_teams?: string | null
+          motivo?: string | null
+          updated_at?: string | null
+          vagas_bloqueadas?: number | null
+        }
+        Relationships: []
+      }
       convocacoes: {
         Row: {
           banco_id: string | null
@@ -304,6 +382,74 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      editais: {
+        Row: {
+          aprovados_finais: number | null
+          aprovados_triagem: number | null
+          convocados_entrevista: number | null
+          created_at: string | null
+          data_abertura_edital: string | null
+          data_encerramento_edital: string | null
+          data_entrevista: string | null
+          data_prova: string | null
+          etapa_atual: string | null
+          id: string
+          numero_edital: string | null
+          numero_processo: string | null
+          possui_banco_talentos: boolean | null
+          status_publicacao: string | null
+          total_inscritos: number | null
+          updated_at: string | null
+          vaga_id: string | null
+        }
+        Insert: {
+          aprovados_finais?: number | null
+          aprovados_triagem?: number | null
+          convocados_entrevista?: number | null
+          created_at?: string | null
+          data_abertura_edital?: string | null
+          data_encerramento_edital?: string | null
+          data_entrevista?: string | null
+          data_prova?: string | null
+          etapa_atual?: string | null
+          id?: string
+          numero_edital?: string | null
+          numero_processo?: string | null
+          possui_banco_talentos?: boolean | null
+          status_publicacao?: string | null
+          total_inscritos?: number | null
+          updated_at?: string | null
+          vaga_id?: string | null
+        }
+        Update: {
+          aprovados_finais?: number | null
+          aprovados_triagem?: number | null
+          convocados_entrevista?: number | null
+          created_at?: string | null
+          data_abertura_edital?: string | null
+          data_encerramento_edital?: string | null
+          data_entrevista?: string | null
+          data_prova?: string | null
+          etapa_atual?: string | null
+          id?: string
+          numero_edital?: string | null
+          numero_processo?: string | null
+          possui_banco_talentos?: boolean | null
+          status_publicacao?: string | null
+          total_inscritos?: number | null
+          updated_at?: string | null
+          vaga_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "editais_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feedbacks: {
         Row: {
@@ -569,6 +715,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tarefas: {
+        Row: {
+          atribuido_a: string | null
+          created_at: string | null
+          data_criacao: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          id: string
+          perfil_destinatario: string | null
+          prioridade: string | null
+          relacionado_a_id: string | null
+          relacionado_a_tipo: string | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          atribuido_a?: string | null
+          created_at?: string | null
+          data_criacao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          perfil_destinatario?: string | null
+          prioridade?: string | null
+          relacionado_a_id?: string | null
+          relacionado_a_tipo?: string | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          atribuido_a?: string | null
+          created_at?: string | null
+          data_criacao?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          perfil_destinatario?: string | null
+          prioridade?: string | null
+          relacionado_a_id?: string | null
+          relacionado_a_tipo?: string | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -800,6 +994,53 @@ export type Database = {
             columns: ["gestor_aprovador_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      validacoes_editais: {
+        Row: {
+          created_at: string | null
+          etapa_finalizada: boolean | null
+          id: string
+          observacao: string | null
+          precisa_validacao: boolean | null
+          responsavel_validacao: string | null
+          status_validacao: string | null
+          tipo_validacao: string | null
+          updated_at: string | null
+          vaga_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          etapa_finalizada?: boolean | null
+          id?: string
+          observacao?: string | null
+          precisa_validacao?: boolean | null
+          responsavel_validacao?: string | null
+          status_validacao?: string | null
+          tipo_validacao?: string | null
+          updated_at?: string | null
+          vaga_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          etapa_finalizada?: boolean | null
+          id?: string
+          observacao?: string | null
+          precisa_validacao?: boolean | null
+          responsavel_validacao?: string | null
+          status_validacao?: string | null
+          tipo_validacao?: string | null
+          updated_at?: string | null
+          vaga_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validacoes_editais_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
             referencedColumns: ["id"]
           },
         ]

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import avatarDefault from '@/assets/avatar-izac.jpeg';
+
 import logoAgir from '@/assets/logo-agir-white.png';
 import { supabase } from '@/integrations/supabase/client';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -404,7 +404,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     isCompact ? 'h-8 w-8' : 'h-10 w-10'
                   }`}
                 >
-                  <img src={currentUser?.avatar_url || avatarDefault} alt={userName} className="h-full w-full object-cover" />
+                  {currentUser?.avatar_url ? (
+                    <img src={currentUser.avatar_url} alt={userName} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                      {initials}
+                    </div>
+                  )}
                 </button>
               </div>
             </div>
@@ -470,7 +476,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <img src={logoAgir} alt="AGIR" className="h-14 object-contain" />
             <div className="absolute -bottom-12 left-8 group">
               <div className="h-24 w-24 rounded-full border-4 border-background bg-muted overflow-hidden shadow-lg relative">
-                <img src={currentUser?.avatar_url || avatarDefault} alt={userName} className="h-full w-full object-cover" />
+                {currentUser?.avatar_url ? (
+                  <img src={currentUser.avatar_url} alt={userName} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl">
+                    {initials}
+                  </div>
+                )}
                 <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <Camera className="h-6 w-6 text-white" />
                   <input 

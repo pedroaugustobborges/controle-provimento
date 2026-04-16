@@ -440,7 +440,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="none">-- Não Mapeado --</SelectItem>
-                                {currentHeaders.map((h, i) => (
+                                {currentHeaders.filter(Boolean).map((h, i) => (
                                   <SelectItem key={`${h}-${i}`} value={h}>{h || `Coluna ${i+1}`}</SelectItem>
                                 ))}
                               </SelectContent>

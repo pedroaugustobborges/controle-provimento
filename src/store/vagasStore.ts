@@ -141,7 +141,8 @@ interface VagasState {
   fetchAll: () => Promise<void>;
   fetchImportHistory: () => Promise<void>;
   fetchNotificacoes: () => Promise<void>;
-  createNotificacao: (notif: { titulo: string; mensagem: string; tipo?: string; unidade?: string; registro_id?: string; regiao?: string }) => Promise<void>;
+  createNotificacao: (notif: { titulo: string; mensagem: string; tipo?: string; unidade?: string; registro_id?: string; regiao?: string; usuario_id?: string | null }) => Promise<void>;
+  notificarMovimentacaoEdital: (vagaId: string, novaEtapa: string, mensagemExtra?: string) => Promise<void>;
   addVagas: (vagas: Vaga[]) => void;
   updateVaga: (id: string, data: Partial<Vaga>) => void;
   updateVagaAsync: (id: string, data: Partial<Vaga>) => Promise<boolean>;

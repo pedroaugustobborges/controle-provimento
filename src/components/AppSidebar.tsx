@@ -156,8 +156,9 @@ export function AppSidebar() {
       return currentUrl === url;
     }
     
-    // For base URLs, match exactly or as a parent directory
-    return currentUrl === url || currentUrl.startsWith(url + '/') || currentUrl.startsWith(url + '?');
+    // For base URLs without query params: only match exactly or as parent directory
+    // Do NOT match when current URL has query params (e.g. /vagas should not be active when on /vagas?filtro=teias)
+    return currentUrl === url || currentUrl.startsWith(url + '/');
   }, [location]);
 
   const isParentActive = useCallback((item: any) => {

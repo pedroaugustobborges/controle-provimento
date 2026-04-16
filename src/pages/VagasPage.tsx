@@ -154,6 +154,7 @@ export default function VagasPage() {
   const [filterLideranca, setFilterLideranca] = useState('all');
   const [filterVagasNovas, setFilterVagasNovas] = useState(false);
   const [filterComBanco, setFilterComBanco] = useState(false);
+  const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(false);
   const [vacancyStatusTab, setVacancyStatusTab] = useState(searchParams.get('statusTab') || 'todas');
   
   useEffect(() => {
@@ -367,13 +368,18 @@ export default function VagasPage() {
 
       const matchComBanco = !filterComBanco || vagasComBancoSet.has(v.id);
 
-      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas && matchComBanco;
+      const isStuck = (!v.status || v.status === 'SEM STATUS' || !v.status_geral || v.status_geral === 'SEM STATUS') && 
+                      (!v.historico || v.historico.length === 0) &&
+                      (creationTime > (nowTime - 30 * 86400000)); // Consider "recent" as 30 days
+      const matchSemMovimentacao = !filterSemMovimentacao || isStuck;
+
+      return matchSearch && matchStatus && matchTipo && matchAnalista && matchAssistente && matchLideranca && matchVagasNovas && matchComBanco && matchSemMovimentacao;
     });
-  }, [statusScopedBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vagasComBancoSet]);
+  }, [statusScopedBase, search, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, filterSemMovimentacao, vagasComBancoSet]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, vacancyStatusTab]);
+  }, [search, filterUnidade, filterMes, filterStatuses, filterTipo, filterAnalista, filterAssistente, filterLideranca, filterVagasNovas, filterComBanco, filterSemMovimentacao, vacancyStatusTab]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -455,6 +461,7 @@ export default function VagasPage() {
   const countDocumentacao = counts.documentacao;
   const countComBanco = useMemo(() => statusScopedBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length, [statusScopedBase, vagasComBancoSet]);
   const countVagasNovas = counts.vagas_novas;
+  const countSemMovimentacao = counts.sem_movimentacao;
 
 
   // 4. Parity Debug Audit - forensic row-level check
@@ -523,9 +530,10 @@ export default function VagasPage() {
     setFilterLideranca('all');
     setFilterVagasNovas(false);
     setFilterComBanco(false);
+    setFilterSemMovimentacao(false);
   };
 
-  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas || filterComBanco;
+  const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas || filterComBanco || filterSemMovimentacao;
 
   const prepareVagasForExport = (data: Vaga[]) => {
     return data.map(v => ({
@@ -820,6 +828,16 @@ export default function VagasPage() {
             >
               <Database className={`h-3.5 w-3.5 ${filterComBanco ? 'text-white' : 'text-emerald-500'}`} />
               Com Banco {countComBanco > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-emerald-100 text-emerald-700 border-none">{countComBanco}</Badge>}
+            </Button>
+
+            <Button 
+              variant={filterSemMovimentacao ? "default" : "outline"} 
+              size="sm" 
+              className={`h-9 text-[11px] font-bold gap-2 ${filterSemMovimentacao ? 'bg-orange-600 hover:bg-orange-700' : 'border-slate-200 text-slate-600 bg-white'}`}
+              onClick={() => setFilterSemMovimentacao(!filterSemMovimentacao)}
+            >
+              <AlertCircle className={`h-3.5 w-3.5 ${filterSemMovimentacao ? 'text-white' : 'text-orange-500'}`} />
+              Vagas Paradas {countSemMovimentacao > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px] bg-orange-100 text-orange-700 border-none">{countSemMovimentacao}</Badge>}
             </Button>
 
             {hasFilters && (

@@ -230,12 +230,13 @@ export default function FilaAnalistaEditalPage() {
     setIsPublishModalOpen(true);
   };
 
-  const handleFinalizePublication = () => {
+  const handleFinalizePublication = async () => {
     if (!selectedVaga) return;
 
-    updateVaga(selectedVaga.id, {
+    const ok = await updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'publicado',
-      status: 'EM ANDAMENTO', 
+      etapa: 'publicado',
+      status: 'EM ANDAMENTO',
       unidade_trabalho: unidadeTrabalho,
       distribuicao_vagas: distribuicaoVagas,
       unidades_banco_talentos: unidadesBanco,
@@ -247,14 +248,16 @@ export default function FilaAnalistaEditalPage() {
         ...selectedVaga.acompanhamento,
         gerou_banco: isTalentBank,
       },
-      historico: [...selectedVaga.historico, {
+      historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
         descricao: `Edital PUBLICADO. Unidade de trabalho definida: ${unidadeTrabalho}. ${isTalentBank ? 'Banco de talentos habilitado.' : ''}`,
         usuario: currentUser?.nome_completo || 'Analista do Edital'
       }]
-    });
+    } as any);
 
+    if (!ok) return;
+    notificarMovimentacaoEdital(selectedVaga.id, 'publicado', `Unidade: ${unidadeTrabalho}.`);
     setIsPublishModalOpen(false);
     toast.success('Edital publicado e cronograma salvo com sucesso!');
   };

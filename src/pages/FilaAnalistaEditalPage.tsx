@@ -28,12 +28,13 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
+import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
   const { vagas, updateVagaAsync } = useVagasStore();
   const updateVaga = updateVagaAsync;
-  const { currentUser } = useAdminStore();
+  const { currentUser, users } = useAdminStore();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
 
@@ -45,6 +46,7 @@ export default function FilaAnalistaEditalPage() {
   const [numeroEdital, setNumeroEdital] = useState('');
   const [numeroProcesso, setNumeroProcesso] = useState('');
   const [reachrUrl, setReachrUrl] = useState('');
+  const [responsavelValidacao, setResponsavelValidacao] = useState<string>('');
 
   // Modal de Publicação / Cronograma
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -104,6 +106,17 @@ export default function FilaAnalistaEditalPage() {
 
   const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
 
+  // Analistas elegíveis para validação do edital
+  const analistasValidacao = useMemo(() => {
+    return (users || []).filter((u: any) => {
+      const perfil = (u.perfil || '').toLowerCase();
+      const status = (u.status || 'ativo').toLowerCase();
+      return status === 'ativo' && (
+        perfil.includes('analista') || perfil.includes('admin') || perfil.includes('gestor')
+      );
+    });
+  }, [users]);
+
   const handleOpenEditModal = (vaga: Vaga) => {
     setSelectedVaga(vaga);
     setObsEdital(vaga.observacoes_edital || '');
@@ -111,6 +124,22 @@ export default function FilaAnalistaEditalPage() {
     setNumeroProcesso(vaga.numero_processo || '');
     setNomeArquivo(vaga.arquivo_edital || '');
     setReachrUrl((vaga as any).url_reachr || '');
+
+    // Pré-preenche o responsável pela validação:
+    // 1) usa o já atribuído se existir
+    // 2) senão, sugere com base na região da unidade (Goiás+ES → Isaac, etc.)
+    if (vaga.validado_por) {
+      setResponsavelValidacao(vaga.validado_por);
+    } else {
+      const sugestao = sugerirResponsavelValidacao(vaga.unidade);
+      const match = sugestao?.nome
+        ? (users || []).find((u: any) =>
+            (u.nome_completo || '').toLowerCase().includes(sugestao.nome.toLowerCase())
+          )
+        : null;
+      setResponsavelValidacao(match?.id || '');
+    }
+
     setIsEditModalOpen(true);
   };
 
@@ -142,7 +171,15 @@ export default function FilaAnalistaEditalPage() {
       return;
     }
 
-    updateVaga(selectedVaga.id, { 
+    if (!responsavelValidacao) {
+      toast.error('Selecione o responsável pela validação do edital.');
+      return;
+    }
+
+    const respUser = (users || []).find((u: any) => u.id === responsavelValidacao);
+    const respNome = respUser?.nome_completo || 'Não atribuído';
+
+    updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'enviado_validacao',
       status_validacao: 'pendente',
       observacoes_edital: obsEdital,
@@ -150,16 +187,17 @@ export default function FilaAnalistaEditalPage() {
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
+      validado_por: responsavelValidacao,
       historico: [...selectedVaga.historico, {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
-        descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}`,
+        descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}. Responsável pela validação: ${respNome}.`,
         usuario: currentUser?.nome_completo || 'Analista do Edital'
       }]
     });
 
     setIsEditModalOpen(false);
-    toast.success('Edital enviado com sucesso para validação administrativa!');
+    toast.success(`Edital enviado para validação de ${respNome}.`);
   };
 
   const handleOpenPublishModal = (vaga: Vaga) => {
@@ -474,6 +512,34 @@ export default function FilaAnalistaEditalPage() {
                     </Button>
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-2 p-3 rounded-md border border-blue-100 bg-blue-50/40">
+                <Label htmlFor="respValidacao" className="text-sm font-semibold flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-blue-600" />
+                  Responsável pela Validação
+                </Label>
+                <Select value={responsavelValidacao} onValueChange={setResponsavelValidacao}>
+                  <SelectTrigger id="respValidacao" className="bg-white">
+                    <SelectValue placeholder="Selecione o analista validador..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {analistasValidacao.map((u: any) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.nome_completo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedVaga && (() => {
+                  const sugestao = sugerirResponsavelValidacao(selectedVaga.unidade);
+                  if (!sugestao?.nome) return null;
+                  return (
+                    <p className="text-[11px] text-blue-700 italic">
+                      Sugestão automática para {selectedVaga.unidade}: <strong>{sugestao.nome}</strong>
+                    </p>
+                  );
+                })()}
               </div>
 
               <div className="space-y-2">

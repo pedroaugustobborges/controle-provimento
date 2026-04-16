@@ -41,36 +41,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
   const { vagas, updateVaga } = useVagasStore();
-  const { currentUser, users } = useAdminStore();
-
-  // Analistas elegíveis para serem responsáveis pela publicação do edital
-  const analistasPublicacao = useMemo(() => {
-    return (users || []).filter((u: any) => {
-      const perfil = (u.perfil || '').toLowerCase();
-      const status = (u.status || 'ativo').toLowerCase();
-      return status === 'ativo' && (
-        perfil.includes('analista') || perfil.includes('admin') || perfil.includes('gestor')
-      );
-    });
-  }, [users]);
-
-  const handleSetResponsavelPublicacao = (vaga: Vaga, userId: string) => {
-    const user = (users || []).find((u: any) => u.id === userId);
-    const nome = user?.nome_completo || 'Não atribuído';
-    updateVaga(vaga.id, {
-      validado_por: userId,
-      historico: [
-        ...(vaga.historico || []),
-        {
-          id: `h-${Date.now()}`,
-          data: new Date().toISOString().split('T')[0],
-          descricao: `Responsável pela publicação do edital atribuído: ${nome}`,
-          usuario: currentUser?.nome_completo || 'Sistema',
-        },
-      ],
-    });
-    toast.success(`Responsável atualizado: ${nome}`);
-  };
+  const { currentUser } = useAdminStore();
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
@@ -380,7 +351,6 @@ export default function FilaEditaisPage() {
                   <TableHead className="text-center">Dias Aberto</TableHead>
                   <TableHead className="text-center">Status Atual</TableHead>
                   <TableHead>Enviado por</TableHead>
-                  <TableHead>Responsável pela publicação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -402,7 +372,7 @@ export default function FilaEditaisPage() {
                             {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                           </Button>
                         </TableCell>
-                        <TableCell colSpan={10} className="py-3">
+                        <TableCell colSpan={9} className="py-3">
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                             <div className="flex items-center gap-2 min-w-0">
                               <Briefcase className="h-4 w-4 text-blue-700 shrink-0" />
@@ -498,12 +468,6 @@ export default function FilaEditaisPage() {
                             <Badge variant="outline" className="text-[9px] uppercase bg-slate-50 text-slate-500 border-slate-200">Sub-item</Badge>
                           </TableCell>
                           <TableCell className="text-[10px] text-slate-500">{v.analista_responsavel || '—'}</TableCell>
-                          <TableCell className="text-[10px] text-slate-500">
-                            {(() => {
-                              const u = (users || []).find((x: any) => x.id === v.validado_por);
-                              return u?.nome_completo || <span className="italic text-slate-400">não atribuído</span>;
-                            })()}
-                          </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
                       ))}
@@ -562,23 +526,6 @@ export default function FilaEditaisPage() {
                       <TableCell className="text-xs font-medium text-slate-600">
                         {v.analista_responsavel || <span className="italic text-slate-400">—</span>}
                       </TableCell>
-                      <TableCell>
-                        <Select
-                          value={v.validado_por || ''}
-                          onValueChange={(val) => handleSetResponsavelPublicacao(v, val)}
-                        >
-                          <SelectTrigger className="h-8 text-xs w-[180px] bg-white">
-                            <SelectValue placeholder="Atribuir..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {analistasPublicacao.map((u: any) => (
-                              <SelectItem key={u.id} value={u.id} className="text-xs">
-                                {u.nome_completo}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
@@ -594,7 +541,7 @@ export default function FilaEditaisPage() {
                 })}
                 {pendingVagas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={12} className="px-6 py-20 text-center">
+                    <TableCell colSpan={11} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
                         <p className="text-slate-500 font-medium">Nenhuma pendência encontrada na fila de editais.</p>

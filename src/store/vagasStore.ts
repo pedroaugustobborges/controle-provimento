@@ -566,7 +566,21 @@ export const useVagasStore = create<VagasState>()(
                 set((s) => ({ bancos: s.bancos.filter((b) => b.id !== oldRow.id) }));
               }
             })
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'convocacoes' }, (payload) => {
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'INSERT') {
+                if (newRow.deleted_at) return;
+                set((s) => s.convocacoes.some(c => c.id === newRow.id) ? s : ({ convocacoes: [newRow as any, ...s.convocacoes] }));
+              } else if (eventType === 'UPDATE') {
+                if (newRow.deleted_at) {
+                  set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== newRow.id) }));
+                  return;
+                }
+                set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === newRow.id ? { ...c, ...newRow } as any : c) }));
+              } else if (eventType === 'DELETE') {
+                set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== oldRow.id) }));
+              }
+            })
               const newRow = payload.new;
               toast.info(newRow.titulo, { description: newRow.mensagem });
               set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));
@@ -607,7 +621,7 @@ export const useVagasStore = create<VagasState>()(
       name: 'hospital-recruitment-store',
       version: 5,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ editais: state.editais, validacoes: state.validacoes, convocacoes: state.convocacoes, bloqueios: state.bloqueios, tarefas: state.tarefas, alertas: state.alertas, historicoMensagens: state.historicoMensagens, temNovasMensagens: state.temNovasMensagens }),
+      partialize: (state) => ({ editais: state.editais, validacoes: state.validacoes, bloqueios: state.bloqueios, tarefas: state.tarefas, alertas: state.alertas, historicoMensagens: state.historicoMensagens, temNovasMensagens: state.temNovasMensagens }),
     }
   )
 );

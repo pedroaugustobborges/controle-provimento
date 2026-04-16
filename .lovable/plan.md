@@ -1,17 +1,12 @@
 
 
-## Plano: Corrigir view TEIAs — botão redundante e filtro incorreto
+## Plano: Ajustar filtros de unidades por contexto
 
 ### Alteração em `src/pages/VagasPage.tsx`
 
-**1. Remover botão TEIAs redundante na view TEIAs**
-- Revisar a lógica condicional dos botões de atalho quando `filtroEspecial === 'teias'`
-- Garantir que o botão TEIAs não aparece nessa view
+1. **Na visão padrão (Controle de Vagas):** Filtrar o dropdown de unidades para **excluir** unidades cujo nome contenha "TEIA"
+2. **Na visão TEIAs (`filtro=teias`):** Filtrar o dropdown de unidades para mostrar **apenas** unidades cujo nome contenha "TEIA"
+3. Identificar onde o array de unidades é gerado/filtrado para o componente de seleção e aplicar a lógica condicional baseada em `filtroEspecial`
 
-**2. Corrigir filtro de vagas TEIAs**
-- Revisar a lógica de filtragem `filtroEspecial === 'teias'` para garantir que filtra corretamente por unidades TEIA (TEIA APARECIDA, TEIA GOIÂNIA, TEIA CANEDO)
-- Verificar se está usando `is_teia` ou filtrando por nome da unidade — e se a lógica está correta
-- Corrigir possível duplicação de registros
-
-Preciso primeiro inspecionar o código atual do `VagasPage.tsx` para entender o estado atual da lógica.
+Preciso inspecionar o código atual para localizar exatamente onde o filtro de unidades é renderizado.
 

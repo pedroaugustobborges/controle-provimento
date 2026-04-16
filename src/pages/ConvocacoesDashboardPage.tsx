@@ -2,18 +2,19 @@ import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LabelList } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, LabelList } from 'recharts';
 
 const truncateLabel = (value: string, max = 22) =>
   value && value.length > max ? `${value.slice(0, max - 1)}…` : value;
-import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
 
 interface ConvocacaoData {
   status: string | null;
   unidade: string | null;
   cargo: string | null;
   unidade_convocacao: string | null;
+  data_convocacao: string | null;
 }
 
 const SOFT_COLORS = [
@@ -43,7 +44,7 @@ export default function ConvocacoesDashboardPage() {
     const fetchData = async () => {
       const { data: rows, error } = await supabase
         .from('banco_candidatos')
-        .select('status, unidade, cargo, unidade_convocacao')
+        .select('status, unidade, cargo, unidade_convocacao, data_convocacao')
         .not('status', 'is', null);
 
       if (!error && rows) {
@@ -86,24 +87,34 @@ export default function ConvocacoesDashboardPage() {
       .map(([name, value]) => ({ name, value }));
   }, [data]);
 
-  const statusDistribution = useMemo(() => {
-    const counts: Record<string, number> = {};
-    data.forEach(d => {
-      const s = (d.status || 'Não informado').toUpperCase().trim();
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([name, value], index) => ({ name, value, fill: SOFT_COLORS[index % SOFT_COLORS.length] }));
+  const historicoConvocacoes = useMemo(() => {
+    const byDate: Record<string, { total: number; unidades: Record<string, number> }> = {};
+    data
+      .filter(d => d.status?.toUpperCase() === 'CONVOCADO' && d.data_convocacao)
+      .forEach(d => {
+        const date = (d.data_convocacao || '').slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+        const unidade = (d.unidade_convocacao || d.unidade || 'Não informada').toUpperCase().trim();
+        if (!byDate[date]) byDate[date] = { total: 0, unidades: {} };
+        byDate[date].total += 1;
+        byDate[date].unidades[unidade] = (byDate[date].unidades[unidade] || 0) + 1;
+      });
+    return Object.entries(byDate)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, info]) => {
+        const [y, m, d] = date.split('-');
+        return {
+          date,
+          label: `${d}/${m}`,
+          total: info.total,
+          unidades: Object.entries(info.unidades).sort(([, a], [, b]) => b - a),
+        };
+      });
   }, [data]);
 
-  const dynamicPieConfig = useMemo<ChartConfig>(() => {
-    const config: ChartConfig = { value: { label: 'Quantidade' } };
-    statusDistribution.forEach((item, index) => {
-      config[item.name] = { label: item.name, color: SOFT_COLORS[index % SOFT_COLORS.length] };
-    });
-    return config;
-  }, [statusDistribution]);
+  const historicoChartConfig: ChartConfig = {
+    total: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
+  };
 
   if (loading) {
     return (
@@ -170,32 +181,28 @@ export default function ConvocacoesDashboardPage() {
         <Card className="lg:col-span-2 shadow-sm border-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-primary" />
-              Distribuição por Status
+              <TrendingUp className="h-4 w-4 text-primary" />
+              Histórico de Convocações
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={dynamicPieConfig} className="h-[320px] w-full">
-              <PieChart>
-                <Pie
-                  data={statusDistribution}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={110}
-                  innerRadius={50}
-                  dataKey="value"
-                  nameKey="name"
-                  strokeWidth={2}
-                  stroke="hsl(var(--background))"
-                >
-                  {statusDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-              </PieChart>
-            </ChartContainer>
+            {historicoConvocacoes.length === 0 ? (
+              <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground">
+                Sem convocações registradas ainda.
+              </div>
+            ) : (
+              <ChartContainer config={historicoChartConfig} className="h-[320px] w-full">
+                <LineChart data={historicoConvocacoes} margin={{ left: 8, right: 24, top: 16, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <ChartTooltip cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '3 3' }} content={<HistoricoTooltip />} />
+                  <Line type="monotone" dataKey="total" stroke="var(--color-total)" strokeWidth={2.5} dot={{ r: 4, fill: 'hsl(221, 50%, 62%)', strokeWidth: 0 }} activeDot={{ r: 6 }}>
+                    <LabelList dataKey="total" position="top" fontSize={11} fontWeight={600} className="fill-foreground" />
+                  </Line>
+                </LineChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -216,5 +223,26 @@ function MetricCard({ icon: Icon, label, value, color, bg }: { icon: any; label:
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function HistoricoTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0].payload as { label: string; total: number; unidades: [string, number][] };
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/95 backdrop-blur px-3 py-2 shadow-lg text-xs min-w-[200px]">
+      <div className="flex items-center justify-between gap-3 pb-1.5 mb-1.5 border-b border-border/40">
+        <span className="font-semibold">Dia {item.label}</span>
+        <span className="font-bold text-primary">{item.total} convocação{item.total !== 1 ? 'ões' : ''}</span>
+      </div>
+      <div className="space-y-0.5 max-h-[180px] overflow-y-auto">
+        {item.unidades.map(([unidade, qtd]) => (
+          <div key={unidade} className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground truncate">{unidade}</span>
+            <span className="font-medium tabular-nums">{qtd}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

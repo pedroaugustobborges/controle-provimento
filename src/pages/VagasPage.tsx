@@ -147,6 +147,7 @@ export default function VagasPage() {
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
   const [filterUnidade, setFilterUnidade] = useState('all');
+  const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
   const [filterMes, setFilterMes] = useState('all');
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
   const [filterTipo, setFilterTipo] = useState('all');
@@ -314,11 +315,16 @@ export default function VagasPage() {
       baseRecords = baseRecords.filter(v => 
         (v.is_pcd === true) || (v.cargo || '').toUpperCase().includes('PCD')
       );
+      // Filter by PCD region if selected
+      if (pcdRegiao && PCD_REGIOES[pcdRegiao]) {
+        const regionUnits = PCD_REGIOES[pcdRegiao].map(u => normalizeUnitName(u));
+        baseRecords = baseRecords.filter(v => regionUnits.includes(normalizeUnitName(v.unidade)));
+      }
     }
     
     // 3. Filtragem interna da tela
     return getValidVacancyBase(baseRecords, filterUnidade, filterMes);
-  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes, filtroEspecial]);
+  }, [vagas, selectedRegion, globalUnit, filterUnidade, filterMes, filtroEspecial, pcdRegiao]);
 
   const statusScopedBase = useMemo(() => {
     return canonicalBase.filter((vaga) => passesVacancyStatusTab(vaga.categoria_status || getCategoriaStatus(vaga), vacancyStatusTab));
@@ -552,6 +558,7 @@ export default function VagasPage() {
   const clearFilters = () => {
     setSearch('');
     setFilterUnidade('all');
+    setPcdRegiao(null);
     setFilterMes('all');
     setFilterStatuses([]);
     setFilterTipo('all');
@@ -562,6 +569,32 @@ export default function VagasPage() {
     setFilterComBanco(false);
     setFilterSemMovimentacao(false);
   };
+
+  const PCD_REGIOES: Record<string, string[]> = {
+    'Goiás e Vitória (ES)': [
+      'CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'POLICLÍNICA', 'JATAÍ',
+      'TEIA APARECIDA', 'TEIA GOIÂNIA', 'TEIA CANEDO',
+      'SÃO PEDRO', 'SUÁ'
+    ],
+    'Demais Unidades': [
+      'HRD', 'HMSA', 'CHS', 'HRC', 'HRCAC I', 'HRCAC II', 'DOURADOS',
+      'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3', 'TEIA CEN', 'TEIA PIN'
+    ],
+  };
+
+  const pcdUnidadesComVagas = useMemo(() => {
+    if (filtroEspecial !== 'pcd') return {};
+    const result: Record<string, string[]> = {};
+    for (const [regiao, units] of Object.entries(PCD_REGIOES)) {
+      const unitsWithVagas = units.filter(unit => 
+        canonicalBase.some(v => normalizeUnitName(v.unidade) === normalizeUnitName(unit))
+      );
+      if (unitsWithVagas.length > 0) {
+        result[regiao] = unitsWithVagas;
+      }
+    }
+    return result;
+  }, [filtroEspecial, canonicalBase]);
 
   const hasFilters = search || filterUnidade !== 'all' || filterMes !== 'all' || filterStatuses.length > 0 || filterTipo !== 'all' || filterAnalista !== 'all' || filterAssistente !== 'all' || filterLideranca !== 'all' || filterVagasNovas || filterComBanco || filterSemMovimentacao;
 
@@ -588,7 +621,7 @@ export default function VagasPage() {
       ) : (
         <>
            <PageHeader 
-            title={filtroEspecial === 'teia' ? 'Controle de Vagas — Unidades TEIAs' : filtroEspecial === 'pcd' ? 'Controle de Vagas — Vagas PCD' : 'Controle de Vagas'}
+            title={filtroEspecial === 'teia' ? 'Unidades TEIAs' : filtroEspecial === 'pcd' ? 'Vagas PCD' : 'Controle de Vagas'}
             helpContent={<HelpGuide />}
             actions={
               <>
@@ -768,13 +801,55 @@ export default function VagasPage() {
                 <Input placeholder="Buscar cargo, requisição ou unidade..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-white" />
               </div>
             </div>
-            <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-              <SelectTrigger className="w-[180px] bg-white"><SelectValue placeholder="Unidade" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas Unidades</SelectItem>
-                {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {filtroEspecial === 'pcd' ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-slate-400" />
+                  {Object.keys(PCD_REGIOES).map(regiao => (
+                    <Button
+                      key={regiao}
+                      variant={pcdRegiao === regiao ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 text-xs font-bold rounded-xl"
+                      onClick={() => {
+                        setPcdRegiao(pcdRegiao === regiao ? null : regiao);
+                        setFilterUnidade('all');
+                      }}
+                    >
+                      {regiao}
+                    </Button>
+                  ))}
+                  {pcdRegiao && (
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400" onClick={() => { setPcdRegiao(null); setFilterUnidade('all'); }}>
+                      <X className="h-3 w-3 mr-1" /> Limpar
+                    </Button>
+                  )}
+                </div>
+                {pcdRegiao && pcdUnidadesComVagas[pcdRegiao] && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {pcdUnidadesComVagas[pcdRegiao].map(unit => (
+                      <Button
+                        key={unit}
+                        variant={filterUnidade === unit ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 text-[11px] font-medium rounded-lg px-3"
+                        onClick={() => setFilterUnidade(filterUnidade === unit ? 'all' : unit)}
+                      >
+                        {unit}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+                <SelectTrigger className="w-[180px] bg-white"><SelectValue placeholder="Unidade" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas Unidades</SelectItem>
+                  {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={filterMes} onValueChange={setFilterMes}>
               <SelectTrigger className="w-[160px] bg-white text-xs">
                 <div className="flex items-center gap-2">

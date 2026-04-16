@@ -343,8 +343,9 @@ export const useVagasStore = create<VagasState>()(
 
           const recipientIds = new Set<string>((destinatarios || []).map((d: any) => d.id));
           // Also include the original requester (created_by) so they track progress
-          if (vaga.created_by && typeof vaga.created_by === 'string' && vaga.created_by.length === 36) {
-            recipientIds.add(vaga.created_by);
+          const createdBy = (vaga as any).created_by;
+          if (createdBy && typeof createdBy === 'string' && createdBy.length === 36) {
+            recipientIds.add(createdBy);
           }
           // Don't notify the actor themselves (they did the action)
           if (user?.id) recipientIds.delete(user.id);

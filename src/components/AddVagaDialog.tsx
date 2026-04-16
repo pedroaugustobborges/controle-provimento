@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { 
+import { Checkbox } from '@/components/ui/checkbox';
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,8 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
     numero_vagas: vaga?.numero_vagas || vaga?.quantidade || 1,
     secao: vaga?.secao || '',
     data_abertura: vaga?.data_abertura || new Date().toISOString().split('T')[0],
+    is_pcd: vaga?.is_pcd || false,
+    is_teia: vaga?.is_teia || (vaga?.unidade || '').toUpperCase().includes('TEIA'),
   });
 
   React.useEffect(() => {
@@ -44,6 +47,8 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
         numero_vagas: vaga.numero_vagas || vaga.quantidade || 1,
         secao: vaga.secao || '',
         data_abertura: vaga.data_abertura || new Date().toISOString().split('T')[0],
+        is_pcd: vaga.is_pcd || false,
+        is_teia: vaga.is_teia || (vaga.unidade || '').toUpperCase().includes('TEIA'),
       });
     } else {
       resetForm();
@@ -56,7 +61,13 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'unidade') {
+        updated.is_teia = value.toUpperCase().includes('TEIA');
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -116,6 +127,8 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
       numero_vagas: 1,
       secao: '',
       data_abertura: new Date().toISOString().split('T')[0],
+      is_pcd: false,
+      is_teia: false,
     });
   };
 
@@ -213,6 +226,25 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
             <div className="space-y-2">
               <Label htmlFor="data_abertura">Data de Abertura</Label>
               <Input id="data_abertura" name="data_abertura" type="date" value={formData.data_abertura} onChange={handleInputChange} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is_pcd" 
+                checked={formData.is_pcd} 
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_pcd: checked === true }))}
+              />
+              <Label htmlFor="is_pcd">Vaga PCD?</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is_teia" 
+                checked={formData.is_teia} 
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_teia: checked === true }))}
+              />
+              <Label htmlFor="is_teia">Vaga TEIA?</Label>
             </div>
           </div>
 

@@ -224,6 +224,8 @@ export interface Vaga {
   distribuicao_vagas?: Record<string, number>;
   unidade_trabalho?: string;
   unidades_banco_talentos?: string[];
+  is_pcd?: boolean;
+  is_teia?: boolean;
 }
 
 export const UNIDADES_GOIANIA = [

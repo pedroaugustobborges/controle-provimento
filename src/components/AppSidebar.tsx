@@ -94,6 +94,11 @@ export function AppSidebar() {
       url: '/vagas', 
       icon: Briefcase, 
       visible: getPermissions('vagas').canRead,
+      subMenu: [
+        { title: 'Todas as Vagas', url: '/vagas' },
+        { title: 'Unidades TEIAs', url: '/vagas?filtro=teia' },
+        { title: 'Vagas PCD', url: '/vagas?filtro=pcd' },
+      ]
     },
     { 
       title: 'Publicação de Edital', 

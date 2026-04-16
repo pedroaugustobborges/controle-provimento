@@ -392,9 +392,86 @@ export const useVagasStore = create<VagasState>()(
         return false;
       },
       deleteBanco: (id) => set((s) => ({ bancos: s.bancos.filter((b) => b.id !== id) })),
-      addConvocacao: (convocacao) => set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] })),
-      updateConvocacao: (id, data) => set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === id ? { ...c, ...data } : c) })),
-      deleteConvocacao: (id) => set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== id) })),
+      addConvocacao: async (convocacao) => {
+        // Optimistic update
+        set((s) => ({ convocacoes: [convocacao, ...s.convocacoes] }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { useAdminStore } = await import('./adminStore');
+          const { currentUser } = useAdminStore.getState();
+          const { id, vaga_id, banco_id, ...rest } = convocacao as any;
+          const payload: any = {
+            ...rest,
+            vaga_id: vaga_id && /^[0-9a-f-]{36}$/i.test(vaga_id) ? vaga_id : null,
+            banco_id: banco_id && /^[0-9a-f-]{36}$/i.test(banco_id) ? banco_id : null,
+            created_by: currentUser?.id || null,
+            updated_by: currentUser?.id || null,
+          };
+          // Drop undefined / non-DB fields
+          delete payload.requisicao;
+          delete payload.edital_relacionado;
+          const { data, error } = await supabase.from('convocacoes' as any).insert(payload).select().single();
+          if (error) {
+            console.error('addConvocacao persist error:', error);
+            toast.error('Falha ao salvar convocação no servidor. Verifique sua conexão.');
+            // Rollback optimistic
+            set((s) => ({ convocacoes: s.convocacoes.filter(c => c.id !== id) }));
+            return;
+          }
+          // Replace temp id with DB id
+          set((s) => ({ convocacoes: s.convocacoes.map(c => c.id === id ? { ...c, ...(data as any) } as Convocacao : c) }));
+        } catch (e) {
+          console.error('addConvocacao exception:', e);
+          toast.error('Erro ao salvar convocação.');
+        }
+      },
+      updateConvocacao: async (id, data) => {
+        set((s) => ({ convocacoes: s.convocacoes.map((c) => c.id === id ? { ...c, ...data } : c) }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { useAdminStore } = await import('./adminStore');
+          const { currentUser } = useAdminStore.getState();
+          const payload: any = { ...data, updated_by: currentUser?.id || null };
+          delete payload.id;
+          delete payload.requisicao;
+          delete payload.edital_relacionado;
+          delete payload.vaga_id;
+          delete payload.banco_id;
+          delete payload.created_at;
+          delete payload.created_by;
+          delete payload.version;
+          const { error } = await supabase.from('convocacoes' as any).update(payload).eq('id', id);
+          if (error) {
+            console.error('updateConvocacao error:', error);
+            toast.error('Falha ao atualizar convocação no servidor.');
+          }
+        } catch (e) {
+          console.error('updateConvocacao exception:', e);
+        }
+      },
+      deleteConvocacao: async (id) => {
+        set((s) => ({ convocacoes: s.convocacoes.filter((c) => c.id !== id) }));
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          // Soft delete
+          const { error } = await supabase.from('convocacoes' as any).update({ deleted_at: new Date().toISOString() }).eq('id', id);
+          if (error) console.error('deleteConvocacao error:', error);
+        } catch (e) {
+          console.error('deleteConvocacao exception:', e);
+        }
+      },
+      fetchConvocacoes: async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data, error } = await supabase.from('convocacoes' as any).select('*').is('deleted_at', null).order('data_convocacao', { ascending: false }).limit(2000);
+          if (error) { console.error('fetchConvocacoes error:', error); return; }
+          if (data && Array.isArray(data)) {
+            set({ convocacoes: data as any });
+          }
+        } catch (e) {
+          console.error('fetchConvocacoes exception:', e);
+        }
+      },
       updateEdital: (id, data) => set((s) => ({ editais: s.editais.map((e) => e.id === id ? { ...e, ...data } : e) })),
       updateValidacao: (id, data) => set((s) => ({ validacoes: s.validacoes.map((v) => v.id === id ? { ...v, ...data } : v) })),
       addEdital: (edital) => set((s) => ({ editais: [...s.editais, edital] })),

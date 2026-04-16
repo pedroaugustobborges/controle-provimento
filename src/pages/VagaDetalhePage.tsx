@@ -122,7 +122,7 @@ export default function VagaDetalhePage() {
     applyStatusChange(newStatus);
   };
 
-  const applyStatusChange = (newStatus: string, createBanco = false) => {
+  const applyStatusChange = async (newStatus: string, createBanco = false) => {
     const oldStatus = vaga.status || vaga.status_geral;
     const now = new Date().toISOString();
     const today = now.split('T')[0];

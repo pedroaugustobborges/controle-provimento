@@ -79,12 +79,14 @@ export function AddVagaDialog({ open, onOpenChange, vaga }: AddVagaDialogProps) 
     }
 
     if (vaga) {
-      updateVaga(vaga.id, {
+      const success = await updateVagaAsync(vaga.id, {
         ...formData,
         numero_requisicao: formData.requisicao,
       });
-      toast.success('Vaga atualizada com sucesso.');
-      onOpenChange(false);
+      if (success) {
+        toast.success('Vaga atualizada com sucesso.');
+        onOpenChange(false);
+      }
       return;
     }
 

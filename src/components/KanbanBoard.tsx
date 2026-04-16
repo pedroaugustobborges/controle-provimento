@@ -235,18 +235,25 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
     const conv = initialConvocacoes.find(c => c.id === activeId);
     if (!conv) return;
 
-    // Check if dropped over a column or an item in a column
-    let targetColId = overId;
-    const overItem = initialConvocacoes.find(c => c.id === overId);
-    if (overItem) {
+    // Check if dropped over a column directly or over a card in a column
+    const columnIds = columns.map(c => c.id);
+    let targetColId: string;
+    
+    if (columnIds.includes(overId)) {
+      // Dropped directly on a column
+      targetColId = overId;
+    } else {
+      // Dropped on a card — find which column that card belongs to
+      const overItem = initialConvocacoes.find(c => c.id === overId);
+      if (!overItem) return;
       targetColId = overItem.status;
-      // Normalizar status de recusa para a coluna 'recusa'
+      // Normalize recusa statuses to the 'recusa' column
       if (['recusa_plantao', 'recusa_unidade', 'recusa_horario'].includes(targetColId)) {
         targetColId = 'recusa';
       }
     }
 
-    // Se o status atual já é o de destino (considerando agrupamento de recusa), não faz nada
+    // If current status matches target (considering recusa grouping), do nothing
     const currentBaseStatus = ['recusa_plantao', 'recusa_unidade', 'recusa_horario'].includes(conv.status) ? 'recusa' : conv.status;
     
     if (currentBaseStatus !== targetColId) {

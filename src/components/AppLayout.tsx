@@ -70,7 +70,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const pathnames = location.pathname.split('/').filter((x) => x);
-  const { currentUser, fetchCurrentProfile } = useAdminStore();
+  const { currentUser, fetchCurrentProfile, subscribeRealtime: subscribeAdminRealtime, unsubscribeRealtime: unsubscribeAdminRealtime } = useAdminStore();
   const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -84,10 +84,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     fetchVagas();
     fetchBancos();
     subscribeRealtime();
+    subscribeAdminRealtime();
     return () => {
       unsubscribeRealtime();
+      unsubscribeAdminRealtime();
     };
-  }, [fetchCurrentProfile, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime]);
+  }, [fetchCurrentProfile, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime, subscribeAdminRealtime, unsubscribeAdminRealtime]);
 
   useEffect(() => {
     if (!currentUser) return;

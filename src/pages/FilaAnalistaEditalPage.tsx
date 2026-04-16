@@ -106,6 +106,17 @@ export default function FilaAnalistaEditalPage() {
 
   const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
 
+  // Analistas elegíveis para validação do edital
+  const analistasValidacao = useMemo(() => {
+    return (users || []).filter((u: any) => {
+      const perfil = (u.perfil || '').toLowerCase();
+      const status = (u.status || 'ativo').toLowerCase();
+      return status === 'ativo' && (
+        perfil.includes('analista') || perfil.includes('admin') || perfil.includes('gestor')
+      );
+    });
+  }, [users]);
+
   const handleOpenEditModal = (vaga: Vaga) => {
     setSelectedVaga(vaga);
     setObsEdital(vaga.observacoes_edital || '');
@@ -113,6 +124,22 @@ export default function FilaAnalistaEditalPage() {
     setNumeroProcesso(vaga.numero_processo || '');
     setNomeArquivo(vaga.arquivo_edital || '');
     setReachrUrl((vaga as any).url_reachr || '');
+
+    // Pré-preenche o responsável pela validação:
+    // 1) usa o já atribuído se existir
+    // 2) senão, sugere com base na região da unidade (Goiás+ES → Isaac, etc.)
+    if (vaga.validado_por) {
+      setResponsavelValidacao(vaga.validado_por);
+    } else {
+      const sugestao = sugerirResponsavelValidacao(vaga.unidade);
+      const match = sugestao?.nome
+        ? (users || []).find((u: any) =>
+            (u.nome_completo || '').toLowerCase().includes(sugestao.nome.toLowerCase())
+          )
+        : null;
+      setResponsavelValidacao(match?.id || '');
+    }
+
     setIsEditModalOpen(true);
   };
 

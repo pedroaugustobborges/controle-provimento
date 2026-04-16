@@ -839,11 +839,31 @@ export const useVagasStore = create<VagasState>()(
           toast.error('Erro inesperado ao enviar mensagem.');
         }
       },
-      marcarMensagemLida: (id) => set((s) => {
-        const newHistory = s.historicoMensagens.map((m) => m.id === id ? { ...m, lida: true } : m);
-        return { historicoMensagens: newHistory, temNovasMensagens: newHistory.some(m => !m.lida) };
-      }),
-      marcarTodasLidas: () => set((s) => ({ historicoMensagens: s.historicoMensagens.map((m) => ({ ...m, lida: true })), temNovasMensagens: false })),
+      marcarMensagemLida: async (id) => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+          
+          set((s) => {
+            const newHistory = s.historicoMensagens.map((m) => m.id === id ? { ...m, lida: true } : m);
+            return { historicoMensagens: newHistory, temNovasMensagens: newHistory.some(m => !m.lida) };
+          });
+        } catch (err) {
+          console.error('[marcarMensagemLida] error:', err);
+        }
+      },
+      marcarTodasLidas: async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('notificacoes').update({ lida: true }).eq('usuario_id', user.id);
+          }
+          set((s) => ({ historicoMensagens: s.historicoMensagens.map((m) => ({ ...m, lida: true })), temNovasMensagens: false }));
+        } catch (err) {
+          console.error('[marcarTodasLidas] error:', err);
+        }
+      },
       setTemNovasMensagens: (has) => set({ temNovasMensagens: has }),
       deleteImportBatch: async (batchId) => {
         const { DatabaseService } = await import('@/services/databaseService');

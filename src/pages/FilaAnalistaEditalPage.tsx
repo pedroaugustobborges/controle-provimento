@@ -829,176 +829,175 @@ export default function FilaAnalistaEditalPage() {
           
           <div className="space-y-6 py-4">
             {(isBatchMode ? selectedBatchVagas.length > 0 : selectedVaga) && (
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    {isBatchMode ? `Lote Agrupado (${selectedBatchVagas.length} Cargos)` : 'Informações Recebidas da Unidade'}
-                  </h4>
-                  {isBatchMode && <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">
-                    <Layers className="h-3 w-3 mr-1" /> Mesma Unidade
-                  </Badge>}
-                </div>
-                
-                {isBatchMode ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
-                      <p className="text-sm font-bold text-slate-700">{selectedBatchVagas[0].unidade}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargos no Lote</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedBatchVagas.map(v => (
-                          <Badge key={v.id} variant="outline" className="text-[10px] bg-white whitespace-nowrap">
-                            {v.cargo}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+              <>
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      {isBatchMode ? `Lote Agrupado (${selectedBatchVagas.length} Cargos)` : 'Informações Recebidas da Unidade'}
+                    </h4>
+                    {isBatchMode && <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">
+                      <Layers className="h-3 w-3 mr-1" /> Mesma Unidade
+                    </Badge>}
                   </div>
-                ) : (
-                  <>
+                  
+                  {isBatchMode ? (
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargo</p>
-                        <p className="text-sm font-bold text-slate-700">{selectedVaga?.cargo}</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
+                        <p className="text-sm font-bold text-slate-700">{selectedBatchVagas[0].unidade}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
-                        <p className="text-sm font-bold text-slate-700">{selectedVaga?.unidade}</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargos no Lote</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedBatchVagas.map(v => (
+                            <Badge key={v.id} variant="outline" className="text-[10px] bg-white whitespace-nowrap">
+                              {v.cargo}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-1 pt-2 border-t border-slate-200">
-                      <p className="text-[10px] text-slate-500 uppercase font-semibold flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" /> Observações da Unidade
-                      </p>
-                      <p className="text-sm text-slate-600 bg-white p-2 rounded border border-slate-100 italic">
-                        {selectedVaga?.observacoes_unidade || 'Nenhuma observação informada.'}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargo</p>
+                          <p className="text-sm font-bold text-slate-700">{selectedVaga?.cargo}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
+                          <p className="text-sm font-bold text-slate-700">{selectedVaga?.unidade}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1 pt-2 border-t border-slate-200">
+                        <p className="text-[10px] text-slate-500 uppercase font-semibold flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" /> Observações da Unidade
+                        </p>
+                        <p className="text-sm text-slate-600 bg-white p-2 rounded border border-slate-100 italic">
+                          {selectedVaga?.observacoes_unidade || 'Nenhuma observação informada.'}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
 
-
-
-              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="numEdital" className="text-sm font-semibold">Número do Edital</Label>
+                    <Input 
+                      id="numEdital" 
+                      placeholder="Ex: 001/2024" 
+                      value={numeroEdital}
+                      onChange={(e) => setNumeroEdital(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="numProcesso" className="text-sm font-semibold">Número do Processo</Label>
+                    <Input 
+                      id="numProcesso" 
+                      placeholder="Ex: 2024.0001" 
+                      value={numeroProcesso}
+                      onChange={(e) => setNumeroProcesso(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="numEdital" className="text-sm font-semibold">Número do Edital</Label>
+                  <Label htmlFor="reachr" className="text-sm font-semibold flex items-center gap-2">
+                    <Rocket className="h-4 w-4 text-blue-600" /> Link da Vaga no Reachr
+                  </Label>
                   <Input 
-                    id="numEdital" 
-                    placeholder="Ex: 001/2024" 
-                    value={numeroEdital}
-                    onChange={(e) => setNumeroEdital(e.target.value)}
+                    id="reachr" 
+                    placeholder="https://www.reachr.com.br/vaga/..." 
+                    value={reachrUrl}
+                    onChange={(e) => setReachrUrl(e.target.value)}
+                    className="bg-white border-slate-200"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="numProcesso" className="text-sm font-semibold">Número do Processo</Label>
-                  <Input 
-                    id="numProcesso" 
-                    placeholder="Ex: 2024.0001" 
-                    value={numeroProcesso}
-                    onChange={(e) => setNumeroProcesso(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="reachr" className="text-sm font-semibold flex items-center gap-2">
-                  <Rocket className="h-4 w-4 text-blue-600" /> Link da Vaga no Reachr
-                </Label>
-                <Input 
-                  id="reachr" 
-                  placeholder="https://www.reachr.com.br/vaga/..." 
-                  value={reachrUrl}
-                  onChange={(e) => setReachrUrl(e.target.value)}
-                  className="bg-white border-slate-200"
-                />
-                <p className="text-[10px] text-slate-400 font-medium italic">Opcional: Informe o link da vaga já publicada no portal Reachr.</p>
-              </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Edital (Arquivo Word)</Label>
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" className="w-full relative overflow-hidden h-20 border-dashed" asChild>
-                    <label className="cursor-pointer flex flex-col items-center justify-center gap-1">
-                      <Upload className="h-5 w-5 text-slate-400" />
-                      <span className="text-xs text-slate-500">Clique para carregar o arquivo .doc ou .docx</span>
-                      <input type="file" className="hidden" accept=".doc,.docx" onChange={handleFileChange} />
-                    </label>
-                  </Button>
-                </div>
-                {nomeArquivo && (
-                  <div className="flex items-center gap-2 p-2 bg-blue-50 text-blue-700 rounded-md border border-blue-100 text-sm">
-                    <FileDown className="h-4 w-4" />
-                    <span className="font-medium truncate flex-1">{nomeArquivo}</span>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-blue-700 hover:text-blue-800" onClick={() => setNomeArquivo('')}>
-                      <X className="h-3 w-3" />
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Edital (Arquivo Word)</Label>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" className="w-full relative overflow-hidden h-20 border-dashed" asChild>
+                      <label className="cursor-pointer flex flex-col items-center justify-center gap-1">
+                        <Upload className="h-5 w-5 text-slate-400" />
+                        <span className="text-xs text-slate-500">Clique para carregar o arquivo .doc ou .docx</span>
+                        <input type="file" className="hidden" accept=".doc,.docx" onChange={handleFileChange} />
+                      </label>
                     </Button>
                   </div>
-                )}
-              </div>
+                  {nomeArquivo && (
+                    <div className="flex items-center gap-2 p-2 bg-blue-50 text-blue-700 rounded-md border border-blue-100 text-sm">
+                      <FileDown className="h-4 w-4" />
+                      <span className="font-medium truncate flex-1">{nomeArquivo}</span>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-blue-700 hover:text-blue-800" onClick={() => setNomeArquivo('')}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
 
-              {isBatchMode ? (
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 mb-4">
+                {isBatchMode ? (
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 mb-4">
+                      {selectedBatchVagas.map(v => (
+                        <TabsTrigger key={v.id} value={v.id} className="text-[10px] truncate uppercase">
+                          {v.cargo}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
                     {selectedBatchVagas.map(v => (
-                      <TabsTrigger key={v.id} value={v.id} className="text-[10px] truncate uppercase">
-                        {v.cargo}
-                      </TabsTrigger>
+                      <TabsContent key={v.id} value={v.id} className="space-y-4">
+                        {renderCronogramaFields(v.id)}
+                      </TabsContent>
                     ))}
-                  </TabsList>
-                  {selectedBatchVagas.map(v => (
-                    <TabsContent key={v.id} value={v.id} className="space-y-4">
-                      {renderCronogramaFields(v.id)}
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              ) : (
-                renderCronogramaFields()
-              )}
+                  </Tabs>
+                ) : (
+                  renderCronogramaFields()
+                )}
 
+                <div className="space-y-2 p-3 rounded-md border border-blue-100 bg-blue-50/40">
+                  <Label htmlFor="respValidacao" className="text-sm font-semibold flex items-center gap-2">
+                    <CheckSquare className="h-4 w-4 text-blue-600" />
+                    Responsável pela Validação
+                  </Label>
+                  <Select value={responsavelValidacao} onValueChange={setResponsavelValidacao}>
+                    <SelectTrigger id="respValidacao" className="bg-white">
+                      <SelectValue placeholder="Selecione o analista validador..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {analistasValidacao.map((u: any) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.nome_completo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedVaga && (() => {
+                    const sugestao = sugerirResponsavelValidacao(selectedVaga.unidade);
+                    if (!sugestao?.nome) return null;
+                    return (
+                      <p className="text-[11px] text-blue-700 italic">
+                        Sugestão automática para {selectedVaga.unidade}: <strong>{sugestao.nome}</strong>
+                      </p>
+                    );
+                  })()}
+                </div>
 
-              <div className="space-y-2 p-3 rounded-md border border-blue-100 bg-blue-50/40">
-                <Label htmlFor="respValidacao" className="text-sm font-semibold flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4 text-blue-600" />
-                  Responsável pela Validação
-                </Label>
-                <Select value={responsavelValidacao} onValueChange={setResponsavelValidacao}>
-                  <SelectTrigger id="respValidacao" className="bg-white">
-                    <SelectValue placeholder="Selecione o analista validador..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {analistasValidacao.map((u: any) => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {u.nome_completo}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedVaga && (() => {
-                  const sugestao = sugerirResponsavelValidacao(selectedVaga.unidade);
-                  if (!sugestao?.nome) return null;
-                  return (
-                    <p className="text-[11px] text-blue-700 italic">
-                      Sugestão automática para {selectedVaga.unidade}: <strong>{sugestao.nome}</strong>
-                    </p>
-                  );
-                })()}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="obsAnalista" className="text-sm font-semibold">Observações do Analista do Edital</Label>
-                <Textarea 
-                  id="obsAnalista" 
-                  placeholder="Informações adicionais sobre o preparo do edital..."
-                  className="min-h-[80px] resize-none"
-                  value={obsEdital}
-                  onChange={(e) => setObsEdital(e.target.value)}
-                />
-              </div>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="obsAnalista" className="text-sm font-semibold">Observações do Analista do Edital</Label>
+                  <Textarea 
+                    id="obsAnalista" 
+                    placeholder="Informações adicionais sobre o preparo do edital..."
+                    className="min-h-[80px] resize-none"
+                    value={obsEdital}
+                    onChange={(e) => setObsEdital(e.target.value)}
+                  />
+                </div>
+              </>
             )}
+          </div>
+
           </div>
 
 

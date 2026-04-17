@@ -274,6 +274,7 @@ export default function FilaEditaisPage() {
     Promise.all(vagasParaAtualizar.map(vaga =>
       updateVagaAsync(vaga.id, {
         status: 'ACOMPANHAMENTO DE EDITAL',
+        status_origem: vaga.status_origem || vaga.status,
         status_fluxo_edital: 'encaminhado_edital',
         etapa: 'encaminhado_edital',
         cargo_validado: true,

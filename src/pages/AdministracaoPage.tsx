@@ -1909,6 +1909,80 @@ export default function AdministracaoPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* DIALOG: GERENCIAR FERIADO */}
+      <Dialog open={isHolidayDialogOpen} onOpenChange={setIsHolidayDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              {editingHoliday ? 'Editar Feriado' : 'Novo Feriado Local'}
+            </DialogTitle>
+            <DialogDescription>
+              Cadastre a data e localização para bloqueio no cronograma.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">Nome do Feriado</Label>
+              <Input 
+                placeholder="Ex: Aniversário de Goiânia" 
+                value={holidayForm.nome} 
+                onChange={(e) => setHolidayForm({...holidayForm, nome: e.target.value})} 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Data</Label>
+                <Input 
+                  type="date" 
+                  value={holidayForm.data} 
+                  onChange={(e) => setHolidayForm({...holidayForm, data: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Tipo</Label>
+                <Select value={holidayForm.tipo} onValueChange={(v: any) => setHolidayForm({...holidayForm, tipo: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="municipal">Municipal</SelectItem>
+                    <SelectItem value="estadual">Estadual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Estado</Label>
+                <Select value={holidayForm.estado} onValueChange={(v) => setHolidayForm({...holidayForm, estado: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GO">Goiás (GO)</SelectItem>
+                    <SelectItem value="ES">Espírito Santo (ES)</SelectItem>
+                    <SelectItem value="AM">Amazonas (AM)</SelectItem>
+                    <SelectItem value="MS">Mato Grosso do Sul (MS)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {holidayForm.tipo === 'municipal' && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Cidade</Label>
+                  <Input 
+                    placeholder="Ex: Goiânia" 
+                    value={holidayForm.cidade} 
+                    onChange={(e) => setHolidayForm({...holidayForm, cidade: e.target.value})} 
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHolidayDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveHoliday} disabled={saving} className="bg-primary">
+              {saving ? 'Salvando...' : 'Salvar Feriado'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -176,9 +176,18 @@ export default function FilaAnalistaEditalPage() {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
         if (!userUnidades.includes(vUnitNormalized)) return false;
       }
-      // 'encaminhado_edital' belongs to Fila de Editais, not to Redação.
-      // Redação only lists vagas em rascunho/validação/publicação.
-      const showInThisFlow = ['em_redacao', 'enviado_validacao', 'aprovado_administrativo', 'publicado'].includes(v.status_fluxo_edital || '');
+      // 'encaminhado_edital' belongs exclusively to Fila de Editais. All other
+      // vagas com sinal de redação (status_fluxo_edital ativo, etapa em_redacao
+      // ou edital_id presente) devem aparecer aqui — inclusive registros legados
+      // sem status_fluxo_edital preenchido.
+      const ACTIVE_REDACAO_STATUSES = ['em_redacao', 'enviado_validacao', 'aprovado_administrativo', 'publicado'];
+      const status = v.status_fluxo_edital || '';
+      if (status === 'encaminhado_edital') return false;
+      const vAny = v as any;
+      const showInThisFlow =
+        ACTIVE_REDACAO_STATUSES.includes(status) ||
+        vAny.etapa === 'em_redacao' ||
+        !!vAny.edital_id;
       if (!showInThisFlow) return false;
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || v.cargo.toLowerCase().includes(searchTerm) || (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);

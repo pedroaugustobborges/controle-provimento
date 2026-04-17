@@ -287,6 +287,10 @@ export default function FilaAnalistaEditalPage() {
       data_entrevistas: vaga.cronograma?.data_entrevistas || '',
       data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
     });
+    setEntrevistaConfig(deriveEntrevistaConfig(
+      vaga.cronograma?.data_entrevistas,
+      (vaga.cronograma as any)?.entrevista_config
+    ));
     setUnidadeTrabalho(vaga.unidade_trabalho || vaga.unidade || '');
     setDistribuicaoVagas(vaga.distribuicao_vagas || {});
     setUnidadesBanco(vaga.unidades_banco_talentos || []);

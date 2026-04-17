@@ -803,12 +803,20 @@ export const useVagasStore = create<VagasState>()(
           const { supabase } = await import('@/integrations/supabase/client');
           const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
           if (authErr || !authUser) {
+            console.error('[AGIE addMensagem] ❌ Sem sessão autenticada', authErr);
             toast.error('Sessão expirada. Faça login novamente para enviar mensagens.');
             return;
           }
           const destinatarioId = mensagem.destinatario_id || mensagem.usuario_id || null;
           const conteudo = mensagem.conteudo || mensagem.mensagem || '';
+          console.log('[AGIE addMensagem] 📤 Enviando mensagem', {
+            de: authUser.id,
+            para: destinatarioId,
+            destinatario_nome: mensagem.destinatario_nome,
+            conteudo: conteudo.slice(0, 60),
+          });
           if (!destinatarioId) {
+            console.error('[AGIE addMensagem] ❌ destinatario_id ausente', mensagem);
             toast.error('Destinatário não encontrado. Não foi possível enviar a mensagem.');
             return;
           }
@@ -828,22 +836,31 @@ export const useVagasStore = create<VagasState>()(
           };
           set((s) => ({ historicoMensagens: [optimistic, ...s.historicoMensagens] }));
 
-          const { error } = await supabase.from('notificacoes').insert({
+          const { data: inserted, error } = await supabase.from('notificacoes').insert({
             usuario_id: destinatarioId,
             titulo: mensagem.titulo || `Mensagem de ${mensagem.remetente_nome || 'colega'}`,
             mensagem: conteudo,
             tipo: 'mensagem',
             remetente_id: authUser.id,
             remetente_nome: mensagem.remetente_nome || mensagem.remetente || null,
-          });
+          }).select().single();
           if (error) {
-            console.error('[addMensagem] insert error:', error);
+            console.error('[AGIE addMensagem] ❌ INSERT falhou:', error);
             toast.error('Falha ao enviar mensagem: ' + error.message);
             // rollback optimistic
             set((s) => ({ historicoMensagens: s.historicoMensagens.filter(m => m.id !== optimistic.id) }));
+            return;
+          }
+          console.log('[AGIE addMensagem] ✅ Mensagem persistida', { id: inserted?.id, para: destinatarioId });
+          toast.success('Mensagem enviada!');
+          // Replace optimistic ID with real DB id to dedupe with Realtime echo
+          if (inserted?.id) {
+            set((s) => ({
+              historicoMensagens: s.historicoMensagens.map(m => m.id === optimistic.id ? { ...m, id: inserted.id } : m)
+            }));
           }
         } catch (e: any) {
-          console.error('[addMensagem] exception:', e);
+          console.error('[AGIE addMensagem] ❌ Exceção:', e);
           toast.error('Erro inesperado ao enviar mensagem.');
         }
       },
@@ -986,10 +1003,22 @@ export const useVagasStore = create<VagasState>()(
               const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
               const myId = user?.id;
               
-              console.log('[Realtime] New Notification:', newRow.titulo, 'tipo=', newRow.tipo);
+              console.log('[AGIE Realtime] 📨 Nova notificação recebida', {
+                id: newRow.id,
+                tipo: newRow.tipo,
+                titulo: newRow.titulo,
+                de: newRow.remetente_id,
+                para: newRow.usuario_id,
+                meuId: myId,
+                ehParaMim: newRow.usuario_id === myId,
+                fuiEuQueEnviei: newRow.remetente_id === myId,
+              });
               
               // Only show if it's for me OR I sent it (to keep history updated)
-              if (newRow.usuario_id !== myId && newRow.remetente_id !== myId && newRow.usuario_id !== null) return;
+              if (newRow.usuario_id !== myId && newRow.remetente_id !== myId && newRow.usuario_id !== null) {
+                console.log('[AGIE Realtime] ⏭️ Ignorando — não é para mim');
+                return;
+              }
 
               set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));
 

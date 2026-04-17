@@ -25,8 +25,18 @@ export interface ParsedCronograma {
   etapas: ParsedEtapa[];
 }
 
+/** Normaliza espaços não-quebráveis, hífens tipográficos, espaços múltiplos. */
+const normalizeText = (s: string) =>
+  (s || '')
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 const stripAccents = (s: string) =>
-  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  normalizeText(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 /** Mapa de palavras-chave → chave do cronograma do sistema.
  *  ATENÇÃO: ordem importa apenas no desempate por tamanho do match (mais longo vence).
@@ -169,10 +179,13 @@ function detectTipo(text: string, datas: string[]): EntrevistaTipo {
 
 /** Indica se um texto identifica um anexo de cronograma de cargo. */
 function parseAnexoCronogramaTitle(text: string): { anexo: string; cargo: string } | null {
-  const clean = text.replace(/\s+/g, ' ').trim();
+  const clean = normalizeText(text);
   const norm = stripAccents(clean);
-  // Procura o trecho "cronograma de selecao para o cargo de"
-  if (!norm.includes('cronograma de selecao para o cargo')) return null;
+  // Aceita variações: "cronograma de selecao para o cargo", "cronograma para o cargo",
+  // "cronograma do processo seletivo ... cargo", "cronograma ... cargo de"
+  const hasCronograma = /cronograma/.test(norm);
+  const hasCargo = /\bcargo\b/.test(norm);
+  if (!hasCronograma || !hasCargo) return null;
 
   // Captura "Anexo XXX" no início, se houver
   let anexo = '';

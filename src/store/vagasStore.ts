@@ -136,8 +136,8 @@ interface VagasState {
   lastUpdated?: number;
 
   setVagas: (vagas: Vaga[]) => void;
-  fetchVagas: (incremental?: boolean) => Promise<void>;
-  fetchBancos: (incremental?: boolean) => Promise<void>;
+  fetchVagas: (incremental?: boolean | { force?: boolean }) => Promise<void>;
+  fetchBancos: (incremental?: boolean | { force?: boolean }) => Promise<void>;
   fetchAll: () => Promise<void>;
   fetchImportHistory: () => Promise<void>;
   fetchNotificacoes: () => Promise<void>;

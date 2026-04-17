@@ -25,8 +25,18 @@ export interface ParsedCronograma {
   etapas: ParsedEtapa[];
 }
 
+/** Normaliza espaços não-quebráveis, hífens tipográficos, espaços múltiplos. */
+const normalizeText = (s: string) =>
+  (s || '')
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 const stripAccents = (s: string) =>
-  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  normalizeText(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
 /** Mapa de palavras-chave → chave do cronograma do sistema.
  *  ATENÇÃO: ordem importa apenas no desempate por tamanho do match (mais longo vence).
@@ -169,10 +179,13 @@ function detectTipo(text: string, datas: string[]): EntrevistaTipo {
 
 /** Indica se um texto identifica um anexo de cronograma de cargo. */
 function parseAnexoCronogramaTitle(text: string): { anexo: string; cargo: string } | null {
-  const clean = text.replace(/\s+/g, ' ').trim();
+  const clean = normalizeText(text);
   const norm = stripAccents(clean);
-  // Procura o trecho "cronograma de selecao para o cargo de"
-  if (!norm.includes('cronograma de selecao para o cargo')) return null;
+  // Aceita variações: "cronograma de selecao para o cargo", "cronograma para o cargo",
+  // "cronograma do processo seletivo ... cargo", "cronograma ... cargo de"
+  const hasCronograma = /cronograma/.test(norm);
+  const hasCargo = /\bcargo\b/.test(norm);
+  if (!hasCronograma || !hasCargo) return null;
 
   // Captura "Anexo XXX" no início, se houver
   let anexo = '';
@@ -219,46 +232,81 @@ export interface CronogramaParseResult {
   cronogramas: ParsedCronograma[];
 }
 
-/** Extrai etapas de uma <table>. Trata "Inscrição" (período) abrindo em início+fim. */
-function extractEtapasFromTable(table: HTMLTableElement): ParsedEtapa[] {
-  const rows = Array.from(table.querySelectorAll('tr'));
-  if (rows.length < 2) return [];
+/** Diagnóstico: motivo de rejeição de uma tabela */
+export interface TableRejection {
+  index: number;
+  motivo: string;
+  headers: string[];
+  primeiraLinha?: string[];
+}
 
-  const headerCells = Array.from(rows[0].querySelectorAll('th, td'))
-    .map((c) => stripAccents(c.textContent || ''));
-  let etapaCol = headerCells.findIndex((h) => h.includes('etapa'));
-  let dataCol = headerCells.findIndex((h) => h.includes('data'));
+const isEtapaHeader = (h: string) =>
+  /\b(etapa|etapas|fase|fases|atividade|atividades|evento|eventos)\b/.test(h);
+const isDataHeader = (h: string) =>
+  /\b(data|datas|periodo|prazo|prazos|cronograma)\b/.test(h);
+
+/** Extrai etapas de uma <table>. Trata "Inscrição" (período) abrindo em início+fim. */
+function extractEtapasFromTable(
+  table: HTMLTableElement,
+  rejections?: TableRejection[],
+  tableIndex = 0,
+): ParsedEtapa[] {
+  const rows = Array.from(table.querySelectorAll(':scope > tbody > tr, :scope > tr'));
+  // fallback: se não achou rows diretas, pega todas (caso mammoth não gere tbody)
+  const allRows = rows.length > 0 ? rows : Array.from(table.querySelectorAll('tr'));
+  if (allRows.length < 2) {
+    rejections?.push({ index: tableIndex, motivo: 'menos de 2 linhas', headers: [] });
+    return [];
+  }
+
+  const readHeaders = (rowIdx: number) =>
+    Array.from(allRows[rowIdx].querySelectorAll(':scope > th, :scope > td'))
+      .map((c) => stripAccents(c.textContent || ''));
+
+  let headerCells = readHeaders(0);
+  let etapaCol = headerCells.findIndex(isEtapaHeader);
+  let dataCol = headerCells.findIndex(isDataHeader);
   let startRow = 1;
 
+  // Tenta as próximas 2 linhas como cabeçalho (alguns docs têm título mesclado na 1ª)
   if (etapaCol === -1 || dataCol === -1) {
-    // tenta segunda linha como cabeçalho
-    if (rows.length >= 2) {
-      const h2 = Array.from(rows[1].querySelectorAll('th, td')).map((c) => stripAccents(c.textContent || ''));
-      const e2 = h2.findIndex((h) => h.includes('etapa'));
-      const d2 = h2.findIndex((h) => h.includes('data'));
-      if (e2 !== -1 && d2 !== -1) {
-        etapaCol = e2;
-        dataCol = d2;
-        startRow = 2;
+    for (let tryRow = 1; tryRow < Math.min(3, allRows.length); tryRow++) {
+      const h = readHeaders(tryRow);
+      const e = h.findIndex(isEtapaHeader);
+      const d = h.findIndex(isDataHeader);
+      if (e !== -1 && d !== -1) {
+        etapaCol = e;
+        dataCol = d;
+        startRow = tryRow + 1;
+        headerCells = h;
+        break;
       }
     }
   }
 
-  if (etapaCol === -1 || dataCol === -1) return [];
+  if (etapaCol === -1 || dataCol === -1) {
+    rejections?.push({
+      index: tableIndex,
+      motivo: 'cabeçalho ETAPA/DATA não encontrado',
+      headers: headerCells,
+      primeiraLinha: allRows[1] ? readHeaders(1) : undefined,
+    });
+    return [];
+  }
 
   const etapas: ParsedEtapa[] = [];
-  for (let i = startRow; i < rows.length; i++) {
-    const cells = Array.from(rows[i].querySelectorAll('th, td'));
-    if (cells.length <= Math.max(etapaCol, dataCol)) continue;
-    const etapaText = (cells[etapaCol].textContent || '').trim();
-    const dataText = (cells[dataCol].textContent || '').trim();
+  for (let i = startRow; i < allRows.length; i++) {
+    const cells = Array.from(allRows[i].querySelectorAll(':scope > th, :scope > td'));
+    const cellsToUse = cells.length > 0 ? cells : Array.from(allRows[i].querySelectorAll('th, td'));
+    if (cellsToUse.length <= Math.max(etapaCol, dataCol)) continue;
+    const etapaText = normalizeText(cellsToUse[etapaCol].textContent || '');
+    const dataText = normalizeText(cellsToUse[dataCol].textContent || '');
     if (!etapaText && !dataText) continue;
 
     const datas = extractDates(dataText);
     const tipo = detectTipo(dataText, datas);
     const match = matchEtapa(etapaText);
 
-    // Caso especial: linha "Inscrição/Inscrições" com período → expande para início+fim
     if (match && match.key === 'inscricao_periodo') {
       if (datas.length >= 2) {
         etapas.push({
@@ -299,6 +347,14 @@ function extractEtapasFromTable(table: HTMLTableElement): ParsedEtapa[] {
       tipo,
       datas,
       textoOriginal: dataText,
+    });
+  }
+
+  if (etapas.length === 0) {
+    rejections?.push({
+      index: tableIndex,
+      motivo: 'cabeçalho ok mas nenhuma linha com dados úteis',
+      headers: headerCells,
     });
   }
 
@@ -388,13 +444,14 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
   }
 
   // 5. Extração de cronogramas
+  const rejections: TableRejection[] = [];
   try {
     type TitleHit = { idx: number; anexo: string; cargo: string };
     const titles: TitleHit[] = [];
     for (let i = 0; i < allNodes.length; i++) {
       const node = allNodes[i];
       if (node.closest('table')) continue;
-      const txt = (node.textContent || '').replace(/\s+/g, ' ').trim();
+      const txt = normalizeText(node.textContent || '');
       if (!txt) continue;
       const parsed = parseAnexoCronogramaTitle(txt);
       if (parsed) {
@@ -415,42 +472,41 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
           return pos > start && pos < end;
         });
         if (!table) continue;
-        const etapas = extractEtapasFromTable(table);
+        const tIdx = tables.indexOf(table);
+        const etapas = extractEtapasFromTable(table, rejections, tIdx);
         if (etapas.length > 0) {
           cronogramas.push({ anexo: titles[t].anexo, cargo: titles[t].cargo, etapas });
         }
       }
     }
 
+    // Fallback: tentar QUALQUER tabela com cabeçalho ETAPA+DATA, mesmo sem título identificado
     if (cronogramas.length === 0) {
-      let anexoIdx = -1;
-      for (let i = 0; i < allNodes.length; i++) {
-        const txt = stripAccents(allNodes[i].textContent || '');
-        if (/^anexo\b/.test(txt) || txt.startsWith('anexo ')) {
-          anexoIdx = i;
-          break;
-        }
-      }
-      for (const table of tables) {
-        const pos = allNodes.indexOf(table);
-        if (anexoIdx !== -1 && pos < anexoIdx) continue;
-        const headers = Array.from(table.querySelectorAll('tr')[0]?.querySelectorAll('th, td') || [])
-          .map((c) => stripAccents(c.textContent || ''));
-        if (headers.some((h) => h.includes('etapa')) && headers.some((h) => h.includes('data'))) {
-          const etapas = extractEtapasFromTable(table);
-          if (etapas.length > 0) {
-            cronogramas.push({ anexo: 'Cronograma', cargo: '(cargo não identificado)', etapas });
-          }
+      for (let i = 0; i < tables.length; i++) {
+        const table = tables[i];
+        const etapas = extractEtapasFromTable(table, rejections, i);
+        if (etapas.length > 0) {
+          cronogramas.push({
+            anexo: 'Cronograma',
+            cargo: '(cargo não identificado)',
+            etapas,
+          });
         }
       }
     }
 
     if (cronogramas.length === 0) {
-      const tablesInfo = `Tabelas encontradas: ${tables.length}.`;
+      const motivos = rejections
+        .slice(0, 8)
+        .map((r) => `#${r.index + 1}: ${r.motivo} [headers: ${r.headers.join(' | ') || '∅'}]`)
+        .join('\n');
+      const tablesInfo = `Tabelas encontradas: ${tables.length}. Rejeições:\n${motivos || '(nenhuma diagnosticada)'}`;
+      // eslint-disable-next-line no-console
+      console.warn('[cronograma-parser] tabelas rejeitadas:', rejections);
       return fail(
         'extracao_cronograma',
         'Nenhum cronograma reconhecido no arquivo.',
-        'Confirme que o Word contém um trecho como "Anexo … Cronograma de Seleção para o Cargo de: …" seguido de uma tabela com colunas "ETAPA" e "DATA". Você também pode anexar este .docx aqui na conversa para diagnóstico.',
+        'O sistema agora aceita variações como "ETAPAS"/"FASE"/"ATIVIDADE" e "DATA"/"DATAS"/"PERÍODO"/"PRAZO". Verifique se a tabela do cronograma tem cabeçalho com essas palavras. Você também pode anexar este .docx aqui na conversa para diagnóstico.',
         tablesInfo,
       );
     }

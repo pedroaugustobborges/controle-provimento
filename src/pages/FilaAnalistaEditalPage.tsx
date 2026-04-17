@@ -47,6 +47,10 @@ export default function FilaAnalistaEditalPage() {
   // Modal de Redação/Envio para Validação
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+  const [selectedBatchVagas, setSelectedBatchVagas] = useState<Vaga[]>([]);
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('');
+  
   const [obsEdital, setObsEdital] = useState('');
   const [nomeArquivo, setNomeArquivo] = useState('');
   const [numeroEdital, setNumeroEdital] = useState('');
@@ -54,7 +58,11 @@ export default function FilaAnalistaEditalPage() {
   const [reachrUrl, setReachrUrl] = useState('');
   const [responsavelValidacao, setResponsavelValidacao] = useState<string>('');
 
-  // Cronograma (moved to be accessible in both modals)
+  // Cronogramas por vaga (ID -> cronograma)
+  const [batchCronogramas, setBatchCronogramas] = useState<Record<string, any>>({});
+  const [batchEntrevistaConfigs, setBatchEntrevistaConfigs] = useState<Record<string, EntrevistaConfig>>({});
+
+  // Cronograma single mode (fallback)
   const [cronograma, setCronograma] = useState<any>({
     data_publicacao_edital: '',
     data_inicio_inscricao: '',
@@ -69,8 +77,63 @@ export default function FilaAnalistaEditalPage() {
     data_resultado_final_seletivo: ''
   });
 
-  // Configuração estruturada da etapa Entrevistas (1 data | 2 datas | período)
+  // Configuração estruturada da etapa Entrevistas
   const [entrevistaConfig, setEntrevistaConfig] = useState<EntrevistaConfig>({ tipo: 'unica', datas: [''] });
+
+  // Detectar lote agrupado vindo do sessionStorage
+  useEffect(() => {
+    const batchData = sessionStorage.getItem('grouped_vagas');
+    if (batchData) {
+      try {
+        const { vagaIds } = JSON.parse(batchData);
+        const batchVagas = vagas.filter(v => vagaIds.includes(v.id));
+        
+        if (batchVagas.length > 0) {
+          setIsBatchMode(true);
+          setSelectedBatchVagas(batchVagas);
+          setActiveTab(batchVagas[0].id);
+          
+          // Inicializar campos comuns
+          setNumeroEdital(batchVagas[0].numero_edital || '');
+          setNumeroProcesso(batchVagas[0].numero_processo || '');
+          setObsEdital(batchVagas[0].observacoes_edital || '');
+          
+          // Inicializar cronogramas
+          const cronos: Record<string, any> = {};
+          const configs: Record<string, EntrevistaConfig> = {};
+          
+          batchVagas.forEach(v => {
+            cronos[v.id] = {
+              data_publicacao_edital: v.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+              data_inicio_inscricao: v.cronograma?.data_inicio_inscricao || '',
+              data_fim_inscricao: v.cronograma?.data_fim_inscricao || '',
+              data_triagem: v.cronograma?.data_triagem || '',
+              data_avaliacao_especifica_online: v.cronograma?.data_avaliacao_especifica_online || '',
+              data_resultado_preliminar_avaliacao_especifica: v.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+              data_recurso_avaliacao_especifica: v.cronograma?.data_recurso_avaliacao_especifica || '',
+              data_resultado_recurso_avaliacao_especifica: v.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+              data_resultado_final_avaliacao_especifica: v.cronograma?.data_resultado_final_avaliacao_especifica || '',
+              data_entrevistas: v.cronograma?.data_entrevistas || '',
+              data_resultado_final_seletivo: v.cronograma?.data_resultado_final_seletivo || ''
+            };
+            configs[v.id] = deriveEntrevistaConfig(
+              v.cronograma?.data_entrevistas,
+              (v.cronograma as any)?.entrevista_config
+            );
+          });
+          
+          setBatchCronogramas(cronos);
+          setBatchEntrevistaConfigs(configs);
+          setIsEditModalOpen(true);
+          
+          // Limpar após consumir
+          sessionStorage.removeItem('grouped_vagas');
+        }
+      } catch (e) {
+        console.error('Erro ao processar lote de vagas:', e);
+      }
+    }
+  }, [vagas]);
 
   // Importação automática do cronograma a partir de .docx
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -89,35 +152,7 @@ export default function FilaAnalistaEditalPage() {
   const [isTalentBank, setIsTalentBank] = useState(false);
 
   const editalVagas = useMemo(() => {
-    return vagas.filter(v => {
-      const vUnitNormalized = normalizeUnitName(v.unidade);
-      
-      // Unit access restriction
-      if (!currentUser?.visualiza_todas_unidades) {
-        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-        if (!userUnidades.includes(vUnitNormalized)) {
-          return false;
-        }
-      }
-
-      // Regra: Mostrar vagas em redação, enviadas para validação ou aprovadas
-      const showInThisFlow = [
-        'encaminhado_edital', 
-        'em_redacao', 
-        'enviado_validacao', 
-        'aprovado_administrativo',
-        'publicado'
-      ].includes(v.status_fluxo_edital || '');
-      
-      if (!showInThisFlow) return false;
-
-      const searchTerm = search.toLowerCase();
-      const matchSearch = !search || 
-        v.cargo.toLowerCase().includes(searchTerm) || 
-        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);
-      
-      const matchUnidade = filterUnidade === 'all' || vUnitNormalized === filterUnidade;
-
+...
       return matchSearch && matchUnidade;
     });
   }, [vagas, currentUser, search, filterUnidade]);
@@ -138,15 +173,16 @@ export default function FilaAnalistaEditalPage() {
   }, [users]);
 
   const handleOpenEditModal = (vaga: Vaga) => {
+    setIsBatchMode(false);
     setSelectedVaga(vaga);
+    setSelectedBatchVagas([vaga]);
     setObsEdital(vaga.observacoes_edital || '');
     setNumeroEdital(vaga.numero_edital || '');
     setNumeroProcesso(vaga.numero_processo || '');
     setNomeArquivo(vaga.arquivo_edital || '');
     setReachrUrl((vaga as any).url_reachr || '');
     
-    // Initialize cronograma
-    setCronograma({
+    const initialCronograma = {
       data_publicacao_edital: vaga.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
       data_inicio_inscricao: vaga.cronograma?.data_inicio_inscricao || '',
       data_fim_inscricao: vaga.cronograma?.data_fim_inscricao || '',
@@ -158,12 +194,17 @@ export default function FilaAnalistaEditalPage() {
       data_resultado_final_avaliacao_especifica: vaga.cronograma?.data_resultado_final_avaliacao_especifica || '',
       data_entrevistas: vaga.cronograma?.data_entrevistas || '',
       data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
-    });
+    };
 
-    setEntrevistaConfig(deriveEntrevistaConfig(
+    setCronograma(initialCronograma);
+    setBatchCronogramas({ [vaga.id]: initialCronograma });
+
+    const initialEntrevistaConfig = deriveEntrevistaConfig(
       vaga.cronograma?.data_entrevistas,
       (vaga.cronograma as any)?.entrevista_config
-    ));
+    );
+    setEntrevistaConfig(initialEntrevistaConfig);
+    setBatchEntrevistaConfigs({ [vaga.id]: initialEntrevistaConfig });
 
     if (vaga.validado_por) {
       setResponsavelValidacao(vaga.validado_por);
@@ -179,6 +220,7 @@ export default function FilaAnalistaEditalPage() {
 
     setIsEditModalOpen(true);
   };
+
 
   /** Mescla cronograma + entrevista_config + sincroniza data_entrevistas (1ª data) */
   const buildCronogramaPayload = () => ({

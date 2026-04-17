@@ -629,7 +629,7 @@ export default function VagasPage() {
   return (
 // ... keep existing code
     <div className="space-y-4">
-      {isLoadingVagas && isInitialLoad ? (
+      {isInitialLoad ? (
         <PageSkeleton />
       ) : currentTab === 'acompanhamento' ? (
         <AcompanhamentoEditalList />

@@ -9,10 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 export default function EditaisPage() {
-  const { vagas, editais } = useVagasStore();
+  const { vagas, editais, isInitialLoad } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit } = useAdminStore();
   const navigate = useNavigate();
 
@@ -36,12 +36,15 @@ export default function EditaisPage() {
       });
   }, [editais, vagas, currentUser, selectedRegion, selectedUnit]);
 
+  if (isInitialLoad) {
+    return <PageSkeleton />;
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader 
         title="Editais e Publicações"
       />
-
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">

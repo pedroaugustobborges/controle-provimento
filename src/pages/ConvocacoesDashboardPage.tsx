@@ -7,6 +7,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line, CartesianGrid, LabelList } from 'recharts';
 import { Users, Building2, Briefcase, CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
 import { filterByRegionAndUnit } from '@/lib/vagaUtils';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 const truncateLabel = (value: string, max = 22) =>
   value && value.length > max ? `${value.slice(0, max - 1)}…` : value;
@@ -24,7 +25,7 @@ const historicoChartConfig: ChartConfig = {
 };
 
 export default function ConvocacoesDashboardPage() {
-  const { convocacoes } = useVagasStore();
+  const { convocacoes, isInitialLoad } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
 
   // Mesma fonte e mesmos filtros de permissão usados em ConvocacoesPage
@@ -99,6 +100,10 @@ export default function ConvocacoesDashboardPage() {
         };
       });
   }, [visibleConvocacoes]);
+
+  if (isInitialLoad) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

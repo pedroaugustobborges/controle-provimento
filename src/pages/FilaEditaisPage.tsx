@@ -36,11 +36,12 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 
 export default function FilaEditaisPage() {
   const navigate = useNavigate();
-  const { vagas, updateVaga, updateVagaAsync, notificarMovimentacaoEdital } = useVagasStore();
+  const { vagas, updateVaga, updateVagaAsync, notificarMovimentacaoEdital, isInitialLoad, isLoadingVagas } = useVagasStore();
   const { currentUser } = useAdminStore();
   const permissions = usePermissions();
   const [search, setSearch] = useState('');
@@ -347,8 +348,11 @@ export default function FilaEditaisPage() {
     toast.success('Vaga encaminhada com sucesso para a redação do edital!');
   };
 
-
   const hasFilters = search !== '' || filterUnidade !== 'all';
+
+  if (isInitialLoad || (isLoadingVagas && vagas.length === 0)) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

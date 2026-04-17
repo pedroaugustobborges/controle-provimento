@@ -55,11 +55,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 export default function ConvocacoesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { vagas, convocacoes, bancos, bloqueios, getBancoByVaga } = useVagasStore();
+  const { vagas, convocacoes, bancos, bloqueios, getBancoByVaga, isInitialLoad, isLoading } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const [view, setView] = useState<'kanban' | 'list' | 'diaria' | 'pending'>('diaria');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -251,6 +252,10 @@ export default function ConvocacoesPage() {
     }));
   };
 
+  if (isInitialLoad) {
+    return <PageSkeleton />;
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -258,41 +263,41 @@ export default function ConvocacoesPage() {
         actions={
           <>
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('diaria')}
               >
                 <CalendarIcon className="h-3.5 w-3.5 mr-1" /> Diária
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('kanban')}
               >
                 <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Quadro
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
                 onClick={() => handleViewChange('list')}
               >
                 <List className="h-3.5 w-3.5 mr-1" /> Histórico
               </Button>
             </div>
-            <ExportButton 
-              data={prepareConvocacoesForExport(filteredConvocacoes)} 
+            <ExportButton
+              data={prepareConvocacoesForExport(filteredConvocacoes)}
               filename="convocacoes_export"
               label="Exportar Excel"
               className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
             />
             {view === 'diaria' && (
-              <Button 
-                variant="outline" 
-                onClick={() => setIsBloqueioOpen(true)} 
+              <Button
+                variant="outline"
+                onClick={() => setIsBloqueioOpen(true)}
                 className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
               >
                 <Lock className="h-4 w-4" /> Bloquear Horário
@@ -305,19 +310,18 @@ export default function ConvocacoesPage() {
         }
       />
 
-
       <div className="flex flex-col md:flex-row items-center gap-3 bg-white/50 p-3 rounded-xl border border-slate-200/50 backdrop-blur-sm shadow-sm">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Pesquisar por candidato, cargo..." 
             className="w-full pl-10 pr-4 h-10 text-sm rounded-lg bg-white border border-slate-200/80 focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all outline-none"
           />
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto overflow-visible">
           <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
             <SelectTrigger className="h-10 w-[180px] bg-white border-slate-200 text-xs font-bold text-slate-600">
@@ -334,9 +338,9 @@ export default function ConvocacoesPage() {
 
           {view === 'diaria' ? (
             <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-8 w-8"
                 onClick={() => setSelectedDate(prev => {
                   const d = new Date(prev);
@@ -346,11 +350,11 @@ export default function ConvocacoesPage() {
               >
                 <ArrowRight className="h-4 w-4 rotate-180" />
               </Button>
-              
+
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="h-8 px-3 gap-2 text-xs font-bold text-primary hover:bg-primary/5"
                   >
                     <CalendarIcon className="h-3.5 w-3.5" />
@@ -368,9 +372,9 @@ export default function ConvocacoesPage() {
                 </PopoverContent>
               </Popover>
 
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-8 w-8"
                 onClick={() => setSelectedDate(prev => {
                   const d = new Date(prev);
@@ -384,8 +388,8 @@ export default function ConvocacoesPage() {
           ) : (
             <Popover>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className={`h-10 px-4 gap-2 text-xs font-bold bg-white border-slate-200 hover:bg-slate-50 ${dateRange.from ? 'text-primary border-primary/30' : 'text-slate-600'}`}
                 >
                   <CalendarIcon className="h-3.5 w-3.5" />
@@ -401,12 +405,12 @@ export default function ConvocacoesPage() {
                     "Filtrar Período"
                   )}
                   {dateRange.from && (
-                    <X 
-                      className="ml-1 h-3 w-3 hover:text-destructive" 
+                    <X
+                      className="ml-1 h-3 w-3 hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDateRange({ from: undefined, to: undefined });
-                      }} 
+                      }}
                     />
                   )}
                 </Button>
@@ -433,7 +437,6 @@ export default function ConvocacoesPage() {
           </Button>
         </div>
       </div>
-
 
       <div className="mt-2 h-full min-h-[500px]">
         {view === 'diaria' ? (
@@ -463,15 +466,15 @@ export default function ConvocacoesPage() {
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader >
-                    <TableRow>
-                     <TableHead>Candidato</TableHead>
-                     <TableHead>Vaga / Cargo</TableHead>
-                     <TableHead className="text-center">Data/Hora</TableHead>
-                     <TableHead className="text-center">Status</TableHead>
-                     <TableHead>Unidade</TableHead>
-                     <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Candidato</TableHead>
+                    <TableHead>Vaga / Cargo</TableHead>
+                    <TableHead className="text-center">Data/Hora</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead>Unidade</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredConvocacoes.map((c) => (
@@ -515,7 +518,7 @@ export default function ConvocacoesPage() {
                               <Edit className="h-4 w-4 text-amber-500" /> Validar/Editar
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               className="gap-2 text-destructive"
                               onClick={() => {
                                 setRegistroParaExcluir(c.id);
@@ -551,7 +554,7 @@ export default function ConvocacoesPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                   <TableRow>
+                  <TableRow>
                     <TableHead>Candidato</TableHead>
                     <TableHead>Cargo</TableHead>
                     <TableHead>Unidade</TableHead>
@@ -583,17 +586,17 @@ export default function ConvocacoesPage() {
         ) : null}
       </div>
 
-      <ConvocacaoDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
+      <ConvocacaoDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         vaga={selectedVaga}
       />
 
       {selectedConvocacao && (
-        <DevolutivaDialog 
-          open={isDevolutivaOpen} 
-          onOpenChange={setIsDevolutivaOpen} 
-          convocacao={selectedConvocacao} 
+        <DevolutivaDialog
+          open={isDevolutivaOpen}
+          onOpenChange={setIsDevolutivaOpen}
+          convocacao={selectedConvocacao}
         />
       )}
 

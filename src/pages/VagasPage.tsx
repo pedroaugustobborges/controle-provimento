@@ -1057,7 +1057,7 @@ export default function VagasPage() {
               Em Andamento ({counts.fila_edital + counts.em_andamento + counts.convocacao + counts.documentacao + counts.aguardando_unidade + ((counts as any).em_admissao || 0)})
             </TabsTrigger>
             <TabsTrigger value="ativas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
-              Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao})
+              Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao + counts.em_admissao + counts.movimentacao_interna})
             </TabsTrigger>
             <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
               Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})

@@ -493,17 +493,50 @@ export default function FilaAnalistaEditalPage() {
     if (!file) return;
     setNomeArquivo(file.name);
     e.target.value = '';
-    setIsImportOpen(true);
     setParsing(true);
     setParsingFileName(file.name);
     setParsingOriginalFile(file);
+    toast.loading('Lendo cronograma do Word...', { id: 'parse-docx' });
     const result = await parseCronogramaFromDocx(file);
     setParsing(false);
+
     if (!result.ok) {
+      toast.error(result.errorMessage || 'Erro ao ler o Word.', { id: 'parse-docx' });
       setParseError(result.errorMessage || 'Erro no Word.');
+      setParseErrorDetails(result.error || null);
+      setIsImportOpen(true);
       return;
     }
+
     setParsedCronogramas(result.cronogramas);
+
+    // AUTO-APPLY: single mode + exatamente 1 cronograma → aplica direto sem abrir dialog
+    if (!isBatchMode && result.cronogramas.length === 1) {
+      const c = result.cronogramas[0];
+      const values: Record<string, string> = {};
+      let cfg: EntrevistaConfig | undefined;
+      for (const et of c.etapas) {
+        if (!et.cronogramaKey || et.datas.length === 0) continue;
+        if (!values[et.cronogramaKey]) values[et.cronogramaKey] = et.datas[0];
+        if (et.cronogramaKey === 'data_entrevistas') {
+          cfg = { tipo: et.tipo, datas: et.datas.slice(0, 2) };
+        }
+      }
+      setCronograma((prev: any) => ({ ...prev, ...values }));
+      if (cfg) setEntrevistaConfig(cfg);
+      const count = Object.keys(values).length;
+      if (count > 0) {
+        toast.success(`${count} data(s) aplicada(s) automaticamente do edital.`, { id: 'parse-docx' });
+      } else {
+        toast.warning('Nenhuma data reconhecida no cronograma.', { id: 'parse-docx' });
+        setIsImportOpen(true);
+      }
+      return;
+    }
+
+    // Lote ou múltiplos cronogramas → abre dialog para mapeamento
+    toast.success(`${result.cronogramas.length} cronograma(s) detectado(s).`, { id: 'parse-docx' });
+    setIsImportOpen(true);
   };
 
   const renderCronogramaFields = (vagaId?: string) => {

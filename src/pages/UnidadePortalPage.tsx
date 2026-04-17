@@ -815,7 +815,20 @@ export default function UnidadePortalPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {todayConvocacoes.map(c => (
+                    {!hydrated ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <TableRow key={`csk-${i}`}>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-4 w-12" /></TableCell>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-4 w-40" /></TableCell>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : todayConvocacoes.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma convocação para esta data</TableCell>
+                      </TableRow>
+                    ) : todayConvocacoes.map(c => (
                       <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell className="py-4 px-6 font-black text-slate-900 text-sm">{c.horario}</TableCell>
                         <TableCell className="py-4 px-6 font-bold text-slate-800 text-sm">{c.nome_candidato}</TableCell>

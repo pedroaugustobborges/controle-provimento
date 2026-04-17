@@ -1,25 +1,24 @@
 
-## Plano de execução
+## Plano — Corrigir exibição da animação de logout
 
-### 1. Investigação
-- Localizar o componente de edição de usuário (provavelmente em `AdministracaoPage.tsx` ou diálogo associado) — identificar o checkbox "Visualizar todas as unidades" e o estado condicional que renderiza (ou deveria renderizar) a lista de unidades.
-- Localizar o botão "Sair" (em `AppSidebar.tsx` e `InactivityLogout.tsx`) e mapear o fluxo atual de logout.
+### Causa raiz
+O overlay de loading está dentro do `LogoutConfirmDialog`, que é renderizado pelo `AppSidebar`. Quando `signOut()` executa, o `useAuth` atualiza `isAuthenticated → false`, o `App.tsx` re-renderiza e o `AppSidebar` (junto com o dialog e o overlay) é desmontado **antes** do usuário ver a animação. Além disso, `setLoggingOut(false)` no `finally` esconde o overlay imediatamente.
 
-### 2. Correção do bug — Edição de Unidades
-- Garantir que o estado `viewAllUnits` (ou nome equivalente) controle corretamente a renderização condicional da lista.
-- Buscar a lista completa de unidades do banco e renderizar como checkboxes quando `viewAllUnits === false`.
-- Pré-marcar as unidades já vinculadas ao usuário em edição.
-- Persistir a seleção ao salvar.
+### Solução
+1. **Criar estado global de logout** via Zustand (ex.: `useLogoutStore` com `isLoggingOut: boolean`) — ou adicionar a flag ao `adminStore` existente.
+2. **Criar componente `LogoutOverlay`** standalone, montado em `App.tsx` (fora do `AppSidebar` e fora das rotas protegidas), que escuta o estado global e renderiza o overlay full-screen quando ativo. Assim ele sobrevive ao desmonte do sidebar e do redirect.
+3. **Refatorar `LogoutConfirmDialog`**:
+   - Ao confirmar: setar `isLoggingOut = true` no store global, fechar o dialog imediatamente.
+   - Executar update da `user_sessions` + `signOut()` + `navigate('/login')`.
+   - Remover `setLoggingOut(false)` do `finally` — deixar o overlay visível até o redirect concluir. Limpar o flag no `LoginPage` (mount) ou após `navigate` com pequeno delay.
+4. **Montar `<LogoutOverlay />` em `App.tsx`** logo após o `BrowserRouter`/providers, garantindo que esteja sempre disponível.
 
-### 3. Modal de Confirmação + Animação de Logout
-- Criar um componente `LogoutConfirmDialog` reutilizável usando `AlertDialog` do shadcn.
-- Substituir o handler direto de `signOut()` no `AppSidebar.tsx` (e onde mais aparecer) para abrir o modal primeiro.
-- Ao confirmar:
-  - Exibir overlay full-screen com `Loader2` animado e texto "Saindo do sistema..."
-  - Executar `signOut()` + limpeza de sessão (`user_sessions` update)
-  - Redirecionar para `/login` apenas após conclusão
-- Cobrir também o caso do `InactivityLogout.tsx` se aplicável.
+### Arquivos a alterar
+- `src/store/adminStore.ts` (ou novo `src/store/logoutStore.ts`) — adicionar `isLoggingOut` + setter.
+- `src/components/LogoutOverlay.tsx` (novo) — overlay standalone.
+- `src/components/LogoutConfirmDialog.tsx` — usar store global, remover overlay local.
+- `src/App.tsx` — montar `<LogoutOverlay />` global.
+- `src/pages/LoginPage.tsx` — limpar `isLoggingOut` no mount.
 
-### 4. Validação
-- Testar edição de usuário: marcar/desmarcar "todas as unidades" e verificar lista aparecendo.
-- Testar logout: confirmar modal → animação → redirecionamento.
+### Validação
+- Clicar em "Sair" → modal aparece → confirmar → overlay com spinner permanece visível até chegar em `/login`.

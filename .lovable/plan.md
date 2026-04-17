@@ -1,77 +1,32 @@
 
-**Prompt reescrito:**
+## Plano de execução — Diagnóstico e correção do envio/recebimento de mensagens AGIE
 
----
+### Fase 1 — Diagnóstico técnico
+1. Inspecionar `src/store/vagasStore.ts` (função `addMensagem` + handler Realtime de `notificacoes`).
+2. Inspecionar `src/components/chat/AgieChat.tsx` e `src/pages/MensagensPage.tsx` (resolução de destinatário e renderização do histórico).
+3. Consultar `notificacoes` via `supabase--read_query` para verificar se INSERTs recentes de `tipo='mensagem'` estão persistindo com `remetente_id` e `usuario_id` corretos.
+4. Verificar via SQL se a tabela `notificacoes` está em `supabase_realtime` publication com `REPLICA IDENTITY FULL`.
+5. Validar políticas RLS atuais da tabela `notificacoes` (SELECT deve permitir tanto remetente quanto destinatário).
 
-Solicito **reformulação completa do módulo de Mensagens (Agie/Chat)** com correção crítica de sincronização e melhoria de UX no estilo WhatsApp.
+### Fase 2 — Correções prováveis
+- **Realtime publication**: migration para garantir `ALTER TABLE notificacoes REPLICA IDENTITY FULL` e `ALTER PUBLICATION supabase_realtime ADD TABLE notificacoes` se faltar.
+- **RLS SELECT**: confirmar policy `auth.uid() = usuario_id OR auth.uid() = remetente_id`.
+- **addMensagem (vagasStore)**: garantir `auth.getUser()`, whitelist de colunas e tratamento de erro detalhado com `toast.error` exibindo a causa real.
+- **AgieChat**: garantir que o `profile.id` resolvido seja passado como `destinatario_id` (não o nome curto).
+- **Subscription handler**: garantir filtro por `usuario_id === myId` e atualização do `historicoMensagens` + dedupe por `id`.
 
-### 🔴 Problema 1 — Mensagens não chegam ao destinatário
-Testei enviando mensagem de Usuário A → Usuário B. O remetente vê a confirmação "sistema recebeu sua mensagem, vamos encaminhar ao usuário", mas **a mensagem nunca chega ao destinatário final**.
+### Fase 3 — Validação end-to-end
+- Inserção de teste via `supabase--insert` simulando A→B.
+- Conferir leitura via `supabase--read_query` (registro presente, RLS permite ambos).
+- Solicitar ao usuário teste real entre 2 sessões para confirmar entrega em tempo real.
 
-**Investigar:**
-- Se o INSERT em `mensagens`/`notificacoes` está realmente persistindo no Supabase com `destinatario_id` correto.
-- Se o canal Realtime propaga o evento INSERT para o destinatário.
-- Se o handler do front-end no usuário B está escutando e renderizando a mensagem.
-- Aplicar padrão consolidado: `auth.getUser()` + whitelist + erro detalhado.
-
-### 🔴 Problema 2 — Remover mensagem técnica de confirmação
-Remover o toast/aviso "sistema recebeu sua mensagem, vamos encaminhar ao usuário". O usuário não precisa saber dessa mecânica interna. A mensagem deve simplesmente aparecer no histórico.
-
-### 🎨 Problema 3 — Reformular UI estilo WhatsApp
-- Mensagens **enviadas pelo usuário atual**: balão à direita, cor primária (azul #275ac5), texto branco.
-- Mensagens **recebidas de outros usuários**: balão à esquerda, cor neutra (cinza claro), texto escuro.
-- Mostrar nome do remetente nas mensagens recebidas.
-- Mostrar horário (HH:mm) abaixo de cada balão.
-- Histórico cronológico com scroll automático para a última mensagem.
-- Indicador visual de mensagem não-lida (badge).
-
-### 🧪 Problema 4 — Validação multiusuário
-Testar com **3 sessões simultâneas** (A, B, C):
-- A → B: B recebe em tempo real, A vê no próprio histórico.
-- A e C → B simultaneamente: B recebe ambas, sem perda.
-- B responde A: A recebe sem refresh.
-- Badge de não-lidas atualiza corretamente em todos os clientes.
-
-### 📋 Entregáveis
-1. Diagnóstico da causa raiz da falha de entrega.
-2. Correção do `addMensagem` no `vagasStore` (auth + whitelist + erro + Realtime).
-3. Refatoração visual do componente de chat estilo WhatsApp (bubbles diferenciadas).
-4. Remoção do toast técnico de confirmação.
-5. Teste end-to-end com 3 sessões simultâneas validando entrega 100%.
-
----
-
-## Plano de execução
-
-### Fase 1 — Diagnóstico
-1. Inspecionar `src/components/chat/AgieChat.tsx`, `src/pages/MensagensPage.tsx` e `src/store/vagasStore.ts` (função `addMensagem`).
-2. Verificar via `supabase--read_query`:
-   - Schema das tabelas `mensagens` e `notificacoes` (campos `remetente_id`, `destinatario_id`, `conteudo`, `lida`).
-   - Se `mensagens` está em `supabase_realtime` publication com `REPLICA IDENTITY FULL`.
-3. Identificar onde o toast técnico é disparado.
-4. Mapear o handler de subscription Realtime no front (filtro por destinatário, atualização de estado).
-
-### Fase 2 — Correções
-- **`vagasStore.ts > addMensagem`**: tornar async, persistir no Supabase com `auth.getUser()` para `remetente_id`, whitelist de colunas, erro detalhado, sem update otimista que bypassa o canal.
-- **Subscription Realtime**: garantir handler para INSERT de `mensagens` filtrado por `destinatario_id = currentUser.id`, atualizando store e disparando toast amigável "Nova mensagem de {nome}".
-- **Remover toast técnico** de "sistema recebeu/encaminhando".
-- **Migration SQL** se faltar `REPLICA IDENTITY FULL` ou inclusão no publication.
-
-### Fase 3 — UI WhatsApp-style
-Refatorar `AgieChat.tsx` (ou criar `ChatBubble.tsx`):
-- Container flex com `justify-end` para enviadas, `justify-start` para recebidas.
-- Bubble enviada: `bg-primary text-white rounded-2xl rounded-br-sm`.
-- Bubble recebida: `bg-slate-100 text-slate-800 rounded-2xl rounded-bl-sm`.
-- Nome do remetente acima do bubble (apenas em recebidas).
-- Timestamp `HH:mm` discreto abaixo.
-- `useEffect` com `scrollIntoView` para auto-scroll na última mensagem.
-- Badge de não-lidas no header e na sidebar.
-
-### Fase 4 — Validação
-Roteiro de teste com 3 sessões simultâneas (3 perfis distintos) cobrindo entrega, simultaneidade e badges.
+### Entregáveis
+1. Diagnóstico com causa raiz identificada.
+2. Migration SQL (se necessário) + ajustes em `vagasStore.ts` e `AgieChat.tsx`.
+3. Roteiro de teste documentado.
 
 <lov-actions>
-<lov-suggestion message="Aprovado. Execute: (1) corrija addMensagem no vagasStore com persistência real no Supabase + auth.getUser + whitelist + erro detalhado; (2) garanta o canal Realtime de mensagens com handler filtrado por destinatário; (3) remova o toast técnico de confirmação; (4) refatore o chat estilo WhatsApp (bubbles diferenciadas, nome, timestamp, auto-scroll, badge de não-lidas); (5) valide com 3 sessões simultâneas.">Executar reformulação completa</lov-suggestion>
-<lov-suggestion message="Antes de codar, entregue só o diagnóstico: por que as mensagens não chegam hoje, qual o schema real de mensagens/notificacoes, se está no Realtime publication, e onde o toast técnico é disparado. Eu aprovo as correções depois.">Só diagnóstico primeiro</lov-suggestion>
-<lov-suggestion message="Foque exclusivamente na correção da entrega das mensagens (addMensagem persistir + Realtime entregar ao destinatário) e na remoção do toast técnico. A reformulação visual estilo WhatsApp fica para uma próxima rodada.">Só corrigir a entrega agora</lov-suggestion>
+<lov-suggestion message="Aprovado. Execute o diagnóstico completo, aplique as correções necessárias (Realtime publication, RLS, addMensagem, handler) e valide com teste real de inserção SQL entre dois usuários.">Executar diagnóstico + correção</lov-suggestion>
+<lov-suggestion message="Antes de codar, entregue só o diagnóstico: status da publication Realtime, RLS atual de notificacoes, últimos INSERTs de tipo=mensagem e onde exatamente o fluxo quebra. Eu aprovo as correções depois.">Só diagnóstico primeiro</lov-suggestion>
+<lov-suggestion message="Faça um teste end-to-end real agora: insira via SQL uma mensagem de A para B, confirme que B recebe via Realtime sem refresh, e me mostre o resultado com prints/logs.">Teste real end-to-end agora</lov-suggestion>
 </lov-actions>

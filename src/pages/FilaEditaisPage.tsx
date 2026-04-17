@@ -392,6 +392,39 @@ export default function FilaEditaisPage() {
         </Card>
       </div>
 
+      {(regroupableCargos.length > 0 || selectedRows.size >= 1) && (
+        <div className="sticky top-2 z-30 bg-primary text-primary-foreground shadow-lg rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap animate-in fade-in slide-in-from-top-2">
+          <CheckSquare className="h-4 w-4 shrink-0" />
+          <span className="text-sm font-medium">
+            <strong>{selectedRows.size}</strong> selecionada(s)
+            {regiaoSelecionada && <span className="ml-2 opacity-80">• Região: <strong>{regiaoSelecionada}</strong></span>}
+            {regroupableCargos.length > 0 && <span className="ml-2 opacity-80">• {regroupableCargos.length} elegível(is) p/ reagrupar</span>}
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            {regroupableCargos.length > 0 && (
+              <Button size="sm" variant="secondary" className="h-8 font-semibold" onClick={handleRegroupSelected}>
+                <Link2 className="h-4 w-4 mr-1" /> Reagrupar mesmo cargo
+              </Button>
+            )}
+            {selectedRows.size >= 2 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+                onClick={handleOpenBatchSend}
+                disabled={!sendGroupedValidation.ok}
+                title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
+              >
+                <Send className="h-4 w-4 mr-1" /> Enviar {selectedRows.size} agrupados
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-8 text-primary-foreground hover:bg-white/10" onClick={() => setSelectedRows(new Set())}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Card className="shadow-sm border-slate-200 overflow-hidden">
         <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2">

@@ -152,10 +152,39 @@ export default function FilaAnalistaEditalPage() {
   const [isTalentBank, setIsTalentBank] = useState(false);
 
   const editalVagas = useMemo(() => {
-...
+    return vagas.filter(v => {
+      const vUnitNormalized = normalizeUnitName(v.unidade);
+      
+      // Unit access restriction
+      if (!currentUser?.visualiza_todas_unidades) {
+        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
+        if (!userUnidades.includes(vUnitNormalized)) {
+          return false;
+        }
+      }
+
+      // Regra: Mostrar vagas em redação, enviadas para validação ou aprovadas
+      const showInThisFlow = [
+        'encaminhado_edital', 
+        'em_redacao', 
+        'enviado_validacao', 
+        'aprovado_administrativo',
+        'publicado'
+      ].includes(v.status_fluxo_edital || '');
+      
+      if (!showInThisFlow) return false;
+
+      const searchTerm = search.toLowerCase();
+      const matchSearch = !search || 
+        v.cargo.toLowerCase().includes(searchTerm) || 
+        (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);
+      
+      const matchUnidade = filterUnidade === 'all' || vUnitNormalized === filterUnidade;
+
       return matchSearch && matchUnidade;
     });
   }, [vagas, currentUser, search, filterUnidade]);
+
 
   const devolvidos = useMemo(() => editalVagas.filter(v => v.status_fluxo_edital === 'em_redacao' && v.observacoes_validacao), [editalVagas]);
 

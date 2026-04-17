@@ -34,6 +34,7 @@ import { retryQueue } from '@/lib/retryQueue';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { SaveStatusIndicator } from '@/components/SaveStatusIndicator';
 import { DraftRecoveryBanner } from '@/components/DraftRecoveryBanner';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { SaveStatus } from '@/hooks/useAutoSave';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { getCategoriaStatus } from '@/lib/vagaUtils';
@@ -98,6 +99,7 @@ export default function UnidadePortalPage() {
   const { convocacoes, vagas, updateConvocacao, fetchVagas, fetchBancos } = useVagasStore();
   const { signOut } = useAuth();
   const [bootstrapping, setBootstrapping] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
   // Hydrate stores when opened in a new tab (outside AppLayout)
   useEffect(() => {
@@ -105,8 +107,10 @@ export default function UnidadePortalPage() {
     (async () => {
       try {
         await Promise.all([fetchCurrentProfile(), fetchVagas(), fetchBancos()]);
+        if (mounted) setHydrated(true);
       } catch (err) {
         console.error('[UnidadePortal] Erro ao carregar dados:', err);
+        if (mounted) setHydrated(true); // still mark as hydrated so UI can show error/empty state
       } finally {
         if (mounted) setBootstrapping(false);
       }
@@ -596,8 +600,12 @@ export default function UnidadePortalPage() {
                 <Card key={label} className="border-slate-200/60 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className={cn('p-3 rounded-2xl', bg)}><Icon className={cn('h-5 w-5', color)} /></div>
-                    <div>
-                      <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
+                    <div className="flex-1">
+                      {hydrated ? (
+                        <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
+                      ) : (
+                        <Skeleton className="h-7 w-12" />
+                      )}
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
                     </div>
                   </CardContent>
@@ -612,8 +620,10 @@ export default function UnidadePortalPage() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="h-[320px] w-full">
-                    {statusChartData.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
+                    {!hydrated ? (
+                      <Skeleton className="h-full w-full rounded-2xl" />
+                    ) : statusChartData.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl">
                         <BarChart3 className="h-10 w-10 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
                       </div>
@@ -672,8 +682,10 @@ export default function UnidadePortalPage() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="h-[320px] w-full">
-                    {top5CargosData.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
+                    {!hydrated ? (
+                      <Skeleton className="h-full w-full rounded-2xl" />
+                    ) : top5CargosData.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl">
                         <Briefcase className="h-10 w-10 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
                       </div>
@@ -742,7 +754,21 @@ export default function UnidadePortalPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vagasParaConsulta.map(v => (
+                    {!hydrated ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={`sk-${i}`}>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : vagasParaConsulta.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma vaga encontrada</TableCell>
+                      </TableRow>
+                    ) : vagasParaConsulta.map(v => (
                       <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell className="font-bold text-slate-900 text-sm whitespace-nowrap">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>
@@ -789,7 +815,20 @@ export default function UnidadePortalPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {todayConvocacoes.map(c => (
+                    {!hydrated ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <TableRow key={`csk-${i}`}>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-4 w-12" /></TableCell>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-4 w-40" /></TableCell>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : todayConvocacoes.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma convocação para esta data</TableCell>
+                      </TableRow>
+                    ) : todayConvocacoes.map(c => (
                       <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell className="py-4 px-6 font-black text-slate-900 text-sm">{c.horario}</TableCell>
                         <TableCell className="py-4 px-6 font-bold text-slate-800 text-sm">{c.nome_candidato}</TableCell>

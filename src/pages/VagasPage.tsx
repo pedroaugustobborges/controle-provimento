@@ -163,6 +163,13 @@ export default function VagasPage() {
   const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
   const [filterMes, setFilterMes] = useState('all');
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+
+  // Limpar filtros de status ao trocar entre submenu (TEIA / padrão / PCD)
+  // pois as listas de status disponíveis são diferentes
+  useEffect(() => {
+    setFilterStatuses([]);
+  }, [filtroEspecial]);
+
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
   const [filterAssistente, setFilterAssistente] = useState('all');

@@ -27,6 +27,7 @@ import {
 import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 import { useState, useMemo } from 'react';
 import { 
@@ -39,7 +40,7 @@ import { toast } from 'sonner';
 
 
 export default function ValidacaoEditaisPage() {
-  const { vagas, updateVagaAsync, addMensagem, notificarMovimentacaoEdital } = useVagasStore();
+  const { vagas, updateVagaAsync, addMensagem, notificarMovimentacaoEdital, isInitialLoad } = useVagasStore();
   const updateVaga = updateVagaAsync;
   const { currentUser, addAuditLog, users, fetchUsers } = useAdminStore();
   const [search, setSearch] = useState('');
@@ -56,6 +57,10 @@ export default function ValidacaoEditaisPage() {
   const gestores = useMemo(() => {
     return users.filter(u => u.perfil === 'Gestão' || u.perfil === 'Gerência' || u.perfil === 'Coordenação');
   }, [users]);
+
+  if (isInitialLoad) {
+    return <PageSkeleton />;
+  }
 
   const pendingEditais = useMemo(() => {
     return vagas.filter(v => {

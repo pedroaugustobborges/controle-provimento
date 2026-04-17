@@ -39,9 +39,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 export default function ValidacaoPage() {
-  const { convocacoes } = useVagasStore();
+  const { convocacoes, isInitialLoad } = useVagasStore();
   const { currentUser } = useAdminStore();
   const [search, setSearch] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -75,6 +76,10 @@ export default function ValidacaoPage() {
 
   const pendentes = filteredConvocacoes.filter(c => c.status === 'pendente');
   const validadas = filteredConvocacoes.filter(c => c.status !== 'pendente');
+
+  if (isInitialLoad) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

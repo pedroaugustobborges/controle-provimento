@@ -232,32 +232,67 @@ export interface CronogramaParseResult {
   cronogramas: ParsedCronograma[];
 }
 
-/** Extrai etapas de uma <table>. Trata "Inscrição" (período) abrindo em início+fim. */
-function extractEtapasFromTable(table: HTMLTableElement): ParsedEtapa[] {
-  const rows = Array.from(table.querySelectorAll('tr'));
-  if (rows.length < 2) return [];
+/** Diagnóstico: motivo de rejeição de uma tabela */
+export interface TableRejection {
+  index: number;
+  motivo: string;
+  headers: string[];
+  primeiraLinha?: string[];
+}
 
-  const headerCells = Array.from(rows[0].querySelectorAll('th, td'))
-    .map((c) => stripAccents(c.textContent || ''));
-  let etapaCol = headerCells.findIndex((h) => h.includes('etapa'));
-  let dataCol = headerCells.findIndex((h) => h.includes('data'));
+const isEtapaHeader = (h: string) =>
+  /\b(etapa|etapas|fase|fases|atividade|atividades|evento|eventos)\b/.test(h);
+const isDataHeader = (h: string) =>
+  /\b(data|datas|periodo|prazo|prazos|cronograma)\b/.test(h);
+
+/** Extrai etapas de uma <table>. Trata "Inscrição" (período) abrindo em início+fim. */
+function extractEtapasFromTable(
+  table: HTMLTableElement,
+  rejections?: TableRejection[],
+  tableIndex = 0,
+): ParsedEtapa[] {
+  const rows = Array.from(table.querySelectorAll(':scope > tbody > tr, :scope > tr'));
+  // fallback: se não achou rows diretas, pega todas (caso mammoth não gere tbody)
+  const allRows = rows.length > 0 ? rows : Array.from(table.querySelectorAll('tr'));
+  if (allRows.length < 2) {
+    rejections?.push({ index: tableIndex, motivo: 'menos de 2 linhas', headers: [] });
+    return [];
+  }
+
+  const readHeaders = (rowIdx: number) =>
+    Array.from(allRows[rowIdx].querySelectorAll(':scope > th, :scope > td'))
+      .map((c) => stripAccents(c.textContent || ''));
+
+  let headerCells = readHeaders(0);
+  let etapaCol = headerCells.findIndex(isEtapaHeader);
+  let dataCol = headerCells.findIndex(isDataHeader);
   let startRow = 1;
 
+  // Tenta as próximas 2 linhas como cabeçalho (alguns docs têm título mesclado na 1ª)
   if (etapaCol === -1 || dataCol === -1) {
-    // tenta segunda linha como cabeçalho
-    if (rows.length >= 2) {
-      const h2 = Array.from(rows[1].querySelectorAll('th, td')).map((c) => stripAccents(c.textContent || ''));
-      const e2 = h2.findIndex((h) => h.includes('etapa'));
-      const d2 = h2.findIndex((h) => h.includes('data'));
-      if (e2 !== -1 && d2 !== -1) {
-        etapaCol = e2;
-        dataCol = d2;
-        startRow = 2;
+    for (let tryRow = 1; tryRow < Math.min(3, allRows.length); tryRow++) {
+      const h = readHeaders(tryRow);
+      const e = h.findIndex(isEtapaHeader);
+      const d = h.findIndex(isDataHeader);
+      if (e !== -1 && d !== -1) {
+        etapaCol = e;
+        dataCol = d;
+        startRow = tryRow + 1;
+        headerCells = h;
+        break;
       }
     }
   }
 
-  if (etapaCol === -1 || dataCol === -1) return [];
+  if (etapaCol === -1 || dataCol === -1) {
+    rejections?.push({
+      index: tableIndex,
+      motivo: 'cabeçalho ETAPA/DATA não encontrado',
+      headers: headerCells,
+      primeiraLinha: allRows[1] ? readHeaders(1) : undefined,
+    });
+    return [];
+  }
 
   const etapas: ParsedEtapa[] = [];
   for (let i = startRow; i < rows.length; i++) {

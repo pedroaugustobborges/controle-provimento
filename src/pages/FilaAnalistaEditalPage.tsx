@@ -171,6 +171,23 @@ export default function FilaAnalistaEditalPage() {
     setIsEditModalOpen(true);
   };
 
+  /** Mescla cronograma + entrevista_config + sincroniza data_entrevistas (1ª data) */
+  const buildCronogramaPayload = () => ({
+    ...selectedVaga?.cronograma,
+    ...cronograma,
+    data_entrevistas: primaryEntrevistaDate(entrevistaConfig) || cronograma.data_entrevistas || '',
+    entrevista_config: entrevistaConfig,
+  });
+
+  const handleApplyImport = (result: CronogramaImportResult) => {
+    setCronograma((prev: any) => ({ ...prev, ...result.values }));
+    if (result.entrevistaConfig) {
+      setEntrevistaConfig(result.entrevistaConfig);
+    } else if (result.values.data_entrevistas) {
+      setEntrevistaConfig({ tipo: 'unica', datas: [result.values.data_entrevistas] });
+    }
+  };
+
   const handleSaveDraft = async () => {
     if (!selectedVaga) return;
 
@@ -182,10 +199,7 @@ export default function FilaAnalistaEditalPage() {
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
-      cronograma: {
-        ...selectedVaga.cronograma,
-        ...cronograma
-      }
+      cronograma: buildCronogramaPayload(),
     } as any);
 
     if (ok) {

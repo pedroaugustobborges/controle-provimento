@@ -1,38 +1,28 @@
 
-## Plano — Limpeza final da AGIE + correção do parser de cronograma
+## Plano — Exibir Unidade Destino, Horário/Plantão e Observação no Portal da Unidade
 
 ### 1. Investigação (read-only)
-- Reler `src/components/chat/AgieChat.tsx` e `src/types/chat.ts` para localizar resquícios de fluxo de mensagens entre usuários (botões, steps, textos).
-- Reler `src/lib/editalCronogramaParser.ts` para entender:
-  - Como detecta o marcador do cargo (regex de "Cronograma de Seleção para o Cargo de:").
-  - Como identifica as colunas "ETAPA" e "DATA" nas tabelas.
-  - Se varre tabelas aninhadas.
-- Reler `src/components/CronogramaImportDialog.tsx` para confirmar onde o erro `extracao_cronograma` é emitido.
+- Reler `src/pages/UnidadePortalPage.tsx` para localizar a seção "Convocações Diárias" e o bloco condicional atual que só exibe quando há observação.
+- Reler `src/components/AgendaDiaria.tsx` (provável componente compartilhado) para confirmar onde o card de cada convocação é renderizado.
+- Conferir em `src/types/vaga.ts` os campos disponíveis no tipo `Convocacao` (`unidade_alternativa`, `horario_trabalho`, `observacoes`, etc.) para mapear corretamente.
 
-### 2. Pendência (preciso receber antes de codar)
-- **Anexar o arquivo `PROCESSO SELETIVO AGIR - EDITAL 028.2026 - GOIÂNIA.docx`** aqui no chat para que eu inspecione com `document--parse_document` e veja a estrutura real das 8 tabelas. Sem isso, qualquer correção é chute.
+### 2. Pendências a confirmar
+- "Unidade Destino" = `unidade_alternativa` existente, ou novo campo?
+- Apenas visualização ou também edição inline pela unidade?
 
-### 3. Correções (após receber o arquivo)
-
-**A) AGIE — remover mensagens definitivamente**
-- Auditar `AgieChat.tsx` e remover qualquer botão/step relacionado a "Mensagens entre usuários".
-- Garantir `ChatStep = 'INITIAL' | 'ALERTS' | 'FEEDBACK' | 'NEWS'` (já está em `chat.ts`, mas pode haver lógica órfã no componente).
-- Remover textos/ícones residuais.
-
-**B) Parser — torná-lo robusto**
-- **Normalização de texto**: antes de qualquer regex, aplicar `.replace(/\u00A0/g, ' ').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim()`.
-- **Detecção do cargo**: aceitar variações:
-  - `Cronograma de Seleção para o Cargo de:`
-  - `Cronograma para o Cargo de:`
-  - `Cargo:` (fallback)
-  - Regex flexível, case-insensitive, com `\s*` entre palavras.
-- **Detecção de colunas**: aceitar `ETAPA`/`ETAPAS`/`FASE` e `DATA`/`DATAS`/`PERÍODO`/`DATA PREVISTA`.
-- **Tabelas aninhadas**: percorrer recursivamente células para encontrar tabelas internas.
-- **Diagnóstico granular**: para cada tabela rejeitada, logar `console.warn('[cronograma-parser] tabela #N rejeitada', { headers, primeiraLinha, motivo })`.
-- Atualizar mensagem de erro para incluir contagem de tabelas válidas vs. rejeitadas + os motivos das rejeições no campo `raw`.
+### 3. Implementação (após confirmação)
+1. No componente da seção "Convocações Diárias" do Portal da Unidade:
+   - Trocar a condição atual `{convocacao.observacoes && (...)}` por `{(convocacao.unidade_alternativa || convocacao.horario_trabalho || convocacao.observacoes) && (...)}`.
+   - Dentro do bloco, renderizar 3 linhas condicionais (cada uma só aparece se o campo tiver valor):
+     - **Unidade Destino**: ícone `MapPin` + label + valor de `unidade_alternativa` (ou campo confirmado).
+     - **Horário / Plantão**: ícone `Clock` + label + valor de `horario_trabalho`.
+     - **Observação**: ícone `MessageSquare` + label + valor de `observacoes`.
+2. Manter o estilo visual consistente com o restante do Portal (mesmo padrão de `bg-slate-50`, bordas arredondadas, tipografia).
+3. Se for confirmado edição inline → adicionar pequenos botões "Editar" abrindo o `AcompanhamentoModal` ou modal dedicado.
 
 ### 4. Validação
-- Reimportar o `.docx` original → cronograma deve ser detectado.
-- Conferir que o dialog mostra as etapas mapeadas corretamente.
-- Abrir AGIE e confirmar que não há mais opção de mensagens.
-- Console limpo (apenas warnings esperados de tabelas que realmente não são cronograma).
+- Convocação com apenas observação → bloco aparece com 1 linha (Observação).
+- Convocação com unidade alternativa + horário, sem observação → bloco aparece com 2 linhas.
+- Convocação com os 3 campos → bloco aparece com 3 linhas.
+- Convocação sem nenhum dos 3 → bloco não aparece.
+- Conferir responsividade e console limpo.

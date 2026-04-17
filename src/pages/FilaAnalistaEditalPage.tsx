@@ -176,7 +176,9 @@ export default function FilaAnalistaEditalPage() {
         const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
         if (!userUnidades.includes(vUnitNormalized)) return false;
       }
-      const showInThisFlow = ['encaminhado_edital', 'em_redacao', 'enviado_validacao', 'aprovado_administrativo', 'publicado'].includes(v.status_fluxo_edital || '');
+      // 'encaminhado_edital' belongs to Fila de Editais, not to Redação.
+      // Redação only lists vagas em rascunho/validação/publicação.
+      const showInThisFlow = ['em_redacao', 'enviado_validacao', 'aprovado_administrativo', 'publicado'].includes(v.status_fluxo_edital || '');
       if (!showInThisFlow) return false;
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || v.cargo.toLowerCase().includes(searchTerm) || (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);

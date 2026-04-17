@@ -143,12 +143,43 @@ export function CronogramaImportDialog({
         )}
 
         {!loading && errorMessage && (
-          <div className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/5 text-destructive text-sm">
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-            <div>
-              <strong className="block mb-1">Não foi possível extrair o cronograma.</strong>
-              <span>{errorMessage}</span>
+          <div className="space-y-3">
+            <div className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/5 text-destructive text-sm">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <strong className="block">Não foi possível extrair o cronograma.</strong>
+                {errorDetails?.step && (
+                  <div className="text-[11px] uppercase tracking-wider opacity-70">
+                    Etapa: {errorDetails.step.replace(/_/g, ' ')}
+                  </div>
+                )}
+                <span className="block">{errorMessage}</span>
+                {errorDetails?.hint && (
+                  <div className="mt-2 text-xs text-slate-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                    💡 <strong>Dica:</strong> {errorDetails.hint}
+                  </div>
+                )}
+                {errorDetails?.raw && (
+                  <details className="mt-1 text-[11px] text-slate-600">
+                    <summary className="cursor-pointer">Detalhes técnicos</summary>
+                    <pre className="mt-1 whitespace-pre-wrap break-all bg-slate-50 border border-slate-200 rounded p-2">{errorDetails.raw}</pre>
+                  </details>
+                )}
+              </div>
             </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={handleCopyDetails} className="gap-1.5">
+                <Copy className="h-3.5 w-3.5" /> Copiar detalhes do erro
+              </Button>
+              {originalFile && (
+                <Button variant="outline" size="sm" onClick={handleDownloadOriginal} className="gap-1.5">
+                  <Download className="h-3.5 w-3.5" /> Baixar arquivo para diagnóstico
+                </Button>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 italic">
+              Anexe o arquivo baixado e os detalhes copiados na conversa do chat para análise.
+            </p>
           </div>
         )}
 

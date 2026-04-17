@@ -341,6 +341,37 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     await get().fetchSupportConfigs();
   },
 
+  fetchFeriados: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feriados_locais')
+        .select('*')
+        .order('data', { ascending: true });
+      if (error) throw error;
+      set({ feriados: (data || []) as LocalHoliday[] });
+    } catch (err) {
+      console.error('Erro ao buscar feriados:', err);
+    }
+  },
+
+  addFeriado: async (feriado) => {
+    const { error } = await supabase.from('feriados_locais').insert(feriado);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
+  updateFeriado: async (id, data) => {
+    const { error } = await supabase.from('feriados_locais').update(data).eq('id', id);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
+  deleteFeriado: async (id) => {
+    const { error } = await supabase.from('feriados_locais').delete().eq('id', id);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
   generateBackup: () => set((s) => {
     const newBackup: BackupRecord = {
       id: Math.random().toString(36).substr(2, 9),

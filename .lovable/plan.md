@@ -1,47 +1,55 @@
 
-## Plano — Restaurar dados em Redação de Edital sem reintroduzir duplicação
+## Plano — Auditoria e comprovação de proteção de dados (fluxo Edital)
 
-### Investigação
-- `src/pages/FilaAnalistaEditalPage.tsx` — revisar o filtro `showInThisFlow` atual e o histórico (git/conversa) para ver qual era o critério anterior que mostrava as vagas.
-- `src/store/vagasStore.ts` + `src/types/vaga.ts` — verificar se `status_fluxo_edital` é sempre populado ou se há vagas com valor nulo/legado.
-- Conferir se vagas em redação têm também `etapa === 'em_redacao'` ou `edital_id !== null` como critério alternativo.
+### Objetivo
+Gerar relatório verificável de que as recentes correções de filtro (Redação ↔ Fila) **não causaram perda de dados** e que as proteções (auditoria, versionamento, soft-delete, RLS) estão ativas.
 
-### Causa provável
-A correção anterior tornou o filtro **estritamente** dependente de `status_fluxo_edital ∈ {em_redacao, enviado_validacao, aprovado_administrativo, publicado}`. Vagas legadas ou criadas por outro fluxo não têm esse campo preenchido com esses valores → sumiram da listagem. O filtro anterior provavelmente combinava status + etapa + edital_id em OR, sendo mais tolerante.
+### Etapas
 
-### Implementação
+**1. Inventário de integridade (queries read-only no Supabase)**
+- `SELECT count(*) FROM vagas WHERE deleted_at IS NULL;` — total de vagas ativas.
+- `SELECT status_fluxo_edital, count(*) FROM vagas WHERE deleted_at IS NULL GROUP BY 1;` — distribuição por status.
+- `SELECT count(*) FROM vagas WHERE deleted_at IS NULL AND edital_id IS NOT NULL AND status_fluxo_edital IS NULL;` — vagas legadas (candidatas a backfill).
+- `SELECT count(*) FROM vagas WHERE etapa = 'em_redacao' AND status_fluxo_edital = 'encaminhado_edital';` — detectar inconsistências.
 
-**1. Filtro tolerante mas preciso** em `FilaAnalistaEditalPage.tsx`:
-```ts
-const ACTIVE_REDACAO_STATUSES = ['em_redacao', 'enviado_validacao', 'aprovado_administrativo', 'publicado'];
-const EXCLUDED_STATUSES = ['encaminhado_edital']; // explicitamente fora
+**2. Validação de mútua exclusão Fila ↔ Redação**
+- Simular o filtro de cada página em SQL e cruzar resultados (`INTERSECT`) — deve retornar 0 linhas.
 
-const showInThisFlow = 
-  // exclui explicitamente vagas devolvidas
-  !EXCLUDED_STATUSES.includes(v.status_fluxo_edital || '') && (
-    // inclui por status_fluxo_edital
-    ACTIVE_REDACAO_STATUSES.includes(v.status_fluxo_edital || '') ||
-    // OU por etapa (compatibilidade com legado)
-    v.etapa === 'em_redacao' ||
-    // OU por presença de edital_id sem ter sido devolvida
-    (!!v.edital_id && v.status_fluxo_edital !== 'encaminhado_edital')
-  );
+**3. Auditoria e versionamento**
+- `SELECT count(*), max(created_at) FROM audit_logs WHERE modulo IN ('vagas','editais') AND created_at > now() - interval '7 days';` — confirmar que alterações recentes geraram trilha.
+- Confirmar incremento de `version` em vagas alteradas (amostragem de 5 registros recentemente atualizados).
+
+**4. Soft-delete e RLS**
+- Confirmar que filtros de listagem aplicam `deleted_at IS NULL` (revisão dos serviços).
+- Listar políticas RLS ativas das tabelas críticas (`vagas`, `editais`, `validacoes_editais`) — já temos no contexto, apenas validar.
+
+**5. Proposta de backfill (não-destrutivo)**
+- Migration sugerida (apresentar SQL, **não executar sem aprovação**):
+```sql
+UPDATE vagas
+SET status_fluxo_edital = 'em_redacao'
+WHERE deleted_at IS NULL
+  AND edital_id IS NOT NULL
+  AND status_fluxo_edital IS NULL
+  AND (etapa = 'em_redacao' OR etapa IS NULL);
 ```
+- Backup automático via tabela `backups` antes de executar.
 
-**2. Garantir mutua exclusão** Fila ↔ Redação:
-- Vaga com `status_fluxo_edital === 'encaminhado_edital'` → SÓ na Fila.
-- Vaga com qualquer outro status ativo de redação → SÓ na Redação.
+**6. Roteiro de teste E2E manual no preview**
+- Documentar passos: criar vaga teste → enviar para edital → abrir Redação → devolver para Fila → confirmar exclusividade visual + persistência após refresh + entrada em `audit_logs`.
 
-**3. Backfill defensivo (opcional)**: ao carregar vagas, normalizar `status_fluxo_edital` derivando de `etapa`/`edital_id` se estiver null, para consistência futura.
+### Entregáveis
+- Relatório consolidado (markdown) com:
+  - Tabela de contagens (antes/depois quando aplicável).
+  - Lista de vagas candidatas a backfill (se houver).
+  - Confirmação de auditoria ativa.
+  - SQL de backfill pronto (aguardando aprovação para execução).
+  - Checklist do teste E2E.
 
-### Validação
-- Redação de Edital → vagas voltam a aparecer (legadas + novas).
-- Fila de Editais → vagas devolvidas continuam lá, **sem** duplicar na Redação.
-- Devolver vaga da Redação → some da Redação, aparece só na Fila.
-- Refresh nas duas páginas → estado consistente.
-
-### Arquivos alterados
-- `src/pages/FilaAnalistaEditalPage.tsx` (filtro tolerante com exclusão explícita de `encaminhado_edital`)
+### Arquivos a consultar (read-only)
+- `src/pages/FilaAnalistaEditalPage.tsx`, `src/pages/FilaEditaisPage.tsx` (filtros).
+- `src/services/databaseService.ts`, `src/store/vagasStore.ts` (persistência + soft-delete).
+- `src/hooks/useAudit.ts` (registro de auditoria).
 
 ### Risco
-Baixo. Restaura tolerância do filtro anterior mantendo a exclusão da regressão de duplicação. Validação end-to-end no preview após implementação.
+Nenhum — etapa puramente investigativa/diagnóstica. Backfill só é executado após aprovação explícita do usuário.

@@ -89,6 +89,57 @@ export default function FilaEditaisPage() {
   const [salarioValidado, setSalarioValidado] = useState(false);
   const [obsUnidade, setObsUnidade] = useState('');
 
+  // Modal de devolução para Controle de Vagas
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returnTargets, setReturnTargets] = useState<Vaga[]>([]);
+  const [returnMotivo, setReturnMotivo] = useState<string>('A pedido do analista da unidade');
+  const [returnObs, setReturnObs] = useState('');
+  const [returnSubmitting, setReturnSubmitting] = useState(false);
+
+  const handleOpenReturnModal = (targets: Vaga[]) => {
+    if (targets.length === 0) return;
+    setReturnTargets(targets);
+    setReturnMotivo('A pedido do analista da unidade');
+    setReturnObs('');
+    setIsReturnModalOpen(true);
+  };
+
+  const handleConfirmReturn = async () => {
+    if (returnObs.trim().length < 10) {
+      toast.error('Informe uma observação com pelo menos 10 caracteres.');
+      return;
+    }
+    if (returnTargets.length === 0) return;
+    setReturnSubmitting(true);
+    let count = 0;
+    for (const vaga of returnTargets) {
+      const statusRestaurado = (vaga.status_origem as any) || 'SEM STATUS';
+      const ok = await updateVagaAsync(vaga.id, {
+        status: statusRestaurado,
+        status_geral: statusRestaurado,
+        status_fluxo_edital: null,
+        etapa: null,
+        historico: [...(vaga.historico || []), {
+          id: `h-${Date.now()}-${vaga.id}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Devolvida ao Controle de Vagas — Motivo: ${returnMotivo}. Observação: ${returnObs}`,
+          usuario: currentUser?.nome_completo || 'Analista'
+        }]
+      } as any);
+      if (ok) count++;
+    }
+    setReturnSubmitting(false);
+    if (count > 0) {
+      toast.success(`${count} vaga(s) devolvida(s) ao Controle de Vagas.`);
+      setIsReturnModalOpen(false);
+      setReturnTargets([]);
+      setSelectedRows(new Set());
+    } else {
+      toast.error('Não foi possível devolver as vagas.');
+    }
+  };
+
+
   const pendingVagas = useMemo(() => {
     return vagas.filter(v => {
       const vUnitNormalized = normalizeUnitName(v.unidade);

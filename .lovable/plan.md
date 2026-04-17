@@ -1,38 +1,47 @@
 
-## Plano — Agrupamento real + múltiplos cronogramas
+## Plano — Ajustes no agrupamento + UX da fila + status legível
 
-Usuário pulou as perguntas → assumo defaults sensatos:
-- **Modelo**: FK `edital_id` em `vagas` (1 edital → N vagas). Simples, sem tabela de junção.
-- **Cronogramas**: 100% independentes por cargo (JSONB `cronogramas_por_cargo` em `editais`).
-- **Agrupamento**: mesma unidade obrigatória; tipo livre.
+### Problemas
+1. **Agrupamento bloqueia unidades de Goiânia**: hoje só permite mesma unidade exata. Mas Goiânia tem várias unidades (CRER, AGIR, HUGOL, HECAD, HDS, POLICLÍNICA) que devem poder ser agrupadas entre si. Vitória (SÃO PEDRO, SUÁ) e cidades isoladas (JATAÍ, TEIA APARECIDA, etc.) seguem regra própria.
+2. **Layout do botão "Enviar agrupados"**: barra de ação está mal posicionada / muito embaixo.
+3. **Status cru exibido**: aparece `encaminhado_edital` literal em vez de label amigável tipo "Encaminhado para Edital".
 
-### A. Migration
-- `ALTER TABLE editais ADD COLUMN cronogramas_por_cargo JSONB DEFAULT '{}'::jsonb`
-- Confirmar/adicionar `vagas.edital_id UUID REFERENCES editais(id)` se não existir.
+### Investigação necessária (após aprovação)
+- `src/pages/FilaEditaisPage.tsx` — regra atual de validação de agrupamento + posição da action bar.
+- `src/pages/FilaAnalistaEditalPage.tsx` — `\u003cBadge\u003e{v.status_fluxo_edital}\u003c/Badge\u003e` cru, trocar por label.
+- `src/types/vaga.ts` — confirmar valores possíveis de `status_fluxo_edital`.
+- `src/lib/vagaUtils.ts` — verificar se já existe helper de label; senão criar.
+- Memória core já lista unidades de Goiânia → usar como fonte de verdade para "região".
 
-### B. Fila de Editais (`FilaEditaisPage.tsx` / `FilaAnalistaEditalPage.tsx`)
-- Checkbox por linha + "selecionar todos" no header.
-- Barra de ação fixa no rodapé quando ≥1 selecionado: "Enviar N cargos agrupados para Redação".
-- Validação: bloquear seleção cruzada entre unidades (toast explicativo).
-- Ação cria 1 rascunho de edital com array `vaga_ids` no state e navega para Redação.
+### Implementação
 
-### C. Redação de Editais (`EditaisPage.tsx`)
-- Topo: campos comuns (número, ano, data abertura, observações).
-- Tabs (1 por cargo) com campos específicos + cronograma próprio.
-- Botão "+ Adicionar cargo" (busca vagas elegíveis da mesma unidade).
-- Botão "Remover cargo" por aba.
+**A. Regra de agrupamento por região (não por unidade exata)**
+- Helper `getRegiaoUnidade(unidade)` em `vagaUtils.ts`:
+  - Goiânia: CRER, AGIR, HUGOL, HECAD, HDS, POLICLÍNICA → região `"goiania"`
+  - Vitória: SÃO PEDRO, SUÁ → região `"vitoria"`
+  - Demais (JATAÍ, TEIA APARECIDA, TEIA GOIÂNIA, TEIA CANEDO) → cada uma é sua própria região
+- Validação no `FilaEditaisPage`: bloquear seleção apenas se a região mudar; permitir mix dentro da mesma região.
+- Toast claro: "Cargos da mesma região (Goiânia) podem ser agrupados".
 
-### D. Aplicação de datas (corrigir bug + múltiplos cronogramas)
-- **Bug**: investigar `handleApplyImport` — provável mismatch entre `cronogramaKey` do parser e `name` dos inputs RHF, ou falta de `setValue(..., { shouldDirty: true })`. Corrigir mapeamento.
-- **`CronogramaImportDialog`**: novo modo múltiplo quando edital tem N cargos:
-  - Mostra lista de cronogramas detectados no Word + lista de cargos do edital.
-  - Auto-match por similaridade de nome de cargo; permite override manual via select.
-  - Botão "Aplicar todos" preenche cronograma de cada aba de cargo.
-- Modo single (1 cargo) continua funcionando como hoje.
+**B. Layout da barra de ação**
+- Trocar barra fixa no rodapé por **bar sticky no topo da tabela** (logo abaixo dos filtros) quando ≥1 selecionado.
+- Visual destacado (fundo primário, ícone, contador, botão de ação à direita, "limpar seleção" ao lado).
+- Sem `position: fixed` ofuscando conteúdo; usa `sticky top-0` dentro do card.
 
-### E. Validação
-- Selecionar 3 cargos mesma unidade → enviar agrupado → Redação abre com 3 abas.
-- Importar Word com 3 cronogramas → diálogo mapeia cada cronograma a um cargo → datas aparecem nos campos certos.
-- Tentar agrupar cargos de unidades diferentes → bloqueia.
-- Caso simples (1 cargo, 1 cronograma) continua funcionando.
-- Salvar e reabrir edital → estado preservado.
+**C. Labels de status legíveis**
+- Mapa em `vagaUtils.ts`:
+  ```
+  encaminhado_edital → "Encaminhado para Edital"
+  em_redacao → "Em Redação"
+  enviado_validacao → "Enviado para Validação"
+  aprovado_administrativo → "Aprovado"
+  publicado → "Publicado"
+  ```
+- Substituir todos os `\u003cBadge\u003e{v.status_fluxo_edital}\u003c/Badge\u003e` por `\u003cBadge\u003e{getStatusFluxoLabel(v.status_fluxo_edital)}\u003c/Badge\u003e` em FilaAnalistaEditalPage e FilaEditaisPage.
+
+### Validação
+- Selecionar CRER + AGIR + HUGOL → agrupa OK (Goiânia).
+- Selecionar CRER + JATAÍ → bloqueia com toast "regiões diferentes".
+- Selecionar SÃO PEDRO + SUÁ → agrupa OK (Vitória).
+- Barra de seleção aparece logo abaixo dos filtros, bem visível.
+- Status mostra "Encaminhado para Edital" no lugar de `encaminhado_edital`.

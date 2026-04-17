@@ -32,7 +32,7 @@ import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 import { validateDate } from '@/services/holidayService';
 import { EntrevistaDateField, EntrevistaConfig, deriveEntrevistaConfig, primaryEntrevistaDate } from '@/components/EntrevistaDateField';
 import { CronogramaImportDialog, CronogramaImportResult } from '@/components/CronogramaImportDialog';
-import { parseCronogramaFromDocx, ParsedCronograma } from '@/lib/editalCronogramaParser';
+import { parseCronogramaFromDocx, ParsedCronograma, CronogramaParseError } from '@/lib/editalCronogramaParser';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
@@ -74,6 +74,8 @@ export default function FilaAnalistaEditalPage() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [parsedCronogramas, setParsedCronogramas] = useState<ParsedCronograma[] | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
+  const [parseErrorDetails, setParseErrorDetails] = useState<CronogramaParseError | null>(null);
+  const [parsingOriginalFile, setParsingOriginalFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
   const [parsingFileName, setParsingFileName] = useState('');
 
@@ -349,25 +351,22 @@ export default function FilaAnalistaEditalPage() {
     setNomeArquivo(file.name);
     e.target.value = '';
 
-    // Apenas .docx é suportado pelo parser (mammoth)
-    if (!/\.docx$/i.test(file.name)) {
-      toast.message('Arquivo anexado.', {
-        description: 'A leitura automática do cronograma só funciona com .docx (Word moderno).',
-      });
-      return;
-    }
-
+    // Abre o diálogo já com o arquivo original disponível para diagnóstico,
+    // mesmo se a validação de tipo falhar (usuário pode baixar e nos enviar).
     setIsImportOpen(true);
     setParsing(true);
     setParseError(null);
+    setParseErrorDetails(null);
     setParsedCronogramas(null);
     setParsingFileName(file.name);
+    setParsingOriginalFile(file);
 
     const result = await parseCronogramaFromDocx(file);
     setParsing(false);
 
     if (!result.ok) {
       setParseError(result.errorMessage || 'Falha ao processar o arquivo.');
+      setParseErrorDetails(result.error ?? null);
       return;
     }
 
@@ -1049,6 +1048,8 @@ export default function FilaAnalistaEditalPage() {
         onOpenChange={setIsImportOpen}
         cronogramas={parsedCronogramas}
         errorMessage={parseError}
+        errorDetails={parseErrorDetails}
+        originalFile={parsingOriginalFile}
         loading={parsing}
         fileName={parsingFileName}
         onApply={handleApplyImport}

@@ -195,9 +195,27 @@ function parseAnexoCronogramaTitle(text: string): { anexo: string; cargo: string
   return { anexo: anexo || 'Cronograma', cargo: cargo || '(cargo não identificado)' };
 }
 
+export type CronogramaParseStep =
+  | 'validacao_tipo'
+  | 'leitura_arquivo'
+  | 'conversao_docx'
+  | 'parse_html'
+  | 'extracao_cronograma'
+  | 'desconhecido';
+
+export interface CronogramaParseError {
+  step: CronogramaParseStep;
+  message: string;
+  hint?: string;
+  /** Detalhes técnicos crus (mensagem do erro original, etc.) */
+  raw?: string;
+}
+
 export interface CronogramaParseResult {
   ok: boolean;
   errorMessage?: string;
+  /** Detalhes estruturados do erro, quando ok=false */
+  error?: CronogramaParseError;
   cronogramas: ParsedCronograma[];
 }
 
@@ -292,27 +310,94 @@ function extractEtapasFromTable(table: HTMLTableElement): ParsedEtapa[] {
  * "Cronograma de Seleção para o Cargo de: ..." e a próxima tabela
  * com colunas ETAPA + DATA.
  */
+function fail(step: CronogramaParseStep, message: string, hint?: string, raw?: string): CronogramaParseResult {
+  const payload = { step, message, hint, raw };
+  // eslint-disable-next-line no-console
+  console.error('[word-import]', payload);
+  return {
+    ok: false,
+    errorMessage: message,
+    error: payload,
+    cronogramas: [],
+  };
+}
+
 export async function parseCronogramaFromDocx(file: File): Promise<CronogramaParseResult> {
+  // 1. Validação de tipo
+  if (!file) {
+    return fail('validacao_tipo', 'Nenhum arquivo recebido.', 'Selecione um arquivo .docx e tente novamente.');
+  }
+  const lowerName = file.name.toLowerCase();
+  if (lowerName.endsWith('.doc') && !lowerName.endsWith('.docx')) {
+    return fail(
+      'validacao_tipo',
+      'Formato .doc (Word antigo) não é suportado.',
+      'Abra o arquivo no Word e use "Salvar como" → escolha "Documento do Word (.docx)" e tente novamente.',
+    );
+  }
+  if (!/\.docx$/i.test(file.name)) {
+    return fail(
+      'validacao_tipo',
+      `Tipo de arquivo não suportado: ${file.name.split('.').pop() || 'desconhecido'}.`,
+      'A leitura automática só funciona com arquivos .docx (Word moderno).',
+    );
+  }
+  if (file.size === 0) {
+    return fail('validacao_tipo', 'Arquivo vazio.', 'Selecione um arquivo .docx válido.');
+  }
+  if (file.size > 25 * 1024 * 1024) {
+    return fail('validacao_tipo', 'Arquivo muito grande (máx. 25 MB).', 'Reduza o arquivo ou divida-o.');
+  }
+
+  // 2. Leitura do arquivo
+  let arrayBuffer: ArrayBuffer;
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const { value: html } = await mammoth.convertToHtml({ arrayBuffer });
+    arrayBuffer = await file.arrayBuffer();
+  } catch (err: any) {
+    return fail('leitura_arquivo', 'Não foi possível ler o conteúdo do arquivo.', 'Tente novamente. Se persistir, baixe o arquivo de novo da origem.', String(err?.message ?? err));
+  }
 
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const allNodes = Array.from(doc.body.querySelectorAll('*'));
-    const tables = Array.from(doc.body.querySelectorAll('table')) as HTMLTableElement[];
+  // 3. Conversão DOCX → HTML (mammoth)
+  let html: string;
+  try {
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    html = result.value;
+  } catch (err: any) {
+    const raw = String(err?.message ?? err);
+    let hint = 'Verifique se o arquivo abre normalmente no Word. Se ele foi exportado de outro app (Google Docs, Pages), reabra no Word e salve como .docx.';
+    if (/zip|central directory|end of central/i.test(raw)) {
+      hint = 'O arquivo parece corrompido ou não é um .docx real (pode ser um PDF/.doc renomeado). Reexporte como .docx no Word.';
+    }
+    return fail('conversao_docx', 'Falha ao decodificar o arquivo .docx.', hint, raw);
+  }
 
-    // 1. Localiza TODOS os títulos de cronograma de cargo, com sua posição no DOM
+  if (!html || html.trim().length === 0) {
+    return fail('conversao_docx', 'O arquivo Word não tem conteúdo legível.', 'Confirme que o documento contém texto/tabelas e tente novamente.');
+  }
+
+  // 4. Parse HTML
+  let doc: Document;
+  let allNodes: Element[];
+  let tables: HTMLTableElement[];
+  try {
+    doc = new DOMParser().parseFromString(html, 'text/html');
+    allNodes = Array.from(doc.body.querySelectorAll('*'));
+    tables = Array.from(doc.body.querySelectorAll('table')) as HTMLTableElement[];
+  } catch (err: any) {
+    return fail('parse_html', 'Falha ao interpretar o conteúdo do Word.', 'Tente reabrir o arquivo no Word e salvar novamente.', String(err?.message ?? err));
+  }
+
+  // 5. Extração de cronogramas
+  try {
     type TitleHit = { idx: number; anexo: string; cargo: string };
     const titles: TitleHit[] = [];
     for (let i = 0; i < allNodes.length; i++) {
       const node = allNodes[i];
-      // Ignora nós dentro de tabelas para não confundir células com títulos
       if (node.closest('table')) continue;
       const txt = (node.textContent || '').replace(/\s+/g, ' ').trim();
       if (!txt) continue;
       const parsed = parseAnexoCronogramaTitle(txt);
       if (parsed) {
-        // Evita duplicação quando o mesmo texto está em parent + child
         const last = titles[titles.length - 1];
         if (last && last.cargo === parsed.cargo && Math.abs(last.idx - i) < 3) continue;
         titles.push({ idx: i, anexo: parsed.anexo, cargo: parsed.cargo });
@@ -322,7 +407,6 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
     const cronogramas: ParsedCronograma[] = [];
 
     if (titles.length > 0) {
-      // 2. Para cada título, achar a próxima tabela após ele (e antes do próximo título)
       for (let t = 0; t < titles.length; t++) {
         const start = titles[t].idx;
         const end = t + 1 < titles.length ? titles[t + 1].idx : Infinity;
@@ -338,7 +422,6 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
       }
     }
 
-    // 3. Fallback: nenhum título encontrado — procura por qualquer tabela com colunas ETAPA + DATA após "ANEXO"
     if (cronogramas.length === 0) {
       let anexoIdx = -1;
       for (let i = 0; i < allNodes.length; i++) {
@@ -363,20 +446,17 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
     }
 
     if (cronogramas.length === 0) {
-      return {
-        ok: false,
-        errorMessage:
-          'Não foi possível localizar nenhum "Anexo … Cronograma de Seleção para o Cargo de …" com a tabela de etapas.',
-        cronogramas: [],
-      };
+      const tablesInfo = `Tabelas encontradas: ${tables.length}.`;
+      return fail(
+        'extracao_cronograma',
+        'Nenhum cronograma reconhecido no arquivo.',
+        'Confirme que o Word contém um trecho como "Anexo … Cronograma de Seleção para o Cargo de: …" seguido de uma tabela com colunas "ETAPA" e "DATA". Você também pode anexar este .docx aqui na conversa para diagnóstico.',
+        tablesInfo,
+      );
     }
 
     return { ok: true, cronogramas };
   } catch (err: any) {
-    return {
-      ok: false,
-      errorMessage: `Erro ao ler o arquivo Word: ${err?.message ?? err}`,
-      cronogramas: [],
-    };
+    return fail('extracao_cronograma', 'Erro inesperado ao extrair o cronograma.', 'Use o botão "Baixar arquivo para diagnóstico" e anexe-o aqui na conversa.', String(err?.message ?? err));
   }
 }

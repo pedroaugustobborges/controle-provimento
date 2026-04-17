@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, CheckCircle2, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
+import { FileText, CheckCircle2, AlertTriangle, Loader2, ArrowLeft, Copy, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { ParsedCronograma } from '@/lib/editalCronogramaParser';
+import { ParsedCronograma, CronogramaParseError } from '@/lib/editalCronogramaParser';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/vagaUtils';
 import { EntrevistaConfig } from '@/components/EntrevistaDateField';
@@ -22,13 +22,13 @@ export interface CronogramaImportResult {
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  /** Lista de cronogramas detectados no arquivo */
   cronogramas: ParsedCronograma[] | null;
-  /** Mensagem de erro do parser, se houver */
   errorMessage?: string | null;
-  /** True enquanto o parser está rodando */
+  /** Detalhes estruturados do erro (passo, hint, raw) */
+  errorDetails?: CronogramaParseError | null;
+  /** Arquivo original — usado para botão "Baixar para diagnóstico" */
+  originalFile?: File | null;
   loading?: boolean;
-  /** Nome do arquivo em processamento (para feedback) */
   fileName?: string;
   onApply: (result: CronogramaImportResult) => void;
 }
@@ -38,10 +38,46 @@ export function CronogramaImportDialog({
   onOpenChange,
   cronogramas,
   errorMessage,
+  errorDetails,
+  originalFile,
   loading,
   fileName,
   onApply,
 }: Props) {
+  const handleCopyDetails = async () => {
+    const payload = {
+      fileName: originalFile?.name ?? fileName ?? null,
+      size: originalFile?.size ?? null,
+      type: originalFile?.type ?? null,
+      step: errorDetails?.step ?? null,
+      message: errorDetails?.message ?? errorMessage ?? null,
+      hint: errorDetails?.hint ?? null,
+      raw: errorDetails?.raw ?? null,
+      timestamp: new Date().toISOString(),
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      toast.success('Detalhes copiados — cole na conversa para diagnóstico.');
+    } catch {
+      toast.error('Não foi possível copiar. Tire um print da tela.');
+    }
+  };
+
+  const handleDownloadOriginal = () => {
+    if (!originalFile) return;
+    const ts = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    const safeName = originalFile.name.replace(/[^\w.\-]+/g, '_');
+    const url = URL.createObjectURL(originalFile);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `diagnostico-word-${ts}-${safeName}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Arquivo baixado. Anexe-o aqui na conversa para diagnóstico.');
+  };
+
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
 
   // Auto-seleciona quando vem 1 só; reseta seleção sempre que a lista muda
@@ -107,12 +143,43 @@ export function CronogramaImportDialog({
         )}
 
         {!loading && errorMessage && (
-          <div className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/5 text-destructive text-sm">
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-            <div>
-              <strong className="block mb-1">Não foi possível extrair o cronograma.</strong>
-              <span>{errorMessage}</span>
+          <div className="space-y-3">
+            <div className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/5 text-destructive text-sm">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <strong className="block">Não foi possível extrair o cronograma.</strong>
+                {errorDetails?.step && (
+                  <div className="text-[11px] uppercase tracking-wider opacity-70">
+                    Etapa: {errorDetails.step.replace(/_/g, ' ')}
+                  </div>
+                )}
+                <span className="block">{errorMessage}</span>
+                {errorDetails?.hint && (
+                  <div className="mt-2 text-xs text-slate-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                    💡 <strong>Dica:</strong> {errorDetails.hint}
+                  </div>
+                )}
+                {errorDetails?.raw && (
+                  <details className="mt-1 text-[11px] text-slate-600">
+                    <summary className="cursor-pointer">Detalhes técnicos</summary>
+                    <pre className="mt-1 whitespace-pre-wrap break-all bg-slate-50 border border-slate-200 rounded p-2">{errorDetails.raw}</pre>
+                  </details>
+                )}
+              </div>
             </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={handleCopyDetails} className="gap-1.5">
+                <Copy className="h-3.5 w-3.5" /> Copiar detalhes do erro
+              </Button>
+              {originalFile && (
+                <Button variant="outline" size="sm" onClick={handleDownloadOriginal} className="gap-1.5">
+                  <Download className="h-3.5 w-3.5" /> Baixar arquivo para diagnóstico
+                </Button>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 italic">
+              Anexe o arquivo baixado e os detalhes copiados na conversa do chat para análise.
+            </p>
           </div>
         )}
 

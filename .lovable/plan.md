@@ -1,41 +1,36 @@
 
-## Plano — Investigar e remover status fantasma `encaminhado_edital`
+## Plano — Validar fluxo de devolução e esclarecer status `encaminhado_edital`
 
-### Contexto
-Usuário afirma que `encaminhado_edital` **não existe** como status válido no sistema, mas a auditoria revelou 7 vagas no banco com `status_fluxo_edital = 'encaminhado_edital'` e o código em `FilaAnalistaEditalPage.tsx` usa esse valor explicitamente para excluir vagas da Redação e mantê-las na Fila.
+### Entendimento do fluxo (confirmado pelo usuário)
+1. **Controle de Vagas → Fila de Editais**: unidade encaminha vaga. Status muda para `encaminhado_edital`. `status_origem` guarda o status anterior (geralmente "SEM STATUS").
+2. **Fila de Editais → Redação de Edital**: analista puxa para redigir. Status muda para `em_redacao`.
+3. **Redação → devolver → Fila de Editais**: volta para `encaminhado_edital` (NÃO volta para Controle).
+4. **Fila de Editais → devolver → Controle de Vagas**: restaura `status_origem` (geralmente "SEM STATUS"). Limpa `status_fluxo_edital` e `etapa`.
 
-### Investigação necessária
-1. `src/types/vaga.ts` — listar valores oficiais de `status_fluxo_edital` (enum/union type).
-2. `src/pages/FilaEditaisPage.tsx` — confirmar qual status a Fila de Editais realmente usa para listar vagas.
-3. `src/pages/FilaAnalistaEditalPage.tsx` — revisar uso de `'encaminhado_edital'` no filtro.
-4. Buscar todas as ocorrências de `'encaminhado_edital'` no código (`code--search_files`).
-5. Identificar qual é o status correto que representa "vaga encaminhada/aguardando redação na Fila de Editais" (provavelmente `'em_redacao'`, `null`, ou outro valor da enum oficial).
+### Diagnóstico
+O fluxo descrito **já está implementado corretamente** segundo investigação anterior. A confusão do usuário parece ser sobre a **existência** do status `encaminhado_edital` — ele acreditava ser fantasma, mas é legítimo e essencial para representar "vaga na Fila aguardando analista".
 
-### Possíveis cenários
-- **A**: `encaminhado_edital` é um valor legado/lixo gravado por bug antigo. Os 7 registros precisam ser corrigidos para o status oficial correspondente, e o código limpo.
-- **B**: `encaminhado_edital` foi renomeado em algum momento (ex: para `aguardando_redacao` ou similar) e o código ficou desatualizado.
-- **C**: Os 7 registros vieram de uma migração antiga e devem ser re-mapeados.
+### Investigação adicional necessária
+Para garantir 100% que o código bate com a regra:
+1. `src/pages/FilaAnalistaEditalPage.tsx` — handler de devolver (Redação→Fila): confirmar que grava `status_fluxo_edital='encaminhado_edital'` e mantém `etapa='em_redacao'` ou similar.
+2. `src/pages/FilaEditaisPage.tsx` — handler de devolver (Fila→Controle): confirmar restauração de `status_origem`, limpeza de `status_fluxo_edital` e `etapa`, e registro no histórico.
+3. `src/types/vaga.ts` — confirmar enum oficial inclui `encaminhado_edital`.
+4. Banco: verificar nos 7 registros se `status_origem` está populado corretamente (para garantir que a devolução para Controle vai funcionar).
 
-### Implementação proposta
-1. **Identificar status correto** (após investigação) — mapear `encaminhado_edital` para o valor oficial.
-2. **Atualizar `FilaAnalistaEditalPage.tsx`**: remover referências a `'encaminhado_edital'` e usar a lógica correta de mútua exclusão entre Fila e Redação.
-3. **Atualizar `FilaEditaisPage.tsx`** se necessário, garantindo coerência.
-4. **Migration de correção** dos 7 registros: `UPDATE vagas SET status_fluxo_edital = '<valor_correto>' WHERE status_fluxo_edital = 'encaminhado_edital';` (após confirmar valor com o usuário).
-5. **Remover qualquer outra ocorrência** de `'encaminhado_edital'` no codebase.
+### Possíveis ajustes (a confirmar após investigação)
+- **Se `status_origem` estiver vazio nos 7 registros**: adicionar fallback robusto + migration defensiva populando `status_origem='SEM STATUS'`.
+- **Se faltar registro no histórico** em alguma das transições: instrumentar.
+- **Se houver qualquer divergência** entre o código atual e a regra descrita pelo usuário: corrigir.
 
-### Validação
-- Buscar no código: 0 ocorrências de `'encaminhado_edital'` após limpeza.
-- Banco: 0 vagas com esse status.
-- Fila e Redação continuam com mútua exclusão.
+### Implementação (após validação)
+1. Ler os dois arquivos de handler e o enum.
+2. Query SQL nos 7 registros: `SELECT id, status, status_origem, status_fluxo_edital, etapa FROM vagas WHERE status_fluxo_edital='encaminhado_edital';`
+3. Apresentar diagnóstico real ao usuário com evidências.
+4. Aplicar correções **apenas se** houver divergência real entre código e regra.
 
-### Pergunta de confirmação (antes de executar)
-Antes de aplicar a migração de UPDATE nos 7 registros, vou primeiro investigar e propor o **valor correto** para substituição. Se houver ambiguidade, perguntarei via `ask_questions`.
-
-### Arquivos prováveis
-- `src/types/vaga.ts` (enum oficial)
-- `src/pages/FilaAnalistaEditalPage.tsx` (remover `encaminhado_edital`)
-- `src/pages/FilaEditaisPage.tsx` (validar lógica)
-- Migration SQL para corrigir os 7 registros
+### Validação E2E
+- Criar vaga teste → encaminhar para Fila → puxar para Redação → devolver → confirma que volta para Fila com `encaminhado_edital`.
+- Devolver da Fila → confirma que volta para Controle com status original.
 
 ### Risco
-Médio. Mexe em status de vagas reais e em filtros de duas páginas. Vou confirmar o valor de substituição antes de executar a migration. Validação end-to-end após aplicar.
+Baixo. Etapa de validação primeiro; alterações apenas se necessário.

@@ -372,7 +372,8 @@ export function AppSidebar() {
                       {isExternal ? (
                         <a
                           href={item.url}
-                          onClick={(e) => { e.preventDefault(); navigate(item.url); }}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active

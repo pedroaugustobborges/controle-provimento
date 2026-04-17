@@ -653,14 +653,14 @@ export default function UnidadePortalPage() {
                   <Table>
                     <TableHeader>
                        <TableRow>
-                        <TableHead>Candidato</TableHead>
-                        <TableHead>Unidade</TableHead>
+                        <TableHead className="min-w-[200px] w-[220px]">Candidato</TableHead>
+                        <TableHead className="min-w-[140px]">Unidade</TableHead>
                         <TableHead className="min-w-[140px]">Status</TableHead>
                         <TableHead className="min-w-[140px]">Unidade Destino</TableHead>
                         <TableHead className="min-w-[130px]">Horário/Plantão</TableHead>
-                        <TableHead>Aceito</TableHead>
-                        <TableHead className="min-w-[200px]">Observação</TableHead>
-                        <TableHead className="w-20">Ação</TableHead>
+                        <TableHead className="w-[100px]">Aceito</TableHead>
+                        <TableHead className="min-w-[220px]">Observação</TableHead>
+                        <TableHead className="w-[100px]">Ação</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -706,8 +706,10 @@ export default function UnidadePortalPage() {
                           );
                           return (
                             <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                              <TableCell className="py-3 px-4 font-bold text-slate-900 text-sm">{c.nome_candidato || '—'}</TableCell>
-                              <TableCell className="py-3 px-4 text-slate-600 text-xs font-semibold">{c.unidade || '—'}</TableCell>
+                              <TableCell className="py-3 px-4 font-bold text-slate-900 text-sm align-middle whitespace-normal break-words leading-snug">
+                                {c.nome_candidato || '—'}
+                              </TableCell>
+                              <TableCell className="py-3 px-4 text-slate-600 text-xs font-semibold align-middle whitespace-normal break-words">{c.unidade || '—'}</TableCell>
                               <TableCell className="py-3 px-4">
                                 <Select value={edit.status} onValueChange={(v) => setObsField(c.id, c, 'status', v)}>
                                   <SelectTrigger className="h-9 text-xs font-semibold rounded-lg border-slate-200">

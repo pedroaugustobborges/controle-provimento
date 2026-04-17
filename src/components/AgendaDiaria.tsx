@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Clock, Lock, User, Video, Edit, Trash2, Calendar, Users, MapPin, Briefcase } from 'lucide-react';
+import { Clock, Lock, User, Video, Edit, Trash2, Calendar, Users, MapPin, Briefcase, MessageSquare } from 'lucide-react';
 import { Convocacao, BloqueioHorario } from '@/types/vaga';
 import { HORARIOS_FIXOS_CONVOCACAO, getBaseForUnidade } from '@/lib/convocacaoUtils';
 import { formatDate } from '@/lib/vagaUtils';
@@ -200,7 +200,7 @@ function ConvocacaoRow({ conv, onEdit, onDevolutiva, showHorario = true }: { con
           <span className="text-sm font-bold text-foreground">{conv.horario}</span>
         </div>
       )}
-      <div className="flex-1 min-w-0 flex items-center gap-3">
+      <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
         <User className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="text-sm font-semibold text-foreground break-words leading-tight">{conv.nome_candidato}</span>
         <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
@@ -213,6 +213,27 @@ function ConvocacaoRow({ conv, onEdit, onDevolutiva, showHorario = true }: { con
           <Badge variant="outline" className="text-[9px] h-5 gap-0.5 bg-primary/10 text-primary border-primary/20">
             <Video className="h-2.5 w-2.5" /> Online
           </Badge>
+        )}
+        {conv.observacoes && conv.observacoes.trim() !== '' && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 gap-1 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MessageSquare className="h-3 w-3" />
+                Obs. da Unidade
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="start">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Observação da Unidade</p>
+                <p className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">{conv.observacoes}</p>
+              </div>
+            </PopoverContent>
+          </Popover>
         )}
       </div>
       <div className="flex gap-1 shrink-0">

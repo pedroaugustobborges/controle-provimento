@@ -180,7 +180,63 @@ export default function AdministracaoPage() {
     fetchUsers();
     fetchAuditLogs();
     fetchFeedbacks();
-  }, [fetchUsers, fetchAuditLogs, fetchFeedbacks]);
+    fetchFeriados();
+  }, [fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchFeriados]);
+
+  // Holiday management state
+  const [isHolidayDialogOpen, setIsHolidayDialogOpen] = useState(false);
+  const [editingHoliday, setEditingHoliday] = useState<any>(null);
+  const [holidayForm, setHolidayForm] = useState({
+    nome: '',
+    data: '',
+    tipo: 'municipal' as 'municipal' | 'estadual',
+    cidade: '',
+    estado: 'GO'
+  });
+
+  const resetHolidayForm = () => setHolidayForm({
+    nome: '',
+    data: '',
+    tipo: 'municipal',
+    cidade: '',
+    estado: 'GO'
+  });
+
+  const handleSaveHoliday = async () => {
+    if (!holidayForm.nome || !holidayForm.data || !holidayForm.estado) {
+      toast.error('Preencha nome, data e estado.');
+      return;
+    }
+    setSaving(true);
+    try {
+      if (editingHoliday) {
+        await updateFeriado(editingHoliday.id, holidayForm);
+        toast.success('Feriado atualizado!');
+      } else {
+        await addFeriado(holidayForm);
+        toast.success('Feriado cadastrado!');
+      }
+      setIsHolidayDialogOpen(false);
+      resetHolidayForm();
+      setEditingHoliday(null);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEditHoliday = (feriado: any) => {
+    setEditingHoliday(feriado);
+    setHolidayForm({
+      nome: feriado.nome,
+      data: feriado.data,
+      tipo: feriado.tipo,
+      cidade: feriado.cidade || '',
+      estado: feriado.estado
+    });
+    setIsHolidayDialogOpen(true);
+  };
 
   // Auto-generate temp password when mode changes
   useEffect(() => {

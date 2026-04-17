@@ -696,6 +696,41 @@ export default function FilaAnalistaEditalPage() {
         onApply={handleApplyImport} onApplyMulti={handleApplyImport}
         cargosAlvo={isBatchMode ? selectedBatchVagas.map(v => ({ id: v.id, cargo: v.cargo })) : undefined}
       />
+
+      <AlertDialog open={isReturnToFilaOpen} onOpenChange={setIsReturnToFilaOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-700">
+              <Undo2 className="h-5 w-5" /> Devolver à Fila de Editais
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {returnToFilaTargets.length} vaga(s) voltarão para a Fila de Editais e poderão ser reencaminhadas posteriormente. A movimentação será registrada no histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {returnToFilaTargets.length > 0 && (
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 max-h-[160px] overflow-y-auto">
+              <ul className="space-y-1">
+                {returnToFilaTargets.map(v => (
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-slate-400">— {v.unidade}</span></span>
+                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={returnToFilaSubmitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleConfirmReturnToFila(); }}
+              disabled={returnToFilaSubmitting}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {returnToFilaSubmitting ? 'Devolvendo...' : 'Confirmar devolução'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

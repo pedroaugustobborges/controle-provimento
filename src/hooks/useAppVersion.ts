@@ -80,13 +80,17 @@ export function useAppVersion(): UseAppVersionResult {
 
   const reload = () => {
     acknowledge();
+    const doReload = () => {
+      (window as Window).location.reload();
+    };
     // Tenta limpar caches do Service Worker, se existir
-    if ("caches" in window) {
-      caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).finally(() => {
-        window.location.reload();
-      });
+    if (typeof caches !== "undefined") {
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+        .finally(doReload);
     } else {
-      window.location.reload();
+      doReload();
     }
   };
 

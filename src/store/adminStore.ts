@@ -3,12 +3,23 @@ import { User, AuditLog, SupportConfig, BackupRecord, Feedback } from '@/types/a
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempPassword, getAdminPasswordErrorMessage } from '@/lib/adminPasswordUtils';
 
+export interface LocalHoliday {
+  id: string;
+  nome: string;
+  data: string;
+  tipo: 'municipal' | 'estadual';
+  cidade?: string;
+  estado: string;
+  created_at: string;
+}
+
 interface AdminState {
   users: User[];
   auditLogs: AuditLog[];
   supportConfigs: SupportConfig[];
   backups: BackupRecord[];
   feedbacks: Feedback[];
+  feriados: LocalHoliday[];
   currentUser: User | null;
   selectedRegion: string;
   selectedUnit: string;
@@ -20,6 +31,7 @@ interface AdminState {
   fetchAuditLogs: () => Promise<void>;
   fetchFeedbacks: () => Promise<void>;
   fetchCurrentProfile: () => Promise<void>;
+  fetchFeriados: () => Promise<void>;
 
   // User actions via edge function
   addUser: (user: Partial<User> & { email: string; password: string; sendWelcomeEmail?: boolean }) => Promise<void>;
@@ -44,6 +56,11 @@ interface AdminState {
   addSupportConfig: (config: Omit<SupportConfig, 'id'>) => Promise<void>;
   updateSupportConfig: (id: string, data: Partial<SupportConfig>) => Promise<void>;
   deleteSupportConfig: (id: string) => Promise<void>;
+
+  // Holiday actions
+  addFeriado: (feriado: Omit<LocalHoliday, 'id' | 'created_at'>) => Promise<void>;
+  updateFeriado: (id: string, feriado: Partial<LocalHoliday>) => Promise<void>;
+  deleteFeriado: (id: string) => Promise<void>;
 
   // Backup actions
   generateBackup: () => void;

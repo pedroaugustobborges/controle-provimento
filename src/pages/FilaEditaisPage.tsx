@@ -899,6 +899,63 @@ export default function FilaEditaisPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal: Devolver vagas ao Controle de Vagas */}
+      <Dialog open={isReturnModalOpen} onOpenChange={setIsReturnModalOpen}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-700">
+              <Undo2 className="h-5 w-5" />
+              Devolver {returnTargets.length} vaga(s) ao Controle
+            </DialogTitle>
+            <DialogDescription>
+              A(s) vaga(s) voltará(ão) para o Controle de Vagas com o status original. Informe o motivo e uma observação obrigatória.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 max-h-[160px] overflow-y-auto">
+              <ul className="space-y-1">
+                {returnTargets.map(v => (
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-slate-400">— {v.unidade}</span></span>
+                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Motivo</Label>
+              <Select value={returnMotivo} onValueChange={setReturnMotivo}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A pedido do analista da unidade">A pedido do analista da unidade</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Observação <span className="text-destructive">*</span></Label>
+              <Textarea
+                placeholder="Descreva o motivo da devolução (mínimo 10 caracteres)..."
+                value={returnObs}
+                onChange={(e) => setReturnObs(e.target.value)}
+                className="min-h-[90px] resize-none"
+              />
+              <p className="text-[11px] text-slate-500">{returnObs.trim().length}/10 caracteres mínimos</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReturnModalOpen(false)} disabled={returnSubmitting}>Cancelar</Button>
+            <Button
+              onClick={handleConfirmReturn}
+              disabled={returnSubmitting || returnObs.trim().length < 10}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {returnSubmitting ? 'Devolvendo...' : 'Confirmar devolução'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

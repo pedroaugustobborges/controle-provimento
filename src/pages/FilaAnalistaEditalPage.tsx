@@ -693,12 +693,32 @@ export default function FilaAnalistaEditalPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="font-semibold text-slate-700">Número do Edital</Label>
-                      <Input 
-                        placeholder="Ex: 001/2024" 
-                        value={numeroEdital} 
-                        onChange={e => setNumeroEdital(e.target.value)}
-                        className="border-slate-200 focus:border-primary focus:ring-primary/20"
-                      />
+                      <div className="flex gap-1">
+                        <Input 
+                          placeholder="Ex: 001/2024" 
+                          value={numeroEdital} 
+                          onChange={e => setNumeroEdital(e.target.value)}
+                          className="border-slate-200 focus:border-primary focus:ring-primary/20"
+                        />
+                        {uniqueEditais.length > 0 && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="icon" className="px-2 w-auto gap-1 text-xs border-slate-200">
+                                <PlusCircle className="h-4 w-4" />
+                                <span className="hidden md:inline">Existentes</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
+                              <DropdownMenuSeparator />
+                              {uniqueEditais.map(ed => (
+                                <DropdownMenuItem key={ed} onClick={() => setNumeroEdital(ed)}>
+                                  Edital {ed}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="font-semibold text-slate-700">Número do Processo</Label>

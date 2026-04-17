@@ -326,8 +326,8 @@ export default function FilaEditaisPage() {
       updateVagaAsync(vaga.id, {
         status: 'ACOMPANHAMENTO DE EDITAL',
         status_origem: vaga.status_origem || vaga.status,
-        status_fluxo_edital: 'encaminhado_edital',
-        etapa: 'encaminhado_edital',
+        status_fluxo_edital: 'em_redacao',
+        etapa: 'em_redacao',
         cargo_validado: true,
         carga_horaria_validada: true,
         salario_validado: true,
@@ -339,7 +339,7 @@ export default function FilaEditaisPage() {
           usuario: currentUser?.nome_completo || 'Analista da Unidade'
         }]
       } as any).then(ok => {
-        if (ok) notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', batchObs ? `Obs: ${batchObs}` : '');
+        if (ok) notificarMovimentacaoEdital(vaga.id, 'em_redacao', batchObs ? `Obs: ${batchObs}` : '');
       })
     )).catch(err => console.error('Erro ao atualizar vagas em lote:', err));
   };
@@ -380,8 +380,8 @@ export default function FilaEditaisPage() {
     const ok = await updateVagaAsync(selectedVaga.id, {
       status: 'ACOMPANHAMENTO DE EDITAL',
       status_origem: selectedVaga.status_origem || selectedVaga.status,
-      status_fluxo_edital: 'encaminhado_edital',
-      etapa: 'encaminhado_edital',
+      status_fluxo_edital: 'em_redacao',
+      etapa: 'em_redacao',
       cargo_validado: true,
       carga_horaria_validada: true,
       salario_validado: true,
@@ -397,7 +397,7 @@ export default function FilaEditaisPage() {
     if (!ok) return;
 
     // Notify Administrativos, Analistas do Edital and the original requester
-    notificarMovimentacaoEdital(selectedVaga.id, 'encaminhado_edital', obsUnidade ? `Obs: ${obsUnidade}` : '');
+    notificarMovimentacaoEdital(selectedVaga.id, 'em_redacao', obsUnidade ? `Obs: ${obsUnidade}` : '');
 
     setIsSendModalOpen(false);
     toast.success('Vaga encaminhada com sucesso para a redação do edital!');

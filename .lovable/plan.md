@@ -1,39 +1,29 @@
 
-## Plano — Detecção automática de nova versão após deploy (Hostinger)
+## Plano — Corrigir parser para detectar 3ª tabela de cronograma e datas corretas
 
-### 1. Investigação (read-only) — já feita
-- `src/hooks/useSystemUpdates.ts` depende de INSERT manual em `system_updates`.
-- `src/components/UpdateBanner.tsx` já está pronto e funcional, só precisa ser disparado.
-- Não há nada hoje que detecte automaticamente um novo build no servidor.
-- `vercel.json` e `.github/workflows/deploy.yml` existem — confirmar fluxo Hostinger.
+### 1. Coleta de informações (bloqueante — precisa do usuário)
+- Anexar o `.docx` problemático na conversa (ou prints da 3ª tabela + cabeçalhos + diálogo de seleção atual).
+- Confirmar exemplo concreto de data divergente (etapa X: Word diz Y, sistema preencheu Z).
 
-### 2. Decisões pendentes (precisa confirmar antes de codar)
-- **Abordagem A, B ou C** (ver acima).
-- Se A ou C: confirmar periodicidade do polling (sugiro 60s).
-- Se B ou C: confirmar acesso ao workflow de deploy.
+### 2. Investigação (read-only, após receber arquivo)
+- Reler `src/lib/editalCronogramaParser.ts` com foco em:
+  - Lógica `inTableHits` (priorização de títulos dentro de tabelas) — pode estar causando perda do 3º título se ele não estiver dentro da tabela como TD/TH.
+  - Regex de cabeçalho (`ETAPA`/`DATA`) — confirmar se aceita variações como "ETAPA / FASE", "DATA PREVISTA", "PERÍODO", etc.
+  - Função de extração de datas — verificar se está pegando a primeira data quando há intervalo (ex.: "01/02 a 05/02"), tratando dd/mm vs dd/mm/aaaa, e timezone na conversão para `yyyy-mm-dd`.
+- Usar `document--parse_document` no `.docx` enviado para inspecionar a estrutura HTML real da 3ª tabela e confirmar onde o parser está falhando.
 
-### 3. Implementação — Opção A (mais provável, recomendada)
-1. **Plugin Vite para gerar `version.json` no build**:
-   - Editar `vite.config.ts` adicionando plugin custom que, no hook `closeBundle`, escreve `dist/version.json` com `{ version: <timestamp>, buildHash: <hash> }`.
-2. **Hook `useAppVersion`**:
-   - Criar `src/hooks/useAppVersion.ts` que:
-     - Faz fetch inicial de `/version.json` e guarda o hash em `useRef`.
-     - Roda `setInterval` de 60s fazendo fetch com cache-busting.
-     - Se hash mudar, retorna `{ hasUpdate: true, newVersion }`.
-3. **Integrar com UpdateBanner existente**:
-   - Adaptar `UpdateBanner.tsx` para também escutar `useAppVersion`.
-   - Se `hasUpdate` do polling for true e não houver `system_updates` ativo, exibir banner com mensagem padrão "Nova versão disponível" + ação `reload`.
-   - Manter `lastSeenSystemUpdateId` por hash no localStorage para não reaparecer após reload.
-4. **Cache busting do reload**:
-   - No clique de "Atualizar agora", chamar `window.location.reload()` + idealmente limpar service worker se houver.
+### 3. Implementação (após investigação)
+1. **3ª tabela ignorada** — possíveis correções:
+   - Ampliar tags aceitas no `TITLE_TAGS` se o título da 3ª tabela usar tag não prevista.
+   - Ajustar lógica de associação título→tabela quando o título do Anexo VII vem em parágrafo distante (mais que o limite atual de proximidade).
+   - Aceitar mais variações no regex de "Cronograma de Seleção para o Cargo de".
+2. **Datas incorretas** — possíveis correções:
+   - Corrigir parsing de intervalos ("a"/"até"/"-") para pegar data inicial corretamente.
+   - Ajustar normalização de timezone no `yyyy-mm-dd` (evitar shift de -1 dia).
+   - Tratar formatos abreviados (dd/mm sem ano → herdar ano do contexto).
 
-### 4. Implementação opcional — Opção B (se confirmada)
-- Adicionar step no `.github/workflows/deploy.yml` pós-deploy que faz `curl` para edge function que insere em `system_updates`.
-- Criar edge function `notify-deploy` protegida por secret.
-
-### 5. Validação
-- Build local com `npm run build` → confirma que `dist/version.json` é gerado.
-- Subir versão na Hostinger → após 60s, banner aparece para usuários logados.
-- Clicar "Atualizar agora" → recarrega e banner não reaparece.
-- Subir nova versão de novo → banner reaparece.
-- Console limpo, sem 404 em `/version.json`.
+### 4. Validação
+- Reimportar o `.docx` problemático → todos os 3 cronogramas aparecem no diálogo.
+- Conferir cada data lado a lado com o Word original — todas batem.
+- Reimportar arquivos de teste anteriores → não houve regressão (os 2 que já funcionavam continuam funcionando).
+- Console limpo; logs de rejeição apenas para tabelas que realmente não são cronograma.

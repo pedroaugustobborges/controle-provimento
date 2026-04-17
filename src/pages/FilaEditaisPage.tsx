@@ -488,20 +488,18 @@ export default function FilaEditaisPage() {
                   const isUngroupedFromConsolidated = goianiaCargo && ungrouped.has(cargoKey);
                   const isSelected = selectedRows.has(v.id);
                   return (
-                    <TableRow key={v.id} className="group">
+                    <TableRow key={v.id} className={`group ${isSelected ? 'bg-blue-50/40' : ''}`}>
                       <TableCell className="align-middle">
-                        {isUngroupedFromConsolidated && (
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(checked) => {
-                              setSelectedRows(prev => {
-                                const next = new Set(prev);
-                                if (checked) next.add(v.id); else next.delete(v.id);
-                                return next;
-                              });
-                            }}
-                          />
-                        )}
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
+                            setSelectedRows(prev => {
+                              const next = new Set(prev);
+                              if (checked) next.add(v.id); else next.delete(v.id);
+                              return next;
+                            });
+                          }}
+                        />
                       </TableCell>
                       <TableCell className="font-mono text-xs text-primary font-bold">
                         {v.requisicao || v.numero_requisicao}

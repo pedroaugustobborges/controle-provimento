@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,6 +29,12 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import logoAgir from '@/assets/logo-agir.png';
+import { draftStore } from '@/lib/draftStore';
+import { retryQueue } from '@/lib/retryQueue';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { SaveStatusIndicator } from '@/components/SaveStatusIndicator';
+import { DraftRecoveryBanner } from '@/components/DraftRecoveryBanner';
+import type { SaveStatus } from '@/hooks/useAutoSave';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { getCategoriaStatus } from '@/lib/vagaUtils';
 import {
@@ -136,6 +142,10 @@ export default function UnidadePortalPage() {
     status: string; horario_plantao: string; aceito: boolean; observacao: string; unidade_destino: string;
   }>>({});
   const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
+  const [saveStatus, setSaveStatus] = useState<Record<string, SaveStatus>>({});
+  const [pendingRetryCount, setPendingRetryCount] = useState(0);
+  const [recoverableDrafts, setRecoverableDrafts] = useState<Array<{ recordId: string; data: any }>>([]);
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [obsFilterUnidade, setObsFilterUnidade] = useState('all');
   const [obsFilterDate, setObsFilterDate] = useState<Date | undefined>(undefined);
   const [obsCalendarOpen, setObsCalendarOpen] = useState(false);
@@ -335,26 +345,166 @@ export default function UnidadePortalPage() {
     unidade_destino: c.unidade_alternativa || '',
   };
 
+  // Keep latest edits/convocacoes in refs so callbacks always read fresh data
+  const editsRef = useRef(obsEdits);
+  editsRef.current = obsEdits;
+  const convocacoesRef = useRef(convocacoes);
+  convocacoesRef.current = convocacoes;
+
+  // Trava 4 — performs the actual save. Used by both manual save and retry queue.
+  const performSave = useCallback(async (payload: { id: string; data: any }) => {
+    await updateConvocacao(payload.id, payload.data);
+  }, [updateConvocacao]);
+
+  // Register the retry queue handler exactly once
+  useEffect(() => {
+    retryQueue.registerHandler('updateConvocacao', performSave);
+    retryQueue.installNetworkListeners();
+    const unsub = retryQueue.subscribe((items) => setPendingRetryCount(items.length));
+    return unsub;
+  }, [performSave]);
+
+  // Trava 2 — Hydrate recoverable drafts on mount (after currentUser available)
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const drafts = draftStore.listAllForUser(currentUser.id);
+    const recoverable: Array<{ recordId: string; data: any }> = [];
+    drafts.forEach(({ recordId, entry }) => {
+      const conv = convocacoesRef.current.find((c) => c.id === recordId);
+      // If server doesn't have it or local draft is newer than server, recover.
+      if (!conv) {
+        recoverable.push({ recordId, data: entry.data });
+        return;
+      }
+      const serverTs = new Date((conv as any).updated_at || 0).getTime();
+      if (entry.timestamp > serverTs) {
+        recoverable.push({ recordId, data: entry.data });
+      } else {
+        // Server is newer — drop stale draft
+        draftStore.clear(currentUser.id, recordId);
+      }
+    });
+    setRecoverableDrafts(recoverable);
+  }, [currentUser?.id, convocacoes.length]);
+
+  const handleRecoverDrafts = () => {
+    const next = { ...editsRef.current };
+    recoverableDrafts.forEach(({ recordId, data }) => {
+      next[recordId] = data;
+    });
+    setObsEdits(next);
+    setRecoverableDrafts([]);
+    toast.success('Alterações recuperadas. Clique em Salvar para confirmar.');
+  };
+
+  const handleDiscardDrafts = () => {
+    if (!currentUser?.id) return;
+    recoverableDrafts.forEach(({ recordId }) => draftStore.clear(currentUser.id, recordId));
+    setRecoverableDrafts([]);
+    toast.message('Rascunhos descartados.');
+  };
+
+  // Trava 1 + 2 — Auto-save com debounce + persistência local imediata
+  const scheduleAutoSave = useCallback((convId: string, c: any) => {
+    if (debounceTimers.current[convId]) clearTimeout(debounceTimers.current[convId]);
+    debounceTimers.current[convId] = setTimeout(async () => {
+      const edit = editsRef.current[convId];
+      if (!edit) return;
+      setSaveStatus((s) => ({ ...s, [convId]: 'saving' }));
+      try {
+        await performSave({
+          id: convId,
+          data: {
+            status: edit.status as StatusConvocacao,
+            horario_trabalho: edit.horario_plantao,
+            devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+            observacoes: edit.observacao,
+            unidade_alternativa: edit.unidade_destino,
+          },
+        });
+        // Clear local draft after server confirms
+        if (currentUser?.id) draftStore.clear(currentUser.id, convId);
+        setSaveStatus((s) => ({ ...s, [convId]: 'saved' }));
+        setTimeout(() => {
+          setSaveStatus((s) => (s[convId] === 'saved' ? { ...s, [convId]: 'idle' } : s));
+        }, 1500);
+      } catch (err: any) {
+        console.error('[autosave] failed, queueing for retry:', err);
+        // Trava 5 — Enqueue for retry on network failure
+        retryQueue.enqueue({
+          action: 'updateConvocacao',
+          recordId: convId,
+          payload: {
+            id: convId,
+            data: {
+              status: edit.status as StatusConvocacao,
+              horario_trabalho: edit.horario_plantao,
+              devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+              observacoes: edit.observacao,
+              unidade_alternativa: edit.unidade_destino,
+            },
+          },
+        });
+        setSaveStatus((s) => ({ ...s, [convId]: 'error' }));
+      }
+    }, 1000);
+  }, [performSave, currentUser?.id]);
+
   const setObsField = (id: string, c: any, field: string, value: any) => {
     const current = getObsEdit(c);
-    setObsEdits(prev => ({ ...prev, [id]: { ...current, [field]: value } }));
+    const next = { ...current, [field]: value };
+    setObsEdits(prev => ({ ...prev, [id]: next }));
+    setSaveStatus((s) => ({ ...s, [id]: 'dirty' }));
+    // Trava 2 — snapshot in localStorage IMMEDIATELY on every keystroke
+    if (currentUser?.id) {
+      draftStore.save(currentUser.id, id, next, (c as any).updated_at || null);
+    }
+    scheduleAutoSave(id, c);
   };
+
+  // Trava 3 — Block tab close while there are dirty rows or queued items
+  const hasUnsavedChanges = Object.keys(obsEdits).length > 0 || pendingRetryCount > 0;
+  useBeforeUnload(hasUnsavedChanges);
 
   const handleSaveObsRow = async (c: any) => {
     const edit = getObsEdit(c);
+    // Cancel any pending debounce — manual save takes precedence
+    if (debounceTimers.current[c.id]) clearTimeout(debounceTimers.current[c.id]);
     setSavingObs(prev => ({ ...prev, [c.id]: true }));
+    setSaveStatus((s) => ({ ...s, [c.id]: 'saving' }));
     try {
-      await updateConvocacao(c.id, {
-        status: edit.status as StatusConvocacao,
-        horario_trabalho: edit.horario_plantao,
-        devolutiva: edit.aceito ? 'aceitou' : 'recusou',
-        observacoes: edit.observacao,
-        unidade_alternativa: edit.unidade_destino,
+      await performSave({
+        id: c.id,
+        data: {
+          status: edit.status as StatusConvocacao,
+          horario_trabalho: edit.horario_plantao,
+          devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+          observacoes: edit.observacao,
+          unidade_alternativa: edit.unidade_destino,
+        },
       });
+      if (currentUser?.id) draftStore.clear(currentUser.id, c.id);
       toast.success('Devolutiva salva com sucesso.');
       setObsEdits(prev => { const n = { ...prev }; delete n[c.id]; return n; });
-    } catch {
-      toast.error('Erro ao salvar devolutiva.');
+      setSaveStatus((s) => ({ ...s, [c.id]: 'saved' }));
+    } catch (err: any) {
+      // Trava 5 — Queue for retry instead of losing data
+      retryQueue.enqueue({
+        action: 'updateConvocacao',
+        recordId: c.id,
+        payload: {
+          id: c.id,
+          data: {
+            status: edit.status as StatusConvocacao,
+            horario_trabalho: edit.horario_plantao,
+            devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+            observacoes: edit.observacao,
+            unidade_alternativa: edit.unidade_destino,
+          },
+        },
+      });
+      toast.error('Sem conexão — alteração guardada e será reenviada automaticamente.');
+      setSaveStatus((s) => ({ ...s, [c.id]: 'error' }));
     } finally {
       setSavingObs(prev => ({ ...prev, [c.id]: false }));
     }
@@ -402,6 +552,11 @@ export default function UnidadePortalPage() {
               <span className="text-xs font-bold text-white/90 leading-tight">{currentUser?.nome_completo}</span>
               <span className="text-[10px] font-medium text-white/40 uppercase tracking-tighter">{currentUser?.perfil}</span>
             </div>
+            {pendingRetryCount > 0 && (
+              <div className="hidden sm:flex items-center px-2 py-1 rounded-md bg-amber-500/20 border border-amber-300/30">
+                <SaveStatusIndicator status="idle" pendingCount={pendingRetryCount} className="text-amber-100" />
+              </div>
+            )}
             <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair do Portal" aria-label="Sair" className="text-white/60 hover:text-white hover:bg-rose-500/20 transition-all rounded-full h-9 w-9 shrink-0">
               <LogOut className="h-4 w-4" />
             </Button>
@@ -409,7 +564,14 @@ export default function UnidadePortalPage() {
         </div>
       </header>
 
+      <DraftRecoveryBanner
+        count={recoverableDrafts.length}
+        onRecover={handleRecoverDrafts}
+        onDiscard={handleDiscardDrafts}
+      />
+
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6 lg:py-8 space-y-6">
+
         <Tabs defaultValue="dashboard" className="space-y-6">
           <div className="sticky top-[68px] z-40 py-2 -mt-2 bg-slate-50/80 backdrop-blur-sm sm:static sm:bg-transparent">
             <TabsList className="bg-white/80 border border-slate-200 shadow-sm p-1.5 rounded-2xl h-auto flex flex-wrap sm:flex-nowrap gap-1">
@@ -810,24 +972,27 @@ export default function UnidadePortalPage() {
                                 />
                               </TableCell>
                               <TableCell className="py-3 px-4 text-center">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleSaveObsRow(c)}
-                                  disabled={isSaving || !hasChanges}
-                                  className={cn(
-                                    "rounded-lg font-bold text-xs gap-1.5 h-9 px-3 transition-all",
-                                    hasChanges
-                                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-                                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                  )}
-                                >
-                                  {isSaving ? (
-                                    <span className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full" />
-                                  ) : (
-                                    <Save className="h-3.5 w-3.5" />
-                                  )}
-                                  Salvar
-                                </Button>
+                                <div className="flex flex-col items-center gap-1.5">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleSaveObsRow(c)}
+                                    disabled={isSaving || !hasChanges}
+                                    className={cn(
+                                      "rounded-lg font-bold text-xs gap-1.5 h-9 px-3 transition-all",
+                                      hasChanges
+                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                    )}
+                                  >
+                                    {isSaving ? (
+                                      <span className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full" />
+                                    ) : (
+                                      <Save className="h-3.5 w-3.5" />
+                                    )}
+                                    Salvar
+                                  </Button>
+                                  <SaveStatusIndicator status={saveStatus[c.id] || 'idle'} />
+                                </div>
                               </TableCell>
                             </TableRow>
                           );

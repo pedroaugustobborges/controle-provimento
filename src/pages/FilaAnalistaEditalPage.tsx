@@ -209,6 +209,7 @@ export default function FilaAnalistaEditalPage() {
     };
   };
 
+
   const handleApplyImport = (result: any) => {
     if (isBatchMode && result.porCargo) {
       // MODO MÚLTIPLO: result é CronogramaImportMultiResult

@@ -967,24 +967,27 @@ export default function UnidadePortalPage() {
                                 />
                               </TableCell>
                               <TableCell className="py-3 px-4 text-center">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleSaveObsRow(c)}
-                                  disabled={isSaving || !hasChanges}
-                                  className={cn(
-                                    "rounded-lg font-bold text-xs gap-1.5 h-9 px-3 transition-all",
-                                    hasChanges
-                                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-                                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                  )}
-                                >
-                                  {isSaving ? (
-                                    <span className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full" />
-                                  ) : (
-                                    <Save className="h-3.5 w-3.5" />
-                                  )}
-                                  Salvar
-                                </Button>
+                                <div className="flex flex-col items-center gap-1.5">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleSaveObsRow(c)}
+                                    disabled={isSaving || !hasChanges}
+                                    className={cn(
+                                      "rounded-lg font-bold text-xs gap-1.5 h-9 px-3 transition-all",
+                                      hasChanges
+                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                    )}
+                                  >
+                                    {isSaving ? (
+                                      <span className="animate-spin h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full" />
+                                    ) : (
+                                      <Save className="h-3.5 w-3.5" />
+                                    )}
+                                    Salvar
+                                  </Button>
+                                  <SaveStatusIndicator status={saveStatus[c.id] || 'idle'} />
+                                </div>
                               </TableCell>
                             </TableRow>
                           );

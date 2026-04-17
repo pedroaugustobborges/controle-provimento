@@ -529,24 +529,22 @@ export default function FilaAnalistaEditalPage() {
         <div className="sticky top-2 z-30 bg-primary text-primary-foreground shadow-lg rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap animate-in fade-in slide-in-from-top-2">
           <Layers className="h-4 w-4 shrink-0" />
           <span className="text-sm font-medium">
-            <strong>{selectedForGroup.size}</strong> selecionada(s) para agrupar
+            <strong>{selectedForGroup.size}</strong> selecionada(s)
             {groupableSelected.length >= 1 && groupableSelected[0] && (
               <span className="ml-2 opacity-80">• Região: <strong>{getRegiaoAgrupamentoLabel(getRegiaoAgrupamento(groupableSelected[0].unidade))}</strong></span>
             )}
           </span>
           <div className="flex items-center gap-2 ml-auto">
-            {selectedForGroup.size >= 2 && (
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
-                onClick={handleOpenGroupModal}
-                disabled={!groupValidation.ok}
-                title={!groupValidation.ok ? groupValidation.reason : 'Agrupar cargos selecionados em um único edital'}
-              >
-                <Layers className="h-4 w-4 mr-1" /> Agrupar {selectedForGroup.size} cargos
-              </Button>
-            )}
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+              onClick={handleOpenGroupModal}
+              disabled={selectedForGroup.size < 1 || (selectedForGroup.size === 1 && !groupValidation.ok && false)}
+              title="Agrupar ou Anexar cargos selecionados"
+            >
+              <Plus className="h-4 w-4 mr-1" /> {selectedForGroup.size === 1 ? 'Anexar a Edital' : `Agrupar ${selectedForGroup.size} cargos`}
+            </Button>
             {selectedForGroup.size >= 1 && (
               <Button
                 size="sm"
@@ -556,7 +554,7 @@ export default function FilaAnalistaEditalPage() {
                   setReturnToFilaTargets(editalVagas.filter(v => selectedForGroup.has(v.id) && v.status_fluxo_edital === 'em_redacao'));
                   setIsReturnToFilaOpen(true);
                 }}
-                title="Devolver vagas selecionadas para a Fila de Editais"
+                title="Devolver selecionadas para a Fila de Editais"
               >
                 <Undo2 className="h-4 w-4 mr-1" /> Devolver à Fila
               </Button>

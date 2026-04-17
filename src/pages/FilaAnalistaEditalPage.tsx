@@ -30,6 +30,8 @@ import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 import { validateDate } from '@/services/holidayService';
+import { EntrevistaDateField, EntrevistaConfig, deriveEntrevistaConfig, primaryEntrevistaDate } from '@/components/EntrevistaDateField';
+import { CronogramaImportDialog, CronogramaImportResult } from '@/components/CronogramaImportDialog';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
@@ -63,6 +65,12 @@ export default function FilaAnalistaEditalPage() {
     data_entrevistas: '',
     data_resultado_final_seletivo: ''
   });
+
+  // Configuração estruturada da etapa Entrevistas (1 data | 2 datas | período)
+  const [entrevistaConfig, setEntrevistaConfig] = useState<EntrevistaConfig>({ tipo: 'unica', datas: [''] });
+
+  // Importação automática do cronograma a partir de .docx
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Modal de Publicação
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);

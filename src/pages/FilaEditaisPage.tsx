@@ -328,6 +328,7 @@ export default function FilaEditaisPage() {
 
     const ok = await updateVagaAsync(selectedVaga.id, {
       status: 'ACOMPANHAMENTO DE EDITAL',
+      status_origem: selectedVaga.status_origem || selectedVaga.status,
       status_fluxo_edital: 'encaminhado_edital',
       etapa: 'encaminhado_edital',
       cargo_validado: true,

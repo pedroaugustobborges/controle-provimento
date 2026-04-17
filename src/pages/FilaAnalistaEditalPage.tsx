@@ -1014,6 +1014,12 @@ export default function FilaAnalistaEditalPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CronogramaImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        onApply={handleApplyImport}
+      />
     </div>
   );
 }

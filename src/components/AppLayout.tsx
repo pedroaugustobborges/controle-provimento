@@ -19,7 +19,7 @@ import {
   Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
   History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera, FileBarChart
 } from 'lucide-react';
-import { AIAssistant } from './AIAssistant';
+import { AgieChat } from './chat/AgieChat';
 import { InactivityLogout } from './InactivityLogout';
 import { UserSessionTracker } from './UserSessionTracker';
 import { UpdateBanner } from './UpdateBanner';
@@ -448,7 +448,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {children}
             </div>
           </main>
-          <AIAssistant />
+          <AgieChat />
           <InactivityLogout />
         </div>
       </div>

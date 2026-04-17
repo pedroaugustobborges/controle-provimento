@@ -298,16 +298,31 @@ export const useVagasStore = create<VagasState>()(
           const { supabase } = await import('@/integrations/supabase/client');
           const { data: { user: authUser } } = await supabase.auth.getUser();
           const myId = authUser?.id;
-          const { data, error } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(500);
-          if (!error && data) {
-            set({ notificacoes: data.slice(0, 50) });
+          
+          // Fetch more notifications to ensure messages aren't lost among info alerts
+          const { data, error } = await supabase
+            .from('notificacoes')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(1000);
 
-            // Resolve destinatario_nome by fetching all involved user IDs
-            const mensagensRaw = data.filter((n: any) => n.tipo === 'mensagem' && (n.usuario_id === myId || n.remetente_id === myId));
+          if (!error && data) {
+            set({ notificacoes: data.slice(0, 100) });
+
+            // Separate and prioritize messages
+            const mensagensRaw = data.filter((n: any) => 
+              n.tipo === 'mensagem' && (n.usuario_id === myId || n.remetente_id === myId)
+            );
+
+            // Resolve names via profiles for better display
             const involvedIds = Array.from(new Set(mensagensRaw.flatMap((n: any) => [n.usuario_id, n.remetente_id]).filter(Boolean))) as string[];
             let nameById: Record<string, string> = {};
+            
             if (involvedIds.length > 0) {
-              const { data: profs } = await supabase.from('profiles').select('id, nome_completo').in('id', involvedIds);
+              const { data: profs } = await supabase
+                .from('profiles')
+                .select('id, nome_completo')
+                .in('id', involvedIds);
               nameById = (profs || []).reduce((acc: any, p: any) => { acc[p.id] = p.nome_completo; return acc; }, {});
             }
 
@@ -317,14 +332,15 @@ export const useVagasStore = create<VagasState>()(
               remetente: n.remetente_nome || nameById[n.remetente_id] || 'Colega',
               remetente_id: n.remetente_id || null,
               destinatario_id: n.usuario_id || null,
-              destinatario_nome: nameById[n.usuario_id] || null,
+              destinatario_nome: n.destinatario_nome || nameById[n.usuario_id] || null,
               conteudo: n.mensagem || '',
               lida: n.remetente_id === myId ? true : Boolean(n.lida),
               titulo: n.titulo,
             }));
+
             set({
               historicoMensagens: mensagens,
-              temNovasMensagens: mensagens.some(m => !m.lida),
+              temNovasMensagens: mensagens.some(m => !m.lida && m.destinatario_id === myId),
             });
           }
         } catch (err) {

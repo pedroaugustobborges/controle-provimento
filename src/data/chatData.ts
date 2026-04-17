@@ -6,85 +6,29 @@ export const UNITS: Unit[] = [
     id: 'hecad', 
     name: 'HECAD', 
     region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Thays Silva'], 
-    assistants: ['Ana Julia'] 
+    analysts: ['Ana Karolina Oliveira Barros'], 
+    assistants: ['ANA CAROLINE GONÇALVES'] 
   },
   { 
     id: 'crer', 
     name: 'CRER', 
     region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Samara Silva'], 
-    assistants: ['Ana Caroline'] 
+    analysts: ['Rayanne Pereira de Sousa'], 
+    assistants: ['Priscila Brito Guimarães'] 
   },
   { 
     id: 'agir', 
     name: 'AGIR', 
     region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Julyana Marçal'], 
-    assistants: ['Karielly Alves'] 
+    analysts: ['Izac Cézar'], 
+    assistants: ['Ana Karolina Oliveira Barros'] 
   },
   { 
     id: 'hugol', 
     name: 'HUGOL', 
     region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Sannya Laryssa'], 
-    assistants: ['Eduarda Oliveira', 'Flavia Vaz'] 
-  },
-  { 
-    id: 'hds', 
-    name: 'HDS', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Julyana Marçal'], 
-    assistants: ['Karielly Alves'] 
-  },
-  { 
-    id: 'policlinica', 
-    name: 'POLICLÍNICA', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Julyana Marçal'], 
-    assistants: ['Karielly Alves'] 
-  },
-  { 
-    id: 'jatai', 
-    name: 'JATAÍ', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Geovana Miranda'], 
-    assistants: ['Nara Rubia'] 
-  },
-  { 
-    id: 'vitoria', 
-    name: 'VITÓRIA (SÃO PEDRO/SUÁ)', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Geovana Miranda'], 
-    assistants: ['Nara Rubia'] 
-  },
-  { 
-    id: 'teia-anapolis', 
-    name: 'TEIA ANAPOLIS', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Julyana Marçal'], 
-    assistants: ['Karielly Alves'] 
-  },
-  { 
-    id: 'teia-canedo', 
-    name: 'TEIA CANEDO', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Julyana Marçal'], 
-    assistants: ['Karielly Alves'] 
-  },
-  { 
-    id: 'teia-aparecida', 
-    name: 'TEIA APARECIDA', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Julyana Marçal'], 
-    assistants: ['Karielly Alves'] 
-  },
-  { 
-    id: 'teia-goiania', 
-    name: 'TEIA GOIÂNIA', 
-    region: 'GOIÁS E ESPÍRITO SANTO', 
-    analysts: ['Julyana Marçal'], 
-    assistants: ['Karielly Alves'] 
+    analysts: ['Rayanne Pereira de Sousa'], 
+    assistants: ['ANA CAROLINE GONÇALVES'] 
   },
   
   // AMAZONAS
@@ -92,66 +36,24 @@ export const UNITS: Unit[] = [
     id: 'chs', 
     name: 'CHS', 
     region: 'AMAZONAS', 
-    analysts: ['Beatriz Almeida Pontes'], 
+    analysts: ['Beatriz Almeida Pontes da Silva'], 
     assistants: [] 
   },
   { 
     id: 'teia-man', 
     name: 'TEIA MAN', 
     region: 'AMAZONAS', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'teia-man-2', 
-    name: 'TEIA MAN 2', 
-    region: 'AMAZONAS', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'teia-man-3', 
-    name: 'TEIA MAN 3', 
-    region: 'AMAZONAS', 
-    analysts: ['Beatriz Almeida Pontes'], 
+    analysts: ['Beatriz Almeida Pontes da Silva'], 
     assistants: [] 
   },
 
   // OUTRAS UNIDADES
   { 
-    id: 'dourados', 
-    name: 'DOURADOS', 
-    region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
     id: 'hmsa', 
     name: 'HMSA', 
     region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'hrcac', 
-    name: 'HRCAC', 
-    region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'teia-cen', 
-    name: 'TEIA CEN', 
-    region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
-  },
-  { 
-    id: 'teia-pin', 
-    name: 'TEIA PIN', 
-    region: 'OUTRAS UNIDADES', 
-    analysts: ['Beatriz Almeida Pontes'], 
-    assistants: [] 
+    analysts: ['Beatriz Almeida Pontes da Silva'], 
+    assistants: ['Luanna Ramos de Sousa'] 
   },
 ];
 
@@ -159,41 +61,31 @@ export const ROLES: Role[] = [
   { 
     id: 'lideranca', 
     label: 'Analista de Vagas de Liderança', 
-    users: ['Ellen Leticia'] 
-  },
-  { 
-    id: 'edital', 
-    label: 'Analista de Edital', 
-    users: ['Ketty Lorrane Ferreira', 'Wanessa Gomes de Sousa'] 
+    users: ['Rayanne Pereira de Sousa'] 
   },
   { 
     id: 'adm-go-vit', 
     label: 'Analista Administrativo — Unidades de GO e ES', 
-    users: ['Izac Cézar'] 
+    users: ['Izac Cézar', 'ANA CAROLINE GONÇALVES'] 
   },
   { 
     id: 'adm-fora', 
     label: 'Analista Administrativo — Outras Unidades', 
-    users: ['Beatriz Almeida Pontes'] 
-  },
-  { 
-    id: 'convocacoes', 
-    label: 'Analista das Convocações Diárias', 
-    users: ['Lis Angela Menezes'] 
+    users: ['Beatriz Almeida Pontes da Silva'] 
   },
   { 
     id: 'super-go-vit', 
     label: 'Supervisora — Unidades de GO e ES', 
-    users: ['Ana Carolina Nunes'] 
+    users: ['Ana Carolina Nunes Monteiro'] 
   },
   { 
     id: 'super-fora', 
     label: 'Supervisora — Outras Unidades', 
-    users: ['Renata Moiana'] 
+    users: ['Renata Moiana Da Costa'] 
   },
   { 
     id: 'coordenadora', 
     label: 'Coordenadora', 
-    users: ['Luanna Ramos'] 
+    users: ['Luanna Ramos de Sousa'] 
   },
 ];

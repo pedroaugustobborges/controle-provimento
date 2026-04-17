@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminStore } from '@/store/adminStore';
+import { useLogoutStore } from '@/store/logoutStore';
 import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog,
@@ -13,7 +13,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
-import { Loader2, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -23,11 +23,17 @@ interface Props {
 export function LogoutConfirmDialog({ open, onOpenChange }: Props) {
   const { signOut } = useAuth();
   const { currentUser } = useAdminStore();
+  const setIsLoggingOut = useLogoutStore((s) => s.setIsLoggingOut);
   const navigate = useNavigate();
-  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleConfirm = async () => {
-    setLoggingOut(true);
+    // Close the modal and show overlay BEFORE signOut tears down the tree
+    onOpenChange(false);
+    setIsLoggingOut(true);
+
+    // Yield a frame so the overlay paints before any heavy work
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+
     try {
       if (currentUser) {
         await supabase
@@ -37,53 +43,40 @@ export function LogoutConfirmDialog({ open, onOpenChange }: Props) {
           .is('logout_at', null);
       }
       await signOut();
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (e) {
       console.error('Logout error', e);
-    } finally {
-      setLoggingOut(false);
-      onOpenChange(false);
+      // On error, hide overlay so user isn't stuck
+      setIsLoggingOut(false);
     }
+    // Note: do NOT clear isLoggingOut here on success — LoginPage clears it on mount
   };
 
   return (
-    <>
-      <AlertDialog open={open} onOpenChange={(o) => !loggingOut && onOpenChange(o)}>
-        <AlertDialogContent className="sm:max-w-[420px]">
-          <AlertDialogHeader>
-            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
-              <LogOut className="h-6 w-6 text-red-600" />
-            </div>
-            <AlertDialogTitle className="text-center">Sair do sistema</AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
-              Tem certeza que deseja encerrar sua sessão?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-2">
-            <AlertDialogCancel disabled={loggingOut}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleConfirm();
-              }}
-              disabled={loggingOut}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Sim, sair
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {loggingOut && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm animate-fade-in">
-          <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-white/10 border border-white/20 shadow-2xl">
-            <Loader2 className="h-12 w-12 text-white animate-spin" />
-            <p className="text-white text-base font-bold tracking-wide">Saindo do sistema...</p>
-            <p className="text-white/60 text-xs">Encerrando sessão com segurança</p>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="sm:max-w-[420px]">
+        <AlertDialogHeader>
+          <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+            <LogOut className="h-6 w-6 text-red-600" />
           </div>
-        </div>
-      )}
-    </>
+          <AlertDialogTitle className="text-center">Sair do sistema</AlertDialogTitle>
+          <AlertDialogDescription className="text-center">
+            Tem certeza que deseja encerrar sua sessão?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="sm:justify-center gap-2">
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              handleConfirm();
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            Sim, sair
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

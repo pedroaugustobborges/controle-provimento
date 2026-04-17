@@ -493,8 +493,23 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
 
     if (titles.length > 0) {
       for (let t = 0; t < titles.length; t++) {
-        const start = titles[t].idx;
-        // Próxima tabela depois do título que ainda não foi usada e tenha cabeçalho ETAPA+DATA.
+        const title = titles[t];
+        // Se o título está DENTRO de uma tabela, essa tabela É a do cronograma
+        // (o Word mescla a 1ª linha como faixa-título). Não procuramos a "próxima".
+        if (title.inTable) {
+          const containerTable = (allNodes[title.idx] as Element).closest('table') as HTMLTableElement | null;
+          if (containerTable && !usedTables.has(containerTable)) {
+            const tIdx = tables.indexOf(containerTable);
+            const etapas = extractEtapasFromTable(containerTable, rejections, tIdx);
+            if (etapas.length > 0) {
+              usedTables.add(containerTable);
+              cronogramas.push({ anexo: title.anexo, cargo: title.cargo, etapas });
+              continue;
+            }
+          }
+        }
+        // Caso contrário (título em parágrafo), pega a próxima tabela com ETAPA+DATA.
+        const start = title.idx;
         for (const tbl of tables) {
           if (usedTables.has(tbl)) continue;
           const pos = allNodes.indexOf(tbl);
@@ -503,7 +518,7 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
           const etapas = extractEtapasFromTable(tbl, rejections, tIdx);
           if (etapas.length > 0) {
             usedTables.add(tbl);
-            cronogramas.push({ anexo: titles[t].anexo, cargo: titles[t].cargo, etapas });
+            cronogramas.push({ anexo: title.anexo, cargo: title.cargo, etapas });
             break;
           }
         }

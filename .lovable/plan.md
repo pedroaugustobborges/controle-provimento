@@ -1,43 +1,56 @@
 
-## Plano — Corrigir filtro "Em Andamento" em Todas as Vagas e Vagas PCD
+## Plano — Corrigir duplicação: vaga devolvida continua aparecendo em Redação
 
 ### Investigação
-- `src/pages/VagasPage.tsx` — localizar definição do filtro "Em Andamento" (provavelmente em `STATUS_FILTER_OPTIONS` ou em lógica de quick filters/tabs no topo da listagem).
-- `src/types/vaga.ts` — revisar `STATUS_FILTER_OPTIONS` e ver se "Em Andamento" está mapeado e quais `matches` ele inclui.
-- Verificar se há um agrupador "Em Andamento" que deveria somar várias categorias (EM EDITAL + FILA + CONVOCAÇÃO + DOCUMENTAÇÃO + ADMISSÃO ENVIADA + ADMISSÃO) mas que ficou desatualizado após introdução de novos status (lowercase: `encaminhado_edital`, `admissao_enviada`, `em_admissao`, `em_documentacao`, etc.).
-- Conferir interação com `filtroEspecial === 'pcd'` para confirmar se PCD apenas restringe a base e não interfere no matching de status.
+- `src/pages/FilaAnalistaEditalPage.tsx` — confirmar critério de filtro da listagem de Redação (provavelmente `status_fluxo_edital === 'em_redacao'` OU `etapa === 'em_redacao'` OU `edital_id IS NOT NULL`).
+- `src/pages/FilaAnalistaEditalPage.tsx` (handler `handleConfirmReturnToFila`) — revisar quais campos estão sendo atualizados na devolução. A correção anterior setou `status`, `status_geral`, `status_fluxo_edital: 'encaminhado_edital'` e `etapa: 'encaminhado_edital'`, mas a vaga continua aparecendo → algum outro campo do filtro não foi limpo.
+- Verificar se há `edital_id` populado na vaga e se a página de Redação filtra por `edital_id IS NOT NULL`. Se sim, devolução precisa setar `edital_id = null`.
+- Verificar se existe registro em `validacoes_editais` ou `editais` vinculado à vaga que a mantém visível.
 
 ### Causa provável
-Após adições recentes de status (fluxo de editais, TEIA, status lowercase do banco), o agrupador "Em Andamento" não foi atualizado para incluir as novas variantes. Resultado: a comparação não bate com nenhum registro e a lista vem vazia.
+O filtro da página de Redação combina múltiplos critérios (ex: `status_fluxo_edital === 'em_redacao'` **OR** `edital_id !== null` **OR** etapa específica). A devolução só troca `status_fluxo_edital`, mas outro critério permanece verdadeiro → vaga aparece nas duas listas.
 
 ### Implementação
 
-**1. Definir lista canônica de status "Em Andamento"** em `src/types/vaga.ts`:
+**1. Auditar filtro da Redação** em `FilaAnalistaEditalPage.tsx`:
+- Identificar exatamente quais campos definem "está em redação".
+- Listar todos os critérios (status, etapa, edital_id, presença em tabela auxiliar).
+
+**2. Atualizar `handleConfirmReturnToFila`** para resetar TODOS os campos que mantêm a vaga em Redação:
 ```ts
-export const STATUS_EM_ANDAMENTO: StatusVaga[] = [
-  'EM EDITAL', 'FILA DE EDITAIS', 'REALIZAR CONVOCAÇÃO',
-  'DOCUMENTAÇÃO', 'ADMISSÃO ENVIADA', 'ADMISSÃO',
-  'ACOMPANHAMENTO DE EDITAL', 'PUBLICAR EDITAL',
-  // variantes lowercase do banco
-  'encaminhado_edital', 'em_redacao', 'em_documentacao',
-  'admissao_enviada', 'em_admissao', 'em_convocacao',
-];
+await updateVaga(vaga.id, {
+  status: 'PUBLICAR EDITAL',
+  status_geral: 'PUBLICAR EDITAL',
+  status_fluxo_edital: 'encaminhado_edital',
+  etapa: 'encaminhado_edital',
+  edital_id: null,                    // se for o caso
+  // ...campos extras conforme investigação
+  historico: [...(vaga.historico || []), {
+    acao: 'Devolvida para Fila de Editais',
+    de_etapa: 'em_redacao',
+    para_etapa: 'encaminhado_edital',
+    usuario: currentUser?.nome,
+    data: new Date().toISOString(),
+  }],
+});
 ```
 
-**2. `src/pages/VagasPage.tsx`** — usar essa lista no handler/filtro "Em Andamento" com comparação case-insensitive (`String(v.status).toUpperCase()` vs lista normalizada). Garantir que o badge de contagem use a mesma função.
+**3. Se houver registros em `editais` ou `validacoes_editais`** vinculados, decidir:
+- Opção A: deletar/marcar como cancelado o registro auxiliar na devolução.
+- Opção B: ajustar filtro da Redação para considerar `status_fluxo_edital === 'em_redacao'` como fonte única de verdade (preferível: menos efeitos colaterais).
 
-**3. Validar PCD** — confirmar que `filtroEspecial === 'pcd'` apenas pré-filtra `vagas.filter(v => v.pcd)` antes de aplicar o filtro de status. Se houver short-circuit que ignora status quando PCD ativo, remover.
+**4. Reatividade** — garantir que após `updateVaga`, a store Zustand reflita a mudança e ambas as páginas re-renderizem (Redação some, Fila aparece) sem refresh.
 
-**4. Regressão** — rodar mentalmente os outros filtros (Concluídas, Canceladas, Suspensas) com a mesma base para garantir que continuam funcionando.
+### Validação (após implementação)
+- Vaga em Redação → "Devolver à Fila" → vaga **sai** da Redação e aparece **apenas** na Fila de Editais.
+- Lote: 3 vagas devolvidas → todas saem da Redação, todas aparecem na Fila.
+- Refresh da página de Redação → vagas devolvidas continuam ausentes.
+- Refresh da Fila de Editais → vagas devolvidas continuam presentes.
+- Histórico mostra a movimentação com etapa de origem e destino.
 
-### Validação (após aprovação, eu testo no preview)
-- Controle de Vagas → Todas as Vagas → "Em Andamento" → vagas aparecem, contagem bate.
-- Controle de Vagas → Vagas PCD → "Em Andamento" → apenas vagas PCD em andamento aparecem.
-- Outros filtros (Concluídas, Canceladas) continuam funcionando.
-
-### Arquivos alterados
-- `src/types/vaga.ts` (constante `STATUS_EM_ANDAMENTO`)
-- `src/pages/VagasPage.tsx` (uso da constante no filtro + contagem)
+### Arquivos prováveis
+- `src/pages/FilaAnalistaEditalPage.tsx` (handler + entender filtro)
+- Possivelmente `src/store/vagasStore.ts` (se houver lógica derivada)
 
 ### Risco
-Baixo. Mudança aditiva no mapeamento de status. Vou validar end-to-end no preview após implementação.
+Baixo. Correção pontual: garantir que TODOS os campos do filtro de Redação sejam zerados na devolução. Vou validar end-to-end no preview.

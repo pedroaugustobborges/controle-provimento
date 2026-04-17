@@ -319,10 +319,7 @@ export default function FilaAnalistaEditalPage() {
       unidade_trabalho: unidadeTrabalho,
       distribuicao_vagas: distribuicaoVagas,
       unidades_banco_talentos: unidadesBanco,
-      cronograma: {
-        ...selectedVaga.cronograma,
-        ...cronograma
-      },
+      cronograma: buildCronogramaPayload(),
       acompanhamento: {
         ...selectedVaga.acompanhamento,
         gerou_banco: isTalentBank,

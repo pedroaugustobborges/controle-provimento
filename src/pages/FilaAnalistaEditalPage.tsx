@@ -616,7 +616,24 @@ export default function FilaAnalistaEditalPage() {
                     <TableCell>{v.unidade}</TableCell>
                     <TableCell className="font-semibold">{v.cargo}</TableCell>
                     <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
-                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}><Edit className="h-4 w-4" /></Button></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)} title="Editar">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        {(v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'encaminhado_edital') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            title="Devolver para a Fila de Editais"
+                            onClick={() => { setReturnToFilaTargets([v]); setIsReturnToFilaOpen(true); }}
+                          >
+                            <Undo2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}

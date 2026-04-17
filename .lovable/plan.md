@@ -1,59 +1,57 @@
 
-## Plano — Status específicos para Unidades TEIA
+## Plano — Corrigir botão "Devolver à Fila de Editais"
 
-### Escopo
-Aplicar lista reduzida de status **somente** quando o usuário está no submenu "Unidades TEIAs" ou editando uma vaga de unidade TEIA. Demais unidades permanecem com a lista atual completa.
+### Investigação
+- `src/pages/FilaAnalistaEditalPage.tsx` — handler do botão "Devolver à Fila" (linha + lote): verificar se `onClick` está conectado, se chama `updateVaga` corretamente e se o `AlertDialog` confirma de fato.
+- `src/store/vagasStore.ts` — confirmar que `updateVaga` persiste `status_fluxo_edital` no Supabase e atualiza estado local.
+- Verificar filtro da página de Redação: provavelmente filtra por `status_fluxo_edital === 'em_redacao'`. Ao mudar para `encaminhado_edital`, vaga deve sair da lista automaticamente.
+- `src/pages/FilaEditaisPage.tsx` — confirmar que filtro inclui vagas com `status_fluxo_edital === 'encaminhado_edital'` para que a vaga devolvida reapareça.
 
-### Lista oficial TEIA (10 status)
-1. PROCESSO SELETIVO → `EM EDITAL`
-2. DOCUMENTAÇÃO → `DOCUMENTAÇÃO`
-3. ADMISSÃO ENVIADA → `ADMISSÃO ENVIADA`
-4. CONCLUÍDA → `CONCLUÍDA`
-5. MOVIMENTAÇÃO INTERNA → `MOVIMENTAÇÃO INTERNA`
-6. ADMISSÃO → `ADMISSÃO`
-7. VAGA DE LIDERANÇA → `VAGA DE LIDERANÇA`
-8. SUSPENSA → `SUSPENSA`
-9. CANCELADA → `CANCELADAS`
-10. SEM STATUS → `SEM STATUS`
+### Causas prováveis
+1. Handler chama `updateVaga` mas não passa `status_fluxo_edital` corretamente (typo ou campo faltando).
+2. `AlertDialog` confirma mas o `onConfirm` não dispara (falta wiring do `onClick` no `AlertDialogAction`).
+3. Update no Supabase falha silenciosamente (erro de RLS ou coluna inexistente) e toast de sucesso é exibido mesmo com falha.
+4. `historico` é objeto ao invés de array, ou push gera erro que aborta o update.
+5. Filtro da Fila de Editais não captura o novo `status_fluxo_edital` setado.
 
 ### Implementação
 
-**1. `src/types/vaga.ts`** — exportar nova constante:
-```ts
-export const STATUS_FILTER_OPTIONS_TEIA: Record<string, { label: string; matches: StatusVaga[] }> = {
-  'EM EDITAL': { label: 'Processo Seletivo', matches: [...STATUS_FILTER_OPTIONS['EM EDITAL'].matches, ...STATUS_FILTER_OPTIONS['FILA DE EDITAIS'].matches, ...STATUS_FILTER_OPTIONS['REALIZAR CONVOCAÇÃO'].matches] },
-  'DOCUMENTAÇÃO': STATUS_FILTER_OPTIONS['DOCUMENTAÇÃO'],
-  'ADMISSÃO ENVIADA': { label: 'Admissão Enviada', matches: ['ADMISSÃO ENVIADA', 'admissao_enviada'] },
-  'CONCLUÍDA': STATUS_FILTER_OPTIONS['CONCLUÍDA'],
-  'MOVIMENTAÇÃO INTERNA': STATUS_FILTER_OPTIONS['MOVIMENTAÇÃO INTERNA'],
-  'ADMISSÃO': { label: 'Admissão', matches: ['ADMISSÃO', 'em_admissao'] },
-  'VAGA DE LIDERANÇA': STATUS_FILTER_OPTIONS['VAGA DE LIDERANÇA'],
-  'SUSPENSA': STATUS_FILTER_OPTIONS['SUSPENSA'],
-  'CANCELADAS': { label: 'Cancelada', matches: STATUS_FILTER_OPTIONS['CANCELADAS'].matches },
-  'SEM STATUS': STATUS_FILTER_OPTIONS['SEM STATUS'],
-};
-```
-Helper: `export const isTeiaUnit = (u: string) => (u || '').toUpperCase().includes('TEIA');`
+**A. Auditoria e logs**
+- Adicionar `console.log` temporário antes/depois do `updateVaga` no handler para ver fluxo.
+- Verificar retorno do `updateVaga` (await + try/catch) e exibir toast de erro real se falhar.
 
-**2. `src/pages/VagasPage.tsx`** — no popover de filtro de status (linha ~956), trocar `STATUS_FILTER_OPTIONS` por opções condicionais:
-```tsx
-const statusFilterOptions = filtroEspecial === 'teias' ? STATUS_FILTER_OPTIONS_TEIA : STATUS_FILTER_OPTIONS;
-```
-Usar `statusFilterOptions` no `.map()` e na lógica de `matchStatus` (linha ~382). Limpar `filterStatuses` ao trocar de submenu (useEffect com dependência em `filtroEspecial`).
+**B. Correções prováveis**
+- Garantir que o handler:
+  ```ts
+  await updateVaga(vagaId, {
+    status_fluxo_edital: 'encaminhado_edital',
+    historico: [...(vaga.historico || []), { 
+      acao: 'Devolvida para Fila de Editais',
+      usuario: currentUser?.nome,
+      data: new Date().toISOString()
+    }]
+  });
+  ```
+- Garantir que o `AlertDialogAction` tem `onClick={handleDevolverFila}` (e não só dentro do conteúdo do dialog).
+- Para lote: iterar com `Promise.all` e tratar erros individuais.
+- Limpar seleção (`setSelectedForReturn([])`) e fechar dialog após sucesso.
 
-**3. `src/pages/VagaDetalhePage.tsx`** — no `Select` de status atual (linha 657), se `isTeiaUnit(vaga.unidade)`, renderizar uma única seção "Status TEIA" com os 10 status mapeados (em vez das 5 seções atuais). Mantém compatibilidade retroativa: se status atual da vaga não estiver na lista, exibe mesmo assim no SelectValue (badge), mas o usuário ao abrir o select vê apenas as 10 opções novas.
+**C. Verificação do filtro**
+- Em `FilaEditaisPage.tsx`, confirmar que o filtro de listagem inclui `status_fluxo_edital === 'encaminhado_edital'`. Se filtrar apenas por status genérico, ajustar.
+
+**D. Reatividade**
+- Confirmar que `vagas` da store é usado direto (não cópia local em `useState`) para que update do Zustand re-renderize automaticamente.
 
 ### Validação
-- Acessar `/vagas?filtro=teias` → filtro de status mostra 10 opções TEIA.
-- Acessar `/vagas` (controle padrão) → filtro mostra os 12 status originais.
-- Abrir vaga de TEIA APARECIDA → select de status mostra só os 10 TEIA.
-- Abrir vaga de CRER → select mostra todas as seções originais.
-- Vaga TEIA com status legado (ex: `em_documentacao`) continua visível no badge; ao editar, usuário escolhe novo status da lista TEIA.
+- Vaga em Redação → clicar "Devolver à Fila" individual → confirmar → vaga sai da Redação e aparece na Fila de Editais.
+- Selecionar 3 vagas → "Devolver à Fila" em lote → todas são movidas, toast mostra "3 vagas devolvidas".
+- Forçar erro (ex: desconectar) → toast de erro real aparece, vaga não some indevidamente.
+- Histórico da vaga mostra entrada "Devolvida para Fila de Editais por {usuário}" com timestamp.
+- Refresh da página: vaga continua na Fila de Editais (persistência confirmada).
 
 ### Arquivos alterados
-- `src/types/vaga.ts` (adicionar export)
-- `src/pages/VagasPage.tsx` (filtro condicional)
-- `src/pages/VagaDetalhePage.tsx` (select condicional por unidade)
+- `src/pages/FilaAnalistaEditalPage.tsx` (handler + wiring do AlertDialog)
+- Possivelmente `src/pages/FilaEditaisPage.tsx` (ajuste de filtro se necessário)
 
 ### Risco
-Baixo. Mudança puramente condicional e aditiva — nenhum status é removido do sistema, apenas as opções exibidas são restritas no contexto TEIA.
+Baixo. Correção pontual de wiring/persistência. Vou rodar teste end-to-end no preview após a correção para confirmar.

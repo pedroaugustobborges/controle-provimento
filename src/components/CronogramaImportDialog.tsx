@@ -313,9 +313,10 @@ export function CronogramaImportDialog({
               </TableHeader>
               <TableBody>
                 {cargosAlvo.map((alvo) => {
+                  if (!alvo?.id) return null;
                   const idx = mapping[alvo.id];
-                  const c = idx !== undefined && idx >= 0 ? cronogramas[idx] : null;
-                  const mapeadas = c ? c.etapas.filter((e) => e.cronogramaKey).length : 0;
+                  const c = idx !== undefined && idx !== null && idx >= 0 && cronogramas[idx] ? cronogramas[idx] : null;
+                  const mapeadas = c ? (c.etapas || []).filter((e) => e.cronogramaKey).length : 0;
                   return (
                     <TableRow key={alvo.id}>
                       <TableCell className="text-sm font-medium text-slate-800">

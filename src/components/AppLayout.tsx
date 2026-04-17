@@ -22,6 +22,7 @@ import {
 import { AIAssistant } from './AIAssistant';
 import { InactivityLogout } from './InactivityLogout';
 import { UserSessionTracker } from './UserSessionTracker';
+import { UpdateBanner } from './UpdateBanner';
 import { AccessHistoryPopoverContent } from './AccessHistoryPopoverContent';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
@@ -245,6 +246,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
+        <UpdateBanner />
         <UserSessionTracker />
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">

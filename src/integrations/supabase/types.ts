@@ -748,6 +748,72 @@ export type Database = {
         }
         Relationships: []
       }
+      system_maintenance: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          created_at: string
+          deactivated_at: string | null
+          deactivated_by: string | null
+          expected_return_at: string | null
+          id: string
+          is_active: boolean
+          message: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          expected_return_at?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          expected_return_at?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string | null
+        }
+        Relationships: []
+      }
+      system_updates: {
+        Row: {
+          action_type: string
+          id: string
+          is_mandatory: boolean
+          message: string
+          published_at: string
+          published_by: string | null
+          version: string | null
+        }
+        Insert: {
+          action_type?: string
+          id?: string
+          is_mandatory?: boolean
+          message: string
+          published_at?: string
+          published_by?: string | null
+          version?: string | null
+        }
+        Update: {
+          action_type?: string
+          id?: string
+          is_mandatory?: boolean
+          message?: string
+          published_at?: string
+          published_by?: string | null
+          version?: string | null
+        }
+        Relationships: []
+      }
       tarefas: {
         Row: {
           atribuido_a: string | null

@@ -169,6 +169,10 @@ export default function FilaAnalistaEditalPage() {
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
+      cronograma: {
+        ...selectedVaga.cronograma,
+        ...cronograma
+      }
     } as any);
 
     if (ok) {
@@ -195,6 +199,34 @@ export default function FilaAnalistaEditalPage() {
       return;
     }
 
+    // Validation of holiday dates
+    const dateFields: Record<string, string> = {
+      'Publicação do Edital': cronograma.data_publicacao_edital,
+      'Início das Inscrições': cronograma.data_inicio_inscricao,
+      'Fim das Inscrições': cronograma.data_fim_inscricao,
+      'Triagem': cronograma.data_triagem,
+      'Avaliação On-line': cronograma.data_avaliacao_especifica_online,
+      'Resultado Preliminar Avaliação': cronograma.data_resultado_preliminar_avaliacao_especifica,
+      'Recurso Avaliação': cronograma.data_recurso_avaliacao_especifica,
+      'Resultado Recurso': cronograma.data_resultado_recurso_avaliacao_especifica,
+      'Resultado Final Avaliação': cronograma.data_resultado_final_avaliacao_especifica,
+      'Entrevistas': cronograma.data_entrevistas,
+      'Resultado Final Seletivo': cronograma.data_resultado_final_seletivo,
+    };
+
+    for (const [fieldName, dateValue] of Object.entries(dateFields)) {
+      if (dateValue) {
+        const validation = await validateDate(dateValue, selectedVaga.unidade);
+        if (!validation.isValid) {
+          toast.error(
+            `A data da etapa ${fieldName} (${formatDate(dateValue)}) ${validation.message}. Por favor, ajuste a data antes de enviar para aprovação.`,
+            { duration: 6000 }
+          );
+          return;
+        }
+      }
+    }
+
     const respUser = (users || []).find((u: any) => u.id === responsavelValidacao);
     const respNome = respUser?.nome_completo || 'Não atribuído';
 
@@ -208,6 +240,10 @@ export default function FilaAnalistaEditalPage() {
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
       validado_por: responsavelValidacao,
+      cronograma: {
+        ...selectedVaga.cronograma,
+        ...cronograma
+      },
       historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],

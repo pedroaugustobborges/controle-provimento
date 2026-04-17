@@ -754,7 +754,21 @@ export default function UnidadePortalPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vagasParaConsulta.map(v => (
+                    {!hydrated ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={`sk-${i}`}>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : vagasParaConsulta.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma vaga encontrada</TableCell>
+                      </TableRow>
+                    ) : vagasParaConsulta.map(v => (
                       <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell className="font-bold text-slate-900 text-sm whitespace-nowrap">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
                         <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>

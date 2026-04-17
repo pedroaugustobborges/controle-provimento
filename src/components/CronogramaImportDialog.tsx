@@ -371,7 +371,7 @@ export function CronogramaImportDialog({
               Selecione o cronograma ({cronogramas.length} encontrados)
             </Label>
             <RadioGroup
-              value=""
+              value={selectedIdx >= 0 ? String(selectedIdx) : ""}
               onValueChange={(v) => setSelectedIdx(parseInt(v, 10))}
               className="space-y-2"
             >

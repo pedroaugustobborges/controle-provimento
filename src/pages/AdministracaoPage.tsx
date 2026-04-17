@@ -571,6 +571,9 @@ export default function AdministracaoPage() {
               <History className="h-4 w-4" /> Auditoria
             </TabsTrigger>
           )}
+          <TabsTrigger value="feriados" className="gap-2 font-bold px-4 py-2">
+            <Calendar className="h-4 w-4" /> Feriados Locais
+          </TabsTrigger>
           <TabsTrigger value="backup" className="gap-2 font-bold px-4 py-2">
             <HardDrive className="h-4 w-4" /> Backup
           </TabsTrigger>

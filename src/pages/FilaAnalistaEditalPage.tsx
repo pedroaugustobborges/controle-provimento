@@ -184,6 +184,71 @@ export default function FilaAnalistaEditalPage() {
   const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
   const analistasValidacao = useMemo(() => (users || []).filter((u: any) => u.status === 'ativo' && ((u.perfil || '').toLowerCase().includes('analista') || (u.perfil || '').toLowerCase().includes('admin') || (u.perfil || '').toLowerCase().includes('gestor'))), [users]);
 
+  // Seleção manual para agrupar cargos já em redação no mesmo edital
+  const [selectedForGroup, setSelectedForGroup] = useState<Set<string>>(new Set());
+
+  const groupableSelected = useMemo(
+    () => editalVagas.filter(v => selectedForGroup.has(v.id) && v.status_fluxo_edital === 'em_redacao'),
+    [editalVagas, selectedForGroup]
+  );
+
+  const groupValidation = useMemo(() => {
+    if (groupableSelected.length < 2) return { ok: false, reason: '' };
+    const regs = new Set(groupableSelected.map(v => getRegiaoAgrupamento(v.unidade)));
+    if (regs.size > 1) {
+      const labels = Array.from(regs).map(getRegiaoAgrupamentoLabel).join(', ');
+      return { ok: false, reason: `Cargos de regiões diferentes (${labels}) não podem ser agrupados.` };
+    }
+    return { ok: true, reason: '' };
+  }, [groupableSelected]);
+
+  const toggleSelectForGroup = (id: string) => {
+    setSelectedForGroup(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleOpenGroupModal = () => {
+    if (!groupValidation.ok) {
+      toast.error(groupValidation.reason || 'Não é possível agrupar essas vagas.');
+      return;
+    }
+    const batchVagas = groupableSelected;
+    setIsBatchMode(true);
+    setSelectedBatchVagas(batchVagas);
+    setActiveTab(batchVagas[0].id);
+    setNumeroEdital(batchVagas[0].numero_edital || '');
+    setNumeroProcesso(batchVagas[0].numero_processo || '');
+    setObsEdital(batchVagas[0].observacoes_edital || '');
+    setNomeArquivo(batchVagas[0].arquivo_edital || '');
+    setReachrUrl((batchVagas[0] as any).url_reachr || '');
+
+    const cronos: Record<string, any> = {};
+    const configs: Record<string, EntrevistaConfig> = {};
+    batchVagas.forEach(v => {
+      cronos[v.id] = {
+        data_publicacao_edital: v.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+        data_inicio_inscricao: v.cronograma?.data_inicio_inscricao || '',
+        data_fim_inscricao: v.cronograma?.data_fim_inscricao || '',
+        data_triagem: v.cronograma?.data_triagem || '',
+        data_avaliacao_especifica_online: v.cronograma?.data_avaliacao_especifica_online || '',
+        data_resultado_preliminar_avaliacao_especifica: v.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+        data_recurso_avaliacao_especifica: v.cronograma?.data_recurso_avaliacao_especifica || '',
+        data_resultado_recurso_avaliacao_especifica: v.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+        data_resultado_final_avaliacao_especifica: v.cronograma?.data_resultado_final_avaliacao_especifica || '',
+        data_entrevistas: v.cronograma?.data_entrevistas || '',
+        data_resultado_final_seletivo: v.cronograma?.data_resultado_final_seletivo || ''
+      };
+      configs[v.id] = deriveEntrevistaConfig(v.cronograma?.data_entrevistas, (v.cronograma as any)?.entrevista_config);
+    });
+    setBatchCronogramas(cronos);
+    setBatchEntrevistaConfigs(configs);
+    setSelectedForGroup(new Set());
+    setIsEditModalOpen(true);
+  };
+
   const handleOpenEditModal = (vaga: Vaga) => {
     setIsBatchMode(false);
     setSelectedVaga(vaga);

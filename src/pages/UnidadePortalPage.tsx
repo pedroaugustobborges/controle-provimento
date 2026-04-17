@@ -88,9 +88,42 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
 
 export default function UnidadePortalPage() {
   const navigate = useNavigate();
-  const { currentUser } = useAdminStore();
-  const { convocacoes, vagas, updateConvocacao } = useVagasStore();
+  const { currentUser, fetchCurrentProfile } = useAdminStore();
+  const { convocacoes, vagas, updateConvocacao, fetchVagas, fetchBancos } = useVagasStore();
   const { signOut } = useAuth();
+  const [bootstrapping, setBootstrapping] = useState(true);
+
+  // Hydrate stores when opened in a new tab (outside AppLayout)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        await Promise.all([fetchCurrentProfile(), fetchVagas(), fetchBancos()]);
+      } catch (err) {
+        console.error('[UnidadePortal] Erro ao carregar dados:', err);
+      } finally {
+        if (mounted) setBootstrapping(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [fetchCurrentProfile, fetchVagas, fetchBancos]);
+
+  // Update browser tab title and favicon
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = 'Portal Unidade';
+    const iconLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    const prevIconHref = iconLink?.getAttribute('href') || null;
+    if (iconLink) {
+      // Use a distinct emoji-based SVG favicon for the Portal tab
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%230A192F'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='38' font-family='Arial,sans-serif' font-weight='bold' fill='white'>U</text></svg>`;
+      iconLink.setAttribute('href', `data:image/svg+xml;utf8,${svg}`);
+    }
+    return () => {
+      document.title = prevTitle;
+      if (iconLink && prevIconHref) iconLink.setAttribute('href', prevIconHref);
+    };
+  }, []);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -327,7 +360,17 @@ export default function UnidadePortalPage() {
     }
   };
 
-  if (!currentUser || !hasAccess) return null;
+  if (bootstrapping || !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-4">
+          <div className="h-10 w-10 border-4 border-[#0A192F] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-600 font-semibold">Carregando Portal da Unidade...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!hasAccess) return null;
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col transition-all duration-300">

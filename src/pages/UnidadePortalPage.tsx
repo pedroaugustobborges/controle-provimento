@@ -848,7 +848,7 @@ export default function UnidadePortalPage() {
                       <TableHead>Hora</TableHead>
                       <TableHead>Candidato</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="min-w-[260px]">Observação da Unidade</TableHead>
+                      <TableHead className="min-w-[280px]">Informações da Unidade</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>

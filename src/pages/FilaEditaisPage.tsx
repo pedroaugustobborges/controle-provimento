@@ -168,65 +168,13 @@ export default function FilaEditaisPage() {
   }, [vagas, currentUser, search, filterUnidade]);
 
   const groupedVagas = useMemo(() => {
-    const goianiaVagas = pendingVagas.filter(v => UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
-    const otherVagas = pendingVagas.filter(v => !UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
-
-    const grouped: Record<string, {
-      cargo: string;
-      cargoKey: string;
-      vagas: Vaga[];
-      totalVagas: number;
-      unidades: string[];
-      regioes: string[];
-    }> = {};
-
-    const computeRegion = (unidade: string): string => {
-      const u = normalizeUnitName(unidade);
-      for (const [regiao, units] of Object.entries(UNIDADES_POR_REGIAO)) {
-        if (units.map(x => normalizeUnitName(x)).includes(u)) return regiao;
-      }
-      return 'Outras';
-    };
-
-    goianiaVagas.forEach(v => {
-      const cargoKey = v.cargo.toUpperCase().trim();
-      if (!grouped[cargoKey]) {
-        grouped[cargoKey] = {
-          cargo: v.cargo,
-          cargoKey,
-          vagas: [],
-          totalVagas: 0,
-          unidades: [],
-          regioes: [],
-        };
-      }
-      grouped[cargoKey].vagas.push(v);
-      grouped[cargoKey].totalVagas += (v.numero_vagas || v.quantidade || 1);
-      if (!grouped[cargoKey].unidades.includes(v.unidade)) {
-        grouped[cargoKey].unidades.push(v.unidade);
-      }
-      const reg = computeRegion(v.unidade);
-      if (!grouped[cargoKey].regioes.includes(reg)) {
-        grouped[cargoKey].regioes.push(reg);
-      }
-    });
-
-    // Apply ungrouped: those cargos go into otherVagas individually
-    const activeGroups: typeof grouped[string][] = [];
-    const expandedAsIndividuals: Vaga[] = [];
-    Object.values(grouped).forEach(g => {
-      if (ungrouped.has(g.cargoKey) || g.vagas.length < 2) {
-        expandedAsIndividuals.push(...g.vagas);
-      } else {
-        activeGroups.push(g);
-      }
-    });
-
+    // Requirements: "Remover o agrupamento automático na Fila de Editais"
+    // Vagas should arrive individually.
     return {
-      groupedGoiania: activeGroups,
-      otherVagas: [...otherVagas, ...expandedAsIndividuals],
+      groupedGoiania: [],
+      otherVagas: pendingVagas,
     };
-  }, [pendingVagas, ungrouped]);
+  }, [pendingVagas]);
 
   // Selected rows -> cargos eligible to regroup (only cargos currently in ungrouped set with 2+ selected of same cargo)
   const regroupableCargos = useMemo(() => {
@@ -555,124 +503,7 @@ export default function FilaEditaisPage() {
               </TableHeader>
               <TableBody>
                 {/* Vagas Agrupadas (Consolidadas) */}
-                {groupedVagas.groupedGoiania.map((group) => {
-                  const isExpanded = expandedGroups.has(group.cargoKey);
-                  return (
-                    <React.Fragment key={group.cargoKey}>
-                      <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50/40 hover:from-blue-100/70 hover:to-indigo-50/60 border-l-4 border-l-blue-500">
-                        <TableCell className="align-middle">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-blue-700 hover:bg-blue-100"
-                            onClick={() => toggleExpand(group.cargoKey)}
-                            title={isExpanded ? 'Recolher' : 'Expandir requisições'}
-                          >
-                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                          </Button>
-                        </TableCell>
-                        <TableCell colSpan={9} className="py-3">
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Briefcase className="h-4 w-4 text-blue-700 shrink-0" />
-                              <span className="font-bold text-blue-900 text-base truncate">{group.cargo}</span>
-                              <Badge className="bg-blue-600 text-white font-semibold uppercase tracking-wide text-[10px]">
-                                Consolidado · {group.vagas.length} req.
-                              </Badge>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {group.regioes.map(r => (
-                                <Badge key={r} variant="outline" className="bg-white text-blue-700 border-blue-300 text-[10px] font-semibold flex items-center gap-1">
-                                  <MapPinIcon className="h-3 w-3" /> {r}
-                                </Badge>
-                              ))}
-                            </div>
-
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-7 text-xs bg-white border-blue-200 text-blue-700 hover:bg-blue-50">
-                                  <Building2 className="h-3.5 w-3.5 mr-1" />
-                                  {group.unidades.length} unidade{group.unidades.length > 1 ? 's' : ''}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-64 p-3">
-                                <p className="text-xs font-bold text-slate-600 uppercase mb-2">Unidades incluídas</p>
-                                <ul className="space-y-1">
-                                  {group.unidades.map(u => {
-                                    const qty = group.vagas
-                                      .filter(v => v.unidade === u)
-                                      .reduce((s, v) => s + (v.numero_vagas || v.quantidade || 1), 0);
-                                    return (
-                                      <li key={u} className="flex items-center justify-between text-xs">
-                                        <span className="text-slate-700">{u}</span>
-                                        <Badge variant="outline" className="text-[10px]">{qty} vaga{qty > 1 ? 's' : ''}</Badge>
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              </PopoverContent>
-                            </Popover>
-
-                            <Badge className="bg-blue-600 text-white font-bold">
-                              <Users className="h-3 w-3 mr-1" /> {group.totalVagas} vagas no total
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
-                          <div className="flex justify-end gap-1">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
-                                    onClick={() => handleUngroup(group.cargoKey)}
-                                  >
-                                    <Unlink className="h-3.5 w-3.5 mr-1" /> Desagrupar
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Tratar cada requisição como edital separado</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <Button
-                              size="sm"
-                              className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                              onClick={() => handleOpenSendModal(group.vagas[0])}
-                            >
-                              <Send className="h-3.5 w-3.5 mr-1" /> Preparar Consolidado
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      {isExpanded && group.vagas.map(v => (
-                        <TableRow key={v.id} className="bg-slate-50/40 hover:bg-slate-50">
-                          <TableCell></TableCell>
-                          <TableCell className="pl-8 font-mono text-[10px] text-slate-500">
-                            {v.requisicao || v.numero_requisicao}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Building2 className="h-3 w-3 text-slate-400" />
-                              <span className="text-xs text-slate-600">{v.unidade}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-xs text-slate-600 italic">{v.cargo}</TableCell>
-                          <TableCell className="text-[10px] text-slate-400">{v.tipo_vaga}</TableCell>
-                          <TableCell className="text-center text-xs">{v.numero_vagas || v.quantidade}</TableCell>
-                          <TableCell className="text-[10px] text-slate-400">{formatDate(v.data_recebimento!)}</TableCell>
-                          <TableCell className="text-center text-[10px]">{calcDiasAberto(v.data_recebimento || v.data_abertura)}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-[9px] uppercase bg-slate-50 text-slate-500 border-slate-200">Sub-item</Badge>
-                          </TableCell>
-                          <TableCell className="text-[10px] text-slate-500">{v.analista_responsavel || '—'}</TableCell>
-                          <TableCell></TableCell>
-                        </TableRow>
-                      ))}
-                    </React.Fragment>
-                  );
-                })}
+                {/* Vagas rendered individually as requested */}
 
                 {/* Demais Vagas (incluindo desagrupadas) */}
                 {groupedVagas.otherVagas.map((v) => {

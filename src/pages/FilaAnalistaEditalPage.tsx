@@ -602,9 +602,21 @@ export default function FilaAnalistaEditalPage() {
               </div>
 
               <div className="space-y-4 p-4 rounded-xl border border-amber-200 bg-amber-50/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-amber-600" />
-                  <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-amber-600" />
+                    <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsImportOpen(true)}
+                    className="h-8 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
+                  >
+                    <FileUp className="h-3.5 w-3.5" />
+                    <span className="text-xs">Importar do Word</span>
+                  </Button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">

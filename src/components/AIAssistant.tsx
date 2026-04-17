@@ -198,7 +198,6 @@ export function AIAssistant() {
 
   const handleMessageClick = (msg: any) => {
     if (!msg.lida) marcarMensagemLida(msg.id);
-    navigate('/mensagens?tab=historico');
     setIsOpen(false);
   };
 
@@ -561,14 +560,7 @@ export function AIAssistant() {
               </div>
             </ScrollArea>
 
-            {/* Footer - only on menu */}
-            {currentView === 'menu' && (
-              <div className="p-2 border-t bg-background shrink-0">
-                <Button className="w-full gap-2 text-[10px] font-bold h-8" variant="ghost" size="sm" onClick={() => { navigate('/mensagens'); setIsOpen(false); }}>
-                  <ExternalLink className="h-3 w-3" /> Abrir Central Completa
-                </Button>
-              </div>
-            )}
+            {/* Footer removido — funcionalidade de mensagens entre usuários descontinuada */}
           </motion.div>
         )}
       </AnimatePresence>

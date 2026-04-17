@@ -375,16 +375,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       )}
                     </div>
                     
-                    <div className="p-2 border-t border-slate-100 bg-slate-50/50">
-                      <Link 
-                        to="/mensagens?tab=historico" 
-                        className="flex items-center justify-center gap-2 w-full py-2 text-xs font-semibold text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                      >
-                        <History className="h-3.5 w-3.5" />
-                        Histórico de Mensagens
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
                   </PopoverContent>
                 </Popover>
                 

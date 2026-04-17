@@ -848,6 +848,7 @@ export default function UnidadePortalPage() {
                       <TableHead>Hora</TableHead>
                       <TableHead>Candidato</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="min-w-[260px]">Observação da Unidade</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -858,27 +859,52 @@ export default function UnidadePortalPage() {
                           <TableCell className="py-4 px-6"><Skeleton className="h-4 w-12" /></TableCell>
                           <TableCell className="py-4 px-6"><Skeleton className="h-4 w-40" /></TableCell>
                           <TableCell className="py-4 px-6"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                          <TableCell className="py-4 px-6"><Skeleton className="h-4 w-48" /></TableCell>
                           <TableCell className="py-4 px-6"><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
                         </TableRow>
                       ))
                     ) : todayConvocacoes.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma convocação para esta data</TableCell>
+                        <TableCell colSpan={5} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma convocação para esta data</TableCell>
                       </TableRow>
-                    ) : todayConvocacoes.map(c => (
-                      <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="py-4 px-6 font-black text-slate-900 text-sm">{c.horario}</TableCell>
-                        <TableCell className="py-4 px-6 font-bold text-slate-800 text-sm">{c.nome_candidato}</TableCell>
-                        <TableCell className="py-4 px-6">
-                          <Badge className={cn("text-[10px] font-black rounded-full", STATUS_COLOR[c.status] || 'bg-slate-100 text-slate-600')}>
-                            {STATUS_CONVOCACAO_LABELS[c.status as keyof typeof STATUS_CONVOCACAO_LABELS] || c.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="py-4 px-6">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenObs(c.id, c.observacoes || '')}><MessageSquare className="h-4 w-4 text-slate-400" /></Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    ) : todayConvocacoes.map(c => {
+                      const obs = (c.observacoes || '').trim();
+                      const hasObs = obs.length > 0;
+                      return (
+                        <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors align-top">
+                          <TableCell className="py-4 px-6 font-black text-slate-900 text-sm">{c.horario}</TableCell>
+                          <TableCell className="py-4 px-6 font-bold text-slate-800 text-sm">{c.nome_candidato}</TableCell>
+                          <TableCell className="py-4 px-6">
+                            <Badge className={cn("text-[10px] font-black rounded-full", STATUS_COLOR[c.status] || 'bg-slate-100 text-slate-600')}>
+                              {STATUS_CONVOCACAO_LABELS[c.status as keyof typeof STATUS_CONVOCACAO_LABELS] || c.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-4 px-6">
+                            {hasObs ? (
+                              <div className="flex items-start gap-2 max-w-md">
+                                <MessageSquare className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                                <p className="text-xs text-slate-700 font-medium whitespace-pre-wrap break-words leading-relaxed">
+                                  {obs}
+                                </p>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-slate-300 italic font-medium">Sem observação</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-4 px-6">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenObs(c.id, c.observacoes || '')}
+                              title={hasObs ? 'Editar observação' : 'Adicionar observação'}
+                              className={cn(hasObs && "bg-amber-50 hover:bg-amber-100")}
+                            >
+                              <MessageSquare className={cn("h-4 w-4", hasObs ? "text-amber-600" : "text-slate-400")} />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

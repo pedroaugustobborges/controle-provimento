@@ -1,32 +1,35 @@
 
-## Plano de execução — Diagnóstico e correção do envio/recebimento de mensagens AGIE
+## Plano — Validação real e correção definitiva do envio de mensagens AGIE para o Izac
 
-### Fase 1 — Diagnóstico técnico
-1. Inspecionar `src/store/vagasStore.ts` (função `addMensagem` + handler Realtime de `notificacoes`).
-2. Inspecionar `src/components/chat/AgieChat.tsx` e `src/pages/MensagensPage.tsx` (resolução de destinatário e renderização do histórico).
-3. Consultar `notificacoes` via `supabase--read_query` para verificar se INSERTs recentes de `tipo='mensagem'` estão persistindo com `remetente_id` e `usuario_id` corretos.
-4. Verificar via SQL se a tabela `notificacoes` está em `supabase_realtime` publication com `REPLICA IDENTITY FULL`.
-5. Validar políticas RLS atuais da tabela `notificacoes` (SELECT deve permitir tanto remetente quanto destinatário).
+### Fase 1 — Diagnóstico do estado atual (read-only)
+1. Consultar `notificacoes` via SQL para ver as últimas mensagens de `tipo='mensagem'` envolvendo o Izac (como remetente e destinatário) — confirmar se mensagens recentes foram persistidas.
+2. Verificar via SQL se `notificacoes` está em `supabase_realtime` publication e tem `REPLICA IDENTITY FULL`.
+3. Revisar `src/components/chat/AgieChat.tsx` — confirmar como o destinatário é resolvido no clique de "Enviar" (selectedRecipient → profile.id).
+4. Revisar `src/store/vagasStore.ts` — função `addMensagem` (payload do INSERT) + handler Realtime (filtro e dedupe).
+5. Revisar `src/pages/MensagensPage.tsx` — fluxo de envio + filtro de histórico por contato.
+6. Validar policies RLS atuais de `notificacoes` (SELECT/INSERT para remetente e destinatário).
 
 ### Fase 2 — Correções prováveis
-- **Realtime publication**: migration para garantir `ALTER TABLE notificacoes REPLICA IDENTITY FULL` e `ALTER PUBLICATION supabase_realtime ADD TABLE notificacoes` se faltar.
-- **RLS SELECT**: confirmar policy `auth.uid() = usuario_id OR auth.uid() = remetente_id`.
-- **addMensagem (vagasStore)**: garantir `auth.getUser()`, whitelist de colunas e tratamento de erro detalhado com `toast.error` exibindo a causa real.
-- **AgieChat**: garantir que o `profile.id` resolvido seja passado como `destinatario_id` (não o nome curto).
-- **Subscription handler**: garantir filtro por `usuario_id === myId` e atualização do `historicoMensagens` + dedupe por `id`.
+- **AgieChat / MensagensPage**: garantir que o `destinatario_id` enviado seja o UUID real do perfil do Izac (não nome curto), com busca ILIKE robusta na `profiles` e fallback se não encontrar.
+- **addMensagem (vagasStore)**: garantir whitelist de colunas (`usuario_id`, `remetente_id`, `remetente_nome`, `titulo`, `mensagem`, `tipo='mensagem'`), `auth.getUser()` antes do INSERT, e `toast.error` exibindo o erro real do Supabase se falhar.
+- **Subscription handler**: garantir filtro `usuario_id === myId`, dedupe por `id`, e atualização imediata do `historicoMensagens` + toast.
+- **RLS / Realtime**: aplicar migration se faltar `REPLICA IDENTITY FULL` ou se SELECT não cobrir remetente+destinatário.
+- **Logs de debug**: adicionar `console.log` temporários no envio (payload, resposta) e na subscription (evento recebido) para evidenciar o teste real.
 
-### Fase 3 — Validação end-to-end
-- Inserção de teste via `supabase--insert` simulando A→B.
-- Conferir leitura via `supabase--read_query` (registro presente, RLS permite ambos).
-- Solicitar ao usuário teste real entre 2 sessões para confirmar entrega em tempo real.
+### Fase 3 — Teste real end-to-end com o Izac
+1. Inserir via SQL uma mensagem real de teste de outro usuário ativo → Izac, simulando o que a UI faria, e confirmar persistência.
+2. **Pedir ao usuário** para abrir 2 sessões reais (uma normal logada como remetente, uma anônima logada como Izac) e enviar uma mensagem pela UI.
+3. Coletar via console logs / network o que aconteceu no envio e na recepção, e confirmar entrega em tempo real sem refresh.
+4. Se falhar, iterar correção até o fluxo real funcionar 100%.
 
 ### Entregáveis
-1. Diagnóstico com causa raiz identificada.
-2. Migration SQL (se necessário) + ajustes em `vagasStore.ts` e `AgieChat.tsx`.
-3. Roteiro de teste documentado.
+1. Diagnóstico com causa raiz real (não suposta).
+2. Correções aplicadas em `AgieChat.tsx`, `vagasStore.ts`, `MensagensPage.tsx` e/ou migration RLS/Realtime.
+3. Confirmação visual/log do teste real Ana → Izac → Ana funcionando em tempo real.
+4. Roteiro reproduzível para o usuário validar com qualquer par de perfis.
 
 <lov-actions>
-<lov-suggestion message="Aprovado. Execute o diagnóstico completo, aplique as correções necessárias (Realtime publication, RLS, addMensagem, handler) e valide com teste real de inserção SQL entre dois usuários.">Executar diagnóstico + correção</lov-suggestion>
-<lov-suggestion message="Antes de codar, entregue só o diagnóstico: status da publication Realtime, RLS atual de notificacoes, últimos INSERTs de tipo=mensagem e onde exatamente o fluxo quebra. Eu aprovo as correções depois.">Só diagnóstico primeiro</lov-suggestion>
-<lov-suggestion message="Faça um teste end-to-end real agora: insira via SQL uma mensagem de A para B, confirme que B recebe via Realtime sem refresh, e me mostre o resultado com prints/logs.">Teste real end-to-end agora</lov-suggestion>
+<lov-suggestion message="Aprovado. Execute o diagnóstico completo, aplique correções com logs de debug, e me dê o roteiro exato (qual usuário usar, qual senha, qual botão clicar) para eu testar em 2 sessões reais agora.">Diagnóstico + correção + roteiro de teste real</lov-suggestion>
+<lov-suggestion message="Antes de mexer no código, me mostre o diagnóstico real: últimas 10 mensagens de tipo=mensagem envolvendo o Izac no banco, status da publication Realtime, RLS atual, e onde exatamente o fluxo quebra na UI. Eu aprovo as correções depois.">Só diagnóstico real primeiro</lov-suggestion>
+<lov-suggestion message="Faça você o teste real agora: simule via SQL uma mensagem da Ana para o Izac com payload idêntico ao da UI, confirme via query que persistiu com remetente_id e usuario_id corretos, e me mostre o resultado. Depois eu testo na UI.">Teste SQL idêntico à UI agora</lov-suggestion>
 </lov-actions>

@@ -259,37 +259,91 @@ export default function FilaAnalistaEditalPage() {
     entrevista_config: entrevistaConfig,
   });
 
+  /** Mescla cronograma + entrevista_config + sincroniza data_entrevistas (1ª data) */
+  const buildCronogramaPayload = (vagaId?: string) => {
+    const currentCronograma = isBatchMode && vagaId ? batchCronogramas[vagaId] : cronograma;
+    const currentEntrevistaConfig = isBatchMode && vagaId ? batchEntrevistaConfigs[vagaId] : entrevistaConfig;
+    const baseCronograma = isBatchMode && vagaId ? selectedBatchVagas.find(v => v.id === vagaId)?.cronograma : selectedVaga?.cronograma;
+
+    return {
+      ...baseCronograma,
+      ...currentCronograma,
+      data_entrevistas: primaryEntrevistaDate(currentEntrevistaConfig) || currentCronograma.data_entrevistas || '',
+      entrevista_config: currentEntrevistaConfig,
+    };
+  };
+
   const handleApplyImport = (result: CronogramaImportResult) => {
-    setCronograma((prev: any) => ({ ...prev, ...result.values }));
-    if (result.entrevistaConfig) {
-      setEntrevistaConfig(result.entrevistaConfig);
-    } else if (result.values.data_entrevistas) {
-      setEntrevistaConfig({ tipo: 'unica', datas: [result.values.data_entrevistas] });
+    if (isBatchMode && result.batchValues) {
+      // Aplicar múltiplos cronogramas aos respectivos cargos
+      setBatchCronogramas(prev => ({
+        ...prev,
+        ...result.batchValues
+      }));
+      
+      if (result.batchEntrevistaConfigs) {
+        setBatchEntrevistaConfigs(prev => ({
+          ...prev,
+          ...result.batchEntrevistaConfigs
+        }));
+      }
+      
+      toast.success('Múltiplos cronogramas aplicados aos respectivos cargos.');
+    } else {
+      // Modo single: aplica à vaga ativa
+      const targetId = isBatchMode ? activeTab : selectedVaga?.id;
+      if (!targetId) return;
+
+      if (isBatchMode) {
+        setBatchCronogramas(prev => ({
+          ...prev,
+          [targetId]: { ...prev[targetId], ...result.values }
+        }));
+        if (result.entrevistaConfig) {
+          setBatchEntrevistaConfigs(prev => ({ ...prev, [targetId]: result.entrevistaConfig! }));
+        } else if (result.values.data_entrevistas) {
+          setBatchEntrevistaConfigs(prev => ({ ...prev, [targetId]: { tipo: 'unica', datas: [result.values.data_entrevistas] } }));
+        }
+      } else {
+        setCronograma((prev: any) => ({ ...prev, ...result.values }));
+        if (result.entrevistaConfig) {
+          setEntrevistaConfig(result.entrevistaConfig);
+        } else if (result.values.data_entrevistas) {
+          setEntrevistaConfig({ tipo: 'unica', datas: [result.values.data_entrevistas] });
+        }
+      }
+      toast.success('Cronograma aplicado.');
     }
   };
 
   const handleSaveDraft = async () => {
-    if (!selectedVaga) return;
+    const vagasToUpdate = isBatchMode ? selectedBatchVagas : (selectedVaga ? [selectedVaga] : []);
+    if (vagasToUpdate.length === 0) return;
 
-    const ok = await updateVaga(selectedVaga.id, {
-      status_fluxo_edital: 'em_redacao',
-      etapa: 'em_redacao',
-      observacoes_edital: obsEdital,
-      numero_edital: numeroEdital,
-      numero_processo: numeroProcesso,
-      arquivo_edital: nomeArquivo,
-      url_reachr: reachrUrl,
-      cronograma: buildCronogramaPayload(),
-    } as any);
+    let successCount = 0;
+    for (const v of vagasToUpdate) {
+      const ok = await updateVaga(v.id, {
+        status_fluxo_edital: 'em_redacao',
+        etapa: 'em_redacao',
+        observacoes_edital: obsEdital,
+        numero_edital: numeroEdital,
+        numero_processo: numeroProcesso,
+        arquivo_edital: nomeArquivo,
+        url_reachr: reachrUrl,
+        cronograma: buildCronogramaPayload(v.id),
+      } as any);
+      if (ok) successCount++;
+    }
 
-    if (ok) {
-      notificarMovimentacaoEdital(selectedVaga.id, 'em_redacao', 'Rascunho salvo.');
-      toast.success('Rascunho do edital salvo com sucesso!');
+    if (successCount > 0) {
+      vagasToUpdate.forEach(v => notificarMovimentacaoEdital(v.id, 'em_redacao', 'Rascunho salvo.'));
+      toast.success(`${successCount} rascunho(s) salvo(s) com sucesso!`);
     }
   };
 
   const handleSendToValidation = async () => {
-    if (!selectedVaga) return;
+    const vagasToUpdate = isBatchMode ? selectedBatchVagas : (selectedVaga ? [selectedVaga] : []);
+    if (vagasToUpdate.length === 0) return;
 
     if (!nomeArquivo) {
       toast.error('É necessário carregar o arquivo Word do edital antes de enviar.');
@@ -306,30 +360,33 @@ export default function FilaAnalistaEditalPage() {
       return;
     }
 
-    // Validation of holiday dates
-    const dateFields: Record<string, string> = {
-      'Publicação do Edital': cronograma.data_publicacao_edital,
-      'Início das Inscrições': cronograma.data_inicio_inscricao,
-      'Fim das Inscrições': cronograma.data_fim_inscricao,
-      'Triagem': cronograma.data_triagem,
-      'Avaliação On-line': cronograma.data_avaliacao_especifica_online,
-      'Resultado Preliminar Avaliação': cronograma.data_resultado_preliminar_avaliacao_especifica,
-      'Recurso Avaliação': cronograma.data_recurso_avaliacao_especifica,
-      'Resultado Recurso': cronograma.data_resultado_recurso_avaliacao_especifica,
-      'Resultado Final Avaliação': cronograma.data_resultado_final_avaliacao_especifica,
-      'Entrevistas': cronograma.data_entrevistas,
-      'Resultado Final Seletivo': cronograma.data_resultado_final_seletivo,
-    };
+    // Validation of holiday dates for all selected vagas
+    for (const v of vagasToUpdate) {
+      const currentCrono = isBatchMode ? batchCronogramas[v.id] : cronograma;
+      const dateFields: Record<string, string> = {
+        'Publicação do Edital': currentCrono.data_publicacao_edital,
+        'Início das Inscrições': currentCrono.data_inicio_inscricao,
+        'Fim das Inscrições': currentCrono.data_fim_inscricao,
+        'Triagem': currentCrono.data_triagem,
+        'Avaliação On-line': currentCrono.data_avaliacao_especifica_online,
+        'Resultado Preliminar Avaliação': currentCrono.data_resultado_preliminar_avaliacao_especifica,
+        'Recurso Avaliação': currentCrono.data_recurso_avaliacao_especifica,
+        'Resultado Recurso': currentCrono.data_resultado_recurso_avaliacao_especifica,
+        'Resultado Final Avaliação': currentCrono.data_resultado_final_avaliacao_especifica,
+        'Entrevistas': currentCrono.data_entrevistas,
+        'Resultado Final Seletivo': currentCrono.data_resultado_final_seletivo,
+      };
 
-    for (const [fieldName, dateValue] of Object.entries(dateFields)) {
-      if (dateValue) {
-        const validation = await validateDate(dateValue, selectedVaga.unidade);
-        if (!validation.isValid) {
-          toast.error(
-            `A data da etapa ${fieldName} (${formatDate(dateValue)}) ${validation.message}. Por favor, ajuste a data antes de enviar para aprovação.`,
-            { duration: 6000 }
-          );
-          return;
+      for (const [fieldName, dateValue] of Object.entries(dateFields)) {
+        if (dateValue) {
+          const validation = await validateDate(dateValue, v.unidade);
+          if (!validation.isValid) {
+            toast.error(
+              `[${v.cargo}] A data da etapa ${fieldName} (${formatDate(dateValue)}) ${validation.message}. Por favor, ajuste a data antes de enviar.`,
+              { duration: 6000 }
+            );
+            return;
+          }
         }
       }
     }
@@ -337,46 +394,43 @@ export default function FilaAnalistaEditalPage() {
     const respUser = (users || []).find((u: any) => u.id === responsavelValidacao);
     const respNome = respUser?.nome_completo || 'Não atribuído';
 
-    const ok = await updateVaga(selectedVaga.id, {
-      status_fluxo_edital: 'enviado_validacao',
-      etapa: 'enviado_validacao',
-      status_validacao: 'pendente',
-      observacoes_edital: obsEdital,
-      numero_edital: numeroEdital,
-      numero_processo: numeroProcesso,
-      arquivo_edital: nomeArquivo,
-      url_reachr: reachrUrl,
-      validado_por: responsavelValidacao,
-      cronograma: buildCronogramaPayload(),
-      historico: [...(selectedVaga.historico || []), {
-        id: `h-${Date.now()}`,
-        data: new Date().toISOString().split('T')[0],
-        descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}. Responsável pela validação: ${respNome}.`,
-        usuario: currentUser?.nome_completo || 'Analista do Edital'
-      }]
-    } as any);
+    let successCount = 0;
+    for (const v of vagasToUpdate) {
+      const ok = await updateVaga(v.id, {
+        status_fluxo_edital: 'enviado_validacao',
+        etapa: 'enviado_validacao',
+        status_validacao: 'pendente',
+        observacoes_edital: obsEdital,
+        numero_edital: numeroEdital,
+        numero_processo: numeroProcesso,
+        arquivo_edital: nomeArquivo,
+        url_reachr: reachrUrl,
+        validado_por: responsavelValidacao,
+        cronograma: buildCronogramaPayload(v.id),
+        historico: [...(v.historico || []), {
+          id: `h-${Date.now()}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Edital redigido e enviado para validação administrativa. Edital: ${numeroEdital}. Responsável pela validação: ${respNome}.`,
+          usuario: currentUser?.nome_completo || 'Analista do Edital'
+        }]
+      } as any);
+      if (ok) {
+        successCount++;
+        notificarMovimentacaoEdital(v.id, 'enviado_validacao', `Responsável: ${respNome}.`);
+      }
+    }
 
-    if (!ok) return;
-
-    notificarMovimentacaoEdital(selectedVaga.id, 'enviado_validacao', `Responsável: ${respNome}.`);
-    setIsEditModalOpen(false);
-    toast.success(`Edital enviado para validação de ${respNome}.`);
+    if (successCount > 0) {
+      setIsEditModalOpen(false);
+      toast.success(`${successCount} cargo(s) enviado(s) para validação de ${respNome}.`);
+    }
   };
 
   const handleOpenPublishModal = (vaga: Vaga) => {
+    setIsBatchMode(false);
     setSelectedVaga(vaga);
     setCronograma({
-      data_publicacao_edital: vaga.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
-      data_inicio_inscricao: vaga.cronograma?.data_inicio_inscricao || '',
-      data_fim_inscricao: vaga.cronograma?.data_fim_inscricao || '',
-      data_triagem: vaga.cronograma?.data_triagem || '',
-      data_avaliacao_especifica_online: vaga.cronograma?.data_avaliacao_especifica_online || '',
-      data_resultado_preliminar_avaliacao_especifica: vaga.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
-      data_recurso_avaliacao_especifica: vaga.cronograma?.data_recurso_avaliacao_especifica || '',
-      data_resultado_recurso_avaliacao_especifica: vaga.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
-      data_resultado_final_avaliacao_especifica: vaga.cronograma?.data_resultado_final_avaliacao_especifica || '',
-      data_entrevistas: vaga.cronograma?.data_entrevistas || '',
-      data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
+...
     });
     setEntrevistaConfig(deriveEntrevistaConfig(
       vaga.cronograma?.data_entrevistas,
@@ -388,6 +442,7 @@ export default function FilaAnalistaEditalPage() {
     setIsTalentBank(vaga.acompanhamento?.gerou_banco || false);
     setIsPublishModalOpen(true);
   };
+
 
   const handleFinalizePublication = async () => {
     if (!selectedVaga) return;

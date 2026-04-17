@@ -7,6 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { LogoutOverlay } from "@/components/LogoutOverlay";
+import { useMaintenanceMode } from "@/hooks/useMaintenanceMode";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import MaintenancePage from "@/pages/MaintenancePage";
+import { useEffect } from "react";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const VagasPage = lazy(() => import("@/pages/VagasPage"));
@@ -42,9 +46,18 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRouteWrapper() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, signOut } = useAuth();
+  const { state: maintenance, loading: maintLoading } = useMaintenanceMode();
+  const isAdmin = useIsAdmin();
 
-  if (loading) {
+  // Auto-deslogar não-admin quando manutenção é ativada em tempo real
+  useEffect(() => {
+    if (maintenance?.is_active && isAdmin === false && isAuthenticated) {
+      signOut();
+    }
+  }, [maintenance?.is_active, isAdmin, isAuthenticated, signOut]);
+
+  if (loading || maintLoading || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -59,6 +72,10 @@ function ProtectedRouteWrapper() {
     return <Navigate to="/login" replace />;
   }
 
+  if (maintenance?.is_active && !isAdmin) {
+    return <MaintenancePage message={maintenance.message} expectedReturnAt={maintenance.expected_return_at} />;
+  }
+
   return (
     <AppLayout>
       <Suspense fallback={<PageSkeleton />}>
@@ -69,9 +86,17 @@ function ProtectedRouteWrapper() {
 }
 
 function UnidadeRouteWrapper() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, signOut } = useAuth();
+  const { state: maintenance, loading: maintLoading } = useMaintenanceMode();
+  const isAdmin = useIsAdmin();
 
-  if (loading) {
+  useEffect(() => {
+    if (maintenance?.is_active && isAdmin === false && isAuthenticated) {
+      signOut();
+    }
+  }, [maintenance?.is_active, isAdmin, isAuthenticated, signOut]);
+
+  if (loading || maintLoading || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -81,6 +106,10 @@ function UnidadeRouteWrapper() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (maintenance?.is_active && !isAdmin) {
+    return <MaintenancePage message={maintenance.message} expectedReturnAt={maintenance.expected_return_at} />;
   }
 
   return (

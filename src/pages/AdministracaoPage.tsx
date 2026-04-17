@@ -56,6 +56,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
 import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { generateTempPassword, getAdminPasswordErrorMessage, validateAdminPassword } from '@/lib/adminPasswordUtils';
+import { SistemaTab } from '@/components/admin/SistemaTab';
 
 const REGIOES_SELECAO = {
   'Goiânia': UNIDADES_POR_REGIAO['Goiânia'] || [],
@@ -597,7 +598,14 @@ export default function AdministracaoPage() {
           <TabsTrigger value="feedbacks" className="gap-2 font-bold px-4 py-2">
             <MessageSquare className="h-4 w-4" /> Feedbacks
           </TabsTrigger>
+          <TabsTrigger value="sistema" className="gap-2 font-bold px-4 py-2">
+            <Settings className="h-4 w-4" /> Sistema
+          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="sistema">
+          <SistemaTab />
+        </TabsContent>
 
         {/* USUÁRIOS */}
         <TabsContent value="usuarios">

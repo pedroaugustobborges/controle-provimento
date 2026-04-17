@@ -502,6 +502,35 @@ export default function FilaAnalistaEditalPage() {
         <Card className="bg-blue-50 border-blue-100 shadow-sm"><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-5 w-5 text-blue-600" /><div><p className="text-xs font-bold text-blue-600 uppercase">Aguardando Redação</p><p className="text-2xl font-bold text-slate-800">{editalVagas.length}</p></div></div></CardContent></Card>
       </div>
 
+      {selectedForGroup.size >= 1 && (
+        <div className="sticky top-2 z-30 bg-primary text-primary-foreground shadow-lg rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap animate-in fade-in slide-in-from-top-2">
+          <Layers className="h-4 w-4 shrink-0" />
+          <span className="text-sm font-medium">
+            <strong>{selectedForGroup.size}</strong> selecionada(s) para agrupar
+            {groupableSelected.length >= 1 && groupableSelected[0] && (
+              <span className="ml-2 opacity-80">• Região: <strong>{getRegiaoAgrupamentoLabel(getRegiaoAgrupamento(groupableSelected[0].unidade))}</strong></span>
+            )}
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            {selectedForGroup.size >= 2 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+                onClick={handleOpenGroupModal}
+                disabled={!groupValidation.ok}
+                title={!groupValidation.ok ? groupValidation.reason : 'Agrupar cargos selecionados em um único edital'}
+              >
+                <Layers className="h-4 w-4 mr-1" /> Agrupar {selectedForGroup.size} cargos
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-8 text-primary-foreground hover:bg-white/10" onClick={() => setSelectedForGroup(new Set())}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Card className="shadow-sm border-slate-200 overflow-hidden">
         <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row justify-between gap-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2"><ListFilter className="h-5 w-5 text-primary" />Vagas para Edital</CardTitle>
@@ -512,17 +541,29 @@ export default function FilaAnalistaEditalPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader><TableRow><TableHead>Requisição</TableHead><TableHead>Unidade</TableHead><TableHead>Cargo</TableHead><TableHead className="text-center">Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="w-[40px]"></TableHead><TableHead>Requisição</TableHead><TableHead>Unidade</TableHead><TableHead>Cargo</TableHead><TableHead className="text-center">Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
-              {editalVagas.map(v => (
-                <TableRow key={v.id} className="group">
-                  <TableCell className="font-mono text-xs font-bold">{v.requisicao || v.numero_requisicao}</TableCell>
-                  <TableCell>{v.unidade}</TableCell>
-                  <TableCell className="font-semibold">{v.cargo}</TableCell>
-                  <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
-                  <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}><Edit className="h-4 w-4" /></Button></TableCell>
-                </TableRow>
-              ))}
+              {editalVagas.map(v => {
+                const canGroup = v.status_fluxo_edital === 'em_redacao';
+                return (
+                  <TableRow key={v.id} className="group">
+                    <TableCell>
+                      {canGroup && (
+                        <Checkbox
+                          checked={selectedForGroup.has(v.id)}
+                          onCheckedChange={() => toggleSelectForGroup(v.id)}
+                          aria-label={`Selecionar ${v.cargo} para agrupar`}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs font-bold">{v.requisicao || v.numero_requisicao}</TableCell>
+                    <TableCell>{v.unidade}</TableCell>
+                    <TableCell className="font-semibold">{v.cargo}</TableCell>
+                    <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
+                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}><Edit className="h-4 w-4" /></Button></TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

@@ -444,13 +444,14 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
   }
 
   // 5. Extração de cronogramas
+  const rejections: TableRejection[] = [];
   try {
     type TitleHit = { idx: number; anexo: string; cargo: string };
     const titles: TitleHit[] = [];
     for (let i = 0; i < allNodes.length; i++) {
       const node = allNodes[i];
       if (node.closest('table')) continue;
-      const txt = (node.textContent || '').replace(/\s+/g, ' ').trim();
+      const txt = normalizeText(node.textContent || '');
       if (!txt) continue;
       const parsed = parseAnexoCronogramaTitle(txt);
       if (parsed) {
@@ -471,42 +472,41 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
           return pos > start && pos < end;
         });
         if (!table) continue;
-        const etapas = extractEtapasFromTable(table);
+        const tIdx = tables.indexOf(table);
+        const etapas = extractEtapasFromTable(table, rejections, tIdx);
         if (etapas.length > 0) {
           cronogramas.push({ anexo: titles[t].anexo, cargo: titles[t].cargo, etapas });
         }
       }
     }
 
+    // Fallback: tentar QUALQUER tabela com cabeçalho ETAPA+DATA, mesmo sem título identificado
     if (cronogramas.length === 0) {
-      let anexoIdx = -1;
-      for (let i = 0; i < allNodes.length; i++) {
-        const txt = stripAccents(allNodes[i].textContent || '');
-        if (/^anexo\b/.test(txt) || txt.startsWith('anexo ')) {
-          anexoIdx = i;
-          break;
-        }
-      }
-      for (const table of tables) {
-        const pos = allNodes.indexOf(table);
-        if (anexoIdx !== -1 && pos < anexoIdx) continue;
-        const headers = Array.from(table.querySelectorAll('tr')[0]?.querySelectorAll('th, td') || [])
-          .map((c) => stripAccents(c.textContent || ''));
-        if (headers.some((h) => h.includes('etapa')) && headers.some((h) => h.includes('data'))) {
-          const etapas = extractEtapasFromTable(table);
-          if (etapas.length > 0) {
-            cronogramas.push({ anexo: 'Cronograma', cargo: '(cargo não identificado)', etapas });
-          }
+      for (let i = 0; i < tables.length; i++) {
+        const table = tables[i];
+        const etapas = extractEtapasFromTable(table, rejections, i);
+        if (etapas.length > 0) {
+          cronogramas.push({
+            anexo: 'Cronograma',
+            cargo: '(cargo não identificado)',
+            etapas,
+          });
         }
       }
     }
 
     if (cronogramas.length === 0) {
-      const tablesInfo = `Tabelas encontradas: ${tables.length}.`;
+      const motivos = rejections
+        .slice(0, 8)
+        .map((r) => `#${r.index + 1}: ${r.motivo} [headers: ${r.headers.join(' | ') || '∅'}]`)
+        .join('\n');
+      const tablesInfo = `Tabelas encontradas: ${tables.length}. Rejeições:\n${motivos || '(nenhuma diagnosticada)'}`;
+      // eslint-disable-next-line no-console
+      console.warn('[cronograma-parser] tabelas rejeitadas:', rejections);
       return fail(
         'extracao_cronograma',
         'Nenhum cronograma reconhecido no arquivo.',
-        'Confirme que o Word contém um trecho como "Anexo … Cronograma de Seleção para o Cargo de: …" seguido de uma tabela com colunas "ETAPA" e "DATA". Você também pode anexar este .docx aqui na conversa para diagnóstico.',
+        'O sistema agora aceita variações como "ETAPAS"/"FASE"/"ATIVIDADE" e "DATA"/"DATAS"/"PERÍODO"/"PRAZO". Verifique se a tabela do cronograma tem cabeçalho com essas palavras. Você também pode anexar este .docx aqui na conversa para diagnóstico.',
         tablesInfo,
       );
     }

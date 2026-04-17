@@ -1,50 +1,49 @@
 
-## Plano — Garantia de persistência absoluta no Portal Unidade
+## Plano — Múltiplas datas na etapa Entrevista + Importação automática de cronograma via Word
 
-### 1. Diagnóstico
-- Ler `src/pages/UnidadePortalPage.tsx` para mapear todos os campos editáveis e o fluxo atual de salvamento.
-- Identificar onde está faltando `await` ou onde o estado local diverge do servidor.
-- Verificar se há salvamento apenas em memória (state) sem persistência em backend.
+### 1. Investigação
+- Localizar o submenu **Redação de Edital** e o componente que gerencia as etapas (provavelmente em `EditaisPage.tsx` ou `ValidacaoEditaisPage.tsx`).
+- Mapear o modelo atual da etapa Entrevista (campo de data único) e a estrutura de persistência no Supabase.
+- Identificar onde adicionar o botão de upload de Word.
 
-### 2. Camadas de proteção (defesa em profundidade)
+### 2. Frontend — Etapa Entrevista flexível
+- Adicionar seletor (RadioGroup) com 3 opções: **Data única**, **Duas datas**, **Período**.
+- Renderizar dinamicamente:
+  - 1 input date (única)
+  - 2 inputs date independentes (duas datas)
+  - 2 inputs date com labels "Início" e "Fim" (período)
+- Persistir como JSON estruturado: `{ tipo: 'unica' | 'duas_datas' | 'periodo', datas: string[] }`.
 
-**Trava 1 — Auto-save com debounce**
-- Criar hook `useAutoSave(value, saveFn, delay=800)` que dispara salvamento automático no backend após o usuário parar de digitar.
-- Aplicar em todos os campos editáveis (observações, status, etc.).
-- Indicador visual: "Salvando..." → "Salvo ✓" → "Erro" via toast/badge.
+### 3. Backend — Migração
+- Adicionar coluna `entrevista_config` (JSONB) na tabela de etapas do edital (ou ajustar coluna existente para suportar JSON).
+- Manter compatibilidade com registros antigos (fallback para data única).
 
-**Trava 2 — Rascunho local em localStorage**
-- Criar utilitário `draftStore.ts` com chaves no formato `portal-unidade:draft:{userId}:{recordId}`.
-- Salvar snapshot do form a cada alteração + timestamp.
-- Ao montar a página: comparar timestamp do rascunho local vs `updated_at` do servidor → se local for mais novo, exibir banner "Recuperar alterações não salvas?".
-- Limpar rascunho após confirmação de save no servidor.
+### 4. Parser de Word (.docx)
+- Instalar/usar `mammoth` ou `docx` no client (parser leve em browser) — preferência por `mammoth` para extrair HTML/tabelas.
+- Criar utilitário `src/lib/editalCronogramaParser.ts`:
+  - Recebe `File` (.docx) → extrai HTML.
+  - Localiza heading com "ANEXO" (regex case-insensitive, ignora acentos).
+  - Procura próxima `<table>` cujo conteúdo cite "Cronograma de Seleção para o Cargo".
+  - Mapeia colunas pelo cabeçalho: detecta índices de "ETAPA" e "DATA".
+  - Para cada linha:
+    - Normaliza nome da etapa (lowercase, sem acentos).
+    - Faz match com etapas do sistema (lista pré-definida + fuzzy match simples).
+    - Detecta padrão de datas: única (`dd/mm/yyyy`), múltiplas (`X e Y`, `X,Y`), período (`X a Y`, `X até Y`).
+- Retorna estrutura: `[{ etapa: string, tipo: 'unica'|'duas_datas'|'periodo', datas: string[] }]`.
 
-**Trava 3 — Bloqueio de saída**
-- Hook `useBeforeUnload(hasUnsavedChanges)` que registra listener no `window.beforeunload`.
-- Bloqueia refresh/fechamento se houver alterações pendentes na fila.
+### 5. UI do upload
+- Botão "Importar cronograma do Word" no topo do formulário de Redação.
+- Componente `<CronogramaImportDialog />`:
+  - Drag & drop / file input (.docx).
+  - Após parse, exibe **tabela de prévia** com etapa detectada + datas + status (✅ matched / ⚠️ não encontrada).
+  - Botão "Aplicar" preenche os campos do formulário.
+  - Etapas sem match permanecem manuais.
 
-**Trava 4 — Versionamento otimista**
-- Reusar coluna `version` já existente em `vagas` e `banco_candidatos` via `DatabaseService.saveWithConcurrency` (já implementado).
-- Garantir que toda update no Portal Unidade passe por esse caminho.
-- Em conflito: toast de erro + opção "Recarregar dados".
+### 6. Pendência com o usuário
+**Aguardando arquivo Word de exemplo** para calibrar o parser (estrutura exata do "ANEXO", nomenclatura das etapas, formatos de data utilizados).
 
-**Trava 5 — Fila de retry offline**
-- Criar `retryQueue.ts` em localStorage: `[{action, payload, timestamp, attempts}]`.
-- Listener `window.online`: ao reconectar, reprocessar fila com backoff exponencial.
-- Limite de tentativas (ex.: 5) antes de marcar como erro permanente e notificar usuário.
-
-### 3. Arquivos a criar/alterar
-- `src/hooks/useAutoSave.ts` (novo)
-- `src/hooks/useBeforeUnload.ts` (novo)
-- `src/lib/draftStore.ts` (novo)
-- `src/lib/retryQueue.ts` (novo)
-- `src/components/SaveStatusIndicator.tsx` (novo) — badge visual
-- `src/components/DraftRecoveryBanner.tsx` (novo) — banner de recuperação
-- `src/pages/UnidadePortalPage.tsx` — integrar todas as travas
-
-### 4. Validação
-- Editar campo → ver "Salvando..." → "Salvo ✓".
-- Editar e dar F5 imediatamente → banner de recuperação aparece.
-- Editar offline (DevTools > Network > Offline) → fila acumula → reconectar → retry automático.
-- Editar e tentar fechar aba → `beforeunload` bloqueia.
-- Dois usuários editando o mesmo registro → segundo recebe aviso de conflito.
+### 7. Validação
+- Etapa Entrevista: alternar entre os 3 modos e salvar — confirmar persistência.
+- Upload de Word de exemplo → validar extração correta de todas as etapas.
+- Confirmar que datas múltiplas/período na Entrevista vêm com a modalidade correta auto-selecionada.
+- Etapas ausentes no Word: confirmar que campo fica em branco sem quebrar o formulário.

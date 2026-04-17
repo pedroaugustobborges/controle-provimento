@@ -641,20 +641,95 @@ export default function FilaEditaisPage() {
         </CardContent>
       </Card>
 
-      {regroupableCargos.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white shadow-2xl rounded-full px-5 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
-          <CheckSquare className="h-4 w-4" />
+      {(regroupableCargos.length > 0 || selectedRows.size >= 2) && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 max-w-[95vw] flex-wrap justify-center">
+          <CheckSquare className="h-4 w-4 shrink-0" />
           <span className="text-sm font-medium">
-            {selectedRows.size} selecionada(s) — {regroupableCargos.length} cargo(s) elegível(is)
+            {selectedRows.size} selecionada(s)
+            {regroupableCargos.length > 0 && ` — ${regroupableCargos.length} cargo(s) elegível(is) p/ reagrupar`}
           </span>
-          <Button size="sm" variant="secondary" className="h-8 bg-white text-blue-700 hover:bg-blue-50 font-semibold" onClick={handleRegroupSelected}>
-            <Link2 className="h-4 w-4 mr-1" /> Agrupar selecionados
-          </Button>
+          {regroupableCargos.length > 0 && (
+            <Button size="sm" variant="secondary" className="h-8 bg-white text-blue-700 hover:bg-blue-50 font-semibold" onClick={handleRegroupSelected}>
+              <Link2 className="h-4 w-4 mr-1" /> Reagrupar mesmo cargo
+            </Button>
+          )}
+          {selectedRows.size >= 2 && (
+            <Button
+              size="sm"
+              className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
+              onClick={handleOpenBatchSend}
+              disabled={!sendGroupedValidation.ok}
+              title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
+            >
+              <Send className="h-4 w-4 mr-1" /> Enviar {selectedRows.size} agrupados p/ Redação
+            </Button>
+          )}
           <Button size="sm" variant="ghost" className="h-8 text-white hover:bg-blue-700" onClick={() => setSelectedRows(new Set())}>
             <X className="h-4 w-4" />
           </Button>
         </div>
       )}
+
+      <Dialog open={isBatchSendOpen} onOpenChange={setIsBatchSendOpen}>
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Send className="h-5 w-5" />
+              Enviar {selectedVagas.length} cargos agrupados p/ Redação
+            </DialogTitle>
+            <DialogDescription>
+              Estes cargos serão enviados como UM ÚNICO edital. Na Redação você poderá inserir cronogramas independentes para cada cargo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <p className="text-[10px] text-slate-500 uppercase font-bold mb-2">
+                Unidade: <span className="text-slate-700">{selectedVagas[0]?.unidade}</span>
+              </p>
+              <ul className="space-y-1 max-h-[180px] overflow-y-auto">
+                {selectedVagas.map(v => (
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo}</span>
+                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-800">Validações obrigatórias (aplicam-se a todos)</Label>
+              {[
+                { key: 'cargo' as const, label: 'Cargo validado com a unidade' },
+                { key: 'carga' as const, label: 'Carga horária validada com a unidade' },
+                { key: 'salario' as const, label: 'Salário validado com a unidade' },
+              ].map(item => (
+                <div
+                  key={item.key}
+                  className="flex items-center space-x-3 p-2 rounded-md border border-slate-100 hover:bg-slate-50 cursor-pointer"
+                  onClick={() => setBatchValidacoes(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                >
+                  <Checkbox checked={batchValidacoes[item.key]} onCheckedChange={(c) => setBatchValidacoes(prev => ({ ...prev, [item.key]: !!c }))} />
+                  <Label className="text-sm cursor-pointer">{item.label}</Label>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-800">Observações para a Redação</Label>
+              <Textarea
+                placeholder="Instruções comuns ao edital agrupado..."
+                className="min-h-[80px] resize-none"
+                value={batchObs}
+                onChange={(e) => setBatchObs(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBatchSendOpen(false)}>Cancelar</Button>
+            <Button onClick={handleConfirmBatchSend} className="bg-emerald-600 hover:bg-emerald-700">
+              Confirmar e enviar agrupado
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
 

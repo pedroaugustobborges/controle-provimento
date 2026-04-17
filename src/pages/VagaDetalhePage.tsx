@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS, isTeiaUnit } from '@/types/vaga';
 import { 
   ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, 
   FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check, 
@@ -663,45 +663,70 @@ export default function VagaDetalhePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">
-                          <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b mb-1">Fluxo Inicial</div>
-                          {['aberta', 'em_triagem', 'entrevista'].map(k => (
-                            <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                              {STATUS_LABELS[k as StatusVaga]}
-                            </SelectItem>
-                          ))}
-                          
-                          <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Processo Seletivo</div>
-                          {['publicado_edital', 'em_edital', 'realizar_convocacao'].map(k => (
-                            <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                              {STATUS_LABELS[k as StatusVaga]}
-                            </SelectItem>
-                          ))}
-                          
-                          <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Documentação e Admissão</div>
-                          {['documentacao', 'documentacao_ok', 'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 'admissao_efetivada'].map(k => (
-                            <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                              {STATUS_LABELS[k as StatusVaga]}
-                            </SelectItem>
-                          ))}
-                          
-                          <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Especiais / Outros</div>
-                          {['movimentacao_interna', 'vaga_lideranca', 'aguardando_unidade'].map(k => (
-                            <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                              {STATUS_LABELS[k as StatusVaga]}
-                            </SelectItem>
-                          ))}
-                          
-                          <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Finalização</div>
-                          {['suspensa', 'cancelada', 'finalizada', 'encerrada'].map(k => (
-                            <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                              {STATUS_LABELS[k as StatusVaga]}
-                            </SelectItem>
-                          ))}
+                          {isTeiaUnit(vaga.unidade) ? (
+                            <>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b mb-1">Status TEIA</div>
+                              {([
+                                { value: 'EM EDITAL', label: 'Processo Seletivo' },
+                                { value: 'DOCUMENTAÇÃO', label: 'Documentação' },
+                                { value: 'ADMISSÃO ENVIADA', label: 'Admissão Enviada' },
+                                { value: 'CONCLUÍDA', label: 'Concluída' },
+                                { value: 'MOVIMENTAÇÃO INTERNA', label: 'Movimentação Interna' },
+                                { value: 'ADMISSÃO', label: 'Admissão' },
+                                { value: 'VAGA DE LIDERANÇA', label: 'Vaga de Liderança' },
+                                { value: 'SUSPENSA', label: 'Suspensa' },
+                                { value: 'CANCELADAS', label: 'Cancelada' },
+                                { value: 'SEM STATUS', label: 'Sem Status' },
+                              ] as { value: StatusVaga; label: string }[]).map(({ value, label }) => (
+                                <SelectItem key={value} value={value} className="focus:bg-slate-50">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(value)} border border-current opacity-60`} />
+                                  {label}
+                                </SelectItem>
+                              ))}
+                            </>
+                          ) : (
+                            <>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b mb-1">Fluxo Inicial</div>
+                              {['aberta', 'em_triagem', 'entrevista'].map(k => (
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
+                                  {STATUS_LABELS[k as StatusVaga]}
+                                </SelectItem>
+                              ))}
+                              
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Processo Seletivo</div>
+                              {['publicado_edital', 'em_edital', 'realizar_convocacao'].map(k => (
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
+                                  {STATUS_LABELS[k as StatusVaga]}
+                                </SelectItem>
+                              ))}
+                              
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Documentação e Admissão</div>
+                              {['documentacao', 'documentacao_ok', 'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 'admissao_efetivada'].map(k => (
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
+                                  {STATUS_LABELS[k as StatusVaga]}
+                                </SelectItem>
+                              ))}
+                              
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Especiais / Outros</div>
+                              {['movimentacao_interna', 'vaga_lideranca', 'aguardando_unidade'].map(k => (
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
+                                  {STATUS_LABELS[k as StatusVaga]}
+                                </SelectItem>
+                              ))}
+                              
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Finalização</div>
+                              {['suspensa', 'cancelada', 'finalizada', 'encerrada'].map(k => (
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
+                                  {STATUS_LABELS[k as StatusVaga]}
+                                </SelectItem>
+                              ))}
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

@@ -471,6 +471,8 @@ export default function VagasPage() {
       convocacao: 0,
       aguardando_unidade: 0,
       documentacao: 0,
+      em_admissao: 0,
+      movimentacao_interna: 0,
       com_banco_valido: 0,
       vagas_novas: 0,
       sem_movimentacao: 0

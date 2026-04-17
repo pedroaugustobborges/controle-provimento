@@ -541,6 +541,28 @@ export default function UnidadePortalPage() {
   }
   if (!hasAccess) return null;
 
+  if (hydrationError && vagas.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-md w-full bg-white border border-rose-200 rounded-2xl shadow-lg p-6 text-center space-y-4">
+          <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center">
+            <AlertCircle className="h-6 w-6 text-rose-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Não foi possível carregar os dados</h2>
+            <p className="text-sm text-slate-600 mt-1">{hydrationError}</p>
+          </div>
+          <div className="flex items-center gap-2 justify-center">
+            <Button onClick={() => { setBootstrapping(true); setHydrated(false); setRetryNonce(n => n + 1); }} className="bg-[#0A192F] hover:bg-[#0A192F]/90">
+              Tentar novamente
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>Sair</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col transition-all duration-300">
       <header className="sticky top-0 z-50 bg-[#0A192F] text-white px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-lg backdrop-blur-sm border-b border-white/5">

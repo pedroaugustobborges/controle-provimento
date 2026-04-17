@@ -1,47 +1,59 @@
 
-## Plano — Retornar vagas entre etapas (Redação → Fila → Controle)
+## Plano — Status específicos para Unidades TEIA
 
-### Investigação necessária (após aprovação)
-- `src/pages/FilaAnalistaEditalPage.tsx` — adicionar ação "Voltar para Fila de Editais" (linha + lote).
-- `src/pages/FilaEditaisPage.tsx` — adicionar ação "Voltar para Controle de Vagas" com modal obrigatório.
-- `src/types/vaga.ts` — adicionar campo `status_origem?: StatusVaga` na interface `Vaga`.
-- `src/store/vagasStore.ts` — garantir que ao mover vaga para fluxo de edital, o status anterior seja salvo em `status_origem`.
+### Escopo
+Aplicar lista reduzida de status **somente** quando o usuário está no submenu "Unidades TEIAs" ou editando uma vaga de unidade TEIA. Demais unidades permanecem com a lista atual completa.
+
+### Lista oficial TEIA (10 status)
+1. PROCESSO SELETIVO → `EM EDITAL`
+2. DOCUMENTAÇÃO → `DOCUMENTAÇÃO`
+3. ADMISSÃO ENVIADA → `ADMISSÃO ENVIADA`
+4. CONCLUÍDA → `CONCLUÍDA`
+5. MOVIMENTAÇÃO INTERNA → `MOVIMENTAÇÃO INTERNA`
+6. ADMISSÃO → `ADMISSÃO`
+7. VAGA DE LIDERANÇA → `VAGA DE LIDERANÇA`
+8. SUSPENSA → `SUSPENSA`
+9. CANCELADA → `CANCELADAS`
+10. SEM STATUS → `SEM STATUS`
 
 ### Implementação
 
-**A. Campo `status_origem` (preservar status original)**
-- Adicionar `status_origem?: StatusVaga` em `Vaga` (`src/types/vaga.ts`).
-- No momento em que vaga entra em `encaminhado_edital` (Fila de Editais), salvar `status_origem = vaga.status` se ainda não existir.
-- Migration SQL: `ALTER TABLE vagas ADD COLUMN status_origem text;`
+**1. `src/types/vaga.ts`** — exportar nova constante:
+```ts
+export const STATUS_FILTER_OPTIONS_TEIA: Record<string, { label: string; matches: StatusVaga[] }> = {
+  'EM EDITAL': { label: 'Processo Seletivo', matches: [...STATUS_FILTER_OPTIONS['EM EDITAL'].matches, ...STATUS_FILTER_OPTIONS['FILA DE EDITAIS'].matches, ...STATUS_FILTER_OPTIONS['REALIZAR CONVOCAÇÃO'].matches] },
+  'DOCUMENTAÇÃO': STATUS_FILTER_OPTIONS['DOCUMENTAÇÃO'],
+  'ADMISSÃO ENVIADA': { label: 'Admissão Enviada', matches: ['ADMISSÃO ENVIADA', 'admissao_enviada'] },
+  'CONCLUÍDA': STATUS_FILTER_OPTIONS['CONCLUÍDA'],
+  'MOVIMENTAÇÃO INTERNA': STATUS_FILTER_OPTIONS['MOVIMENTAÇÃO INTERNA'],
+  'ADMISSÃO': { label: 'Admissão', matches: ['ADMISSÃO', 'em_admissao'] },
+  'VAGA DE LIDERANÇA': STATUS_FILTER_OPTIONS['VAGA DE LIDERANÇA'],
+  'SUSPENSA': STATUS_FILTER_OPTIONS['SUSPENSA'],
+  'CANCELADAS': { label: 'Cancelada', matches: STATUS_FILTER_OPTIONS['CANCELADAS'].matches },
+  'SEM STATUS': STATUS_FILTER_OPTIONS['SEM STATUS'],
+};
+```
+Helper: `export const isTeiaUnit = (u: string) => (u || '').toUpperCase().includes('TEIA');`
 
-**B. Em Redação de Edital (`FilaAnalistaEditalPage.tsx`)**
-- Botão "Devolver à Fila" por linha (dropdown de ações) + ação em lote quando há seleção.
-- Confirma com `AlertDialog` simples (sem observação obrigatória — é movimento "para trás" leve).
-- Atualiza `status_fluxo_edital` → `encaminhado_edital`.
-- Registra no `historico` da vaga: "Devolvida para Fila de Editais por {usuário}".
-- Toast de sucesso.
+**2. `src/pages/VagasPage.tsx`** — no popover de filtro de status (linha ~956), trocar `STATUS_FILTER_OPTIONS` por opções condicionais:
+```tsx
+const statusFilterOptions = filtroEspecial === 'teias' ? STATUS_FILTER_OPTIONS_TEIA : STATUS_FILTER_OPTIONS;
+```
+Usar `statusFilterOptions` no `.map()` e na lógica de `matchStatus` (linha ~382). Limpar `filterStatuses` ao trocar de submenu (useEffect com dependência em `filtroEspecial`).
 
-**C. Em Fila de Editais (`FilaEditaisPage.tsx`)**
-- Botão "Devolver ao Controle" por linha + ação em lote.
-- Abre `Dialog` com:
-  - `Select` "Motivo" → opção pré-definida: **"A pedido do analista da unidade"** + "Outro".
-  - `Textarea` "Observação" (obrigatória, mínimo 10 caracteres, validação com toast/erro inline).
-  - Botões "Cancelar" / "Confirmar devolução".
-- Ao confirmar:
-  - Restaura `status = vaga.status_origem || 'SEM STATUS'`.
-  - Limpa `status_fluxo_edital`.
-  - Adiciona ao `historico`: "Devolvida ao Controle de Vagas — Motivo: {motivo}. Observação: {obs}".
-  - Toast de sucesso, modal fecha, lista atualiza (Zustand já reativo).
-
-**D. Permissões**
-- Usar `usePermissions` existente — só perfis de Edital/Admin podem devolver.
+**3. `src/pages/VagaDetalhePage.tsx`** — no `Select` de status atual (linha 657), se `isTeiaUnit(vaga.unidade)`, renderizar uma única seção "Status TEIA" com os 10 status mapeados (em vez das 5 seções atuais). Mantém compatibilidade retroativa: se status atual da vaga não estiver na lista, exibe mesmo assim no SelectValue (badge), mas o usuário ao abrir o select vê apenas as 10 opções novas.
 
 ### Validação
-- Vaga em Redação → "Devolver à Fila" → aparece em Fila de Editais com status correto.
-- Vaga em Fila → tentar devolver sem observação → bloqueia.
-- Vaga em Fila → devolver com motivo "A pedido do analista" + obs → volta ao Controle com status original preservado.
-- Histórico mostra ambas movimentações com usuário e timestamp.
-- Lote: selecionar 3 vagas → devolver todas em uma operação.
+- Acessar `/vagas?filtro=teias` → filtro de status mostra 10 opções TEIA.
+- Acessar `/vagas` (controle padrão) → filtro mostra os 12 status originais.
+- Abrir vaga de TEIA APARECIDA → select de status mostra só os 10 TEIA.
+- Abrir vaga de CRER → select mostra todas as seções originais.
+- Vaga TEIA com status legado (ex: `em_documentacao`) continua visível no badge; ao editar, usuário escolhe novo status da lista TEIA.
+
+### Arquivos alterados
+- `src/types/vaga.ts` (adicionar export)
+- `src/pages/VagasPage.tsx` (filtro condicional)
+- `src/pages/VagaDetalhePage.tsx` (select condicional por unidade)
 
 ### Risco
-Baixo. Mudanças aditivas. Único cuidado: garantir que `status_origem` seja gravado retroativamente para vagas já em fluxo (fallback para `'SEM STATUS'` se ausente).
+Baixo. Mudança puramente condicional e aditiva — nenhum status é removido do sistema, apenas as opções exibidas são restritas no contexto TEIA.

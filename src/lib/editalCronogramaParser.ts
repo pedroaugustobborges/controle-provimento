@@ -295,18 +295,18 @@ function extractEtapasFromTable(
   }
 
   const etapas: ParsedEtapa[] = [];
-  for (let i = startRow; i < rows.length; i++) {
-    const cells = Array.from(rows[i].querySelectorAll('th, td'));
-    if (cells.length <= Math.max(etapaCol, dataCol)) continue;
-    const etapaText = (cells[etapaCol].textContent || '').trim();
-    const dataText = (cells[dataCol].textContent || '').trim();
+  for (let i = startRow; i < allRows.length; i++) {
+    const cells = Array.from(allRows[i].querySelectorAll(':scope > th, :scope > td'));
+    const cellsToUse = cells.length > 0 ? cells : Array.from(allRows[i].querySelectorAll('th, td'));
+    if (cellsToUse.length <= Math.max(etapaCol, dataCol)) continue;
+    const etapaText = normalizeText(cellsToUse[etapaCol].textContent || '');
+    const dataText = normalizeText(cellsToUse[dataCol].textContent || '');
     if (!etapaText && !dataText) continue;
 
     const datas = extractDates(dataText);
     const tipo = detectTipo(dataText, datas);
     const match = matchEtapa(etapaText);
 
-    // Caso especial: linha "Inscrição/Inscrições" com período → expande para início+fim
     if (match && match.key === 'inscricao_periodo') {
       if (datas.length >= 2) {
         etapas.push({
@@ -347,6 +347,14 @@ function extractEtapasFromTable(
       tipo,
       datas,
       textoOriginal: dataText,
+    });
+  }
+
+  if (etapas.length === 0) {
+    rejections?.push({
+      index: tableIndex,
+      motivo: 'cabeçalho ok mas nenhuma linha com dados úteis',
+      headers: headerCells,
     });
   }
 

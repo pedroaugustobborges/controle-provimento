@@ -23,7 +23,7 @@ import {
 import {
   Calendar as CalendarIcon, Download, LogOut, Building2,
   MessageSquare, CheckCircle2, AlertCircle, Clock, BarChart3,
-  Search, FileText, Edit3, Briefcase, Activity, Users, Save, Check
+  Search, FileText, Edit3, Briefcase, Activity, Users, Save, Check, MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -848,7 +848,7 @@ export default function UnidadePortalPage() {
                       <TableHead>Hora</TableHead>
                       <TableHead>Candidato</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="min-w-[260px]">Observação da Unidade</TableHead>
+                      <TableHead className="min-w-[280px]">Informações da Unidade</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -869,7 +869,10 @@ export default function UnidadePortalPage() {
                       </TableRow>
                     ) : todayConvocacoes.map(c => {
                       const obs = (c.observacoes || '').trim();
+                      const unidadeDestino = (c.unidade_alternativa || '').trim();
+                      const horarioPlantao = (c.horario_trabalho || '').trim();
                       const hasObs = obs.length > 0;
+                      const hasAnyInfo = hasObs || unidadeDestino.length > 0 || horarioPlantao.length > 0;
                       return (
                         <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors align-top">
                           <TableCell className="py-4 px-6 font-black text-slate-900 text-sm">{c.horario}</TableCell>
@@ -880,15 +883,38 @@ export default function UnidadePortalPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="py-4 px-6">
-                            {hasObs ? (
-                              <div className="flex items-start gap-2 max-w-md">
-                                <MessageSquare className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
-                                <p className="text-xs text-slate-700 font-medium whitespace-pre-wrap break-words leading-relaxed">
-                                  {obs}
-                                </p>
+                            {hasAnyInfo ? (
+                              <div className="space-y-1.5 max-w-md bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                                {unidadeDestino && (
+                                  <div className="flex items-start gap-2">
+                                    <MapPin className="h-3.5 w-3.5 text-blue-600 mt-0.5 shrink-0" />
+                                    <div className="flex flex-col">
+                                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wide">Unidade Destino</span>
+                                      <p className="text-xs text-slate-700 font-semibold whitespace-pre-wrap break-words leading-snug">{unidadeDestino}</p>
+                                    </div>
+                                  </div>
+                                )}
+                                {horarioPlantao && (
+                                  <div className="flex items-start gap-2">
+                                    <Clock className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                                    <div className="flex flex-col">
+                                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wide">Horário / Plantão</span>
+                                      <p className="text-xs text-slate-700 font-semibold whitespace-pre-wrap break-words leading-snug">{horarioPlantao}</p>
+                                    </div>
+                                  </div>
+                                )}
+                                {hasObs && (
+                                  <div className="flex items-start gap-2">
+                                    <MessageSquare className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                                    <div className="flex flex-col">
+                                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wide">Observação</span>
+                                      <p className="text-xs text-slate-700 font-medium whitespace-pre-wrap break-words leading-snug">{obs}</p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ) : (
-                              <span className="text-[11px] text-slate-300 italic font-medium">Sem observação</span>
+                              <span className="text-[11px] text-slate-300 italic font-medium">Sem informações adicionais</span>
                             )}
                           </TableCell>
                           <TableCell className="py-4 px-6">

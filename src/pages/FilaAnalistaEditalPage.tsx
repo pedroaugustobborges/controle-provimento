@@ -183,10 +183,11 @@ export default function FilaAnalistaEditalPage() {
       const ACTIVE_REDACAO_STATUSES = ['em_redacao', 'enviado_validacao', 'aprovado_administrativo', 'publicado'];
       const status = v.status_fluxo_edital || '';
       if (status === 'encaminhado_edital') return false;
+      const vAny = v as any;
       const showInThisFlow =
         ACTIVE_REDACAO_STATUSES.includes(status) ||
-        v.etapa === 'em_redacao' ||
-        !!v.edital_id;
+        vAny.etapa === 'em_redacao' ||
+        !!vAny.edital_id;
       if (!showInThisFlow) return false;
       const searchTerm = search.toLowerCase();
       const matchSearch = !search || v.cargo.toLowerCase().includes(searchTerm) || (v.requisicao || v.numero_requisicao || '').toLowerCase().includes(searchTerm);

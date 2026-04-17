@@ -519,6 +519,8 @@ export function AppSidebar() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <LogoutConfirmDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm} />
     </Sidebar>
   );
 }

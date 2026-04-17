@@ -1,46 +1,47 @@
 
-## Plano — Corrigir 404 no envio agrupado + receber lote em Redação
+## Plano — Retornar vagas entre etapas (Redação → Fila → Controle)
 
-### Problemas
-1. **404 após "Enviar agrupados"**: na Fila de Editais, ao confirmar envio do lote, mostra toast de sucesso mas navega para rota inexistente → 404.
-2. **Lote não chega agrupado em Redação**: as vagas até mudam de status, mas a página de Redação abre cada cargo isolado, sem o modo "lote/abas" detectado via `sessionStorage`.
-3. **Sem opção de agrupar manualmente em Redação**: se o analista quiser unir cargos já em redação num único edital, não há UI para isso.
-
-### Investigação (read-only)
-- `src/pages/FilaEditaisPage.tsx` — handler `sendGroupedValidation` / botão "Enviar agrupados": qual rota está sendo chamada no `navigate(...)` e se o `sessionStorage.setItem('grouped_vagas', ...)` está sendo gravado **antes** da navegação.
-- `src/App.tsx` — confirmar rota real da página de Redação (provavelmente `/fila-editais-analista` ou `/redacao-editais`, não `/redacao-edital`).
-- `src/pages/FilaAnalistaEditalPage.tsx` — o `useEffect` que lê `sessionStorage.getItem('grouped_vagas')` depende de `vagas` já estar populado; se navegar antes da store carregar, lote é perdido.
-- Confirmar a chave usada no storage é a mesma nos dois lados (`grouped_vagas`).
-
-### Causas prováveis
-- **404**: `navigate('/redacao-edital')` aponta para path que não existe no router.
-- **Lote some**: ou (a) chave de storage divergente, ou (b) navega antes de gravar, ou (c) `useEffect` consome storage antes de `vagas` carregar e o `filter` retorna vazio → cai no modo single.
+### Investigação necessária (após aprovação)
+- `src/pages/FilaAnalistaEditalPage.tsx` — adicionar ação "Voltar para Fila de Editais" (linha + lote).
+- `src/pages/FilaEditaisPage.tsx` — adicionar ação "Voltar para Controle de Vagas" com modal obrigatório.
+- `src/types/vaga.ts` — adicionar campo `status_origem?: StatusVaga` na interface `Vaga`.
+- `src/store/vagasStore.ts` — garantir que ao mover vaga para fluxo de edital, o status anterior seja salvo em `status_origem`.
 
 ### Implementação
 
-**A. Corrigir navegação (Fila de Editais)**
-- Identificar a rota correta no `App.tsx` e usar exatamente esse path no `navigate()`.
-- Garantir ordem: `sessionStorage.setItem('grouped_vagas', JSON.stringify({ vagaIds, regiao, timestamp: Date.now() }))` **antes** de `navigate(...)`.
-- Atualizar status das vagas para `em_redacao` em paralelo (não bloquear navegação).
+**A. Campo `status_origem` (preservar status original)**
+- Adicionar `status_origem?: StatusVaga` em `Vaga` (`src/types/vaga.ts`).
+- No momento em que vaga entra em `encaminhado_edital` (Fila de Editais), salvar `status_origem = vaga.status` se ainda não existir.
+- Migration SQL: `ALTER TABLE vagas ADD COLUMN status_origem text;`
 
-**B. Robustez do consumo do lote (Redação)**
-- No `useEffect` de `FilaAnalistaEditalPage.tsx`:
-  - Não remover `grouped_vagas` do storage até confirmar que `batchVagas.length > 0`.
-  - Se `vagas.length === 0` ainda, esperar próximo render (não consumir).
-  - Adicionar timestamp/expiração (descarta lotes > 5min para evitar lixo).
-  - Logar warning no console se IDs não baterem com vagas existentes.
+**B. Em Redação de Edital (`FilaAnalistaEditalPage.tsx`)**
+- Botão "Devolver à Fila" por linha (dropdown de ações) + ação em lote quando há seleção.
+- Confirma com `AlertDialog` simples (sem observação obrigatória — é movimento "para trás" leve).
+- Atualiza `status_fluxo_edital` → `encaminhado_edital`.
+- Registra no `historico` da vaga: "Devolvida para Fila de Editais por {usuário}".
+- Toast de sucesso.
 
-**C. Agrupar manualmente em Redação**
-- Adicionar checkboxes na tabela de vagas em `em_redacao` da `FilaAnalistaEditalPage`.
-- Botão sticky no topo "Agrupar N cargos no mesmo edital" quando ≥2 selecionados.
-- Aplica mesma regra de região (`getRegiaoAgrupamento`) já existente em `vagaUtils.ts`.
-- Ao clicar, abre o modal de redação direto em modo `isBatchMode` com os cargos selecionados (sem precisar passar pelo storage — chamada in-memory).
+**C. Em Fila de Editais (`FilaEditaisPage.tsx`)**
+- Botão "Devolver ao Controle" por linha + ação em lote.
+- Abre `Dialog` com:
+  - `Select` "Motivo" → opção pré-definida: **"A pedido do analista da unidade"** + "Outro".
+  - `Textarea` "Observação" (obrigatória, mínimo 10 caracteres, validação com toast/erro inline).
+  - Botões "Cancelar" / "Confirmar devolução".
+- Ao confirmar:
+  - Restaura `status = vaga.status_origem || 'SEM STATUS'`.
+  - Limpa `status_fluxo_edital`.
+  - Adiciona ao `historico`: "Devolvida ao Controle de Vagas — Motivo: {motivo}. Observação: {obs}".
+  - Toast de sucesso, modal fecha, lista atualiza (Zustand já reativo).
+
+**D. Permissões**
+- Usar `usePermissions` existente — só perfis de Edital/Admin podem devolver.
 
 ### Validação
-- Selecionar CRER + AGIR na Fila de Editais → "Enviar agrupados" → toast + navega para Redação → modal abre em modo lote com 2 abas.
-- Refresh na página de Redação não duplica/perde o lote.
-- Em Redação, marcar 2 cargos já presentes → botão "Agrupar" → modal abre com abas.
-- Tentar agrupar regiões diferentes → bloqueia com toast.
+- Vaga em Redação → "Devolver à Fila" → aparece em Fila de Editais com status correto.
+- Vaga em Fila → tentar devolver sem observação → bloqueia.
+- Vaga em Fila → devolver com motivo "A pedido do analista" + obs → volta ao Controle com status original preservado.
+- Histórico mostra ambas movimentações com usuário e timestamp.
+- Lote: selecionar 3 vagas → devolver todas em uma operação.
 
 ### Risco
-Pequeno. Mudança principal é uma string de rota + ordem de operações. Modo manual de agrupar é aditivo, não quebra nada.
+Baixo. Mudanças aditivas. Único cuidado: garantir que `status_origem` seja gravado retroativamente para vagas já em fluxo (fallback para `'SEM STATUS'` se ausente).

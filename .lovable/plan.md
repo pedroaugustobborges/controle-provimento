@@ -1,56 +1,48 @@
 
-## Plano — Corrigir duplicação: vaga devolvida continua aparecendo em Redação
+## Plano — Corrigir AGIE: remover "Mensagem" e estabilizar badge piscando
 
-### Investigação
-- `src/pages/FilaAnalistaEditalPage.tsx` — confirmar critério de filtro da listagem de Redação (provavelmente `status_fluxo_edital === 'em_redacao'` OU `etapa === 'em_redacao'` OU `edital_id IS NOT NULL`).
-- `src/pages/FilaAnalistaEditalPage.tsx` (handler `handleConfirmReturnToFila`) — revisar quais campos estão sendo atualizados na devolução. A correção anterior setou `status`, `status_geral`, `status_fluxo_edital: 'encaminhado_edital'` e `etapa: 'encaminhado_edital'`, mas a vaga continua aparecendo → algum outro campo do filtro não foi limpo.
-- Verificar se há `edital_id` populado na vaga e se a página de Redação filtra por `edital_id IS NOT NULL`. Se sim, devolução precisa setar `edital_id = null`.
-- Verificar se existe registro em `validacoes_editais` ou `editais` vinculado à vaga que a mantém visível.
+### Investigação necessária (após aprovação)
+- `src/components/chat/AgieChat.tsx` — localizar e remover qualquer opção/botão/step "Mensagem" remanescente. Confirmar que `ChatStep` está restrito a `INITIAL | ALERTS | FEEDBACK | NEWS`.
+- `src/types/chat.ts` — já está correto (sem MESSAGE), mas verificar se há strings hardcoded "Mensagem" no AgieChat.
+- `src/components/Layout.tsx` ou header equivalente — localizar indicador "Sistema Sincronizado" e o badge ao lado. Identificar fonte do contador.
+- `src/store/vagasStore.ts` + hooks de notificação — verificar se há múltiplos `useEffect` ou subscriptions atualizando o mesmo badge.
+- Procurar por `setInterval`, `subscribe`, `postgres_changes` relacionados a alertas/tarefas/mensagens.
 
 ### Causa provável
-O filtro da página de Redação combina múltiplos critérios (ex: `status_fluxo_edital === 'em_redacao'` **OR** `edital_id !== null` **OR** etapa específica). A devolução só troca `status_fluxo_edital`, mas outro critério permanece verdadeiro → vaga aparece nas duas listas.
+
+**Problema 1 (Mensagem na AGIE)**: opção legada não removida do `AgieChat.tsx` — provavelmente um botão de ação rápida ou item de menu inicial.
+
+**Problema 2 (badge piscando 1↔2)**: dois cálculos concorrentes do contador:
+- Um effect/selector conta `alertas não lidos + tarefas pendentes` = 2
+- Outro conta só `mensagens não lidas` = 1
+- Ambos atualizam o mesmo state em ms diferentes → flicker visual.
+
+Alternativa: subscription Realtime duplicada por StrictMode sem cleanup, causando dobra/desdobra de contagem.
 
 ### Implementação
 
-**1. Auditar filtro da Redação** em `FilaAnalistaEditalPage.tsx`:
-- Identificar exatamente quais campos definem "está em redação".
-- Listar todos os critérios (status, etapa, edital_id, presença em tabela auxiliar).
+**A. Remover "Mensagem" da AGIE**
+- Em `AgieChat.tsx`: remover botão/case/step relacionado a mensagem. Garantir que apenas Alertas, Feedback e Novidades apareçam no menu inicial.
 
-**2. Atualizar `handleConfirmReturnToFila`** para resetar TODOS os campos que mantêm a vaga em Redação:
-```ts
-await updateVaga(vaga.id, {
-  status: 'PUBLICAR EDITAL',
-  status_geral: 'PUBLICAR EDITAL',
-  status_fluxo_edital: 'encaminhado_edital',
-  etapa: 'encaminhado_edital',
-  edital_id: null,                    // se for o caso
-  // ...campos extras conforme investigação
-  historico: [...(vaga.historico || []), {
-    acao: 'Devolvida para Fila de Editais',
-    de_etapa: 'em_redacao',
-    para_etapa: 'encaminhado_edital',
-    usuario: currentUser?.nome,
-    data: new Date().toISOString(),
-  }],
-});
-```
+**B. Unificar contador do badge**
+- Criar um único `useMemo` ou selector centralizado em `vagasStore` (ex: `getTotalNotificacoes`) que retorne o total de não lidas.
+- No header/Layout: usar APENAS esse selector. Remover quaisquer cálculos paralelos.
+- Confirmar cleanup correto de subscriptions Realtime (`return () => channel.unsubscribe()`).
 
-**3. Se houver registros em `editais` ou `validacoes_editais`** vinculados, decidir:
-- Opção A: deletar/marcar como cancelado o registro auxiliar na devolução.
-- Opção B: ajustar filtro da Redação para considerar `status_fluxo_edital === 'em_redacao'` como fonte única de verdade (preferível: menos efeitos colaterais).
-
-**4. Reatividade** — garantir que após `updateVaga`, a store Zustand reflita a mudança e ambas as páginas re-renderizem (Redação some, Fila aparece) sem refresh.
+**C. Validar reatividade**
+- Garantir que o badge re-renderize só quando o total muda (não a cada tick).
+- Conferir que não há `setInterval` rodando em paralelo.
 
 ### Validação (após implementação)
-- Vaga em Redação → "Devolver à Fila" → vaga **sai** da Redação e aparece **apenas** na Fila de Editais.
-- Lote: 3 vagas devolvidas → todas saem da Redação, todas aparecem na Fila.
-- Refresh da página de Redação → vagas devolvidas continuam ausentes.
-- Refresh da Fila de Editais → vagas devolvidas continuam presentes.
-- Histórico mostra a movimentação com etapa de origem e destino.
+- AGIE aberta → menu inicial mostra apenas Alertas, Feedback, Novidades. Sem "Mensagem".
+- Badge ao lado de "Sistema Sincronizado" exibe número estável (sem piscar).
+- Marcar 1 alerta como lido → badge decrementa de forma estável.
+- Refresh da página → contagem permanece consistente.
 
 ### Arquivos prováveis
-- `src/pages/FilaAnalistaEditalPage.tsx` (handler + entender filtro)
-- Possivelmente `src/store/vagasStore.ts` (se houver lógica derivada)
+- `src/components/chat/AgieChat.tsx` (remover Mensagem)
+- `src/components/Layout.tsx` (badge unificado)
+- `src/store/vagasStore.ts` (selector único de notificações)
 
 ### Risco
-Baixo. Correção pontual: garantir que TODOS os campos do filtro de Redação sejam zerados na devolução. Vou validar end-to-end no preview.
+Baixo. Remoção de opção legada + unificação de fonte de verdade do contador. Vou validar visualmente no preview após a implementação.

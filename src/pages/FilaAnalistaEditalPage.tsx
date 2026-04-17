@@ -19,7 +19,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
 import { StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, getStatusFluxoLabel } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, getStatusFluxoLabel, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogFooter, DialogDescription 

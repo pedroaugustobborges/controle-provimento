@@ -430,8 +430,19 @@ export default function FilaAnalistaEditalPage() {
     setIsBatchMode(false);
     setSelectedVaga(vaga);
     setCronograma({
-...
+      data_publicacao_edital: vaga.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+      data_inicio_inscricao: vaga.cronograma?.data_inicio_inscricao || '',
+      data_fim_inscricao: vaga.cronograma?.data_fim_inscricao || '',
+      data_triagem: vaga.cronograma?.data_triagem || '',
+      data_avaliacao_especifica_online: vaga.cronograma?.data_avaliacao_especifica_online || '',
+      data_resultado_preliminar_avaliacao_especifica: vaga.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+      data_recurso_avaliacao_especifica: vaga.cronograma?.data_recurso_avaliacao_especifica || '',
+      data_resultado_recurso_avaliacao_especifica: vaga.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+      data_resultado_final_avaliacao_especifica: vaga.cronograma?.data_resultado_final_avaliacao_especifica || '',
+      data_entrevistas: vaga.cronograma?.data_entrevistas || '',
+      data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
     });
+
     setEntrevistaConfig(deriveEntrevistaConfig(
       vaga.cronograma?.data_entrevistas,
       (vaga.cronograma as any)?.entrevista_config
@@ -685,29 +696,60 @@ export default function FilaAnalistaEditalPage() {
             </DialogDescription>
           </DialogHeader>
           
-          {selectedVaga && (
-            <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4">
+            {(isBatchMode ? selectedBatchVagas.length > 0 : selectedVaga) && (
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Informações Recebidas da Unidade</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargo</p>
-                    <p className="text-sm font-bold text-slate-700">{selectedVaga.cargo}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
-                    <p className="text-sm font-bold text-slate-700">{selectedVaga.unidade}</p>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    {isBatchMode ? `Lote Agrupado (${selectedBatchVagas.length} Cargos)` : 'Informações Recebidas da Unidade'}
+                  </h4>
+                  {isBatchMode && <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">
+                    <Layers className="h-3 w-3 mr-1" /> Mesma Unidade
+                  </Badge>}
                 </div>
-                <div className="space-y-1 pt-2 border-t border-slate-200">
-                  <p className="text-[10px] text-slate-500 uppercase font-semibold flex items-center gap-1">
-                    <MessageSquare className="h-3 w-3" /> Observações da Unidade
-                  </p>
-                  <p className="text-sm text-slate-600 bg-white p-2 rounded border border-slate-100 italic">
-                    {selectedVaga.observacoes_unidade || 'Nenhuma observação informada.'}
-                  </p>
-                </div>
+                
+                {isBatchMode ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
+                      <p className="text-sm font-bold text-slate-700">{selectedBatchVagas[0].unidade}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargos no Lote</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {selectedBatchVagas.map(v => (
+                          <Badge key={v.id} variant="outline" className="text-[10px] bg-white whitespace-nowrap">
+                            {v.cargo}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Cargo</p>
+                        <p className="text-sm font-bold text-slate-700">{selectedVaga?.cargo}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Unidade</p>
+                        <p className="text-sm font-bold text-slate-700">{selectedVaga?.unidade}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1 pt-2 border-t border-slate-200">
+                      <p className="text-[10px] text-slate-500 uppercase font-semibold flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3" /> Observações da Unidade
+                      </p>
+                      <p className="text-sm text-slate-600 bg-white p-2 rounded border border-slate-100 italic">
+                        {selectedVaga?.observacoes_unidade || 'Nenhuma observação informada.'}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
+            )}
+
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

@@ -433,7 +433,7 @@ export default function DashboardPage() {
     ));
   }, [vacancyAlerts, filteredBancos]);
 
-    if (isInitialLoad && isLoadingVagas) {
+    if (isInitialLoad || (isLoadingVagas && allVagas.length === 0)) {
     return (
       <div className="space-y-8">
         <div className="flex flex-col gap-4">

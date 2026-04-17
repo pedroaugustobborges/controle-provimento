@@ -154,8 +154,9 @@ export default function MensagensPage() {
       const { data: profiles, error: profileErr } = await supabase
         .from('profiles')
         .select('id, nome_completo')
-        .ilike('nome_completo', `%${selectedRecipient.trim()}%`)
-        .eq('status', 'ativo');
+        .or(`nome_completo.ilike.%${selectedRecipient.trim()}%,nome_completo.ilike.%${selectedRecipient.split(' ')[0]}%`)
+        .eq('status', 'ativo')
+        .limit(1);
 
       if (profileErr || !profiles || profiles.length === 0) {
         toast.error(`Não foi possível localizar "${selectedRecipient}" no sistema.`);
@@ -164,7 +165,9 @@ export default function MensagensPage() {
       }
 
       const profile = profiles[0];
-      setSelectedRecipient(profile.nome_completo); // Update to full name for better filtering
+      
+      // Update selectedRecipient to match the full name in the DB for consistent filtering
+      setSelectedRecipient(profile.nome_completo);
 
       await useVagasStore.getState().addMensagem({
         id: optimisticId,
@@ -191,8 +194,13 @@ export default function MensagensPage() {
       .filter(m => {
         const remetenteName = (m.remetente || '').trim().toLowerCase();
         const destName = (m.destinatario_nome || '').trim().toLowerCase();
-        const isFromMeToThem = m.remetente_id === myId && (destName === recipientName || destName.includes(recipientName));
-        const isFromThemToMe = m.destinatario_id === myId && (remetenteName === recipientName || remetenteName.includes(recipientName));
+        
+        // Match by ID primarily, and name as fallback
+        const isFromMeToThem = (m.remetente_id === myId || m.remetente === currentUser.nome_completo) && 
+                              (destName === recipientName || destName.includes(recipientName));
+        const isFromThemToMe = (m.destinatario_id === myId || m.destinatario_nome === currentUser.nome_completo) && 
+                              (remetenteName === recipientName || remetenteName.includes(recipientName));
+        
         return isFromMeToThem || isFromThemToMe;
       })
       .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())

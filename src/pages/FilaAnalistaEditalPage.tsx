@@ -624,33 +624,247 @@ export default function FilaAnalistaEditalPage() {
       </Card>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Preparar Edital</DialogTitle></DialogHeader>
-          <div className="space-y-6 py-4">
+        <DialogContent className="sm:max-w-[800px] max-h-[95vh] overflow-y-auto p-0 gap-0 border-none bg-slate-50/50">
+          <DialogHeader className="p-6 bg-white border-b sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-slate-900">Preparar Edital</DialogTitle>
+                <DialogDescription>Preencha as informações técnicas e cronograma do edital</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-8">
             {(isBatchMode ? selectedBatchVagas.length > 0 : selectedVaga) && (
               <>
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">{isBatchMode ? `Lote (${selectedBatchVagas.length})` : 'Info Unidade'}</h4>
-                  {isBatchMode ? <div className="flex flex-wrap gap-1">{selectedBatchVagas.map(v => <Badge key={v.id} variant="outline">{v.cargo}</Badge>)}</div> : <p className="font-bold">{selectedVaga?.cargo}</p>}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Número Edital</Label><Input value={numeroEdital} onChange={e => setNumeroEdital(e.target.value)} /></div>
-                  <div className="space-y-2"><Label>Número Processo</Label><Input value={numeroProcesso} onChange={e => setNumeroProcesso(e.target.value)} /></div>
-                </div>
-                <div className="space-y-2"><Label>Link Reachr</Label><Input value={reachrUrl} onChange={e => setReachrUrl(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Arquivo Word</Label><Input type="file" onChange={handleFileChange} />{nomeArquivo && <Badge className="mt-2">{nomeArquivo}</Badge>}</div>
-                {isBatchMode ? (
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="mb-4">{selectedBatchVagas.map(v => <TabsTrigger key={v.id} value={v.id} className="text-xs">{v.cargo}</TabsTrigger>)}</TabsList>
-                    {selectedBatchVagas.map(v => <TabsContent key={v.id} value={v.id}>{renderCronogramaFields(v.id)}</TabsContent>)}
-                  </Tabs>
-                ) : renderCronogramaFields()}
-                <div className="space-y-2"><Label>Validador</Label><Select value={responsavelValidacao} onValueChange={setResponsavelValidacao}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{analistasValidacao.map((u: any) => <SelectItem key={u.id} value={u.id}>{u.nome_completo}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label>Observações</Label><Textarea value={obsEdital} onChange={e => setObsEdital(e.target.value)} /></div>
+                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
+                    <h3 className="font-bold text-slate-800">Informações do Processo</h3>
+                  </div>
+
+                  {isBatchMode ? (
+                    <div className="space-y-3">
+                      <Label className="text-xs uppercase text-slate-400 font-bold tracking-wider">Cargos no Lote ({selectedBatchVagas.length})</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedBatchVagas.map(v => (
+                          <Badge key={v.id} variant="secondary" className="bg-slate-100 text-slate-700 border-slate-200 py-1 px-3">
+                            {v.cargo}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs uppercase text-slate-400 font-bold">Cargo</Label>
+                        <p className="font-bold text-slate-900">{selectedVaga?.cargo}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs uppercase text-slate-400 font-bold">Unidade</Label>
+                        <p className="font-bold text-slate-900">{selectedVaga?.unidade}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-slate-700">Número do Edital</Label>
+                      <Input 
+                        placeholder="Ex: 001/2024" 
+                        value={numeroEdital} 
+                        onChange={e => setNumeroEdital(e.target.value)}
+                        className="border-slate-200 focus:border-primary focus:ring-primary/20"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-slate-700">Número do Processo</Label>
+                      <Input 
+                        placeholder="Ex: 2024.0001.0002" 
+                        value={numeroProcesso} 
+                        onChange={e => setNumeroProcesso(e.target.value)}
+                        className="border-slate-200 focus:border-primary focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-700">Link da Vaga (Reachr)</Label>
+                    <div className="relative">
+                      <Rocket className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <Input 
+                        placeholder="https://reachr.com.br/vaga/..." 
+                        value={reachrUrl} 
+                        onChange={e => setReachrUrl(e.target.value)}
+                        className="pl-10 border-slate-200 focus:border-primary focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <Upload className="h-5 w-5 text-primary" />
+                    <h3 className="font-bold text-slate-800">Arquivo do Edital</h3>
+                  </div>
+                  
+                  <div 
+                    className={`border-2 border-dashed rounded-xl p-8 transition-all flex flex-col items-center justify-center gap-3 group cursor-pointer
+                      ${nomeArquivo ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 hover:border-primary hover:bg-slate-50/50'}`}
+                    onClick={() => document.getElementById('file-upload-input')?.click()}
+                  >
+                    <input 
+                      id="file-upload-input"
+                      type="file" 
+                      className="hidden" 
+                      onChange={handleFileChange}
+                      accept=".doc,.docx,.pdf"
+                    />
+                    
+                    {nomeArquivo ? (
+                      <>
+                        <div className="p-3 bg-emerald-100 rounded-full text-emerald-600">
+                          <Check className="h-8 w-8" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-emerald-800">{nomeArquivo}</p>
+                          <p className="text-sm text-emerald-600">Arquivo selecionado com sucesso</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-slate-500 hover:text-destructive hover:bg-destructive/5 mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNomeArquivo('');
+                          }}
+                        >
+                          Remover e trocar arquivo
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-3 bg-slate-100 rounded-full text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                          <Upload className="h-8 w-8" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-slate-700">Clique para selecionar ou arraste o arquivo</p>
+                          <p className="text-sm text-slate-500">Formatos aceitos: DOCX, DOC ou PDF (Máx. 10MB)</p>
+                        </div>
+                        <Button variant="outline" size="sm" className="mt-2 border-slate-200 text-slate-600 pointer-events-none">
+                          Selecionar Arquivo
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </section>
+
+                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      <h3 className="font-bold text-slate-800">Cronograma de Datas</h3>
+                    </div>
+                    {isBatchMode && (
+                      <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
+                        Modo Lote Ativado
+                      </Badge>
+                    )}
+                  </div>
+
+                  {isBatchMode ? (
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                      <div className="overflow-x-auto pb-2 mb-4 scrollbar-hide">
+                        <TabsList className="bg-slate-100/50 p-1 rounded-lg">
+                          {selectedBatchVagas.map(v => (
+                            <TabsTrigger 
+                              key={v.id} 
+                              value={v.id} 
+                              className="text-xs px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all"
+                            >
+                              {v.cargo}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                      </div>
+                      {selectedBatchVagas.map(v => (
+                        <TabsContent key={v.id} value={v.id} className="mt-0 animate-in fade-in-50 duration-300">
+                          <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                            {renderCronogramaFields(v.id)}
+                          </div>
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  ) : (
+                    <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                      {renderCronogramaFields()}
+                    </div>
+                  )}
+                </section>
+
+                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <Users className="h-5 w-5 text-primary" />
+                    <h3 className="font-bold text-slate-800">Finalização</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-slate-700">Responsável pela Validação</Label>
+                      <Select value={responsavelValidacao} onValueChange={setResponsavelValidacao}>
+                        <SelectTrigger className="border-slate-200 focus:border-primary">
+                          <SelectValue placeholder="Selecione um analista..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {analistasValidacao.map((u: any) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.nome_completo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-slate-700">Observações Adicionais</Label>
+                      <Textarea 
+                        placeholder="Algum detalhe relevante sobre este edital..."
+                        value={obsEdital} 
+                        onChange={e => setObsEdital(e.target.value)}
+                        className="border-slate-200 focus:border-primary focus:ring-primary/20 min-h-[100px]"
+                      />
+                    </div>
+                  </div>
+                </section>
               </>
             )}
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancelar</Button><Button onClick={handleSaveDraft}>Salvar</Button><Button onClick={handleSendToValidation}>Enviar</Button></DialogFooter>
+
+          <DialogFooter className="p-6 bg-white border-t sticky bottom-0 z-10 flex flex-col sm:flex-row gap-2 items-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditModalOpen(false)}
+              className="w-full sm:w-auto border-slate-200 text-slate-600 hover:bg-slate-50"
+            >
+              Cancelar
+            </Button>
+            <div className="flex-1" />
+            <Button 
+              variant="secondary"
+              onClick={handleSaveDraft}
+              className="w-full sm:w-auto bg-slate-100 text-slate-700 hover:bg-slate-200"
+            >
+              Salvar como Rascunho
+            </Button>
+            <Button 
+              onClick={handleSendToValidation}
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 px-8"
+            >
+              Enviar p/ Validação
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

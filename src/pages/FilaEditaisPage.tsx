@@ -15,7 +15,7 @@ import {
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
-  FileUp, CheckSquare
+  FileUp, CheckSquare, Undo2
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';

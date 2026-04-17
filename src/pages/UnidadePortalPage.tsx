@@ -34,6 +34,7 @@ import { retryQueue } from '@/lib/retryQueue';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { SaveStatusIndicator } from '@/components/SaveStatusIndicator';
 import { DraftRecoveryBanner } from '@/components/DraftRecoveryBanner';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { SaveStatus } from '@/hooks/useAutoSave';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { getCategoriaStatus } from '@/lib/vagaUtils';

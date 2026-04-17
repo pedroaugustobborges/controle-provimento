@@ -455,7 +455,138 @@ export default function FilaAnalistaEditalPage() {
   };
 
 
-  const handleFinalizePublication = async () => {
+  const renderCronogramaFields = (vagaId?: string) => {
+    const currentCrono = isBatchMode && vagaId ? batchCronogramas[vagaId] : cronograma;
+    const currentConfig = isBatchMode && vagaId ? batchEntrevistaConfigs[vagaId] : entrevistaConfig;
+
+    const setCrono = (newVal: any) => {
+      if (isBatchMode && vagaId) {
+        setBatchCronogramas(prev => ({ ...prev, [vagaId]: newVal }));
+      } else {
+        setCronograma(newVal);
+      }
+    };
+
+    const setConfig = (newVal: EntrevistaConfig) => {
+      if (isBatchMode && vagaId) {
+        setBatchEntrevistaConfigs(prev => ({ ...prev, [vagaId]: newVal }));
+      } else {
+        setEntrevistaConfig(newVal);
+      }
+    };
+
+    return (
+      <div className="space-y-4 p-4 rounded-xl border border-amber-200 bg-amber-50/30">
+        <div className="flex items-center gap-2 mb-2">
+          <Calendar className="h-4 w-4 text-amber-600" />
+          <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+          <span className="text-[11px] text-amber-700/80 italic ml-auto">
+            Anexe um .docx acima para preencher automaticamente.
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Publicação do Edital</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_publicacao_edital} 
+              onChange={(e) => setCrono({...currentCrono, data_publicacao_edital: e.target.value})}
+              className="bg-white border-amber-100"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Início das Inscrições</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_inicio_inscricao} 
+              onChange={(e) => setCrono({...currentCrono, data_inicio_inscricao: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Fim das Inscrições</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_fim_inscricao} 
+              onChange={(e) => setCrono({...currentCrono, data_fim_inscricao: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Data da Triagem</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_triagem} 
+              onChange={(e) => setCrono({...currentCrono, data_triagem: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Avaliação On-line</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_avaliacao_especifica_online} 
+              onChange={(e) => setCrono({...currentCrono, data_avaliacao_especifica_online: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Preliminar</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_resultado_preliminar_avaliacao_especifica} 
+              onChange={(e) => setCrono({...currentCrono, data_resultado_preliminar_avaliacao_especifica: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Período de Recurso</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_recurso_avaliacao_especifica} 
+              onChange={(e) => setCrono({...currentCrono, data_recurso_avaliacao_especifica: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Recurso</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_resultado_recurso_avaliacao_especifica} 
+              onChange={(e) => setCrono({...currentCrono, data_resultado_recurso_avaliacao_especifica: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Avaliação</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_resultado_final_avaliacao_especifica} 
+              onChange={(e) => setCrono({...currentCrono, data_resultado_final_avaliacao_especifica: e.target.value})}
+              className="bg-white"
+            />
+          </div>
+          <EntrevistaDateField
+            value={currentConfig}
+            onChange={setConfig}
+          />
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Seletivo</Label>
+            <Input 
+              type="date" 
+              value={currentCrono.data_resultado_final_seletivo} 
+              onChange={(e) => setCrono({...currentCrono, data_resultado_final_seletivo: e.target.value})}
+              className="bg-white border-amber-100 font-bold"
+            />
+          </div>
+        </div>
+        <p className="text-[10px] text-amber-600 font-medium italic mt-2">
+          * As datas serão validadas contra feriados nacionais, municipais, vésperas e dias posteriores úteis.
+        </p>
+      </div>
+    );
+  };
+
     if (!selectedVaga) return;
 
     const ok = await updateVaga(selectedVaga.id, {

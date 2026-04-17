@@ -600,8 +600,12 @@ export default function UnidadePortalPage() {
                 <Card key={label} className="border-slate-200/60 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className={cn('p-3 rounded-2xl', bg)}><Icon className={cn('h-5 w-5', color)} /></div>
-                    <div>
-                      <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
+                    <div className="flex-1">
+                      {hydrated ? (
+                        <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
+                      ) : (
+                        <Skeleton className="h-7 w-12" />
+                      )}
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
                     </div>
                   </CardContent>

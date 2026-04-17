@@ -577,6 +577,40 @@ Object.entries(STATUS_VAGA_LABELS).forEach(([k]) => {
   }
 });
 
+// Helper para detectar unidades TEIA
+export const isTeiaUnit = (u: string | undefined | null): boolean =>
+  (u || '').toUpperCase().includes('TEIA');
+
+// Lista reduzida de status para Unidades TEIA
+export const STATUS_FILTER_OPTIONS_TEIA: Record<string, { label: string; matches: StatusVaga[] }> = {
+  'EM EDITAL': {
+    label: 'Processo Seletivo',
+    matches: [
+      ...STATUS_FILTER_OPTIONS['EM EDITAL'].matches,
+      ...STATUS_FILTER_OPTIONS['FILA DE EDITAIS'].matches,
+      ...STATUS_FILTER_OPTIONS['REALIZAR CONVOCAÇÃO'].matches,
+    ],
+  },
+  'DOCUMENTAÇÃO': STATUS_FILTER_OPTIONS['DOCUMENTAÇÃO'],
+  'ADMISSÃO ENVIADA': {
+    label: 'Admissão Enviada',
+    matches: ['ADMISSÃO ENVIADA', 'admissao_enviada'],
+  },
+  'CONCLUÍDA': STATUS_FILTER_OPTIONS['CONCLUÍDA'],
+  'MOVIMENTAÇÃO INTERNA': STATUS_FILTER_OPTIONS['MOVIMENTAÇÃO INTERNA'],
+  'ADMISSÃO': {
+    label: 'Admissão',
+    matches: ['ADMISSÃO', 'em_admissao'],
+  },
+  'VAGA DE LIDERANÇA': STATUS_FILTER_OPTIONS['VAGA DE LIDERANÇA'],
+  'SUSPENSA': STATUS_FILTER_OPTIONS['SUSPENSA'],
+  'CANCELADAS': {
+    label: 'Cancelada',
+    matches: STATUS_FILTER_OPTIONS['CANCELADAS'].matches,
+  },
+  'SEM STATUS': STATUS_FILTER_OPTIONS['SEM STATUS'],
+};
+
 export const STATUS_CONVOCACAO_LABELS: Record<StatusConvocacao, string> = {
   aceite: 'Aceite',
   recusa_plantao: 'Recusa Plantão',

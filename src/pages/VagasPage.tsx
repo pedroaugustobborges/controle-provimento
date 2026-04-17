@@ -5,7 +5,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { StatusBadge } from '@/components/StatusBadge';
-import { TIPO_VAGA_LABELS, STATUS_LABELS, STATUS_FILTER_OPTIONS, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, BancoTalentos, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_LABELS, STATUS_FILTER_OPTIONS, STATUS_FILTER_OPTIONS_TEIA, StatusGeral, TipoVaga, STATUS_EDITAL_COLORS, Vaga, BancoTalentos, ETAPA_LABELS, EtapaEdital, TODAS_AS_ETAPAS } from '@/types/vaga';
 import { AcompanhamentoModal } from '@/components/AcompanhamentoModal';
 import { 
   calcDiasAberto, formatDate, CATEGORIAS_STATUS, isVitoriaUnit, 
@@ -163,6 +163,13 @@ export default function VagasPage() {
   const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
   const [filterMes, setFilterMes] = useState('all');
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+
+  // Limpar filtros de status ao trocar entre submenu (TEIA / padrão / PCD)
+  // pois as listas de status disponíveis são diferentes
+  useEffect(() => {
+    setFilterStatuses([]);
+  }, [filtroEspecial]);
+
   const [filterTipo, setFilterTipo] = useState('all');
   const [filterAnalista, setFilterAnalista] = useState('all');
   const [filterAssistente, setFilterAssistente] = useState('all');
@@ -378,8 +385,9 @@ export default function VagasPage() {
         (v.unidade || '').toLowerCase().includes(searchTerm) ||
         (v.analista_responsavel || '').toLowerCase().includes(searchTerm);
 
+      const activeStatusOptions = filtroEspecial === 'teias' ? STATUS_FILTER_OPTIONS_TEIA : STATUS_FILTER_OPTIONS;
       const matchStatus = filterStatuses.length === 0 || filterStatuses.some(filterKey => {
-        const filterOption = STATUS_FILTER_OPTIONS[filterKey];
+        const filterOption = activeStatusOptions[filterKey];
         if (!filterOption) return false;
         const statusValue = v.status_geral || v.status || '';
         // Check direct match with any of the grouped statuses
@@ -953,7 +961,7 @@ export default function VagasPage() {
                   </div>
                   <div className="h-px bg-slate-100 my-1" />
                   <div className="max-h-[300px] overflow-y-auto space-y-1">
-                    {Object.entries(STATUS_FILTER_OPTIONS).map(([k, { label }]) => {
+                    {Object.entries(filtroEspecial === 'teias' ? STATUS_FILTER_OPTIONS_TEIA : STATUS_FILTER_OPTIONS).map(([k, { label }]) => {
                       const isSelected = filterStatuses.includes(k);
                       return (
                         <div 

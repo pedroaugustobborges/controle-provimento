@@ -597,9 +597,23 @@ export default function FilaAnalistaEditalPage() {
                     <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)} title="Editar">
+                        <Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)} title="Editar" className="text-slate-600">
                           <Edit className="h-4 w-4" />
                         </Button>
+                        {v.status_fluxo_edital === 'em_redacao' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              setSelectedForGroup(new Set([v.id]));
+                              handleOpenGroupModal();
+                            }} 
+                            title="Agrupar / Anexar" 
+                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        )}
                         {(v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'encaminhado_edital') && (
                           <Button
                             variant="ghost"

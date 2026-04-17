@@ -168,65 +168,13 @@ export default function FilaEditaisPage() {
   }, [vagas, currentUser, search, filterUnidade]);
 
   const groupedVagas = useMemo(() => {
-    const goianiaVagas = pendingVagas.filter(v => UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
-    const otherVagas = pendingVagas.filter(v => !UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade)));
-
-    const grouped: Record<string, {
-      cargo: string;
-      cargoKey: string;
-      vagas: Vaga[];
-      totalVagas: number;
-      unidades: string[];
-      regioes: string[];
-    }> = {};
-
-    const computeRegion = (unidade: string): string => {
-      const u = normalizeUnitName(unidade);
-      for (const [regiao, units] of Object.entries(UNIDADES_POR_REGIAO)) {
-        if (units.map(x => normalizeUnitName(x)).includes(u)) return regiao;
-      }
-      return 'Outras';
-    };
-
-    goianiaVagas.forEach(v => {
-      const cargoKey = v.cargo.toUpperCase().trim();
-      if (!grouped[cargoKey]) {
-        grouped[cargoKey] = {
-          cargo: v.cargo,
-          cargoKey,
-          vagas: [],
-          totalVagas: 0,
-          unidades: [],
-          regioes: [],
-        };
-      }
-      grouped[cargoKey].vagas.push(v);
-      grouped[cargoKey].totalVagas += (v.numero_vagas || v.quantidade || 1);
-      if (!grouped[cargoKey].unidades.includes(v.unidade)) {
-        grouped[cargoKey].unidades.push(v.unidade);
-      }
-      const reg = computeRegion(v.unidade);
-      if (!grouped[cargoKey].regioes.includes(reg)) {
-        grouped[cargoKey].regioes.push(reg);
-      }
-    });
-
-    // Apply ungrouped: those cargos go into otherVagas individually
-    const activeGroups: typeof grouped[string][] = [];
-    const expandedAsIndividuals: Vaga[] = [];
-    Object.values(grouped).forEach(g => {
-      if (ungrouped.has(g.cargoKey) || g.vagas.length < 2) {
-        expandedAsIndividuals.push(...g.vagas);
-      } else {
-        activeGroups.push(g);
-      }
-    });
-
+    // Requirements: "Remover o agrupamento automático na Fila de Editais"
+    // Vagas should arrive individually.
     return {
-      groupedGoiania: activeGroups,
-      otherVagas: [...otherVagas, ...expandedAsIndividuals],
+      groupedGoiania: [],
+      otherVagas: pendingVagas,
     };
-  }, [pendingVagas, ungrouped]);
+  }, [pendingVagas]);
 
   // Selected rows -> cargos eligible to regroup (only cargos currently in ungrouped set with 2+ selected of same cargo)
   const regroupableCargos = useMemo(() => {

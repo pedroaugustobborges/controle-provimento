@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
   FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw,
-  Minus, Plus, ShieldCheck
+  Minus, Plus, ShieldCheck, Layers
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
@@ -33,6 +34,7 @@ import { validateDate } from '@/services/holidayService';
 import { EntrevistaDateField, EntrevistaConfig, deriveEntrevistaConfig, primaryEntrevistaDate } from '@/components/EntrevistaDateField';
 import { CronogramaImportDialog, CronogramaImportResult } from '@/components/CronogramaImportDialog';
 import { parseCronogramaFromDocx, ParsedCronograma, CronogramaParseError } from '@/lib/editalCronogramaParser';
+
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();

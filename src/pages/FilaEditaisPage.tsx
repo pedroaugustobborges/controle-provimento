@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel, getStatusFluxoLabel } from '@/lib/vagaUtils';
 import { UNIDADES_GOIANIA } from '@/types/vaga';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
@@ -205,14 +205,22 @@ export default function FilaEditaisPage() {
     [selectedRows, pendingVagas],
   );
 
-  /** Validação: para enviar agrupado, todas devem ser da mesma unidade */
+  /** Validação: para enviar agrupado, todas devem ser da MESMA REGIÃO de agrupamento.
+   *  Goiânia (capital) e Vitória aceitam mix entre suas sub-unidades; demais cidades só agrupam consigo mesmas. */
   const sendGroupedValidation = useMemo(() => {
     if (selectedVagas.length < 2) return { ok: false, reason: '' };
-    const unidades = new Set(selectedVagas.map(v => normalizeUnitName(v.unidade)));
-    if (unidades.size > 1) {
-      return { ok: false, reason: 'Selecione apenas vagas da MESMA unidade para agrupar em um edital.' };
+    const regioes = new Set(selectedVagas.map(v => getRegiaoAgrupamento(v.unidade)));
+    if (regioes.size > 1) {
+      const labels = Array.from(regioes).map(getRegiaoAgrupamentoLabel).join(', ');
+      return { ok: false, reason: `Cargos de regiões diferentes (${labels}) não podem ser agrupados no mesmo edital.` };
     }
     return { ok: true, reason: '' };
+  }, [selectedVagas]);
+
+  const regiaoSelecionada = useMemo(() => {
+    if (selectedVagas.length === 0) return '';
+    const regs = Array.from(new Set(selectedVagas.map(v => getRegiaoAgrupamento(v.unidade))));
+    return regs.length === 1 ? getRegiaoAgrupamentoLabel(regs[0]) : '';
   }, [selectedVagas]);
 
   /** Envia múltiplas vagas agrupadas para a Redação como 1 edital único.

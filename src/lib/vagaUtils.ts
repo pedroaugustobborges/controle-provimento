@@ -75,6 +75,45 @@ export function getRegionForUnit(unitName: string): string {
   return partialMatch?.[1] || 'OUTRAS';
 }
 
+/** Região para fins de AGRUPAMENTO de editais.
+ *  - Goiânia (capital): CRER, AGIR, HUGOL, HECAD, HDS, POLICLÍNICA → podem ser agrupadas entre si
+ *  - Vitória (ES): SÃO PEDRO, SUÁ → podem ser agrupadas entre si
+ *  - Demais (JATAÍ, TEIA *, HRD, CHS, etc): cada unidade é sua própria "região" (não agrupa com outras)
+ */
+const GOIANIA_AGRUP = ['CRER', 'AGIR', 'HUGOL', 'HECAD', 'HDS', 'POLICLINICA', 'POLICLÍNICA'];
+const VITORIA_AGRUP = ['SAO PEDRO', 'SÃO PEDRO', 'SUA', 'SUÁ', 'PRAIA DO SUA', 'PRAIA DO SUÁ'];
+
+export function getRegiaoAgrupamento(unidade: string): string {
+  const norm = removeAccents(String(unidade || '').toUpperCase().trim());
+  if (!norm) return '__none__';
+  if (GOIANIA_AGRUP.some(u => norm.includes(removeAccents(u.toUpperCase())))) return 'GOIANIA';
+  if (VITORIA_AGRUP.some(u => norm.includes(removeAccents(u.toUpperCase())))) return 'VITORIA';
+  // Cada outra unidade é sua própria região (chave = nome normalizado)
+  return `UNIT::${norm}`;
+}
+
+export function getRegiaoAgrupamentoLabel(regiao: string): string {
+  if (regiao === 'GOIANIA') return 'Goiânia';
+  if (regiao === 'VITORIA') return 'Vitória';
+  if (regiao.startsWith('UNIT::')) return regiao.replace('UNIT::', '');
+  return regiao;
+}
+
+/** Labels legíveis para status do fluxo de edital */
+const STATUS_FLUXO_LABELS: Record<string, string> = {
+  encaminhado_edital: 'Encaminhado para Edital',
+  em_redacao: 'Em Redação',
+  enviado_validacao: 'Enviado para Validação',
+  aprovado_administrativo: 'Aprovado',
+  reprovado_administrativo: 'Reprovado',
+  publicado: 'Publicado',
+};
+
+export function getStatusFluxoLabel(status?: string | null): string {
+  if (!status) return '—';
+  return STATUS_FLUXO_LABELS[status] || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
 export function isVitoriaUnit(unidade: string): boolean {
   if (!unidade) return false;
   const normalized = removeAccents(unidade.toLowerCase().trim());

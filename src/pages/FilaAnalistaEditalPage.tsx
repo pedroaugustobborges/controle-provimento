@@ -1048,6 +1048,8 @@ export default function FilaAnalistaEditalPage() {
         onOpenChange={setIsImportOpen}
         cronogramas={parsedCronogramas}
         errorMessage={parseError}
+        errorDetails={parseErrorDetails}
+        originalFile={parsingOriginalFile}
         loading={parsing}
         fileName={parsingFileName}
         onApply={handleApplyImport}

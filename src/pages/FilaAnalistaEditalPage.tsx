@@ -48,8 +48,7 @@ export default function FilaAnalistaEditalPage() {
   const [reachrUrl, setReachrUrl] = useState('');
   const [responsavelValidacao, setResponsavelValidacao] = useState<string>('');
 
-  // Modal de Publicação / Cronograma
-  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  // Cronograma (moved to be accessible in both modals)
   const [cronograma, setCronograma] = useState<any>({
     data_publicacao_edital: '',
     data_inicio_inscricao: '',
@@ -63,6 +62,9 @@ export default function FilaAnalistaEditalPage() {
     data_entrevistas: '',
     data_resultado_final_seletivo: ''
   });
+
+  // Modal de Publicação
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [unidadeTrabalho, setUnidadeTrabalho] = useState('');
   const [distribuicaoVagas, setDistribuicaoVagas] = useState<Record<string, number>>({});
   const [unidadesBanco, setUnidadesBanco] = useState<string[]>([]);

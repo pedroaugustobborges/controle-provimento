@@ -37,7 +37,44 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     setPhase('loading');
     try {
       await new Promise(r => setTimeout(r, 1500)); // branded delay
-      await signIn(email, password);
+      const result = await signIn(email, password);
+
+      // Verifica modo de manutenção
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: maint } = await supabase
+        .from('system_maintenance')
+        .select('is_active,message')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (maint?.is_active) {
+        // Checa se é admin
+        const userId = result.user?.id;
+        let isAdmin = false;
+        if (userId) {
+          const { data: roleRow } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('role', 'admin')
+            .maybeSingle();
+          if (roleRow) isAdmin = true;
+          else {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('perfil')
+              .eq('id', userId)
+              .maybeSingle();
+            isAdmin = prof?.perfil === 'Administrador' || prof?.perfil === 'Admin';
+          }
+        }
+        if (!isAdmin) {
+          await supabase.auth.signOut();
+          throw new Error(maint.message || 'Sistema em manutenção. Tente novamente mais tarde.');
+        }
+      }
+
       navigate('/', { replace: true });
     } catch (err: any) {
       const msg = err.message?.includes('Invalid login')

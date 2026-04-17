@@ -1,47 +1,46 @@
 
-## Plano — Ajustes no agrupamento + UX da fila + status legível
+## Plano — Corrigir 404 no envio agrupado + receber lote em Redação
 
 ### Problemas
-1. **Agrupamento bloqueia unidades de Goiânia**: hoje só permite mesma unidade exata. Mas Goiânia tem várias unidades (CRER, AGIR, HUGOL, HECAD, HDS, POLICLÍNICA) que devem poder ser agrupadas entre si. Vitória (SÃO PEDRO, SUÁ) e cidades isoladas (JATAÍ, TEIA APARECIDA, etc.) seguem regra própria.
-2. **Layout do botão "Enviar agrupados"**: barra de ação está mal posicionada / muito embaixo.
-3. **Status cru exibido**: aparece `encaminhado_edital` literal em vez de label amigável tipo "Encaminhado para Edital".
+1. **404 após "Enviar agrupados"**: na Fila de Editais, ao confirmar envio do lote, mostra toast de sucesso mas navega para rota inexistente → 404.
+2. **Lote não chega agrupado em Redação**: as vagas até mudam de status, mas a página de Redação abre cada cargo isolado, sem o modo "lote/abas" detectado via `sessionStorage`.
+3. **Sem opção de agrupar manualmente em Redação**: se o analista quiser unir cargos já em redação num único edital, não há UI para isso.
 
-### Investigação necessária (após aprovação)
-- `src/pages/FilaEditaisPage.tsx` — regra atual de validação de agrupamento + posição da action bar.
-- `src/pages/FilaAnalistaEditalPage.tsx` — `\u003cBadge\u003e{v.status_fluxo_edital}\u003c/Badge\u003e` cru, trocar por label.
-- `src/types/vaga.ts` — confirmar valores possíveis de `status_fluxo_edital`.
-- `src/lib/vagaUtils.ts` — verificar se já existe helper de label; senão criar.
-- Memória core já lista unidades de Goiânia → usar como fonte de verdade para "região".
+### Investigação (read-only)
+- `src/pages/FilaEditaisPage.tsx` — handler `sendGroupedValidation` / botão "Enviar agrupados": qual rota está sendo chamada no `navigate(...)` e se o `sessionStorage.setItem('grouped_vagas', ...)` está sendo gravado **antes** da navegação.
+- `src/App.tsx` — confirmar rota real da página de Redação (provavelmente `/fila-editais-analista` ou `/redacao-editais`, não `/redacao-edital`).
+- `src/pages/FilaAnalistaEditalPage.tsx` — o `useEffect` que lê `sessionStorage.getItem('grouped_vagas')` depende de `vagas` já estar populado; se navegar antes da store carregar, lote é perdido.
+- Confirmar a chave usada no storage é a mesma nos dois lados (`grouped_vagas`).
+
+### Causas prováveis
+- **404**: `navigate('/redacao-edital')` aponta para path que não existe no router.
+- **Lote some**: ou (a) chave de storage divergente, ou (b) navega antes de gravar, ou (c) `useEffect` consome storage antes de `vagas` carregar e o `filter` retorna vazio → cai no modo single.
 
 ### Implementação
 
-**A. Regra de agrupamento por região (não por unidade exata)**
-- Helper `getRegiaoUnidade(unidade)` em `vagaUtils.ts`:
-  - Goiânia: CRER, AGIR, HUGOL, HECAD, HDS, POLICLÍNICA → região `"goiania"`
-  - Vitória: SÃO PEDRO, SUÁ → região `"vitoria"`
-  - Demais (JATAÍ, TEIA APARECIDA, TEIA GOIÂNIA, TEIA CANEDO) → cada uma é sua própria região
-- Validação no `FilaEditaisPage`: bloquear seleção apenas se a região mudar; permitir mix dentro da mesma região.
-- Toast claro: "Cargos da mesma região (Goiânia) podem ser agrupados".
+**A. Corrigir navegação (Fila de Editais)**
+- Identificar a rota correta no `App.tsx` e usar exatamente esse path no `navigate()`.
+- Garantir ordem: `sessionStorage.setItem('grouped_vagas', JSON.stringify({ vagaIds, regiao, timestamp: Date.now() }))` **antes** de `navigate(...)`.
+- Atualizar status das vagas para `em_redacao` em paralelo (não bloquear navegação).
 
-**B. Layout da barra de ação**
-- Trocar barra fixa no rodapé por **bar sticky no topo da tabela** (logo abaixo dos filtros) quando ≥1 selecionado.
-- Visual destacado (fundo primário, ícone, contador, botão de ação à direita, "limpar seleção" ao lado).
-- Sem `position: fixed` ofuscando conteúdo; usa `sticky top-0` dentro do card.
+**B. Robustez do consumo do lote (Redação)**
+- No `useEffect` de `FilaAnalistaEditalPage.tsx`:
+  - Não remover `grouped_vagas` do storage até confirmar que `batchVagas.length > 0`.
+  - Se `vagas.length === 0` ainda, esperar próximo render (não consumir).
+  - Adicionar timestamp/expiração (descarta lotes > 5min para evitar lixo).
+  - Logar warning no console se IDs não baterem com vagas existentes.
 
-**C. Labels de status legíveis**
-- Mapa em `vagaUtils.ts`:
-  ```
-  encaminhado_edital → "Encaminhado para Edital"
-  em_redacao → "Em Redação"
-  enviado_validacao → "Enviado para Validação"
-  aprovado_administrativo → "Aprovado"
-  publicado → "Publicado"
-  ```
-- Substituir todos os `\u003cBadge\u003e{v.status_fluxo_edital}\u003c/Badge\u003e` por `\u003cBadge\u003e{getStatusFluxoLabel(v.status_fluxo_edital)}\u003c/Badge\u003e` em FilaAnalistaEditalPage e FilaEditaisPage.
+**C. Agrupar manualmente em Redação**
+- Adicionar checkboxes na tabela de vagas em `em_redacao` da `FilaAnalistaEditalPage`.
+- Botão sticky no topo "Agrupar N cargos no mesmo edital" quando ≥2 selecionados.
+- Aplica mesma regra de região (`getRegiaoAgrupamento`) já existente em `vagaUtils.ts`.
+- Ao clicar, abre o modal de redação direto em modo `isBatchMode` com os cargos selecionados (sem precisar passar pelo storage — chamada in-memory).
 
 ### Validação
-- Selecionar CRER + AGIR + HUGOL → agrupa OK (Goiânia).
-- Selecionar CRER + JATAÍ → bloqueia com toast "regiões diferentes".
-- Selecionar SÃO PEDRO + SUÁ → agrupa OK (Vitória).
-- Barra de seleção aparece logo abaixo dos filtros, bem visível.
-- Status mostra "Encaminhado para Edital" no lugar de `encaminhado_edital`.
+- Selecionar CRER + AGIR na Fila de Editais → "Enviar agrupados" → toast + navega para Redação → modal abre em modo lote com 2 abas.
+- Refresh na página de Redação não duplica/perde o lote.
+- Em Redação, marcar 2 cargos já presentes → botão "Agrupar" → modal abre com abas.
+- Tentar agrupar regiões diferentes → bloqueia com toast.
+
+### Risco
+Pequeno. Mudança principal é uma string de rota + ordem de operações. Modo manual de agrupar é aditivo, não quebra nada.

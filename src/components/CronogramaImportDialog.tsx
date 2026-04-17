@@ -293,7 +293,7 @@ export function CronogramaImportDialog({
         )}
 
         {/* ============ MODO MÚLTIPLO ============ */}
-        {!loading && !errorMessage && isMultiMode && cronogramas && cargosAlvo && (
+        {!loading && !errorMessage && isMultiMode && cronogramas && cronogramas.length > 0 && cargosAlvo && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 p-3 rounded-md border border-blue-200 bg-blue-50 text-blue-800 text-xs">
               <Layers className="h-4 w-4 shrink-0" />

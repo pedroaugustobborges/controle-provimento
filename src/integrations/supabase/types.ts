@@ -389,6 +389,7 @@ export type Database = {
           aprovados_triagem: number | null
           convocados_entrevista: number | null
           created_at: string | null
+          cronogramas_por_cargo: Json
           data_abertura_edital: string | null
           data_encerramento_edital: string | null
           data_entrevista: string | null
@@ -408,6 +409,7 @@ export type Database = {
           aprovados_triagem?: number | null
           convocados_entrevista?: number | null
           created_at?: string | null
+          cronogramas_por_cargo?: Json
           data_abertura_edital?: string | null
           data_encerramento_edital?: string | null
           data_entrevista?: string | null
@@ -427,6 +429,7 @@ export type Database = {
           aprovados_triagem?: number | null
           convocados_entrevista?: number | null
           created_at?: string | null
+          cronogramas_por_cargo?: Json
           data_abertura_edital?: string | null
           data_encerramento_edital?: string | null
           data_entrevista?: string | null
@@ -947,6 +950,7 @@ export type Database = {
           deleted_at: string | null
           detalhes_acompanhamento: string | null
           distribuicao_vagas: Json | null
+          edital_id: string | null
           etapa: string | null
           forma_convocacao_planilha: string | null
           gestor_aprovador_id: string | null
@@ -1013,6 +1017,7 @@ export type Database = {
           deleted_at?: string | null
           detalhes_acompanhamento?: string | null
           distribuicao_vagas?: Json | null
+          edital_id?: string | null
           etapa?: string | null
           forma_convocacao_planilha?: string | null
           gestor_aprovador_id?: string | null
@@ -1079,6 +1084,7 @@ export type Database = {
           deleted_at?: string | null
           detalhes_acompanhamento?: string | null
           distribuicao_vagas?: Json | null
+          edital_id?: string | null
           etapa?: string | null
           forma_convocacao_planilha?: string | null
           gestor_aprovador_id?: string | null
@@ -1121,6 +1127,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "vagas_edital_id_fkey"
+            columns: ["edital_id"]
+            isOneToOne: false
+            referencedRelation: "editais"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vagas_gestor_aprovador_id_fkey"
             columns: ["gestor_aprovador_id"]

@@ -199,6 +199,88 @@ export default function FilaEditaisPage() {
     toast.success('Requisições reagrupadas.');
   };
 
+  /** Vagas selecionadas (objetos completos) */
+  const selectedVagas = useMemo(
+    () => Array.from(selectedRows).map(id => pendingVagas.find(v => v.id === id)).filter(Boolean) as Vaga[],
+    [selectedRows, pendingVagas],
+  );
+
+  /** Validação: para enviar agrupado, todas devem ser da mesma unidade */
+  const sendGroupedValidation = useMemo(() => {
+    if (selectedVagas.length < 2) return { ok: false, reason: '' };
+    const unidades = new Set(selectedVagas.map(v => normalizeUnitName(v.unidade)));
+    if (unidades.size > 1) {
+      return { ok: false, reason: 'Selecione apenas vagas da MESMA unidade para agrupar em um edital.' };
+    }
+    return { ok: true, reason: '' };
+  }, [selectedVagas]);
+
+  /** Envia múltiplas vagas agrupadas para a Redação como 1 edital único.
+   *  Persiste o lote em sessionStorage; a página de Redação detecta e abre
+   *  o modal de redação multi-cargo com as vagas mapeadas. */
+  const [isBatchSendOpen, setIsBatchSendOpen] = useState(false);
+  const [batchObs, setBatchObs] = useState('');
+  const [batchValidacoes, setBatchValidacoes] = useState({ cargo: false, carga: false, salario: false });
+
+  const handleOpenBatchSend = () => {
+    if (!sendGroupedValidation.ok) {
+      toast.error(sendGroupedValidation.reason || 'Não é possível agrupar essas vagas.');
+      return;
+    }
+    setBatchObs('');
+    setBatchValidacoes({ cargo: false, carga: false, salario: false });
+    setIsBatchSendOpen(true);
+  };
+
+  const handleConfirmBatchSend = async () => {
+    if (!batchValidacoes.cargo || !batchValidacoes.carga || !batchValidacoes.salario) {
+      toast.error('Valide cargo, carga horária e salário antes de enviar.');
+      return;
+    }
+    if (selectedVagas.length === 0) return;
+
+    let successCount = 0;
+    for (const vaga of selectedVagas) {
+      const ok = await updateVagaAsync(vaga.id, {
+        status: 'ACOMPANHAMENTO DE EDITAL',
+        status_fluxo_edital: 'encaminhado_edital',
+        etapa: 'encaminhado_edital',
+        cargo_validado: true,
+        carga_horaria_validada: true,
+        salario_validado: true,
+        observacoes_unidade: batchObs,
+        historico: [...(vaga.historico || []), {
+          id: `h-${Date.now()}-${vaga.id}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Vaga encaminhada para redação como parte de edital agrupado (${selectedVagas.length} cargos). Obs: ${batchObs || 'Sem observações'}`,
+          usuario: currentUser?.nome_completo || 'Analista da Unidade'
+        }]
+      } as any);
+      if (ok) {
+        successCount++;
+        notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', batchObs ? `Obs: ${batchObs}` : '');
+      }
+    }
+
+    // Persiste o lote para a página de Redação consumir
+    try {
+      const batchPayload = {
+        vagaIds: selectedVagas.map(v => v.id),
+        unidade: selectedVagas[0].unidade,
+        createdAt: new Date().toISOString(),
+        obs: batchObs,
+      };
+      const existing = JSON.parse(sessionStorage.getItem('edital-batches') || '[]');
+      existing.push(batchPayload);
+      sessionStorage.setItem('edital-batches', JSON.stringify(existing));
+    } catch {}
+
+    setIsBatchSendOpen(false);
+    setSelectedRows(new Set());
+    toast.success(`${successCount} cargos encaminhados como edital agrupado para a Redação.`);
+    navigate('/fila-editais-analista');
+  };
+
   const unidadesAgrupadas = useMemo(() => {
     const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean);
     
@@ -488,20 +570,18 @@ export default function FilaEditaisPage() {
                   const isUngroupedFromConsolidated = goianiaCargo && ungrouped.has(cargoKey);
                   const isSelected = selectedRows.has(v.id);
                   return (
-                    <TableRow key={v.id} className="group">
+                    <TableRow key={v.id} className={`group ${isSelected ? 'bg-blue-50/40' : ''}`}>
                       <TableCell className="align-middle">
-                        {isUngroupedFromConsolidated && (
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(checked) => {
-                              setSelectedRows(prev => {
-                                const next = new Set(prev);
-                                if (checked) next.add(v.id); else next.delete(v.id);
-                                return next;
-                              });
-                            }}
-                          />
-                        )}
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
+                            setSelectedRows(prev => {
+                              const next = new Set(prev);
+                              if (checked) next.add(v.id); else next.delete(v.id);
+                              return next;
+                            });
+                          }}
+                        />
                       </TableCell>
                       <TableCell className="font-mono text-xs text-primary font-bold">
                         {v.requisicao || v.numero_requisicao}
@@ -561,20 +641,95 @@ export default function FilaEditaisPage() {
         </CardContent>
       </Card>
 
-      {regroupableCargos.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white shadow-2xl rounded-full px-5 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
-          <CheckSquare className="h-4 w-4" />
+      {(regroupableCargos.length > 0 || selectedRows.size >= 2) && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 max-w-[95vw] flex-wrap justify-center">
+          <CheckSquare className="h-4 w-4 shrink-0" />
           <span className="text-sm font-medium">
-            {selectedRows.size} selecionada(s) — {regroupableCargos.length} cargo(s) elegível(is)
+            {selectedRows.size} selecionada(s)
+            {regroupableCargos.length > 0 && ` — ${regroupableCargos.length} cargo(s) elegível(is) p/ reagrupar`}
           </span>
-          <Button size="sm" variant="secondary" className="h-8 bg-white text-blue-700 hover:bg-blue-50 font-semibold" onClick={handleRegroupSelected}>
-            <Link2 className="h-4 w-4 mr-1" /> Agrupar selecionados
-          </Button>
+          {regroupableCargos.length > 0 && (
+            <Button size="sm" variant="secondary" className="h-8 bg-white text-blue-700 hover:bg-blue-50 font-semibold" onClick={handleRegroupSelected}>
+              <Link2 className="h-4 w-4 mr-1" /> Reagrupar mesmo cargo
+            </Button>
+          )}
+          {selectedRows.size >= 2 && (
+            <Button
+              size="sm"
+              className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
+              onClick={handleOpenBatchSend}
+              disabled={!sendGroupedValidation.ok}
+              title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
+            >
+              <Send className="h-4 w-4 mr-1" /> Enviar {selectedRows.size} agrupados p/ Redação
+            </Button>
+          )}
           <Button size="sm" variant="ghost" className="h-8 text-white hover:bg-blue-700" onClick={() => setSelectedRows(new Set())}>
             <X className="h-4 w-4" />
           </Button>
         </div>
       )}
+
+      <Dialog open={isBatchSendOpen} onOpenChange={setIsBatchSendOpen}>
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Send className="h-5 w-5" />
+              Enviar {selectedVagas.length} cargos agrupados p/ Redação
+            </DialogTitle>
+            <DialogDescription>
+              Estes cargos serão enviados como UM ÚNICO edital. Na Redação você poderá inserir cronogramas independentes para cada cargo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <p className="text-[10px] text-slate-500 uppercase font-bold mb-2">
+                Unidade: <span className="text-slate-700">{selectedVagas[0]?.unidade}</span>
+              </p>
+              <ul className="space-y-1 max-h-[180px] overflow-y-auto">
+                {selectedVagas.map(v => (
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo}</span>
+                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-800">Validações obrigatórias (aplicam-se a todos)</Label>
+              {[
+                { key: 'cargo' as const, label: 'Cargo validado com a unidade' },
+                { key: 'carga' as const, label: 'Carga horária validada com a unidade' },
+                { key: 'salario' as const, label: 'Salário validado com a unidade' },
+              ].map(item => (
+                <div
+                  key={item.key}
+                  className="flex items-center space-x-3 p-2 rounded-md border border-slate-100 hover:bg-slate-50 cursor-pointer"
+                  onClick={() => setBatchValidacoes(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                >
+                  <Checkbox checked={batchValidacoes[item.key]} onCheckedChange={(c) => setBatchValidacoes(prev => ({ ...prev, [item.key]: !!c }))} />
+                  <Label className="text-sm cursor-pointer">{item.label}</Label>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-800">Observações para a Redação</Label>
+              <Textarea
+                placeholder="Instruções comuns ao edital agrupado..."
+                className="min-h-[80px] resize-none"
+                value={batchObs}
+                onChange={(e) => setBatchObs(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBatchSendOpen(false)}>Cancelar</Button>
+            <Button onClick={handleConfirmBatchSend} className="bg-emerald-600 hover:bg-emerald-700">
+              Confirmar e enviar agrupado
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ImportStagedDialog open={isImportOpen} onOpenChange={setIsImportOpen} type="vagas" />
 

@@ -215,6 +215,43 @@ export default function FilaAnalistaEditalPage() {
     });
   };
 
+  // Devolução para Fila de Editais
+  const [returnToFilaTargets, setReturnToFilaTargets] = useState<Vaga[]>([]);
+  const [isReturnToFilaOpen, setIsReturnToFilaOpen] = useState(false);
+  const [returnToFilaSubmitting, setReturnToFilaSubmitting] = useState(false);
+
+  const handleConfirmReturnToFila = async () => {
+    if (returnToFilaTargets.length === 0) return;
+    setReturnToFilaSubmitting(true);
+    let count = 0;
+    for (const vaga of returnToFilaTargets) {
+      const ok = await updateVaga(vaga.id, {
+        status_fluxo_edital: 'encaminhado_edital',
+        etapa: 'encaminhado_edital',
+        historico: [...(vaga.historico || []), {
+          id: `h-${Date.now()}-${vaga.id}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Devolvida para a Fila de Editais por ${currentUser?.nome_completo || 'Analista'}.`,
+          usuario: currentUser?.nome_completo || 'Analista'
+        }]
+      } as any);
+      if (ok) {
+        notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', 'Devolvida da Redação para a Fila de Editais.');
+        count++;
+      }
+    }
+    setReturnToFilaSubmitting(false);
+    if (count > 0) {
+      toast.success(`${count} vaga(s) devolvida(s) à Fila de Editais.`);
+      setIsReturnToFilaOpen(false);
+      setReturnToFilaTargets([]);
+      setSelectedForGroup(new Set());
+    } else {
+      toast.error('Não foi possível devolver as vagas.');
+    }
+  };
+
+
   const handleOpenGroupModal = () => {
     if (!groupValidation.ok) {
       toast.error(groupValidation.reason || 'Não é possível agrupar essas vagas.');

@@ -181,11 +181,16 @@ function detectTipo(text: string, datas: string[]): EntrevistaTipo {
 function parseAnexoCronogramaTitle(text: string): { anexo: string; cargo: string } | null {
   const clean = normalizeText(text);
   const norm = stripAccents(clean);
+
   // Aceita variações: "cronograma de selecao para o cargo", "cronograma para o cargo",
   // "cronograma do processo seletivo ... cargo", "cronograma ... cargo de"
   const hasCronograma = /cronograma/.test(norm);
-  const hasCargo = /\bcargo\b/.test(norm);
-  if (!hasCronograma || !hasCargo) return null;
+  if (!hasCronograma) return null;
+
+  // EXIGE explicitamente "cargo de" (com dois pontos opcionais) seguido de um cargo real,
+  // para evitar falsos positivos como "...na data prevista no Cronograma, Anexo V."
+  const idxCargoDe = norm.indexOf('cargo de');
+  if (idxCargoDe === -1) return null;
 
   // Captura "Anexo XXX" no início, se houver
   let anexo = '';
@@ -193,19 +198,24 @@ function parseAnexoCronogramaTitle(text: string): { anexo: string; cargo: string
   if (mAnexo) anexo = mAnexo[0];
 
   // Captura cargo após "Cargo de:" ou "Cargo de"
-  const idx = norm.indexOf('cargo de');
-  let cargo = '';
-  if (idx !== -1) {
-    // posição correspondente em `clean` (mesmo tamanho pois apenas troca acentos)
-    let after = clean.substring(idx + 'cargo de'.length);
-    // remove ":" ou "-" iniciais
-    after = after.replace(/^\s*[:\-–—]\s*/, '').trim();
-    cargo = after.split(/\s{2,}|\n|\r/)[0].trim();
-    // limita comprimento sensato
-    if (cargo.length > 200) cargo = cargo.substring(0, 200);
-  }
+  let after = clean.substring(idxCargoDe + 'cargo de'.length);
+  // remove ":" ou "-" iniciais e pontuação final
+  after = after.replace(/^\s*[:\-–—]\s*/, '').trim();
+  let cargo = after.split(/\s{2,}|\n|\r/)[0].trim();
+  // remove ponto final que vem do .docx
+  cargo = cargo.replace(/[.,;]+$/, '').trim();
+  if (cargo.length > 240) cargo = cargo.substring(0, 240).trim() + '…';
 
-  return { anexo: anexo || 'Cronograma', cargo: cargo || '(cargo não identificado)' };
+  // Sem cargo extraído de forma útil, descarta — evita "(cargo não identificado)" falso
+  if (!cargo || cargo.length < 3) return null;
+
+  // Sanity: o título deve começar com "Anexo" OU conter "cronograma" + "cargo de" próximos
+  // (no máximo 80 chars de distância) para evitar que parágrafos longos mencionando
+  // "cronograma" e depois "cargo de" sejam considerados títulos.
+  const idxCronograma = norm.indexOf('cronograma');
+  if (!anexo && Math.abs(idxCargoDe - idxCronograma) > 80) return null;
+
+  return { anexo: anexo || 'Cronograma', cargo };
 }
 
 export type CronogramaParseStep =

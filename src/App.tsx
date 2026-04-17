@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
 import { PageSkeleton } from "@/components/PageSkeleton";
+import { LogoutOverlay } from "@/components/LogoutOverlay";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const VagasPage = lazy(() => import("@/pages/VagasPage"));
@@ -93,6 +94,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
+      <LogoutOverlay />
       <BrowserRouter basename="/">
         <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center bg-background">

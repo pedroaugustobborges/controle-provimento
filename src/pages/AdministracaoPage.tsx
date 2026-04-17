@@ -358,7 +358,13 @@ export default function AdministracaoPage() {
   };
 
   const openEditUser = (user: any) => {
-    setEditingUser({ ...user });
+    setEditingUser({
+      ...user,
+      unidades_vinculadas: Array.isArray(user.unidades_vinculadas) ? user.unidades_vinculadas : [],
+      modulos_acesso: Array.isArray(user.modulos_acesso) ? user.modulos_acesso : [],
+      permissoes_modulo: user.permissoes_modulo || {},
+      visualiza_todas_unidades: !!user.visualiza_todas_unidades,
+    });
     setIsEditUserOpen(true);
   };
 
@@ -413,12 +419,15 @@ export default function AdministracaoPage() {
 
   const toggleEditUnidade = (unidade: string) => {
     if (!editingUser) return;
-    setEditingUser((prev: any) => ({
-      ...prev,
-      unidades_vinculadas: prev.unidades_vinculadas.includes(unidade)
-        ? prev.unidades_vinculadas.filter((u: string) => u !== unidade)
-        : [...prev.unidades_vinculadas, unidade]
-    }));
+    setEditingUser((prev: any) => {
+      const current: string[] = Array.isArray(prev.unidades_vinculadas) ? prev.unidades_vinculadas : [];
+      return {
+        ...prev,
+        unidades_vinculadas: current.includes(unidade)
+          ? current.filter((u: string) => u !== unidade)
+          : [...current, unidade],
+      };
+    });
   };
 
   const handleUploadPhoto = async (file: File, isEdit = false) => {
@@ -1722,13 +1731,50 @@ export default function AdministracaoPage() {
                   <Switch checked={editingUser.visualiza_todas_unidades} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: v }))} />
                 </div>
                 {!editingUser.visualiza_todas_unidades && (
-                  <div className="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto">
-                    {ALL_UNIDADES.map(u => (
-                      <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 cursor-pointer" onClick={() => toggleEditUnidade(u)}>
-                        <input type="checkbox" checked={editingUser.unidades_vinculadas?.includes(u)} readOnly className="h-3 w-3 rounded" />
-                        <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
-                      </div>
-                    ))}
+                  <div className="space-y-3 animate-fade-in">
+                    {/* Seleção rápida por região */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase">Selecionar por região:</span>
+                      {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => {
+                        const selected: string[] = editingUser.unidades_vinculadas || [];
+                        const allSelected = unidades.length > 0 && unidades.every(u => selected.includes(u));
+                        return (
+                          <Button
+                            key={regiao}
+                            type="button"
+                            variant={allSelected ? "default" : "outline"}
+                            size="sm"
+                            className="h-7 text-[11px] font-bold"
+                            onClick={() => {
+                              if (allSelected) {
+                                setEditingUser((p: any) => ({ ...p, unidades_vinculadas: (p.unidades_vinculadas || []).filter((u: string) => !unidades.includes(u)) }));
+                              } else {
+                                setEditingUser((p: any) => ({ ...p, unidades_vinculadas: [...new Set([...(p.unidades_vinculadas || []), ...unidades])] }));
+                              }
+                            }}
+                          >
+                            {regiao} {allSelected && <Check className="h-3 w-3 ml-1" />}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Checkboxes individuais agrupados por região */}
+                    <div className="space-y-3 max-h-[220px] overflow-y-auto">
+                      {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => (
+                        <div key={regiao}>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{regiao}</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {unidades.map(u => (
+                              <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleEditUnidade(u)}>
+                                <input type="checkbox" checked={(editingUser.unidades_vinculadas || []).includes(u)} readOnly className="h-3 w-3 rounded" />
+                                <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

@@ -46,6 +46,7 @@ import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
+import { LogoutConfirmDialog } from '@/components/LogoutConfirmDialog';
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -56,6 +57,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [showSupport, setShowSupport] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [supportAnalysts, setSupportAnalysts] = useState<Tables<'profiles'>[]>([]);
 
   useEffect(() => {
@@ -71,21 +73,9 @@ export function AppSidebar() {
     }
   }, [showSupport]);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      if (currentUser) {
-        await supabase
-          .from('user_sessions')
-          .update({ logout_at: new Date().toISOString() })
-          .eq('user_id', currentUser.id)
-          .is('logout_at', null);
-      }
-      await signOut();
-      navigate('/login');
-    } catch (e) {
-      console.error('Logout error', e);
-    }
-  }, [signOut, navigate, currentUser]);
+  const handleLogout = useCallback(() => {
+    setShowLogoutConfirm(true);
+  }, []);
 
   const mainItems = useMemo(() => [
     { title: 'Visão Geral', url: '/', icon: LayoutDashboard, visible: getPermissions('vagas').canRead },

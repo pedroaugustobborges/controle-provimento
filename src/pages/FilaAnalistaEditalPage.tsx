@@ -12,12 +12,12 @@ import {
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
   FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw,
-  Minus, Plus
+  Minus, Plus, ShieldCheck
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
-import { STATUS_EDITAL_COLORS, StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
+import { StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
+import { validateDate } from '@/services/holidayService';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();

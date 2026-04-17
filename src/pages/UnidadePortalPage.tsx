@@ -345,26 +345,166 @@ export default function UnidadePortalPage() {
     unidade_destino: c.unidade_alternativa || '',
   };
 
+  // Keep latest edits/convocacoes in refs so callbacks always read fresh data
+  const editsRef = useRef(obsEdits);
+  editsRef.current = obsEdits;
+  const convocacoesRef = useRef(convocacoes);
+  convocacoesRef.current = convocacoes;
+
+  // Trava 4 — performs the actual save. Used by both manual save and retry queue.
+  const performSave = useCallback(async (payload: { id: string; data: any }) => {
+    await updateConvocacao(payload.id, payload.data);
+  }, [updateConvocacao]);
+
+  // Register the retry queue handler exactly once
+  useEffect(() => {
+    retryQueue.registerHandler('updateConvocacao', performSave);
+    retryQueue.installNetworkListeners();
+    const unsub = retryQueue.subscribe((items) => setPendingRetryCount(items.length));
+    return unsub;
+  }, [performSave]);
+
+  // Trava 2 — Hydrate recoverable drafts on mount (after currentUser available)
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const drafts = draftStore.listAllForUser(currentUser.id);
+    const recoverable: Array<{ recordId: string; data: any }> = [];
+    drafts.forEach(({ recordId, entry }) => {
+      const conv = convocacoesRef.current.find((c) => c.id === recordId);
+      // If server doesn't have it or local draft is newer than server, recover.
+      if (!conv) {
+        recoverable.push({ recordId, data: entry.data });
+        return;
+      }
+      const serverTs = new Date((conv as any).updated_at || 0).getTime();
+      if (entry.timestamp > serverTs) {
+        recoverable.push({ recordId, data: entry.data });
+      } else {
+        // Server is newer — drop stale draft
+        draftStore.clear(currentUser.id, recordId);
+      }
+    });
+    setRecoverableDrafts(recoverable);
+  }, [currentUser?.id, convocacoes.length]);
+
+  const handleRecoverDrafts = () => {
+    const next = { ...editsRef.current };
+    recoverableDrafts.forEach(({ recordId, data }) => {
+      next[recordId] = data;
+    });
+    setObsEdits(next);
+    setRecoverableDrafts([]);
+    toast.success('Alterações recuperadas. Clique em Salvar para confirmar.');
+  };
+
+  const handleDiscardDrafts = () => {
+    if (!currentUser?.id) return;
+    recoverableDrafts.forEach(({ recordId }) => draftStore.clear(currentUser.id, recordId));
+    setRecoverableDrafts([]);
+    toast.message('Rascunhos descartados.');
+  };
+
+  // Trava 1 + 2 — Auto-save com debounce + persistência local imediata
+  const scheduleAutoSave = useCallback((convId: string, c: any) => {
+    if (debounceTimers.current[convId]) clearTimeout(debounceTimers.current[convId]);
+    debounceTimers.current[convId] = setTimeout(async () => {
+      const edit = editsRef.current[convId];
+      if (!edit) return;
+      setSaveStatus((s) => ({ ...s, [convId]: 'saving' }));
+      try {
+        await performSave({
+          id: convId,
+          data: {
+            status: edit.status as StatusConvocacao,
+            horario_trabalho: edit.horario_plantao,
+            devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+            observacoes: edit.observacao,
+            unidade_alternativa: edit.unidade_destino,
+          },
+        });
+        // Clear local draft after server confirms
+        if (currentUser?.id) draftStore.clear(currentUser.id, convId);
+        setSaveStatus((s) => ({ ...s, [convId]: 'saved' }));
+        setTimeout(() => {
+          setSaveStatus((s) => (s[convId] === 'saved' ? { ...s, [convId]: 'idle' } : s));
+        }, 1500);
+      } catch (err: any) {
+        console.error('[autosave] failed, queueing for retry:', err);
+        // Trava 5 — Enqueue for retry on network failure
+        retryQueue.enqueue({
+          action: 'updateConvocacao',
+          recordId: convId,
+          payload: {
+            id: convId,
+            data: {
+              status: edit.status as StatusConvocacao,
+              horario_trabalho: edit.horario_plantao,
+              devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+              observacoes: edit.observacao,
+              unidade_alternativa: edit.unidade_destino,
+            },
+          },
+        });
+        setSaveStatus((s) => ({ ...s, [convId]: 'error' }));
+      }
+    }, 1000);
+  }, [performSave, currentUser?.id]);
+
   const setObsField = (id: string, c: any, field: string, value: any) => {
     const current = getObsEdit(c);
-    setObsEdits(prev => ({ ...prev, [id]: { ...current, [field]: value } }));
+    const next = { ...current, [field]: value };
+    setObsEdits(prev => ({ ...prev, [id]: next }));
+    setSaveStatus((s) => ({ ...s, [id]: 'dirty' }));
+    // Trava 2 — snapshot in localStorage IMMEDIATELY on every keystroke
+    if (currentUser?.id) {
+      draftStore.save(currentUser.id, id, next, (c as any).updated_at || null);
+    }
+    scheduleAutoSave(id, c);
   };
+
+  // Trava 3 — Block tab close while there are dirty rows or queued items
+  const hasUnsavedChanges = Object.keys(obsEdits).length > 0 || pendingRetryCount > 0;
+  useBeforeUnload(hasUnsavedChanges);
 
   const handleSaveObsRow = async (c: any) => {
     const edit = getObsEdit(c);
+    // Cancel any pending debounce — manual save takes precedence
+    if (debounceTimers.current[c.id]) clearTimeout(debounceTimers.current[c.id]);
     setSavingObs(prev => ({ ...prev, [c.id]: true }));
+    setSaveStatus((s) => ({ ...s, [c.id]: 'saving' }));
     try {
-      await updateConvocacao(c.id, {
-        status: edit.status as StatusConvocacao,
-        horario_trabalho: edit.horario_plantao,
-        devolutiva: edit.aceito ? 'aceitou' : 'recusou',
-        observacoes: edit.observacao,
-        unidade_alternativa: edit.unidade_destino,
+      await performSave({
+        id: c.id,
+        data: {
+          status: edit.status as StatusConvocacao,
+          horario_trabalho: edit.horario_plantao,
+          devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+          observacoes: edit.observacao,
+          unidade_alternativa: edit.unidade_destino,
+        },
       });
+      if (currentUser?.id) draftStore.clear(currentUser.id, c.id);
       toast.success('Devolutiva salva com sucesso.');
       setObsEdits(prev => { const n = { ...prev }; delete n[c.id]; return n; });
-    } catch {
-      toast.error('Erro ao salvar devolutiva.');
+      setSaveStatus((s) => ({ ...s, [c.id]: 'saved' }));
+    } catch (err: any) {
+      // Trava 5 — Queue for retry instead of losing data
+      retryQueue.enqueue({
+        action: 'updateConvocacao',
+        recordId: c.id,
+        payload: {
+          id: c.id,
+          data: {
+            status: edit.status as StatusConvocacao,
+            horario_trabalho: edit.horario_plantao,
+            devolutiva: edit.aceito ? 'aceitou' : 'recusou',
+            observacoes: edit.observacao,
+            unidade_alternativa: edit.unidade_destino,
+          },
+        },
+      });
+      toast.error('Sem conexão — alteração guardada e será reenviada automaticamente.');
+      setSaveStatus((s) => ({ ...s, [c.id]: 'error' }));
     } finally {
       setSavingObs(prev => ({ ...prev, [c.id]: false }));
     }

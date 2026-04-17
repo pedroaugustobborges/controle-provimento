@@ -559,7 +559,14 @@ export default function UnidadePortalPage() {
         </div>
       </header>
 
+      <DraftRecoveryBanner
+        count={recoverableDrafts.length}
+        onRecover={handleRecoverDrafts}
+        onDiscard={handleDiscardDrafts}
+      />
+
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6 lg:py-8 space-y-6">
+
         <Tabs defaultValue="dashboard" className="space-y-6">
           <div className="sticky top-[68px] z-40 py-2 -mt-2 bg-slate-50/80 backdrop-blur-sm sm:static sm:bg-transparent">
             <TabsList className="bg-white/80 border border-slate-200 shadow-sm p-1.5 rounded-2xl h-auto flex flex-wrap sm:flex-nowrap gap-1">

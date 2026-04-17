@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel, getStatusFluxoLabel } from '@/lib/vagaUtils';
 import { UNIDADES_GOIANIA } from '@/types/vaga';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
@@ -205,14 +205,22 @@ export default function FilaEditaisPage() {
     [selectedRows, pendingVagas],
   );
 
-  /** Validação: para enviar agrupado, todas devem ser da mesma unidade */
+  /** Validação: para enviar agrupado, todas devem ser da MESMA REGIÃO de agrupamento.
+   *  Goiânia (capital) e Vitória aceitam mix entre suas sub-unidades; demais cidades só agrupam consigo mesmas. */
   const sendGroupedValidation = useMemo(() => {
     if (selectedVagas.length < 2) return { ok: false, reason: '' };
-    const unidades = new Set(selectedVagas.map(v => normalizeUnitName(v.unidade)));
-    if (unidades.size > 1) {
-      return { ok: false, reason: 'Selecione apenas vagas da MESMA unidade para agrupar em um edital.' };
+    const regioes = new Set(selectedVagas.map(v => getRegiaoAgrupamento(v.unidade)));
+    if (regioes.size > 1) {
+      const labels = Array.from(regioes).map(getRegiaoAgrupamentoLabel).join(', ');
+      return { ok: false, reason: `Cargos de regiões diferentes (${labels}) não podem ser agrupados no mesmo edital.` };
     }
     return { ok: true, reason: '' };
+  }, [selectedVagas]);
+
+  const regiaoSelecionada = useMemo(() => {
+    if (selectedVagas.length === 0) return '';
+    const regs = Array.from(new Set(selectedVagas.map(v => getRegiaoAgrupamento(v.unidade))));
+    return regs.length === 1 ? getRegiaoAgrupamentoLabel(regs[0]) : '';
   }, [selectedVagas]);
 
   /** Envia múltiplas vagas agrupadas para a Redação como 1 edital único.
@@ -383,6 +391,39 @@ export default function FilaEditaisPage() {
           </CardContent>
         </Card>
       </div>
+
+      {(regroupableCargos.length > 0 || selectedRows.size >= 1) && (
+        <div className="sticky top-2 z-30 bg-primary text-primary-foreground shadow-lg rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap animate-in fade-in slide-in-from-top-2">
+          <CheckSquare className="h-4 w-4 shrink-0" />
+          <span className="text-sm font-medium">
+            <strong>{selectedRows.size}</strong> selecionada(s)
+            {regiaoSelecionada && <span className="ml-2 opacity-80">• Região: <strong>{regiaoSelecionada}</strong></span>}
+            {regroupableCargos.length > 0 && <span className="ml-2 opacity-80">• {regroupableCargos.length} elegível(is) p/ reagrupar</span>}
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            {regroupableCargos.length > 0 && (
+              <Button size="sm" variant="secondary" className="h-8 font-semibold" onClick={handleRegroupSelected}>
+                <Link2 className="h-4 w-4 mr-1" /> Reagrupar mesmo cargo
+              </Button>
+            )}
+            {selectedRows.size >= 2 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+                onClick={handleOpenBatchSend}
+                disabled={!sendGroupedValidation.ok}
+                title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
+              >
+                <Send className="h-4 w-4 mr-1" /> Enviar {selectedRows.size} agrupados
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-8 text-primary-foreground hover:bg-white/10" onClick={() => setSelectedRows(new Set())}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Card className="shadow-sm border-slate-200 overflow-hidden">
         <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -641,34 +682,6 @@ export default function FilaEditaisPage() {
         </CardContent>
       </Card>
 
-      {(regroupableCargos.length > 0 || selectedRows.size >= 2) && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-blue-600 text-white shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 max-w-[95vw] flex-wrap justify-center">
-          <CheckSquare className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-medium">
-            {selectedRows.size} selecionada(s)
-            {regroupableCargos.length > 0 && ` — ${regroupableCargos.length} cargo(s) elegível(is) p/ reagrupar`}
-          </span>
-          {regroupableCargos.length > 0 && (
-            <Button size="sm" variant="secondary" className="h-8 bg-white text-blue-700 hover:bg-blue-50 font-semibold" onClick={handleRegroupSelected}>
-              <Link2 className="h-4 w-4 mr-1" /> Reagrupar mesmo cargo
-            </Button>
-          )}
-          {selectedRows.size >= 2 && (
-            <Button
-              size="sm"
-              className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
-              onClick={handleOpenBatchSend}
-              disabled={!sendGroupedValidation.ok}
-              title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
-            >
-              <Send className="h-4 w-4 mr-1" /> Enviar {selectedRows.size} agrupados p/ Redação
-            </Button>
-          )}
-          <Button size="sm" variant="ghost" className="h-8 text-white hover:bg-blue-700" onClick={() => setSelectedRows(new Set())}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
 
       <Dialog open={isBatchSendOpen} onOpenChange={setIsBatchSendOpen}>
         <DialogContent className="sm:max-w-[560px]">
@@ -684,7 +697,8 @@ export default function FilaEditaisPage() {
           <div className="space-y-4 py-2">
             <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
               <p className="text-[10px] text-slate-500 uppercase font-bold mb-2">
-                Unidade: <span className="text-slate-700">{selectedVagas[0]?.unidade}</span>
+                Região: <span className="text-slate-700">{regiaoSelecionada}</span>
+                <span className="ml-3">Unidades: <span className="text-slate-700">{Array.from(new Set(selectedVagas.map(v => v.unidade))).join(', ')}</span></span>
               </p>
               <ul className="space-y-1 max-h-[180px] overflow-y-auto">
                 {selectedVagas.map(v => (

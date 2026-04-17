@@ -19,7 +19,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
 import { StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, getStatusFluxoLabel } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogFooter, DialogDescription 
@@ -430,7 +430,7 @@ export default function FilaAnalistaEditalPage() {
                   <TableCell className="font-mono text-xs font-bold">{v.requisicao || v.numero_requisicao}</TableCell>
                   <TableCell>{v.unidade}</TableCell>
                   <TableCell className="font-semibold">{v.cargo}</TableCell>
-                  <TableCell className="text-center"><Badge variant="outline">{v.status_fluxo_edital}</Badge></TableCell>
+                  <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
                   <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}><Edit className="h-4 w-4" /></Button></TableCell>
                 </TableRow>
               ))}

@@ -448,15 +448,17 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
   try {
     type TitleHit = { idx: number; anexo: string; cargo: string };
     const titles: TitleHit[] = [];
+    const TITLE_TAGS = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'B', 'STRONG', 'I', 'EM', 'LI']);
     for (let i = 0; i < allNodes.length; i++) {
       const node = allNodes[i];
       if (node.closest('table')) continue;
+      if (!TITLE_TAGS.has(node.tagName)) continue;
       const txt = normalizeText(node.textContent || '');
-      if (!txt) continue;
+      if (!txt || txt.length > 500) continue;
       const parsed = parseAnexoCronogramaTitle(txt);
       if (parsed) {
         const last = titles[titles.length - 1];
-        if (last && last.cargo === parsed.cargo && Math.abs(last.idx - i) < 3) continue;
+        if (last && last.cargo === parsed.cargo && Math.abs(last.idx - i) < 5) continue;
         titles.push({ idx: i, anexo: parsed.anexo, cargo: parsed.cargo });
       }
     }

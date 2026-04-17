@@ -99,6 +99,7 @@ export default function UnidadePortalPage() {
   const { convocacoes, vagas, updateConvocacao, fetchVagas, fetchBancos } = useVagasStore();
   const { signOut } = useAuth();
   const [bootstrapping, setBootstrapping] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
 
   // Hydrate stores when opened in a new tab (outside AppLayout)
   useEffect(() => {
@@ -106,8 +107,10 @@ export default function UnidadePortalPage() {
     (async () => {
       try {
         await Promise.all([fetchCurrentProfile(), fetchVagas(), fetchBancos()]);
+        if (mounted) setHydrated(true);
       } catch (err) {
         console.error('[UnidadePortal] Erro ao carregar dados:', err);
+        if (mounted) setHydrated(true); // still mark as hydrated so UI can show error/empty state
       } finally {
         if (mounted) setBootstrapping(false);
       }

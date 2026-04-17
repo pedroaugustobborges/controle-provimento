@@ -1,57 +1,43 @@
 
-## Plano — Corrigir botão "Devolver à Fila de Editais"
+## Plano — Corrigir filtro "Em Andamento" em Todas as Vagas e Vagas PCD
 
 ### Investigação
-- `src/pages/FilaAnalistaEditalPage.tsx` — handler do botão "Devolver à Fila" (linha + lote): verificar se `onClick` está conectado, se chama `updateVaga` corretamente e se o `AlertDialog` confirma de fato.
-- `src/store/vagasStore.ts` — confirmar que `updateVaga` persiste `status_fluxo_edital` no Supabase e atualiza estado local.
-- Verificar filtro da página de Redação: provavelmente filtra por `status_fluxo_edital === 'em_redacao'`. Ao mudar para `encaminhado_edital`, vaga deve sair da lista automaticamente.
-- `src/pages/FilaEditaisPage.tsx` — confirmar que filtro inclui vagas com `status_fluxo_edital === 'encaminhado_edital'` para que a vaga devolvida reapareça.
+- `src/pages/VagasPage.tsx` — localizar definição do filtro "Em Andamento" (provavelmente em `STATUS_FILTER_OPTIONS` ou em lógica de quick filters/tabs no topo da listagem).
+- `src/types/vaga.ts` — revisar `STATUS_FILTER_OPTIONS` e ver se "Em Andamento" está mapeado e quais `matches` ele inclui.
+- Verificar se há um agrupador "Em Andamento" que deveria somar várias categorias (EM EDITAL + FILA + CONVOCAÇÃO + DOCUMENTAÇÃO + ADMISSÃO ENVIADA + ADMISSÃO) mas que ficou desatualizado após introdução de novos status (lowercase: `encaminhado_edital`, `admissao_enviada`, `em_admissao`, `em_documentacao`, etc.).
+- Conferir interação com `filtroEspecial === 'pcd'` para confirmar se PCD apenas restringe a base e não interfere no matching de status.
 
-### Causas prováveis
-1. Handler chama `updateVaga` mas não passa `status_fluxo_edital` corretamente (typo ou campo faltando).
-2. `AlertDialog` confirma mas o `onConfirm` não dispara (falta wiring do `onClick` no `AlertDialogAction`).
-3. Update no Supabase falha silenciosamente (erro de RLS ou coluna inexistente) e toast de sucesso é exibido mesmo com falha.
-4. `historico` é objeto ao invés de array, ou push gera erro que aborta o update.
-5. Filtro da Fila de Editais não captura o novo `status_fluxo_edital` setado.
+### Causa provável
+Após adições recentes de status (fluxo de editais, TEIA, status lowercase do banco), o agrupador "Em Andamento" não foi atualizado para incluir as novas variantes. Resultado: a comparação não bate com nenhum registro e a lista vem vazia.
 
 ### Implementação
 
-**A. Auditoria e logs**
-- Adicionar `console.log` temporário antes/depois do `updateVaga` no handler para ver fluxo.
-- Verificar retorno do `updateVaga` (await + try/catch) e exibir toast de erro real se falhar.
+**1. Definir lista canônica de status "Em Andamento"** em `src/types/vaga.ts`:
+```ts
+export const STATUS_EM_ANDAMENTO: StatusVaga[] = [
+  'EM EDITAL', 'FILA DE EDITAIS', 'REALIZAR CONVOCAÇÃO',
+  'DOCUMENTAÇÃO', 'ADMISSÃO ENVIADA', 'ADMISSÃO',
+  'ACOMPANHAMENTO DE EDITAL', 'PUBLICAR EDITAL',
+  // variantes lowercase do banco
+  'encaminhado_edital', 'em_redacao', 'em_documentacao',
+  'admissao_enviada', 'em_admissao', 'em_convocacao',
+];
+```
 
-**B. Correções prováveis**
-- Garantir que o handler:
-  ```ts
-  await updateVaga(vagaId, {
-    status_fluxo_edital: 'encaminhado_edital',
-    historico: [...(vaga.historico || []), { 
-      acao: 'Devolvida para Fila de Editais',
-      usuario: currentUser?.nome,
-      data: new Date().toISOString()
-    }]
-  });
-  ```
-- Garantir que o `AlertDialogAction` tem `onClick={handleDevolverFila}` (e não só dentro do conteúdo do dialog).
-- Para lote: iterar com `Promise.all` e tratar erros individuais.
-- Limpar seleção (`setSelectedForReturn([])`) e fechar dialog após sucesso.
+**2. `src/pages/VagasPage.tsx`** — usar essa lista no handler/filtro "Em Andamento" com comparação case-insensitive (`String(v.status).toUpperCase()` vs lista normalizada). Garantir que o badge de contagem use a mesma função.
 
-**C. Verificação do filtro**
-- Em `FilaEditaisPage.tsx`, confirmar que o filtro de listagem inclui `status_fluxo_edital === 'encaminhado_edital'`. Se filtrar apenas por status genérico, ajustar.
+**3. Validar PCD** — confirmar que `filtroEspecial === 'pcd'` apenas pré-filtra `vagas.filter(v => v.pcd)` antes de aplicar o filtro de status. Se houver short-circuit que ignora status quando PCD ativo, remover.
 
-**D. Reatividade**
-- Confirmar que `vagas` da store é usado direto (não cópia local em `useState`) para que update do Zustand re-renderize automaticamente.
+**4. Regressão** — rodar mentalmente os outros filtros (Concluídas, Canceladas, Suspensas) com a mesma base para garantir que continuam funcionando.
 
-### Validação
-- Vaga em Redação → clicar "Devolver à Fila" individual → confirmar → vaga sai da Redação e aparece na Fila de Editais.
-- Selecionar 3 vagas → "Devolver à Fila" em lote → todas são movidas, toast mostra "3 vagas devolvidas".
-- Forçar erro (ex: desconectar) → toast de erro real aparece, vaga não some indevidamente.
-- Histórico da vaga mostra entrada "Devolvida para Fila de Editais por {usuário}" com timestamp.
-- Refresh da página: vaga continua na Fila de Editais (persistência confirmada).
+### Validação (após aprovação, eu testo no preview)
+- Controle de Vagas → Todas as Vagas → "Em Andamento" → vagas aparecem, contagem bate.
+- Controle de Vagas → Vagas PCD → "Em Andamento" → apenas vagas PCD em andamento aparecem.
+- Outros filtros (Concluídas, Canceladas) continuam funcionando.
 
 ### Arquivos alterados
-- `src/pages/FilaAnalistaEditalPage.tsx` (handler + wiring do AlertDialog)
-- Possivelmente `src/pages/FilaEditaisPage.tsx` (ajuste de filtro se necessário)
+- `src/types/vaga.ts` (constante `STATUS_EM_ANDAMENTO`)
+- `src/pages/VagasPage.tsx` (uso da constante no filtro + contagem)
 
 ### Risco
-Baixo. Correção pontual de wiring/persistência. Vou rodar teste end-to-end no preview após a correção para confirmar.
+Baixo. Mudança aditiva no mapeamento de status. Vou validar end-to-end no preview após implementação.

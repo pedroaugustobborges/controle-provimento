@@ -267,10 +267,7 @@ export default function FilaAnalistaEditalPage() {
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
       validado_por: responsavelValidacao,
-      cronograma: {
-        ...selectedVaga.cronograma,
-        ...cronograma
-      },
+      cronograma: buildCronogramaPayload(),
       historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],

@@ -1,48 +1,37 @@
 
-## Plano — Corrigir Portal Unidade não puxando dados de Provimento
+## Plano — Simplificar AGIE para apenas notificações do sistema
 
-### 1. Investigação (read-only)
-- Reler `src/pages/UnidadePortalPage.tsx` para mapear: que stores/services chama, com quais filtros, e como mapeia o retorno.
-- Reler `src/store/vagasStore.ts` e `src/services/recruitmentService.ts` para entender `fetchVagas` (e similares) — confirmar se aceitam/aplicam filtro por `unidade_id`.
-- Conferir `useAuth` / `fetchCurrentProfile` para garantir que `unidade_id` (ou `unidades_vinculadas`) do usuário está disponível antes da query.
-- Consultar via `supabase--read_query`:
-  - `SELECT id, email, perfil, unidade_id, unidades_vinculadas, visualiza_todas_unidades FROM usuarios LIMIT 20;` para confirmar vínculo dos usuários de Portal Unidade.
-  - `SELECT unidade_id, COUNT(*) FROM vagas GROUP BY unidade_id;` para ver se há dados.
-- Consultar RLS de `vagas` e tabelas relacionadas via `supabase--read_query` em `pg_policies`.
-- Conferir `supabase--analytics_query` (postgres_logs) por `permission denied` recentes.
+### 1. Investigação rápida (read-only)
+- Reler `src/components/chat/AgieChat.tsx` para mapear os passos (`ChatStep`) e quais conduzem a chat entre usuários vs. notificações.
+- Reler `src/pages/MensagensPage.tsx`, `src/components/AppSidebar.tsx` e `src/App.tsx` para localizar rota e item de menu.
+- Buscar referências a `COMMUNICATION_HUB`, `BY_REGION`, `BY_UNIT`, `BY_PERSON`, `BY_ROLE`, `CONVERSATION`, `SUPERVISION` para garantir remoção completa.
+- Identificar onde estão hoje os fluxos de **Alertas**, **Feedback** e **Melhorias/News** (ex.: passo `FEEDBACK`, `NEWS`, integração com `AlertasTarefasPage`).
 
-### 2. Hipóteses prováveis
-- **Filtro ausente/errado**: Portal Unidade chama `fetchVagas()` global em vez de `fetchVagasByUnidade(user.unidade_id)`.
-- **RLS bloqueando**: policy de `vagas` permite só `is_admin()` e não cobre o perfil "Analista da unidade" / Portal Unidade.
-- **Usuário sem `unidade_id`**: perfil do usuário de teste foi criado sem vínculo de unidade.
-- **Race condition**: query disparada antes do `currentProfile` estar carregado — `unidade_id=undefined` retorna vazio.
-- **Mapeamento quebrado**: campo renomeado no schema do Supabase mas não atualizado no frontend.
+### 2. Perguntas a confirmar com o usuário (antes de codar)
+- Remover totalmente a rota `/mensagens` do menu, ou manter com aviso de descontinuada?
+- Apagar dados antigos de mensagens entre usuários no banco, ou só esconder da UI?
+- Confirmar que nenhum fluxo crítico ainda usa chat 1:1.
 
-### 3. Correções (após aprovação)
-1. **Frontend** (`UnidadePortalPage.tsx`):
-   - Aguardar `currentProfile` carregar antes de chamar fetches de provimento.
-   - Passar `unidade_id` (ou lista `unidades_vinculadas`) explicitamente para os services.
-   - Logar `console.error('[portal-unidade]', ...)` em qualquer rejeição.
-   - Adicionar bloco de erro com botão "Tentar novamente" caso a hidratação falhe.
+### 3. Implementação (após aprovação)
+1. **`src/types/chat.ts`**: enxugar `ChatStep` mantendo só `INITIAL`, `FEEDBACK`, `NEWS` (+ um novo `ALERTS` se necessário).
+2. **`src/components/chat/AgieChat.tsx`**:
+   - Remover renderização e handlers dos passos de chat entre usuários.
+   - Reescrever passo `INITIAL` com 3 botões: **Alertas do sistema**, **Feedback / Melhorias**, **Novidades**.
+   - Remover imports/uso de `UNITS`, `ROLES` e seleção de pessoas.
+3. **`src/components/AppSidebar.tsx`**: remover item de menu "Mensagens" (ou marcar como descontinuado conforme decisão).
+4. **`src/App.tsx`**: remover rota `/mensagens` (ou apontar para uma página de aviso).
+5. **`src/pages/MensagensPage.tsx`**: deletar ou substituir por componente simples de aviso.
+6. **`src/data/chatData.ts`**: manter por ora (não usado), ou remover se nada mais referenciar.
+7. **Backend (condicional)**: se aprovado, criar migração para remover/arquivar tabelas de mensagens entre usuários.
 
-2. **Service** (`recruitmentService.ts` / `vagasStore.ts`):
-   - Garantir filtro `.in('unidade_id', unidades)` ou `.eq('unidade_id', id)` na query do Supabase.
-   - Propagar erro (sem catch silencioso).
+### 4. Validação (testes a executar e relatar)
+- **Alertas**: abrir AGIE → escolher Alertas → confirmar lista de alertas reais (prazos, tarefas) + badge.
+- **Feedback**: enviar feedback de teste → confirmar persistência + confirmação visual.
+- **Melhorias/Novidades**: abrir seção → confirmar exibição correta de itens.
+- Confirmar que nenhuma opção de chat entre usuários aparece mais na UI.
+- Conferir console por erros após a limpeza.
 
-3. **RLS** (se for o caso — via migração):
-   - Adicionar policy de SELECT em `vagas` permitindo `auth.uid()` cuja `usuarios.unidade_id` ou `usuarios.unidades_vinculadas` contenha o `vagas.unidade_id`.
-   - Replicar em tabelas relacionadas (convocações, candidatos por vaga, etc.) conforme o caso.
-
-4. **Perfil do usuário** (se for o caso):
-   - Orientar admin a vincular o usuário a uma unidade via tela de Administração.
-
-### 4. Validação
-- Logar como usuário de uma unidade específica e abrir `/portal-unidade`.
-- Confirmar via Network que a request retorna `> 0 registros`.
-- Conferir cards/tabelas/gráficos preenchidos.
-- Forçar erro de rede (DevTools offline) → confirmar mensagem de erro com retry.
-- Conferir `supabase--analytics_query` sem `permission denied` após o fix.
-
-### 5. Pendência (preciso confirmar antes de implementar)
-- Qual usuário/unidade está sendo usado no teste? (para eu validar o vínculo no banco).
-- Se for problema de RLS, autoriza criação de migração para ajustar policies?
+### 5. Entrega
+- AGIE simplificada com 3 funções claras.
+- Rota/menu `/mensagens` tratados conforme decisão.
+- Relatório curto do resultado dos 3 testes ao final.

@@ -136,8 +136,8 @@ interface VagasState {
   lastUpdated?: number;
 
   setVagas: (vagas: Vaga[]) => void;
-  fetchVagas: (incremental?: boolean) => Promise<void>;
-  fetchBancos: (incremental?: boolean) => Promise<void>;
+  fetchVagas: (incremental?: boolean | { force?: boolean }) => Promise<void>;
+  fetchBancos: (incremental?: boolean | { force?: boolean }) => Promise<void>;
   fetchAll: () => Promise<void>;
   fetchImportHistory: () => Promise<void>;
   fetchNotificacoes: () => Promise<void>;
@@ -217,28 +217,35 @@ export const useVagasStore = create<VagasState>()(
       lastUpdated: undefined,
 
       setVagas: (vagas) => set({ vagas }),
-      fetchVagas: async (incremental = false) => {
+      fetchVagas: async (incremental: boolean | { force?: boolean } = false) => {
+        const force = typeof incremental === 'object' ? !!incremental.force : false;
+        const isIncremental = typeof incremental === 'boolean' ? incremental : false;
         if (get().isLoadingVagas) return;
-        if (!incremental && get().vagas.length > 0 && !get().isInitialLoad) return;
+        // Skip cache only when not forced and not incremental
+        if (!force && !isIncremental && get().vagas.length > 0 && !get().isInitialLoad) return;
         set({ isLoadingVagas: true });
         try {
           const data = await fetchAllRows('vagas');
           set({ vagas: data.map(mapDbVaga), isInitialLoad: false });
         } catch (err) {
-          console.error('Error fetching vagas:', err);
+          console.error('[vagasStore] Error fetching vagas:', err);
+          throw err; // Propagate so callers can show error UI
         } finally {
           set({ isLoadingVagas: false });
         }
       },
-      fetchBancos: async (incremental = false) => {
+      fetchBancos: async (incremental: boolean | { force?: boolean } = false) => {
+        const force = typeof incremental === 'object' ? !!incremental.force : false;
+        const isIncremental = typeof incremental === 'boolean' ? incremental : false;
         if (get().isLoadingBancos) return;
-        if (!incremental && get().bancos.length > 0 && !get().isInitialLoad) return;
+        if (!force && !isIncremental && get().bancos.length > 0 && !get().isInitialLoad) return;
         set({ isLoadingBancos: true });
         try {
           const data = await fetchAllRows('banco_candidatos');
           set({ bancos: data.map(mapDbBanco), isInitialLoad: false });
         } catch (err) {
-          console.error('Error fetching bancos:', err);
+          console.error('[vagasStore] Error fetching bancos:', err);
+          throw err;
         } finally {
           set({ isLoadingBancos: false });
         }

@@ -96,27 +96,42 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
 export default function UnidadePortalPage() {
   const navigate = useNavigate();
   const { currentUser, fetchCurrentProfile } = useAdminStore();
-  const { convocacoes, vagas, updateConvocacao, fetchVagas, fetchBancos } = useVagasStore();
+  const { convocacoes, vagas, updateConvocacao, fetchVagas, fetchBancos, fetchConvocacoes } = useVagasStore();
   const { signOut } = useAuth();
   const [bootstrapping, setBootstrapping] = useState(true);
   const [hydrated, setHydrated] = useState(false);
+  const [hydrationError, setHydrationError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
-  // Hydrate stores when opened in a new tab (outside AppLayout)
+  // Hydrate stores when opened in a new tab (outside AppLayout).
+  // CRITICAL: force=true so we ALWAYS hit the server, bypassing the persisted Zustand cache
+  // that would otherwise short-circuit and show stale/empty data.
   useEffect(() => {
     let mounted = true;
+    setHydrationError(null);
     (async () => {
       try {
-        await Promise.all([fetchCurrentProfile(), fetchVagas(), fetchBancos()]);
+        // Profile first (needed to know which units the user can see)
+        await fetchCurrentProfile();
+        // Then force-fetch provimento data
+        await Promise.all([
+          fetchVagas({ force: true }),
+          fetchBancos({ force: true }),
+          fetchConvocacoes(),
+        ]);
         if (mounted) setHydrated(true);
-      } catch (err) {
-        console.error('[UnidadePortal] Erro ao carregar dados:', err);
-        if (mounted) setHydrated(true); // still mark as hydrated so UI can show error/empty state
+      } catch (err: any) {
+        console.error('[portal-unidade] Erro ao carregar dados de provimento:', err);
+        if (mounted) {
+          setHydrationError(err?.message || 'Falha ao carregar dados do servidor.');
+          setHydrated(true);
+        }
       } finally {
         if (mounted) setBootstrapping(false);
       }
     })();
     return () => { mounted = false; };
-  }, [fetchCurrentProfile, fetchVagas, fetchBancos]);
+  }, [fetchCurrentProfile, fetchVagas, fetchBancos, fetchConvocacoes, retryNonce]);
 
   // Update browser tab title and favicon
   useEffect(() => {
@@ -525,6 +540,28 @@ export default function UnidadePortalPage() {
     );
   }
   if (!hasAccess) return null;
+
+  if (hydrationError && vagas.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-md w-full bg-white border border-rose-200 rounded-2xl shadow-lg p-6 text-center space-y-4">
+          <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center">
+            <AlertCircle className="h-6 w-6 text-rose-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Não foi possível carregar os dados</h2>
+            <p className="text-sm text-slate-600 mt-1">{hydrationError}</p>
+          </div>
+          <div className="flex items-center gap-2 justify-center">
+            <Button onClick={() => { setBootstrapping(true); setHydrated(false); setRetryNonce(n => n + 1); }} className="bg-[#0A192F] hover:bg-[#0A192F]/90">
+              Tentar novamente
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>Sair</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col transition-all duration-300">

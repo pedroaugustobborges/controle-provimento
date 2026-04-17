@@ -1,36 +1,46 @@
 
-## Plano — Validar fluxo de devolução e esclarecer status `encaminhado_edital`
+## Plano — Corrigir fluxo Fila de Editais ↔ Redação de Edital
 
-### Entendimento do fluxo (confirmado pelo usuário)
-1. **Controle de Vagas → Fila de Editais**: unidade encaminha vaga. Status muda para `encaminhado_edital`. `status_origem` guarda o status anterior (geralmente "SEM STATUS").
-2. **Fila de Editais → Redação de Edital**: analista puxa para redigir. Status muda para `em_redacao`.
-3. **Redação → devolver → Fila de Editais**: volta para `encaminhado_edital` (NÃO volta para Controle).
-4. **Fila de Editais → devolver → Controle de Vagas**: restaura `status_origem` (geralmente "SEM STATUS"). Limpa `status_fluxo_edital` e `etapa`.
+### Problema relatado pelo usuário
+1. **Bug de envio**: ao puxar uma vaga de "Fila de Editais" para "Redação de Edital", a vaga **sai da Fila mas não aparece em Redação** (vaga "desaparece").
+2. **Bug de devolução**: ao devolver uma vaga em "Redação de Edital", ela deveria **voltar para "Fila de Editais"**, mas isso não está acontecendo de forma visível.
 
-### Diagnóstico
-O fluxo descrito **já está implementado corretamente** segundo investigação anterior. A confusão do usuário parece ser sobre a **existência** do status `encaminhado_edital` — ele acreditava ser fantasma, mas é legítimo e essencial para representar "vaga na Fila aguardando analista".
+### Hipótese técnica
+- Quando o analista puxa para Redação, o código provavelmente grava `etapa='em_redacao'` mas **não atualiza `status_fluxo_edital`** (deixa em `encaminhado_edital` ou limpa para `null`), o que faz o filtro da Redação não capturá-la.
+- O filtro atual da Redação (`FilaAnalistaEditalPage.tsx`) exclui `encaminhado_edital` e exige `status_fluxo_edital ∈ {em_redacao,...}` OU `etapa='em_redacao'` OU `edital_id IS NOT NULL`. Se algum handler grava combinação inconsistente, a vaga "some".
+- A devolução de Redação→Fila pode estar gravando `encaminhado_edital` mas mantendo `etapa='em_redacao'`, causando confusão.
 
-### Investigação adicional necessária
-Para garantir 100% que o código bate com a regra:
-1. `src/pages/FilaAnalistaEditalPage.tsx` — handler de devolver (Redação→Fila): confirmar que grava `status_fluxo_edital='encaminhado_edital'` e mantém `etapa='em_redacao'` ou similar.
-2. `src/pages/FilaEditaisPage.tsx` — handler de devolver (Fila→Controle): confirmar restauração de `status_origem`, limpeza de `status_fluxo_edital` e `etapa`, e registro no histórico.
-3. `src/types/vaga.ts` — confirmar enum oficial inclui `encaminhado_edital`.
-4. Banco: verificar nos 7 registros se `status_origem` está populado corretamente (para garantir que a devolução para Controle vai funcionar).
+### Investigação (read-only)
+1. `src/pages/FilaEditaisPage.tsx` — handler "puxar para Redação" e handler "devolver para Controle".
+2. `src/pages/FilaAnalistaEditalPage.tsx` — handler "devolver para Fila", handler "iniciar redação" (se existir), e filtro `showInThisFlow`.
+3. `src/store/vagasStore.ts` — métodos de update de status_fluxo_edital/etapa.
+4. SQL: estado real dos 7 registros e quaisquer vagas com `etapa='em_redacao'` ou `edital_id IS NOT NULL` que não aparecem em nenhuma das duas listas.
 
-### Possíveis ajustes (a confirmar após investigação)
-- **Se `status_origem` estiver vazio nos 7 registros**: adicionar fallback robusto + migration defensiva populando `status_origem='SEM STATUS'`.
-- **Se faltar registro no histórico** em alguma das transições: instrumentar.
-- **Se houver qualquer divergência** entre o código atual e a regra descrita pelo usuário: corrigir.
+### Correções planejadas
+1. **Padronizar transições de estado** (regra única e clara):
+   - **Controle → Fila**: `status_fluxo_edital='encaminhado_edital'`, `etapa=null`, salva `status_origem`.
+   - **Fila → Redação (puxar)**: `status_fluxo_edital='em_redacao'`, `etapa='em_redacao'`, grava `analista_id`.
+   - **Redação → Fila (devolver)**: `status_fluxo_edital='encaminhado_edital'`, `etapa=null`, limpa `analista_id`.
+   - **Fila → Controle (devolver)**: restaura `status_origem`, limpa `status_fluxo_edital`, `etapa`, `edital_id`.
 
-### Implementação (após validação)
-1. Ler os dois arquivos de handler e o enum.
-2. Query SQL nos 7 registros: `SELECT id, status, status_origem, status_fluxo_edital, etapa FROM vagas WHERE status_fluxo_edital='encaminhado_edital';`
-3. Apresentar diagnóstico real ao usuário com evidências.
-4. Aplicar correções **apenas se** houver divergência real entre código e regra.
+2. **Simplificar filtros** (mútua exclusão estrita por `status_fluxo_edital`):
+   - **Fila de Editais**: `status_fluxo_edital === 'encaminhado_edital'`.
+   - **Redação de Edital**: `status_fluxo_edital ∈ ['em_redacao','enviado_validacao','aprovado_administrativo','publicado']`.
+   - Remover lógica tolerante (`etapa===em_redacao` OU `edital_id presente`) que mascarava bugs de gravação.
+
+3. **Migration defensiva**: corrigir registros inconsistentes existentes (vagas com `etapa='em_redacao'` ou `edital_id` mas sem `status_fluxo_edital` válido).
+
+4. **Arquivos a editar**:
+   - `src/pages/FilaEditaisPage.tsx` (handler puxar para Redação — garantir gravação de `status_fluxo_edital='em_redacao'`).
+   - `src/pages/FilaAnalistaEditalPage.tsx` (filtro estrito + handler devolver garantindo `encaminhado_edital`).
+   - Migration SQL para reconciliar registros órfãos.
 
 ### Validação E2E
-- Criar vaga teste → encaminhar para Fila → puxar para Redação → devolver → confirma que volta para Fila com `encaminhado_edital`.
-- Devolver da Fila → confirma que volta para Controle com status original.
+- Encaminhar vaga Controle → Fila (aparece em Fila ✅).
+- Puxar vaga Fila → Redação (sai da Fila ✅, aparece em Redação ✅).
+- Devolver vaga Redação → Fila (sai da Redação ✅, aparece na Fila ✅).
+- Devolver vaga Fila → Controle (some das duas, status original restaurado ✅).
+- Refresh em todas as etapas → estado persistente.
 
 ### Risco
-Baixo. Etapa de validação primeiro; alterações apenas se necessário.
+Médio. Mexe em handlers e filtros das duas páginas + migration de reconciliação. Validação completa no preview após implementar.

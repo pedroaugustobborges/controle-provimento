@@ -58,9 +58,6 @@ export default function ValidacaoEditaisPage() {
     return users.filter(u => u.perfil === 'Gestão' || u.perfil === 'Gerência' || u.perfil === 'Coordenação');
   }, [users]);
 
-  if (isInitialLoad) {
-    return <PageSkeleton />;
-  }
 
   const pendingEditais = useMemo(() => {
     return vagas.filter(v => {
@@ -198,6 +195,10 @@ export default function ValidacaoEditaisPage() {
     setObs('');
     setSelectedGestorId('');
   };
+
+  if (isInitialLoad) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

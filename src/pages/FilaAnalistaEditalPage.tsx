@@ -224,20 +224,31 @@ export default function FilaAnalistaEditalPage() {
     if (returnToFilaTargets.length === 0) return;
     setReturnToFilaSubmitting(true);
     let count = 0;
+    const errors: string[] = [];
     for (const vaga of returnToFilaTargets) {
-      const ok = await updateVaga(vaga.id, {
-        status_fluxo_edital: 'encaminhado_edital',
-        etapa: 'encaminhado_edital',
-        historico: [...(vaga.historico || []), {
-          id: `h-${Date.now()}-${vaga.id}`,
-          data: new Date().toISOString().split('T')[0],
-          descricao: `Devolvida para a Fila de Editais por ${currentUser?.nome_completo || 'Analista'}.`,
-          usuario: currentUser?.nome_completo || 'Analista'
-        }]
-      } as any);
-      if (ok) {
-        notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', 'Devolvida da Redação para a Fila de Editais.');
-        count++;
+      try {
+        const ok = await updateVaga(vaga.id, {
+          // Restore the listing status so the vaga reappears in Fila de Editais
+          status: 'PUBLICAR EDITAL',
+          status_geral: 'PUBLICAR EDITAL',
+          status_fluxo_edital: 'encaminhado_edital',
+          etapa: 'encaminhado_edital',
+          historico: [...(vaga.historico || []), {
+            id: `h-${Date.now()}-${vaga.id}`,
+            data: new Date().toISOString().split('T')[0],
+            descricao: `Devolvida para a Fila de Editais por ${currentUser?.nome_completo || 'Analista'}.`,
+            usuario: currentUser?.nome_completo || 'Analista'
+          }]
+        } as any);
+        if (ok) {
+          notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', 'Devolvida da Redação para a Fila de Editais.');
+          count++;
+        } else {
+          errors.push(vaga.cargo || vaga.id);
+        }
+      } catch (err: any) {
+        console.error('[handleConfirmReturnToFila] erro vaga', vaga.id, err);
+        errors.push(vaga.cargo || vaga.id);
       }
     }
     setReturnToFilaSubmitting(false);
@@ -246,8 +257,9 @@ export default function FilaAnalistaEditalPage() {
       setIsReturnToFilaOpen(false);
       setReturnToFilaTargets([]);
       setSelectedForGroup(new Set());
-    } else {
-      toast.error('Não foi possível devolver as vagas.');
+    }
+    if (errors.length > 0) {
+      toast.error(`Falha ao devolver ${errors.length} vaga(s): ${errors.slice(0, 3).join(', ')}${errors.length > 3 ? '...' : ''}`);
     }
   };
 

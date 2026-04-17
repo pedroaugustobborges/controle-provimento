@@ -136,10 +136,21 @@ const pushLookup = <T,>(map: Map<string, T[]>, key: string, value: T) => {
   map.set(key, list);
 };
 
+// Categorias consideradas "Em Andamento" (vagas em fluxo ativo de processo)
+const EM_ANDAMENTO_CATEGORIES = new Set([
+  'em_andamento',
+  'fila_edital',
+  'convocacao',
+  'convocacoes',
+  'documentacao',
+  'em_admissao',
+  'aguardando_unidade',
+]);
+
 const passesVacancyStatusTab = (category: string, tab: string) => {
-  if (tab === 'ativas') return category !== 'concluidas' && category !== 'vagas_interrompidas';
-  if (tab === 'concluidas') return category === 'concluidas' || category === 'vagas_interrompidas';
-  if (tab === 'em_andamento') return category === 'em_andamento';
+  if (tab === 'ativas') return category !== 'concluidas' && category !== 'vagas_interrompidas' && category !== 'suspensa' && category !== 'cancelada';
+  if (tab === 'concluidas') return category === 'concluidas' || category === 'vagas_interrompidas' || category === 'suspensa' || category === 'cancelada';
+  if (tab === 'em_andamento') return EM_ANDAMENTO_CATEGORIES.has(category);
   return true;
 };
 

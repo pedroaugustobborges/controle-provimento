@@ -1,52 +1,38 @@
 
-## Plano — Modo de Manutenção + Notificação de Atualização
+## Plano — Limpeza final da AGIE + correção do parser de cronograma
 
-### 1. Investigação rápida (read-only)
-- Reler `src/App.tsx` (rotas/wrappers), `src/hooks/useAuth.ts`, `src/pages/LoginPage.tsx`, `src/pages/AdministracaoPage.tsx` para entender pontos de inserção.
-- Conferir se há realtime já habilitado em alguma tabela como referência.
+### 1. Investigação (read-only)
+- Reler `src/components/chat/AgieChat.tsx` e `src/types/chat.ts` para localizar resquícios de fluxo de mensagens entre usuários (botões, steps, textos).
+- Reler `src/lib/editalCronogramaParser.ts` para entender:
+  - Como detecta o marcador do cargo (regex de "Cronograma de Seleção para o Cargo de:").
+  - Como identifica as colunas "ETAPA" e "DATA" nas tabelas.
+  - Se varre tabelas aninhadas.
+- Reler `src/components/CronogramaImportDialog.tsx` para confirmar onde o erro `extracao_cronograma` é emitido.
 
-### 2. Perguntas a confirmar antes de codar
-- Definição de "admin" (apenas role `admin` em `user_roles`? ou também `perfil` admin em `profiles`?).
-- Deslogar não-admins na hora da ativação vs. só bloquear navegação.
-- Atualização: registro manual pelo admin (recomendado) ou auto-detecção por hash de build.
-- Banner sempre adiável + flag "obrigatória" pelo admin (recomendado).
-- Tela admin nova em `/gestor` aba "Sistema" → sub-abas Manutenção e Atualizações.
+### 2. Pendência (preciso receber antes de codar)
+- **Anexar o arquivo `PROCESSO SELETIVO AGIR - EDITAL 028.2026 - GOIÂNIA.docx`** aqui no chat para que eu inspecione com `document--parse_document` e veja a estrutura real das 8 tabelas. Sem isso, qualquer correção é chute.
 
-### 3. Backend (migrações)
-1. Criar tabela `system_maintenance`:
-   - `id uuid pk`, `is_active boolean default false`, `message text`, `expected_return_at timestamptz`, `activated_by uuid`, `activated_at timestamptz`, `deactivated_at timestamptz`, `created_at`.
-   - RLS: SELECT autenticados; INSERT/UPDATE apenas `has_role(auth.uid(),'admin')`.
-   - Habilitar `replica identity full` + adicionar à publicação `supabase_realtime`.
-2. Criar tabela `system_updates`:
-   - `id uuid pk`, `version text`, `message text`, `action_type text check in ('reload','relogin')`, `is_mandatory boolean default false`, `published_by uuid`, `published_at timestamptz default now()`.
-   - RLS: SELECT autenticados; INSERT apenas admin.
-   - Habilitar realtime.
+### 3. Correções (após receber o arquivo)
 
-### 4. Frontend — Modo de Manutenção
-1. Hook `src/hooks/useMaintenanceMode.ts`:
-   - Query da linha mais recente de `system_maintenance` (singleton lógico).
-   - Subscribe realtime; ao detectar `is_active=true` e usuário não-admin → `signOut()` + redirect `/login`.
-2. `src/pages/MaintenancePage.tsx`: tela bloqueando o app para não-admin durante manutenção (mensagem + previsão de retorno).
-3. Em `App.tsx`: dentro de `ProtectedRouteWrapper` e `UnidadeRouteWrapper`, se manutenção ativa e !admin → renderizar `MaintenancePage`.
-4. Em `LoginPage.tsx`: antes do `signIn`, checar manutenção; se ativa e o usuário (após autenticar) não for admin, fazer `signOut` e mostrar mensagem.
-5. Tela admin em `AdministracaoPage` (nova aba "Sistema" → sub-aba "Manutenção"): toggle, mensagem, previsão de retorno, histórico (lista das linhas anteriores).
+**A) AGIE — remover mensagens definitivamente**
+- Auditar `AgieChat.tsx` e remover qualquer botão/step relacionado a "Mensagens entre usuários".
+- Garantir `ChatStep = 'INITIAL' | 'ALERTS' | 'FEEDBACK' | 'NEWS'` (já está em `chat.ts`, mas pode haver lógica órfã no componente).
+- Remover textos/ícones residuais.
 
-### 5. Frontend — Notificação de Atualização
-1. Hook `src/hooks/useSystemUpdates.ts`:
-   - Buscar último update; subscribe realtime para novos inserts.
-   - Persistir `lastSeenUpdateId` em `localStorage`; só exibe se `id !== lastSeen`.
-2. Componente `src/components/UpdateBanner.tsx`:
-   - Banner topo (ou modal se `is_mandatory`).
-   - Botão "Atualizar agora" → `window.location.reload()` (action `reload`).
-   - Botão "Deslogar e entrar novamente" → `signOut()` + `navigate('/login')` (action `relogin`).
-   - Botão "Mais tarde" só quando não obrigatório.
-3. Montar `<UpdateBanner />` dentro do `AppLayout`.
-4. Sub-aba admin "Atualizações" em `AdministracaoPage`: form para publicar nova versão (mensagem, tipo de ação, obrigatória) + lista das últimas publicações.
+**B) Parser — torná-lo robusto**
+- **Normalização de texto**: antes de qualquer regex, aplicar `.replace(/\u00A0/g, ' ').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim()`.
+- **Detecção do cargo**: aceitar variações:
+  - `Cronograma de Seleção para o Cargo de:`
+  - `Cronograma para o Cargo de:`
+  - `Cargo:` (fallback)
+  - Regex flexível, case-insensitive, com `\s*` entre palavras.
+- **Detecção de colunas**: aceitar `ETAPA`/`ETAPAS`/`FASE` e `DATA`/`DATAS`/`PERÍODO`/`DATA PREVISTA`.
+- **Tabelas aninhadas**: percorrer recursivamente células para encontrar tabelas internas.
+- **Diagnóstico granular**: para cada tabela rejeitada, logar `console.warn('[cronograma-parser] tabela #N rejeitada', { headers, primeiraLinha, motivo })`.
+- Atualizar mensagem de erro para incluir contagem de tabelas válidas vs. rejeitadas + os motivos das rejeições no campo `raw`.
 
-### 6. Validação
-- Admin ativa manutenção → usuário comum logado é deslogado em <5s; tentativa de login mostra mensagem; admin continua acessando.
-- Admin desativa → usuário comum loga normalmente.
-- Admin publica update tipo `reload` → banner aparece para todos com botão "Atualizar agora"; clicando, recarrega.
-- Admin publica update tipo `relogin` obrigatório → modal trava UI até "Deslogar e entrar novamente".
-- Conferir que após reload não reaparece (graças ao `lastSeenUpdateId`).
-- Console limpo, sem `permission denied`.
+### 4. Validação
+- Reimportar o `.docx` original → cronograma deve ser detectado.
+- Conferir que o dialog mostra as etapas mapeadas corretamente.
+- Abrir AGIE e confirmar que não há mais opção de mensagens.
+- Console limpo (apenas warnings esperados de tabelas que realmente não são cronograma).

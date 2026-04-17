@@ -586,8 +586,9 @@ export default function FilaAnalistaEditalPage() {
       </div>
     );
   };
-
+  const handleFinalizePublication = async () => {
     if (!selectedVaga) return;
+
 
     const ok = await updateVaga(selectedVaga.id, {
       status_fluxo_edital: 'publicado',

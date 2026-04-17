@@ -136,10 +136,21 @@ const pushLookup = <T,>(map: Map<string, T[]>, key: string, value: T) => {
   map.set(key, list);
 };
 
+// Categorias consideradas "Em Andamento" (vagas em fluxo ativo de processo)
+const EM_ANDAMENTO_CATEGORIES = new Set([
+  'em_andamento',
+  'fila_edital',
+  'convocacao',
+  'convocacoes',
+  'documentacao',
+  'em_admissao',
+  'aguardando_unidade',
+]);
+
 const passesVacancyStatusTab = (category: string, tab: string) => {
-  if (tab === 'ativas') return category !== 'concluidas' && category !== 'vagas_interrompidas';
-  if (tab === 'concluidas') return category === 'concluidas' || category === 'vagas_interrompidas';
-  if (tab === 'em_andamento') return category === 'em_andamento';
+  if (tab === 'ativas') return category !== 'concluidas' && category !== 'vagas_interrompidas' && category !== 'suspensa' && category !== 'cancelada';
+  if (tab === 'concluidas') return category === 'concluidas' || category === 'vagas_interrompidas' || category === 'suspensa' || category === 'cancelada';
+  if (tab === 'em_andamento') return EM_ANDAMENTO_CATEGORIES.has(category);
   return true;
 };
 
@@ -460,6 +471,8 @@ export default function VagasPage() {
       convocacao: 0,
       aguardando_unidade: 0,
       documentacao: 0,
+      em_admissao: 0,
+      movimentacao_interna: 0,
       com_banco_valido: 0,
       vagas_novas: 0,
       sem_movimentacao: 0
@@ -1041,10 +1054,10 @@ export default function VagasPage() {
               Todas as Vagas ({canonicalBase.length})
             </TabsTrigger>
             <TabsTrigger value="em_andamento" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
-              Em Andamento ({counts.em_andamento})
+              Em Andamento ({counts.fila_edital + counts.em_andamento + counts.convocacao + counts.documentacao + counts.aguardando_unidade + ((counts as any).em_admissao || 0)})
             </TabsTrigger>
             <TabsTrigger value="ativas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
-              Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao})
+              Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao + counts.em_admissao + counts.movimentacao_interna})
             </TabsTrigger>
             <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
               Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})

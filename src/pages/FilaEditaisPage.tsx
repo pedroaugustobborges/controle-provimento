@@ -697,7 +697,8 @@ export default function FilaEditaisPage() {
           <div className="space-y-4 py-2">
             <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
               <p className="text-[10px] text-slate-500 uppercase font-bold mb-2">
-                Unidade: <span className="text-slate-700">{selectedVagas[0]?.unidade}</span>
+                Região: <span className="text-slate-700">{regiaoSelecionada}</span>
+                <span className="ml-3">Unidades: <span className="text-slate-700">{Array.from(new Set(selectedVagas.map(v => v.unidade))).join(', ')}</span></span>
               </p>
               <ul className="space-y-1 max-h-[180px] overflow-y-auto">
                 {selectedVagas.map(v => (

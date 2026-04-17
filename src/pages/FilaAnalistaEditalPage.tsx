@@ -161,6 +161,14 @@ export default function FilaAnalistaEditalPage() {
   // Seleção manual para agrupar cargos já em redação no mesmo edital
   const [selectedForGroup, setSelectedForGroup] = useState<Set<string>>(new Set());
 
+  const uniqueEditais = useMemo(() => {
+    const editais = new Set<string>();
+    vagas.forEach(v => {
+      if (v.numero_edital) editais.add(v.numero_edital);
+    });
+    return Array.from(editais).sort();
+  }, [vagas]);
+
   const groupableSelected = useMemo(
     () => editalVagas.filter(v => selectedForGroup.has(v.id) && v.status_fluxo_edital === 'em_redacao'),
     [editalVagas, selectedForGroup]

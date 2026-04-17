@@ -620,8 +620,10 @@ export default function UnidadePortalPage() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="h-[320px] w-full">
-                    {statusChartData.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl animate-pulse">
+                    {!hydrated ? (
+                      <Skeleton className="h-full w-full rounded-2xl" />
+                    ) : statusChartData.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl">
                         <BarChart3 className="h-10 w-10 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
                       </div>

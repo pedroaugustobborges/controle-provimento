@@ -96,27 +96,42 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
 export default function UnidadePortalPage() {
   const navigate = useNavigate();
   const { currentUser, fetchCurrentProfile } = useAdminStore();
-  const { convocacoes, vagas, updateConvocacao, fetchVagas, fetchBancos } = useVagasStore();
+  const { convocacoes, vagas, updateConvocacao, fetchVagas, fetchBancos, fetchConvocacoes } = useVagasStore();
   const { signOut } = useAuth();
   const [bootstrapping, setBootstrapping] = useState(true);
   const [hydrated, setHydrated] = useState(false);
+  const [hydrationError, setHydrationError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
-  // Hydrate stores when opened in a new tab (outside AppLayout)
+  // Hydrate stores when opened in a new tab (outside AppLayout).
+  // CRITICAL: force=true so we ALWAYS hit the server, bypassing the persisted Zustand cache
+  // that would otherwise short-circuit and show stale/empty data.
   useEffect(() => {
     let mounted = true;
+    setHydrationError(null);
     (async () => {
       try {
-        await Promise.all([fetchCurrentProfile(), fetchVagas(), fetchBancos()]);
+        // Profile first (needed to know which units the user can see)
+        await fetchCurrentProfile();
+        // Then force-fetch provimento data
+        await Promise.all([
+          fetchVagas({ force: true }),
+          fetchBancos({ force: true }),
+          fetchConvocacoes(),
+        ]);
         if (mounted) setHydrated(true);
-      } catch (err) {
-        console.error('[UnidadePortal] Erro ao carregar dados:', err);
-        if (mounted) setHydrated(true); // still mark as hydrated so UI can show error/empty state
+      } catch (err: any) {
+        console.error('[portal-unidade] Erro ao carregar dados de provimento:', err);
+        if (mounted) {
+          setHydrationError(err?.message || 'Falha ao carregar dados do servidor.');
+          setHydrated(true);
+        }
       } finally {
         if (mounted) setBootstrapping(false);
       }
     })();
     return () => { mounted = false; };
-  }, [fetchCurrentProfile, fetchVagas, fetchBancos]);
+  }, [fetchCurrentProfile, fetchVagas, fetchBancos, fetchConvocacoes, retryNonce]);
 
   // Update browser tab title and favicon
   useEffect(() => {

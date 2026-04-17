@@ -338,40 +338,55 @@ export default function FilaAnalistaEditalPage() {
 
 
   const handleApplyImport = (result: any) => {
+    if (!result) return;
+    
     if (isBatchMode && result.porCargo) {
       // MODO MÚLTIPLO: result é CronogramaImportMultiResult
       const newCronos = { ...batchCronogramas };
       const newConfigs = { ...batchEntrevistaConfigs };
       
       Object.entries(result.porCargo).forEach(([vagaId, res]: [string, any]) => {
-        newCronos[vagaId] = { ...newCronos[vagaId], ...res.values };
+        if (!res) return;
+        // Garante que o objeto de destino existe
+        newCronos[vagaId] = { ...(newCronos[vagaId] || {}), ...res.values };
+        
         if (res.entrevistaConfig) {
           newConfigs[vagaId] = res.entrevistaConfig;
-        } else if (res.values.data_entrevistas) {
+        } else if (res.values?.data_entrevistas) {
+          // Se não tem config mas tem a data bruta, cria uma config básica para não perder a informação no formulário
           newConfigs[vagaId] = { tipo: 'unica', datas: [res.values.data_entrevistas] };
         }
       });
       
       setBatchCronogramas(newCronos);
       setBatchEntrevistaConfigs(newConfigs);
-      toast.success('Múltiplos cronogramas aplicados.');
+      toast.success('Cronogramas aplicados aos cargos selecionados.');
     } else {
       // MODO ÚNICO: result é CronogramaImportResult
-      const targetId = isBatchMode ? activeTab : selectedVaga?.id;
-      if (!targetId) return;
-      
       const res = result;
-      if (isBatchMode) {
+      const targetId = isBatchMode ? activeTab : selectedVaga?.id;
+      
+      if (isBatchMode && targetId) {
         setBatchCronogramas(prev => ({ 
           ...prev, 
-          [targetId]: { ...prev[targetId], ...res.values } 
+          [targetId]: { ...(prev[targetId] || {}), ...(res.values || {}) } 
         }));
+        
         if (res.entrevistaConfig) {
           setBatchEntrevistaConfigs(prev => ({ ...prev, [targetId]: res.entrevistaConfig }));
+        } else if (res.values?.data_entrevistas) {
+          setBatchEntrevistaConfigs(prev => ({ 
+            ...prev, 
+            [targetId]: { tipo: 'unica', datas: [res.values.data_entrevistas] } 
+          }));
         }
       } else {
-        setCronograma((prev: any) => ({ ...prev, ...res.values }));
-        if (res.entrevistaConfig) setEntrevistaConfig(res.entrevistaConfig);
+        setCronograma((prev: any) => ({ ...prev, ...(res.values || {}) }));
+        if (res.entrevistaConfig) {
+          setEntrevistaConfig(res.entrevistaConfig);
+        } else if (res.values?.data_entrevistas) {
+          setEntrevistaConfig({ tipo: 'unica', datas: [res.values.data_entrevistas] });
+        }
       }
       toast.success('Cronograma aplicado.');
     }

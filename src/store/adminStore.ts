@@ -81,6 +81,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   supportConfigs: [],
   backups: [],
   feedbacks: [],
+  feriados: [],
   currentUser: null,
   selectedRegion: 'all',
   selectedUnit: 'all',

@@ -552,6 +552,11 @@ export default function UnidadePortalPage() {
               <span className="text-xs font-bold text-white/90 leading-tight">{currentUser?.nome_completo}</span>
               <span className="text-[10px] font-medium text-white/40 uppercase tracking-tighter">{currentUser?.perfil}</span>
             </div>
+            {pendingRetryCount > 0 && (
+              <div className="hidden sm:flex items-center px-2 py-1 rounded-md bg-amber-500/20 border border-amber-300/30">
+                <SaveStatusIndicator status="idle" pendingCount={pendingRetryCount} className="text-amber-100" />
+              </div>
+            )}
             <Button variant="ghost" size="icon" onClick={handleLogout} title="Sair do Portal" aria-label="Sair" className="text-white/60 hover:text-white hover:bg-rose-500/20 transition-all rounded-full h-9 w-9 shrink-0">
               <LogOut className="h-4 w-4" />
             </Button>

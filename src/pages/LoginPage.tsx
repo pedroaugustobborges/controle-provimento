@@ -560,6 +560,13 @@ export default function LoginPage() {
   const [showAccess, setShowAccess] = useState(false);
   const [showUnidadeLogin, setShowUnidadeLogin] = useState(false);
 
+  // Clear logout overlay flag when arriving at login
+  useEffect(() => {
+    import('@/store/logoutStore').then(({ useLogoutStore }) => {
+      useLogoutStore.getState().setIsLoggingOut(false);
+    });
+  }, []);
+
   useEffect(() => {
     if (!loading && isAuthenticated) {
       navigate('/', { replace: true });

@@ -119,7 +119,8 @@ export default function AdministracaoPage() {
     users, auditLogs, supportConfigs, backups, feedbacks, loading,
     addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, 
     sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchSupportConfigs,
-    addSupportConfig, updateSupportConfig, deleteSupportConfig, updateFeedbackStatus, generateBackup 
+    addSupportConfig, updateSupportConfig, deleteSupportConfig, updateFeedbackStatus, generateBackup,
+    feriados, fetchFeriados, addFeriado, updateFeriado, deleteFeriado
   } = useAdminStore();
 
   const { vagas } = useVagasStore();

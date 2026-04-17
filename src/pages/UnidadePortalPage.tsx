@@ -29,6 +29,12 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import logoAgir from '@/assets/logo-agir.png';
+import { draftStore } from '@/lib/draftStore';
+import { retryQueue } from '@/lib/retryQueue';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { SaveStatusIndicator } from '@/components/SaveStatusIndicator';
+import { DraftRecoveryBanner } from '@/components/DraftRecoveryBanner';
+import type { SaveStatus } from '@/hooks/useAutoSave';
 import { BASES_CONVOCACAO } from '@/lib/convocacaoUtils';
 import { getCategoriaStatus } from '@/lib/vagaUtils';
 import {

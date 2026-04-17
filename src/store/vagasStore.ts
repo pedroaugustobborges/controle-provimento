@@ -297,23 +297,31 @@ export const useVagasStore = create<VagasState>()(
         try {
           const { supabase } = await import('@/integrations/supabase/client');
           const { data: { user: authUser } } = await supabase.auth.getUser();
-          const { data, error } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(200);
+          const myId = authUser?.id;
+          const { data, error } = await supabase.from('notificacoes').select('*').order('created_at', { ascending: false }).limit(500);
           if (!error && data) {
             set({ notificacoes: data.slice(0, 50) });
-            // Build chat history: messages either sent by me or addressed to me
-            const myId = authUser?.id;
-            const mensagens: MensagemHistorico[] = data
-              .filter((n: any) => n.tipo === 'mensagem' && (n.usuario_id === myId || n.remetente_id === myId))
-              .map((n: any) => ({
-                id: n.id,
-                data: n.created_at || new Date().toISOString(),
-                remetente: n.remetente_nome || 'Colega',
-                remetente_id: n.remetente_id || null,
-                destinatario_id: n.usuario_id || null,
-                conteudo: n.mensagem || '',
-                lida: n.remetente_id === myId ? true : Boolean(n.lida),
-                titulo: n.titulo,
-              }));
+
+            // Resolve destinatario_nome by fetching all involved user IDs
+            const mensagensRaw = data.filter((n: any) => n.tipo === 'mensagem' && (n.usuario_id === myId || n.remetente_id === myId));
+            const involvedIds = Array.from(new Set(mensagensRaw.flatMap((n: any) => [n.usuario_id, n.remetente_id]).filter(Boolean))) as string[];
+            let nameById: Record<string, string> = {};
+            if (involvedIds.length > 0) {
+              const { data: profs } = await supabase.from('profiles').select('id, nome_completo').in('id', involvedIds);
+              nameById = (profs || []).reduce((acc: any, p: any) => { acc[p.id] = p.nome_completo; return acc; }, {});
+            }
+
+            const mensagens: MensagemHistorico[] = mensagensRaw.map((n: any) => ({
+              id: n.id,
+              data: n.created_at || new Date().toISOString(),
+              remetente: n.remetente_nome || nameById[n.remetente_id] || 'Colega',
+              remetente_id: n.remetente_id || null,
+              destinatario_id: n.usuario_id || null,
+              destinatario_nome: nameById[n.usuario_id] || null,
+              conteudo: n.mensagem || '',
+              lida: n.remetente_id === myId ? true : Boolean(n.lida),
+              titulo: n.titulo,
+            }));
             set({
               historicoMensagens: mensagens,
               temNovasMensagens: mensagens.some(m => !m.lida),
@@ -987,13 +995,22 @@ export const useVagasStore = create<VagasState>()(
 
               if (newRow.tipo === 'mensagem') {
                 const isFromMe = newRow.remetente_id === myId;
-                
+
+                // Resolve destinatario_nome via profiles when missing (needed by chat filter)
+                let destinatarioNome: string | null = null;
+                if (newRow.usuario_id) {
+                  const { supabase: sb } = await import('@/integrations/supabase/client');
+                  const { data: prof } = await sb.from('profiles').select('nome_completo').eq('id', newRow.usuario_id).maybeSingle();
+                  destinatarioNome = prof?.nome_completo || null;
+                }
+
                 const mensagem: MensagemHistorico = {
                   id: newRow.id,
                   data: newRow.created_at || new Date().toISOString(),
                   remetente: newRow.remetente_nome || 'Colega',
                   remetente_id: newRow.remetente_id || null,
                   destinatario_id: newRow.usuario_id || null,
+                  destinatario_nome: destinatarioNome,
                   conteudo: newRow.mensagem || '',
                   lida: isFromMe ? true : Boolean(newRow.lida),
                   titulo: newRow.titulo,

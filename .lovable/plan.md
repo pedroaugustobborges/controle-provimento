@@ -1,35 +1,50 @@
 
-## Plano de execução
+## Plano — Garantia de persistência absoluta no Portal Unidade
 
-### 1. Diagnóstico do bug "página em branco"
-- Ler `src/pages/UnidadePortalPage.tsx` e `src/App.tsx` (UnidadeRouteWrapper).
-- Verificar console do navegador via `code--read_console_logs` para identificar o erro real.
-- Hipóteses prováveis:
-  - Erro em `useAuth` quando aba nova não tem contexto inicial completo.
-  - Query do Supabase falhando por sessão não hidratada.
-  - Import quebrado / hook lançando exceção.
+### 1. Diagnóstico
+- Ler `src/pages/UnidadePortalPage.tsx` para mapear todos os campos editáveis e o fluxo atual de salvamento.
+- Identificar onde está faltando `await` ou onde o estado local diverge do servidor.
+- Verificar se há salvamento apenas em memória (state) sem persistência em backend.
 
-### 2. Correção do bug
-- Aplicar try/catch ou estados de loading/erro no componente.
-- Garantir que a sessão do Supabase é restaurada na nova aba (normalmente já é via `localStorage`, mas validar).
-- Adicionar fallback visual (skeleton/erro) para nunca ficar em branco.
+### 2. Camadas de proteção (defesa em profundidade)
 
-### 3. Título e Favicon dinâmicos
-- Adicionar `useEffect` em `UnidadePortalPage.tsx`:
-  ```ts
-  useEffect(() => {
-    const prevTitle = document.title;
-    document.title = 'Portal Unidade';
-    return () => { document.title = prevTitle; };
-  }, []);
-  ```
-- Para o favicon: criar utilitário que troca o `href` do `<link rel="icon">` e restaura no cleanup.
+**Trava 1 — Auto-save com debounce**
+- Criar hook `useAutoSave(value, saveFn, delay=800)` que dispara salvamento automático no backend após o usuário parar de digitar.
+- Aplicar em todos os campos editáveis (observações, status, etc.).
+- Indicador visual: "Salvando..." → "Salvo ✓" → "Erro" via toast/badge.
 
-### 4. Pendência com o usuário
-**Pergunta:** o favicon do Portal Unidade deve ser:
-- (a) o mesmo favicon atual (`/favicon-agir-v2.png`) — apenas o título muda, OU
-- (b) um favicon novo — nesse caso, **preciso que envie a imagem** (PNG quadrado, idealmente 256x256).
+**Trava 2 — Rascunho local em localStorage**
+- Criar utilitário `draftStore.ts` com chaves no formato `portal-unidade:draft:{userId}:{recordId}`.
+- Salvar snapshot do form a cada alteração + timestamp.
+- Ao montar a página: comparar timestamp do rascunho local vs `updated_at` do servidor → se local for mais novo, exibir banner "Recuperar alterações não salvas?".
+- Limpar rascunho após confirmação de save no servidor.
 
-### 5. Validação
-- Abrir Portal Unidade → conferir conteúdo renderizado, título "Portal Unidade" na aba, favicon correto.
-- Voltar à aba principal → título e favicon originais preservados.
+**Trava 3 — Bloqueio de saída**
+- Hook `useBeforeUnload(hasUnsavedChanges)` que registra listener no `window.beforeunload`.
+- Bloqueia refresh/fechamento se houver alterações pendentes na fila.
+
+**Trava 4 — Versionamento otimista**
+- Reusar coluna `version` já existente em `vagas` e `banco_candidatos` via `DatabaseService.saveWithConcurrency` (já implementado).
+- Garantir que toda update no Portal Unidade passe por esse caminho.
+- Em conflito: toast de erro + opção "Recarregar dados".
+
+**Trava 5 — Fila de retry offline**
+- Criar `retryQueue.ts` em localStorage: `[{action, payload, timestamp, attempts}]`.
+- Listener `window.online`: ao reconectar, reprocessar fila com backoff exponencial.
+- Limite de tentativas (ex.: 5) antes de marcar como erro permanente e notificar usuário.
+
+### 3. Arquivos a criar/alterar
+- `src/hooks/useAutoSave.ts` (novo)
+- `src/hooks/useBeforeUnload.ts` (novo)
+- `src/lib/draftStore.ts` (novo)
+- `src/lib/retryQueue.ts` (novo)
+- `src/components/SaveStatusIndicator.tsx` (novo) — badge visual
+- `src/components/DraftRecoveryBanner.tsx` (novo) — banner de recuperação
+- `src/pages/UnidadePortalPage.tsx` — integrar todas as travas
+
+### 4. Validação
+- Editar campo → ver "Salvando..." → "Salvo ✓".
+- Editar e dar F5 imediatamente → banner de recuperação aparece.
+- Editar offline (DevTools > Network > Offline) → fila acumula → reconectar → retry automático.
+- Editar e tentar fechar aba → `beforeunload` bloqueia.
+- Dois usuários editando o mesmo registro → segundo recebe aviso de conflito.

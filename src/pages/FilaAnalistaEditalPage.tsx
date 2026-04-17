@@ -879,7 +879,7 @@ export default function FilaAnalistaEditalPage() {
                   </>
                 )}
               </div>
-            )}
+
 
 
               <div className="grid grid-cols-2 gap-4">
@@ -999,6 +999,8 @@ export default function FilaAnalistaEditalPage() {
               </div>
             </div>
             )}
+          </div>
+
 
 
           <DialogFooter className="gap-2 sm:gap-0">

@@ -199,6 +199,88 @@ export default function FilaEditaisPage() {
     toast.success('Requisições reagrupadas.');
   };
 
+  /** Vagas selecionadas (objetos completos) */
+  const selectedVagas = useMemo(
+    () => Array.from(selectedRows).map(id => pendingVagas.find(v => v.id === id)).filter(Boolean) as Vaga[],
+    [selectedRows, pendingVagas],
+  );
+
+  /** Validação: para enviar agrupado, todas devem ser da mesma unidade */
+  const sendGroupedValidation = useMemo(() => {
+    if (selectedVagas.length < 2) return { ok: false, reason: '' };
+    const unidades = new Set(selectedVagas.map(v => normalizeUnitName(v.unidade)));
+    if (unidades.size > 1) {
+      return { ok: false, reason: 'Selecione apenas vagas da MESMA unidade para agrupar em um edital.' };
+    }
+    return { ok: true, reason: '' };
+  }, [selectedVagas]);
+
+  /** Envia múltiplas vagas agrupadas para a Redação como 1 edital único.
+   *  Persiste o lote em sessionStorage; a página de Redação detecta e abre
+   *  o modal de redação multi-cargo com as vagas mapeadas. */
+  const [isBatchSendOpen, setIsBatchSendOpen] = useState(false);
+  const [batchObs, setBatchObs] = useState('');
+  const [batchValidacoes, setBatchValidacoes] = useState({ cargo: false, carga: false, salario: false });
+
+  const handleOpenBatchSend = () => {
+    if (!sendGroupedValidation.ok) {
+      toast.error(sendGroupedValidation.reason || 'Não é possível agrupar essas vagas.');
+      return;
+    }
+    setBatchObs('');
+    setBatchValidacoes({ cargo: false, carga: false, salario: false });
+    setIsBatchSendOpen(true);
+  };
+
+  const handleConfirmBatchSend = async () => {
+    if (!batchValidacoes.cargo || !batchValidacoes.carga || !batchValidacoes.salario) {
+      toast.error('Valide cargo, carga horária e salário antes de enviar.');
+      return;
+    }
+    if (selectedVagas.length === 0) return;
+
+    let successCount = 0;
+    for (const vaga of selectedVagas) {
+      const ok = await updateVagaAsync(vaga.id, {
+        status: 'ACOMPANHAMENTO DE EDITAL',
+        status_fluxo_edital: 'encaminhado_edital',
+        etapa: 'encaminhado_edital',
+        cargo_validado: true,
+        carga_horaria_validada: true,
+        salario_validado: true,
+        observacoes_unidade: batchObs,
+        historico: [...(vaga.historico || []), {
+          id: `h-${Date.now()}-${vaga.id}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Vaga encaminhada para redação como parte de edital agrupado (${selectedVagas.length} cargos). Obs: ${batchObs || 'Sem observações'}`,
+          usuario: currentUser?.nome_completo || 'Analista da Unidade'
+        }]
+      } as any);
+      if (ok) {
+        successCount++;
+        notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', batchObs ? `Obs: ${batchObs}` : '');
+      }
+    }
+
+    // Persiste o lote para a página de Redação consumir
+    try {
+      const batchPayload = {
+        vagaIds: selectedVagas.map(v => v.id),
+        unidade: selectedVagas[0].unidade,
+        createdAt: new Date().toISOString(),
+        obs: batchObs,
+      };
+      const existing = JSON.parse(sessionStorage.getItem('edital-batches') || '[]');
+      existing.push(batchPayload);
+      sessionStorage.setItem('edital-batches', JSON.stringify(existing));
+    } catch {}
+
+    setIsBatchSendOpen(false);
+    setSelectedRows(new Set());
+    toast.success(`${successCount} cargos encaminhados como edital agrupado para a Redação.`);
+    navigate('/fila-editais-analista');
+  };
+
   const unidadesAgrupadas = useMemo(() => {
     const allUnidades = Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean);
     

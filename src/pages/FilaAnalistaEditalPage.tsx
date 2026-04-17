@@ -32,6 +32,7 @@ import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 import { validateDate } from '@/services/holidayService';
 import { EntrevistaDateField, EntrevistaConfig, deriveEntrevistaConfig, primaryEntrevistaDate } from '@/components/EntrevistaDateField';
 import { CronogramaImportDialog, CronogramaImportResult } from '@/components/CronogramaImportDialog';
+import { parseCronogramaFromDocx, ParsedCronograma } from '@/lib/editalCronogramaParser';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
@@ -71,6 +72,10 @@ export default function FilaAnalistaEditalPage() {
 
   // Importação automática do cronograma a partir de .docx
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [parsedCronogramas, setParsedCronogramas] = useState<ParsedCronograma[] | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [parsingFileName, setParsingFileName] = useState('');
 
   // Modal de Publicação
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -338,9 +343,42 @@ export default function FilaAnalistaEditalPage() {
     toast.success('Edital publicado e cronograma salvo com sucesso!');
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setNomeArquivo(e.target.files[0].name);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNomeArquivo(file.name);
+    e.target.value = '';
+
+    // Apenas .docx é suportado pelo parser (mammoth)
+    if (!/\.docx$/i.test(file.name)) {
+      toast.message('Arquivo anexado.', {
+        description: 'A leitura automática do cronograma só funciona com .docx (Word moderno).',
+      });
+      return;
+    }
+
+    setIsImportOpen(true);
+    setParsing(true);
+    setParseError(null);
+    setParsedCronogramas(null);
+    setParsingFileName(file.name);
+
+    const result = await parseCronogramaFromDocx(file);
+    setParsing(false);
+
+    if (!result.ok) {
+      setParseError(result.errorMessage || 'Falha ao processar o arquivo.');
+      return;
+    }
+
+    setParsedCronogramas(result.cronogramas);
+
+    if (result.cronogramas.length === 1) {
+      toast.success('Cronograma detectado no Word — confira e aplique.');
+    } else {
+      toast.message(`${result.cronogramas.length} cronogramas detectados no Word.`, {
+        description: 'Selecione qual cargo deseja aplicar ao formulário.',
+      });
     }
   };
 
@@ -602,21 +640,12 @@ export default function FilaAnalistaEditalPage() {
               </div>
 
               <div className="space-y-4 p-4 rounded-xl border border-amber-200 bg-amber-50/30">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-amber-600" />
-                    <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsImportOpen(true)}
-                    className="h-8 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
-                  >
-                    <FileUp className="h-3.5 w-3.5" />
-                    <span className="text-xs">Importar do Word</span>
-                  </Button>
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-amber-600" />
+                  <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+                  <span className="text-[11px] text-amber-700/80 italic ml-auto">
+                    Anexe um .docx acima para preencher automaticamente.
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -1018,6 +1047,10 @@ export default function FilaAnalistaEditalPage() {
       <CronogramaImportDialog
         open={isImportOpen}
         onOpenChange={setIsImportOpen}
+        cronogramas={parsedCronogramas}
+        errorMessage={parseError}
+        loading={parsing}
+        fileName={parsingFileName}
         onApply={handleApplyImport}
       />
     </div>

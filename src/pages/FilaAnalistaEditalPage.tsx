@@ -566,6 +566,20 @@ export default function FilaAnalistaEditalPage() {
                 <Layers className="h-4 w-4 mr-1" /> Agrupar {selectedForGroup.size} cargos
               </Button>
             )}
+            {selectedForGroup.size >= 1 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 bg-amber-500 hover:bg-amber-600 text-white border-0 font-semibold"
+                onClick={() => {
+                  setReturnToFilaTargets(editalVagas.filter(v => selectedForGroup.has(v.id) && v.status_fluxo_edital === 'em_redacao'));
+                  setIsReturnToFilaOpen(true);
+                }}
+                title="Devolver vagas selecionadas para a Fila de Editais"
+              >
+                <Undo2 className="h-4 w-4 mr-1" /> Devolver à Fila
+              </Button>
+            )}
             <Button size="sm" variant="ghost" className="h-8 text-primary-foreground hover:bg-white/10" onClick={() => setSelectedForGroup(new Set())}>
               <X className="h-4 w-4" />
             </Button>

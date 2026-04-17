@@ -487,6 +487,39 @@ export type Database = {
         }
         Relationships: []
       }
+      feriados_locais: {
+        Row: {
+          cidade: string | null
+          created_at: string
+          data: string
+          estado: string
+          id: string
+          nome: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          cidade?: string | null
+          created_at?: string
+          data: string
+          estado: string
+          id?: string
+          nome: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          cidade?: string | null
+          created_at?: string
+          data?: string
+          estado?: string
+          id?: string
+          nome?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       importacoes: {
         Row: {
           aba_planilha: string | null

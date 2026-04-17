@@ -16,7 +16,7 @@ import {
   Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
   HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send, Eye, EyeOff,
-  MessageSquare, Camera, Upload, User as UserIcon
+  MessageSquare, Camera, Upload, User as UserIcon, Calendar
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -119,7 +119,8 @@ export default function AdministracaoPage() {
     users, auditLogs, supportConfigs, backups, feedbacks, loading,
     addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, 
     sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchSupportConfigs,
-    addSupportConfig, updateSupportConfig, deleteSupportConfig, updateFeedbackStatus, generateBackup 
+    addSupportConfig, updateSupportConfig, deleteSupportConfig, updateFeedbackStatus, generateBackup,
+    feriados, fetchFeriados, addFeriado, updateFeriado, deleteFeriado
   } = useAdminStore();
 
   const { vagas } = useVagasStore();
@@ -179,7 +180,63 @@ export default function AdministracaoPage() {
     fetchUsers();
     fetchAuditLogs();
     fetchFeedbacks();
-  }, [fetchUsers, fetchAuditLogs, fetchFeedbacks]);
+    fetchFeriados();
+  }, [fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchFeriados]);
+
+  // Holiday management state
+  const [isHolidayDialogOpen, setIsHolidayDialogOpen] = useState(false);
+  const [editingHoliday, setEditingHoliday] = useState<any>(null);
+  const [holidayForm, setHolidayForm] = useState({
+    nome: '',
+    data: '',
+    tipo: 'municipal' as 'municipal' | 'estadual',
+    cidade: '',
+    estado: 'GO'
+  });
+
+  const resetHolidayForm = () => setHolidayForm({
+    nome: '',
+    data: '',
+    tipo: 'municipal',
+    cidade: '',
+    estado: 'GO'
+  });
+
+  const handleSaveHoliday = async () => {
+    if (!holidayForm.nome || !holidayForm.data || !holidayForm.estado) {
+      toast.error('Preencha nome, data e estado.');
+      return;
+    }
+    setSaving(true);
+    try {
+      if (editingHoliday) {
+        await updateFeriado(editingHoliday.id, holidayForm);
+        toast.success('Feriado atualizado!');
+      } else {
+        await addFeriado(holidayForm);
+        toast.success('Feriado cadastrado!');
+      }
+      setIsHolidayDialogOpen(false);
+      resetHolidayForm();
+      setEditingHoliday(null);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEditHoliday = (feriado: any) => {
+    setEditingHoliday(feriado);
+    setHolidayForm({
+      nome: feriado.nome,
+      data: feriado.data,
+      tipo: feriado.tipo,
+      cidade: feriado.cidade || '',
+      estado: feriado.estado
+    });
+    setIsHolidayDialogOpen(true);
+  };
 
   // Auto-generate temp password when mode changes
   useEffect(() => {
@@ -514,6 +571,9 @@ export default function AdministracaoPage() {
               <History className="h-4 w-4" /> Auditoria
             </TabsTrigger>
           )}
+          <TabsTrigger value="feriados" className="gap-2 font-bold px-4 py-2">
+            <Calendar className="h-4 w-4" /> Feriados Locais
+          </TabsTrigger>
           <TabsTrigger value="backup" className="gap-2 font-bold px-4 py-2">
             <HardDrive className="h-4 w-4" /> Backup
           </TabsTrigger>
@@ -1179,6 +1239,78 @@ export default function AdministracaoPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* FERIADOS LOCAIS */}
+        <TabsContent value="feriados">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0 bg-slate-50/50">
+              <div>
+                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Gerenciamento de Feriados Locais
+                </CardTitle>
+                <CardDescription>Cadastre feriados municipais e estaduais para validação do cronograma de editais.</CardDescription>
+              </div>
+              <Button onClick={() => { resetHolidayForm(); setEditingHoliday(null); setIsHolidayDialogOpen(true); }} className="bg-primary gap-2">
+                <Plus className="h-4 w-4" /> Novo Feriado
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Feriado</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Localização</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {feriados && feriados.length > 0 ? (
+                      feriados.map((f) => (
+                        <TableRow key={f.id} className="hover:bg-slate-50/50 transition-colors">
+                          <TableCell className="font-mono text-sm font-bold text-primary">
+                            {new Date(f.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell className="font-bold text-slate-700">{f.nome}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={cn(
+                              "text-[10px] uppercase font-bold",
+                              f.tipo === 'municipal' ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"
+                            )}>
+                              {f.tipo}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-500">
+                            {f.tipo === 'municipal' ? `${f.cidade} / ${f.estado}` : f.estado}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => openEditHoliday(f)} className="h-8 w-8">
+                                <Edit2 className="h-4 w-4 text-slate-400" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => deleteFeriado(f.id)} className="h-8 w-8 hover:text-red-600">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-32 text-center text-slate-400 italic">
+                          Nenhum feriado local cadastrado.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* DIALOG: NOVO USUÁRIO */}
@@ -1777,6 +1909,80 @@ export default function AdministracaoPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* DIALOG: GERENCIAR FERIADO */}
+      <Dialog open={isHolidayDialogOpen} onOpenChange={setIsHolidayDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              {editingHoliday ? 'Editar Feriado' : 'Novo Feriado Local'}
+            </DialogTitle>
+            <DialogDescription>
+              Cadastre a data e localização para bloqueio no cronograma.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">Nome do Feriado</Label>
+              <Input 
+                placeholder="Ex: Aniversário de Goiânia" 
+                value={holidayForm.nome} 
+                onChange={(e) => setHolidayForm({...holidayForm, nome: e.target.value})} 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Data</Label>
+                <Input 
+                  type="date" 
+                  value={holidayForm.data} 
+                  onChange={(e) => setHolidayForm({...holidayForm, data: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Tipo</Label>
+                <Select value={holidayForm.tipo} onValueChange={(v: any) => setHolidayForm({...holidayForm, tipo: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="municipal">Municipal</SelectItem>
+                    <SelectItem value="estadual">Estadual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">Estado</Label>
+                <Select value={holidayForm.estado} onValueChange={(v) => setHolidayForm({...holidayForm, estado: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GO">Goiás (GO)</SelectItem>
+                    <SelectItem value="ES">Espírito Santo (ES)</SelectItem>
+                    <SelectItem value="AM">Amazonas (AM)</SelectItem>
+                    <SelectItem value="MS">Mato Grosso do Sul (MS)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {holidayForm.tipo === 'municipal' && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Cidade</Label>
+                  <Input 
+                    placeholder="Ex: Goiânia" 
+                    value={holidayForm.cidade} 
+                    onChange={(e) => setHolidayForm({...holidayForm, cidade: e.target.value})} 
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHolidayDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveHoliday} disabled={saving} className="bg-primary">
+              {saving ? 'Salvando...' : 'Salvar Feriado'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

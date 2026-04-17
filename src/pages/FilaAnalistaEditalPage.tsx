@@ -12,12 +12,12 @@ import {
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
   FileUp, CheckSquare, MessageSquare, Upload, FileDown, Rocket, Check, RotateCcw,
-  Minus, Plus
+  Minus, Plus, ShieldCheck
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
-import { STATUS_EDITAL_COLORS, StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
+import { StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
 import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
+import { validateDate } from '@/services/holidayService';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
@@ -48,8 +49,7 @@ export default function FilaAnalistaEditalPage() {
   const [reachrUrl, setReachrUrl] = useState('');
   const [responsavelValidacao, setResponsavelValidacao] = useState<string>('');
 
-  // Modal de Publicação / Cronograma
-  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  // Cronograma (moved to be accessible in both modals)
   const [cronograma, setCronograma] = useState<any>({
     data_publicacao_edital: '',
     data_inicio_inscricao: '',
@@ -63,6 +63,9 @@ export default function FilaAnalistaEditalPage() {
     data_entrevistas: '',
     data_resultado_final_seletivo: ''
   });
+
+  // Modal de Publicação
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [unidadeTrabalho, setUnidadeTrabalho] = useState('');
   const [distribuicaoVagas, setDistribuicaoVagas] = useState<Record<string, number>>({});
   const [unidadesBanco, setUnidadesBanco] = useState<string[]>([]);
@@ -124,10 +127,22 @@ export default function FilaAnalistaEditalPage() {
     setNumeroProcesso(vaga.numero_processo || '');
     setNomeArquivo(vaga.arquivo_edital || '');
     setReachrUrl((vaga as any).url_reachr || '');
+    
+    // Initialize cronograma
+    setCronograma({
+      data_publicacao_edital: vaga.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+      data_inicio_inscricao: vaga.cronograma?.data_inicio_inscricao || '',
+      data_fim_inscricao: vaga.cronograma?.data_fim_inscricao || '',
+      data_triagem: vaga.cronograma?.data_triagem || '',
+      data_avaliacao_especifica_online: vaga.cronograma?.data_avaliacao_especifica_online || '',
+      data_resultado_preliminar_avaliacao_especifica: vaga.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+      data_recurso_avaliacao_especifica: vaga.cronograma?.data_recurso_avaliacao_especifica || '',
+      data_resultado_recurso_avaliacao_especifica: vaga.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+      data_resultado_final_avaliacao_especifica: vaga.cronograma?.data_resultado_final_avaliacao_especifica || '',
+      data_entrevistas: vaga.cronograma?.data_entrevistas || '',
+      data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
+    });
 
-    // Pré-preenche o responsável pela validação:
-    // 1) usa o já atribuído se existir
-    // 2) senão, sugere com base na região da unidade (Goiás+ES → Isaac, etc.)
     if (vaga.validado_por) {
       setResponsavelValidacao(vaga.validado_por);
     } else {
@@ -154,6 +169,10 @@ export default function FilaAnalistaEditalPage() {
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
+      cronograma: {
+        ...selectedVaga.cronograma,
+        ...cronograma
+      }
     } as any);
 
     if (ok) {
@@ -180,6 +199,34 @@ export default function FilaAnalistaEditalPage() {
       return;
     }
 
+    // Validation of holiday dates
+    const dateFields: Record<string, string> = {
+      'Publicação do Edital': cronograma.data_publicacao_edital,
+      'Início das Inscrições': cronograma.data_inicio_inscricao,
+      'Fim das Inscrições': cronograma.data_fim_inscricao,
+      'Triagem': cronograma.data_triagem,
+      'Avaliação On-line': cronograma.data_avaliacao_especifica_online,
+      'Resultado Preliminar Avaliação': cronograma.data_resultado_preliminar_avaliacao_especifica,
+      'Recurso Avaliação': cronograma.data_recurso_avaliacao_especifica,
+      'Resultado Recurso': cronograma.data_resultado_recurso_avaliacao_especifica,
+      'Resultado Final Avaliação': cronograma.data_resultado_final_avaliacao_especifica,
+      'Entrevistas': cronograma.data_entrevistas,
+      'Resultado Final Seletivo': cronograma.data_resultado_final_seletivo,
+    };
+
+    for (const [fieldName, dateValue] of Object.entries(dateFields)) {
+      if (dateValue) {
+        const validation = await validateDate(dateValue, selectedVaga.unidade);
+        if (!validation.isValid) {
+          toast.error(
+            `A data da etapa ${fieldName} (${formatDate(dateValue)}) ${validation.message}. Por favor, ajuste a data antes de enviar para aprovação.`,
+            { duration: 6000 }
+          );
+          return;
+        }
+      }
+    }
+
     const respUser = (users || []).find((u: any) => u.id === responsavelValidacao);
     const respNome = respUser?.nome_completo || 'Não atribuído';
 
@@ -193,6 +240,10 @@ export default function FilaAnalistaEditalPage() {
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
       validado_por: responsavelValidacao,
+      cronograma: {
+        ...selectedVaga.cronograma,
+        ...cronograma
+      },
       historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
@@ -523,6 +574,117 @@ export default function FilaAnalistaEditalPage() {
                     </Button>
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-4 p-4 rounded-xl border border-amber-200 bg-amber-50/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-amber-600" />
+                  <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Publicação do Edital</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_publicacao_edital} 
+                      onChange={(e) => setCronograma({...cronograma, data_publicacao_edital: e.target.value})}
+                      className="bg-white border-amber-100"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Início das Inscrições</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_inicio_inscricao} 
+                      onChange={(e) => setCronograma({...cronograma, data_inicio_inscricao: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Fim das Inscrições</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_fim_inscricao} 
+                      onChange={(e) => setCronograma({...cronograma, data_fim_inscricao: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Data da Triagem</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_triagem} 
+                      onChange={(e) => setCronograma({...cronograma, data_triagem: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Avaliação On-line</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_avaliacao_especifica_online} 
+                      onChange={(e) => setCronograma({...cronograma, data_avaliacao_especifica_online: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Preliminar</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_preliminar_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_preliminar_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Período de Recurso</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_recurso_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_recurso_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Recurso</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_recurso_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_recurso_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Avaliação</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_final_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_final_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Entrevistas</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_entrevistas} 
+                      onChange={(e) => setCronograma({...cronograma, data_entrevistas: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Seletivo</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_final_seletivo} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_final_seletivo: e.target.value})}
+                      className="bg-white border-amber-100 font-bold"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-amber-600 font-medium italic mt-2">
+                  * As datas serão validadas contra feriados nacionais, municipais, vésperas e dias posteriores úteis.
+                </p>
               </div>
 
               <div className="space-y-2 p-3 rounded-md border border-blue-100 bg-blue-50/40">

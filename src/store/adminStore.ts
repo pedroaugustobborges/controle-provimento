@@ -3,12 +3,23 @@ import { User, AuditLog, SupportConfig, BackupRecord, Feedback } from '@/types/a
 import { supabase } from '@/integrations/supabase/client';
 import { generateTempPassword, getAdminPasswordErrorMessage } from '@/lib/adminPasswordUtils';
 
+export interface LocalHoliday {
+  id: string;
+  nome: string;
+  data: string;
+  tipo: 'municipal' | 'estadual';
+  cidade?: string;
+  estado: string;
+  created_at: string;
+}
+
 interface AdminState {
   users: User[];
   auditLogs: AuditLog[];
   supportConfigs: SupportConfig[];
   backups: BackupRecord[];
   feedbacks: Feedback[];
+  feriados: LocalHoliday[];
   currentUser: User | null;
   selectedRegion: string;
   selectedUnit: string;
@@ -20,6 +31,7 @@ interface AdminState {
   fetchAuditLogs: () => Promise<void>;
   fetchFeedbacks: () => Promise<void>;
   fetchCurrentProfile: () => Promise<void>;
+  fetchFeriados: () => Promise<void>;
 
   // User actions via edge function
   addUser: (user: Partial<User> & { email: string; password: string; sendWelcomeEmail?: boolean }) => Promise<void>;
@@ -45,6 +57,11 @@ interface AdminState {
   updateSupportConfig: (id: string, data: Partial<SupportConfig>) => Promise<void>;
   deleteSupportConfig: (id: string) => Promise<void>;
 
+  // Holiday actions
+  addFeriado: (feriado: Omit<LocalHoliday, 'id' | 'created_at'>) => Promise<void>;
+  updateFeriado: (id: string, feriado: Partial<LocalHoliday>) => Promise<void>;
+  deleteFeriado: (id: string) => Promise<void>;
+
   // Backup actions
   generateBackup: () => void;
 
@@ -64,6 +81,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   supportConfigs: [],
   backups: [],
   feedbacks: [],
+  feriados: [],
   currentUser: null,
   selectedRegion: 'all',
   selectedUnit: 'all',
@@ -321,6 +339,37 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const { error } = await supabase.from('support_configs').delete().eq('id', id);
     if (error) throw error;
     await get().fetchSupportConfigs();
+  },
+
+  fetchFeriados: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feriados_locais')
+        .select('*')
+        .order('data', { ascending: true });
+      if (error) throw error;
+      set({ feriados: (data || []) as LocalHoliday[] });
+    } catch (err) {
+      console.error('Erro ao buscar feriados:', err);
+    }
+  },
+
+  addFeriado: async (feriado) => {
+    const { error } = await supabase.from('feriados_locais').insert(feriado);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
+  updateFeriado: async (id, data) => {
+    const { error } = await supabase.from('feriados_locais').update(data).eq('id', id);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
+  deleteFeriado: async (id) => {
+    const { error } = await supabase.from('feriados_locais').delete().eq('id', id);
+    if (error) throw error;
+    await get().fetchFeriados();
   },
 
   generateBackup: () => set((s) => {

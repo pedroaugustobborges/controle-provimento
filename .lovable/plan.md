@@ -1,55 +1,41 @@
 
-## Plano — Auditoria e comprovação de proteção de dados (fluxo Edital)
+## Plano — Investigar e remover status fantasma `encaminhado_edital`
 
-### Objetivo
-Gerar relatório verificável de que as recentes correções de filtro (Redação ↔ Fila) **não causaram perda de dados** e que as proteções (auditoria, versionamento, soft-delete, RLS) estão ativas.
+### Contexto
+Usuário afirma que `encaminhado_edital` **não existe** como status válido no sistema, mas a auditoria revelou 7 vagas no banco com `status_fluxo_edital = 'encaminhado_edital'` e o código em `FilaAnalistaEditalPage.tsx` usa esse valor explicitamente para excluir vagas da Redação e mantê-las na Fila.
 
-### Etapas
+### Investigação necessária
+1. `src/types/vaga.ts` — listar valores oficiais de `status_fluxo_edital` (enum/union type).
+2. `src/pages/FilaEditaisPage.tsx` — confirmar qual status a Fila de Editais realmente usa para listar vagas.
+3. `src/pages/FilaAnalistaEditalPage.tsx` — revisar uso de `'encaminhado_edital'` no filtro.
+4. Buscar todas as ocorrências de `'encaminhado_edital'` no código (`code--search_files`).
+5. Identificar qual é o status correto que representa "vaga encaminhada/aguardando redação na Fila de Editais" (provavelmente `'em_redacao'`, `null`, ou outro valor da enum oficial).
 
-**1. Inventário de integridade (queries read-only no Supabase)**
-- `SELECT count(*) FROM vagas WHERE deleted_at IS NULL;` — total de vagas ativas.
-- `SELECT status_fluxo_edital, count(*) FROM vagas WHERE deleted_at IS NULL GROUP BY 1;` — distribuição por status.
-- `SELECT count(*) FROM vagas WHERE deleted_at IS NULL AND edital_id IS NOT NULL AND status_fluxo_edital IS NULL;` — vagas legadas (candidatas a backfill).
-- `SELECT count(*) FROM vagas WHERE etapa = 'em_redacao' AND status_fluxo_edital = 'encaminhado_edital';` — detectar inconsistências.
+### Possíveis cenários
+- **A**: `encaminhado_edital` é um valor legado/lixo gravado por bug antigo. Os 7 registros precisam ser corrigidos para o status oficial correspondente, e o código limpo.
+- **B**: `encaminhado_edital` foi renomeado em algum momento (ex: para `aguardando_redacao` ou similar) e o código ficou desatualizado.
+- **C**: Os 7 registros vieram de uma migração antiga e devem ser re-mapeados.
 
-**2. Validação de mútua exclusão Fila ↔ Redação**
-- Simular o filtro de cada página em SQL e cruzar resultados (`INTERSECT`) — deve retornar 0 linhas.
+### Implementação proposta
+1. **Identificar status correto** (após investigação) — mapear `encaminhado_edital` para o valor oficial.
+2. **Atualizar `FilaAnalistaEditalPage.tsx`**: remover referências a `'encaminhado_edital'` e usar a lógica correta de mútua exclusão entre Fila e Redação.
+3. **Atualizar `FilaEditaisPage.tsx`** se necessário, garantindo coerência.
+4. **Migration de correção** dos 7 registros: `UPDATE vagas SET status_fluxo_edital = '<valor_correto>' WHERE status_fluxo_edital = 'encaminhado_edital';` (após confirmar valor com o usuário).
+5. **Remover qualquer outra ocorrência** de `'encaminhado_edital'` no codebase.
 
-**3. Auditoria e versionamento**
-- `SELECT count(*), max(created_at) FROM audit_logs WHERE modulo IN ('vagas','editais') AND created_at > now() - interval '7 days';` — confirmar que alterações recentes geraram trilha.
-- Confirmar incremento de `version` em vagas alteradas (amostragem de 5 registros recentemente atualizados).
+### Validação
+- Buscar no código: 0 ocorrências de `'encaminhado_edital'` após limpeza.
+- Banco: 0 vagas com esse status.
+- Fila e Redação continuam com mútua exclusão.
 
-**4. Soft-delete e RLS**
-- Confirmar que filtros de listagem aplicam `deleted_at IS NULL` (revisão dos serviços).
-- Listar políticas RLS ativas das tabelas críticas (`vagas`, `editais`, `validacoes_editais`) — já temos no contexto, apenas validar.
+### Pergunta de confirmação (antes de executar)
+Antes de aplicar a migração de UPDATE nos 7 registros, vou primeiro investigar e propor o **valor correto** para substituição. Se houver ambiguidade, perguntarei via `ask_questions`.
 
-**5. Proposta de backfill (não-destrutivo)**
-- Migration sugerida (apresentar SQL, **não executar sem aprovação**):
-```sql
-UPDATE vagas
-SET status_fluxo_edital = 'em_redacao'
-WHERE deleted_at IS NULL
-  AND edital_id IS NOT NULL
-  AND status_fluxo_edital IS NULL
-  AND (etapa = 'em_redacao' OR etapa IS NULL);
-```
-- Backup automático via tabela `backups` antes de executar.
-
-**6. Roteiro de teste E2E manual no preview**
-- Documentar passos: criar vaga teste → enviar para edital → abrir Redação → devolver para Fila → confirmar exclusividade visual + persistência após refresh + entrada em `audit_logs`.
-
-### Entregáveis
-- Relatório consolidado (markdown) com:
-  - Tabela de contagens (antes/depois quando aplicável).
-  - Lista de vagas candidatas a backfill (se houver).
-  - Confirmação de auditoria ativa.
-  - SQL de backfill pronto (aguardando aprovação para execução).
-  - Checklist do teste E2E.
-
-### Arquivos a consultar (read-only)
-- `src/pages/FilaAnalistaEditalPage.tsx`, `src/pages/FilaEditaisPage.tsx` (filtros).
-- `src/services/databaseService.ts`, `src/store/vagasStore.ts` (persistência + soft-delete).
-- `src/hooks/useAudit.ts` (registro de auditoria).
+### Arquivos prováveis
+- `src/types/vaga.ts` (enum oficial)
+- `src/pages/FilaAnalistaEditalPage.tsx` (remover `encaminhado_edital`)
+- `src/pages/FilaEditaisPage.tsx` (validar lógica)
+- Migration SQL para corrigir os 7 registros
 
 ### Risco
-Nenhum — etapa puramente investigativa/diagnóstica. Backfill só é executado após aprovação explícita do usuário.
+Médio. Mexe em status de vagas reais e em filtros de duas páginas. Vou confirmar o valor de substituição antes de executar a migration. Validação end-to-end após aplicar.

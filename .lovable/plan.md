@@ -1,24 +1,35 @@
 
-## Plano — Corrigir exibição da animação de logout
+## Plano de execução
 
-### Causa raiz
-O overlay de loading está dentro do `LogoutConfirmDialog`, que é renderizado pelo `AppSidebar`. Quando `signOut()` executa, o `useAuth` atualiza `isAuthenticated → false`, o `App.tsx` re-renderiza e o `AppSidebar` (junto com o dialog e o overlay) é desmontado **antes** do usuário ver a animação. Além disso, `setLoggingOut(false)` no `finally` esconde o overlay imediatamente.
+### 1. Diagnóstico do bug "página em branco"
+- Ler `src/pages/UnidadePortalPage.tsx` e `src/App.tsx` (UnidadeRouteWrapper).
+- Verificar console do navegador via `code--read_console_logs` para identificar o erro real.
+- Hipóteses prováveis:
+  - Erro em `useAuth` quando aba nova não tem contexto inicial completo.
+  - Query do Supabase falhando por sessão não hidratada.
+  - Import quebrado / hook lançando exceção.
 
-### Solução
-1. **Criar estado global de logout** via Zustand (ex.: `useLogoutStore` com `isLoggingOut: boolean`) — ou adicionar a flag ao `adminStore` existente.
-2. **Criar componente `LogoutOverlay`** standalone, montado em `App.tsx` (fora do `AppSidebar` e fora das rotas protegidas), que escuta o estado global e renderiza o overlay full-screen quando ativo. Assim ele sobrevive ao desmonte do sidebar e do redirect.
-3. **Refatorar `LogoutConfirmDialog`**:
-   - Ao confirmar: setar `isLoggingOut = true` no store global, fechar o dialog imediatamente.
-   - Executar update da `user_sessions` + `signOut()` + `navigate('/login')`.
-   - Remover `setLoggingOut(false)` do `finally` — deixar o overlay visível até o redirect concluir. Limpar o flag no `LoginPage` (mount) ou após `navigate` com pequeno delay.
-4. **Montar `<LogoutOverlay />` em `App.tsx`** logo após o `BrowserRouter`/providers, garantindo que esteja sempre disponível.
+### 2. Correção do bug
+- Aplicar try/catch ou estados de loading/erro no componente.
+- Garantir que a sessão do Supabase é restaurada na nova aba (normalmente já é via `localStorage`, mas validar).
+- Adicionar fallback visual (skeleton/erro) para nunca ficar em branco.
 
-### Arquivos a alterar
-- `src/store/adminStore.ts` (ou novo `src/store/logoutStore.ts`) — adicionar `isLoggingOut` + setter.
-- `src/components/LogoutOverlay.tsx` (novo) — overlay standalone.
-- `src/components/LogoutConfirmDialog.tsx` — usar store global, remover overlay local.
-- `src/App.tsx` — montar `<LogoutOverlay />` global.
-- `src/pages/LoginPage.tsx` — limpar `isLoggingOut` no mount.
+### 3. Título e Favicon dinâmicos
+- Adicionar `useEffect` em `UnidadePortalPage.tsx`:
+  ```ts
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = 'Portal Unidade';
+    return () => { document.title = prevTitle; };
+  }, []);
+  ```
+- Para o favicon: criar utilitário que troca o `href` do `<link rel="icon">` e restaura no cleanup.
 
-### Validação
-- Clicar em "Sair" → modal aparece → confirmar → overlay com spinner permanece visível até chegar em `/login`.
+### 4. Pendência com o usuário
+**Pergunta:** o favicon do Portal Unidade deve ser:
+- (a) o mesmo favicon atual (`/favicon-agir-v2.png`) — apenas o título muda, OU
+- (b) um favicon novo — nesse caso, **preciso que envie a imagem** (PNG quadrado, idealmente 256x256).
+
+### 5. Validação
+- Abrir Portal Unidade → conferir conteúdo renderizado, título "Portal Unidade" na aba, favicon correto.
+- Voltar à aba principal → título e favicon originais preservados.

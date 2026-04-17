@@ -731,6 +731,9 @@ export default function FilaEditaisPage() {
                           <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
                             <Send className="h-4 w-4" />
                           </Button>
+                          <Button variant="ghost" size="icon" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50" title="Devolver ao Controle de Vagas" onClick={() => handleOpenReturnModal([v])}>
+                            <Undo2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

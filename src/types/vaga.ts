@@ -174,6 +174,7 @@ export interface Vaga {
   observacoes_unidade?: string;
   observacoes_edital?: string;
   status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao' | 'aguardando_aprovacao_gestor' | 'aprovado_administrativo' | 'publicado';
+  status_origem?: StatusVaga;
 
   historico: HistoricoItem[];
   origem: 'manual' | 'importada';

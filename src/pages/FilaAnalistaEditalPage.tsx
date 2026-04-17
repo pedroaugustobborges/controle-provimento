@@ -76,55 +76,79 @@ export default function FilaAnalistaEditalPage() {
 
   const [entrevistaConfig, setEntrevistaConfig] = useState<EntrevistaConfig>({ tipo: 'unica', datas: [''] });
 
+  const [batchConsumed, setBatchConsumed] = useState(false);
+
   useEffect(() => {
+    if (batchConsumed) return;
     const batchData = sessionStorage.getItem('grouped_vagas');
-    if (batchData) {
-      try {
-        const { vagaIds } = JSON.parse(batchData);
-        const batchVagas = vagas.filter(v => vagaIds.includes(v.id));
-        
-        if (batchVagas.length > 0) {
-          setIsBatchMode(true);
-          setSelectedBatchVagas(batchVagas);
-          setActiveTab(batchVagas[0].id);
-          
-          setNumeroEdital(batchVagas[0].numero_edital || '');
-          setNumeroProcesso(batchVagas[0].numero_processo || '');
-          setObsEdital(batchVagas[0].observacoes_edital || '');
-          
-          const cronos: Record<string, any> = {};
-          const configs: Record<string, EntrevistaConfig> = {};
-          
-          batchVagas.forEach(v => {
-            cronos[v.id] = {
-              data_publicacao_edital: v.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
-              data_inicio_inscricao: v.cronograma?.data_inicio_inscricao || '',
-              data_fim_inscricao: v.cronograma?.data_fim_inscricao || '',
-              data_triagem: v.cronograma?.data_triagem || '',
-              data_avaliacao_especifica_online: v.cronograma?.data_avaliacao_especifica_online || '',
-              data_resultado_preliminar_avaliacao_especifica: v.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
-              data_recurso_avaliacao_especifica: v.cronograma?.data_recurso_avaliacao_especifica || '',
-              data_resultado_recurso_avaliacao_especifica: v.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
-              data_resultado_final_avaliacao_especifica: v.cronograma?.data_resultado_final_avaliacao_especifica || '',
-              data_entrevistas: v.cronograma?.data_entrevistas || '',
-              data_resultado_final_seletivo: v.cronograma?.data_resultado_final_seletivo || ''
-            };
-            configs[v.id] = deriveEntrevistaConfig(
-              v.cronograma?.data_entrevistas,
-              (v.cronograma as any)?.entrevista_config
-            );
-          });
-          
-          setBatchCronogramas(cronos);
-          setBatchEntrevistaConfigs(configs);
-          setIsEditModalOpen(true);
-          sessionStorage.removeItem('grouped_vagas');
-        }
-      } catch (e) {
-        console.error('Erro ao processar lote de vagas:', e);
+    if (!batchData) return;
+    // Aguarda vagas carregarem antes de consumir
+    if (vagas.length === 0) return;
+
+    try {
+      const parsed = JSON.parse(batchData);
+      const { vagaIds, timestamp } = parsed;
+
+      // Expira lotes antigos (> 5 min)
+      if (timestamp && Date.now() - timestamp > 5 * 60 * 1000) {
+        sessionStorage.removeItem('grouped_vagas');
+        setBatchConsumed(true);
+        return;
       }
+
+      const batchVagas = vagas.filter(v => vagaIds.includes(v.id));
+
+      if (batchVagas.length === 0) {
+        // IDs ainda não materializados — aguardar próximo render, NÃO remover storage
+        console.warn('[grouped_vagas] vagas ainda não disponíveis, aguardando...', vagaIds);
+        return;
+      }
+
+      if (batchVagas.length < vagaIds.length) {
+        console.warn('[grouped_vagas] algumas vagas não encontradas:',
+          vagaIds.filter((id: string) => !batchVagas.find(v => v.id === id)));
+      }
+
+      setIsBatchMode(true);
+      setSelectedBatchVagas(batchVagas);
+      setActiveTab(batchVagas[0].id);
+      setNumeroEdital(batchVagas[0].numero_edital || '');
+      setNumeroProcesso(batchVagas[0].numero_processo || '');
+      setObsEdital(batchVagas[0].observacoes_edital || '');
+
+      const cronos: Record<string, any> = {};
+      const configs: Record<string, EntrevistaConfig> = {};
+      batchVagas.forEach(v => {
+        cronos[v.id] = {
+          data_publicacao_edital: v.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+          data_inicio_inscricao: v.cronograma?.data_inicio_inscricao || '',
+          data_fim_inscricao: v.cronograma?.data_fim_inscricao || '',
+          data_triagem: v.cronograma?.data_triagem || '',
+          data_avaliacao_especifica_online: v.cronograma?.data_avaliacao_especifica_online || '',
+          data_resultado_preliminar_avaliacao_especifica: v.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+          data_recurso_avaliacao_especifica: v.cronograma?.data_recurso_avaliacao_especifica || '',
+          data_resultado_recurso_avaliacao_especifica: v.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+          data_resultado_final_avaliacao_especifica: v.cronograma?.data_resultado_final_avaliacao_especifica || '',
+          data_entrevistas: v.cronograma?.data_entrevistas || '',
+          data_resultado_final_seletivo: v.cronograma?.data_resultado_final_seletivo || ''
+        };
+        configs[v.id] = deriveEntrevistaConfig(
+          v.cronograma?.data_entrevistas,
+          (v.cronograma as any)?.entrevista_config
+        );
+      });
+
+      setBatchCronogramas(cronos);
+      setBatchEntrevistaConfigs(configs);
+      setIsEditModalOpen(true);
+      sessionStorage.removeItem('grouped_vagas');
+      setBatchConsumed(true);
+    } catch (e) {
+      console.error('Erro ao processar lote de vagas:', e);
+      sessionStorage.removeItem('grouped_vagas');
+      setBatchConsumed(true);
     }
-  }, [vagas]);
+  }, [vagas, batchConsumed]);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [parsedCronogramas, setParsedCronogramas] = useState<ParsedCronograma[] | null>(null);

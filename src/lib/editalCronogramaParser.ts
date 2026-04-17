@@ -17,26 +17,114 @@ export interface ParsedEtapa {
   textoOriginal: string;
 }
 
+export interface ParsedCronograma {
+  /** Ex.: "Anexo VII" */
+  anexo: string;
+  /** Ex.: "Cirurgião Dentista – Odontopediatria" */
+  cargo: string;
+  etapas: ParsedEtapa[];
+}
+
 const stripAccents = (s: string) =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-/** Mapa de palavras-chave → chave do cronograma do sistema */
+/** Mapa de palavras-chave → chave do cronograma do sistema.
+ *  ATENÇÃO: ordem importa apenas no desempate por tamanho do match (mais longo vence).
+ *  Inclua sempre as variantes mais específicas primeiro nos `matchers`.
+ */
 const ETAPA_KEYWORDS: Array<{ key: string; label: string; matchers: string[] }> = [
   { key: 'data_publicacao_edital', label: 'Publicação do Edital', matchers: ['publicacao do edital', 'publicacao'] },
-  { key: 'data_inicio_inscricao', label: 'Início das Inscrições', matchers: ['inicio das inscricoes', 'inicio inscricoes', 'abertura das inscricoes', 'inicio inscricao'] },
-  { key: 'data_fim_inscricao', label: 'Fim das Inscrições', matchers: ['fim das inscricoes', 'encerramento das inscricoes', 'termino das inscricoes', 'fim inscricoes'] },
+
+  // Inscrições (singular ou plural)
+  { key: 'data_inicio_inscricao', label: 'Início das Inscrições', matchers: [
+    'inicio das inscricoes', 'inicio inscricoes', 'abertura das inscricoes',
+    'inicio inscricao', 'inicio da inscricao', 'abertura da inscricao',
+  ]},
+  { key: 'data_fim_inscricao', label: 'Fim das Inscrições', matchers: [
+    'fim das inscricoes', 'encerramento das inscricoes', 'termino das inscricoes',
+    'fim inscricoes', 'fim da inscricao', 'encerramento da inscricao', 'termino da inscricao',
+  ]},
+  // Genérico "Inscrição/Inscrições" (período em uma só linha) — chave especial tratada no parse de linhas
+  { key: 'inscricao_periodo', label: 'Período de Inscrição', matchers: [
+    'periodo de inscricao', 'periodo das inscricoes', 'inscricoes', 'inscricao',
+  ]},
+
   { key: 'data_triagem', label: 'Triagem', matchers: ['triagem'] },
-  { key: 'data_avaliacao_especifica_online', label: 'Avaliação Online', matchers: ['avaliacao especifica online', 'avaliacao online', 'avaliacao especifica'] },
-  { key: 'data_resultado_preliminar_avaliacao_especifica', label: 'Resultado Preliminar', matchers: ['resultado preliminar'] },
-  { key: 'data_recurso_avaliacao_especifica', label: 'Período de Recurso', matchers: ['periodo de recurso', 'prazo para recurso', 'recurso da avaliacao', 'recurso avaliacao', 'recurso'] },
-  { key: 'data_resultado_recurso_avaliacao_especifica', label: 'Resultado do Recurso', matchers: ['resultado do recurso', 'resultado recurso'] },
-  { key: 'data_resultado_final_avaliacao_especifica', label: 'Resultado Final Avaliação', matchers: ['resultado final da avaliacao', 'resultado final avaliacao'] },
-  { key: 'data_entrevistas', label: 'Entrevistas', matchers: ['entrevista', 'entrevistas'] },
-  { key: 'data_resultado_final_seletivo', label: 'Resultado Final Seletivo', matchers: ['resultado final do processo', 'resultado final seletivo', 'resultado final', 'homologacao'] },
+
+  // Avaliação Específica Online
+  { key: 'data_avaliacao_especifica_online', label: 'Avaliação Específica Online', matchers: [
+    'avaliacao especifica online', 'avaliacao online', 'avaliacao especifica',
+  ]},
+  { key: 'data_resultado_preliminar_avaliacao_especifica', label: 'Resultado Preliminar (Avaliação)', matchers: [
+    'resultado preliminar da avaliacao especifica online',
+    'resultado preliminar da avaliacao especifica',
+    'resultado preliminar da avaliacao',
+    'resultado preliminar',
+  ]},
+  { key: 'data_recurso_avaliacao_especifica', label: 'Prazo para Recurso (Avaliação)', matchers: [
+    'prazo para recurso da avaliacao especifica online',
+    'prazo para recurso da avaliacao especifica',
+    'prazo para recurso da avaliacao',
+    'periodo de recurso da avaliacao',
+    'periodo de recurso',
+    'prazo para recurso',
+    'recurso da avaliacao especifica',
+    'recurso avaliacao',
+  ]},
+  { key: 'data_resultado_recurso_avaliacao_especifica', label: 'Resultado do Recurso (Avaliação)', matchers: [
+    'resultado do recurso da avaliacao especifica online',
+    'resultado do recurso da avaliacao especifica',
+    'resultado do recurso da avaliacao',
+    'resultado do recurso',
+  ]},
+  { key: 'data_resultado_final_avaliacao_especifica', label: 'Resultado Final (Avaliação)', matchers: [
+    'resultado final da avaliacao especifica online',
+    'resultado final da avaliacao especifica',
+    'resultado final da avaliacao',
+  ]},
+
+  // Análise Curricular (Médico, Cirurgião-Dentista, etc.)
+  { key: 'data_envio_titulos', label: 'Envio de Títulos/Certificados', matchers: [
+    'envio dos certificados, titulos e aperfeicoamentos',
+    'envio dos certificados titulos e aperfeicoamentos',
+    'envio dos certificados',
+    'envio dos titulos',
+    'envio de titulos',
+    'envio de certificados',
+    'declaracao de experiencia profissional',
+  ]},
+  { key: 'data_resultado_preliminar_analise_curricular', label: 'Resultado Preliminar (Análise Curricular)', matchers: [
+    'resultado preliminar da analise curricular',
+    'resultado preliminar da analise',
+  ]},
+  { key: 'data_recurso_analise_curricular', label: 'Prazo para Recurso (Análise Curricular)', matchers: [
+    'prazo para recurso da analise curricular',
+    'periodo de recurso da analise curricular',
+    'recurso da analise curricular',
+  ]},
+  { key: 'data_resultado_recurso_analise_curricular', label: 'Resultado do Recurso (Análise Curricular)', matchers: [
+    'resultado do recurso da analise curricular',
+  ]},
+  { key: 'data_resultado_final_analise_curricular', label: 'Resultado Final (Análise Curricular)', matchers: [
+    'resultado final da analise curricular',
+  ]},
+
+  // Entrevistas
+  { key: 'data_entrevistas', label: 'Entrevistas', matchers: ['entrevistas', 'entrevista'] },
+
+  // Resultado Final do Processo
+  { key: 'data_resultado_final_seletivo', label: 'Resultado Final Seletivo', matchers: [
+    'resultado final do processo seletivo',
+    'resultado final do processo',
+    'resultado final seletivo',
+    'homologacao do resultado',
+    'homologacao',
+    'resultado final',
+  ]},
 ];
 
 function matchEtapa(rawName: string): { key: string; label: string } | null {
-  const norm = stripAccents(rawName);
+  const norm = stripAccents(rawName).replace(/\s+/g, ' ');
   // Prioriza match mais longo (mais específico)
   let best: { key: string; label: string; len: number } | null = null;
   for (const { key, label, matchers } of ETAPA_KEYWORDS) {
@@ -72,142 +160,223 @@ function extractDates(text: string): string[] {
 function detectTipo(text: string, datas: string[]): EntrevistaTipo {
   if (datas.length <= 1) return 'unica';
   const norm = stripAccents(text);
-  // Período: "a", "ate", "-"
+  // Período: "a", "ate", "-", "–", "—"
   if (/\d\s*(a|ate|–|—|-)\s*\d/.test(norm)) return 'periodo';
   // Duas datas explícitas: "e", ","
   if (datas.length === 2) return 'duas_datas';
   return 'periodo';
 }
 
+/** Indica se um texto identifica um anexo de cronograma de cargo. */
+function parseAnexoCronogramaTitle(text: string): { anexo: string; cargo: string } | null {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  const norm = stripAccents(clean);
+  // Procura o trecho "cronograma de selecao para o cargo de"
+  if (!norm.includes('cronograma de selecao para o cargo')) return null;
+
+  // Captura "Anexo XXX" no início, se houver
+  let anexo = '';
+  const mAnexo = clean.match(/Anexo\s+[IVXLCDM\d]+/i);
+  if (mAnexo) anexo = mAnexo[0];
+
+  // Captura cargo após "Cargo de:" ou "Cargo de"
+  const idx = norm.indexOf('cargo de');
+  let cargo = '';
+  if (idx !== -1) {
+    // posição correspondente em `clean` (mesmo tamanho pois apenas troca acentos)
+    let after = clean.substring(idx + 'cargo de'.length);
+    // remove ":" ou "-" iniciais
+    after = after.replace(/^\s*[:\-–—]\s*/, '').trim();
+    cargo = after.split(/\s{2,}|\n|\r/)[0].trim();
+    // limita comprimento sensato
+    if (cargo.length > 200) cargo = cargo.substring(0, 200);
+  }
+
+  return { anexo: anexo || 'Cronograma', cargo: cargo || '(cargo não identificado)' };
+}
+
 export interface CronogramaParseResult {
   ok: boolean;
   errorMessage?: string;
-  cargo?: string;
-  etapas: ParsedEtapa[];
+  cronogramas: ParsedCronograma[];
+}
+
+/** Extrai etapas de uma <table>. Trata "Inscrição" (período) abrindo em início+fim. */
+function extractEtapasFromTable(table: HTMLTableElement): ParsedEtapa[] {
+  const rows = Array.from(table.querySelectorAll('tr'));
+  if (rows.length < 2) return [];
+
+  const headerCells = Array.from(rows[0].querySelectorAll('th, td'))
+    .map((c) => stripAccents(c.textContent || ''));
+  let etapaCol = headerCells.findIndex((h) => h.includes('etapa'));
+  let dataCol = headerCells.findIndex((h) => h.includes('data'));
+  let startRow = 1;
+
+  if (etapaCol === -1 || dataCol === -1) {
+    // tenta segunda linha como cabeçalho
+    if (rows.length >= 2) {
+      const h2 = Array.from(rows[1].querySelectorAll('th, td')).map((c) => stripAccents(c.textContent || ''));
+      const e2 = h2.findIndex((h) => h.includes('etapa'));
+      const d2 = h2.findIndex((h) => h.includes('data'));
+      if (e2 !== -1 && d2 !== -1) {
+        etapaCol = e2;
+        dataCol = d2;
+        startRow = 2;
+      }
+    }
+  }
+
+  if (etapaCol === -1 || dataCol === -1) return [];
+
+  const etapas: ParsedEtapa[] = [];
+  for (let i = startRow; i < rows.length; i++) {
+    const cells = Array.from(rows[i].querySelectorAll('th, td'));
+    if (cells.length <= Math.max(etapaCol, dataCol)) continue;
+    const etapaText = (cells[etapaCol].textContent || '').trim();
+    const dataText = (cells[dataCol].textContent || '').trim();
+    if (!etapaText && !dataText) continue;
+
+    const datas = extractDates(dataText);
+    const tipo = detectTipo(dataText, datas);
+    const match = matchEtapa(etapaText);
+
+    // Caso especial: linha "Inscrição/Inscrições" com período → expande para início+fim
+    if (match && match.key === 'inscricao_periodo') {
+      if (datas.length >= 2) {
+        etapas.push({
+          etapaOriginal: etapaText,
+          cronogramaKey: 'data_inicio_inscricao',
+          cronogramaLabel: 'Início das Inscrições',
+          tipo: 'unica',
+          datas: [datas[0]],
+          textoOriginal: dataText,
+        });
+        etapas.push({
+          etapaOriginal: etapaText,
+          cronogramaKey: 'data_fim_inscricao',
+          cronogramaLabel: 'Fim das Inscrições',
+          tipo: 'unica',
+          datas: [datas[datas.length - 1]],
+          textoOriginal: dataText,
+        });
+        continue;
+      }
+      if (datas.length === 1) {
+        etapas.push({
+          etapaOriginal: etapaText,
+          cronogramaKey: 'data_inicio_inscricao',
+          cronogramaLabel: 'Início das Inscrições',
+          tipo: 'unica',
+          datas: [datas[0]],
+          textoOriginal: dataText,
+        });
+        continue;
+      }
+    }
+
+    etapas.push({
+      etapaOriginal: etapaText,
+      cronogramaKey: match?.key ?? null,
+      cronogramaLabel: match?.label ?? null,
+      tipo,
+      datas,
+      textoOriginal: dataText,
+    });
+  }
+
+  return etapas;
 }
 
 /**
- * Parseia um arquivo .docx procurando:
- *   1. Heading/parágrafo contendo "ANEXO"
- *   2. Tabela seguinte que tenha "Cronograma de Seleção para o Cargo de ..."
- *   3. Colunas "ETAPA" e "DATA"
+ * Parseia um arquivo .docx procurando TODOS os anexos contendo
+ * "Cronograma de Seleção para o Cargo de: ..." e a próxima tabela
+ * com colunas ETAPA + DATA.
  */
 export async function parseCronogramaFromDocx(file: File): Promise<CronogramaParseResult> {
   try {
     const arrayBuffer = await file.arrayBuffer();
     const { value: html } = await mammoth.convertToHtml({ arrayBuffer });
 
-    // Parse HTML em DOM
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const allNodes = Array.from(doc.body.querySelectorAll('*'));
+    const tables = Array.from(doc.body.querySelectorAll('table')) as HTMLTableElement[];
 
-    // 1. Localiza nó com "ANEXO"
-    let anexoIdx = -1;
+    // 1. Localiza TODOS os títulos de cronograma de cargo, com sua posição no DOM
+    type TitleHit = { idx: number; anexo: string; cargo: string };
+    const titles: TitleHit[] = [];
     for (let i = 0; i < allNodes.length; i++) {
-      const txt = stripAccents(allNodes[i].textContent || '');
-      if (/^anexo\b/.test(txt) || txt.startsWith('anexo ')) {
-        anexoIdx = i;
-        break;
-      }
-    }
-    if (anexoIdx === -1) {
-      return { ok: false, errorMessage: 'Não foi encontrado um título começando com "ANEXO" no documento.', etapas: [] };
-    }
-
-    // 2. Procura próxima tabela após ANEXO; também valida cabeçalho "Cronograma de Seleção para o Cargo"
-    const tables = Array.from(doc.body.querySelectorAll('table'));
-    let cronogramaTable: HTMLTableElement | null = null;
-    let cargo: string | undefined;
-
-    for (const table of tables) {
-      // Verifica posição relativa: tabela deve aparecer após o ANEXO
-      const pos = anexoIdx === -1 ? 0 : allNodes.indexOf(table);
-      if (pos !== -1 && pos < anexoIdx) continue;
-
-      const tableText = stripAccents(table.textContent || '');
-      if (tableText.includes('cronograma de selecao para o cargo')) {
-        cronogramaTable = table as HTMLTableElement;
-        // Tenta extrair cargo
-        const fullText = (table.textContent || '');
-        const mCargo = fullText.match(/Cargo de\s+([^\n]+?)(?:\s{2,}|$|ETAPA)/i);
-        if (mCargo) cargo = mCargo[1].trim();
-        break;
+      const node = allNodes[i];
+      // Ignora nós dentro de tabelas para não confundir células com títulos
+      if (node.closest('table')) continue;
+      const txt = (node.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!txt) continue;
+      const parsed = parseAnexoCronogramaTitle(txt);
+      if (parsed) {
+        // Evita duplicação quando o mesmo texto está em parent + child
+        const last = titles[titles.length - 1];
+        if (last && last.cargo === parsed.cargo && Math.abs(last.idx - i) < 3) continue;
+        titles.push({ idx: i, anexo: parsed.anexo, cargo: parsed.cargo });
       }
     }
 
-    // Fallback: aceita qualquer tabela com colunas ETAPA + DATA após ANEXO
-    if (!cronogramaTable) {
-      for (const table of tables) {
-        const pos = allNodes.indexOf(table);
-        if (pos < anexoIdx) continue;
-        const headers = Array.from(table.querySelectorAll('tr')[0]?.querySelectorAll('th, td') || [])
-          .map((c) => stripAccents(c.textContent || ''));
-        if (headers.some((h) => h.includes('etapa')) && headers.some((h) => h.includes('data'))) {
-          cronogramaTable = table as HTMLTableElement;
-          break;
+    const cronogramas: ParsedCronograma[] = [];
+
+    if (titles.length > 0) {
+      // 2. Para cada título, achar a próxima tabela após ele (e antes do próximo título)
+      for (let t = 0; t < titles.length; t++) {
+        const start = titles[t].idx;
+        const end = t + 1 < titles.length ? titles[t + 1].idx : Infinity;
+        const table = tables.find((tbl) => {
+          const pos = allNodes.indexOf(tbl);
+          return pos > start && pos < end;
+        });
+        if (!table) continue;
+        const etapas = extractEtapasFromTable(table);
+        if (etapas.length > 0) {
+          cronogramas.push({ anexo: titles[t].anexo, cargo: titles[t].cargo, etapas });
         }
       }
     }
 
-    if (!cronogramaTable) {
-      return {
-        ok: false,
-        errorMessage: 'Não foi possível localizar a tabela "Cronograma de Seleção para o Cargo de..." após o ANEXO.',
-        etapas: [],
-      };
-    }
-
-    // 3. Identifica colunas ETAPA e DATA
-    const rows = Array.from(cronogramaTable.querySelectorAll('tr'));
-    if (rows.length < 2) {
-      return { ok: false, errorMessage: 'A tabela do cronograma está vazia.', etapas: [], cargo };
-    }
-
-    const headerCells = Array.from(rows[0].querySelectorAll('th, td')).map((c) => stripAccents(c.textContent || ''));
-    let etapaCol = headerCells.findIndex((h) => h.includes('etapa'));
-    let dataCol = headerCells.findIndex((h) => h === 'data' || h.startsWith('data ') || h.includes('data'));
-
-    // Se cabeçalho não estiver na primeira linha, tenta a segunda
-    if (etapaCol === -1 || dataCol === -1) {
-      const headerCells2 = Array.from(rows[1].querySelectorAll('th, td')).map((c) => stripAccents(c.textContent || ''));
-      const e2 = headerCells2.findIndex((h) => h.includes('etapa'));
-      const d2 = headerCells2.findIndex((h) => h.includes('data'));
-      if (e2 !== -1 && d2 !== -1) {
-        etapaCol = e2;
-        dataCol = d2;
-        rows.splice(0, 1);
+    // 3. Fallback: nenhum título encontrado — procura por qualquer tabela com colunas ETAPA + DATA após "ANEXO"
+    if (cronogramas.length === 0) {
+      let anexoIdx = -1;
+      for (let i = 0; i < allNodes.length; i++) {
+        const txt = stripAccents(allNodes[i].textContent || '');
+        if (/^anexo\b/.test(txt) || txt.startsWith('anexo ')) {
+          anexoIdx = i;
+          break;
+        }
+      }
+      for (const table of tables) {
+        const pos = allNodes.indexOf(table);
+        if (anexoIdx !== -1 && pos < anexoIdx) continue;
+        const headers = Array.from(table.querySelectorAll('tr')[0]?.querySelectorAll('th, td') || [])
+          .map((c) => stripAccents(c.textContent || ''));
+        if (headers.some((h) => h.includes('etapa')) && headers.some((h) => h.includes('data'))) {
+          const etapas = extractEtapasFromTable(table);
+          if (etapas.length > 0) {
+            cronogramas.push({ anexo: 'Cronograma', cargo: '(cargo não identificado)', etapas });
+          }
+        }
       }
     }
 
-    if (etapaCol === -1 || dataCol === -1) {
-      return { ok: false, errorMessage: 'Cabeçalho da tabela não contém colunas "ETAPA" e "DATA".', etapas: [], cargo };
+    if (cronogramas.length === 0) {
+      return {
+        ok: false,
+        errorMessage:
+          'Não foi possível localizar nenhum "Anexo … Cronograma de Seleção para o Cargo de …" com a tabela de etapas.',
+        cronogramas: [],
+      };
     }
 
-    // 4. Extrai linhas
-    const etapas: ParsedEtapa[] = [];
-    for (let i = 1; i < rows.length; i++) {
-      const cells = Array.from(rows[i].querySelectorAll('th, td'));
-      if (cells.length <= Math.max(etapaCol, dataCol)) continue;
-      const etapaText = (cells[etapaCol].textContent || '').trim();
-      const dataText = (cells[dataCol].textContent || '').trim();
-      if (!etapaText && !dataText) continue;
-
-      const datas = extractDates(dataText);
-      const tipo = detectTipo(dataText, datas);
-      const match = matchEtapa(etapaText);
-
-      etapas.push({
-        etapaOriginal: etapaText,
-        cronogramaKey: match?.key ?? null,
-        cronogramaLabel: match?.label ?? null,
-        tipo,
-        datas,
-        textoOriginal: dataText,
-      });
-    }
-
-    return { ok: true, cargo, etapas };
+    return { ok: true, cronogramas };
   } catch (err: any) {
-    return { ok: false, errorMessage: `Erro ao ler o arquivo Word: ${err?.message ?? err}`, etapas: [] };
+    return {
+      ok: false,
+      errorMessage: `Erro ao ler o arquivo Word: ${err?.message ?? err}`,
+      cronogramas: [],
+    };
   }
 }

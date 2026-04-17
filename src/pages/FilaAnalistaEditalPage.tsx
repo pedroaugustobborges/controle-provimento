@@ -30,6 +30,8 @@ import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sugerirResponsavelValidacao } from '@/data/analistasAdministrativos';
 import { validateDate } from '@/services/holidayService';
+import { EntrevistaDateField, EntrevistaConfig, deriveEntrevistaConfig, primaryEntrevistaDate } from '@/components/EntrevistaDateField';
+import { CronogramaImportDialog, CronogramaImportResult } from '@/components/CronogramaImportDialog';
 
 export default function FilaAnalistaEditalPage() {
   const navigate = useNavigate();
@@ -63,6 +65,12 @@ export default function FilaAnalistaEditalPage() {
     data_entrevistas: '',
     data_resultado_final_seletivo: ''
   });
+
+  // Configuração estruturada da etapa Entrevistas (1 data | 2 datas | período)
+  const [entrevistaConfig, setEntrevistaConfig] = useState<EntrevistaConfig>({ tipo: 'unica', datas: [''] });
+
+  // Importação automática do cronograma a partir de .docx
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Modal de Publicação
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -143,6 +151,11 @@ export default function FilaAnalistaEditalPage() {
       data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
     });
 
+    setEntrevistaConfig(deriveEntrevistaConfig(
+      vaga.cronograma?.data_entrevistas,
+      (vaga.cronograma as any)?.entrevista_config
+    ));
+
     if (vaga.validado_por) {
       setResponsavelValidacao(vaga.validado_por);
     } else {
@@ -158,6 +171,23 @@ export default function FilaAnalistaEditalPage() {
     setIsEditModalOpen(true);
   };
 
+  /** Mescla cronograma + entrevista_config + sincroniza data_entrevistas (1ª data) */
+  const buildCronogramaPayload = () => ({
+    ...selectedVaga?.cronograma,
+    ...cronograma,
+    data_entrevistas: primaryEntrevistaDate(entrevistaConfig) || cronograma.data_entrevistas || '',
+    entrevista_config: entrevistaConfig,
+  });
+
+  const handleApplyImport = (result: CronogramaImportResult) => {
+    setCronograma((prev: any) => ({ ...prev, ...result.values }));
+    if (result.entrevistaConfig) {
+      setEntrevistaConfig(result.entrevistaConfig);
+    } else if (result.values.data_entrevistas) {
+      setEntrevistaConfig({ tipo: 'unica', datas: [result.values.data_entrevistas] });
+    }
+  };
+
   const handleSaveDraft = async () => {
     if (!selectedVaga) return;
 
@@ -169,10 +199,7 @@ export default function FilaAnalistaEditalPage() {
       numero_processo: numeroProcesso,
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
-      cronograma: {
-        ...selectedVaga.cronograma,
-        ...cronograma
-      }
+      cronograma: buildCronogramaPayload(),
     } as any);
 
     if (ok) {
@@ -240,10 +267,7 @@ export default function FilaAnalistaEditalPage() {
       arquivo_edital: nomeArquivo,
       url_reachr: reachrUrl,
       validado_por: responsavelValidacao,
-      cronograma: {
-        ...selectedVaga.cronograma,
-        ...cronograma
-      },
+      cronograma: buildCronogramaPayload(),
       historico: [...(selectedVaga.historico || []), {
         id: `h-${Date.now()}`,
         data: new Date().toISOString().split('T')[0],
@@ -274,6 +298,10 @@ export default function FilaAnalistaEditalPage() {
       data_entrevistas: vaga.cronograma?.data_entrevistas || '',
       data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
     });
+    setEntrevistaConfig(deriveEntrevistaConfig(
+      vaga.cronograma?.data_entrevistas,
+      (vaga.cronograma as any)?.entrevista_config
+    ));
     setUnidadeTrabalho(vaga.unidade_trabalho || vaga.unidade || '');
     setDistribuicaoVagas(vaga.distribuicao_vagas || {});
     setUnidadesBanco(vaga.unidades_banco_talentos || []);
@@ -291,10 +319,7 @@ export default function FilaAnalistaEditalPage() {
       unidade_trabalho: unidadeTrabalho,
       distribuicao_vagas: distribuicaoVagas,
       unidades_banco_talentos: unidadesBanco,
-      cronograma: {
-        ...selectedVaga.cronograma,
-        ...cronograma
-      },
+      cronograma: buildCronogramaPayload(),
       acompanhamento: {
         ...selectedVaga.acompanhamento,
         gerou_banco: isTalentBank,
@@ -577,9 +602,21 @@ export default function FilaAnalistaEditalPage() {
               </div>
 
               <div className="space-y-4 p-4 rounded-xl border border-amber-200 bg-amber-50/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-amber-600" />
-                  <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-amber-600" />
+                    <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsImportOpen(true)}
+                    className="h-8 gap-1 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
+                  >
+                    <FileUp className="h-3.5 w-3.5" />
+                    <span className="text-xs">Importar do Word</span>
+                  </Button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -663,15 +700,10 @@ export default function FilaAnalistaEditalPage() {
                       className="bg-white"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Entrevistas</Label>
-                    <Input 
-                      type="date" 
-                      value={cronograma.data_entrevistas} 
-                      onChange={(e) => setCronograma({...cronograma, data_entrevistas: e.target.value})}
-                      className="bg-white"
-                    />
-                  </div>
+                  <EntrevistaDateField
+                    value={entrevistaConfig}
+                    onChange={setEntrevistaConfig}
+                  />
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Seletivo</Label>
                     <Input 
@@ -954,12 +986,11 @@ export default function FilaAnalistaEditalPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500 uppercase">Data da Entrevista</Label>
-                  <Input 
-                    type="date" 
-                    value={cronograma.data_entrevistas} 
-                    onChange={(e) => setCronograma({...cronograma, data_entrevistas: e.target.value})}
+                <div className="col-span-1 sm:col-span-2">
+                  <EntrevistaDateField
+                    value={entrevistaConfig}
+                    onChange={setEntrevistaConfig}
+                    label="Data da Entrevista"
                   />
                 </div>
 
@@ -983,6 +1014,12 @@ export default function FilaAnalistaEditalPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CronogramaImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        onApply={handleApplyImport}
+      />
     </div>
   );
 }

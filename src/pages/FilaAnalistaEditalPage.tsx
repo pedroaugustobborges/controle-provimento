@@ -151,6 +151,11 @@ export default function FilaAnalistaEditalPage() {
       data_resultado_final_seletivo: vaga.cronograma?.data_resultado_final_seletivo || ''
     });
 
+    setEntrevistaConfig(deriveEntrevistaConfig(
+      vaga.cronograma?.data_entrevistas,
+      (vaga.cronograma as any)?.entrevista_config
+    ));
+
     if (vaga.validado_por) {
       setResponsavelValidacao(vaga.validado_por);
     } else {

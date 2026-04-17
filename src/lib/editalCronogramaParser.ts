@@ -456,41 +456,50 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
   // 5. Extração de cronogramas
   const rejections: TableRejection[] = [];
   try {
-    type TitleHit = { idx: number; anexo: string; cargo: string };
-    const titles: TitleHit[] = [];
-    const TITLE_TAGS = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'B', 'STRONG', 'I', 'EM', 'LI']);
+    type TitleHit = { idx: number; anexo: string; cargo: string; inTable: boolean };
+    const allTitleHits: TitleHit[] = [];
+    const TITLE_TAGS = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'TD', 'TH']);
     for (let i = 0; i < allNodes.length; i++) {
       const node = allNodes[i];
-      if (node.closest('table')) continue;
       if (!TITLE_TAGS.has(node.tagName)) continue;
       const txt = normalizeText(node.textContent || '');
       if (!txt || txt.length > 500) continue;
       const parsed = parseAnexoCronogramaTitle(txt);
-      if (parsed) {
-        const last = titles[titles.length - 1];
-        if (last && last.cargo === parsed.cargo && Math.abs(last.idx - i) < 5) continue;
-        titles.push({ idx: i, anexo: parsed.anexo, cargo: parsed.cargo });
-      }
+      if (!parsed) continue;
+      const last = allTitleHits[allTitleHits.length - 1];
+      if (last && last.cargo === parsed.cargo && Math.abs(last.idx - i) < 8) continue;
+      allTitleHits.push({ idx: i, anexo: parsed.anexo, cargo: parsed.cargo, inTable: !!node.closest('table') });
     }
 
+    // Preferir títulos DENTRO de tabelas (são as células-título do próprio cronograma).
+    // Se houver, ignoramos os títulos de fora (que costumam estar no sumário do edital,
+    // bem antes das tabelas reais — o que faz a associação por proximidade pegar tabelas
+    // erradas, como Anexos I-IV).
+    const inTableHits = allTitleHits.filter((h) => h.inTable);
+    const titles: TitleHit[] = inTableHits.length > 0 ? inTableHits : allTitleHits;
+
     const cronogramas: ParsedCronograma[] = [];
+    const usedTables = new Set<HTMLTableElement>();
 
     if (titles.length > 0) {
       for (let t = 0; t < titles.length; t++) {
         const start = titles[t].idx;
-        const end = t + 1 < titles.length ? titles[t + 1].idx : Infinity;
-        const table = tables.find((tbl) => {
+        // Próxima tabela depois do título que ainda não foi usada e tenha cabeçalho ETAPA+DATA.
+        for (const tbl of tables) {
+          if (usedTables.has(tbl)) continue;
           const pos = allNodes.indexOf(tbl);
-          return pos > start && pos < end;
-        });
-        if (!table) continue;
-        const tIdx = tables.indexOf(table);
-        const etapas = extractEtapasFromTable(table, rejections, tIdx);
-        if (etapas.length > 0) {
-          cronogramas.push({ anexo: titles[t].anexo, cargo: titles[t].cargo, etapas });
+          if (pos <= start) continue;
+          const tIdx = tables.indexOf(tbl);
+          const etapas = extractEtapasFromTable(tbl, rejections, tIdx);
+          if (etapas.length > 0) {
+            usedTables.add(tbl);
+            cronogramas.push({ anexo: titles[t].anexo, cargo: titles[t].cargo, etapas });
+            break;
+          }
         }
       }
     }
+
 
     // Fallback: tentar QUALQUER tabela com cabeçalho ETAPA+DATA, mesmo sem título identificado
     if (cronogramas.length === 0) {

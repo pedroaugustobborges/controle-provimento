@@ -248,9 +248,31 @@ export default function FilaEditaisPage() {
     }
     if (selectedVagas.length === 0) return;
 
-    let successCount = 0;
-    for (const vaga of selectedVagas) {
-      const ok = await updateVagaAsync(vaga.id, {
+    // 1. Persiste o lote ANTES de qualquer await — garante que está disponível ao navegar
+    try {
+      const batchPayload = {
+        vagaIds: selectedVagas.map(v => v.id),
+        unidade: selectedVagas[0].unidade,
+        regiao: getRegiaoAgrupamento(selectedVagas[0].unidade),
+        timestamp: Date.now(),
+        obs: batchObs,
+      };
+      sessionStorage.setItem('grouped_vagas', JSON.stringify(batchPayload));
+    } catch (e) {
+      console.error('Erro ao salvar lote no storage:', e);
+    }
+
+    // 2. Fecha modal e navega imediatamente — atualizações de status seguem em background
+    setIsBatchSendOpen(false);
+    const totalCount = selectedVagas.length;
+    const vagasParaAtualizar = [...selectedVagas];
+    setSelectedRows(new Set());
+    toast.success(`${totalCount} cargos encaminhados como edital agrupado para a Redação.`);
+    navigate('/fila-analista-edital');
+
+    // 3. Atualiza status em paralelo (sem bloquear UI)
+    Promise.all(vagasParaAtualizar.map(vaga =>
+      updateVagaAsync(vaga.id, {
         status: 'ACOMPANHAMENTO DE EDITAL',
         status_fluxo_edital: 'encaminhado_edital',
         etapa: 'encaminhado_edital',
@@ -261,33 +283,13 @@ export default function FilaEditaisPage() {
         historico: [...(vaga.historico || []), {
           id: `h-${Date.now()}-${vaga.id}`,
           data: new Date().toISOString().split('T')[0],
-          descricao: `Vaga encaminhada para redação como parte de edital agrupado (${selectedVagas.length} cargos). Obs: ${batchObs || 'Sem observações'}`,
+          descricao: `Vaga encaminhada para redação como parte de edital agrupado (${totalCount} cargos). Obs: ${batchObs || 'Sem observações'}`,
           usuario: currentUser?.nome_completo || 'Analista da Unidade'
         }]
-      } as any);
-      if (ok) {
-        successCount++;
-        notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', batchObs ? `Obs: ${batchObs}` : '');
-      }
-    }
-
-    // Persiste o lote para a página de Redação consumir
-    try {
-      const batchPayload = {
-        vagaIds: selectedVagas.map(v => v.id),
-        unidade: selectedVagas[0].unidade,
-        createdAt: new Date().toISOString(),
-        obs: batchObs,
-      };
-      const existing = JSON.parse(sessionStorage.getItem('edital-batches') || '[]');
-      existing.push(batchPayload);
-      sessionStorage.setItem('edital-batches', JSON.stringify(existing));
-    } catch {}
-
-    setIsBatchSendOpen(false);
-    setSelectedRows(new Set());
-    toast.success(`${successCount} cargos encaminhados como edital agrupado para a Redação.`);
-    navigate('/fila-editais-analista');
+      } as any).then(ok => {
+        if (ok) notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', batchObs ? `Obs: ${batchObs}` : '');
+      })
+    )).catch(err => console.error('Erro ao atualizar vagas em lote:', err));
   };
 
   const unidadesAgrupadas = useMemo(() => {

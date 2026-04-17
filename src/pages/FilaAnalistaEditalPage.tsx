@@ -19,7 +19,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
 import { StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, getStatusFluxoLabel } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, getStatusFluxoLabel, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogFooter, DialogDescription 
@@ -76,55 +76,79 @@ export default function FilaAnalistaEditalPage() {
 
   const [entrevistaConfig, setEntrevistaConfig] = useState<EntrevistaConfig>({ tipo: 'unica', datas: [''] });
 
+  const [batchConsumed, setBatchConsumed] = useState(false);
+
   useEffect(() => {
+    if (batchConsumed) return;
     const batchData = sessionStorage.getItem('grouped_vagas');
-    if (batchData) {
-      try {
-        const { vagaIds } = JSON.parse(batchData);
-        const batchVagas = vagas.filter(v => vagaIds.includes(v.id));
-        
-        if (batchVagas.length > 0) {
-          setIsBatchMode(true);
-          setSelectedBatchVagas(batchVagas);
-          setActiveTab(batchVagas[0].id);
-          
-          setNumeroEdital(batchVagas[0].numero_edital || '');
-          setNumeroProcesso(batchVagas[0].numero_processo || '');
-          setObsEdital(batchVagas[0].observacoes_edital || '');
-          
-          const cronos: Record<string, any> = {};
-          const configs: Record<string, EntrevistaConfig> = {};
-          
-          batchVagas.forEach(v => {
-            cronos[v.id] = {
-              data_publicacao_edital: v.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
-              data_inicio_inscricao: v.cronograma?.data_inicio_inscricao || '',
-              data_fim_inscricao: v.cronograma?.data_fim_inscricao || '',
-              data_triagem: v.cronograma?.data_triagem || '',
-              data_avaliacao_especifica_online: v.cronograma?.data_avaliacao_especifica_online || '',
-              data_resultado_preliminar_avaliacao_especifica: v.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
-              data_recurso_avaliacao_especifica: v.cronograma?.data_recurso_avaliacao_especifica || '',
-              data_resultado_recurso_avaliacao_especifica: v.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
-              data_resultado_final_avaliacao_especifica: v.cronograma?.data_resultado_final_avaliacao_especifica || '',
-              data_entrevistas: v.cronograma?.data_entrevistas || '',
-              data_resultado_final_seletivo: v.cronograma?.data_resultado_final_seletivo || ''
-            };
-            configs[v.id] = deriveEntrevistaConfig(
-              v.cronograma?.data_entrevistas,
-              (v.cronograma as any)?.entrevista_config
-            );
-          });
-          
-          setBatchCronogramas(cronos);
-          setBatchEntrevistaConfigs(configs);
-          setIsEditModalOpen(true);
-          sessionStorage.removeItem('grouped_vagas');
-        }
-      } catch (e) {
-        console.error('Erro ao processar lote de vagas:', e);
+    if (!batchData) return;
+    // Aguarda vagas carregarem antes de consumir
+    if (vagas.length === 0) return;
+
+    try {
+      const parsed = JSON.parse(batchData);
+      const { vagaIds, timestamp } = parsed;
+
+      // Expira lotes antigos (> 5 min)
+      if (timestamp && Date.now() - timestamp > 5 * 60 * 1000) {
+        sessionStorage.removeItem('grouped_vagas');
+        setBatchConsumed(true);
+        return;
       }
+
+      const batchVagas = vagas.filter(v => vagaIds.includes(v.id));
+
+      if (batchVagas.length === 0) {
+        // IDs ainda não materializados — aguardar próximo render, NÃO remover storage
+        console.warn('[grouped_vagas] vagas ainda não disponíveis, aguardando...', vagaIds);
+        return;
+      }
+
+      if (batchVagas.length < vagaIds.length) {
+        console.warn('[grouped_vagas] algumas vagas não encontradas:',
+          vagaIds.filter((id: string) => !batchVagas.find(v => v.id === id)));
+      }
+
+      setIsBatchMode(true);
+      setSelectedBatchVagas(batchVagas);
+      setActiveTab(batchVagas[0].id);
+      setNumeroEdital(batchVagas[0].numero_edital || '');
+      setNumeroProcesso(batchVagas[0].numero_processo || '');
+      setObsEdital(batchVagas[0].observacoes_edital || '');
+
+      const cronos: Record<string, any> = {};
+      const configs: Record<string, EntrevistaConfig> = {};
+      batchVagas.forEach(v => {
+        cronos[v.id] = {
+          data_publicacao_edital: v.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+          data_inicio_inscricao: v.cronograma?.data_inicio_inscricao || '',
+          data_fim_inscricao: v.cronograma?.data_fim_inscricao || '',
+          data_triagem: v.cronograma?.data_triagem || '',
+          data_avaliacao_especifica_online: v.cronograma?.data_avaliacao_especifica_online || '',
+          data_resultado_preliminar_avaliacao_especifica: v.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+          data_recurso_avaliacao_especifica: v.cronograma?.data_recurso_avaliacao_especifica || '',
+          data_resultado_recurso_avaliacao_especifica: v.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+          data_resultado_final_avaliacao_especifica: v.cronograma?.data_resultado_final_avaliacao_especifica || '',
+          data_entrevistas: v.cronograma?.data_entrevistas || '',
+          data_resultado_final_seletivo: v.cronograma?.data_resultado_final_seletivo || ''
+        };
+        configs[v.id] = deriveEntrevistaConfig(
+          v.cronograma?.data_entrevistas,
+          (v.cronograma as any)?.entrevista_config
+        );
+      });
+
+      setBatchCronogramas(cronos);
+      setBatchEntrevistaConfigs(configs);
+      setIsEditModalOpen(true);
+      sessionStorage.removeItem('grouped_vagas');
+      setBatchConsumed(true);
+    } catch (e) {
+      console.error('Erro ao processar lote de vagas:', e);
+      sessionStorage.removeItem('grouped_vagas');
+      setBatchConsumed(true);
     }
-  }, [vagas]);
+  }, [vagas, batchConsumed]);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [parsedCronogramas, setParsedCronogramas] = useState<ParsedCronograma[] | null>(null);
@@ -159,6 +183,71 @@ export default function FilaAnalistaEditalPage() {
   const devolvidos = useMemo(() => editalVagas.filter(v => v.status_fluxo_edital === 'em_redacao' && v.observacoes_validacao), [editalVagas]);
   const unidades = useMemo(() => Array.from(new Set(vagas.map(v => normalizeUnitName(v.unidade)))).filter(Boolean).sort(), [vagas]);
   const analistasValidacao = useMemo(() => (users || []).filter((u: any) => u.status === 'ativo' && ((u.perfil || '').toLowerCase().includes('analista') || (u.perfil || '').toLowerCase().includes('admin') || (u.perfil || '').toLowerCase().includes('gestor'))), [users]);
+
+  // Seleção manual para agrupar cargos já em redação no mesmo edital
+  const [selectedForGroup, setSelectedForGroup] = useState<Set<string>>(new Set());
+
+  const groupableSelected = useMemo(
+    () => editalVagas.filter(v => selectedForGroup.has(v.id) && v.status_fluxo_edital === 'em_redacao'),
+    [editalVagas, selectedForGroup]
+  );
+
+  const groupValidation = useMemo(() => {
+    if (groupableSelected.length < 2) return { ok: false, reason: '' };
+    const regs = new Set(groupableSelected.map(v => getRegiaoAgrupamento(v.unidade)));
+    if (regs.size > 1) {
+      const labels = Array.from(regs).map(getRegiaoAgrupamentoLabel).join(', ');
+      return { ok: false, reason: `Cargos de regiões diferentes (${labels}) não podem ser agrupados.` };
+    }
+    return { ok: true, reason: '' };
+  }, [groupableSelected]);
+
+  const toggleSelectForGroup = (id: string) => {
+    setSelectedForGroup(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleOpenGroupModal = () => {
+    if (!groupValidation.ok) {
+      toast.error(groupValidation.reason || 'Não é possível agrupar essas vagas.');
+      return;
+    }
+    const batchVagas = groupableSelected;
+    setIsBatchMode(true);
+    setSelectedBatchVagas(batchVagas);
+    setActiveTab(batchVagas[0].id);
+    setNumeroEdital(batchVagas[0].numero_edital || '');
+    setNumeroProcesso(batchVagas[0].numero_processo || '');
+    setObsEdital(batchVagas[0].observacoes_edital || '');
+    setNomeArquivo(batchVagas[0].arquivo_edital || '');
+    setReachrUrl((batchVagas[0] as any).url_reachr || '');
+
+    const cronos: Record<string, any> = {};
+    const configs: Record<string, EntrevistaConfig> = {};
+    batchVagas.forEach(v => {
+      cronos[v.id] = {
+        data_publicacao_edital: v.cronograma?.data_publicacao_edital || new Date().toISOString().split('T')[0],
+        data_inicio_inscricao: v.cronograma?.data_inicio_inscricao || '',
+        data_fim_inscricao: v.cronograma?.data_fim_inscricao || '',
+        data_triagem: v.cronograma?.data_triagem || '',
+        data_avaliacao_especifica_online: v.cronograma?.data_avaliacao_especifica_online || '',
+        data_resultado_preliminar_avaliacao_especifica: v.cronograma?.data_resultado_preliminar_avaliacao_especifica || '',
+        data_recurso_avaliacao_especifica: v.cronograma?.data_recurso_avaliacao_especifica || '',
+        data_resultado_recurso_avaliacao_especifica: v.cronograma?.data_resultado_recurso_avaliacao_especifica || '',
+        data_resultado_final_avaliacao_especifica: v.cronograma?.data_resultado_final_avaliacao_especifica || '',
+        data_entrevistas: v.cronograma?.data_entrevistas || '',
+        data_resultado_final_seletivo: v.cronograma?.data_resultado_final_seletivo || ''
+      };
+      configs[v.id] = deriveEntrevistaConfig(v.cronograma?.data_entrevistas, (v.cronograma as any)?.entrevista_config);
+    });
+    setBatchCronogramas(cronos);
+    setBatchEntrevistaConfigs(configs);
+    setSelectedForGroup(new Set());
+    setIsEditModalOpen(true);
+  };
 
   const handleOpenEditModal = (vaga: Vaga) => {
     setIsBatchMode(false);
@@ -413,6 +502,35 @@ export default function FilaAnalistaEditalPage() {
         <Card className="bg-blue-50 border-blue-100 shadow-sm"><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-5 w-5 text-blue-600" /><div><p className="text-xs font-bold text-blue-600 uppercase">Aguardando Redação</p><p className="text-2xl font-bold text-slate-800">{editalVagas.length}</p></div></div></CardContent></Card>
       </div>
 
+      {selectedForGroup.size >= 1 && (
+        <div className="sticky top-2 z-30 bg-primary text-primary-foreground shadow-lg rounded-xl px-4 py-2.5 flex items-center gap-3 flex-wrap animate-in fade-in slide-in-from-top-2">
+          <Layers className="h-4 w-4 shrink-0" />
+          <span className="text-sm font-medium">
+            <strong>{selectedForGroup.size}</strong> selecionada(s) para agrupar
+            {groupableSelected.length >= 1 && groupableSelected[0] && (
+              <span className="ml-2 opacity-80">• Região: <strong>{getRegiaoAgrupamentoLabel(getRegiaoAgrupamento(groupableSelected[0].unidade))}</strong></span>
+            )}
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            {selectedForGroup.size >= 2 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+                onClick={handleOpenGroupModal}
+                disabled={!groupValidation.ok}
+                title={!groupValidation.ok ? groupValidation.reason : 'Agrupar cargos selecionados em um único edital'}
+              >
+                <Layers className="h-4 w-4 mr-1" /> Agrupar {selectedForGroup.size} cargos
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-8 text-primary-foreground hover:bg-white/10" onClick={() => setSelectedForGroup(new Set())}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Card className="shadow-sm border-slate-200 overflow-hidden">
         <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row justify-between gap-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2"><ListFilter className="h-5 w-5 text-primary" />Vagas para Edital</CardTitle>
@@ -423,17 +541,29 @@ export default function FilaAnalistaEditalPage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader><TableRow><TableHead>Requisição</TableHead><TableHead>Unidade</TableHead><TableHead>Cargo</TableHead><TableHead className="text-center">Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="w-[40px]"></TableHead><TableHead>Requisição</TableHead><TableHead>Unidade</TableHead><TableHead>Cargo</TableHead><TableHead className="text-center">Status</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
             <TableBody>
-              {editalVagas.map(v => (
-                <TableRow key={v.id} className="group">
-                  <TableCell className="font-mono text-xs font-bold">{v.requisicao || v.numero_requisicao}</TableCell>
-                  <TableCell>{v.unidade}</TableCell>
-                  <TableCell className="font-semibold">{v.cargo}</TableCell>
-                  <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
-                  <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}><Edit className="h-4 w-4" /></Button></TableCell>
-                </TableRow>
-              ))}
+              {editalVagas.map(v => {
+                const canGroup = v.status_fluxo_edital === 'em_redacao';
+                return (
+                  <TableRow key={v.id} className="group">
+                    <TableCell>
+                      {canGroup && (
+                        <Checkbox
+                          checked={selectedForGroup.has(v.id)}
+                          onCheckedChange={() => toggleSelectForGroup(v.id)}
+                          aria-label={`Selecionar ${v.cargo} para agrupar`}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs font-bold">{v.requisicao || v.numero_requisicao}</TableCell>
+                    <TableCell>{v.unidade}</TableCell>
+                    <TableCell className="font-semibold">{v.cargo}</TableCell>
+                    <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
+                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}><Edit className="h-4 w-4" /></Button></TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

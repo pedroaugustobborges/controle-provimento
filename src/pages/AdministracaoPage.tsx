@@ -1239,6 +1239,78 @@ export default function AdministracaoPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* FERIADOS LOCAIS */}
+        <TabsContent value="feriados">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0 bg-slate-50/50">
+              <div>
+                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Gerenciamento de Feriados Locais
+                </CardTitle>
+                <CardDescription>Cadastre feriados municipais e estaduais para validação do cronograma de editais.</CardDescription>
+              </div>
+              <Button onClick={() => { resetHolidayForm(); setEditingHoliday(null); setIsHolidayDialogOpen(true); }} className="bg-primary gap-2">
+                <Plus className="h-4 w-4" /> Novo Feriado
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[600px]">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Feriado</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Localização</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {feriados && feriados.length > 0 ? (
+                      feriados.map((f) => (
+                        <TableRow key={f.id} className="hover:bg-slate-50/50 transition-colors">
+                          <TableCell className="font-mono text-sm font-bold text-primary">
+                            {new Date(f.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                          </TableCell>
+                          <TableCell className="font-bold text-slate-700">{f.nome}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={cn(
+                              "text-[10px] uppercase font-bold",
+                              f.tipo === 'municipal' ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"
+                            )}>
+                              {f.tipo}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-slate-500">
+                            {f.tipo === 'municipal' ? `${f.cidade} / ${f.estado}` : f.estado}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => openEditHoliday(f)} className="h-8 w-8">
+                                <Edit2 className="h-4 w-4 text-slate-400" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => deleteFeriado(f.id)} className="h-8 w-8 hover:text-red-600">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-32 text-center text-slate-400 italic">
+                          Nenhum feriado local cadastrado.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* DIALOG: NOVO USUÁRIO */}

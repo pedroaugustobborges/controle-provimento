@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, CheckCircle2, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
+import { FileText, CheckCircle2, AlertTriangle, Loader2, ArrowLeft, Copy, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { ParsedCronograma } from '@/lib/editalCronogramaParser';
+import { ParsedCronograma, CronogramaParseError } from '@/lib/editalCronogramaParser';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/vagaUtils';
 import { EntrevistaConfig } from '@/components/EntrevistaDateField';
@@ -22,13 +22,13 @@ export interface CronogramaImportResult {
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  /** Lista de cronogramas detectados no arquivo */
   cronogramas: ParsedCronograma[] | null;
-  /** Mensagem de erro do parser, se houver */
   errorMessage?: string | null;
-  /** True enquanto o parser está rodando */
+  /** Detalhes estruturados do erro (passo, hint, raw) */
+  errorDetails?: CronogramaParseError | null;
+  /** Arquivo original — usado para botão "Baixar para diagnóstico" */
+  originalFile?: File | null;
   loading?: boolean;
-  /** Nome do arquivo em processamento (para feedback) */
   fileName?: string;
   onApply: (result: CronogramaImportResult) => void;
 }
@@ -38,10 +38,46 @@ export function CronogramaImportDialog({
   onOpenChange,
   cronogramas,
   errorMessage,
+  errorDetails,
+  originalFile,
   loading,
   fileName,
   onApply,
 }: Props) {
+  const handleCopyDetails = async () => {
+    const payload = {
+      fileName: originalFile?.name ?? fileName ?? null,
+      size: originalFile?.size ?? null,
+      type: originalFile?.type ?? null,
+      step: errorDetails?.step ?? null,
+      message: errorDetails?.message ?? errorMessage ?? null,
+      hint: errorDetails?.hint ?? null,
+      raw: errorDetails?.raw ?? null,
+      timestamp: new Date().toISOString(),
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      toast.success('Detalhes copiados — cole na conversa para diagnóstico.');
+    } catch {
+      toast.error('Não foi possível copiar. Tire um print da tela.');
+    }
+  };
+
+  const handleDownloadOriginal = () => {
+    if (!originalFile) return;
+    const ts = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    const safeName = originalFile.name.replace(/[^\w.\-]+/g, '_');
+    const url = URL.createObjectURL(originalFile);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `diagnostico-word-${ts}-${safeName}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Arquivo baixado. Anexe-o aqui na conversa para diagnóstico.');
+  };
+
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
 
   // Auto-seleciona quando vem 1 só; reseta seleção sempre que a lista muda

@@ -142,6 +142,10 @@ export default function UnidadePortalPage() {
     status: string; horario_plantao: string; aceito: boolean; observacao: string; unidade_destino: string;
   }>>({});
   const [savingObs, setSavingObs] = useState<Record<string, boolean>>({});
+  const [saveStatus, setSaveStatus] = useState<Record<string, SaveStatus>>({});
+  const [pendingRetryCount, setPendingRetryCount] = useState(0);
+  const [recoverableDrafts, setRecoverableDrafts] = useState<Array<{ recordId: string; data: any }>>([]);
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [obsFilterUnidade, setObsFilterUnidade] = useState('all');
   const [obsFilterDate, setObsFilterDate] = useState<Date | undefined>(undefined);
   const [obsCalendarOpen, setObsCalendarOpen] = useState(false);

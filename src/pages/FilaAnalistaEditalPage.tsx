@@ -576,6 +576,117 @@ export default function FilaAnalistaEditalPage() {
                 )}
               </div>
 
+              <div className="space-y-4 p-4 rounded-xl border border-amber-200 bg-amber-50/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-amber-600" />
+                  <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma de Etapas</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Publicação do Edital</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_publicacao_edital} 
+                      onChange={(e) => setCronograma({...cronograma, data_publicacao_edital: e.target.value})}
+                      className="bg-white border-amber-100"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Início das Inscrições</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_inicio_inscricao} 
+                      onChange={(e) => setCronograma({...cronograma, data_inicio_inscricao: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Fim das Inscrições</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_fim_inscricao} 
+                      onChange={(e) => setCronograma({...cronograma, data_fim_inscricao: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Data da Triagem</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_triagem} 
+                      onChange={(e) => setCronograma({...cronograma, data_triagem: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Avaliação On-line</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_avaliacao_especifica_online} 
+                      onChange={(e) => setCronograma({...cronograma, data_avaliacao_especifica_online: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Preliminar</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_preliminar_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_preliminar_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Período de Recurso</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_recurso_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_recurso_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Recurso</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_recurso_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_recurso_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Avaliação</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_final_avaliacao_especifica} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_final_avaliacao_especifica: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Entrevistas</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_entrevistas} 
+                      onChange={(e) => setCronograma({...cronograma, data_entrevistas: e.target.value})}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Seletivo</Label>
+                    <Input 
+                      type="date" 
+                      value={cronograma.data_resultado_final_seletivo} 
+                      onChange={(e) => setCronograma({...cronograma, data_resultado_final_seletivo: e.target.value})}
+                      className="bg-white border-amber-100 font-bold"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-amber-600 font-medium italic mt-2">
+                  * As datas serão validadas contra feriados nacionais, municipais, vésperas e dias posteriores úteis.
+                </p>
+              </div>
+
               <div className="space-y-2 p-3 rounded-md border border-blue-100 bg-blue-50/40">
                 <Label htmlFor="respValidacao" className="text-sm font-semibold flex items-center gap-2">
                   <CheckSquare className="h-4 w-4 text-blue-600" />

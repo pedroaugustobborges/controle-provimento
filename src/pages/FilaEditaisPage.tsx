@@ -15,7 +15,7 @@ import {
   Search, Filter, Edit, FileText, Send, MoreHorizontal, 
   Clock, AlertCircle, CheckCircle2, Building2, MapPin, 
   Tag, Briefcase, Users, Calendar, ArrowRight, ListFilter, X,
-  FileUp, CheckSquare
+  FileUp, CheckSquare, Undo2
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
@@ -88,6 +88,57 @@ export default function FilaEditaisPage() {
   const [cargaValidada, setCargaValidada] = useState(false);
   const [salarioValidado, setSalarioValidado] = useState(false);
   const [obsUnidade, setObsUnidade] = useState('');
+
+  // Modal de devolução para Controle de Vagas
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returnTargets, setReturnTargets] = useState<Vaga[]>([]);
+  const [returnMotivo, setReturnMotivo] = useState<string>('A pedido do analista da unidade');
+  const [returnObs, setReturnObs] = useState('');
+  const [returnSubmitting, setReturnSubmitting] = useState(false);
+
+  const handleOpenReturnModal = (targets: Vaga[]) => {
+    if (targets.length === 0) return;
+    setReturnTargets(targets);
+    setReturnMotivo('A pedido do analista da unidade');
+    setReturnObs('');
+    setIsReturnModalOpen(true);
+  };
+
+  const handleConfirmReturn = async () => {
+    if (returnObs.trim().length < 10) {
+      toast.error('Informe uma observação com pelo menos 10 caracteres.');
+      return;
+    }
+    if (returnTargets.length === 0) return;
+    setReturnSubmitting(true);
+    let count = 0;
+    for (const vaga of returnTargets) {
+      const statusRestaurado = (vaga.status_origem as any) || 'SEM STATUS';
+      const ok = await updateVagaAsync(vaga.id, {
+        status: statusRestaurado,
+        status_geral: statusRestaurado,
+        status_fluxo_edital: null,
+        etapa: null,
+        historico: [...(vaga.historico || []), {
+          id: `h-${Date.now()}-${vaga.id}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Devolvida ao Controle de Vagas — Motivo: ${returnMotivo}. Observação: ${returnObs}`,
+          usuario: currentUser?.nome_completo || 'Analista'
+        }]
+      } as any);
+      if (ok) count++;
+    }
+    setReturnSubmitting(false);
+    if (count > 0) {
+      toast.success(`${count} vaga(s) devolvida(s) ao Controle de Vagas.`);
+      setIsReturnModalOpen(false);
+      setReturnTargets([]);
+      setSelectedRows(new Set());
+    } else {
+      toast.error('Não foi possível devolver as vagas.');
+    }
+  };
+
 
   const pendingVagas = useMemo(() => {
     return vagas.filter(v => {
@@ -274,6 +325,7 @@ export default function FilaEditaisPage() {
     Promise.all(vagasParaAtualizar.map(vaga =>
       updateVagaAsync(vaga.id, {
         status: 'ACOMPANHAMENTO DE EDITAL',
+        status_origem: vaga.status_origem || vaga.status,
         status_fluxo_edital: 'encaminhado_edital',
         etapa: 'encaminhado_edital',
         cargo_validado: true,
@@ -327,6 +379,7 @@ export default function FilaEditaisPage() {
 
     const ok = await updateVagaAsync(selectedVaga.id, {
       status: 'ACOMPANHAMENTO DE EDITAL',
+      status_origem: selectedVaga.status_origem || selectedVaga.status,
       status_fluxo_edital: 'encaminhado_edital',
       etapa: 'encaminhado_edital',
       cargo_validado: true,
@@ -422,6 +475,17 @@ export default function FilaEditaisPage() {
                 title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
               >
                 <Send className="h-4 w-4 mr-1" /> Enviar {selectedRows.size} agrupados
+              </Button>
+            )}
+            {selectedRows.size >= 1 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 bg-amber-500 hover:bg-amber-600 text-white border-0 font-semibold"
+                onClick={() => handleOpenReturnModal(selectedVagas)}
+                title="Devolver vagas selecionadas ao Controle de Vagas"
+              >
+                <Undo2 className="h-4 w-4 mr-1" /> Devolver ao Controle
               </Button>
             )}
             <Button size="sm" variant="ghost" className="h-8 text-primary-foreground hover:bg-white/10" onClick={() => setSelectedRows(new Set())}>
@@ -667,6 +731,9 @@ export default function FilaEditaisPage() {
                           <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
                             <Send className="h-4 w-4" />
                           </Button>
+                          <Button variant="ghost" size="icon" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50" title="Devolver ao Controle de Vagas" onClick={() => handleOpenReturnModal([v])}>
+                            <Undo2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -828,6 +895,63 @@ export default function FilaEditaisPage() {
             <Button variant="outline" onClick={() => setIsSendModalOpen(false)}>Cancelar</Button>
             <Button onClick={handleConfirmSend} className="bg-primary hover:bg-primary/90">
               Confirmar e Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Devolver vagas ao Controle de Vagas */}
+      <Dialog open={isReturnModalOpen} onOpenChange={setIsReturnModalOpen}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-700">
+              <Undo2 className="h-5 w-5" />
+              Devolver {returnTargets.length} vaga(s) ao Controle
+            </DialogTitle>
+            <DialogDescription>
+              A(s) vaga(s) voltará(ão) para o Controle de Vagas com o status original. Informe o motivo e uma observação obrigatória.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 max-h-[160px] overflow-y-auto">
+              <ul className="space-y-1">
+                {returnTargets.map(v => (
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-slate-400">— {v.unidade}</span></span>
+                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Motivo</Label>
+              <Select value={returnMotivo} onValueChange={setReturnMotivo}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A pedido do analista da unidade">A pedido do analista da unidade</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Observação <span className="text-destructive">*</span></Label>
+              <Textarea
+                placeholder="Descreva o motivo da devolução (mínimo 10 caracteres)..."
+                value={returnObs}
+                onChange={(e) => setReturnObs(e.target.value)}
+                className="min-h-[90px] resize-none"
+              />
+              <p className="text-[11px] text-slate-500">{returnObs.trim().length}/10 caracteres mínimos</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReturnModalOpen(false)} disabled={returnSubmitting}>Cancelar</Button>
+            <Button
+              onClick={handleConfirmReturn}
+              disabled={returnSubmitting || returnObs.trim().length < 10}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {returnSubmitting ? 'Devolvendo...' : 'Confirmar devolução'}
             </Button>
           </DialogFooter>
         </DialogContent>

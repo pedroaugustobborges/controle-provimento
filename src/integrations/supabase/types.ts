@@ -982,6 +982,7 @@ export type Database = {
           status_fluxo_edital: string | null
           status_geral: string | null
           status_oitiva_convocacao_planilha: string | null
+          status_origem: string | null
           tipo_vaga: string | null
           unidade: string | null
           unidade_trabalho: string | null
@@ -1049,6 +1050,7 @@ export type Database = {
           status_fluxo_edital?: string | null
           status_geral?: string | null
           status_oitiva_convocacao_planilha?: string | null
+          status_origem?: string | null
           tipo_vaga?: string | null
           unidade?: string | null
           unidade_trabalho?: string | null
@@ -1116,6 +1118,7 @@ export type Database = {
           status_fluxo_edital?: string | null
           status_geral?: string | null
           status_oitiva_convocacao_planilha?: string | null
+          status_origem?: string | null
           tipo_vaga?: string | null
           unidade?: string | null
           unidade_trabalho?: string | null

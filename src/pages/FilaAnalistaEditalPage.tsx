@@ -24,6 +24,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogFooter, DialogDescription 
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { Undo2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -209,6 +214,43 @@ export default function FilaAnalistaEditalPage() {
       return next;
     });
   };
+
+  // Devolução para Fila de Editais
+  const [returnToFilaTargets, setReturnToFilaTargets] = useState<Vaga[]>([]);
+  const [isReturnToFilaOpen, setIsReturnToFilaOpen] = useState(false);
+  const [returnToFilaSubmitting, setReturnToFilaSubmitting] = useState(false);
+
+  const handleConfirmReturnToFila = async () => {
+    if (returnToFilaTargets.length === 0) return;
+    setReturnToFilaSubmitting(true);
+    let count = 0;
+    for (const vaga of returnToFilaTargets) {
+      const ok = await updateVaga(vaga.id, {
+        status_fluxo_edital: 'encaminhado_edital',
+        etapa: 'encaminhado_edital',
+        historico: [...(vaga.historico || []), {
+          id: `h-${Date.now()}-${vaga.id}`,
+          data: new Date().toISOString().split('T')[0],
+          descricao: `Devolvida para a Fila de Editais por ${currentUser?.nome_completo || 'Analista'}.`,
+          usuario: currentUser?.nome_completo || 'Analista'
+        }]
+      } as any);
+      if (ok) {
+        notificarMovimentacaoEdital(vaga.id, 'encaminhado_edital', 'Devolvida da Redação para a Fila de Editais.');
+        count++;
+      }
+    }
+    setReturnToFilaSubmitting(false);
+    if (count > 0) {
+      toast.success(`${count} vaga(s) devolvida(s) à Fila de Editais.`);
+      setIsReturnToFilaOpen(false);
+      setReturnToFilaTargets([]);
+      setSelectedForGroup(new Set());
+    } else {
+      toast.error('Não foi possível devolver as vagas.');
+    }
+  };
+
 
   const handleOpenGroupModal = () => {
     if (!groupValidation.ok) {
@@ -524,6 +566,20 @@ export default function FilaAnalistaEditalPage() {
                 <Layers className="h-4 w-4 mr-1" /> Agrupar {selectedForGroup.size} cargos
               </Button>
             )}
+            {selectedForGroup.size >= 1 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 bg-amber-500 hover:bg-amber-600 text-white border-0 font-semibold"
+                onClick={() => {
+                  setReturnToFilaTargets(editalVagas.filter(v => selectedForGroup.has(v.id) && v.status_fluxo_edital === 'em_redacao'));
+                  setIsReturnToFilaOpen(true);
+                }}
+                title="Devolver vagas selecionadas para a Fila de Editais"
+              >
+                <Undo2 className="h-4 w-4 mr-1" /> Devolver à Fila
+              </Button>
+            )}
             <Button size="sm" variant="ghost" className="h-8 text-primary-foreground hover:bg-white/10" onClick={() => setSelectedForGroup(new Set())}>
               <X className="h-4 w-4" />
             </Button>
@@ -560,7 +616,24 @@ export default function FilaAnalistaEditalPage() {
                     <TableCell>{v.unidade}</TableCell>
                     <TableCell className="font-semibold">{v.cargo}</TableCell>
                     <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
-                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)}><Edit className="h-4 w-4" /></Button></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)} title="Editar">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        {(v.status_fluxo_edital === 'em_redacao' || v.status_fluxo_edital === 'encaminhado_edital') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            title="Devolver para a Fila de Editais"
+                            onClick={() => { setReturnToFilaTargets([v]); setIsReturnToFilaOpen(true); }}
+                          >
+                            <Undo2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -623,6 +696,41 @@ export default function FilaAnalistaEditalPage() {
         onApply={handleApplyImport} onApplyMulti={handleApplyImport}
         cargosAlvo={isBatchMode ? selectedBatchVagas.map(v => ({ id: v.id, cargo: v.cargo })) : undefined}
       />
+
+      <AlertDialog open={isReturnToFilaOpen} onOpenChange={setIsReturnToFilaOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-700">
+              <Undo2 className="h-5 w-5" /> Devolver à Fila de Editais
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {returnToFilaTargets.length} vaga(s) voltarão para a Fila de Editais e poderão ser reencaminhadas posteriormente. A movimentação será registrada no histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {returnToFilaTargets.length > 0 && (
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 max-h-[160px] overflow-y-auto">
+              <ul className="space-y-1">
+                {returnToFilaTargets.map(v => (
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-slate-400">— {v.unidade}</span></span>
+                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={returnToFilaSubmitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleConfirmReturnToFila(); }}
+              disabled={returnToFilaSubmitting}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {returnToFilaSubmitting ? 'Devolvendo...' : 'Confirmar devolução'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

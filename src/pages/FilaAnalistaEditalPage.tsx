@@ -688,15 +688,10 @@ export default function FilaAnalistaEditalPage() {
                       className="bg-white"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-bold text-slate-500 uppercase">Entrevistas</Label>
-                    <Input 
-                      type="date" 
-                      value={cronograma.data_entrevistas} 
-                      onChange={(e) => setCronograma({...cronograma, data_entrevistas: e.target.value})}
-                      className="bg-white"
-                    />
-                  </div>
+                  <EntrevistaDateField
+                    value={entrevistaConfig}
+                    onChange={setEntrevistaConfig}
+                  />
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado Final Seletivo</Label>
                     <Input 
@@ -979,12 +974,11 @@ export default function FilaAnalistaEditalPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500 uppercase">Data da Entrevista</Label>
-                  <Input 
-                    type="date" 
-                    value={cronograma.data_entrevistas} 
-                    onChange={(e) => setCronograma({...cronograma, data_entrevistas: e.target.value})}
+                <div className="col-span-1 sm:col-span-2">
+                  <EntrevistaDateField
+                    value={entrevistaConfig}
+                    onChange={setEntrevistaConfig}
+                    label="Data da Entrevista"
                   />
                 </div>
 

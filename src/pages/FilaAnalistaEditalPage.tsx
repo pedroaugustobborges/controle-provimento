@@ -209,24 +209,46 @@ export default function FilaAnalistaEditalPage() {
     };
   };
 
-  const handleApplyImport = (result: CronogramaImportResult) => {
-    if (isBatchMode && result.batchValues) {
-      setBatchCronogramas(prev => ({ ...prev, ...result.batchValues }));
-      if (result.batchEntrevistaConfigs) setBatchEntrevistaConfigs(prev => ({ ...prev, ...result.batchEntrevistaConfigs }));
+  const handleApplyImport = (result: any) => {
+    if (isBatchMode && result.porCargo) {
+      // MODO MÚLTIPLO: result é CronogramaImportMultiResult
+      const newCronos = { ...batchCronogramas };
+      const newConfigs = { ...batchEntrevistaConfigs };
+      
+      Object.entries(result.porCargo).forEach(([vagaId, res]: [string, any]) => {
+        newCronos[vagaId] = { ...newCronos[vagaId], ...res.values };
+        if (res.entrevistaConfig) {
+          newConfigs[vagaId] = res.entrevistaConfig;
+        } else if (res.values.data_entrevistas) {
+          newConfigs[vagaId] = { tipo: 'unica', datas: [res.values.data_entrevistas] };
+        }
+      });
+      
+      setBatchCronogramas(newCronos);
+      setBatchEntrevistaConfigs(newConfigs);
       toast.success('Múltiplos cronogramas aplicados.');
     } else {
+      // MODO ÚNICO: result é CronogramaImportResult
       const targetId = isBatchMode ? activeTab : selectedVaga?.id;
       if (!targetId) return;
+      
+      const res = result;
       if (isBatchMode) {
-        setBatchCronogramas(prev => ({ ...prev, [targetId]: { ...prev[targetId], ...result.values } }));
-        if (result.entrevistaConfig) setBatchEntrevistaConfigs(prev => ({ ...prev, [targetId]: result.entrevistaConfig! }));
+        setBatchCronogramas(prev => ({ 
+          ...prev, 
+          [targetId]: { ...prev[targetId], ...res.values } 
+        }));
+        if (res.entrevistaConfig) {
+          setBatchEntrevistaConfigs(prev => ({ ...prev, [targetId]: res.entrevistaConfig }));
+        }
       } else {
-        setCronograma((prev: any) => ({ ...prev, ...result.values }));
-        if (result.entrevistaConfig) setEntrevistaConfig(result.entrevistaConfig);
+        setCronograma((prev: any) => ({ ...prev, ...res.values }));
+        if (res.entrevistaConfig) setEntrevistaConfig(res.entrevistaConfig);
       }
       toast.success('Cronograma aplicado.');
     }
   };
+
 
   const handleSaveDraft = async () => {
     const vToUpdate = isBatchMode ? selectedBatchVagas : (selectedVaga ? [selectedVaga] : []);

@@ -170,9 +170,13 @@ function extractDates(text: string): string[] {
 function detectTipo(text: string, datas: string[]): EntrevistaTipo {
   if (datas.length <= 1) return 'unica';
   const norm = stripAccents(text);
-  // Período: "a", "ate", "-", "–", "—"
-  if (/\d\s*(a|ate|–|—|-)\s*\d/.test(norm)) return 'periodo';
-  // Duas datas explícitas: "e", ","
+  // "e/ou", "e", "ou", "," entre datas → datas discretas (não intervalo)
+  // Verifica ANTES de período, porque "e/ou" contém "/" e poderia confundir.
+  const hasDiscreteSep = /\d[^\d]*\b(e\/ou|e ou|e|ou)\b[^\d]*\d/.test(norm)
+    || /\d\s*,\s*\d/.test(norm);
+  if (hasDiscreteSep) return 'duas_datas';
+  // Período: "a", "ate", "até", "-", "–", "—" entre dois números (mas não confundir com dd/mm/yyyy)
+  if (/\d\s*(a|ate|ate|–|—|-)\s+\d/.test(norm) || /\d{4}\s*(a|ate|–|—|-)\s*\d/.test(norm)) return 'periodo';
   if (datas.length === 2) return 'duas_datas';
   return 'periodo';
 }
@@ -471,12 +475,18 @@ export async function parseCronogramaFromDocx(file: File): Promise<CronogramaPar
       allTitleHits.push({ idx: i, anexo: parsed.anexo, cargo: parsed.cargo, inTable: !!node.closest('table') });
     }
 
-    // Preferir títulos DENTRO de tabelas (são as células-título do próprio cronograma).
-    // Se houver, ignoramos os títulos de fora (que costumam estar no sumário do edital,
-    // bem antes das tabelas reais — o que faz a associação por proximidade pegar tabelas
-    // erradas, como Anexos I-IV).
+    // Estratégia híbrida: títulos DENTRO de tabelas têm prioridade (são as células-título
+    // do próprio cronograma). MAS, se sobrarem tabelas com cabeçalho ETAPA/DATA não cobertas
+    // por nenhum título-em-tabela, completamos com títulos fora (parágrafos antes da tabela).
+    // Isto resolve o caso de cronogramas onde o último Anexo tem o título em parágrafo
+    // separado, fora da grid da tabela — antes ele era descartado.
     const inTableHits = allTitleHits.filter((h) => h.inTable);
-    const titles: TitleHit[] = inTableHits.length > 0 ? inTableHits : allTitleHits;
+    const outTableHits = allTitleHits.filter((h) => !h.inTable);
+    const titles: TitleHit[] = inTableHits.length > 0
+      ? [...inTableHits, ...outTableHits]
+      : allTitleHits;
+    // Ordena por posição no documento — garante associação correta título→próxima tabela.
+    titles.sort((a, b) => a.idx - b.idx);
 
     const cronogramas: ParsedCronograma[] = [];
     const usedTables = new Set<HTMLTableElement>();

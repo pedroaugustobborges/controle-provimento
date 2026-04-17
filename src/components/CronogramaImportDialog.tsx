@@ -293,7 +293,7 @@ export function CronogramaImportDialog({
         )}
 
         {/* ============ MODO MÚLTIPLO ============ */}
-        {!loading && !errorMessage && isMultiMode && cronogramas && cargosAlvo && (
+        {!loading && !errorMessage && isMultiMode && cronogramas && cronogramas.length > 0 && cargosAlvo && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 p-3 rounded-md border border-blue-200 bg-blue-50 text-blue-800 text-xs">
               <Layers className="h-4 w-4 shrink-0" />
@@ -313,9 +313,10 @@ export function CronogramaImportDialog({
               </TableHeader>
               <TableBody>
                 {cargosAlvo.map((alvo) => {
+                  if (!alvo?.id) return null;
                   const idx = mapping[alvo.id];
-                  const c = idx !== undefined && idx >= 0 ? cronogramas[idx] : null;
-                  const mapeadas = c ? c.etapas.filter((e) => e.cronogramaKey).length : 0;
+                  const c = idx !== undefined && idx !== null && idx >= 0 && cronogramas[idx] ? cronogramas[idx] : null;
+                  const mapeadas = c ? (c.etapas || []).filter((e) => e.cronogramaKey).length : 0;
                   return (
                     <TableRow key={alvo.id}>
                       <TableCell className="text-sm font-medium text-slate-800">
@@ -371,7 +372,7 @@ export function CronogramaImportDialog({
               Selecione o cronograma ({cronogramas.length} encontrados)
             </Label>
             <RadioGroup
-              value=""
+              value={selectedIdx >= 0 ? String(selectedIdx) : ""}
               onValueChange={(v) => setSelectedIdx(parseInt(v, 10))}
               className="space-y-2"
             >

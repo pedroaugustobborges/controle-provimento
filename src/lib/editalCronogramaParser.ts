@@ -25,13 +25,17 @@ export interface ParsedCronograma {
   etapas: ParsedEtapa[];
 }
 
-/** Normaliza espaços não-quebráveis, hífens tipográficos, espaços múltiplos. */
+/** Normaliza espaços não-quebráveis, hífens tipográficos, espaços múltiplos e
+ *  insere espaço entre letra-minúscula+letra-Maiúscula (colagem comum do Word
+ *  quando há quebra de linha dentro de célula, ex.: "daAvaliação"). */
 const normalizeText = (s: string) =>
   (s || '')
     .replace(/\u00A0/g, ' ')
     .replace(/[\u2013\u2014]/g, '-')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
+    // separa "daAvaliação" → "da Avaliação", "doRecurso" → "do Recurso", etc.
+    .replace(/([a-záéíóúâêôãõç])([A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g, '$1 $2')
     .replace(/\s+/g, ' ')
     .trim();
 

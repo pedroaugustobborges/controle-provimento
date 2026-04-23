@@ -30,7 +30,7 @@ import {
    const Dashboard = () => {
      const stats = [
         { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-primary', bg: 'bg-blue-50/80', border: 'border-blue-100' },
-        { label: 'Assistentes', value: 12, icon: Users, color: 'text-primary', bg: 'bg-indigo-50/80', border: 'border-indigo-100' },
+        { label: 'Assistentes', value: 12, icon: Users, color: 'text-primary', bg: 'bg-primary/10/80', border: 'border-primary/20' },
         { label: 'Férias', value: 3, icon: Calendar, color: 'text-warning', bg: 'bg-amber-50/80', border: 'border-amber-100' },
         { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-success', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
         { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100' },
@@ -140,7 +140,7 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Férias, Folgas e Day Off</h3>
              <p className="text-sm text-muted-foreground font-medium">Gestão centralizada de ausências e coberturas</p>
            </div>
-            <Button className="w-full sm:w-auto bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
+            <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all active:scale-95">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
@@ -171,7 +171,7 @@ import {
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                <Input 
                  placeholder="Buscar colaborador..." 
-                  className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all"
+                  className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-primary transition-all"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
@@ -252,7 +252,7 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Funções e Escopos</h3>
              <p className="text-sm text-muted-foreground font-medium">Definição clara de responsabilidades por cargo</p>
            </div>
-           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Escopo
            </Button>
          </div>
@@ -314,7 +314,7 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Prazos e Rotinas</h3>
              <p className="text-sm text-muted-foreground font-medium">Monitoramento de entregas e obrigações recorrentes</p>
            </div>
-           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Nova Atividade
            </Button>
          </div>
@@ -344,7 +344,7 @@ import {
             <div className="p-4 border-b border-border/40 bg-muted/30/30 flex flex-col sm:flex-row gap-4 items-center justify-between">
               <div className="relative w-full sm:w-80">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
-                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500" />
+                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-primary" />
               </div>
               <Button variant="outline" className="w-full sm:w-auto h-10 rounded-xl border-border/60 font-bold text-muted-foreground text-xs hover:bg-muted/30 transition-colors">
                <Filter className="h-4 w-4 mr-2" /> Prioridade
@@ -416,10 +416,10 @@ import {
  
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
            {teamStatus.map((t, i) => (
-              <Card key={i} className="border border-border/40 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-indigo-500">
+              <Card key={i} className="border border-border/40 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-primary">
                <div className={cn(
                  "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150",
-                 t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-indigo-500"
+                 t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-primary"
                )} />
                
                <div className="flex flex-col items-center text-center">
@@ -427,13 +427,13 @@ import {
                     <div className={cn(
                       "h-20 w-20 rounded-xl flex items-center justify-center font-black text-2xl border-2 transition-transform duration-500 group-hover:rotate-6",
                       t.status === 'Ativo' ? "bg-emerald-50 border-emerald-100 text-success" : 
-                      t.status === 'Ausente' ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-indigo-50 border-indigo-100 text-primary"
+                      t.status === 'Ausente' ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-primary/10 border-primary/20 text-primary"
                     )}>
                       {t.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className={cn(
                       "absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white",
-                      t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-indigo-500"
+                      t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-primary"
                     )} />
                  </div>
                  
@@ -449,7 +449,7 @@ import {
                      <Badge className={cn(
                        "border-none font-black text-[9px] px-2.5 py-0.5 rounded-lg uppercase tracking-wider",
                        t.status === 'Ativo' ? "bg-emerald-50 text-emerald-700" : 
-                       t.status === 'Ausente' ? "bg-rose-50 text-rose-700" : "bg-indigo-50 text-indigo-700"
+                       t.status === 'Ausente' ? "bg-rose-50 text-rose-700" : "bg-primary/10 text-primary/90"
                      )}>{t.status}</Badge>
                    </div>
                    {t.coverage !== '-' && (
@@ -481,7 +481,7 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Alinhamentos e Treinamentos</h3>
              <p className="text-sm text-muted-foreground font-medium">Desenvolvimento contínuo e sincronização de processos</p>
            </div>
-           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
@@ -491,7 +491,7 @@ import {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
               <Input 
                 placeholder="Buscar por tema ou colaborador..." 
-                className="pl-10 h-10 border-border/60 rounded-xl focus-visible:ring-indigo-500" 
+                className="pl-10 h-10 border-border/60 rounded-xl focus-visible:ring-primary" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -547,7 +547,7 @@ import {
                         </div>
                         <span className="text-xs font-bold text-slate-700">Responsável: {r.person}</span>
                      </div>
-                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-primary hover:bg-indigo-50">
+                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-primary hover:bg-primary/10">
                        Detalhes do Registro
                      </Button>
                    </div>
@@ -562,7 +562,7 @@ import {
  
    const ExportModule = () => {
      const exportOptions = [
-       { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'], icon: Users, color: 'text-primary', bg: 'bg-indigo-50' },
+       { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'], icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
        { title: 'Relatório de Ausências', formats: ['Excel', 'PDF'], icon: Calendar, color: 'text-primary', bg: 'bg-blue-50' },
        { title: 'Escala e Acompanhamento', formats: ['Excel'], icon: Activity, color: 'text-success', bg: 'bg-emerald-50' },
        { title: 'Histórico de Treinamentos', formats: ['PDF', 'Excel'], icon: GraduationCap, color: 'text-primary', bg: 'bg-purple-50' },
@@ -592,7 +592,7 @@ import {
                    
                    <div className="flex flex-wrap gap-2">
                      {opt.formats.map(fmt => (
-                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted/30 hover:text-primary hover:border-indigo-200 transition-all">
+                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted/30 hover:text-primary hover:border-primary/30 transition-all">
                          {fmt}
                        </Button>
                      ))}
@@ -639,7 +639,7 @@ import {
                     <Button variant="outline" className="flex-1 lg:flex-none rounded-xl border-border/60 h-10 px-6 font-bold text-muted-foreground text-xs">
                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
                    </Button>
-                    <Button className="flex-1 lg:flex-none bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
+                    <Button className="flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-primary/30 transition-all">
                      <Plus className="h-4 w-4 mr-2" /> Novo Vínculo
                    </Button>
                </div>
@@ -651,7 +651,7 @@ import {
                      <Card key={i} className="bg-white p-0 rounded-[2rem] shadow-sm border border-border/40 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
                          <div className="p-8">
                            <div className="flex justify-between items-start mb-6">
-                             <div className="h-14 w-14 bg-indigo-50/50 rounded-xl flex items-center justify-center border border-indigo-100 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                             <div className="h-14 w-14 bg-primary/10/50 rounded-xl flex items-center justify-center border border-primary/20 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
                                <Building2 className="h-7 w-7 text-primary" />
                              </div>
                              <Badge variant="outline" className="border-border/40 bg-muted/30 text-muted-foreground/80 font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 rounded-full">
@@ -874,7 +874,7 @@ import {
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                <Input 
                  placeholder="Pesquisa executiva..." 
-                 className="pl-10 w-64 bg-muted/30 border-none focus-visible:ring-indigo-500 rounded-full h-10 text-[13px] font-medium"
+                 className="pl-10 w-64 bg-muted/30 border-none focus-visible:ring-primary rounded-full h-10 text-[13px] font-medium"
                />
              </div>
              
@@ -887,7 +887,7 @@ import {
                    {currentUser?.cargo || 'Analista'}
                  </p>
                </div>
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white transition-transform hover:scale-105">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-primary/20 border-2 border-white transition-transform hover:scale-105">
                  {currentUser?.nome_completo?.charAt(0)}
                </div>
              </div>

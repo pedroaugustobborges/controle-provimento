@@ -547,63 +547,180 @@
      );
    };
  
- const ExportModule = () => {
-   const exportOptions = [
-     { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'] },
-     { title: 'Relatório de Ausências', formats: ['Excel', 'PDF'] },
-     { title: 'Escala e Acompanhamento', formats: ['Excel'] },
-   ];
-   return (
-     <div className="space-y-6">
-       <h3 className="text-2xl font-bold text-slate-900">Central de Exportações</h3>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-         {exportOptions.map((opt, i) => (
-           <Card key={i} className="border-none shadow-sm rounded-3xl p-6">
-             <h4 className="font-bold text-lg mb-4">{opt.title}</h4>
-             <div className="flex gap-2">
-               {opt.formats.map(fmt => (
-                 <Button key={fmt} variant="outline" className="rounded-xl border-slate-200 text-xs font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                   {fmt}
-                 </Button>
-               ))}
-             </div>
-           </Card>
-         ))}
-       </div>
-     </div>
-   );
- };
+   const ExportModule = () => {
+     const exportOptions = [
+       { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'], icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+       { title: 'Relatório de Ausências', formats: ['Excel', 'PDF'], icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50' },
+       { title: 'Escala e Acompanhamento', formats: ['Excel'], icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+       { title: 'Histórico de Treinamentos', formats: ['PDF', 'Excel'], icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' },
+     ];
+     return (
+       <div className="space-y-6">
+         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+           <div>
+             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Central de Exportações</h3>
+             <p className="text-sm text-slate-500 font-medium">Extração de dados e relatórios gerenciais</p>
+           </div>
+           <Download className="h-8 w-8 text-slate-200" />
+         </div>
  
- const TeamModule = () => (
-     <div className="space-y-6">
-         <div className="flex items-center justify-between">
-             <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Quadro da Equipe</h3>
-             <div className="flex gap-2">
-                 <Button variant="outline" className="rounded-full border-slate-200">Exportar PDF</Button>
-                 <Button className="bg-indigo-600 rounded-full">Novo Vínculo</Button>
-             </div>
-         </div>
-         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-             {[1,2,3,4,5,6].map(i => (
-                 <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-md transition-all">
-                     <Building2 className="h-10 w-10 text-indigo-600 mb-4 bg-indigo-50 p-2 rounded-xl" />
-                     <h4 className="font-bold text-slate-900">Unidade {i}</h4>
-                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Goiânia - GO</p>
-                     <div className="mt-6 pt-4 border-t border-slate-50 space-y-2">
-                         <div className="flex justify-between">
-                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Analista</span>
-                             <span className="text-xs font-bold text-slate-700">Ricardo M.</span>
-                         </div>
-                         <div className="flex justify-between">
-                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assistente</span>
-                             <span className="text-xs font-bold text-slate-700">Juliana F.</span>
-                         </div>
-                     </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {exportOptions.map((opt, i) => (
+             <Card key={i} className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] p-8 bg-white group overflow-hidden relative">
+               <div className={cn("absolute top-0 right-0 w-40 h-40 -mr-20 -mt-20 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150", opt.bg.replace('bg-', 'bg-'))} />
+               
+               <div className="flex items-start gap-6 relative z-10">
+                 <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center border border-white shadow-inner shrink-0 group-hover:scale-110 transition-transform duration-500", opt.bg)}>
+                   <opt.icon className={cn("h-7 w-7", opt.color)} />
                  </div>
-             ))}
+                 <div className="flex-1">
+                   <h4 className="font-black text-xl text-slate-900 tracking-tight mb-2 group-hover:text-indigo-600 transition-colors">{opt.title}</h4>
+                   <p className="text-sm text-slate-500 font-medium mb-6">Selecione o formato desejado para download do relatório completo.</p>
+                   
+                   <div className="flex flex-wrap gap-2">
+                     {opt.formats.map(fmt => (
+                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 transition-all">
+                         {fmt}
+                       </Button>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+             </Card>
+           ))}
          </div>
-     </div>
- );
+       </div>
+     );
+   };
+ 
+   const TeamModule = () => {
+     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+     const teamData = [1,2,3,4,5,6,7,8,9];
+ 
+     return (
+       <div className="space-y-6">
+           <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+               <div>
+                 <h3 className="text-2xl font-black text-slate-900 tracking-tight">Quadro da Equipe</h3>
+                 <p className="text-sm text-slate-500 font-medium">Estrutura organizacional e alocação de talentos</p>
+               </div>
+               <div className="flex gap-3">
+                   <div className="bg-slate-50 p-1 rounded-xl border border-slate-100 flex gap-1 mr-2">
+                      <Button 
+                        variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
+                        size="sm" 
+                        className={cn("h-8 rounded-lg text-[10px] font-black uppercase tracking-widest", viewMode === 'grid' && "bg-white shadow-sm")}
+                        onClick={() => setViewMode('grid')}
+                      >
+                        Cards
+                      </Button>
+                      <Button 
+                        variant={viewMode === 'table' ? 'secondary' : 'ghost'} 
+                        size="sm" 
+                        className={cn("h-8 rounded-lg text-[10px] font-black uppercase tracking-widest", viewMode === 'table' && "bg-white shadow-sm")}
+                        onClick={() => setViewMode('table')}
+                      >
+                        Tabela
+                      </Button>
+                   </div>
+                   <Button variant="outline" className="rounded-xl border-slate-200 h-10 px-6 font-bold text-slate-600 text-xs">
+                     <Download className="h-4 w-4 mr-2" /> Exportar PDF
+                   </Button>
+                   <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
+                     <Plus className="h-4 w-4 mr-2" /> Novo Vínculo
+                   </Button>
+               </div>
+           </div>
+ 
+           {viewMode === 'grid' ? (
+             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                 {teamData.map(i => (
+                     <Card key={i} className="bg-white p-0 rounded-[2rem] shadow-sm border border-slate-100 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
+                         <div className="p-8">
+                           <div className="flex justify-between items-start mb-6">
+                             <div className="h-14 w-14 bg-indigo-50/50 rounded-2xl flex items-center justify-center border border-indigo-100 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                               <Building2 className="h-7 w-7 text-indigo-600" />
+                             </div>
+                             <Badge variant="outline" className="border-slate-100 bg-slate-50 text-slate-400 font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 rounded-full">
+                               Ativo
+                             </Badge>
+                           </div>
+                           
+                           <h4 className="font-black text-xl text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">Unidade Hospitalar {i}</h4>
+                           <div className="flex items-center gap-2 mt-1">
+                             <MapPin className="h-3 w-3 text-slate-300" />
+                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Goiânia - GO</p>
+                           </div>
+ 
+                           <div className="mt-8 space-y-4">
+                               <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
+                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                                     <span className="h-1 w-1 rounded-full bg-indigo-400" />
+                                     Analista Responsável
+                                   </p>
+                                   <p className="text-sm font-black text-slate-700 flex justify-between items-center">
+                                     Ricardo Mendes
+                                     <ChevronRight className="h-3 w-3 opacity-0 group-hover/info:opacity-100 transition-opacity" />
+                                   </p>
+                               </div>
+                               <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
+                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                                     <span className="h-1 w-1 rounded-full bg-cyan-400" />
+                                     Assistente ADM
+                                   </p>
+                                   <p className="text-sm font-black text-slate-700 flex justify-between items-center">
+                                     Juliana Ferreira
+                                     <ChevronRight className="h-3 w-3 opacity-0 group-hover/info:opacity-100 transition-opacity" />
+                                   </p>
+                               </div>
+                           </div>
+                         </div>
+                         <div className="bg-slate-50 p-4 flex justify-between items-center border-t border-slate-100">
+                            <div className="flex -space-x-2">
+                              {[1,2,3].map(av => (
+                                <div key={av} className="h-6 w-6 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[8px] font-bold">
+                                  +
+                                </div>
+                              ))}
+                            </div>
+                            <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors">
+                              Gerenciar Equipe
+                            </Button>
+                         </div>
+                     </Card>
+                 ))}
+             </div>
+           ) : (
+             <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+                <Table>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow className="border-slate-100">
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Unidade</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Localização</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Analista</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Assistente</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {teamData.map(i => (
+                      <TableRow key={i} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-slate-900 py-5">Unidade Hospitalar {i}</TableCell>
+                        <TableCell className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Goiânia - GO</TableCell>
+                        <TableCell className="text-sm font-bold text-slate-700">Ricardo M.</TableCell>
+                        <TableCell className="text-sm font-bold text-slate-700">Juliana F.</TableCell>
+                        <TableCell>
+                           <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-lg">Ativo</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+             </Card>
+           )}
+       </div>
+     );
+   };
  
  export default function PortalRHPage() {
    const navigate = useNavigate();

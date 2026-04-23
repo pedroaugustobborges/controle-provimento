@@ -64,30 +64,9 @@
   * {
     @apply border-border;
   }
-   body {
-     @apply bg-[#f8fafc] text-slate-900 font-sans antialiased selection:bg-primary/10 selection:text-primary;
-     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-     letter-spacing: -0.011em;
-   }
-   .premium-card {
-     @apply bg-white border border-slate-200/60 shadow-[0_2px_4px_rgba(0,0,0,0.02),0_1px_1px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 rounded-2xl;
-   }
- 
-   .premium-table-header {
-     @apply bg-slate-50/50 border-b border-slate-100 text-[10px] font-bold uppercase tracking-widest text-slate-500 py-4 px-6;
-   }
- 
-   .premium-badge {
-     @apply inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-tight transition-all duration-200;
-   }
- 
-   .sidebar-item-active {
-     @apply bg-white/10 text-white shadow-[0_4px_12px_-4px_rgba(255,255,255,0.1)] border border-white/20;
-   }
- 
-   .sidebar-item-hover {
-     @apply hover:bg-white/5 hover:text-white transition-all duration-200;
-   }
+    body {
+      @apply bg-background text-foreground;
+    }
 }
 
 @layer utilities {
@@ -109,11 +88,4 @@
     @apply bg-blue-500/10 rounded-full hover:bg-blue-500/30 transition-all duration-300;
   }
 
-  .glass-card {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
-  }
-
-  .neo-blur {
-    @apply bg-white/40 backdrop-blur-xl border border-white/30 shadow-2xl;
-  }
 }

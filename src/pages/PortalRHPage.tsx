@@ -4,11 +4,11 @@
  import { useAuth } from '@/hooks/useAuth';
  import { useNavigate } from 'react-router-dom';
  import { toast } from 'sonner';
- import { 
-   LayoutDashboard, Calendar, Users, Briefcase, Clock, 
-   Activity, GraduationCap, Download, LogOut, ChevronRight,
-   Plus, Search, Filter, MoreHorizontal, CheckCircle2,
-   AlertCircle, ShieldCheck, MapPin, ListTodo, MessageSquare
+import {
+    LayoutDashboard, Calendar, Users, Briefcase, Clock,
+    Activity, GraduationCap, Download, LogOut, ChevronRight,
+    Plus, Search, Filter, MoreHorizontal, CheckCircle2,
+    AlertCircle, ShieldCheck, MapPin, ListTodo, MessageSquare, Menu, X
  } from 'lucide-react';
  import { Button } from '@/components/ui/button';
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -735,10 +735,11 @@
      );
    };
  
- export default function PortalRHPage() {
-   const navigate = useNavigate();
-   const { currentUser, fetchCurrentProfile } = useAdminStore();
-   const [activeTab, setActiveTab] = useState('dashboard');
+  export default function PortalRHPage() {
+    const navigate = useNavigate();
+    const { currentUser, fetchCurrentProfile } = useAdminStore();
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
    useEffect(() => { fetchCurrentProfile(); }, [fetchCurrentProfile]);
  
    const menuItems = [
@@ -768,8 +769,24 @@
  
    return (
      <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
-       {/* Desktop Sidebar */}
-       <aside className="w-80 bg-white border-r border-slate-200/60 hidden lg:flex flex-col sticky top-0 h-screen z-20">
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[40] lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Sidebar (Desktop & Mobile) */}
+        <aside className={cn(
+          "w-80 bg-white border-r border-slate-200/60 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
+          isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
+        )}>
          <div className="p-8 flex flex-col h-full">
              <div className="flex items-center gap-4 mb-12 group cursor-pointer" onClick={() => navigate('/')}>
                <div className="h-12 w-12 bg-[#070e17] rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-200 group-hover:scale-105 transition-transform duration-500">

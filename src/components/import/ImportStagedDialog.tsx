@@ -265,15 +265,15 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-slate-200/60 shadow-2xl">
-        <DialogHeader className="p-6 border-b bg-slate-50/50">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-border/60/60 shadow-2xl">
+        <DialogHeader className="p-6 border-b bg-muted/30/50">
           <div className="flex items-center gap-3 mb-1">
             <div className="p-2 bg-blue-600 rounded-lg text-white">
               <DatabaseZap className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-slate-900">Importação de Dados Robusta</DialogTitle>
-              <DialogDescription className="text-slate-500 font-medium">
+              <DialogTitle className="text-xl font-bold text-foreground">Importação de Dados Robusta</DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium">
                 Arquitetura escalável para grandes volumes de dados
               </DialogDescription>
             </div>
@@ -300,13 +300,13 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                     "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
                     active ? "bg-blue-600 border-blue-600 text-white shadow-lg scale-110" : 
                     completed ? "bg-green-500 border-green-500 text-white" : 
-                    "bg-white border-slate-200 text-slate-400"
+                    "bg-white border-border/60 text-muted-foreground/80"
                   )}>
                     {completed ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
                   </div>
                   <span className={cn(
                     "text-[10px] font-bold uppercase tracking-widest",
-                    active ? "text-blue-600" : "text-slate-400"
+                    active ? "text-blue-600" : "text-muted-foreground/80"
                   )}>{s.label}</span>
                 </div>
               );
@@ -318,34 +318,34 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           {step === 'type-selection' && (
             <div className="flex flex-col items-center justify-center h-80 space-y-8 animate-in fade-in zoom-in-95 duration-500">
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-slate-800">O que esse arquivo contém?</h3>
-                <p className="text-slate-500 font-medium text-sm">Selecione o tipo de dado para que possamos processar corretamente.</p>
+                <h3 className="text-2xl font-black text-foreground">O que esse arquivo contém?</h3>
+                <p className="text-muted-foreground font-medium text-sm">Selecione o tipo de dado para que possamos processar corretamente.</p>
               </div>
               
               <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
                 <button 
                   onClick={() => { setImportType('banco'); setStep('select'); }}
-                  className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group"
+                  className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-border/40 hover:border-blue-500 hover:bg-blue-50/50 transition-all group"
                 >
                   <div className="p-4 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
                     <Users className="h-10 w-10 text-blue-600" />
                   </div>
                   <div className="text-center">
-                    <span className="block font-black text-slate-800 text-lg">Banco de Talentos</span>
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Cadastro Reserva</span>
+                    <span className="block font-black text-foreground text-lg">Banco de Talentos</span>
+                    <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Cadastro Reserva</span>
                   </div>
                 </button>
 
                 <button 
                   onClick={() => { setImportType('vagas'); setStep('select'); }}
-                  className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all group"
+                  className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-border/40 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all group"
                 >
                   <div className="p-4 bg-indigo-50 rounded-2xl group-hover:bg-indigo-100 transition-colors">
                     <Briefcase className="h-10 w-10 text-indigo-600" />
                   </div>
                   <div className="text-center">
-                    <span className="block font-black text-slate-800 text-lg">Vagas</span>
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Gestão de Vagas</span>
+                    <span className="block font-black text-foreground text-lg">Vagas</span>
+                    <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Gestão de Vagas</span>
                   </div>
                 </button>
               </div>
@@ -353,18 +353,18 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           )}
 
           {step === 'select' && (
-            <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 hover:bg-slate-50 hover:border-blue-400/50 transition-all cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+            <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed border-border/60 rounded-3xl bg-muted/30/50 hover:bg-muted/30 hover:border-blue-400/50 transition-all cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
               <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xlsm" onChange={handleFileSelect} />
-              <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
+              <div className="p-6 bg-white rounded-2xl shadow-sm border border-border/40 group-hover:scale-110 transition-transform">
                 <Upload className="h-10 w-10 text-blue-600" />
               </div>
               <div className="text-center mt-6">
-                <p className="font-black text-xl text-slate-800">Selecione o arquivo Excel</p>
-                <p className="text-sm text-slate-500 font-medium mt-1">Arquivos .xlsx ou .xlsm</p>
+                <p className="font-black text-xl text-foreground">Selecione o arquivo Excel</p>
+                <p className="text-sm text-muted-foreground font-medium mt-1">Arquivos .xlsx ou .xlsm</p>
               </div>
               
               <div className="mt-8 flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo Selecionado:</span>
+                <span className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest">Tipo Selecionado:</span>
                 <Badge className={cn("font-black", importType === 'vagas' ? "bg-indigo-600" : "bg-blue-600")}>
                   {importType === 'vagas' ? 'Vagas' : 'Banco de Talentos'}
                 </Badge>
@@ -379,7 +379,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Aba Selecionada</label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Aba Selecionada</label>
                   <Select value={selectedSheet} onValueChange={(val) => {
                     setSelectedSheet(val);
                     if (!workbook) return;
@@ -389,7 +389,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                       toast.error(err.message || 'Não foi possível reler a aba selecionada.');
                     }
                   }}>
-                    <SelectTrigger className="h-11 rounded-xl font-bold bg-slate-50 border-slate-200">
+                    <SelectTrigger className="h-11 rounded-xl font-bold bg-muted/30 border-border/60">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -398,16 +398,16 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Configuração de Cabeçalho</label>
-                  <div className="h-11 bg-slate-100 border border-slate-200 rounded-xl flex items-center px-4 font-bold text-slate-600 text-sm">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Configuração de Cabeçalho</label>
+                  <div className="h-11 bg-slate-100 border border-border/60 rounded-xl flex items-center px-4 font-bold text-muted-foreground text-sm">
                     {importType === 'vagas' ? 'Busca automática de colunas' : 'Padrão BANCO_GERAL (Linha 1)'}
                   </div>
                 </div>
               </div>
 
-              <Card className="border-slate-100 shadow-sm overflow-hidden bg-slate-50/30">
+              <Card className="border-border/40 shadow-sm overflow-hidden bg-muted/30/30">
                 <CardContent className="p-0">
-                  <div className="p-4 bg-slate-50/80 border-b flex items-center justify-between">
+                  <div className="p-4 bg-muted/30/80 border-b flex items-center justify-between">
                     <h3 className="font-bold text-slate-700 flex items-center gap-2">
                       <ListChecks className="h-4 w-4 text-blue-600" />
                       Mapeamento de Colunas
@@ -425,7 +425,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                         return (
                           <div key={field.key} className="space-y-1.5">
                             <div className="flex justify-between items-center px-1">
-                              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{field.label} *</label>
+                              <label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">{field.label} *</label>
                               {!mapping && <span className="text-[10px] font-bold text-red-500">Obrigatório</span>}
                             </div>
                             <Select 
@@ -434,7 +434,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                             >
                               <SelectTrigger className={cn(
                                 "h-10 rounded-xl font-bold bg-white",
-                                !mapping ? "border-red-200 shadow-sm shadow-red-50" : "border-slate-200"
+                                !mapping ? "border-red-200 shadow-sm shadow-red-50" : "border-border/60"
                               )}>
                                 <SelectValue placeholder="Selecione a coluna..." />
                               </SelectTrigger>
@@ -452,18 +452,18 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
 
                     {importType === 'vagas' && (
                       <div className="pt-4 border-t">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 block">Campos Opcionais (Acompanhamento)</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 block">Campos Opcionais (Acompanhamento)</label>
                         <div className="grid md:grid-cols-3 gap-3">
                           {VAGA_OPTIONAL_COLUMNS.map(field => {
                             const mapping = mappings.find(item => normalizeImportSystemKey(item.system) === field.key);
                             return (
                               <div key={field.key} className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-tight px-1">{field.label}</label>
+                                <label className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-tight px-1">{field.label}</label>
                                 <Select 
                                   value={mapping?.excel || 'none'} 
                                   onValueChange={(val) => handleManualMapping(field.key, val)}
                                 >
-                                  <SelectTrigger className="h-8 rounded-lg font-bold bg-white text-xs border-slate-200">
+                                  <SelectTrigger className="h-8 rounded-lg font-bold bg-white text-xs border-border/60">
                                     <SelectValue placeholder="Opcional..." />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -484,16 +484,16 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
               </Card>
 
               {importType === 'banco' && (
-                <Card className="border-slate-100 shadow-sm overflow-hidden bg-slate-50/30">
+                <Card className="border-border/40 shadow-sm overflow-hidden bg-muted/30/30">
                   <CardContent className="p-4 space-y-4">
                     <div className="grid md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tipo do banco</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Tipo do banco</label>
                         <Select value={importOptions.bancoTipo || 'geral'} onValueChange={(value) => setImportOptions(prev => ({
                           ...prev,
                           bancoTipo: value as ImportExecutionOptions['bancoTipo'],
                         }))}>
-                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-slate-200">
+                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-border/60">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -504,7 +504,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Escopo</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Escopo</label>
                         <Select
                           value={importOptions.bancoTipo === 'geral' ? (importOptions.bancoEscopo || 'todas') : 'unidades_planilha'}
                           onValueChange={(value) => {
@@ -513,7 +513,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                           }}
                           disabled={importOptions.bancoTipo !== 'geral'}
                         >
-                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-slate-200">
+                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-border/60">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -525,12 +525,12 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tratamento</label>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Tratamento</label>
                         <Select value={importOptions.bancoModo || 'substituir'} onValueChange={(value) => setImportOptions(prev => ({
                           ...prev,
                           bancoModo: value as ImportExecutionOptions['bancoModo'],
                         }))}>
-                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-slate-200">
+                          <SelectTrigger className="h-10 rounded-xl font-bold bg-white border-border/60">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -549,16 +549,16 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           {step === 'processing' && (
             <div className="flex flex-col items-center justify-center h-80 space-y-8 animate-in zoom-in-95 duration-500">
               <div className="relative">
-                <div className="h-24 w-24 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin" />
+                <div className="h-24 w-24 rounded-full border-4 border-border/40 border-t-blue-600 animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-xl font-black text-blue-600">{importProgress.percentage}%</span>
                 </div>
               </div>
               
               <div className="w-full max-w-md space-y-2 text-center">
-                <p className="text-lg font-bold text-slate-800">{importProgress.label}</p>
+                <p className="text-lg font-bold text-foreground">{importProgress.label}</p>
                 <Progress value={importProgress.percentage} className="h-2 rounded-full" />
-                <div className="flex justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="flex justify-between text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">
                   <span>{importProgress.processedRows} processados</span>
                   <span>Total: {importProgress.totalRows}</span>
                 </div>
@@ -576,26 +576,26 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   {importProgress.phase === 'success' ? <CheckCircle2 className="h-10 w-10" /> : <AlertTriangle className="h-10 w-10" />}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900">
+                  <h2 className="text-2xl font-black text-foreground">
                     {importProgress.phase === 'success' ? 'Importação Concluída!' : 'Erro na Importação'}
                   </h2>
-                  <p className="text-slate-500 font-medium">{importProgress.label}</p>
+                  <p className="text-muted-foreground font-medium">{importProgress.label}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Card className="border-slate-100 bg-slate-50/50">
+                <Card className="border-border/40 bg-muted/30/50">
                   <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
                     <span className="text-3xl font-black text-blue-600">{importProgress.processedRows}</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confirmados no banco</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">Confirmados no banco</span>
                   </CardContent>
                 </Card>
-                <Card className="border-slate-100 bg-slate-50/50">
+                <Card className="border-border/40 bg-muted/30/50">
                   <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
                     <span className={cn("text-3xl font-black", importProgress.errors.length > 0 ? "text-red-500" : "text-emerald-500")}>
                       {importProgress.errors.length}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alertas/Erros</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">Alertas/Erros</span>
                   </CardContent>
                 </Card>
               </div>
@@ -603,7 +603,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           )}
         </div>
 
-        <DialogFooter className="p-6 border-t bg-slate-50/50 gap-2">
+        <DialogFooter className="p-6 border-t bg-muted/30/50 gap-2">
           {step === 'type-selection' && (
             <Button variant="ghost" className="h-11 px-6 rounded-xl font-bold" onClick={() => onOpenChange(false)}>
               Cancelar

@@ -119,14 +119,14 @@ export default function AlertasTarefasPage() {
                     <Badge variant={tarefa.prioridade === 'alta' ? 'destructive' : 'outline'} className="text-[11px] uppercase font-bold">
                       {tarefa.prioridade}
                     </Badge>
-                    <span className="text-[11px] text-slate-400 font-medium">{formatDate(tarefa.data_criacao)}</span>
+                    <span className="text-[11px] text-muted-foreground/80 font-medium">{formatDate(tarefa.data_criacao)}</span>
                   </div>
                   <CardTitle className="text-base font-bold mt-2">{tarefa.titulo}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">{tarefa.descricao}</p>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{tarefa.descricao}</p>
                   <div className="flex items-center justify-between mt-auto">
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-bold uppercase">
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80 font-bold uppercase">
                       <User className="h-3.5 w-3.5" /> {tarefa.atribuido_a}
                     </div>
                     {tarefa.status === 'pendente' && (
@@ -139,7 +139,7 @@ export default function AlertasTarefasPage() {
               </Card>
             ))}
             {filteredTarefas.length === 0 && (
-              <div className="col-span-full py-12 text-center text-slate-400 italic">
+              <div className="col-span-full py-12 text-center text-muted-foreground/80 italic">
                 Nenhuma tarefa pendente encontrada.
               </div>
             )}
@@ -155,7 +155,7 @@ export default function AlertasTarefasPage() {
                     <div className={`p-2 rounded-lg ${
                       alerta.tipo === 'atraso' ? 'bg-red-100 text-red-600' :
                       alerta.tipo === 'validacao' ? 'bg-blue-100 text-blue-600' :
-                      'bg-slate-100 text-slate-600'
+                      'bg-slate-100 text-muted-foreground'
                     }`}>
                       {alerta.tipo === 'atraso' ? <Clock className="h-5 w-5" /> :
                        alerta.tipo === 'validacao' ? <ShieldCheck className="h-5 w-5" /> :
@@ -163,10 +163,10 @@ export default function AlertasTarefasPage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <h4 className="text-sm font-bold text-slate-800">{alerta.titulo}</h4>
-                        <span className="text-[11px] text-slate-400 font-medium">{formatDate(alerta.data_criacao)}</span>
+                        <h4 className="text-sm font-bold text-foreground">{alerta.titulo}</h4>
+                        <span className="text-[11px] text-muted-foreground/80 font-medium">{formatDate(alerta.data_criacao)}</span>
                       </div>
-                      <p className="text-xs text-slate-600 mb-3">{alerta.mensagem}</p>
+                      <p className="text-xs text-muted-foreground mb-3">{alerta.mensagem}</p>
                       <div className="flex items-center gap-2">
                         {alerta.link && (
                           <Button variant="outline" size="sm" className="h-7 text-[11px] font-bold gap-1">
@@ -190,7 +190,7 @@ export default function AlertasTarefasPage() {
               </Card>
             ))}
             {filteredAlertas.length === 0 && (
-              <div className="py-12 text-center text-slate-400 italic">
+              <div className="py-12 text-center text-muted-foreground/80 italic">
                 Nenhum alerta encontrado no momento.
               </div>
             )}
@@ -199,7 +199,7 @@ export default function AlertasTarefasPage() {
 
         <TabsContent value="historico" className="space-y-6">
           {sortedDates.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 italic bg-white rounded-lg border border-dashed">
+            <div className="py-12 text-center text-muted-foreground/80 italic bg-white rounded-lg border border-dashed">
               Nenhum histórico de mensagens encontrado.
             </div>
           ) : (
@@ -208,7 +208,7 @@ export default function AlertasTarefasPage() {
                 <div key={date} className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="h-px flex-1 bg-slate-200"></div>
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                    <span className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest bg-muted/30 px-3 py-1 rounded-full border border-border/60">
                       {format(parseISO(date), "EEEE, d 'de' MMMM", { locale: ptBR })}
                     </span>
                     <div className="h-px flex-1 bg-slate-200"></div>
@@ -228,14 +228,14 @@ export default function AlertasTarefasPage() {
                             )}>
                               {msg.remetente}
                             </Badge>
-                            <span className="text-[10px] text-slate-400 font-medium">
+                            <span className="text-[10px] text-muted-foreground/80 font-medium">
                               {format(parseISO(msg.data), 'HH:mm')}
                             </span>
                           </div>
                           <CardTitle className="text-sm font-bold mt-2">Mensagem recebida</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-xs text-slate-600 leading-relaxed mb-4">{msg.conteudo}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed mb-4">{msg.conteudo}</p>
                           {!msg.lida && (
                             <Button 
                               variant="ghost" 

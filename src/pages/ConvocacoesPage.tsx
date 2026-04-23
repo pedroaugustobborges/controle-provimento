@@ -262,11 +262,11 @@ export default function ConvocacoesPage() {
         title={view === 'diaria' && selectedRegiao ? `Agenda ${selectedRegiao === 'goiania' ? 'Goiânia' : 'Demais Unidades'}` : 'Convocações'}
         actions={
           <>
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-border/60 shadow-inner mr-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'diaria' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-muted-foreground'}`}
                 onClick={() => handleViewChange('diaria')}
               >
                 <CalendarIcon className="h-3.5 w-3.5 mr-1" /> Diária
@@ -274,7 +274,7 @@ export default function ConvocacoesPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'kanban' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-muted-foreground'}`}
                 onClick={() => handleViewChange('kanban')}
               >
                 <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Quadro
@@ -282,7 +282,7 @@ export default function ConvocacoesPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-slate-500'}`}
+                className={`h-8 px-3 text-[11px] font-bold uppercase transition-all rounded-lg ${view === 'list' ? 'bg-white shadow-sm hover:bg-white text-primary' : 'text-muted-foreground'}`}
                 onClick={() => handleViewChange('list')}
               >
                 <List className="h-3.5 w-3.5 mr-1" /> Histórico
@@ -292,13 +292,13 @@ export default function ConvocacoesPage() {
               data={prepareConvocacoesForExport(filteredConvocacoes)}
               filename="convocacoes_export"
               label="Exportar Excel"
-              className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
+              className="h-10 gap-2 text-xs font-bold rounded-xl border-border/60"
             />
             {view === 'diaria' && (
               <Button
                 variant="outline"
                 onClick={() => setIsBloqueioOpen(true)}
-                className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
+                className="h-10 gap-2 text-xs font-bold rounded-xl border-border/60"
               >
                 <Lock className="h-4 w-4" /> Bloquear Horário
               </Button>
@@ -310,7 +310,7 @@ export default function ConvocacoesPage() {
         }
       />
 
-      <div className="flex flex-col md:flex-row items-center gap-3 bg-white/50 p-3 rounded-xl border border-slate-200/50 backdrop-blur-sm shadow-sm">
+      <div className="flex flex-col md:flex-row items-center gap-3 bg-white/50 p-3 rounded-xl border border-border/60/50 backdrop-blur-sm shadow-sm">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <input
@@ -318,13 +318,13 @@ export default function ConvocacoesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Pesquisar por candidato, cargo..." 
-            className="w-full pl-10 pr-4 h-10 text-sm rounded-lg bg-white border border-slate-200/80 focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all outline-none"
+            className="w-full pl-10 pr-4 h-10 text-sm rounded-lg bg-white border border-border/60/80 focus:ring-2 focus:ring-primary/10 focus:border-primary/40 transition-all outline-none"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto overflow-visible">
           <Select value={selectedUnidade} onValueChange={setSelectedUnidade}>
-            <SelectTrigger className="h-10 w-[180px] bg-white border-slate-200 text-xs font-bold text-slate-600">
+            <SelectTrigger className="h-10 w-[180px] bg-white border-border/60 text-xs font-bold text-muted-foreground">
               <Building2 className="h-3.5 w-3.5 mr-2" />
               <SelectValue placeholder="Filtrar Unidade" />
             </SelectTrigger>
@@ -337,7 +337,7 @@ export default function ConvocacoesPage() {
           </Select>
 
           {view === 'diaria' ? (
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-white border border-border/60 rounded-lg p-1">
               <Button
                 variant="ghost"
                 size="icon"
@@ -390,7 +390,7 @@ export default function ConvocacoesPage() {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`h-10 px-4 gap-2 text-xs font-bold bg-white border-slate-200 hover:bg-slate-50 ${dateRange.from ? 'text-primary border-primary/30' : 'text-slate-600'}`}
+                  className={`h-10 px-4 gap-2 text-xs font-bold bg-white border-border/60 hover:bg-muted/30 ${dateRange.from ? 'text-primary border-primary/30' : 'text-muted-foreground'}`}
                 >
                   <CalendarIcon className="h-3.5 w-3.5" />
                   {dateRange.from ? (
@@ -432,7 +432,7 @@ export default function ConvocacoesPage() {
             </Popover>
           )}
 
-          <Button variant="outline" className="h-10 px-4 gap-2 text-xs font-bold text-slate-600 bg-white border-slate-200 hover:bg-slate-50">
+          <Button variant="outline" className="h-10 px-4 gap-2 text-xs font-bold text-muted-foreground bg-white border-border/60 hover:bg-muted/30">
             <Download className="h-3.5 w-3.5" /> Exportar Relatório
           </Button>
         </div>
@@ -457,10 +457,10 @@ export default function ConvocacoesPage() {
         ) : view === 'kanban' ? (
           <KanbanBoard convocacoes={filteredConvocacoes} />
         ) : view === 'list' ? (
-          <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-            <CardHeader className="bg-slate-50/50 border-b pb-3">
-              <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <History className="h-5 w-5 text-slate-400" />
+          <Card className="border-border/60 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <CardHeader className="bg-muted/30/50 border-b pb-3">
+              <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                <History className="h-5 w-5 text-muted-foreground/80" />
                 Histórico de Convocações
               </CardTitle>
             </CardHeader>
@@ -478,36 +478,36 @@ export default function ConvocacoesPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredConvocacoes.map((c) => (
-                    <TableRow key={c.id} className="hover:bg-slate-50 transition-colors">
+                    <TableRow key={c.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-800">{c.nome_candidato}</span>
-                          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Classif: {c.classificacao}º</span>
+                          <span className="font-bold text-foreground">{c.nome_candidato}</span>
+                          <span className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Classif: {c.classificacao}º</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-primary">{c.requisicao}</span>
-                          <span className="text-[11px] text-slate-600 font-medium truncate max-w-[180px]">{c.cargo}</span>
+                          <span className="text-[11px] text-muted-foreground font-medium truncate max-w-[180px]">{c.cargo}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
-                          <span className="text-[11px] text-slate-400">{c.horario || '—'}</span>
+                          <span className="text-[11px] text-muted-foreground/80">{c.horario || '—'}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[11px] font-bold bg-slate-50 border-slate-200">
+                        <Badge variant="outline" className="text-[11px] font-bold bg-muted/30 border-border/60">
                           {STATUS_CONVOCACAO_LABELS[c.status] || c.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-slate-600 font-medium text-xs">{c.unidade}</TableCell>
+                      <TableCell className="text-muted-foreground font-medium text-xs">{c.unidade}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreVertical className="h-4 w-4 text-slate-400" />
+                              <MoreVertical className="h-4 w-4 text-muted-foreground/80" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
@@ -534,7 +534,7 @@ export default function ConvocacoesPage() {
                   ))}
                   {filteredConvocacoes.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
+                      <TableCell colSpan={6} className="h-32 text-center text-muted-foreground/80 font-medium italic">
                         Nenhuma convocação registrada.
                       </TableCell>
                     </TableRow>
@@ -544,9 +544,9 @@ export default function ConvocacoesPage() {
             </CardContent>
           </Card>
         ) : view === 'pending' ? (
-          <Card className="border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-            <CardHeader className="bg-slate-50/50 border-b pb-3">
-              <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <Card className="border-border/60 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+            <CardHeader className="bg-muted/30/50 border-b pb-3">
+              <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Clock className="h-5 w-5 text-amber-500" />
                 Convocações Pendentes
               </CardTitle>
@@ -564,17 +564,17 @@ export default function ConvocacoesPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredConvocacoes.map((conv) => (
-                    <TableRow key={conv.id} className="hover:bg-slate-50/50 transition-colors">
+                    <TableRow key={conv.id} className="hover:bg-muted/30/50 transition-colors">
                       <TableCell className="font-medium text-sm">{conv.candidato}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{conv.cargo}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{conv.unidade}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{formatDate(conv.data_convocacao)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{conv.cargo}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{conv.unidade}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{formatDate(conv.data_convocacao)}</TableCell>
                       <TableCell className="text-center"><StatusBadge status={conv.status} /></TableCell>
                     </TableRow>
                   ))}
                   {filteredConvocacoes.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-medium italic">
+                      <TableCell colSpan={5} className="h-32 text-center text-muted-foreground/80 font-medium italic">
                         Nenhuma convocação pendente.
                       </TableCell>
                     </TableRow>

@@ -23,7 +23,7 @@ export function SaveStatusIndicator({ status, className, pendingCount = 0 }: Pro
   switch (status) {
     case 'saving':
       return (
-        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500', className)}>
+        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground', className)}>
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando…
         </span>
       );

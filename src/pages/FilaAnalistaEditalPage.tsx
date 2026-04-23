@@ -567,12 +567,12 @@ export default function FilaAnalistaEditalPage() {
           <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma</h4>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-slate-500 uppercase">Publicação</Label><Input type="date" value={currentCrono.data_publicacao_edital} onChange={e => setCrono({ ...currentCrono, data_publicacao_edital: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-slate-500 uppercase">Início Insc.</Label><Input type="date" value={currentCrono.data_inicio_inscricao} onChange={e => setCrono({ ...currentCrono, data_inicio_inscricao: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-slate-500 uppercase">Fim Insc.</Label><Input type="date" value={currentCrono.data_fim_inscricao} onChange={e => setCrono({ ...currentCrono, data_fim_inscricao: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-slate-500 uppercase">Triagem</Label><Input type="date" value={currentCrono.data_triagem} onChange={e => setCrono({ ...currentCrono, data_triagem: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-slate-500 uppercase">Avaliação</Label><Input type="date" value={currentCrono.data_avaliacao_especifica_online} onChange={e => setCrono({ ...currentCrono, data_avaliacao_especifica_online: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-slate-500 uppercase">Resultado</Label><Input type="date" value={currentCrono.data_resultado_final_seletivo} onChange={e => setCrono({ ...currentCrono, data_resultado_final_seletivo: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-muted-foreground uppercase">Publicação</Label><Input type="date" value={currentCrono.data_publicacao_edital} onChange={e => setCrono({ ...currentCrono, data_publicacao_edital: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-muted-foreground uppercase">Início Insc.</Label><Input type="date" value={currentCrono.data_inicio_inscricao} onChange={e => setCrono({ ...currentCrono, data_inicio_inscricao: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-muted-foreground uppercase">Fim Insc.</Label><Input type="date" value={currentCrono.data_fim_inscricao} onChange={e => setCrono({ ...currentCrono, data_fim_inscricao: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-muted-foreground uppercase">Triagem</Label><Input type="date" value={currentCrono.data_triagem} onChange={e => setCrono({ ...currentCrono, data_triagem: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-muted-foreground uppercase">Avaliação</Label><Input type="date" value={currentCrono.data_avaliacao_especifica_online} onChange={e => setCrono({ ...currentCrono, data_avaliacao_especifica_online: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label className="text-[11px] font-bold text-muted-foreground uppercase">Resultado</Label><Input type="date" value={currentCrono.data_resultado_final_seletivo} onChange={e => setCrono({ ...currentCrono, data_resultado_final_seletivo: e.target.value })} /></div>
           <EntrevistaDateField value={currentConfig} onChange={setConfig} />
         </div>
       </div>
@@ -585,7 +585,7 @@ export default function FilaAnalistaEditalPage() {
     <div className="space-y-6">
       <PageHeader title="Fila do Edital (Redação)" helpContent={<HelpGuide />} />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-blue-50 border-blue-100 shadow-sm"><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-5 w-5 text-blue-600" /><div><p className="text-xs font-bold text-blue-600 uppercase">Aguardando Redação</p><p className="text-2xl font-bold text-slate-800">{editalVagas.length}</p></div></div></CardContent></Card>
+        <Card className="bg-blue-50 border-blue-100 shadow-sm"><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-5 w-5 text-blue-600" /><div><p className="text-xs font-bold text-blue-600 uppercase">Aguardando Redação</p><p className="text-2xl font-bold text-foreground">{editalVagas.length}</p></div></div></CardContent></Card>
       </div>
 
       {selectedForGroup.size >= 1 && (
@@ -629,8 +629,8 @@ export default function FilaAnalistaEditalPage() {
         </div>
       )}
 
-      <Card className="shadow-sm border-slate-200 overflow-hidden">
-        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row justify-between gap-4">
+      <Card className="shadow-sm border-border/60 overflow-hidden">
+        <CardHeader className="pb-3 border-b bg-muted/30/50 flex flex-col md:flex-row justify-between gap-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2"><ListFilter className="h-5 w-5 text-primary" />Vagas para Edital</CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <Input placeholder="Buscar..." className="w-[200px]" value={search} onChange={e => setSearch(e.target.value)} />
@@ -660,7 +660,7 @@ export default function FilaAnalistaEditalPage() {
                     <TableCell className="text-center"><Badge variant="outline">{getStatusFluxoLabel(v.status_fluxo_edital)}</Badge></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)} title="Editar" className="text-slate-600">
+                        <Button variant="ghost" size="icon" onClick={() => v.status_fluxo_edital === 'aprovado_administrativo' ? handleOpenPublishModal(v) : handleOpenEditModal(v)} title="Editar" className="text-muted-foreground">
                           <Edit className="h-4 w-4" />
                         </Button>
                         {v.status_fluxo_edital === 'em_redacao' && (
@@ -699,14 +699,14 @@ export default function FilaAnalistaEditalPage() {
       </Card>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[95vh] overflow-y-auto p-0 gap-0 border-none bg-slate-50/50">
+        <DialogContent className="sm:max-w-[800px] max-h-[95vh] overflow-y-auto p-0 gap-0 border-none bg-muted/30/50">
           <DialogHeader className="p-6 bg-white border-b sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold text-slate-900">Preparar Edital</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-foreground">Preparar Edital</DialogTitle>
                 <DialogDescription>Preencha as informações técnicas e cronograma do edital</DialogDescription>
               </div>
             </div>
@@ -715,18 +715,18 @@ export default function FilaAnalistaEditalPage() {
           <div className="p-6 space-y-8">
             {(isBatchMode ? selectedBatchVagas.length > 0 : selectedVaga) && (
               <>
-                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                <section className="bg-white p-6 rounded-xl border border-border/60 shadow-sm space-y-6">
+                  <div className="flex items-center gap-2 pb-2 border-b border-border/40">
                     <ShieldCheck className="h-5 w-5 text-primary" />
-                    <h3 className="font-bold text-slate-800">Informações do Processo</h3>
+                    <h3 className="font-bold text-foreground">Informações do Processo</h3>
                   </div>
 
                   {isBatchMode ? (
                     <div className="space-y-3">
-                      <Label className="text-xs uppercase text-slate-400 font-bold tracking-wider">Cargos no Lote ({selectedBatchVagas.length})</Label>
+                      <Label className="text-xs uppercase text-muted-foreground/80 font-bold tracking-wider">Cargos no Lote ({selectedBatchVagas.length})</Label>
                       <div className="flex flex-wrap gap-2">
                         {selectedBatchVagas.map(v => (
-                          <Badge key={v.id} variant="secondary" className="bg-slate-100 text-slate-700 border-slate-200 py-1 px-3">
+                          <Badge key={v.id} variant="secondary" className="bg-slate-100 text-slate-700 border-border/60 py-1 px-3">
                             {v.cargo}
                           </Badge>
                         ))}
@@ -735,12 +735,12 @@ export default function FilaAnalistaEditalPage() {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <Label className="text-xs uppercase text-slate-400 font-bold">Cargo</Label>
-                        <p className="font-bold text-slate-900">{selectedVaga?.cargo}</p>
+                        <Label className="text-xs uppercase text-muted-foreground/80 font-bold">Cargo</Label>
+                        <p className="font-bold text-foreground">{selectedVaga?.cargo}</p>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs uppercase text-slate-400 font-bold">Unidade</Label>
-                        <p className="font-bold text-slate-900">{selectedVaga?.unidade}</p>
+                        <Label className="text-xs uppercase text-muted-foreground/80 font-bold">Unidade</Label>
+                        <p className="font-bold text-foreground">{selectedVaga?.unidade}</p>
                       </div>
                     </div>
                   )}
@@ -753,12 +753,12 @@ export default function FilaAnalistaEditalPage() {
                           placeholder="Ex: 001/2024" 
                           value={numeroEdital} 
                           onChange={e => setNumeroEdital(e.target.value)}
-                          className="border-slate-200 focus:border-primary focus:ring-primary/20"
+                          className="border-border/60 focus:border-primary focus:ring-primary/20"
                         />
                         {uniqueEditais.length > 0 && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="icon" className="px-2 w-auto gap-1 text-xs border-slate-200">
+                              <Button variant="outline" size="icon" className="px-2 w-auto gap-1 text-xs border-border/60">
                                 <PlusCircle className="h-4 w-4" />
                                 <span className="hidden md:inline">Existentes</span>
                               </Button>
@@ -781,7 +781,7 @@ export default function FilaAnalistaEditalPage() {
                         placeholder="Ex: 2024.0001.0002" 
                         value={numeroProcesso} 
                         onChange={e => setNumeroProcesso(e.target.value)}
-                        className="border-slate-200 focus:border-primary focus:ring-primary/20"
+                        className="border-border/60 focus:border-primary focus:ring-primary/20"
                       />
                     </div>
                   </div>
@@ -789,26 +789,26 @@ export default function FilaAnalistaEditalPage() {
                   <div className="space-y-2">
                     <Label className="font-semibold text-slate-700">Link da Vaga (Reachr)</Label>
                     <div className="relative">
-                      <Rocket className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <Rocket className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/80" />
                       <Input 
                         placeholder="https://reachr.com.br/vaga/..." 
                         value={reachrUrl} 
                         onChange={e => setReachrUrl(e.target.value)}
-                        className="pl-10 border-slate-200 focus:border-primary focus:ring-primary/20"
+                        className="pl-10 border-border/60 focus:border-primary focus:ring-primary/20"
                       />
                     </div>
                   </div>
                 </section>
 
-                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                <section className="bg-white p-6 rounded-xl border border-border/60 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-border/40">
                     <Upload className="h-5 w-5 text-primary" />
-                    <h3 className="font-bold text-slate-800">Arquivo do Edital</h3>
+                    <h3 className="font-bold text-foreground">Arquivo do Edital</h3>
                   </div>
                   
                   <div 
                     className={`border-2 border-dashed rounded-xl p-8 transition-all flex flex-col items-center justify-center gap-3 group cursor-pointer
-                      ${nomeArquivo ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 hover:border-primary hover:bg-slate-50/50'}`}
+                      ${nomeArquivo ? 'border-emerald-200 bg-emerald-50/30' : 'border-border/60 hover:border-primary hover:bg-muted/30/50'}`}
                     onClick={() => document.getElementById('file-upload-input')?.click()}
                   >
                     <input 
@@ -831,7 +831,7 @@ export default function FilaAnalistaEditalPage() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="text-slate-500 hover:text-destructive hover:bg-destructive/5 mt-2"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/5 mt-2"
                           onClick={(e) => {
                             e.stopPropagation();
                             setNomeArquivo('');
@@ -842,14 +842,14 @@ export default function FilaAnalistaEditalPage() {
                       </>
                     ) : (
                       <>
-                        <div className="p-3 bg-slate-100 rounded-full text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                        <div className="p-3 bg-slate-100 rounded-full text-muted-foreground/80 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                           <Upload className="h-8 w-8" />
                         </div>
                         <div className="text-center">
                           <p className="font-bold text-slate-700">Clique para selecionar ou arraste o arquivo</p>
-                          <p className="text-sm text-slate-500">Formatos aceitos: DOCX, DOC ou PDF (Máx. 10MB)</p>
+                          <p className="text-sm text-muted-foreground">Formatos aceitos: DOCX, DOC ou PDF (Máx. 10MB)</p>
                         </div>
-                        <Button variant="outline" size="sm" className="mt-2 border-slate-200 text-slate-600 pointer-events-none">
+                        <Button variant="outline" size="sm" className="mt-2 border-border/60 text-muted-foreground pointer-events-none">
                           Selecionar Arquivo
                         </Button>
                       </>
@@ -857,11 +857,11 @@ export default function FilaAnalistaEditalPage() {
                   </div>
                 </section>
 
-                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <section className="bg-white p-6 rounded-xl border border-border/60 shadow-sm space-y-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-border/40">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-5 w-5 text-primary" />
-                      <h3 className="font-bold text-slate-800">Cronograma de Datas</h3>
+                      <h3 className="font-bold text-foreground">Cronograma de Datas</h3>
                     </div>
                     {isBatchMode && (
                       <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
@@ -887,30 +887,30 @@ export default function FilaAnalistaEditalPage() {
                       </div>
                       {selectedBatchVagas.map(v => (
                         <TabsContent key={v.id} value={v.id} className="mt-0 animate-in fade-in-50 duration-300">
-                          <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <div className="p-4 bg-muted/30/50 rounded-xl border border-border/40">
                             {renderCronogramaFields(v.id)}
                           </div>
                         </TabsContent>
                       ))}
                     </Tabs>
                   ) : (
-                    <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <div className="p-4 bg-muted/30/50 rounded-xl border border-border/40">
                       {renderCronogramaFields()}
                     </div>
                   )}
                 </section>
 
-                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                <section className="bg-white p-6 rounded-xl border border-border/60 shadow-sm space-y-6">
+                  <div className="flex items-center gap-2 pb-2 border-b border-border/40">
                     <Users className="h-5 w-5 text-primary" />
-                    <h3 className="font-bold text-slate-800">Finalização</h3>
+                    <h3 className="font-bold text-foreground">Finalização</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="font-semibold text-slate-700">Responsável pela Validação</Label>
                       <Select value={responsavelValidacao} onValueChange={setResponsavelValidacao}>
-                        <SelectTrigger className="border-slate-200 focus:border-primary">
+                        <SelectTrigger className="border-border/60 focus:border-primary">
                           <SelectValue placeholder="Selecione um analista..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -928,7 +928,7 @@ export default function FilaAnalistaEditalPage() {
                         placeholder="Algum detalhe relevante sobre este edital..."
                         value={obsEdital} 
                         onChange={e => setObsEdital(e.target.value)}
-                        className="border-slate-200 focus:border-primary focus:ring-primary/20 min-h-[100px]"
+                        className="border-border/60 focus:border-primary focus:ring-primary/20 min-h-[100px]"
                       />
                     </div>
                   </div>
@@ -941,7 +941,7 @@ export default function FilaAnalistaEditalPage() {
             <Button 
               variant="outline" 
               onClick={() => setIsEditModalOpen(false)}
-              className="w-full sm:w-auto border-slate-200 text-slate-600 hover:bg-slate-50"
+              className="w-full sm:w-auto border-border/60 text-muted-foreground hover:bg-muted/30"
             >
               Cancelar
             </Button>
@@ -998,12 +998,12 @@ export default function FilaAnalistaEditalPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           {returnToFilaTargets.length > 0 && (
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 max-h-[160px] overflow-y-auto">
+            <div className="bg-muted/30 p-3 rounded-lg border border-border/40 max-h-[160px] overflow-y-auto">
               <ul className="space-y-1">
                 {returnToFilaTargets.map(v => (
-                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
-                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-slate-400">— {v.unidade}</span></span>
-                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-border/40 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-muted-foreground/80">— {v.unidade}</span></span>
+                    <span className="text-muted-foreground font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
                   </li>
                 ))}
               </ul>

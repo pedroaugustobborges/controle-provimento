@@ -463,12 +463,12 @@ export default function BancoTalentosPage() {
               data={prepareBancoForExport(filtered)} 
               filename="banco_talentos_export"
               label="Exportar Excel"
-              className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
+              className="gap-2 border-border/60 text-muted-foreground hover:bg-muted/30 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
             />
             {permissions.canImport() && (
               <Button 
                 variant="outline" 
-                className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
+                className="gap-2 border-border/60 text-muted-foreground hover:bg-muted/30 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
                 onClick={() => setIsImportOpen(true)}
               >
                 <FileSpreadsheet className="h-4 w-4 text-primary" /> Importar Excel
@@ -542,48 +542,48 @@ export default function BancoTalentosPage() {
             <div className="space-y-6">
               {/* Candidatos */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <h3 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2"><User className="h-3 w-3" /> Candidatos Classificados ({selectedGroupCandidates.length})</div>
                 </h3>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {selectedGroupCandidates.map((c, idx) => (
-                    <div key={c.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
+                    <div key={c.id} className="p-4 bg-muted/30 rounded-xl border border-border/40 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-primary shadow-sm">
+                          <div className="h-8 w-8 bg-white border border-border/60 rounded-full flex items-center justify-center text-xs font-bold text-primary shadow-sm">
                             {c.classificacao}°
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-800">{c.nome || "Não identificado"}</p>
-                            <p className="text-[11px] text-slate-400 font-medium uppercase">Candidato</p>
+                            <p className="text-sm font-bold text-foreground">{c.nome || "Não identificado"}</p>
+                            <p className="text-[11px] text-muted-foreground/80 font-medium uppercase">Candidato</p>
                           </div>
                         </div>
                         {getStatusBadge(c.status)}
                       </div>
 
                       {/* Dados de Convocação e Detalhes */}
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-slate-200/50">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-border/60/50">
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Chamada</p>
+                          <p className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Chamada</p>
                           <p className="text-[11px] font-semibold text-slate-700">{c.numero_chamada || "—"}</p>
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Vagas Aproveitamento</p>
+                          <p className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Vagas Aproveitamento</p>
                           <p className="text-[11px] font-semibold text-slate-700">{c.numero_vaga_aproveitamento || "—"}</p>
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
+                          <p className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Data Convocação</p>
                           <p className="text-[11px] font-semibold text-green-600">{c.data_convocacao ? formatDate(c.data_convocacao) : "—"}</p>
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Unidade Convocação</p>
+                          <p className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Unidade Convocação</p>
                           <p className="text-[11px] font-semibold text-slate-700">{c.unidade_convocacao || "—"}</p>
                         </div>
                       </div>
                     </div>
                   ))}
                   {selectedGroupCandidates.length === 0 && (
-                    <p className="text-sm text-slate-400 italic text-center py-4">Nenhum candidato listado.</p>
+                    <p className="text-sm text-muted-foreground/80 italic text-center py-4">Nenhum candidato listado.</p>
                   )}
                 </div>
               </section>
@@ -592,17 +592,17 @@ export default function BancoTalentosPage() {
 
               {/* Identificação do Grupo */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Building className="h-3 w-3" /> Unidade e Cargo
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Unidade</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco?.unidade}</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Unidade</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedBanco?.unidade}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Cargo</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco?.cargo}</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Cargo</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedBanco?.cargo}</p>
                   </div>
                 </div>
               </section>
@@ -612,21 +612,21 @@ export default function BancoTalentosPage() {
 
               {/* Edital */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <FileText className="h-3 w-3" /> Edital e Processo
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Número Edital</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_edital}</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Número Edital</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedBanco.numero_edital}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Número Processo</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_processo || "Não informado"}</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Número Processo</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedBanco.numero_processo || "Não informado"}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Classificação</p>
-                    <p className="text-sm font-semibold text-slate-800">{selectedBanco.classificacao || "Não informado"}</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Classificação</p>
+                    <p className="text-sm font-semibold text-foreground">{selectedBanco.classificacao || "Não informado"}</p>
                   </div>
                 </div>
               </section>
@@ -635,27 +635,27 @@ export default function BancoTalentosPage() {
 
               {/* Datas */}
               <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Calendar className="h-3 w-3" /> Datas Importantes
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Publicação</p>
-                    <p className="text-sm font-semibold text-slate-800">{formatDate(selectedBanco.data_abertura_edital)}</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Publicação</p>
+                    <p className="text-sm font-semibold text-foreground">{formatDate(selectedBanco.data_abertura_edital)}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Validade Original</p>
-                    <p className="text-sm font-semibold text-slate-800">{formatDate(selectedBanco.data_validade)}</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Validade Original</p>
+                    <p className="text-sm font-semibold text-foreground">{formatDate(selectedBanco.data_validade)}</p>
                   </div>
                   {selectedBanco.nova_data_validade && (
                     <div className="space-y-1">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Validade Prorrogada</p>
+                      <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Validade Prorrogada</p>
                       <p className="text-sm font-semibold text-blue-600 font-bold">{formatDate(selectedBanco.nova_data_validade)}</p>
                     </div>
                   )}
                   {selectedBanco.data_convocacao && (
                     <div className="space-y-1">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
+                      <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Data Convocação</p>
                       <p className="text-sm font-semibold text-green-600 font-bold">{formatDate(selectedBanco.data_convocacao)}</p>
                     </div>
                   )}
@@ -668,32 +668,32 @@ export default function BancoTalentosPage() {
               {(selectedBanco.data_convocacao || selectedBanco.status === 'CONVOCADO') && (
                 <>
                   <section>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <h3 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider mb-4 flex items-center gap-2">
                       <ClipboardList className="h-3 w-3" /> Detalhes da Convocação
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       {selectedBanco.unidade_convocacao && (
                         <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Unidade de Convocação</p>
-                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.unidade_convocacao}</p>
+                          <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Unidade de Convocação</p>
+                          <p className="text-sm font-semibold text-foreground">{selectedBanco.unidade_convocacao}</p>
                         </div>
                       )}
                       {selectedBanco.numero_chamada && (
                         <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Número da Chamada</p>
-                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_chamada}</p>
+                          <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Número da Chamada</p>
+                          <p className="text-sm font-semibold text-foreground">{selectedBanco.numero_chamada}</p>
                         </div>
                       )}
                       {selectedBanco.numero_processo_seletivo && (
                         <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Proc. Seletivo</p>
-                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_processo_seletivo}</p>
+                          <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Proc. Seletivo</p>
+                          <p className="text-sm font-semibold text-foreground">{selectedBanco.numero_processo_seletivo}</p>
                         </div>
                       )}
                       {selectedBanco.numero_vaga_aproveitamento && (
                         <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Vaga Aproveitamento</p>
-                          <p className="text-sm font-semibold text-slate-800">{selectedBanco.numero_vaga_aproveitamento}</p>
+                          <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Vaga Aproveitamento</p>
+                          <p className="text-sm font-semibold text-foreground">{selectedBanco.numero_vaga_aproveitamento}</p>
                         </div>
                       )}
                     </div>
@@ -705,11 +705,11 @@ export default function BancoTalentosPage() {
               {/* Observações */}
               {selectedBanco.observacoes && (
                 <section>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Info className="h-3 w-3" /> Observações
                   </h3>
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <p className="text-sm text-slate-600 leading-relaxed italic">
+                  <div className="bg-muted/30 p-3 rounded-lg border border-border/40">
+                    <p className="text-sm text-muted-foreground leading-relaxed italic">
                       "{selectedBanco.observacoes}"
                     </p>
                   </div>
@@ -731,16 +731,16 @@ export default function BancoTalentosPage() {
         const stats = calculateStats(bancos);
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
+            <Card className="border-border/60 shadow-sm bg-white border-l-4 border-l-purple-500">
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
                     <Users className="h-5 w-5 text-purple-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Convocados</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider truncate">Convocados</p>
                     <div className="flex flex-col">
-                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                      <p className="text-2xl font-bold text-foreground leading-none">
                         {stats['Total Convocados']}
                       </p>
                     </div>
@@ -748,16 +748,16 @@ export default function BancoTalentosPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
+            <Card className="border-border/60 shadow-sm bg-white border-l-4 border-l-red-500">
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
                     <AlertTriangle className="h-5 w-5 text-red-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Vencidos</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider truncate">Vencidos</p>
                     <div className="flex flex-col">
-                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                      <p className="text-2xl font-bold text-foreground leading-none">
                         {stats['Total Vencidos']}
                       </p>
                     </div>
@@ -765,16 +765,16 @@ export default function BancoTalentosPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
+            <Card className="border-border/60 shadow-sm bg-white border-l-4 border-l-green-500">
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Total Vigentes</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider truncate">Total Vigentes</p>
                     <div className="flex flex-col">
-                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                      <p className="text-2xl font-bold text-foreground leading-none">
                         {stats['Total Cadastro Reserva'] + stats['Total Prorrogados']}
                       </p>
                     </div>
@@ -782,16 +782,16 @@ export default function BancoTalentosPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
+            <Card className="border-border/60 shadow-sm bg-white border-l-4 border-l-slate-400">
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-slate-100 p-2.5 rounded-lg shrink-0">
-                    <Calendar className="h-5 w-5 text-slate-600" />
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">Banco Total</p>
+                    <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider truncate">Banco Total</p>
                     <div className="flex flex-col">
-                      <p className="text-2xl font-bold text-slate-900 leading-none">
+                      <p className="text-2xl font-bold text-foreground leading-none">
                         {bancos.length}
                       </p>
                     </div>
@@ -825,11 +825,11 @@ export default function BancoTalentosPage() {
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="pb-3 border-b bg-slate-50/50">
+          <Card className="border-border/60 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b bg-muted/30/50">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/80" />
                   <Input 
                     placeholder="Buscar por cargo, unidade ou edital..." 
                     className="pl-9 bg-white"
@@ -890,22 +890,22 @@ export default function BancoTalentosPage() {
                 </TableHeader>
                 <TableBody>
                    {paginatedGroups.map((group) => (
-                    <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
+                    <TableRow key={group.id} className="hover:bg-muted/30/50 transition-colors">
                       <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
-                      <TableCell className="text-xs font-semibold text-slate-600 italic">
+                      <TableCell className="text-xs font-semibold text-muted-foreground italic">
                         {group.processoSeletivo || "—"}
                       </TableCell>
                       <TableCell>
-                        <div className="font-semibold text-slate-800">{group.cargo}</div>
-                        <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
+                        <div className="font-semibold text-foreground">{group.cargo}</div>
+                        <div className="text-[11px] text-muted-foreground/80 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
                       </TableCell>
-                       <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                       <TableCell className="text-muted-foreground font-medium">{group.unidade}</TableCell>
                       <TableCell className="text-center">
                         {group.regiao ? (
                           <Badge variant="outline" className={cn(
                             "text-[10px] font-bold",
                             group.regiao === 'GO_ES' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-                            'bg-slate-50 text-slate-600 border-slate-200'
+                            'bg-muted/30 text-muted-foreground border-border/60'
                           )}>
                             {group.regiao === 'GO_ES' ? 'GO/ES' : 'OUTRAS'}
                           </Badge>
@@ -915,7 +915,7 @@ export default function BancoTalentosPage() {
                       </TableCell>
                       <TableCell className="text-center">{getStatusBadge(group.status)}</TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="font-bold bg-slate-50 text-[10px]">{group.qtdBanco || group.candidatos.length}</Badge>
+                        <Badge variant="outline" className="font-bold bg-muted/30 text-[10px]">{group.qtdBanco || group.candidatos.length}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
@@ -962,7 +962,7 @@ export default function BancoTalentosPage() {
                   ))}
                   {filteredGroups.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                      <TableCell colSpan={8} className="h-40 text-center text-muted-foreground/80 font-medium italic">
                         Nenhum banco de talentos encontrado para os filtros aplicados.
                       </TableCell>
                     </TableRow>
@@ -1023,11 +1023,11 @@ export default function BancoTalentosPage() {
         </TabsContent>
 
         <TabsContent value="convocados" className="space-y-4">
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="pb-3 border-b bg-slate-50/50">
+          <Card className="border-border/60 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b bg-muted/30/50">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/80" />
                   <Input 
                     placeholder="Buscar por nome, cargo ou edital..." 
                     className="pl-9 bg-white"
@@ -1085,8 +1085,8 @@ export default function BancoTalentosPage() {
                       );
 
                       return (
-                        <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                          <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
+                        <TableRow key={b.id} className="hover:bg-muted/30/50 transition-colors">
+                          <TableCell className="font-bold text-foreground text-xs">{b.nome || "Não identificado"}</TableCell>
                           <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
                           <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
                           <TableCell className="text-center">
@@ -1097,9 +1097,9 @@ export default function BancoTalentosPage() {
                           <TableCell className="text-xs font-bold text-green-600">
                             {b.data_convocacao ? formatDate(b.data_convocacao) : '-'}
                           </TableCell>
-                          <TableCell className="text-xs font-medium text-slate-600">
+                          <TableCell className="text-xs font-medium text-muted-foreground">
                             <div className="flex items-center gap-1.5">
-                              <Building className="h-3 w-3 text-slate-400" />
+                              <Building className="h-3 w-3 text-muted-foreground/80" />
                               {b.unidade_convocacao || '-'}
                             </div>
                           </TableCell>
@@ -1122,7 +1122,7 @@ export default function BancoTalentosPage() {
                                  dailyConvocacao.status === 'recusa_horario' ? 'Recusa Horário' : dailyConvocacao.status}
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-[10px] font-bold bg-slate-50 text-slate-400 border-slate-200">
+                              <Badge variant="outline" className="text-[10px] font-bold bg-muted/30 text-muted-foreground/80 border-border/60">
                                 CONVOCADO
                               </Badge>
                             )}
@@ -1145,7 +1145,7 @@ export default function BancoTalentosPage() {
                     })}
                     {convocadosFiltered.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                        <TableCell colSpan={8} className="h-40 text-center text-muted-foreground/80 font-medium italic">
                           Nenhum registro de convocação encontrado.
                         </TableCell>
                       </TableRow>
@@ -1158,11 +1158,11 @@ export default function BancoTalentosPage() {
         </TabsContent>
 
         <TabsContent value="vencidos" className="space-y-4">
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="pb-3 border-b bg-slate-50/50">
+          <Card className="border-border/60 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 border-b bg-muted/30/50">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/80" />
                   <Input 
                     placeholder="Buscar por nome, cargo ou edital..." 
                     className="pl-9 bg-white"
@@ -1170,7 +1170,7 @@ export default function BancoTalentosPage() {
                     onChange={(e) => setVencidosSearch(e.target.value)}
                   />
                 </div>
-                <div className="text-xs text-slate-500 font-medium">
+                <div className="text-xs text-muted-foreground font-medium">
                   {vencidosFiltered.length} banco(s) vencido(s)
                 </div>
               </div>
@@ -1192,11 +1192,11 @@ export default function BancoTalentosPage() {
                   </TableHeader>
                   <TableBody>
                     {vencidosFiltered.map((b) => (
-                      <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
+                      <TableRow key={b.id} className="hover:bg-muted/30/50 transition-colors">
+                        <TableCell className="font-bold text-foreground text-xs">{b.nome || "Não identificado"}</TableCell>
                         <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
                         <TableCell className="text-primary font-bold text-xs">{b.numero_edital}</TableCell>
-                        <TableCell className="text-xs font-medium text-slate-600">{b.unidade}</TableCell>
+                        <TableCell className="text-xs font-medium text-muted-foreground">{b.unidade}</TableCell>
                         <TableCell className="text-center">
                           <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">
                             {b.classificacao}°
@@ -1239,7 +1239,7 @@ export default function BancoTalentosPage() {
                     ))}
                     {vencidosFiltered.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                        <TableCell colSpan={8} className="h-40 text-center text-muted-foreground/80 font-medium italic">
                           Nenhum banco vencido encontrado.
                         </TableCell>
                       </TableRow>
@@ -1252,7 +1252,7 @@ export default function BancoTalentosPage() {
         </TabsContent>
 
         <TabsContent value="history">
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <Card className="border-border/60 shadow-sm overflow-hidden">
             <Table>
               <TableHeader >
                 <TableRow>
@@ -1275,7 +1275,7 @@ export default function BancoTalentosPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-xs text-center font-bold">{h.total_novos}</TableCell>
-                    <TableCell className="text-xs text-slate-500">{h.usuario}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{h.usuario}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">Concluído</Badge>
                     </TableCell>
@@ -1288,7 +1288,7 @@ export default function BancoTalentosPage() {
                 ))}
                 {historyBT.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">
+                    <TableCell colSpan={6} className="h-40 text-center text-muted-foreground/80 font-medium italic">
                       Nenhuma importação realizada até o momento.
                     </TableCell>
                   </TableRow>
@@ -1300,11 +1300,11 @@ export default function BancoTalentosPage() {
 
         {permissions.canViewAudit() && (
           <TabsContent value="audit" className="space-y-6">
-            <div className="bg-slate-50 border border-slate-200 p-6 rounded-xl space-y-4 shadow-sm">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
+            <div className="bg-muted/30 border border-border/60 p-6 rounded-xl space-y-4 shadow-sm">
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-lg">
                 <CheckCircle2 className="h-5 w-5 text-green-600" /> RESUMO FINAL DA AUDITORIA (STATUS CALCULADO)
               </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Este painel reflete o <strong>Status Calculado</strong> em tempo real, aplicando as regras de prioridade: 
                 <span className="mx-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded font-bold">1. Convocado</span>
                 <span className="mx-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded font-bold">2. Prorrogação Manual</span>
@@ -1328,19 +1328,19 @@ export default function BancoTalentosPage() {
                 ];
                 
                 return auditItems.map((item, i) => (
-                  <Card key={i} className="border-slate-200 shadow-sm">
+                  <Card key={i} className="border-border/60 shadow-sm">
                     <CardContent className="pt-4 px-4 pb-4 flex flex-col items-center justify-center text-center">
                       <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
-                      <p className="text-xs font-bold text-slate-800 uppercase tracking-tighter mt-1">{item.label}</p>
-                      <p className="text-[10px] text-slate-400 italic mt-0.5">{item.description}</p>
+                      <p className="text-xs font-bold text-foreground uppercase tracking-tighter mt-1">{item.label}</p>
+                      <p className="text-[10px] text-muted-foreground/80 italic mt-0.5">{item.description}</p>
                     </CardContent>
                   </Card>
                 ));
               })()}
             </div>
 
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
-              <CardHeader className="bg-slate-50 border-b py-3 px-4">
+            <Card className="border-border/60 shadow-sm overflow-hidden">
+              <CardHeader className="bg-muted/30 border-b py-3 px-4">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <ClipboardList className="h-4 w-4 text-primary" /> 
                   Detalhamento de Cálculo por Registro
@@ -1349,7 +1349,7 @@ export default function BancoTalentosPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
+                    <TableRow className="bg-muted/30/50">
                       <TableHead className="text-[10px] font-bold uppercase">Candidato / Cargo</TableHead>
                       <TableHead className="text-[10px] font-bold uppercase text-center">Status Orig.</TableHead>
                       <TableHead className="text-[10px] font-bold uppercase text-center">Prorrog.</TableHead>
@@ -1363,10 +1363,10 @@ export default function BancoTalentosPage() {
                     {bancos.slice(0, 100).map((b) => {
                       const calc = calculateBancoStatus(b);
                       return (
-                        <TableRow key={b.id} className="text-[11px] hover:bg-slate-50">
+                        <TableRow key={b.id} className="text-[11px] hover:bg-muted/30">
                           <TableCell className="max-w-[200px]">
                             <p className="font-bold truncate" title={b.nome}>{b.nome || 'N/A'}</p>
-                            <p className="text-slate-400 text-[10px] truncate" title={b.cargo}>{b.cargo}</p>
+                            <p className="text-muted-foreground/80 text-[10px] truncate" title={b.cargo}>{b.cargo}</p>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline" className="text-[9px] h-5">{b.status || 'N/A'}</Badge>
@@ -1374,13 +1374,13 @@ export default function BancoTalentosPage() {
                           <TableCell className="text-center font-medium">
                             {b.prorrogacao || (b.is_prorrogado ? 'SIM' : 'NÃO')}
                           </TableCell>
-                          <TableCell className="text-center text-slate-500">
+                          <TableCell className="text-center text-muted-foreground">
                             {b.data_validade ? formatDate(b.data_validade) : '-'}
                           </TableCell>
                           <TableCell className="text-center">
                             {getStatusBadge(calc.status)}
                           </TableCell>
-                          <TableCell className="text-slate-500 italic">
+                          <TableCell className="text-muted-foreground italic">
                             {calc.motivo}
                           </TableCell>
                           <TableCell className="text-center font-bold text-slate-700">
@@ -1391,7 +1391,7 @@ export default function BancoTalentosPage() {
                     })}
                     {bancos.length > 100 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-4 text-slate-400 italic">
+                        <TableCell colSpan={7} className="text-center py-4 text-muted-foreground/80 italic">
                           Exibindo apenas os primeiros 100 registros para performance. 
                           Total na base: {bancos.length}
                         </TableCell>

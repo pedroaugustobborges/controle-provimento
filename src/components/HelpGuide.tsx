@@ -90,41 +90,41 @@ export function HelpGuide({ activeTab }: { activeTab?: string } = {}) {
           Como usar este menu?
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl bg-slate-50">
-        <DialogHeader className="space-y-3 pb-4 border-b border-slate-200">
+      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl bg-muted/30">
+        <DialogHeader className="space-y-3 pb-4 border-b border-border/60">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Lightbulb className="h-5 w-5 text-blue-600" />
             </div>
-            <DialogTitle className="text-xl font-black text-slate-800 tracking-tight">Guia de Uso</DialogTitle>
+            <DialogTitle className="text-xl font-black text-foreground tracking-tight">Guia de Uso</DialogTitle>
           </div>
-          <DialogDescription className="text-slate-500 font-medium">
+          <DialogDescription className="text-muted-foreground font-medium">
             Entenda como funciona cada etapa deste menu e o que vem a seguir no processo.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6 mt-4">
           {sections.map((section, idx) => (
-            <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div key={idx} className="bg-white p-5 rounded-2xl border border-border/60 shadow-sm space-y-4">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="bg-blue-50 text-blue-700 font-bold border-none">
                   {section.title}
                 </Badge>
               </div>
               
-              <p className="text-sm text-slate-600 leading-relaxed font-medium">
+              <p className="text-sm text-muted-foreground leading-relaxed font-medium">
                 {section.description}
               </p>
               
               {(section.currentStage || section.nextStage) && (
-                <div className="flex items-center justify-between gap-3 pt-2 bg-slate-50/50 p-3 rounded-xl border border-dashed border-slate-200">
+                <div className="flex items-center justify-between gap-3 pt-2 bg-muted/30/50 p-3 rounded-xl border border-dashed border-border/60">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Etapa Atual</span>
+                    <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/80">Etapa Atual</span>
                     <span className="text-xs font-bold text-slate-700">{section.currentStage}</span>
                   </div>
                   <ArrowRight className="h-4 w-4 text-slate-300" />
                   <div className="flex flex-col gap-1 text-right">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Próxima Etapa</span>
+                    <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/80">Próxima Etapa</span>
                     <span className="text-xs font-bold text-blue-600">{section.nextStage}</span>
                   </div>
                 </div>

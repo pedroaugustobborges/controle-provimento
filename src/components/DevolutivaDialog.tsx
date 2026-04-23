@@ -95,7 +95,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+          <div className="bg-muted/30 p-3 rounded-lg border border-border/60 text-sm">
             <p><strong>Candidato:</strong> {convocacao.nome_candidato}</p>
             <p><strong>Vaga:</strong> {convocacao.cargo} - {convocacao.unidade}</p>
           </div>

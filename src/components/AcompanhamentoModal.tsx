@@ -125,13 +125,13 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
     
     return (
       <div className="space-y-2 flex-1">
-        <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">{label}</Label>
+        <Label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">{label}</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
-                "w-full justify-start text-left font-semibold h-10 border-slate-200 hover:bg-slate-50 transition-all rounded-lg shadow-sm",
+                "w-full justify-start text-left font-semibold h-10 border-border/60 hover:bg-muted/30 transition-all rounded-lg shadow-sm",
                 !value && "text-muted-foreground"
               )}
             >
@@ -161,13 +161,13 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
     <div className="space-y-2">
       <div className="flex items-center gap-1.5 border-l-2 border-primary/30 pl-2 mb-1">
         <Icon className={cn("h-3.5 w-3.5", color)} />
-        <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest">{label}</Label>
+        <Label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">{label}</Label>
       </div>
       <Input
         type={type}
         value={value}
         onChange={(e) => onChange(type === "number" ? +e.target.value : e.target.value)}
-        className="h-10 bg-white border-slate-200 font-bold text-slate-700 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
+        className="h-10 bg-white border-border/60 font-bold text-slate-700 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
       />
     </div>
   );
@@ -175,15 +175,15 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-white p-6 border-b border-slate-100">
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-white p-6 border-b border-border/40">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                   <Activity className="h-5 w-5 text-primary" />
                   Atualizar Acompanhamento
                 </DialogTitle>
-                <p className="text-sm text-slate-500 mt-1 font-medium">
+                <p className="text-sm text-muted-foreground mt-1 font-medium">
                   {vaga.cargo} · <span className="text-primary font-bold">{vaga.numero_edital || vaga.requisicao}</span>
                 </p>
               </div>
@@ -196,18 +196,18 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
 
         <div className="p-0 flex flex-col max-h-[70vh]">
           <Tabs defaultValue="operacional" className="w-full flex flex-col h-full">
-            <div className="px-6 border-b border-slate-100 bg-slate-50/50">
+            <div className="px-6 border-b border-border/40 bg-muted/30/50">
               <TabsList className="h-12 bg-transparent gap-6 p-0">
                 <TabsTrigger 
                   value="operacional" 
-                  className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-bold text-xs uppercase tracking-widest text-slate-500 data-[state=active]:text-primary"
+                  className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-bold text-xs uppercase tracking-widest text-muted-foreground data-[state=active]:text-primary"
                 >
                   <Activity className="h-4 w-4 mr-2" />
                   Operacional
                 </TabsTrigger>
                 <TabsTrigger 
                   value="datas" 
-                  className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-bold text-xs uppercase tracking-widest text-slate-500 data-[state=active]:text-primary"
+                  className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-bold text-xs uppercase tracking-widest text-muted-foreground data-[state=active]:text-primary"
                 >
                   <Calendar className="h-4 w-4 mr-2" />
                   Datas das Etapas
@@ -220,12 +220,12 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">Etapa Atual</Label>
+                      <Label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">Etapa Atual</Label>
                       <Select
                         value={formData.etapa_atual}
                         onValueChange={(val) => setFormData({ ...formData, etapa_atual: val })}
                       >
-                        <SelectTrigger className="h-10 bg-white border-slate-200 font-bold text-slate-700 rounded-lg shadow-sm">
+                        <SelectTrigger className="h-10 bg-white border-border/60 font-bold text-slate-700 rounded-lg shadow-sm">
                           <SelectValue placeholder="Selecione a etapa" />
                         </SelectTrigger>
                         <SelectContent>
@@ -245,7 +245,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                         onChange={(val) => setFormData({ ...formData, data_real_etapa: val })}
                       />
                       
-                      <div className="flex items-center gap-3 p-4 bg-slate-50/80 rounded-xl border border-slate-200 shadow-sm transition-all hover:bg-slate-100/50">
+                      <div className="flex items-center gap-3 p-4 bg-muted/30/80 rounded-xl border border-border/60 shadow-sm transition-all hover:bg-slate-100/50">
                         <Checkbox
                           id="concluida"
                           checked={formData.concluida}
@@ -256,14 +256,14 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                           <Label htmlFor="concluida" className="text-[11px] font-bold text-slate-700 uppercase cursor-pointer select-none">
                             Concluída / Publicada
                           </Label>
-                          <span className="text-[9px] text-slate-500 font-medium">Marque se esta etapa já foi finalizada ou o edital publicado</span>
+                          <span className="text-[9px] text-muted-foreground font-medium">Marque se esta etapa já foi finalizada ou o edital publicado</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-4">
-                    <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                  <div className="bg-muted/30/50 p-4 rounded-xl border border-border/40 space-y-4">
+                    <div className="flex items-center gap-2 mb-3 border-b border-border/60 pb-2">
                       <div className="bg-primary/10 p-1.5 rounded-lg">
                         <Info className="h-4 w-4 text-primary" />
                       </div>
@@ -310,14 +310,14 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[11px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">
+                  <Label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-l-2 border-primary/30 pl-2 mb-1">
                     Observações Operacionais
                   </Label>
                   <Textarea
                     value={formData.observacoes_etapa}
                     onChange={(e) => setFormData({ ...formData, observacoes_etapa: e.target.value })}
                     placeholder="Descreva o andamento desta etapa ou observações importantes..."
-                    className="min-h-[100px] bg-white border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 transition-all resize-none p-4"
+                    className="min-h-[100px] bg-white border-border/60 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 transition-all resize-none p-4"
                   />
                 </div>
               </TabsContent>
@@ -344,15 +344,15 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                     </Button>
                   </div>
 
-                  <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                  <div className="border border-border/40 rounded-xl overflow-hidden bg-white shadow-sm">
                     <Table>
-                      <TableHeader className="bg-slate-50/80">
-                        <TableRow className="hover:bg-transparent border-slate-100">
-                          <TableHead className="w-[30%] text-[10px] font-black text-slate-500 uppercase tracking-tighter">Etapa do Edital</TableHead>
-                          <TableHead className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Prevista</TableHead>
-                          <TableHead className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Realizada</TableHead>
-                          <TableHead className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Observação</TableHead>
-                          <TableHead className="w-[60px] text-center text-[10px] font-black text-slate-500 uppercase tracking-tighter">OK</TableHead>
+                      <TableHeader className="bg-muted/30/80">
+                        <TableRow className="hover:bg-transparent border-border/40">
+                          <TableHead className="w-[30%] text-[10px] font-black text-muted-foreground uppercase tracking-tighter">Etapa do Edital</TableHead>
+                          <TableHead className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">Prevista</TableHead>
+                          <TableHead className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">Realizada</TableHead>
+                          <TableHead className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">Observação</TableHead>
+                          <TableHead className="w-[60px] text-center text-[10px] font-black text-muted-foreground uppercase tracking-tighter">OK</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -365,12 +365,12 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                           };
 
                           return (
-                            <TableRow key={etapaKey} className="group hover:bg-slate-50/50 border-slate-50">
+                            <TableRow key={etapaKey} className="group hover:bg-muted/30/50 border-slate-50">
                               <TableCell className="py-3">
                                 <div className="flex flex-col">
                                   <span className="text-[11px] font-bold text-slate-700">{ETAPA_LABELS[etapaKey]}</span>
                                   {item.observacoes && (
-                                    <span className="text-[9px] text-slate-500 italic">{item.observacoes}</span>
+                                    <span className="text-[9px] text-muted-foreground italic">{item.observacoes}</span>
                                   )}
                                 </div>
                               </TableCell>
@@ -379,7 +379,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                                   type="date"
                                   value={item.data_prevista || ''}
                                   onChange={(e) => updateEtapaHistorico(etapaKey, 'data_prevista', e.target.value)}
-                                  className="h-8 text-[11px] font-semibold p-1 border-slate-200"
+                                  className="h-8 text-[11px] font-semibold p-1 border-border/60"
                                 />
                               </TableCell>
                               <TableCell className="py-2">
@@ -387,7 +387,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                                   type="date"
                                   value={item.data_realizada || ''}
                                   onChange={(e) => updateEtapaHistorico(etapaKey, 'data_realizada', e.target.value)}
-                                  className="h-8 text-[11px] font-semibold p-1 border-slate-200"
+                                  className="h-8 text-[11px] font-semibold p-1 border-border/60"
                                 />
                               </TableCell>
                               <TableCell className="py-2">
@@ -395,7 +395,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                                   placeholder="Obs..."
                                   value={item.observacoes || ''}
                                   onChange={(e) => updateEtapaHistorico(etapaKey, 'observacoes', e.target.value)}
-                                  className="h-8 text-[10px] font-medium p-1 border-slate-200"
+                                  className="h-8 text-[10px] font-medium p-1 border-border/60"
                                 />
                               </TableCell>
                               <TableCell className="py-2 text-center">
@@ -412,8 +412,8 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                     </Table>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-                    <p className="text-[10px] text-slate-500 font-medium italic">
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-dashed border-slate-300">
+                    <p className="text-[10px] text-muted-foreground font-medium italic">
                       As etapas acima são as padrão para este tipo de edital. Você pode ajustar as datas conforme o documento oficial.
                     </p>
                     <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold uppercase text-primary">
@@ -426,8 +426,8 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
           </Tabs>
         </div>
 
-        <div className="bg-slate-50/80 p-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <Button variant="ghost" onClick={onClose} className="font-bold text-slate-500 hover:bg-slate-100">
+        <div className="bg-muted/30/80 p-4 border-t border-border/40 flex items-center justify-end gap-3">
+          <Button variant="ghost" onClick={onClose} className="font-bold text-muted-foreground hover:bg-slate-100">
             <X className="mr-2 h-4 w-4" /> Cancelar
           </Button>
           <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 font-bold px-8 shadow-lg shadow-primary/20">

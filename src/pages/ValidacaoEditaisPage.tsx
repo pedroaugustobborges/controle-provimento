@@ -218,14 +218,14 @@ export default function ValidacaoEditaisPage() {
         </Card>
       </div>
 
-      <Card className="border-slate-200 shadow-sm overflow-hidden">
-        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-row items-center justify-between">
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 border-b bg-muted/30/50 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" />
-            <CardTitle className="text-lg font-bold text-slate-800">Editais Pendentes</CardTitle>
+            <CardTitle className="text-lg font-bold text-foreground">Editais Pendentes</CardTitle>
           </div>
           <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/80" />
             <Input 
               placeholder="Filtrar..." 
               className="pl-9 h-10 bg-white" 
@@ -251,18 +251,18 @@ export default function ValidacaoEditaisPage() {
                 <TableRow key={v.id} className="group">
                   <TableCell className="font-medium text-slate-700">{v.unidade}</TableCell>
                   <TableCell>
-                    <div className="font-semibold text-slate-800">{v.cargo}</div>
-                    <div className="text-[11px] text-slate-400">{v.requisicao}</div>
+                    <div className="font-semibold text-foreground">{v.cargo}</div>
+                    <div className="text-[11px] text-muted-foreground/80">{v.requisicao}</div>
                   </TableCell>
                   <td className="px-6 py-4">
                     <div className="text-sm font-bold text-primary">{v.numero_edital || '-'}</div>
-                    <div className="text-[11px] text-slate-500">{v.numero_processo || '-'}</div>
+                    <div className="text-[11px] text-muted-foreground">{v.numero_processo || '-'}</div>
                   </td>
                   <td className="px-6 py-4 max-w-[150px]">
-                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
+                    <p className="text-[10px] text-muted-foreground truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
                   </td>
                   <td className="px-6 py-4 max-w-[150px]">
-                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
+                    <p className="text-[10px] text-muted-foreground truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2 items-center">
@@ -280,7 +280,7 @@ export default function ValidacaoEditaisPage() {
               ))}
               {pendingEditais.length === 0 && (
                 <TableRow>
-                  <td colSpan={6} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                  <td colSpan={6} className="px-6 py-20 text-center text-muted-foreground/80 font-medium italic">
                     Nenhum edital pendente de validação administrativa.
                   </td>
                 </TableRow>
@@ -304,14 +304,14 @@ export default function ValidacaoEditaisPage() {
           
           <div className="space-y-6 py-4">
             {/* Resumo da Vaga */}
-            <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-3 rounded-lg border border-border/40">
               <div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Edital</p>
-                <p className="font-bold text-slate-800">{selectedVaga?.numero_edital}</p>
+                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase">Nº Edital</p>
+                <p className="font-bold text-foreground">{selectedVaga?.numero_edital}</p>
               </div>
               <div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Processo</p>
-                <p className="font-bold text-slate-800">{selectedVaga?.numero_processo}</p>
+                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase">Nº Processo</p>
+                <p className="font-bold text-foreground">{selectedVaga?.numero_processo}</p>
               </div>
             </div>
 
@@ -324,7 +324,7 @@ export default function ValidacaoEditaisPage() {
                 <Input 
                   value={reachrUrl} 
                   onChange={(e) => setReachrUrl(e.target.value)} 
-                  className="bg-white border-slate-200 flex-1" 
+                  className="bg-white border-border/60 flex-1" 
                   placeholder="https://www.reachr.com.br/vaga/..." 
                 />
                 {reachrUrl && (
@@ -338,7 +338,7 @@ export default function ValidacaoEditaisPage() {
                   </Button>
                 )}
               </div>
-              <p className="text-[10px] text-slate-400">Cole o link da vaga publicada no portal www.reachr.com.br</p>
+              <p className="text-[10px] text-muted-foreground/80">Cole o link da vaga publicada no portal www.reachr.com.br</p>
             </div>
 
             {/* Arquivo do Edital */}
@@ -362,8 +362,8 @@ export default function ValidacaoEditaisPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="p-4 border border-dashed border-slate-200 rounded-lg text-center">
-                  <p className="text-sm text-slate-400 italic">Nenhum arquivo anexado.</p>
+                <div className="p-4 border border-dashed border-border/60 rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground/80 italic">Nenhum arquivo anexado.</p>
                 </div>
               )}
             </div>
@@ -375,25 +375,25 @@ export default function ValidacaoEditaisPage() {
               </h4>
               
               <div className="space-y-3">
-                <div className="relative pl-6 pb-2 border-l-2 border-slate-100">
+                <div className="relative pl-6 pb-2 border-l-2 border-border/40">
                   <div className="absolute left-[-9px] top-0 bg-white p-0.5">
                     <div className="bg-amber-100 p-1 rounded-full"><Building2 className="h-3 w-3 text-amber-600" /></div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Analista da Unidade</span>
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase">Analista da Unidade</span>
+                    <div className="bg-muted/30 p-2.5 rounded-lg border border-border/40 text-sm text-slate-700 italic">
                       {selectedVaga?.observacoes_unidade || 'Nenhuma observação informada pela unidade.'}
                     </div>
                   </div>
                 </div>
 
-                <div className="relative pl-6 border-l-2 border-slate-100">
+                <div className="relative pl-6 border-l-2 border-border/40">
                   <div className="absolute left-[-9px] top-0 bg-white p-0.5">
                     <div className="bg-blue-100 p-1 rounded-full"><User className="h-3 w-3 text-blue-600" /></div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Analista do Edital</span>
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase">Analista do Edital</span>
+                    <div className="bg-muted/30 p-2.5 rounded-lg border border-border/40 text-sm text-slate-700 italic">
                       {selectedVaga?.observacoes_edital || 'Nenhuma observação informada pelo analista do edital.'}
                     </div>
                   </div>
@@ -418,18 +418,18 @@ export default function ValidacaoEditaisPage() {
               </div>
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 <div className="bg-white p-1.5 rounded border border-blue-100">
-                  <span className="text-slate-400 block uppercase font-black tracking-tighter">Inscrições</span>
+                  <span className="text-muted-foreground/80 block uppercase font-black tracking-tighter">Inscrições</span>
                   <span className="font-bold text-blue-700">01/01/2024 a 15/01/2024</span>
                 </div>
                 <div className="bg-white p-1.5 rounded border border-blue-100">
-                  <span className="text-slate-400 block uppercase font-black tracking-tighter">Triagem</span>
+                  <span className="text-muted-foreground/80 block uppercase font-black tracking-tighter">Triagem</span>
                   <span className="font-bold text-blue-700">20/01/2024</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-400 uppercase">Observações da Validação Final</label>
+              <label className="text-[11px] font-bold text-muted-foreground/80 uppercase">Observações da Validação Final</label>
               <Textarea 
                 placeholder="Informe o motivo da reprovação, ajuste ou observações da aprovação..." 
                 value={obs}

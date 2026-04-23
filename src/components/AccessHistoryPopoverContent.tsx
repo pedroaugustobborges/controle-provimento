@@ -104,9 +104,9 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
   };
 
   return (
-    <div className="w-[450px] bg-white/95 backdrop-blur-sm border-slate-200/60 shadow-xl rounded-xl overflow-hidden">
+    <div className="w-[450px] bg-white/95 backdrop-blur-sm border-border/60/60 shadow-xl rounded-xl overflow-hidden">
       <Tabs defaultValue="online" className="w-full">
-        <div className="px-4 pt-4 pb-2 border-b border-slate-100 bg-slate-50/50">
+        <div className="px-4 pt-4 pb-2 border-b border-border/40 bg-muted/30/50">
           <TabsList className="grid w-full grid-cols-2 h-9 bg-slate-200/50">
             <TabsTrigger value="online" className="text-xs flex items-center gap-2">
               <Users className="h-3.5 w-3.5" />
@@ -120,8 +120,8 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
         </div>
 
         <TabsContent value="online" className="m-0">
-          <div className="p-3 flex items-center justify-between border-b border-slate-100 bg-white">
-            <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-xs">
+          <div className="p-3 flex items-center justify-between border-b border-border/40 bg-white">
+            <h3 className="font-semibold text-foreground flex items-center gap-2 text-xs">
               <Users className="h-3.5 w-3.5 text-primary" />
               Usuários Conectados
             </h3>
@@ -138,16 +138,16 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
               ) : (
                 <div className="space-y-1">
                   {onlineUsers.map((user) => (
-                    <div key={user.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div key={user.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors">
                       <div className="relative">
-                        <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                        <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
                           {user.nome_completo?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || 'US'}
                         </div>
                         <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-success rounded-full border-2 border-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-800 truncate">{user.nome_completo}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{user.perfil} · {format(new Date(user.online_at || Date.now()), 'HH:mm')}</p>
+                        <p className="text-xs font-semibold text-foreground truncate">{user.nome_completo}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{user.perfil} · {format(new Date(user.online_at || Date.now()), 'HH:mm')}</p>
                       </div>
                     </div>
                   ))}
@@ -158,16 +158,16 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
         </TabsContent>
 
         <TabsContent value="history" className="m-0">
-          <div className="p-3 border-b border-slate-100 bg-white space-y-3">
+          <div className="p-3 border-b border-border/40 bg-white space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-xs">
+              <h3 className="font-semibold text-foreground flex items-center gap-2 text-xs">
                 <History className="h-3.5 w-3.5 text-primary" />
                 Histórico de Acessos
               </h3>
               
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 text-[10px] font-medium border-slate-200">
+                  <Button variant="outline" size="sm" className="h-8 text-[10px] font-medium border-border/60">
                     <CalendarIcon className="mr-2 h-3 w-3" />
                     {format(date, 'dd/MM/yyyy')}
                   </Button>
@@ -198,23 +198,23 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
               ) : (
                 <div className="space-y-3">
                   {history.map((session) => (
-                    <div key={session.id} className="p-3 rounded-xl border border-slate-100 bg-white hover:border-primary/20 hover:shadow-sm transition-all group">
+                    <div key={session.id} className="p-3 rounded-xl border border-border/40 bg-white hover:border-primary/20 hover:shadow-sm transition-all group">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="h-7 w-7 rounded-full bg-primary/5 flex items-center justify-center text-[10px] font-bold text-primary border border-primary/10">
                             {session.profiles?.nome_completo?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || 'US'}
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-slate-800">{session.profiles?.nome_completo || 'Usuário desconhecido'}</p>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-tight">{session.profiles?.perfil || '—'} · {session.profiles?.cargo || 'Sem cargo'}</p>
+                            <p className="text-xs font-semibold text-foreground">{session.profiles?.nome_completo || 'Usuário desconhecido'}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase tracking-tight">{session.profiles?.perfil || '—'} · {session.profiles?.cargo || 'Sem cargo'}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="flex items-center gap-1 text-[10px] font-medium text-slate-600">
-                            <Clock className="h-3 w-3 text-slate-400" />
+                          <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                            <Clock className="h-3 w-3 text-muted-foreground/80" />
                             {format(new Date(session.login_at), 'HH:mm')}
                           </div>
-                          <div className="text-[9px] text-slate-400">
+                          <div className="text-[9px] text-muted-foreground/80">
                             Duração: {session.duration} min
                           </div>
                         </div>
@@ -222,14 +222,14 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
 
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-medium text-slate-600">Interatividade:</span>
+                          <span className="text-[10px] font-medium text-muted-foreground">Interatividade:</span>
                           {session.hasActivity ? (
                             <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 flex items-center gap-1 text-[9px] h-5 px-1.5">
                               <CheckCircle2 className="h-2.5 w-2.5" />
                               Sim
                             </Badge>
                           ) : (
-                            <Badge className="bg-slate-50 text-slate-400 border-slate-100 flex items-center gap-1 text-[9px] h-5 px-1.5">
+                            <Badge className="bg-muted/30 text-muted-foreground/80 border-border/40 flex items-center gap-1 text-[9px] h-5 px-1.5">
                               <XCircle className="h-2.5 w-2.5" />
                               Não
                             </Badge>

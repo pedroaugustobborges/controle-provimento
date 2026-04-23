@@ -318,9 +318,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       )}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-slate-200/60 shadow-xl rounded-xl">
-                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                      <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-border/60/60 shadow-xl rounded-xl">
+                    <div className="p-4 border-b border-border/40 flex items-center justify-between bg-muted/30/50">
+                      <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Bell className="h-4 w-4 text-primary" />
                         Notificações
                       </h3>
@@ -348,7 +348,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                   updateAlerta(alerta.id, { status: 'lido' });
                                 }
                               }}
-                              className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors group relative ${
+                              className={`flex gap-3 p-4 hover:bg-muted/30 transition-colors group relative ${
                                 alerta.status === 'nao_lido' ? 'bg-primary/5' : ''
                               }`}
                             >
@@ -362,9 +362,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                  <Info className="h-4 w-4" />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-800 line-clamp-1">{alerta.titulo}</p>
-                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{alerta.mensagem}</p>
-                                <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
+                                <p className="text-sm font-medium text-foreground line-clamp-1">{alerta.titulo}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{alerta.mensagem}</p>
+                                <p className="text-[10px] text-muted-foreground/80 mt-1 uppercase font-semibold tracking-wider">
                                   {format(parseISO(alerta.data_criacao), "dd 'de' MMMM", { locale: ptBR })}
                                 </p>
                               </div>

@@ -34,7 +34,7 @@ import {
         { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-100' },
         { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
         { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100' },
-        { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50/80', border: 'border-slate-100' },
+        { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-muted-foreground', bg: 'bg-muted/30/80', border: 'border-border/40' },
         { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50/80', border: 'border-cyan-100' },
         { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50/80', border: 'border-purple-100' },
      ];
@@ -58,7 +58,7 @@ import {
               transition={{ delay: i * 0.05, duration: 0.4 }}
               whileHover={{ y: -4 }}
             >
-              <Card className="border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 rounded-2xl overflow-hidden group">
+              <Card className="border border-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 rounded-2xl overflow-hidden group">
                 <CardContent className="p-5 relative">
                   <div className={cn("absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500", stat.bg.replace('bg-', 'bg-').split('/')[0])} />
                   <div className="flex items-start justify-between relative z-10">
@@ -66,8 +66,8 @@ import {
                       <stat.icon className={cn("h-5 w-5", stat.color)} />
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">{stat.value}</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{stat.label}</span>
+                      <span className="text-2xl font-black text-foreground tracking-tight group-hover:text-indigo-600 transition-colors">{stat.value}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest mt-1">{stat.label}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -76,8 +76,8 @@ import {
          ))}
        </div>
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border border-slate-100 shadow-sm rounded-2xl">
-            <CardHeader><CardTitle className="text-lg font-bold text-slate-800">Distribuição de Unidades por Analista</CardTitle></CardHeader>
+          <Card className="border border-border/40 shadow-sm rounded-2xl">
+            <CardHeader><CardTitle className="text-lg font-bold text-foreground">Distribuição de Unidades por Analista</CardTitle></CardHeader>
            <CardContent className="h-[300px]">
              <ResponsiveContainer width="100%" height="100%">
                <BarChart data={chartData}>
@@ -96,11 +96,11 @@ import {
              </ResponsiveContainer>
            </CardContent>
          </Card>
-          <Card className="border border-slate-100 shadow-sm rounded-2xl">
+          <Card className="border border-border/40 shadow-sm rounded-2xl">
            <CardHeader className="flex flex-row items-center justify-between">
              <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Próximos Eventos</CardTitle>
-                <CardDescription className="text-xs font-medium text-slate-400">Agenda interna da equipe</CardDescription>
+                <CardTitle className="text-lg font-bold text-foreground">Próximos Eventos</CardTitle>
+                <CardDescription className="text-xs font-medium text-muted-foreground/80">Agenda interna da equipe</CardDescription>
              </div>
            </CardHeader>
            <CardContent>
@@ -109,13 +109,13 @@ import {
                  { title: 'Treinamento de Onboarding', date: 'Amanhã, 09:00', type: 'Treinamento' },
                  { title: 'Alinhamento Trimestral', date: '25 Out, 14:00', type: 'Alinhamento' },
                ].map((event, i) => (
-                 <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                   <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                 <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/30 transition-colors">
+                   <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground">
                      <Calendar className="h-5 w-5" />
                    </div>
                    <div className="flex-1">
-                     <h4 className="text-sm font-semibold text-slate-900">{event.title}</h4>
-                     <p className="text-xs text-slate-500">{event.date}</p>
+                     <h4 className="text-sm font-semibold text-foreground">{event.title}</h4>
+                     <p className="text-xs text-muted-foreground">{event.date}</p>
                    </div>
                  </div>
                ))}
@@ -135,10 +135,10 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
            <div>
-             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Férias, Folgas e Day Off</h3>
-             <p className="text-sm text-slate-500 font-medium">Gestão centralizada de ausências e coberturas</p>
+             <h3 className="text-2xl font-black text-foreground tracking-tight">Férias, Folgas e Day Off</h3>
+             <p className="text-sm text-muted-foreground font-medium">Gestão centralizada de ausências e coberturas</p>
            </div>
             <Button className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
@@ -157,51 +157,51 @@ import {
                    <Calendar className={cn("h-5 w-5", stat.color)} />
                  </div>
                  <div>
-                   <p className="text-2xl font-black text-slate-900">{stat.value}</p>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                   <p className="text-2xl font-black text-foreground">{stat.value}</p>
+                   <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">{stat.label}</p>
                  </div>
                </div>
              </Card>
            ))}
          </div>
  
-          <Card className="border border-slate-100 shadow-sm overflow-hidden rounded-2xl bg-white">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex flex-wrap gap-4 items-center justify-between">
+          <Card className="border border-border/40 shadow-sm overflow-hidden rounded-2xl bg-white">
+            <div className="p-4 border-b border-border/40 bg-muted/30/30 flex flex-wrap gap-4 items-center justify-between">
               <div className="relative w-full lg:w-80">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                <Input 
                  placeholder="Buscar colaborador..." 
-                  className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all"
+                  className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
              </div>
              <div className="flex gap-2">
-               <Button variant="outline" className="h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs">
+               <Button variant="outline" className="h-10 rounded-xl border-border/60 font-bold text-muted-foreground text-xs">
                  <Filter className="h-4 w-4 mr-2" /> Filtros
                </Button>
-               <Button variant="outline" className="h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs">
+               <Button variant="outline" className="h-10 rounded-xl border-border/60 font-bold text-muted-foreground text-xs">
                  Outubro 2023
                </Button>
              </div>
            </div>
            <Table>
-             <TableHeader className="bg-slate-50/50">
-               <TableRow className="hover:bg-transparent border-slate-100">
-                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Colaborador</TableHead>
-                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Tipo</TableHead>
-                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Período</TableHead>
-                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Cobertura</TableHead>
-                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Status</TableHead>
+             <TableHeader className="bg-muted/30/50">
+               <TableRow className="hover:bg-transparent border-border/40">
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 py-4">Colaborador</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 py-4">Tipo</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 py-4">Período</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 py-4">Cobertura</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 py-4">Status</TableHead>
                </TableRow>
              </TableHeader>
              <TableBody>
                {absences.map(item => (
-                 <TableRow key={item.id} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
+                 <TableRow key={item.id} className="border-slate-50 hover:bg-muted/30/50 transition-colors">
                   <TableCell className="py-4">
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-900 text-sm">{item.name}</span>
-                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">{item.role}</span>
+                      <span className="font-bold text-foreground text-sm">{item.name}</span>
+                      <span className="text-[10px] text-muted-foreground/80 uppercase font-black tracking-tighter">{item.role}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -212,15 +212,15 @@ import {
                       {item.type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-xs font-semibold text-slate-600">
+                  <TableCell className="text-xs font-semibold text-muted-foreground">
                     {item.start} <span className="text-slate-300 mx-1">→</span> {item.end}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className={cn("text-[10px] font-black uppercase tracking-widest", item.coverage === 'Sim' ? "text-indigo-600" : "text-slate-400")}>
+                      <span className={cn("text-[10px] font-black uppercase tracking-widest", item.coverage === 'Sim' ? "text-indigo-600" : "text-muted-foreground/80")}>
                         {item.coverage === 'Sim' ? 'Com Cobertura' : 'Sem Cobertura'}
                       </span>
-                      {item.coveredBy !== '-' && <span className="text-xs font-bold text-slate-600 mt-0.5">{item.coveredBy}</span>}
+                      {item.coveredBy !== '-' && <span className="text-xs font-bold text-muted-foreground mt-0.5">{item.coveredBy}</span>}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -247,10 +247,10 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
            <div>
-             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Funções e Escopos</h3>
-             <p className="text-sm text-slate-500 font-medium">Definição clara de responsabilidades por cargo</p>
+             <h3 className="text-2xl font-black text-foreground tracking-tight">Funções e Escopos</h3>
+             <p className="text-sm text-muted-foreground font-medium">Definição clara de responsabilidades por cargo</p>
            </div>
            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Escopo
@@ -262,30 +262,30 @@ import {
                <div className="p-8">
                  <div className="flex items-start justify-between mb-8">
                    <div className="flex items-center gap-5">
-                     <div className="h-16 w-16 bg-slate-50 rounded-[1.25rem] flex items-center justify-center text-indigo-600 border border-slate-100 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                     <div className="h-16 w-16 bg-muted/30 rounded-[1.25rem] flex items-center justify-center text-indigo-600 border border-border/40 shadow-inner group-hover:scale-110 transition-transform duration-500">
                        <Briefcase className="h-8 w-8" />
                      </div>
                      <div>
-                       <h4 className="font-black text-xl text-slate-900 tracking-tight">{s.role}</h4>
+                       <h4 className="font-black text-xl text-foreground tracking-tight">{s.role}</h4>
                        <div className="flex items-center gap-2 mt-1">
                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                          <p className="text-sm text-indigo-600 font-black uppercase tracking-widest">{s.name}</p>
                        </div>
                      </div>
                    </div>
-                   <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-50">
-                     <MoreHorizontal className="h-5 w-5 text-slate-400" />
+                   <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted/30">
+                     <MoreHorizontal className="h-5 w-5 text-muted-foreground/80" />
                    </Button>
                  </div>
                  <div className="space-y-6 relative">
-                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-50 rounded-full" />
+                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-muted/30 rounded-full" />
                    <div className="pl-6">
-                     <p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em] mb-2">Escopo Principal</p>
-                     <p className="text-base text-slate-800 font-bold leading-relaxed">{s.scope}</p>
+                     <p className="text-[10px] uppercase font-black text-muted-foreground/80 tracking-[0.2em] mb-2">Escopo Principal</p>
+                     <p className="text-base text-foreground font-bold leading-relaxed">{s.scope}</p>
                    </div>
                    <div className="pl-6">
-                     <p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em] mb-2">Atribuições Detalhadas</p>
-                     <p className="text-sm text-slate-500 leading-relaxed font-medium">{s.responsibilities}</p>
+                     <p className="text-[10px] uppercase font-black text-muted-foreground/80 tracking-[0.2em] mb-2">Atribuições Detalhadas</p>
+                     <p className="text-sm text-muted-foreground leading-relaxed font-medium">{s.responsibilities}</p>
                    </div>
                  </div>
                  <div className="mt-8 pt-6 border-t border-slate-50 flex justify-end">
@@ -309,10 +309,10 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
            <div>
-             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Prazos e Rotinas</h3>
-             <p className="text-sm text-slate-500 font-medium">Monitoramento de entregas e obrigações recorrentes</p>
+             <h3 className="text-2xl font-black text-foreground tracking-tight">Prazos e Rotinas</h3>
+             <p className="text-sm text-muted-foreground font-medium">Monitoramento de entregas e obrigações recorrentes</p>
            </div>
            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Nova Atividade
@@ -321,7 +321,7 @@ import {
  
          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
            {[
-             { label: 'Total Tarefas', value: '12', icon: ListTodo, color: 'text-slate-600', bg: 'bg-slate-50' },
+             { label: 'Total Tarefas', value: '12', icon: ListTodo, color: 'text-muted-foreground', bg: 'bg-muted/30' },
              { label: 'Em Atraso', value: '2', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
              { label: 'Próximas 48h', value: '4', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
              { label: 'Concluídas', value: '6', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -332,8 +332,8 @@ import {
                    <stat.icon className={cn("h-5 w-5", stat.color)} />
                  </div>
                  <div className="text-right">
-                   <p className="text-xl font-black text-slate-900">{stat.value}</p>
-                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                   <p className="text-xl font-black text-foreground">{stat.value}</p>
+                   <p className="text-[9px] font-bold text-muted-foreground/80 uppercase tracking-widest">{stat.label}</p>
                  </div>
                </div>
              </Card>
@@ -341,29 +341,29 @@ import {
          </div>
  
          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="p-4 border-b border-border/40 bg-muted/30/30 flex flex-col sm:flex-row gap-4 items-center justify-between">
               <div className="relative w-full sm:w-80">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500" />
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500" />
               </div>
-              <Button variant="outline" className="w-full sm:w-auto h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs hover:bg-slate-50 transition-colors">
+              <Button variant="outline" className="w-full sm:w-auto h-10 rounded-xl border-border/60 font-bold text-muted-foreground text-xs hover:bg-muted/30 transition-colors">
                <Filter className="h-4 w-4 mr-2" /> Prioridade
              </Button>
            </div>
            <Table>
-             <TableHeader className="bg-slate-50/50">
-               <TableRow className="border-slate-100">
-                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Atividade</TableHead>
-                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Prazo Fatal</TableHead>
-                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Prioridade</TableHead>
-                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Status</TableHead>
+             <TableHeader className="bg-muted/30/50">
+               <TableRow className="border-border/40">
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Atividade</TableHead>
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Prazo Fatal</TableHead>
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Prioridade</TableHead>
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Status</TableHead>
                </TableRow>
              </TableHeader>
              <TableBody>
                {routines.map((r, i) => (
-                 <TableRow key={i} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
-                   <TableCell className="font-bold text-slate-800 py-5">{r.task}</TableCell>
-                   <TableCell className="text-slate-500 font-bold text-xs">{r.deadline}</TableCell>
+                 <TableRow key={i} className="border-slate-50 hover:bg-muted/30/50 transition-colors">
+                   <TableCell className="font-bold text-foreground py-5">{r.task}</TableCell>
+                   <TableCell className="text-muted-foreground font-bold text-xs">{r.deadline}</TableCell>
                    <TableCell>
                      <Badge className={cn(
                        "border-none font-black text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-wider",
@@ -374,7 +374,7 @@ import {
                       <Badge variant="outline" className={cn(
                         "capitalize border-none font-bold text-[10px] px-3 py-1 rounded-full",
                         r.status === 'concluido' ? "bg-emerald-50 text-emerald-700" : 
-                        r.status === 'em_andamento' ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"
+                        r.status === 'em_andamento' ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-muted-foreground"
                       )}>
                         {r.status.replace('_', ' ')}
                       </Badge>
@@ -398,10 +398,10 @@ import {
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm">
            <div>
-             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Escala e Acompanhamento</h3>
-             <p className="text-sm text-slate-500 font-medium">Status da equipe em tempo real por unidade</p>
+             <h3 className="text-2xl font-black text-foreground tracking-tight">Escala e Acompanhamento</h3>
+             <p className="text-sm text-muted-foreground font-medium">Status da equipe em tempo real por unidade</p>
            </div>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
@@ -416,7 +416,7 @@ import {
  
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
            {teamStatus.map((t, i) => (
-              <Card key={i} className="border border-slate-100 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-3xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-indigo-500">
+              <Card key={i} className="border border-border/40 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-3xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-indigo-500">
                <div className={cn(
                  "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150",
                  t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-indigo-500"
@@ -437,15 +437,15 @@ import {
                     )} />
                  </div>
                  
-                 <h4 className="font-black text-slate-900 tracking-tight text-lg">{t.name}</h4>
-                 <div className="flex items-center gap-1.5 mt-1 text-slate-400">
+                 <h4 className="font-black text-foreground tracking-tight text-lg">{t.name}</h4>
+                 <div className="flex items-center gap-1.5 mt-1 text-muted-foreground/80">
                    <MapPin className="h-3 w-3" />
                    <span className="text-[10px] font-bold uppercase tracking-widest">{t.location}</span>
                  </div>
  
                  <div className="mt-6 w-full pt-6 border-t border-slate-50">
                    <div className="flex justify-between items-center mb-1">
-                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Situação</span>
+                     <span className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest">Situação</span>
                      <Badge className={cn(
                        "border-none font-black text-[9px] px-2.5 py-0.5 rounded-lg uppercase tracking-wider",
                        t.status === 'Ativo' ? "bg-emerald-50 text-emerald-700" : 
@@ -453,8 +453,8 @@ import {
                      )}>{t.status}</Badge>
                    </div>
                    {t.coverage !== '-' && (
-                      <div className="flex justify-between items-center mt-3 p-2 bg-slate-50 rounded-xl">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cobertura</span>
+                      <div className="flex justify-between items-center mt-3 p-2 bg-muted/30 rounded-xl">
+                        <span className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest">Cobertura</span>
                         <span className="text-[10px] font-bold text-indigo-600">{t.coverage}</span>
                       </div>
                    )}
@@ -476,10 +476,10 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
            <div>
-             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Alinhamentos e Treinamentos</h3>
-             <p className="text-sm text-slate-500 font-medium">Desenvolvimento contínuo e sincronização de processos</p>
+             <h3 className="text-2xl font-black text-foreground tracking-tight">Alinhamentos e Treinamentos</h3>
+             <p className="text-sm text-muted-foreground font-medium">Desenvolvimento contínuo e sincronização de processos</p>
            </div>
            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
@@ -488,19 +488,19 @@ import {
  
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-50 shadow-sm">
              <div className="relative w-full lg:flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
               <Input 
                 placeholder="Buscar por tema ou colaborador..." 
-                className="pl-10 h-10 border-slate-200 rounded-xl focus-visible:ring-indigo-500" 
+                className="pl-10 h-10 border-border/60 rounded-xl focus-visible:ring-indigo-500" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="h-10 rounded-xl border-slate-200 text-xs font-bold text-slate-600">
+              <Button variant="outline" className="h-10 rounded-xl border-border/60 text-xs font-bold text-muted-foreground">
                 <Filter className="h-4 w-4 mr-2" /> Tipo
               </Button>
-              <Button variant="outline" className="h-10 rounded-xl border-slate-200 text-xs font-bold text-slate-600">
+              <Button variant="outline" className="h-10 rounded-xl border-border/60 text-xs font-bold text-muted-foreground">
                 Período
               </Button>
             </div>
@@ -527,7 +527,7 @@ import {
                          "border-none font-black text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-wider",
                          r.type === 'Alinhamento' ? "bg-cyan-100 text-cyan-700" : "bg-purple-100 text-purple-700"
                        )}>{r.type}</Badge>
-                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{r.date}</span>
+                       <span className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest">{r.date}</span>
                      </div>
                      <Badge variant="outline" className={cn(
                         "capitalize border-none font-bold text-[10px] px-3 py-1 rounded-full",
@@ -537,17 +537,17 @@ import {
                      </Badge>
                    </div>
                    
-                   <h4 className="text-xl font-black text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">{r.theme}</h4>
-                   <p className="text-sm text-slate-500 font-medium mt-2 leading-relaxed">{r.description}</p>
+                   <h4 className="text-xl font-black text-foreground tracking-tight group-hover:text-indigo-600 transition-colors">{r.theme}</h4>
+                   <p className="text-sm text-muted-foreground font-medium mt-2 leading-relaxed">{r.description}</p>
                    
                    <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-50">
                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                        <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-muted-foreground">
                           {r.person[0]}
                         </div>
                         <span className="text-xs font-bold text-slate-700">Responsável: {r.person}</span>
                      </div>
-                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 hover:bg-indigo-50">
+                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-indigo-600 hover:bg-indigo-50">
                        Detalhes do Registro
                      </Button>
                    </div>
@@ -569,17 +569,17 @@ import {
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm">
            <div>
-             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Central de Exportações</h3>
-             <p className="text-sm text-slate-500 font-medium">Extração de dados e relatórios gerenciais</p>
+             <h3 className="text-2xl font-black text-foreground tracking-tight">Central de Exportações</h3>
+             <p className="text-sm text-muted-foreground font-medium">Extração de dados e relatórios gerenciais</p>
            </div>
            <Download className="h-8 w-8 text-slate-200" />
          </div>
  
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            {exportOptions.map((opt, i) => (
-              <Card key={i} className="border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 rounded-[2rem] p-8 bg-white group overflow-hidden relative">
+              <Card key={i} className="border border-border/40 shadow-sm hover:shadow-xl transition-all duration-500 rounded-[2rem] p-8 bg-white group overflow-hidden relative">
                <div className={cn("absolute top-0 right-0 w-40 h-40 -mr-20 -mt-20 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150", opt.bg.replace('bg-', 'bg-'))} />
                
                <div className="flex items-start gap-6 relative z-10">
@@ -587,12 +587,12 @@ import {
                    <opt.icon className={cn("h-7 w-7", opt.color)} />
                  </div>
                  <div className="flex-1">
-                   <h4 className="font-black text-xl text-slate-900 tracking-tight mb-2 group-hover:text-indigo-600 transition-colors">{opt.title}</h4>
-                   <p className="text-sm text-slate-500 font-medium mb-6">Selecione o formato desejado para download do relatório completo.</p>
+                   <h4 className="font-black text-xl text-foreground tracking-tight mb-2 group-hover:text-indigo-600 transition-colors">{opt.title}</h4>
+                   <p className="text-sm text-muted-foreground font-medium mb-6">Selecione o formato desejado para download do relatório completo.</p>
                    
                    <div className="flex flex-wrap gap-2">
                      {opt.formats.map(fmt => (
-                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 transition-all">
+                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted/30 hover:text-indigo-600 hover:border-indigo-200 transition-all">
                          {fmt}
                        </Button>
                      ))}
@@ -612,13 +612,13 @@ import {
  
      return (
        <div className="space-y-6">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-6">
                <div>
-                 <h3 className="text-2xl font-black text-slate-900 tracking-tight">Quadro da Equipe</h3>
-                 <p className="text-sm text-slate-500 font-medium">Estrutura organizacional e alocação de talentos</p>
+                 <h3 className="text-2xl font-black text-foreground tracking-tight">Quadro da Equipe</h3>
+                 <p className="text-sm text-muted-foreground font-medium">Estrutura organizacional e alocação de talentos</p>
                </div>
                <div className="flex gap-3">
-                    <div className="bg-slate-50 p-1 rounded-xl border border-slate-100 flex gap-1 mr-2 w-fit">
+                    <div className="bg-muted/30 p-1 rounded-xl border border-border/40 flex gap-1 mr-2 w-fit">
                       <Button 
                         variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
                         size="sm" 
@@ -636,7 +636,7 @@ import {
                         Tabela
                       </Button>
                    </div>
-                    <Button variant="outline" className="flex-1 lg:flex-none rounded-xl border-slate-200 h-10 px-6 font-bold text-slate-600 text-xs">
+                    <Button variant="outline" className="flex-1 lg:flex-none rounded-xl border-border/60 h-10 px-6 font-bold text-muted-foreground text-xs">
                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
                    </Button>
                     <Button className="flex-1 lg:flex-none bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
@@ -648,26 +648,26 @@ import {
            {viewMode === 'grid' ? (
              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                  {teamData.map(i => (
-                     <Card key={i} className="bg-white p-0 rounded-[2rem] shadow-sm border border-slate-100 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
+                     <Card key={i} className="bg-white p-0 rounded-[2rem] shadow-sm border border-border/40 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
                          <div className="p-8">
                            <div className="flex justify-between items-start mb-6">
                              <div className="h-14 w-14 bg-indigo-50/50 rounded-2xl flex items-center justify-center border border-indigo-100 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
                                <Building2 className="h-7 w-7 text-indigo-600" />
                              </div>
-                             <Badge variant="outline" className="border-slate-100 bg-slate-50 text-slate-400 font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 rounded-full">
+                             <Badge variant="outline" className="border-border/40 bg-muted/30 text-muted-foreground/80 font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 rounded-full">
                                Ativo
                              </Badge>
                            </div>
                            
-                           <h4 className="font-black text-xl text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">Unidade Hospitalar {i}</h4>
+                           <h4 className="font-black text-xl text-foreground tracking-tight group-hover:text-indigo-600 transition-colors">Unidade Hospitalar {i}</h4>
                            <div className="flex items-center gap-2 mt-1">
                              <MapPin className="h-3 w-3 text-slate-300" />
-                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Goiânia - GO</p>
+                             <p className="text-[10px] text-muted-foreground/80 font-black uppercase tracking-[0.2em]">Goiânia - GO</p>
                            </div>
  
                            <div className="mt-8 space-y-4">
-                               <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
-                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                               <div className="bg-muted/30/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
+                                   <p className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest mb-1.5 flex items-center gap-2">
                                      <span className="h-1 w-1 rounded-full bg-indigo-400" />
                                      Analista Responsável
                                    </p>
@@ -676,8 +676,8 @@ import {
                                      <ChevronRight className="h-3 w-3 opacity-0 group-hover/info:opacity-100 transition-opacity" />
                                    </p>
                                </div>
-                               <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
-                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                               <div className="bg-muted/30/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
+                                   <p className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest mb-1.5 flex items-center gap-2">
                                      <span className="h-1 w-1 rounded-full bg-cyan-400" />
                                      Assistente ADM
                                    </p>
@@ -688,7 +688,7 @@ import {
                                </div>
                            </div>
                          </div>
-                         <div className="bg-slate-50 p-4 flex justify-between items-center border-t border-slate-100">
+                         <div className="bg-muted/30 p-4 flex justify-between items-center border-t border-border/40">
                             <div className="flex -space-x-2">
                               {[1,2,3].map(av => (
                                 <div key={av} className="h-6 w-6 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[8px] font-bold">
@@ -696,7 +696,7 @@ import {
                                 </div>
                               ))}
                             </div>
-                            <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors">
+                            <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-indigo-600 transition-colors">
                               Gerenciar Equipe
                             </Button>
                          </div>
@@ -706,20 +706,20 @@ import {
            ) : (
              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
                 <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow className="border-slate-100">
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Unidade</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Localização</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Analista</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Assistente</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Status</TableHead>
+                  <TableHeader className="bg-muted/30/50">
+                    <TableRow className="border-border/40">
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Unidade</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Localização</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Analista</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Assistente</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 py-4">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {teamData.map(i => (
-                      <TableRow key={i} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
-                        <TableCell className="font-bold text-slate-900 py-5">Unidade Hospitalar {i}</TableCell>
-                        <TableCell className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Goiânia - GO</TableCell>
+                      <TableRow key={i} className="border-slate-50 hover:bg-muted/30/50 transition-colors">
+                        <TableCell className="font-bold text-foreground py-5">Unidade Hospitalar {i}</TableCell>
+                        <TableCell className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Goiânia - GO</TableCell>
                         <TableCell className="text-sm font-bold text-slate-700">Ricardo M.</TableCell>
                         <TableCell className="text-sm font-bold text-slate-700">Juliana F.</TableCell>
                         <TableCell>
@@ -763,7 +763,7 @@ import {
        case 'scale': return <ScaleModule />;
        case 'training': return <TrainingModule />;
        case 'export': return <ExportModule />;
-       default: return <div className="text-slate-400">Módulo em desenvolvimento</div>;
+       default: return <div className="text-muted-foreground/80">Módulo em desenvolvimento</div>;
      }
    };
  
@@ -784,7 +784,7 @@ import {
 
         {/* Sidebar (Desktop & Mobile) */}
         <aside className={cn(
-          "w-80 bg-white border-r border-slate-200/60 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
+          "w-80 bg-white border-r border-border/60/60 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
           isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
         )}>
          <div className="p-8 flex flex-col h-full">
@@ -793,7 +793,7 @@ import {
                  <ShieldCheck className="text-white h-7 w-7" />
                </div>
                <div>
-                  <h1 className="font-black text-slate-900 tracking-tighter text-xl uppercase leading-none">Gestão Estratégica</h1>
+                  <h1 className="font-black text-foreground tracking-tighter text-xl uppercase leading-none">Gestão Estratégica</h1>
                   <p className="text-[9px] uppercase tracking-[0.3em] text-indigo-600 font-black mt-1">Painel Executivo</p>
                </div>
              </div>
@@ -812,14 +812,14 @@ import {
                       "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
                       isActive 
                         ? "bg-indigo-600 text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] translate-x-1" 
-                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
+                        : "text-muted-foreground hover:bg-muted/30 hover:text-foreground active:scale-[0.98]"
                     )}
                     aria-current={isActive ? 'page' : undefined}
                     aria-label={item.label}
                   >
                    <item.icon className={cn(
                      "h-[18px] w-[18px] transition-all duration-500 group-hover:scale-110",
-                     isActive ? "text-white" : "text-slate-400"
+                     isActive ? "text-white" : "text-muted-foreground/80"
                    )} />
                    {item.label}
                    {isActive && (
@@ -836,7 +836,7 @@ import {
            <div className="mt-auto pt-6 border-t border-slate-50">
              <button 
                onClick={() => navigate('/')}
-               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-50 hover:text-rose-600 transition-all group"
+               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-muted-foreground/80 hover:bg-muted/30 hover:text-rose-600 transition-all group"
              >
                <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
                Sair do Portal
@@ -847,24 +847,24 @@ import {
  
        {/* Main Content Area */}
        <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-scrollbar">
-           <header className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 lg:px-10 flex items-center justify-between sticky top-0 z-10">
+           <header className="h-24 bg-white/80 backdrop-blur-xl border-b border-border/60/60 px-6 lg:px-10 flex items-center justify-between sticky top-0 z-10">
              <div className="flex items-center gap-4 lg:gap-6">
                <Button 
                  variant="ghost" 
                  size="icon" 
-                 className="lg:hidden rounded-xl bg-slate-50 border border-slate-100"
+                 className="lg:hidden rounded-xl bg-muted/30 border border-border/40"
                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                  aria-label="Toggle menu"
                >
                  {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                </Button>
                 <div className="flex flex-col">
-                  <h2 className="text-[22px] font-black text-slate-900 tracking-tight">
+                  <h2 className="text-[22px] font-black text-foreground tracking-tight">
                     {menuItems.find(m => m.id === activeTab)?.label}
                   </h2>
                   <div className="flex items-center gap-2 mt-0.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Executivo • Online</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">Acesso Executivo • Online</span>
                   </div>
                 </div>
               </div>
@@ -874,16 +874,16 @@ import {
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                <Input 
                  placeholder="Pesquisa executiva..." 
-                 className="pl-10 w-64 bg-slate-50 border-none focus-visible:ring-indigo-500 rounded-full h-10 text-[13px] font-medium"
+                 className="pl-10 w-64 bg-muted/30 border-none focus-visible:ring-indigo-500 rounded-full h-10 text-[13px] font-medium"
                />
              </div>
              
-             <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
+             <div className="flex items-center gap-3 pl-6 border-l border-border/40">
                <div className="text-right hidden sm:block">
-                 <p className="text-[13px] font-bold text-slate-900 leading-none">
+                 <p className="text-[13px] font-bold text-foreground leading-none">
                    {currentUser?.nome_completo?.split(' ')[0]}
                  </p>
-                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                 <p className="text-[10px] text-muted-foreground/80 font-bold uppercase tracking-widest mt-1">
                    {currentUser?.cargo || 'Analista'}
                  </p>
                </div>

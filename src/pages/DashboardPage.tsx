@@ -235,7 +235,7 @@ export default function DashboardPage() {
     { label: 'Documentação', value: counts.documentacao, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Pendência documental' },
     { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
     { label: 'Suspensa', value: counts.suspensa, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', description: 'Vagas suspensas' },
-    { label: 'Cancelada', value: counts.cancelada, icon: AlertCircle, color: 'text-slate-600', bg: 'bg-slate-50', description: 'Vagas canceladas' },
+    { label: 'Cancelada', value: counts.cancelada, icon: AlertCircle, color: 'text-muted-foreground', bg: 'bg-muted/30', description: 'Vagas canceladas' },
     { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
     { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
     { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
@@ -467,10 +467,10 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 whitespace-nowrap">
+            <h1 className="text-2xl font-black tracking-tight text-foreground whitespace-nowrap">
               Visão Geral do Provimento
             </h1>
-            <p className="text-slate-400 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
+            <p className="text-muted-foreground/80 font-bold mt-0.5 text-[10px] uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap">
               <Activity className="h-3.5 w-3.5 text-primary animate-pulse" /> Monitoramento em Tempo Real
             </p>
           </div>
@@ -478,12 +478,12 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
-              <Filter className="h-4 w-4 text-slate-500" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Região</span>
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Região</span>
             </div>
             
             <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
-              <SelectTrigger className="h-9 w-[180px] rounded-lg border-slate-200 bg-white text-[11px] font-black uppercase tracking-wider text-slate-600 shadow-sm hover:border-primary/30 transition-colors">
+              <SelectTrigger className="h-9 w-[180px] rounded-lg border-border/60 bg-white text-[11px] font-black uppercase tracking-wider text-muted-foreground shadow-sm hover:border-primary/30 transition-colors">
                 <SelectValue placeholder="Todas as Regiões" />
               </SelectTrigger>
               <SelectContent>
@@ -505,7 +505,7 @@ export default function DashboardPage() {
                 className={`h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-full transition-all ${
                   selectedUnits.includes('all')
                     ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    : 'bg-slate-100 text-muted-foreground hover:bg-slate-200'
                 }`}
                 onClick={() => setSelectedUnits(['all'])}
               >
@@ -536,7 +536,7 @@ export default function DashboardPage() {
                     className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 whitespace-nowrap ${
                       isSelected
                         ? 'bg-primary/5 text-primary border-primary shadow-sm'
-                        : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 hover:bg-slate-50'
+                        : 'bg-white text-muted-foreground border-border/40 hover:border-slate-300 hover:bg-muted/30'
                     }`}
                   >
                     {u}
@@ -556,21 +556,21 @@ export default function DashboardPage() {
                               (isBancosStat && isLoadingBancos && bancos.length === 0);
 
           return (
-            <Card key={idx} className="border border-slate-200 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
+            <Card key={idx} className="border border-border/60 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 group overflow-hidden bg-white relative">
               <div className={`h-1 w-full absolute top-0 left-0 ${stat.bg.replace('/5', '')} opacity-40`}></div>
               <CardContent className="p-3.5">
                 <div className={`p-2.5 rounded-lg ${stat.bg} w-fit mb-3 group-hover:scale-110 transition-transform duration-300 ring-1 ring-slate-100`}>
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
-                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1 leading-tight whitespace-nowrap">{stat.label}</p>
+                <p className="text-[9px] font-extrabold text-muted-foreground/80 uppercase tracking-wider mb-1 leading-tight whitespace-nowrap">{stat.label}</p>
                 <div className="flex flex-col gap-0.5">
                   {showSkeleton ? (
                     <Skeleton className="h-8 w-16 my-0.5" />
                   ) : (
-                    <p className="text-2xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
+                    <p className="text-2xl font-bold text-foreground tracking-tighter">{stat.value}</p>
                   )}
                   {stat.description && (
-                    <p className="text-[9px] font-bold text-slate-400 italic leading-none whitespace-nowrap">{stat.description}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground/80 italic leading-none whitespace-nowrap">{stat.description}</p>
                   )}
                 </div>
               </CardContent>
@@ -580,25 +580,25 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-slate-50/50">
+        <Card className="lg:col-span-2 border border-border/60 shadow-sm bg-white overflow-hidden flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-50 mb-6 bg-muted/30/50">
             <div>
-              <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2.5">
+              <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2.5">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Building2 className="h-5 w-5 text-primary" />
                 </div>
                 Visão Estratégica {chartMode === 'regiao' ? 'por Grupo Regional' : 'por Unidade'}
               </CardTitle>
-              <CardDescription className="text-xs font-medium text-slate-400 ml-10.5">Distribuição consolidada de vagas e bancos conforme os filtros ativos.</CardDescription>
+              <CardDescription className="text-xs font-medium text-muted-foreground/80 ml-10.5">Distribuição consolidada de vagas e bancos conforme os filtros ativos.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+              <div className="flex rounded-lg border border-border/60 overflow-hidden">
                 <button
                   onClick={() => setChartMode('unidade')}
                   className={`text-[10px] font-bold px-3 py-1.5 transition-all uppercase tracking-wider ${
                     chartMode === 'unidade'
                       ? 'bg-[#1e3a5f] text-white'
-                      : 'bg-white text-slate-500 hover:bg-slate-50'
+                      : 'bg-white text-muted-foreground hover:bg-muted/30'
                   }`}
                 >
                   Por Unidade
@@ -608,7 +608,7 @@ export default function DashboardPage() {
                   className={`text-[10px] font-bold px-3 py-1.5 transition-all uppercase tracking-wider ${
                     chartMode === 'regiao'
                       ? 'bg-[#1e3a5f] text-white'
-                      : 'bg-white text-slate-500 hover:bg-slate-50'
+                      : 'bg-white text-muted-foreground hover:bg-muted/30'
                   }`}
                 >
                   Por Região
@@ -622,7 +622,7 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 z-10 bg-white/40 backdrop-blur-[1px] flex items-center justify-center rounded-lg">
                   <div className="flex flex-col items-center gap-3">
                     <RefreshCcw className="h-8 w-8 text-primary animate-spin opacity-40" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Otimizando dados...</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">Otimizando dados...</span>
                   </div>
                 </div>
               )}
@@ -707,7 +707,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
+        <Card className="border border-border/60 shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="pb-4 border-b border-slate-50 bg-amber-50/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -715,8 +715,8 @@ export default function DashboardPage() {
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold text-slate-800">Vagas sem Movimentação</CardTitle>
-                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Vagas sem status desde a inclusão no sistema</p>
+                  <CardTitle className="text-lg font-bold text-foreground">Vagas sem Movimentação</CardTitle>
+                  <p className="text-[10px] text-muted-foreground/80 font-medium mt-0.5">Vagas sem status desde a inclusão no sistema</p>
                 </div>
               </div>
               <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border border-amber-200 shadow-sm">
@@ -728,7 +728,7 @@ export default function DashboardPage() {
             {alerts.length > 0 ? (
               <div className="divide-y divide-slate-50">
                 {alerts.slice(0, 5).map((alert) => (
-                  <div key={alert.id} className="p-5 hover:bg-slate-50/50 transition-all cursor-pointer group flex items-start gap-4">
+                  <div key={alert.id} className="p-5 hover:bg-muted/30/50 transition-all cursor-pointer group flex items-start gap-4">
                     <div className={`h-1.5 w-1.5 rounded-full mt-2 shrink-0 group-hover:scale-150 transition-transform ${alert.type === 'vaga' ? 'bg-amber-400' : 'bg-red-400'}`}></div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1.5 gap-2">
@@ -738,10 +738,10 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <h4 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors truncate leading-snug">{alert.title}</h4>
-                      <p className="text-[11px] text-slate-400 font-semibold mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
+                      <p className="text-[11px] text-muted-foreground/80 font-semibold mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
                         <Building2 className="h-3 w-3 opacity-50" /> {alert.unit}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-1 font-medium">{alert.description}</p>
+                      <p className="text-[10px] text-muted-foreground/80 mt-1 font-medium">{alert.description}</p>
                     </div>
                   </div>
                 ))}
@@ -752,11 +752,11 @@ export default function DashboardPage() {
                   <ShieldCheck className="h-8 w-8 text-emerald-500" />
                 </div>
                 <h4 className="text-sm font-bold text-slate-700">Tudo sob controle</h4>
-                <p className="text-xs text-slate-400 mt-1 max-w-[200px]">Nenhuma pendência crítica no recorte selecionado.</p>
+                <p className="text-xs text-muted-foreground/80 mt-1 max-w-[200px]">Nenhuma pendência crítica no recorte selecionado.</p>
               </div>
             )}
           </CardContent>
-          <div className="p-4 bg-slate-50/50 border-t border-slate-100">
+          <div className="p-4 bg-muted/30/50 border-t border-border/40">
             <Button 
               variant="ghost" 
               className="w-full text-[11px] font-bold text-primary hover:bg-primary/5 uppercase tracking-[0.15em] transition-all"
@@ -770,14 +770,14 @@ export default function DashboardPage() {
 
       <Dialog open={isStaleModalOpen} onOpenChange={setIsStaleModalOpen}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
-          <DialogHeader className="p-6 border-b bg-slate-50/50">
+          <DialogHeader className="p-6 border-b bg-muted/30/50">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold text-slate-900">Vagas sem Movimentação</DialogTitle>
-                <DialogDescription className="text-sm font-medium text-slate-500">
+                <DialogTitle className="text-xl font-bold text-foreground">Vagas sem Movimentação</DialogTitle>
+                <DialogDescription className="text-sm font-medium text-muted-foreground">
                   Vagas sem status ou com mais de 10 dias sem movimentação de status/etapa.
                 </DialogDescription>
               </div>
@@ -798,7 +798,7 @@ export default function DashboardPage() {
               <TableBody>
                 {isLoadingVagas && allVagas.length === 0 ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i} className="border-slate-100">
+                    <TableRow key={i} className="border-border/40">
                       <TableCell className="py-4 px-6"><Skeleton className="h-4 w-16" /></TableCell>
                       <TableCell className="py-4 px-6"><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell className="py-4 px-6"><Skeleton className="h-4 w-48" /></TableCell>
@@ -808,21 +808,21 @@ export default function DashboardPage() {
                   ))
                 ) : vacancyAlerts.length > 0 ? (
                   vacancyAlerts.map((vaga) => (
-                    <TableRow key={vaga.id} className="group hover:bg-slate-50/50 transition-colors border-slate-100">
-                      <TableCell className="py-4 px-6 text-center font-mono text-[11px] font-bold text-slate-400 group-hover:text-primary transition-colors">
+                    <TableRow key={vaga.id} className="group hover:bg-muted/30/50 transition-colors border-border/40">
+                      <TableCell className="py-4 px-6 text-center font-mono text-[11px] font-bold text-muted-foreground/80 group-hover:text-primary transition-colors">
                         #{vaga.displayId}
                       </TableCell>
                       <TableCell className="py-4 px-6 text-left">
                         <div className="flex items-center gap-2">
                           <Building2 className="h-3 w-3 text-slate-300" />
-                          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{normalizeUnitName(vaga.unidade)}</span>
+                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">{normalizeUnitName(vaga.unidade)}</span>
                         </div>
                       </TableCell>
                       <TableCell className="py-4 px-6 text-left">
                         <span className="text-xs font-bold text-slate-700">{vaga.cargo || 'Não informado'}</span>
                       </TableCell>
                       <TableCell className="py-4 px-6 text-center">
-                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-tighter bg-white border-slate-200 text-slate-500">
+                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-tighter bg-white border-border/60 text-muted-foreground">
                           {vaga.status || 'Sem status'}
                         </Badge>
                       </TableCell>
@@ -842,8 +842,8 @@ export default function DashboardPage() {
                         <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center">
                           <ShieldCheck className="h-6 w-6 text-emerald-500" />
                         </div>
-                        <p className="text-sm font-bold text-slate-800">Nenhuma vaga parada</p>
-                        <p className="text-xs text-slate-400">Todas as vagas já possuem status definido.</p>
+                        <p className="text-sm font-bold text-foreground">Nenhuma vaga parada</p>
+                        <p className="text-xs text-muted-foreground/80">Todas as vagas já possuem status definido.</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -852,7 +852,7 @@ export default function DashboardPage() {
             </Table>
           </div>
           
-          <div className="p-4 border-t bg-slate-50/30 flex justify-end">
+          <div className="p-4 border-t bg-muted/30/30 flex justify-end">
             <Button variant="outline" onClick={() => setIsStaleModalOpen(false)} className="text-xs font-bold uppercase tracking-wider">
               Fechar
             </Button>

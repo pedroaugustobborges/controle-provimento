@@ -8,7 +8,7 @@
    LayoutDashboard, Calendar, Users, Briefcase, Clock, 
    Activity, GraduationCap, Download, LogOut, ChevronRight,
    Plus, Search, Filter, MoreHorizontal, CheckCircle2,
-   AlertCircle, ShieldCheck, MapPin, ListTodo
+   AlertCircle, ShieldCheck, MapPin, ListTodo, MessageSquare
  } from 'lucide-react';
  import { Button } from '@/components/ui/button';
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -29,10 +29,14 @@
  
  const Dashboard = () => {
    const stats = [
-     { label: 'Total de Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
-     { label: 'Total de Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-     { label: 'Férias (Período)', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50' },
-     { label: 'Folga/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+     { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
+     { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+     { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50' },
+     { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+     { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50' },
+     { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50' },
+     { label: 'Alinhamentos (Mês)', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+     { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' },
    ];
  
    const chartData = [

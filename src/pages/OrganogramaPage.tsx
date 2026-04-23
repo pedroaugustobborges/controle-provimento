@@ -76,44 +76,44 @@
  
        if (error) throw error;
  
-       // Definir a hierarquia baseada no prompt
        const hierarchy = [
-         { name: "Ana Karolina Oliveira Barros", role: "Diretora Corporativa de recursos humanos", level: 1, reportsTo: null },
-         { name: "Priscila Brito Guimarães", role: "Gerente Corporativa de recursos humanos", level: 2, reportsTo: "Ana Karolina Oliveira Barros" },
-         { name: "Luanna Ramos de Sousa", role: "Coordenadora de recursos humanos", level: 3, reportsTo: "Priscila Brito Guimarães" },
+         { id: "ana-karolina", name: "Ana Karolina Oliveira Barros", role: "Diretora Corporativa de recursos humanos", level: 1, reportsTo: null },
+         { id: "priscila-brito", name: "Priscila Brito Guimarães", role: "Gerente Corporativa de recursos humanos", level: 2, reportsTo: "ana-karolina" },
+         { id: "luanna-ramos", name: "Luanna Ramos de Sousa", role: "Coordenadora de recursos humanos", level: 3, reportsTo: "priscila-brito" },
          
          // Ramos Principais
-         { name: "Ana Carolina Nunes Monteiro", role: "Supervisora de Recursos Humanos", level: 4, reportsTo: "Luanna Ramos de Sousa" },
-         { name: "Renata Moiana Da Costa", role: "Supervisora de Provimento", level: 4, reportsTo: "Luanna Ramos de Sousa" },
+         { id: "ana-carolina-nunes", name: "Ana Carolina Nunes Monteiro", role: "Supervisora de Recursos Humanos", level: 4, reportsTo: "luanna-ramos" },
+         { id: "renata-moiana", name: "Renata Moiana Da Costa", role: "Supervisora de Provimento", level: 4, reportsTo: "luanna-ramos" },
  
          // Equipe Ana Carolina
-         { name: "Carolina Leles", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Ellen Leticia Cardoso", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Ana Caroline", role: "Encarregada de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Wanessa Gomes", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Ketty Lorrane", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Lis Angela Menezes", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Sannya Laryssa", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Geovana Miranda", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Jullyana Marçal", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Eduarda Oliveira", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Thays Silva", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Anna Julia Felipe", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Flavia Vaz", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Izac De Jesus Cezar", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Ana Caroline Feitoza", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Hayane de Paula", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
-         { name: "Samara Silva", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Ana Carolina Nunes Monteiro" },
+         { id: "carolina-leles", name: "Carolina Leles", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "ellen-leticia", name: "Ellen Leticia Cardoso", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "ana-caroline-enc", name: "Ana Caroline", role: "Encarregada de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "wanessa-gomes", name: "Wanessa Gomes", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "ketty-lorrane", name: "Ketty Lorrane", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "lis-angela", name: "Lis Angela Menezes", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "sannya-laryssa-rh", name: "Sannya Laryssa", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "geovana-miranda", name: "Geovana Miranda", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "jullyana-marcal", name: "Jullyana Marçal", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "eduarda-oliveira", name: "Eduarda Oliveira", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "thays-silva", name: "Thays Silva", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "anna-julia", name: "Anna Julia Felipe", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "flavia-vaz", name: "Flavia Vaz", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "izac-jesus", name: "Izac De Jesus Cezar", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "ana-caroline-feitosa", name: "Ana Caroline Feitoza", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "hayane-paula", name: "Hayane de Paula", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "samara-silva", name: "Samara Silva", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
  
          // Equipe Renata
-         { name: "Geovana Arantes", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
-         { name: "Maria Eduarda Miulk", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
-         { name: "Jessica Almeida do Nascimento", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
-         { name: "Pricila Paula da Silva", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
-         { name: "Beatriz Almeida", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
-         { name: "Kaio Dias da Silva", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
-         { name: "Lorrane Augusto", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
-         { name: "Lorraine Sirqueira", role: "Analista de Recursos Humanos", level: 5, reportsTo: "Renata Moiana Da Costa" },
+         { id: "geovana-arantes", name: "Geovana Arantes", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "maria-eduarda", name: "Maria Eduarda Miulk", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "jessica-almeida", name: "Jessica Almeida do Nascimento", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "pricila-paula", name: "Pricila Paula da Silva", role: "Assistente de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "beatriz-almeida", name: "Beatriz Almeida", role: "Analista de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "kaio-dias", name: "Kaio Dias da Silva", role: "Analista de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "lorrane-augusto", name: "Lorrane Augusto", role: "Analista de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "lorraine-sirqueira", name: "Lorraine Sirqueira", role: "Analista de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
+         { id: "sannya-laryssa-prov", name: "Sannya Laryssa", role: "Analista de Recursos Humanos", level: 5, reportsTo: "renata-moiana" },
        ];
  
        const newNodes: any[] = [];
@@ -126,7 +126,7 @@
            p.nome_completo.toLowerCase().includes(item.name.toLowerCase().split(' ').pop() || '')
          );
  
-         const nodeId = realProfile?.id || `node-${index}`;
+         const nodeId = item.id;
          
          newNodes.push({
            id: nodeId,
@@ -142,28 +142,18 @@
          });
  
          if (item.reportsTo) {
-           const parent = hierarchy.find(h => h.name === item.reportsTo);
-           if (parent) {
-             const parentIndex = hierarchy.indexOf(parent);
-             const parentProfile = profiles?.find(p => 
-               p.nome_completo.toLowerCase().includes(parent.name.toLowerCase().split(' ')[0]) &&
-               p.nome_completo.toLowerCase().includes(parent.name.toLowerCase().split(' ').pop() || '')
-             );
-             const parentId = parentProfile?.id || `node-${parentIndex}`;
- 
-             newEdges.push({
-               id: `edge-${parentId}-${nodeId}`,
-               source: parentId,
-               target: nodeId,
-               type: 'smoothstep',
-               animated: false,
-               style: { stroke: '#94a3b8', strokeWidth: 2 },
-               markerEnd: {
-                 type: MarkerType.ArrowClosed,
-                 color: '#94a3b8',
-               },
-             });
-           }
+           newEdges.push({
+             id: `edge-${item.reportsTo}-${nodeId}`,
+             source: item.reportsTo,
+             target: nodeId,
+             type: 'smoothstep',
+             animated: false,
+             style: { stroke: '#94a3b8', strokeWidth: 2 },
+             markerEnd: {
+               type: MarkerType.ArrowClosed,
+               color: '#94a3b8',
+             },
+           });
          }
        });
  

@@ -4,11 +4,11 @@
  import { useAuth } from '@/hooks/useAuth';
  import { useNavigate } from 'react-router-dom';
  import { toast } from 'sonner';
- import { 
-   LayoutDashboard, Calendar, Users, Briefcase, Clock, 
-   Activity, GraduationCap, Download, LogOut, ChevronRight,
-   Plus, Search, Filter, MoreHorizontal, CheckCircle2,
-   AlertCircle, ShieldCheck, MapPin, ListTodo, MessageSquare
+import {
+    LayoutDashboard, Calendar, Users, Briefcase, Clock,
+    Activity, GraduationCap, Download, LogOut, ChevronRight,
+    Plus, Search, Filter, MoreHorizontal, CheckCircle2,
+    AlertCircle, ShieldCheck, MapPin, ListTodo, MessageSquare, Menu, X
  } from 'lucide-react';
  import { Button } from '@/components/ui/button';
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -29,14 +29,14 @@
  
    const Dashboard = () => {
      const stats = [
-       { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50/50' },
-       { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50/50' },
-       { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50/50' },
-       { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
-       { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/50' },
-       { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50/50' },
-       { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50/50' },
-       { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50/50' },
+        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50/80', border: 'border-blue-100' },
+        { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50/80', border: 'border-indigo-100' },
+        { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-100' },
+        { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
+        { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100' },
+        { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50/80', border: 'border-slate-100' },
+        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50/80', border: 'border-cyan-100' },
+        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50/80', border: 'border-purple-100' },
      ];
  
    const chartData = [
@@ -51,43 +51,56 @@
      <div className="space-y-6">
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
          {stats.map((stat, i) => (
-           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-             <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
-               <CardContent className="p-5">
-                 <div className="flex items-start justify-between">
-                   <div className={cn("p-2.5 rounded-xl border border-white shadow-sm", stat.bg)}>
-                     <stat.icon className={cn("h-5 w-5", stat.color)} />
-                   </div>
-                   <div className="flex flex-col items-end">
-                     <span className="text-2xl font-black text-slate-900 tracking-tight">{stat.value}</span>
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{stat.label}</span>
-                   </div>
-                 </div>
-               </CardContent>
-             </Card>
-           </motion.div>
+            <motion.div 
+              key={stat.label} 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+              whileHover={{ y: -4 }}
+            >
+              <Card className="border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 rounded-2xl overflow-hidden group">
+                <CardContent className="p-5 relative">
+                  <div className={cn("absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500", stat.bg.replace('bg-', 'bg-').split('/')[0])} />
+                  <div className="flex items-start justify-between relative z-10">
+                    <div className={cn("p-2.5 rounded-xl border shadow-sm transition-transform group-hover:scale-110 duration-300", stat.bg, stat.border)}>
+                      <stat.icon className={cn("h-5 w-5", stat.color)} />
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">{stat.value}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{stat.label}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
          ))}
        </div>
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <Card className="border-none shadow-sm">
-           <CardHeader><CardTitle className="text-lg font-semibold">Distribuição de Unidades por Analista</CardTitle></CardHeader>
+          <Card className="border border-slate-100 shadow-sm rounded-2xl">
+            <CardHeader><CardTitle className="text-lg font-bold text-slate-800">Distribuição de Unidades por Analista</CardTitle></CardHeader>
            <CardContent className="h-[300px]">
              <ResponsiveContainer width="100%" height="100%">
                <BarChart data={chartData}>
-                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#f1f5f9" />
                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={12} tick={{ fill: '#64748b' }} />
                  <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: '#64748b' }} />
-                 <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none' }} cursor={{ fill: '#f8fafc' }} />
-                 <Bar dataKey="unidades" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f1f5f9', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} cursor={{ fill: '#f8fafc' }} />
+                  <Bar dataKey="unidades" fill="url(#barGradient)" radius={[6, 6, 0, 0]} barSize={32} />
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#818cf8" />
+                    </linearGradient>
+                  </defs>
                </BarChart>
              </ResponsiveContainer>
            </CardContent>
          </Card>
-         <Card className="border-none shadow-sm">
+          <Card className="border border-slate-100 shadow-sm rounded-2xl">
            <CardHeader className="flex flex-row items-center justify-between">
              <div>
-               <CardTitle className="text-lg font-semibold">Próximos Eventos</CardTitle>
-               <CardDescription>Agenda interna da equipe</CardDescription>
+                <CardTitle className="text-lg font-bold text-slate-800">Próximos Eventos</CardTitle>
+                <CardDescription className="text-xs font-medium text-slate-400">Agenda interna da equipe</CardDescription>
              </div>
            </CardHeader>
            <CardContent>
@@ -122,12 +135,12 @@
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Férias, Folgas e Day Off</h3>
              <p className="text-sm text-slate-500 font-medium">Gestão centralizada de ausências e coberturas</p>
            </div>
-           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+            <Button className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
@@ -152,13 +165,13 @@
            ))}
          </div>
  
-         <Card className="border-none shadow-sm overflow-hidden rounded-2xl bg-white">
-           <div className="p-4 border-b border-slate-50 bg-slate-50/30 flex flex-wrap gap-4 items-center justify-between">
-             <div className="relative w-full md:w-80">
+          <Card className="border border-slate-100 shadow-sm overflow-hidden rounded-2xl bg-white">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex flex-wrap gap-4 items-center justify-between">
+              <div className="relative w-full lg:w-80">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                <Input 
                  placeholder="Buscar colaborador..." 
-                 className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-indigo-500"
+                  className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
@@ -234,7 +247,7 @@
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Funções e Escopos</h3>
              <p className="text-sm text-slate-500 font-medium">Definição clara de responsabilidades por cargo</p>
@@ -296,7 +309,7 @@
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Prazos e Rotinas</h3>
              <p className="text-sm text-slate-500 font-medium">Monitoramento de entregas e obrigações recorrentes</p>
@@ -328,12 +341,12 @@
          </div>
  
          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-           <div className="p-4 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-             <div className="relative w-80">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div className="relative w-full sm:w-80">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-               <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-slate-200 rounded-xl" />
-             </div>
-             <Button variant="outline" className="h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs">
+                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500" />
+              </div>
+              <Button variant="outline" className="w-full sm:w-auto h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs hover:bg-slate-50 transition-colors">
                <Filter className="h-4 w-4 mr-2" /> Prioridade
              </Button>
            </div>
@@ -390,20 +403,20 @@
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Escala e Acompanhamento</h3>
              <p className="text-sm text-slate-500 font-medium">Status da equipe em tempo real por unidade</p>
            </div>
-           <div className="flex gap-2">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[10px] font-bold uppercase tracking-widest">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                18 Ativos
              </div>
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[10px] font-bold uppercase tracking-widest">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
                2 Ausentes
              </div>
            </div>
          </div>
  
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
            {teamStatus.map((t, i) => (
-             <Card key={i} className="border-none shadow-sm hover:shadow-lg transition-all duration-300 rounded-[1.5rem] p-6 bg-white relative overflow-hidden group">
+              <Card key={i} className="border border-slate-100 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-3xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-indigo-500">
                <div className={cn(
                  "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150",
                  t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-indigo-500"
@@ -463,7 +476,7 @@
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Alinhamentos e Treinamentos</h3>
              <p className="text-sm text-slate-500 font-medium">Desenvolvimento contínuo e sincronização de processos</p>
@@ -473,8 +486,8 @@
            </Button>
          </div>
  
-         <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-50 shadow-sm">
-            <div className="relative flex-1 min-w-[300px]">
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-50 shadow-sm">
+             <div className="relative w-full lg:flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input 
                 placeholder="Buscar por tema ou colaborador..." 
@@ -566,7 +579,7 @@
  
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            {exportOptions.map((opt, i) => (
-             <Card key={i} className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] p-8 bg-white group overflow-hidden relative">
+              <Card key={i} className="border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 rounded-[2rem] p-8 bg-white group overflow-hidden relative">
                <div className={cn("absolute top-0 right-0 w-40 h-40 -mr-20 -mt-20 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150", opt.bg.replace('bg-', 'bg-'))} />
                
                <div className="flex items-start gap-6 relative z-10">
@@ -599,13 +612,13 @@
  
      return (
        <div className="space-y-6">
-           <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-6">
                <div>
                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Quadro da Equipe</h3>
                  <p className="text-sm text-slate-500 font-medium">Estrutura organizacional e alocação de talentos</p>
                </div>
                <div className="flex gap-3">
-                   <div className="bg-slate-50 p-1 rounded-xl border border-slate-100 flex gap-1 mr-2">
+                    <div className="bg-slate-50 p-1 rounded-xl border border-slate-100 flex gap-1 mr-2 w-fit">
                       <Button 
                         variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
                         size="sm" 
@@ -623,10 +636,10 @@
                         Tabela
                       </Button>
                    </div>
-                   <Button variant="outline" className="rounded-xl border-slate-200 h-10 px-6 font-bold text-slate-600 text-xs">
+                    <Button variant="outline" className="flex-1 lg:flex-none rounded-xl border-slate-200 h-10 px-6 font-bold text-slate-600 text-xs">
                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
                    </Button>
-                   <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
+                    <Button className="flex-1 lg:flex-none bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
                      <Plus className="h-4 w-4 mr-2" /> Novo Vínculo
                    </Button>
                </div>
@@ -722,10 +735,11 @@
      );
    };
  
- export default function PortalRHPage() {
-   const navigate = useNavigate();
-   const { currentUser, fetchCurrentProfile } = useAdminStore();
-   const [activeTab, setActiveTab] = useState('dashboard');
+  export default function PortalRHPage() {
+    const navigate = useNavigate();
+    const { currentUser, fetchCurrentProfile } = useAdminStore();
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
    useEffect(() => { fetchCurrentProfile(); }, [fetchCurrentProfile]);
  
    const menuItems = [
@@ -755,16 +769,32 @@
  
    return (
      <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
-       {/* Desktop Sidebar */}
-       <aside className="w-80 bg-white border-r border-slate-200/60 hidden lg:flex flex-col sticky top-0 h-screen z-20">
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[40] lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Sidebar (Desktop & Mobile) */}
+        <aside className={cn(
+          "w-80 bg-white border-r border-slate-200/60 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
+          isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
+        )}>
          <div className="p-8 flex flex-col h-full">
              <div className="flex items-center gap-4 mb-12 group cursor-pointer" onClick={() => navigate('/')}>
                <div className="h-12 w-12 bg-[#070e17] rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-200 group-hover:scale-105 transition-transform duration-500">
                  <ShieldCheck className="text-white h-7 w-7" />
                </div>
                <div>
-                 <h1 className="font-black text-slate-900 tracking-tighter text-xl uppercase leading-none">Portal RH</h1>
-                 <p className="text-[9px] uppercase tracking-[0.3em] text-slate-400 font-black mt-1">Executive Suite</p>
+                  <h1 className="font-black text-slate-900 tracking-tighter text-xl uppercase leading-none">Gestão Estratégica</h1>
+                  <p className="text-[9px] uppercase tracking-[0.3em] text-indigo-600 font-black mt-1">Painel Executivo</p>
                </div>
              </div>
  
@@ -774,14 +804,19 @@
                return (
                  <button
                    key={item.id}
-                   onClick={() => setActiveTab(item.id)}
-                   className={cn(
-                     "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 group relative",
-                     isActive 
-                       ? "bg-indigo-600 text-white shadow-xl shadow-indigo-100 translate-x-1" 
-                       : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                   )}
-                 >
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+                      isActive 
+                        ? "bg-indigo-600 text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] translate-x-1" 
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
+                    )}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-label={item.label}
+                  >
                    <item.icon className={cn(
                      "h-[18px] w-[18px] transition-all duration-500 group-hover:scale-110",
                      isActive ? "text-white" : "text-slate-400"
@@ -812,18 +847,27 @@
  
        {/* Main Content Area */}
        <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-scrollbar">
-          <header className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-10 flex items-center justify-between sticky top-0 z-10">
-            <div className="flex items-center gap-6">
-              <div className="flex flex-col">
-                <h2 className="text-[22px] font-black text-slate-900 tracking-tight">
-                  {menuItems.find(m => m.id === activeTab)?.label}
-                </h2>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Executivo • Online</span>
+           <header className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 lg:px-10 flex items-center justify-between sticky top-0 z-10">
+             <div className="flex items-center gap-4 lg:gap-6">
+               <Button 
+                 variant="ghost" 
+                 size="icon" 
+                 className="lg:hidden rounded-xl bg-slate-50 border border-slate-100"
+                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                 aria-label="Toggle menu"
+               >
+                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+               </Button>
+                <div className="flex flex-col">
+                  <h2 className="text-[22px] font-black text-slate-900 tracking-tight">
+                    {menuItems.find(m => m.id === activeTab)?.label}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Executivo • Online</span>
+                  </div>
                 </div>
               </div>
-            </div>
  
            <div className="flex items-center gap-6">
              <div className="relative hidden xl:block">
@@ -843,14 +887,14 @@
                    {currentUser?.cargo || 'Analista'}
                  </p>
                </div>
-               <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white transition-transform hover:scale-105">
                  {currentUser?.nome_completo?.charAt(0)}
                </div>
              </div>
            </div>
          </header>
  
-          <div className="p-10 max-w-[1600px] mx-auto w-full">
+           <div className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
            <AnimatePresence mode="wait">
              <motion.div
                key={activeTab}

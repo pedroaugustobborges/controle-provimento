@@ -174,7 +174,7 @@ export function AppSidebar() {
     { title: 'Relatórios', url: '/relatorios', icon: FileSpreadsheet, visible: isManagement || hasFullAccess },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
      { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
-      { title: 'Gestão Estratégica', url: '/portal-rh', icon: ShieldCheck, visible: isAdminAnalyst || isManagement || hasFullAccess },
+      { title: 'Portal RH', url: '/portal-rh', icon: ShieldCheck, visible: isAdminAnalyst || isManagement || hasFullAccess },
      { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: true, external: true },
    ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess, isAdminAnalyst]);
 

@@ -1,12 +1,10 @@
- const OrganogramaPage = lazy(() => import("@/pages/OrganogramaPage"));
-               <Route path="/organograma" element={<OrganogramaPage />} />
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { AppLayout } from "@/components/AppLayout";
+import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { LogoutOverlay } from "@/components/LogoutOverlay";
 import { useMaintenanceMode } from "@/hooks/useMaintenanceMode";
@@ -80,11 +78,9 @@ function ProtectedRouteWrapper() {
   }
 
   return (
-    <AppLayout>
-      <Suspense fallback={<PageSkeleton />}>
-        <Outlet />
-      </Suspense>
-    </AppLayout>
+    <Layout>
+      <Outlet />
+    </Layout>
   );
 }
 
@@ -121,6 +117,7 @@ function UnidadeRouteWrapper() {
     </Suspense>
   );
 }
+const OrganogramaPage = lazy(() => import("@/pages/OrganogramaPage"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -155,6 +152,7 @@ const App = () => (
               <Route path="/mensagens" element={<MensagensPage />} />
               <Route path="/relatorios" element={<RelatoriosPage />} />
               <Route path="/editais" element={<EditaisPage />} />
+              <Route path="/organograma" element={<OrganogramaPage />} />
             </Route>
 
              <Route element={<UnidadeRouteWrapper />}>

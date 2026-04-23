@@ -33,7 +33,7 @@ const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
  const UnidadePortalPage = lazy(() => import("@/pages/UnidadePortalPage"));
- const PortalRHPage = lazy(() => import("@/pages/PortalRHPage"));
+  const GestaoEstrategicaPage = lazy(() => import("@/pages/PortalRHPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -157,7 +157,7 @@ const App = () => (
 
              <Route element={<UnidadeRouteWrapper />}>
                <Route path="/portal-unidade" element={<UnidadePortalPage />} />
-               <Route path="/portal-rh" element={<PortalRHPage />} />
+                <Route path="/portal-rh" element={<GestaoEstrategicaPage />} />
              </Route>
 
             <Route path="*" element={<NotFound />} />

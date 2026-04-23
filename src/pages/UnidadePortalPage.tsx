@@ -52,7 +52,7 @@ const STATUS_COLOR: Record<string, string> = {
   recusa_plantao: 'bg-rose-50 text-rose-700 border-rose-100',
   recusa_unidade: 'bg-rose-50 text-rose-700 border-rose-100',
   recusa_horario: 'bg-amber-50 text-amber-700 border-amber-100',
-  desistiu: 'bg-muted/30 text-muted-foreground border-border/40',
+  desistiu: 'bg-slate-50 text-slate-600 border-slate-100',
   faltou: 'bg-red-50 text-red-700 border-red-100',
   pendente: 'bg-indigo-50 text-indigo-700 border-indigo-100',
 };
@@ -531,10 +531,10 @@ export default function UnidadePortalPage() {
 
   if (bootstrapping || !currentUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center space-y-4">
           <div className="h-10 w-10 border-4 border-[#0A192F] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground font-semibold">Carregando Portal da Unidade...</p>
+          <p className="text-sm text-slate-600 font-semibold">Carregando Portal da Unidade...</p>
         </div>
       </div>
     );
@@ -543,14 +543,14 @@ export default function UnidadePortalPage() {
 
   if (hydrationError && vagas.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-6">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-md w-full bg-white border border-rose-200 rounded-2xl shadow-lg p-6 text-center space-y-4">
           <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center">
             <AlertCircle className="h-6 w-6 text-rose-600" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-foreground">Não foi possível carregar os dados</h2>
-            <p className="text-sm text-muted-foreground mt-1">{hydrationError}</p>
+            <h2 className="text-lg font-bold text-slate-900">Não foi possível carregar os dados</h2>
+            <p className="text-sm text-slate-600 mt-1">{hydrationError}</p>
           </div>
           <div className="flex items-center gap-2 justify-center">
             <Button onClick={() => { setBootstrapping(true); setHydrated(false); setRetryNonce(n => n + 1); }} className="bg-[#0A192F] hover:bg-[#0A192F]/90">
@@ -564,7 +564,7 @@ export default function UnidadePortalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30/50 flex flex-col transition-all duration-300">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col transition-all duration-300">
       <header className="sticky top-0 z-50 bg-[#0A192F] text-white px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-lg backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="p-1.5 bg-white/10 rounded-xl hover:bg-white/20 transition-all cursor-pointer">
@@ -614,8 +614,8 @@ export default function UnidadePortalPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6 lg:py-8 space-y-6">
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <div className="sticky top-[68px] z-40 py-2 -mt-2 bg-muted/30/80 backdrop-blur-sm sm:static sm:bg-transparent">
-            <TabsList className="bg-white/80 border border-border/60 shadow-sm p-1.5 rounded-2xl h-auto flex flex-wrap sm:flex-nowrap gap-1">
+          <div className="sticky top-[68px] z-40 py-2 -mt-2 bg-slate-50/80 backdrop-blur-sm sm:static sm:bg-transparent">
+            <TabsList className="bg-white/80 border border-slate-200 shadow-sm p-1.5 rounded-2xl h-auto flex flex-wrap sm:flex-nowrap gap-1">
               {[{v:'dashboard',i:BarChart3,l:'Dashboard',lm:'Dash'},{v:'status',i:Search,l:'Status das Vagas',lm:'Status'},{v:'convocacoes',i:CalendarIcon,l:'Convocações Diárias',lm:'Conv.'},{v:'observacoes',i:Edit3,l:'Observações',lm:'Obs'}].map(t => (
                 <TabsTrigger key={t.v} value={t.v} className="flex-1 sm:flex-none gap-2 py-2 data-[state=active]:bg-[#0A192F] data-[state=active]:text-white rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 shadow-none data-[state=active]:shadow-md">
                   <t.i className="h-4 w-4" />
@@ -629,21 +629,21 @@ export default function UnidadePortalPage() {
           <TabsContent value="dashboard" className="space-y-6 focus-visible:outline-none animate-in fade-in duration-500">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Vagas', value: dashStats.totalVagas, icon: Briefcase, color: 'text-foreground', bg: 'bg-slate-100' },
-                { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-primary', bg: 'bg-blue-50' },
-                { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-success', bg: 'bg-emerald-50' },
-                { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-primary', bg: 'bg-indigo-50' },
+                { label: 'Total Vagas', value: dashStats.totalVagas, icon: Briefcase, color: 'text-slate-900', bg: 'bg-slate-100' },
+                { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
               ].map(({ label, value, icon: Icon, color, bg }) => (
-                <Card key={label} className="border-border/60/60 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all">
+                <Card key={label} className="border-slate-200/60 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className={cn('p-3 rounded-2xl', bg)}><Icon className={cn('h-5 w-5', color)} /></div>
                     <div className="flex-1">
                       {hydrated ? (
-                        <p className="text-2xl font-black text-foreground leading-none">{value}</p>
+                        <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
                       ) : (
                         <Skeleton className="h-7 w-12" />
                       )}
-                      <p className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest mt-1.5">{label}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -651,8 +651,8 @@ export default function UnidadePortalPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="rounded-2xl border-border/60/60 shadow-sm overflow-hidden">
-                <CardHeader className="bg-muted/30/50 py-4 px-6 border-b border-border/40">
+              <Card className="rounded-2xl border-slate-200/60 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/50 py-4 px-6 border-b border-slate-100">
                   <CardTitle className="text-sm font-bold text-slate-700">Distribuição de Status</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -660,7 +660,7 @@ export default function UnidadePortalPage() {
                     {!hydrated ? (
                       <Skeleton className="h-full w-full rounded-2xl" />
                     ) : statusChartData.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-muted-foreground/80 gap-3 border-2 border-dashed border-border/40 rounded-3xl">
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl">
                         <BarChart3 className="h-10 w-10 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
                       </div>
@@ -713,8 +713,8 @@ export default function UnidadePortalPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-2xl border-border/60/60 shadow-sm overflow-hidden">
-                <CardHeader className="bg-muted/30/50 py-4 px-6 border-b border-border/40">
+              <Card className="rounded-2xl border-slate-200/60 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/50 py-4 px-6 border-b border-slate-100">
                   <CardTitle className="text-sm font-bold text-slate-700">Top 5 Cargos com Mais Vagas</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -722,7 +722,7 @@ export default function UnidadePortalPage() {
                     {!hydrated ? (
                       <Skeleton className="h-full w-full rounded-2xl" />
                     ) : top5CargosData.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-muted-foreground/80 gap-3 border-2 border-dashed border-border/40 rounded-3xl">
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3 border-2 border-dashed border-slate-100 rounded-3xl">
                         <Briefcase className="h-10 w-10 opacity-20" />
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Nenhum dado para exibir</p>
                       </div>
@@ -778,7 +778,7 @@ export default function UnidadePortalPage() {
           </TabsContent>
 
           <TabsContent value="status" className="animate-in fade-in duration-500">
-            <Card className="rounded-2xl border-border/60/60 shadow-xl overflow-hidden bg-white">
+            <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -803,14 +803,14 @@ export default function UnidadePortalPage() {
                       ))
                     ) : vagasParaConsulta.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-12 text-center text-muted-foreground/80 text-xs font-bold">Nenhuma vaga encontrada</TableCell>
+                        <TableCell colSpan={5} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma vaga encontrada</TableCell>
                       </TableRow>
                     ) : vagasParaConsulta.map(v => (
-                      <TableRow key={v.id} className="hover:bg-muted/30/50 transition-colors">
-                        <TableCell className="font-bold text-foreground text-sm whitespace-nowrap">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
-                        <TableCell className="text-muted-foreground text-xs font-semibold">{v.unidade || '—'}</TableCell>
-                        <TableCell className="font-bold text-foreground text-sm">{v.cargo || '—'}</TableCell>
-                        <TableCell className="text-muted-foreground text-xs font-semibold whitespace-nowrap">{(v as any).etapa || v.acompanhamento?.etapa_atual || v.status || '—'}</TableCell>
+                      <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-slate-900 text-sm whitespace-nowrap">{v.numero_requisicao || v.numero_processo || v.numero_edital || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold">{v.unidade || '—'}</TableCell>
+                        <TableCell className="font-bold text-slate-900 text-sm">{v.cargo || '—'}</TableCell>
+                        <TableCell className="text-slate-600 text-xs font-semibold whitespace-nowrap">{(v as any).etapa || v.acompanhamento?.etapa_atual || v.status || '—'}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-700 border-blue-100 whitespace-nowrap">
                             {v.status || 'Sem Status'}
@@ -840,7 +840,7 @@ export default function UnidadePortalPage() {
               </Popover>
               <Button variant="outline" onClick={handleExport} className="rounded-xl font-bold gap-2"><Download className="h-4 w-4" />Exportar</Button>
             </div>
-            <Card className="rounded-2xl border-border/60/60 shadow-xl overflow-hidden bg-white">
+            <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -865,7 +865,7 @@ export default function UnidadePortalPage() {
                       ))
                     ) : todayConvocacoes.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-12 text-center text-muted-foreground/80 text-xs font-bold">Nenhuma convocação para esta data</TableCell>
+                        <TableCell colSpan={5} className="py-12 text-center text-slate-400 text-xs font-bold">Nenhuma convocação para esta data</TableCell>
                       </TableRow>
                     ) : todayConvocacoes.map(c => {
                       const obs = (c.observacoes || '').trim();
@@ -874,40 +874,40 @@ export default function UnidadePortalPage() {
                       const hasObs = obs.length > 0;
                       const hasAnyInfo = hasObs || unidadeDestino.length > 0 || horarioPlantao.length > 0;
                       return (
-                        <TableRow key={c.id} className="hover:bg-muted/30/50 transition-colors align-top">
-                          <TableCell className="py-4 px-6 font-black text-foreground text-sm">{c.horario}</TableCell>
-                          <TableCell className="py-4 px-6 font-bold text-foreground text-sm">{c.nome_candidato}</TableCell>
+                        <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors align-top">
+                          <TableCell className="py-4 px-6 font-black text-slate-900 text-sm">{c.horario}</TableCell>
+                          <TableCell className="py-4 px-6 font-bold text-slate-800 text-sm">{c.nome_candidato}</TableCell>
                           <TableCell className="py-4 px-6">
-                            <Badge className={cn("text-[10px] font-black rounded-full", STATUS_COLOR[c.status] || 'bg-slate-100 text-muted-foreground')}>
+                            <Badge className={cn("text-[10px] font-black rounded-full", STATUS_COLOR[c.status] || 'bg-slate-100 text-slate-600')}>
                               {STATUS_CONVOCACAO_LABELS[c.status as keyof typeof STATUS_CONVOCACAO_LABELS] || c.status}
                             </Badge>
                           </TableCell>
                           <TableCell className="py-4 px-6">
                             {hasAnyInfo ? (
-                              <div className="space-y-1.5 max-w-md bg-muted/30 rounded-lg p-2.5 border border-border/40">
+                              <div className="space-y-1.5 max-w-md bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                 {unidadeDestino && (
                                   <div className="flex items-start gap-2">
-                                    <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                                    <MapPin className="h-3.5 w-3.5 text-blue-600 mt-0.5 shrink-0" />
                                     <div className="flex flex-col">
-                                      <span className="text-[9px] uppercase font-bold text-muted-foreground/80 tracking-wide">Unidade Destino</span>
+                                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wide">Unidade Destino</span>
                                       <p className="text-xs text-slate-700 font-semibold whitespace-pre-wrap break-words leading-snug">{unidadeDestino}</p>
                                     </div>
                                   </div>
                                 )}
                                 {horarioPlantao && (
                                   <div className="flex items-start gap-2">
-                                    <Clock className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+                                    <Clock className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
                                     <div className="flex flex-col">
-                                      <span className="text-[9px] uppercase font-bold text-muted-foreground/80 tracking-wide">Horário / Plantão</span>
+                                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wide">Horário / Plantão</span>
                                       <p className="text-xs text-slate-700 font-semibold whitespace-pre-wrap break-words leading-snug">{horarioPlantao}</p>
                                     </div>
                                   </div>
                                 )}
                                 {hasObs && (
                                   <div className="flex items-start gap-2">
-                                    <MessageSquare className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
+                                    <MessageSquare className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
                                     <div className="flex flex-col">
-                                      <span className="text-[9px] uppercase font-bold text-muted-foreground/80 tracking-wide">Observação</span>
+                                      <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wide">Observação</span>
                                       <p className="text-xs text-slate-700 font-medium whitespace-pre-wrap break-words leading-snug">{obs}</p>
                                     </div>
                                   </div>
@@ -925,7 +925,7 @@ export default function UnidadePortalPage() {
                               title={hasObs ? 'Editar observação' : 'Adicionar observação'}
                               className={cn(hasObs && "bg-amber-50 hover:bg-amber-100")}
                             >
-                              <MessageSquare className={cn("h-4 w-4", hasObs ? "text-warning" : "text-muted-foreground/80")} />
+                              <MessageSquare className={cn("h-4 w-4", hasObs ? "text-amber-600" : "text-slate-400")} />
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -938,17 +938,17 @@ export default function UnidadePortalPage() {
           </TabsContent>
 
           <TabsContent value="observacoes" className="space-y-6 animate-in fade-in duration-500">
-            <Card className="rounded-2xl border-border/60/60 shadow-xl overflow-hidden bg-white">
-              <CardHeader className="bg-muted/30/80 border-b border-border/40 py-4 px-6">
+            <Card className="rounded-2xl border-slate-200/60 shadow-xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-4 px-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <CardTitle className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                    <Edit3 className="h-4 w-4 text-muted-foreground/80" />
+                    <Edit3 className="h-4 w-4 text-slate-400" />
                     Devolutiva das Convocações
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Select value={obsFilterUnidade} onValueChange={setObsFilterUnidade}>
-                      <SelectTrigger className="w-44 h-9 text-xs font-semibold rounded-lg border-border/60">
-                        <Building2 className="h-3.5 w-3.5 text-muted-foreground/80 mr-1.5 shrink-0" />
+                      <SelectTrigger className="w-44 h-9 text-xs font-semibold rounded-lg border-slate-200">
+                        <Building2 className="h-3.5 w-3.5 text-slate-400 mr-1.5 shrink-0" />
                         <SelectValue placeholder="Filtrar unidade" />
                       </SelectTrigger>
                       <SelectContent>
@@ -958,7 +958,7 @@ export default function UnidadePortalPage() {
                     </Select>
                     <Popover open={obsCalendarOpen} onOpenChange={setObsCalendarOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="h-9 rounded-lg font-semibold gap-1.5 text-xs border-border/60">
+                        <Button variant="outline" className="h-9 rounded-lg font-semibold gap-1.5 text-xs border-slate-200">
                           <CalendarIcon className="h-3.5 w-3.5" />
                           {obsFilterDate ? format(obsFilterDate, 'dd/MM/yyyy') : 'Todas as datas'}
                         </Button>
@@ -1011,7 +1011,7 @@ export default function UnidadePortalPage() {
                         if (sliced.length === 0) {
                           return (
                             <TableRow>
-                              <TableCell colSpan={8} className="py-12 text-center text-muted-foreground/80">
+                              <TableCell colSpan={8} className="py-12 text-center text-slate-400">
                                 <div className="flex flex-col items-center gap-2">
                                   <Edit3 className="h-8 w-8 opacity-20" />
                                   <p className="text-xs font-bold">Nenhuma convocação encontrada</p>
@@ -1038,14 +1038,14 @@ export default function UnidadePortalPage() {
                             edit.unidade_destino !== originalState.unidade_destino
                           );
                           return (
-                            <TableRow key={c.id} className="hover:bg-muted/30/50 transition-colors">
-                              <TableCell className="py-3 px-4 font-bold text-foreground text-sm align-middle whitespace-normal break-words leading-snug">
+                            <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                              <TableCell className="py-3 px-4 font-bold text-slate-900 text-sm align-middle whitespace-normal break-words leading-snug">
                                 {c.nome_candidato || '—'}
                               </TableCell>
-                              <TableCell className="py-3 px-4 text-muted-foreground text-xs font-semibold align-middle whitespace-normal break-words">{c.unidade || '—'}</TableCell>
+                              <TableCell className="py-3 px-4 text-slate-600 text-xs font-semibold align-middle whitespace-normal break-words">{c.unidade || '—'}</TableCell>
                               <TableCell className="py-3 px-4">
                                 <Select value={edit.status} onValueChange={(v) => setObsField(c.id, c, 'status', v)}>
-                                  <SelectTrigger className="h-9 text-xs font-semibold rounded-lg border-border/60">
+                                  <SelectTrigger className="h-9 text-xs font-semibold rounded-lg border-slate-200">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -1068,7 +1068,7 @@ export default function UnidadePortalPage() {
                                   value={edit.unidade_destino || ''}
                                   onChange={(e) => setObsField(c.id, c, 'unidade_destino', e.target.value)}
                                   placeholder="Unidade Destino"
-                                  className="h-9 text-xs rounded-lg border-border/60"
+                                  className="h-9 text-xs rounded-lg border-slate-200"
                                 />
                               </TableCell>
                               <TableCell className="py-3 px-4">
@@ -1076,7 +1076,7 @@ export default function UnidadePortalPage() {
                                   value={edit.horario_plantao}
                                   onChange={(e) => setObsField(c.id, c, 'horario_plantao', e.target.value)}
                                   placeholder="Ex: 07h-19h"
-                                  className="h-9 text-xs rounded-lg border-border/60"
+                                  className="h-9 text-xs rounded-lg border-slate-200"
                                 />
                               </TableCell>
                               <TableCell className="py-3 px-4 text-center">
@@ -1086,7 +1086,7 @@ export default function UnidadePortalPage() {
                                     onCheckedChange={(v) => setObsField(c.id, c, 'aceito', v)}
                                     aria-label="Aceito"
                                   />
-                                  <span className={cn("text-[10px] font-black uppercase", edit.aceito ? "text-success" : "text-muted-foreground/80")}>
+                                  <span className={cn("text-[10px] font-black uppercase", edit.aceito ? "text-emerald-600" : "text-slate-400")}>
                                     {edit.aceito ? 'Sim' : 'Não'}
                                   </span>
                                 </div>
@@ -1096,7 +1096,7 @@ export default function UnidadePortalPage() {
                                   value={edit.observacao}
                                   onChange={(e) => setObsField(c.id, c, 'observacao', e.target.value)}
                                   placeholder="Observação adicional..."
-                                  className="h-9 text-xs rounded-lg border-border/60"
+                                  className="h-9 text-xs rounded-lg border-slate-200"
                                 />
                               </TableCell>
                               <TableCell className="py-3 px-4 text-center">
@@ -1108,8 +1108,8 @@ export default function UnidadePortalPage() {
                                     className={cn(
                                       "rounded-lg font-bold text-xs gap-1.5 h-9 px-3 transition-all",
                                       hasChanges
-                                        ? "bg-success hover:bg-emerald-700 text-white shadow-sm"
-                                        : "bg-slate-100 text-muted-foreground/80 cursor-not-allowed"
+                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
                                     )}
                                   >
                                     {isSaving ? (
@@ -1143,7 +1143,7 @@ export default function UnidadePortalPage() {
           <div className="p-6">
             <Textarea value={obsText} onChange={(e) => setObsText(e.target.value)} placeholder="Digite a observação..." className="min-h-[160px] rounded-2xl" />
           </div>
-          <DialogFooter className="px-6 py-4 bg-muted/30 border-t">
+          <DialogFooter className="px-6 py-4 bg-slate-50 border-t">
             <Button variant="ghost" onClick={() => setObsDialog({ open: false, convId: '', current: '' })}>Cancelar</Button>
             <Button onClick={handleSaveObs} className="bg-[#0A192F] text-white font-bold rounded-xl px-8">Salvar</Button>
           </DialogFooter>

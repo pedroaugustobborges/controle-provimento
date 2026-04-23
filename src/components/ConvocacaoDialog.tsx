@@ -137,17 +137,17 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
         
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Informações da Vaga (Somente leitura para contexto) */}
-          <div className="bg-muted/30 p-4 rounded-xl border border-border/60 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground/80">Cargo</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400">Cargo</span>
               <p className="text-sm font-bold text-slate-700">{formData.cargo}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground/80">Unidade Origem</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400">Unidade Origem</span>
               <p className="text-sm font-bold text-slate-700">{formData.unidade}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground/80">Requisição</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400">Requisição</span>
               <p className="text-sm font-bold text-slate-700">{formData.requisicao}</p>
             </div>
           </div>
@@ -196,7 +196,7 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
                           )}
                         </SelectContent>
                       </Select>
-                      <p className="text-[10px] text-muted-foreground italic">
+                      <p className="text-[10px] text-slate-500 italic">
                         <Info className="h-3 w-3 inline mr-1" />
                         Base Goiânia: Máximo 5 agendamentos por horário entre todas as unidades (HUGOL, CRER, HDS, HECAD, AGIR).
                       </p>
@@ -212,9 +212,9 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
                           className="pl-9"
                           required
                         />
-                        <Clock className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80" />
+                        <Clock className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       </div>
-                      <p className="text-[10px] text-muted-foreground italic">
+                      <p className="text-[10px] text-slate-500 italic">
                         <Info className="h-3 w-3 inline mr-1" />
                         Base {baseName || 'não identificada'}: Horário livre. Digite o horário desejado manualmente.
                       </p>
@@ -231,7 +231,7 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
                   onChange={e => setFormData({...formData, unidade_alternativa: e.target.value})}
                   placeholder="Ex: Suá, São Pedro..."
                 />
-                <p className="text-[10px] text-muted-foreground/80">Use este campo se a convocação for para uma variação da unidade principal.</p>
+                <p className="text-[10px] text-slate-400">Use este campo se a convocação for para uma variação da unidade principal.</p>
               </div>
             </div>
 
@@ -308,7 +308,7 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit }:
                         })}
                       </SelectContent>
                     </Select>
-                    <span className="text-sm text-muted-foreground font-medium">às</span>
+                    <span className="text-sm text-slate-500 font-medium">às</span>
                     <Select
                       value={formData.horario_trabalho?.split(' às ')[1] || ''}
                       onValueChange={v => {

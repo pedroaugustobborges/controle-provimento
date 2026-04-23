@@ -95,7 +95,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div className="bg-muted/30 p-3 rounded-lg border border-border/60 text-sm">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
             <p><strong>Candidato:</strong> {convocacao.nome_candidato}</p>
             <p><strong>Vaga:</strong> {convocacao.cargo} - {convocacao.unidade}</p>
           </div>
@@ -106,7 +106,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
               <Button 
                 type="button"
                 variant={devolutiva === 'aceitou' ? 'default' : 'outline'}
-                className={`h-20 flex-col gap-2 ${devolutiva === 'aceitou' ? 'bg-success hover:bg-green-700' : ''}`}
+                className={`h-20 flex-col gap-2 ${devolutiva === 'aceitou' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                 onClick={() => setDevolutiva('aceitou')}
               >
                 <CheckCircle2 className="h-6 w-6" />
@@ -115,7 +115,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
               <Button 
                 type="button"
                 variant={devolutiva === 'recusou' ? 'default' : 'outline'}
-                className={`h-20 flex-col gap-2 ${devolutiva === 'recusou' ? 'bg-destructive hover:bg-red-700' : ''}`}
+                className={`h-20 flex-col gap-2 ${devolutiva === 'recusou' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                 onClick={() => setDevolutiva('recusou')}
               >
                 <XCircle className="h-6 w-6" />

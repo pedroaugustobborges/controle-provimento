@@ -230,7 +230,7 @@ export function BancoTalentosForm({ onSuccess, onCancel }: BancoTalentosFormProp
               <FormItem>
                 <FormLabel>Data de Validade</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} readOnly className="bg-muted/30 cursor-not-allowed" />
+                  <Input type="date" {...field} readOnly className="bg-slate-50 cursor-not-allowed" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

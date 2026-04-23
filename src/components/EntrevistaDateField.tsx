@@ -77,7 +77,7 @@ export function EntrevistaDateField({ value, onChange, inputClassName = 'bg-whit
       {tipo === 'duas_datas' && (
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Label className="text-[10px] text-muted-foreground uppercase">Dia 1</Label>
+            <Label className="text-[10px] text-slate-500 uppercase">Dia 1</Label>
             <Input
               type="date"
               value={datas[0] || ''}
@@ -86,7 +86,7 @@ export function EntrevistaDateField({ value, onChange, inputClassName = 'bg-whit
             />
           </div>
           <div>
-            <Label className="text-[10px] text-muted-foreground uppercase">Dia 2</Label>
+            <Label className="text-[10px] text-slate-500 uppercase">Dia 2</Label>
             <Input
               type="date"
               value={datas[1] || ''}
@@ -100,7 +100,7 @@ export function EntrevistaDateField({ value, onChange, inputClassName = 'bg-whit
       {tipo === 'periodo' && (
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Label className="text-[10px] text-muted-foreground uppercase">Início</Label>
+            <Label className="text-[10px] text-slate-500 uppercase">Início</Label>
             <Input
               type="date"
               value={datas[0] || ''}
@@ -109,7 +109,7 @@ export function EntrevistaDateField({ value, onChange, inputClassName = 'bg-whit
             />
           </div>
           <div>
-            <Label className="text-[10px] text-muted-foreground uppercase">Fim</Label>
+            <Label className="text-[10px] text-slate-500 uppercase">Fim</Label>
             <Input
               type="date"
               value={datas[1] || ''}

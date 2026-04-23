@@ -245,7 +245,7 @@ export function CronogramaImportDialog({
         </DialogHeader>
 
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 py-8 text-slate-600">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm">Processando {fileName}...</span>
           </div>
@@ -269,9 +269,9 @@ export function CronogramaImportDialog({
                   </div>
                 )}
                 {errorDetails?.raw && (
-                  <details className="mt-1 text-[11px] text-muted-foreground">
+                  <details className="mt-1 text-[11px] text-slate-600">
                     <summary className="cursor-pointer">Detalhes técnicos</summary>
-                    <pre className="mt-1 whitespace-pre-wrap break-all bg-muted/30 border border-border/60 rounded p-2">{errorDetails.raw}</pre>
+                    <pre className="mt-1 whitespace-pre-wrap break-all bg-slate-50 border border-slate-200 rounded p-2">{errorDetails.raw}</pre>
                   </details>
                 )}
               </div>
@@ -286,7 +286,7 @@ export function CronogramaImportDialog({
                 </Button>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground italic">
+            <p className="text-[11px] text-slate-500 italic">
               Anexe o arquivo baixado e os detalhes copiados na conversa do chat para análise.
             </p>
           </div>
@@ -319,7 +319,7 @@ export function CronogramaImportDialog({
                   const mapeadas = c ? (c.etapas || []).filter((e) => e.cronogramaKey).length : 0;
                   return (
                     <TableRow key={alvo.id}>
-                      <TableCell className="text-sm font-medium text-foreground">
+                      <TableCell className="text-sm font-medium text-slate-800">
                         {alvo.cargo}
                       </TableCell>
                       <TableCell>
@@ -351,7 +351,7 @@ export function CronogramaImportDialog({
                             <CheckCircle2 className="h-3 w-3" /> {mapeadas}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground/80">—</span>
+                          <span className="text-slate-400">—</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -359,7 +359,7 @@ export function CronogramaImportDialog({
                 })}
               </TableBody>
             </Table>
-            <p className="text-[11px] text-muted-foreground italic">
+            <p className="text-[11px] text-slate-500 italic">
               O sistema sugeriu automaticamente os pareamentos por similaridade do nome do cargo. Ajuste manualmente se necessário.
             </p>
           </div>
@@ -368,7 +368,7 @@ export function CronogramaImportDialog({
         {/* ============ MODO SINGLE — seletor de múltiplos cronogramas ============ */}
         {!loading && !errorMessage && !isMultiMode && cronogramas && multiple && selectedIdx === -1 && (
           <div className="space-y-3">
-            <Label className="text-xs font-bold uppercase text-muted-foreground">
+            <Label className="text-xs font-bold uppercase text-slate-500">
               Selecione o cronograma ({cronogramas.length} encontrados)
             </Label>
             <RadioGroup
@@ -382,14 +382,14 @@ export function CronogramaImportDialog({
                   <label
                     key={i}
                     htmlFor={`cron-${i}`}
-                    className="flex items-start gap-3 rounded-md border border-border/60 hover:border-primary/40 hover:bg-primary/5 p-3 cursor-pointer transition"
+                    className="flex items-start gap-3 rounded-md border border-slate-200 hover:border-primary/40 hover:bg-primary/5 p-3 cursor-pointer transition"
                   >
                     <RadioGroupItem id={`cron-${i}`} value={String(i)} className="mt-1" />
                     <div className="flex-1">
-                      <div className="text-sm font-semibold text-foreground">
+                      <div className="text-sm font-semibold text-slate-800">
                         {c.anexo} — {c.cargo}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
+                      <div className="text-xs text-slate-500 mt-0.5">
                         {c.etapas.length} etapa(s) detectada(s) • {mapeadas} reconhecida(s) pelo sistema
                       </div>
                     </div>
@@ -404,7 +404,7 @@ export function CronogramaImportDialog({
         {!loading && !errorMessage && !isMultiMode && selected && (multiple ? selectedIdx !== -1 : true) && (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md px-3 py-2 flex-1">
+              <div className="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-md px-3 py-2 flex-1">
                 <strong>{selected.anexo}</strong> — Cargo: <strong>{selected.cargo}</strong>
               </div>
               {multiple && (
@@ -425,7 +425,7 @@ export function CronogramaImportDialog({
               <TableBody>
                 {selected.etapas.map((e, i) => (
                   <TableRow key={i}>
-                    <TableCell className="text-xs">{e.etapaOriginal || <em className="text-muted-foreground/80">—</em>}</TableCell>
+                    <TableCell className="text-xs">{e.etapaOriginal || <em className="text-slate-400">—</em>}</TableCell>
                     <TableCell className="text-xs">
                       {e.cronogramaLabel ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700">
@@ -440,9 +440,9 @@ export function CronogramaImportDialog({
                     <TableCell className="text-xs">
                       {e.datas.length > 0
                         ? e.datas.map((d) => formatDate(d)).join(' • ')
-                        : <em className="text-muted-foreground/80">{e.textoOriginal || '—'}</em>}
+                        : <em className="text-slate-400">{e.textoOriginal || '—'}</em>}
                     </TableCell>
-                    <TableCell className="text-xs uppercase text-muted-foreground">
+                    <TableCell className="text-xs uppercase text-slate-500">
                       {e.cronogramaKey === 'data_entrevistas'
                         ? e.tipo === 'unica' ? 'Única' : e.tipo === 'duas_datas' ? '2 datas' : 'Período'
                         : '—'}
@@ -451,7 +451,7 @@ export function CronogramaImportDialog({
                 ))}
               </TableBody>
             </Table>
-            <p className="text-[11px] text-muted-foreground italic">
+            <p className="text-[11px] text-slate-500 italic">
               Etapas sem correspondência permanecem em branco no formulário e podem ser preenchidas manualmente.
             </p>
           </div>

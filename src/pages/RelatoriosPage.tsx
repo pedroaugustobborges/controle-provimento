@@ -208,7 +208,7 @@ export default function RelatoriosPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="border-border/40 shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-50 text-primary">
+              <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
                 <LogIn className="h-5 w-5" />
               </div>
               <div>
@@ -219,7 +219,7 @@ export default function RelatoriosPage() {
           </Card>
           <Card className="border-border/40 shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-50 text-success">
+              <div className="p-2 rounded-lg bg-green-50 text-green-600">
                 <Activity className="h-5 w-5" />
               </div>
               <div>
@@ -230,7 +230,7 @@ export default function RelatoriosPage() {
           </Card>
           <Card className="border-border/40 shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-50 text-warning">
+              <div className="p-2 rounded-lg bg-amber-50 text-amber-600">
                 <FileText className="h-5 w-5" />
               </div>
               <div>
@@ -516,10 +516,10 @@ function AuditDiff({ oldVal, newVal }: { oldVal: any, newVal: any }) {
         {changes.map(key => (
           <div key={key} className="grid grid-cols-3 gap-4 text-xs items-center p-2 bg-white rounded border border-border/20 shadow-sm">
             <div className="font-semibold text-primary truncate" title={key}>{key}</div>
-            <div className="text-destructive line-through truncate bg-red-50/50 px-1.5 py-0.5 rounded" title={formatVal(oldObj[key])}>
+            <div className="text-red-600 line-through truncate bg-red-50/50 px-1.5 py-0.5 rounded" title={formatVal(oldObj[key])}>
               {formatVal(oldObj[key])}
             </div>
-            <div className="text-success font-medium truncate bg-green-50/50 px-1.5 py-0.5 rounded" title={formatVal(newObj[key])}>
+            <div className="text-green-600 font-medium truncate bg-green-50/50 px-1.5 py-0.5 rounded" title={formatVal(newObj[key])}>
               {formatVal(newObj[key])}
             </div>
           </div>

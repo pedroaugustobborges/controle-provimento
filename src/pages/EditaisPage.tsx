@@ -46,7 +46,7 @@ export default function EditaisPage() {
         title="Editais e Publicações"
       />
 
-      <Card className="border-border/60 shadow-sm overflow-hidden">
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -69,12 +69,12 @@ export default function EditaisPage() {
                     onClick={() => navigate(`/vagas/${e.vaga_id}`)}
                   >
                     <TableCell>
-                      <div className="font-semibold text-foreground">{e.vaga?.cargo || '—'}</div>
-                      <div className="text-[11px] text-muted-foreground">{e.vaga?.unidade || '—'}</div>
+                      <div className="font-semibold text-slate-800">{e.vaga?.cargo || '—'}</div>
+                      <div className="text-[11px] text-slate-500">{e.vaga?.unidade || '—'}</div>
                     </TableCell>
                     <TableCell className="font-mono text-xs text-slate-700">{e.numero_processo || '—'}</TableCell>
                     <TableCell className="font-mono text-xs text-primary font-bold">{e.numero_edital || '—'}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{formatDate(e.data_abertura_edital)}</TableCell>
+                    <TableCell className="text-xs text-slate-600">{formatDate(e.data_abertura_edital)}</TableCell>
                     <TableCell className="text-center">
                       <Badge className={`${getEtapaColor(e.etapa_atual)} font-bold text-[11px]`}>{ETAPA_LABELS[e.etapa_atual]}</Badge>
                     </TableCell>

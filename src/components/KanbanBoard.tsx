@@ -61,18 +61,18 @@ const KanbanColumn = ({ id, title, icon: Icon, count, color, children }: KanbanC
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
-    <div className={`flex flex-col min-w-[200px] flex-1 h-full bg-muted/30/50 rounded-xl border transition-colors ${isOver ? 'border-primary/50 bg-primary/5' : 'border-border/60/50'}`}>
-      <div className="p-4 flex items-center justify-between border-b border-border/60/50 bg-white/50 rounded-t-xl">
+    <div className={`flex flex-col min-w-[200px] flex-1 h-full bg-slate-50/50 rounded-xl border transition-colors ${isOver ? 'border-primary/50 bg-primary/5' : 'border-slate-200/50'}`}>
+      <div className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className={`p-1.5 rounded-lg ${color} bg-opacity-10`}>
             <Icon className={`h-4 w-4 ${color.replace('bg-', 'text-')}`} />
           </div>
           <h3 className="font-bold text-sm text-slate-700 uppercase tracking-tight">{title}</h3>
-          <Badge variant="secondary" className="ml-2 bg-slate-200/50 text-muted-foreground font-bold text-[10px] h-5 px-1.5">
+          <Badge variant="secondary" className="ml-2 bg-slate-200/50 text-slate-600 font-bold text-[10px] h-5 px-1.5">
             {count}
           </Badge>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/80">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </div>
@@ -106,20 +106,20 @@ const SortableKanbanCard = ({ convocacao, onEdit }: KanbanCardProps) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-border/60 cursor-grab active:cursor-grabbing group bg-white">
+      <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-slate-200 cursor-grab active:cursor-grabbing group bg-white">
         <CardContent className="p-4 space-y-3">
           <div className="flex justify-between items-start">
             <div className="flex flex-col">
-              <h4 className="font-bold text-sm text-foreground leading-tight group-hover:text-primary transition-colors">
+              <h4 className="font-bold text-sm text-slate-800 leading-tight group-hover:text-primary transition-colors">
                 {convocacao.nome_candidato}
               </h4>
-              <span className="text-[11px] text-muted-foreground font-medium mt-0.5">{convocacao.cargo}</span>
+              <span className="text-[11px] text-slate-500 font-medium mt-0.5">{convocacao.cargo}</span>
             </div>
             <div className="flex gap-1">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-6 px-1.5 text-[9px] font-bold text-muted-foreground/80 hover:text-primary gap-0.5"
+                className="h-6 px-1.5 text-[9px] font-bold text-slate-400 hover:text-primary gap-0.5"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(convocacao);
@@ -131,7 +131,7 @@ const SortableKanbanCard = ({ convocacao, onEdit }: KanbanCardProps) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/80">
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
             {convocacao.horario && (
               <Badge variant="outline" className="text-[10px] font-bold text-primary border-primary/20 bg-primary/5 px-1.5 h-4">
                 {convocacao.horario}
@@ -146,7 +146,7 @@ const SortableKanbanCard = ({ convocacao, onEdit }: KanbanCardProps) => {
           </div>
 
           <div className="flex flex-wrap gap-1">
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-muted-foreground text-[9px] font-bold">
+            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">
               {convocacao.tipo_convocacao}
             </span>
             {convocacao.classificacao === 1 && (
@@ -323,7 +323,7 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
               ))}
             </SortableContext>
             {getItemsForColumn(col.id).length === 0 && (
-              <div className="h-24 flex items-center justify-center border-2 border-dashed border-border/60 rounded-lg text-muted-foreground/80 text-xs italic">
+              <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-lg text-slate-400 text-xs italic">
                 Solte aqui para mover
               </div>
             )}
@@ -334,8 +334,8 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
           {activeConvocacao ? (
             <Card className="shadow-lg border-primary/30 w-[296px] bg-white opacity-90 scale-105 pointer-events-none">
               <CardContent className="p-4 space-y-2">
-                <h4 className="font-bold text-sm text-foreground">{activeConvocacao.nome_candidato}</h4>
-                <p className="text-[10px] text-muted-foreground">{activeConvocacao.cargo}</p>
+                <h4 className="font-bold text-sm text-slate-800">{activeConvocacao.nome_candidato}</h4>
+                <p className="text-[10px] text-slate-500">{activeConvocacao.cargo}</p>
               </CardContent>
             </Card>
           ) : null}
@@ -352,7 +352,7 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
             </DialogTitle>
             <DialogDescription>
               Você está movendo o candidato <strong>{movingConvocacao?.nome_candidato}</strong> para 
-              <Badge variant="outline" className="ml-1 bg-muted/30">
+              <Badge variant="outline" className="ml-1 bg-slate-50">
                 {targetStatus === 'recusa' ? 'Recusa' : targetStatus ? STATUS_CONVOCACAO_LABELS[targetStatus as StatusConvocacao] : ''}
               </Badge>
             </DialogDescription>
@@ -410,11 +410,11 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
             <div className="grid gap-6 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-muted-foreground/80 uppercase">Candidato</Label>
+                  <Label className="text-xs font-bold text-slate-400 uppercase">Candidato</Label>
                   <p className="text-sm font-semibold">{editingConvocacao.nome_candidato}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-muted-foreground/80 uppercase">Status Atual</Label>
+                  <Label className="text-xs font-bold text-slate-400 uppercase">Status Atual</Label>
                   <Badge variant="outline">{STATUS_CONVOCACAO_LABELS[editingConvocacao.status]}</Badge>
                 </div>
               </div>
@@ -429,8 +429,8 @@ export function KanbanBoard({ convocacoes: initialConvocacoes }: KanbanBoardProp
                 />
               </div>
               
-              <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg border border-border/40">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Info className="h-4 w-4" />
                   Para alterar dados básicos, use o formulário principal.
                 </div>

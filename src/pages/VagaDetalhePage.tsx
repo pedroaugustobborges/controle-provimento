@@ -396,17 +396,17 @@ export default function VagaDetalhePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between bg-white p-4 rounded-xl border border-border/60 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-slate-100"><ArrowLeft className="h-5 w-5" /></Button>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-foreground">{vaga.cargo}</h2>
-              {vaga.reabertura_suspeita && <Badge variant="outline" className="bg-amber-50 text-warning border-amber-200 font-bold">REABERTURA</Badge>}
+              <h2 className="text-2xl font-bold text-slate-800">{vaga.cargo}</h2>
+              {vaga.reabertura_suspeita && <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 font-bold">REABERTURA</Badge>}
             </div>
-            <p className="text-sm text-muted-foreground font-medium">
+            <p className="text-sm text-slate-500 font-medium">
               {vaga.requisicao || vaga.numero_requisicao} · {vaga.unidade}
-              {vaga.trace_key && <span className="ml-2 text-[11px] text-muted-foreground/80 font-mono opacity-60">ID Rastro: {vaga.trace_key}</span>}
+              {vaga.trace_key && <span className="ml-2 text-[11px] text-slate-400 font-mono opacity-60">ID Rastro: {vaga.trace_key}</span>}
             </p>
           </div>
         </div>
@@ -417,7 +417,7 @@ export default function VagaDetalhePage() {
             {hasRecusa && <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold text-[11px] uppercase">Convocação Recusada</Badge>}
             {vaga.tem_banco_valido && <Badge className="bg-blue-100 text-blue-700 border-blue-200 font-bold text-[11px] uppercase">Banco Gerado</Badge>}
             {vaga.status === 'publicar_novo_edital' && <Badge className="bg-rose-100 text-rose-700 border-rose-200 font-bold text-[11px] uppercase">Necessidade de Novo Edital</Badge>}
-            {isConcluido && <Badge className="bg-slate-100 text-slate-700 border-border/60 font-bold text-[11px] uppercase">Processo Concluído</Badge>}
+            {isConcluido && <Badge className="bg-slate-100 text-slate-700 border-slate-200 font-bold text-[11px] uppercase">Processo Concluído</Badge>}
             
             {vaga.status_edital && (
               <Badge className={`${STATUS_EDITAL_COLORS[vaga.status_edital as any] || 'bg-slate-100'} font-bold text-xs px-3 py-1`}>
@@ -429,7 +429,7 @@ export default function VagaDetalhePage() {
           {permissions.canDirectEdit() && (
             <Button 
               variant="outline" 
-              className="text-warning border-amber-200 hover:bg-amber-50 gap-2 font-bold"
+              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
               onClick={() => setIsEditVagaOpen(true)}
             >
               <Edit className="h-4 w-4" /> Editar Registro
@@ -438,7 +438,7 @@ export default function VagaDetalhePage() {
           {permissions.canRequestUpdate() && (
             <Button 
               variant="outline" 
-              className="text-warning border-amber-200 hover:bg-amber-50 gap-2 font-bold"
+              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
               onClick={() => setIsRequestUpdateOpen(true)}
             >
               <AlertCircle className="h-4 w-4" /> Solicitar Atualização
@@ -458,18 +458,18 @@ export default function VagaDetalhePage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura), color: 'text-primary', bg: 'bg-blue-50' },
-          { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias`, color: 'text-warning', bg: 'bg-amber-50' },
-          { icon: FileSpreadsheet, label: 'Origem', value: vaga.origem_importacao || 'Manual', color: 'text-success', bg: 'bg-green-50' },
+          { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura), color: 'text-blue-600', bg: 'bg-blue-50' },
+          { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias`, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { icon: FileSpreadsheet, label: 'Origem', value: vaga.origem_importacao || 'Manual', color: 'text-green-600', bg: 'bg-green-50' },
           { icon: Building2, label: 'Qtd. Vagas', value: vaga.numero_vagas || vaga.quantidade || 0, color: 'text-primary', bg: 'bg-primary/5' },
         ].map((item) => (
-          <Card key={item.label} className="border-border/60 shadow-sm">
+          <Card key={item.label} className="border-slate-200 shadow-sm">
             <CardContent className="pt-4 pb-4 px-4 flex items-center gap-3">
               <div className={`${item.bg} p-2 rounded-lg`}>
                 <item.icon className={`h-5 w-5 ${item.color}`} />
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider">{item.label}</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">{item.label}</p>
                 <p className="text-sm font-bold text-slate-700">{item.value}</p>
               </div>
             </CardContent>
@@ -477,10 +477,10 @@ export default function VagaDetalhePage() {
         ))}
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-border/60 shadow-sm space-y-4">
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-          <h3 className="font-bold text-foreground">Ações Operacionais Rápidas</h3>
+          <h3 className="font-bold text-slate-800">Ações Operacionais Rápidas</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Button 
@@ -494,7 +494,7 @@ export default function VagaDetalhePage() {
               </div>
               <div className="text-left">
                 <p className="font-bold text-base">Realizar convocação</p>
-                <p className="text-xs text-muted-foreground font-medium">Usar banco de talentos vinculado para esta vaga</p>
+                <p className="text-xs text-slate-500 font-medium">Usar banco de talentos vinculado para esta vaga</p>
               </div>
             </div>
             <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
@@ -511,7 +511,7 @@ export default function VagaDetalhePage() {
               </div>
               <div className="text-left">
                 <p className="font-bold text-base">Enviar para Fila de Editais</p>
-                <p className="text-xs text-muted-foreground font-medium">Encaminhar para fila de novos editais/publicações</p>
+                <p className="text-xs text-slate-500 font-medium">Encaminhar para fila de novos editais/publicações</p>
               </div>
             </div>
             <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
@@ -532,36 +532,36 @@ export default function VagaDetalhePage() {
         </TabsList>
 
         <TabsContent value="dados">
-          <Card className="border-border/60 shadow-sm">
+          <Card className="border-slate-200 shadow-sm">
             <CardContent className="pt-6 space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><Building2 className="h-3 w-3" /> Unidade</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><Building2 className="h-3 w-3" /> Unidade</label>
                   <p className="text-sm font-semibold text-slate-700">{vaga.unidade}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Seção</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Seção</label>
                   <p className="text-sm font-semibold text-slate-700">{vaga.secao || 'Não informada'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Recebimento</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Recebimento</label>
                   <p className="text-sm font-semibold text-slate-700">{formatDate(vaga.data_recebimento!)}</p>
 
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> Analista Resp.</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> Analista Resp.</label>
                   <p className="text-sm font-semibold text-slate-700">{vaga.analista_responsavel}</p>
                 </div>
                 {vaga.assistentes && vaga.assistentes.length > 0 && (
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> Assistentes</label>
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><User className="h-3 w-3" /> Assistentes</label>
                     <p className="text-sm font-semibold text-slate-700">{vaga.assistentes.join(', ')}</p>
                   </div>
                 )}
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3" /> Banco Ativo?</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3" /> Banco Ativo?</label>
                   <div className="flex items-center gap-2">
-                    <p className={`text-sm font-bold ${banco ? 'text-success' : 'text-muted-foreground'}`}>
+                    <p className={`text-sm font-bold ${banco ? 'text-green-600' : 'text-slate-500'}`}>
                       {banco ? `Sim (${banco.numero_edital})` : 'Não'}
                     </p>
                     {banco && (
@@ -573,22 +573,22 @@ export default function VagaDetalhePage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Edital</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Edital</label>
                   <p className="text-sm font-bold text-primary">{vaga.numero_edital || 'Pendente'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Processo</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Processo</label>
                   <p className="text-sm font-bold text-primary">{vaga.numero_processo || 'Pendente'}</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Requisição</label>
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5"><Hash className="h-3 w-3" /> Nº Requisição</label>
                   <p className="text-sm font-bold text-slate-700 font-mono">{vaga.requisicao || vaga.numero_requisicao}</p>
                 </div>
               </div>
 
-              <div className="bg-muted/30 p-6 rounded-xl border border-border/40 space-y-4">
+              <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Indicadores do Processo</h4>
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Indicadores do Processo</h4>
                   {canEdit && (
                     <Button 
                       variant="ghost" 
@@ -602,35 +602,35 @@ export default function VagaDetalhePage() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Inscritos</label>
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Inscritos</label>
                     {isEditingIndicators ? (
                       <Input type="number" value={indicators.total_inscritos} onChange={(e) => setIndicators({ ...indicators, total_inscritos: +e.target.value })} className="h-8 bg-white" />
                     ) : (
-                      <p className="text-xl font-bold text-foreground">{vaga.total_inscritos || 0}</p>
+                      <p className="text-xl font-bold text-slate-800">{vaga.total_inscritos || 0}</p>
                     )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Triagem</label>
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Triagem</label>
                     {isEditingIndicators ? (
                       <Input type="number" value={indicators.aprovados_triagem} onChange={(e) => setIndicators({ ...indicators, aprovados_triagem: +e.target.value })} className="h-8 bg-white" />
                     ) : (
-                      <p className="text-xl font-bold text-foreground">{vaga.aprovados_triagem || 0}</p>
+                      <p className="text-xl font-bold text-slate-800">{vaga.aprovados_triagem || 0}</p>
                     )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Em Entrevista</label>
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Em Entrevista</label>
                     {isEditingIndicators ? (
                       <Input type="number" value={indicators.convocados_entrevista} onChange={(e) => setIndicators({ ...indicators, convocados_entrevista: +e.target.value })} className="h-8 bg-white" />
                     ) : (
-                      <p className="text-xl font-bold text-foreground">{vaga.convocados_entrevista || 0}</p>
+                      <p className="text-xl font-bold text-slate-800">{vaga.convocados_entrevista || 0}</p>
                     )}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Aprovados</label>
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Aprovados</label>
                     {isEditingIndicators ? (
                       <Input type="number" value={indicators.aprovados_finais} onChange={(e) => setIndicators({ ...indicators, aprovados_finais: +e.target.value })} className="h-8 bg-white" />
                     ) : (
-                      <p className="text-xl font-bold text-success">{vaga.aprovados_finais || 0}</p>
+                      <p className="text-xl font-bold text-green-600">{vaga.aprovados_finais || 0}</p>
                     )}
                   </div>
                 </div>
@@ -638,34 +638,34 @@ export default function VagaDetalhePage() {
 
               <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b">
-                  <Info className="h-4 w-4 text-muted-foreground/80" />
-                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Informações Complementares</h4>
+                  <Info className="h-4 w-4 text-slate-400" />
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Informações Complementares</h4>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Origem Importação</label>
-                    <p className="text-sm font-medium text-muted-foreground">{vaga.origem_importacao || 'Lançamento Manual'}</p>
-                    {vaga.data_importacao && <p className="text-[11px] text-muted-foreground/80">Importado em: {new Date(vaga.data_importacao).toLocaleDateString()}</p>}
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Origem Importação</label>
+                    <p className="text-sm font-medium text-slate-600">{vaga.origem_importacao || 'Lançamento Manual'}</p>
+                    {vaga.data_importacao && <p className="text-[11px] text-slate-400">Importado em: {new Date(vaga.data_importacao).toLocaleDateString()}</p>}
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Lote de Importação</label>
-                    <p className="text-sm font-mono text-muted-foreground">{vaga.lote_importacao || '—'}</p>
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Lote de Importação</label>
+                    <p className="text-sm font-mono text-slate-600">{vaga.lote_importacao || '—'}</p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Status Atual</label>
+                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Status Atual</label>
                     <div className="mt-1">
                       <Select 
                         value={(vaga.status || vaga.status_geral) as string} 
                         onValueChange={handleStatusChange}
                         disabled={!canEdit && !isAssistente}
                       >
-                        <SelectTrigger className={`h-9 bg-white border-border/60 ${getStatusColor(vaga.status || (vaga.status_geral as any))}`}>
+                        <SelectTrigger className={`h-9 bg-white border-slate-200 ${getStatusColor(vaga.status || (vaga.status_geral as any))}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">
                           {isTeiaUnit(vaga.unidade) ? (
                             <>
-                              <div className="p-2 text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider border-b mb-1">Status TEIA</div>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b mb-1">Status TEIA</div>
                               {([
                                 { value: 'EM EDITAL', label: 'Processo Seletivo' },
                                 { value: 'DOCUMENTAÇÃO', label: 'Documentação' },
@@ -678,7 +678,7 @@ export default function VagaDetalhePage() {
                                 { value: 'CANCELADAS', label: 'Cancelada' },
                                 { value: 'SEM STATUS', label: 'Sem Status' },
                               ] as { value: StatusVaga; label: string }[]).map(({ value, label }) => (
-                                <SelectItem key={value} value={value} className="focus:bg-muted/30">
+                                <SelectItem key={value} value={value} className="focus:bg-slate-50">
                                   <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(value)} border border-current opacity-60`} />
                                   {label}
                                 </SelectItem>
@@ -686,41 +686,41 @@ export default function VagaDetalhePage() {
                             </>
                           ) : (
                             <>
-                              <div className="p-2 text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider border-b mb-1">Fluxo Inicial</div>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b mb-1">Fluxo Inicial</div>
                               {['aberta', 'em_triagem', 'entrevista'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-muted/30">
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
                                   <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
                                   {STATUS_LABELS[k as StatusVaga]}
                                 </SelectItem>
                               ))}
                               
-                              <div className="p-2 text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider border-b my-1">Processo Seletivo</div>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Processo Seletivo</div>
                               {['publicado_edital', 'em_edital', 'realizar_convocacao'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-muted/30">
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
                                   <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
                                   {STATUS_LABELS[k as StatusVaga]}
                                 </SelectItem>
                               ))}
                               
-                              <div className="p-2 text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider border-b my-1">Documentação e Admissão</div>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Documentação e Admissão</div>
                               {['documentacao', 'documentacao_ok', 'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 'admissao_efetivada'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-muted/30">
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
                                   <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
                                   {STATUS_LABELS[k as StatusVaga]}
                                 </SelectItem>
                               ))}
                               
-                              <div className="p-2 text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider border-b my-1">Especiais / Outros</div>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Especiais / Outros</div>
                               {['movimentacao_interna', 'vaga_lideranca', 'aguardando_unidade'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-muted/30">
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
                                   <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
                                   {STATUS_LABELS[k as StatusVaga]}
                                 </SelectItem>
                               ))}
                               
-                              <div className="p-2 text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider border-b my-1">Finalização</div>
+                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Finalização</div>
                               {['suspensa', 'cancelada', 'finalizada', 'encerrada'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-muted/30">
+                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
                                   <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
                                   {STATUS_LABELS[k as StatusVaga]}
                                 </SelectItem>
@@ -735,24 +735,24 @@ export default function VagaDetalhePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold">Observações Internas</label>
-                <div className="p-4 bg-muted/30 rounded-lg border border-border/40 min-h-[100px] text-sm text-muted-foreground whitespace-pre-wrap">
+                <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Observações Internas</label>
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 min-h-[100px] text-sm text-slate-600 whitespace-pre-wrap">
                   {vaga.observacoes_internas || vaga.observacoes || 'Nenhuma observação registrada.'}
                 </div>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-border/40 flex flex-wrap gap-x-8 gap-y-2 text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider">
+              <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-x-8 gap-y-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
                 <div className="flex items-center gap-1.5">
-                  <User className="h-3 w-3" /> Criado por: <span className="text-muted-foreground">Sistema</span>
+                  <User className="h-3 w-3" /> Criado por: <span className="text-slate-500">Sistema</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3" /> Data Criação: <span className="text-muted-foreground">{formatDate(vaga.data_abertura)}</span>
+                  <Calendar className="h-3 w-3" /> Data Criação: <span className="text-slate-500">{formatDate(vaga.data_abertura)}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <User className="h-3 w-3" /> Última alteração por: <span className="text-muted-foreground">{vaga.historico[vaga.historico.length - 1]?.usuario || 'Sistema'}</span>
+                  <User className="h-3 w-3" /> Última alteração por: <span className="text-slate-500">{vaga.historico[vaga.historico.length - 1]?.usuario || 'Sistema'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Clock className="h-3 w-3" /> Última atualização: <span className="text-muted-foreground">{formatDate(vaga.historico[vaga.historico.length - 1]?.data || vaga.data_abertura)}</span>
+                  <Clock className="h-3 w-3" /> Última atualização: <span className="text-slate-500">{formatDate(vaga.historico[vaga.historico.length - 1]?.data || vaga.data_abertura)}</span>
                 </div>
               </div>
             </CardContent>
@@ -781,9 +781,9 @@ export default function VagaDetalhePage() {
 
 
         <TabsContent value="historico">
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="pb-2 border-b bg-muted/30/50 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Linha do Tempo</CardTitle>
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-2 border-b bg-slate-50/50 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Linha do Tempo</CardTitle>
               <div className="flex gap-2">
                 <Badge variant={vaga.origem === 'manual' ? 'default' : 'outline'} >
                   {vaga.origem === 'manual' ? 'Origem Manual' : 'Origem Importada'}
@@ -800,7 +800,7 @@ export default function VagaDetalhePage() {
                     <div className={`absolute left-0 w-4 h-4 rounded-full border-2 border-white shadow-sm z-10 ${idx === 0 ? 'bg-primary ring-4 ring-primary/10' : 'bg-slate-300'}`} />
                     <div className="flex-1 pb-4 border-b last:border-0 border-slate-50">
                       <p className="text-sm font-semibold text-slate-700">{h.descricao}</p>
-                      <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
                         <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(h.data)}</span>
                         <span className="flex items-center gap-1"><User className="h-3 w-3" /> {h.usuario}</span>
                       </div>
@@ -870,10 +870,10 @@ export default function VagaDetalhePage() {
           </DialogHeader>
           
           {matchedBanco && (
-            <div className="bg-muted/30 p-4 rounded-lg border border-border/60 space-y-3">
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Banco Identificado</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Banco Identificado</p>
                   <p className="font-bold text-slate-700">{matchedBanco.numero_edital}</p>
                 </div>
                 <Badge className="bg-green-100 text-green-700 border-green-200 font-bold text-[11px] uppercase">
@@ -881,20 +881,20 @@ export default function VagaDetalhePage() {
                 </Badge>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/60/60">
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200/60">
                 <div>
-                  <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Cargo do Banco</p>
-                  <p className="text-xs font-semibold text-muted-foreground truncate">{matchedBanco.cargo}</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cargo do Banco</p>
+                  <p className="text-xs font-semibold text-slate-600 truncate">{matchedBanco.cargo}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Validade</p>
-                  <p className="text-xs font-semibold text-muted-foreground">{formatDate(matchedBanco.data_validade)}</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Validade</p>
+                  <p className="text-xs font-semibold text-slate-600">{formatDate(matchedBanco.data_validade)}</p>
                 </div>
               </div>
               
               <div className="pt-2">
-                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Unidade Origem</p>
-                <p className="text-xs font-semibold text-muted-foreground">{matchedBanco.unidade}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Unidade Origem</p>
+                <p className="text-xs font-semibold text-slate-600">{matchedBanco.unidade}</p>
               </div>
             </div>
           )}
@@ -1086,10 +1086,10 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="border-border/60 shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/30 border-b py-4">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b py-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                   <Activity className="h-5 w-5 text-primary" />
                   Painel Operacional do Edital
                 </CardTitle>
@@ -1102,7 +1102,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Acompanhamento de Etapas</h4>
-                  <div className="text-[11px] font-bold text-muted-foreground/80 uppercase">Marque a conclusão para atualizar o fluxo</div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase">Marque a conclusão para atualizar o fluxo</div>
                 </div>
                 
                 <div className="space-y-3">
@@ -1118,7 +1118,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                         className={`p-4 rounded-xl border transition-all ${
                           isCompleted ? 'bg-green-50/30 border-green-100' : 
                           isCurrent ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10' : 
-                          'bg-white border-border/40'
+                          'bg-white border-slate-100'
                         }`}
                       >
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1126,7 +1126,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                               isCompleted ? 'bg-green-500 text-white' : 
                               isCurrent ? 'bg-primary text-white animate-pulse' : 
-                              'bg-slate-100 text-muted-foreground/80'
+                              'bg-slate-100 text-slate-400'
                             }`}>
                               {isCompleted ? <Check className="h-4 w-4" /> : TODAS_AS_ETAPAS.indexOf(e) + 1}
                             </div>
@@ -1135,7 +1135,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                                 {ETAPA_LABELS[e]}
                               </p>
                               {scheduledDate && (
-                                <p className="text-[11px] text-muted-foreground/80 font-medium uppercase">
+                                <p className="text-[11px] text-slate-400 font-medium uppercase">
                                   Previsto: {formatDate(scheduledDate)}
                                 </p>
                               )}
@@ -1145,10 +1145,10 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                           <div className="flex items-center gap-3">
                             {isCompleted ? (
                               <div className="text-right">
-                                <p className="text-[11px] font-bold text-success uppercase">Concluído em: {status.data_conclusao}</p>
-                                <p className="text-[9px] text-muted-foreground/80">Por: {status.usuario_conclusao}</p>
+                                <p className="text-[11px] font-bold text-green-600 uppercase">Concluído em: {status.data_conclusao}</p>
+                                <p className="text-[9px] text-slate-400">Por: {status.usuario_conclusao}</p>
                                 {status.no_prazo === false && (
-                                  <Badge className="bg-red-50 text-destructive border-red-100 text-[8px] h-4 mt-0.5">ATRASO</Badge>
+                                  <Badge className="bg-red-50 text-red-600 border-red-100 text-[8px] h-4 mt-0.5">ATRASO</Badge>
                                 )}
                               </div>
                             ) : (
@@ -1159,7 +1159,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                                         variant="outline"
                                         size="sm"
                                         className={cn(
-                                          "h-8 w-40 justify-start text-left font-semibold border-border/60 hover:bg-muted/30 transition-all rounded-lg shadow-sm text-[11px]",
+                                          "h-8 w-40 justify-start text-left font-semibold border-slate-200 hover:bg-slate-50 transition-all rounded-lg shadow-sm text-[11px]",
                                         )}
                                       >
                                         <Calendar className="mr-2 h-3 w-3 text-primary" />
@@ -1206,26 +1206,26 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
               <div className="space-y-4 pt-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Indicadores de Funil</h4>
-                  <div className="text-[11px] font-bold text-muted-foreground/80 uppercase">Preenchimento operacional</div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase">Preenchimento operacional</div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                   {[
-                    { label: 'Inscritos', key: 'total_inscritos', icon: Users, color: 'text-primary' },
-                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: SearchIcon, color: 'text-primary' },
-                    { label: 'Avaliação OK', key: 'aprovados_avaliacao_especifica', icon: Zap, color: 'text-primary' },
-                    { label: 'Entrevista', key: 'convocados_entrevista', icon: UserCheck, color: 'text-warning' },
-                    { label: 'Aprovados', key: 'aprovados_finais', icon: CheckCircle, color: 'text-success' },
+                    { label: 'Inscritos', key: 'total_inscritos', icon: Users, color: 'text-blue-600' },
+                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: SearchIcon, color: 'text-purple-600' },
+                    { label: 'Avaliação OK', key: 'aprovados_avaliacao_especifica', icon: Zap, color: 'text-cyan-600' },
+                    { label: 'Entrevista', key: 'convocados_entrevista', icon: UserCheck, color: 'text-amber-600' },
+                    { label: 'Aprovados', key: 'aprovados_finais', icon: CheckCircle, color: 'text-green-600' },
                   ].map((item) => (
-                    <div key={item.key} className="bg-muted/30 p-3 rounded-xl border border-border/40 flex flex-col gap-2">
+                    <div key={item.key} className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col gap-2">
                       <div className="flex items-center gap-2">
                         <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
-                        <label className="text-[11px] font-bold text-muted-foreground uppercase">{item.label}</label>
+                        <label className="text-[11px] font-bold text-slate-500 uppercase">{item.label}</label>
                       </div>
                       <Input 
                         type="number" 
                         value={form[item.key] || 0} 
                         onChange={(e) => setForm({ ...form, [item.key]: +e.target.value })} 
-                        className="h-8 bg-white border-border/60 font-bold text-slate-700"
+                        className="h-8 bg-white border-slate-200 font-bold text-slate-700"
                       />
                     </div>
                   ))}
@@ -1233,18 +1233,18 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Observações Operacionais / Próximos Passos</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Observações Operacionais / Próximos Passos</label>
                 <Textarea 
                   value={form.observacoes_etapa} 
                   onChange={(e) => setForm({ ...form, observacoes_etapa: e.target.value })} 
                   placeholder="Registre aqui detalhes sobre o andamento, problemas encontrados ou decisões tomadas nesta etapa..."
-                  className="min-h-[100px] bg-white border-border/60"
+                  className="min-h-[100px] bg-white border-slate-200"
                 />
               </div>
 
               <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
                 <div className="p-2 bg-amber-100 rounded-lg">
-                  <FileSpreadsheet className="h-5 w-5 text-warning" />
+                  <FileSpreadsheet className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-amber-800">Geração de Banco de Talentos</p>
@@ -1255,7 +1255,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                     type="checkbox" 
                     checked={form.gerou_banco} 
                     onChange={(e) => setForm({ ...form, gerou_banco: e.target.checked })}
-                    className="h-5 w-5 rounded border-amber-300 text-warning focus:ring-amber-500"
+                    className="h-5 w-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                   />
                   {form.gerou_banco && (
                     <div className="flex items-center gap-1">
@@ -1273,8 +1273,8 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="bg-muted/30 border-b py-4">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="bg-slate-50 border-b py-4">
               <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
                 Configuração e Cronograma
@@ -1293,7 +1293,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                   const cronoKey = CRONOGRAMA_KEYS[etapa];
                   
                   return (
-                    <div key={etapa} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isHabilitada ? 'bg-white border-border/60 shadow-sm' : 'bg-muted/30/50 border-dashed border-border/60 opacity-60'}`}>
+                    <div key={etapa} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isHabilitada ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50/50 border-dashed border-slate-200 opacity-60'}`}>
                       <div className="flex items-center gap-3">
                         <input 
                           type="checkbox" 
@@ -1301,7 +1301,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                           onChange={() => toggleEtapa(etapa)}
                           className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
                         />
-                        <span className={`text-xs font-bold ${isHabilitada ? 'text-slate-700' : 'text-muted-foreground/80'}`}>
+                        <span className={`text-xs font-bold ${isHabilitada ? 'text-slate-700' : 'text-slate-400'}`}>
                           {ETAPA_LABELS[etapa]}
                         </span>
                       </div>
@@ -1312,7 +1312,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                               variant="outline"
                               size="sm"
                               className={cn(
-                                "h-8 w-32 justify-start text-left font-semibold border-border/60 hover:bg-muted/30 transition-all rounded-lg shadow-sm text-[11px]",
+                                "h-8 w-32 justify-start text-left font-semibold border-slate-200 hover:bg-slate-50 transition-all rounded-lg shadow-sm text-[11px]",
                               )}
                             >
                               <Calendar className="mr-2 h-3 w-3 text-primary" />
@@ -1343,12 +1343,12 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
         </div>
 
         <div className="space-y-6">
-          <Card className="border-border/60 shadow-sm bg-gradient-to-br from-white to-slate-50">
+          <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-white to-slate-50">
             <CardHeader className="border-b py-4">
               <CardTitle className="text-sm font-bold text-slate-700 uppercase tracking-wider">Resumo Visual</CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="relative pl-6 border-l-2 border-border/60 space-y-8">
+              <div className="relative pl-6 border-l-2 border-slate-200 space-y-8">
                 {TODAS_AS_ETAPAS.filter(e => (form.etapas_habilitadas || []).includes(e)).map((e) => {
                   const status = (form.historico_etapas || []).find((h: any) => h.etapa === e);
                   const isCompleted = status?.concluida;
@@ -1363,11 +1363,11 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                         isCompleted ? 'border-green-500 bg-green-500' : 'border-slate-300'
                       }`} />
                       <div className="flex flex-col">
-                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isCompleted ? 'text-success' : 'text-muted-foreground'}`}>
+                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-slate-500'}`}>
                           {ETAPA_LABELS[e]}
                         </span>
-                        {date && <span className="text-[11px] text-muted-foreground/80 font-medium uppercase tracking-tighter">Previsto: {formatDate(date)}</span>}
-                        {isCompleted && status.data_conclusao && <span className="text-[9px] text-success font-bold uppercase">Realizado: {formatDate(status.data_conclusao)}</span>}
+                        {date && <span className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">Previsto: {formatDate(date)}</span>}
+                        {isCompleted && status.data_conclusao && <span className="text-[9px] text-green-600 font-bold uppercase">Realizado: {formatDate(status.data_conclusao)}</span>}
                         {isCurrent && (
                           <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/10">
                             <p className="text-[9px] font-bold text-primary uppercase">Etapa em andamento</p>
@@ -1391,12 +1391,12 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                 variant="outline" 
                 type="button"
                 onClick={onEditVaga}
-                className="w-full text-warning border-amber-200 hover:bg-amber-50 font-bold h-12"
+                className="w-full text-amber-600 border-amber-200 hover:bg-amber-50 font-bold h-12"
               >
                 <Edit className="h-4 w-4 mr-2" /> Editar Registro
               </Button>
             </div>
-            <p className="text-[11px] text-center text-muted-foreground/80 font-medium">As alterações serão registradas no histórico da vaga.</p>
+            <p className="text-[11px] text-center text-slate-400 font-medium">As alterações serão registradas no histórico da vaga.</p>
           </div>
         </div>
       </div>
@@ -1424,50 +1424,50 @@ function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
   };
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="border-slate-200 shadow-sm">
       <CardContent className="pt-6 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Nº Processo Administrativo</label>
-            <Input value={form.numero_processo} onChange={(e) => setForm({ ...form, numero_processo: e.target.value })} className="bg-white border-border/60" />
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nº Processo Administrativo</label>
+            <Input value={form.numero_processo} onChange={(e) => setForm({ ...form, numero_processo: e.target.value })} className="bg-white border-slate-200" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Nº Edital de Seleção</label>
-            <Input value={form.numero_edital} onChange={(e) => setForm({ ...form, numero_edital: e.target.value })} className="bg-white border-border/60" />
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nº Edital de Seleção</label>
+            <Input value={form.numero_edital} onChange={(e) => setForm({ ...form, numero_edital: e.target.value })} className="bg-white border-slate-200" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Data de Publicação</label>
-            <Input type="date" value={form.data_abertura_edital} onChange={(e) => setForm({ ...form, data_abertura_edital: e.target.value })} className="bg-white border-border/60" />
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Data de Publicação</label>
+            <Input type="date" value={form.data_abertura_edital} onChange={(e) => setForm({ ...form, data_abertura_edital: e.target.value })} className="bg-white border-slate-200" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Etapa Atual do Edital</label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Etapa Atual do Edital</label>
             <Select value={form.etapa_atual} onValueChange={(v) => setForm({ ...form, etapa_atual: v })}>
-              <SelectTrigger className="bg-white border-border/60"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="bg-white border-slate-200"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(ETAPA_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div className="bg-muted/30 p-6 rounded-xl border border-border/40 grid grid-cols-2 sm:grid-cols-5 gap-6">
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 grid grid-cols-2 sm:grid-cols-5 gap-6">
           <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase">Total Inscritos</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase">Total Inscritos</label>
             <Input type="number" value={form.total_inscritos} onChange={(e) => setForm({ ...form, total_inscritos: +e.target.value })} className="bg-white" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase">Aprovados Triagem</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase">Aprovados Triagem</label>
             <Input type="number" value={form.aprovados_triagem} onChange={(e) => setForm({ ...form, aprovados_triagem: +e.target.value })} className="bg-white" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase">Entrevistados</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase">Entrevistados</label>
             <Input type="number" value={form.convocados_entrevista} onChange={(e) => setForm({ ...form, convocados_entrevista: +e.target.value })} className="bg-white" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase">Aprovados Finais</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase">Aprovados Finais</label>
             <Input type="number" value={form.aprovados_finais} onChange={(e) => setForm({ ...form, aprovados_finais: +e.target.value })} className="bg-white" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase">Gerou Banco?</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase">Gerou Banco?</label>
             <div className="flex items-center gap-2 pt-1">
               <input 
                 type="checkbox" 
@@ -1556,26 +1556,26 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   };
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="border-slate-200 shadow-sm">
       <CardContent className="pt-6 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
-            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.precisa_validacao ? 'border-green-200 bg-green-50/30' : 'border-border/60 bg-muted/30'}`}
+            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.precisa_validacao ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
             onClick={() => setForm({ ...form, precisa_validacao: !form.precisa_validacao })}
           >
             <div>
               <p className="text-sm font-bold text-slate-700">Precisa de Validação?</p>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Requer aprovação de gestor</p>
+              <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Requer aprovação de gestor</p>
             </div>
             {getIcon(form.precisa_validacao)}
           </div>
           <div
-            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.etapa_finalizada ? 'border-green-200 bg-green-50/30' : 'border-border/60 bg-muted/30'}`}
+            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.etapa_finalizada ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
             onClick={() => setForm({ ...form, etapa_finalizada: !form.etapa_finalizada })}
           >
             <div>
               <p className="text-sm font-bold text-slate-700">Etapa Finalizada?</p>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Conclusão do processo</p>
+              <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Conclusão do processo</p>
             </div>
             {getIcon(form.etapa_finalizada)}
           </div>
@@ -1583,18 +1583,18 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Responsável pela Validação</label>
-            <Input value={form.responsavel_validacao} onChange={(e) => setForm({ ...form, responsavel_validacao: e.target.value })} className="bg-white border-border/60" placeholder="Nome do gestor ou analista..." />
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Responsável pela Validação</label>
+            <Input value={form.responsavel_validacao} onChange={(e) => setForm({ ...form, responsavel_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Nome do gestor ou analista..." />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tipo de Validação</label>
-            <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="bg-white border-border/60" placeholder="Ex: Técnica, Comportamental..." />
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Validação</label>
+            <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Ex: Técnica, Comportamental..." />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Observações e Parecer</label>
-          <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="bg-white border-border/60 min-h-[120px]" placeholder="Descreva os detalhes da validação..." />
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Observações e Parecer</label>
+          <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="bg-white border-slate-200 min-h-[120px]" placeholder="Descreva os detalhes da validação..." />
         </div>
 
         {form.status_validacao !== 'pendente' && (
@@ -1609,7 +1609,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
           <div className="flex gap-3">
             <Button 
               onClick={() => handleDecisao('aprovado')} 
-              className="bg-success hover:bg-green-700 text-white shadow-md px-6 gap-2"
+              className="bg-green-600 hover:bg-green-700 text-white shadow-md px-6 gap-2"
             >
               <CheckCircle2 className="h-4 w-4" /> Aprovar
             </Button>
@@ -1634,13 +1634,13 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
 
   if (!banco) {
     return (
-      <Card className="border-border/60 shadow-sm">
+      <Card className="border-slate-200 shadow-sm">
         <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-          <div className="bg-muted/30 p-4 rounded-full mb-4">
+          <div className="bg-slate-50 p-4 rounded-full mb-4">
             <XCircle className="h-10 w-10 text-slate-300" />
           </div>
           <h3 className="text-lg font-bold text-slate-700">Sem Banco de Talentos</h3>
-          <p className="text-sm text-muted-foreground max-w-xs mt-1">Não foi encontrado um banco de talentos válido para este cargo e unidade.</p>
+          <p className="text-sm text-slate-500 max-w-xs mt-1">Não foi encontrado um banco de talentos válido para este cargo e unidade.</p>
           <Button 
             variant="outline" 
             className="mt-6 gap-2"
@@ -1656,16 +1656,16 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
   const isValido = banco.status === 'valido' || banco.status === 'prorrogado';
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="border-slate-200 shadow-sm">
       <CardContent className="pt-6 space-y-6">
         <div className="flex items-center justify-between pb-4 border-b">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${isValido ? 'bg-green-50' : 'bg-red-50'}`}>
-              <CheckCircle2 className={`h-6 w-6 ${isValido ? 'text-success' : 'text-destructive'}`} />
+              <CheckCircle2 className={`h-6 w-6 ${isValido ? 'text-green-600' : 'text-red-600'}`} />
             </div>
             <div>
-              <h3 className="font-bold text-foreground">{banco.numero_edital}</h3>
-              <p className="text-xs text-muted-foreground font-medium">Validade: {formatDate(banco.nova_data_validade || banco.data_validade)}</p>
+              <h3 className="font-bold text-slate-800">{banco.numero_edital}</h3>
+              <p className="text-xs text-slate-500 font-medium">Validade: {formatDate(banco.nova_data_validade || banco.data_validade)}</p>
             </div>
           </div>
           <Badge className={`${isValido ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-bold`}>
@@ -1675,26 +1675,26 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="space-y-1">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider">Data de Abertura</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Data de Abertura</label>
             <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_abertura_edital)}</p>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider">Validade Original</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Validade Original</label>
             <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_validade)}</p>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider">Prorrogado?</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Prorrogado?</label>
             <p className="text-sm font-semibold text-slate-700">{banco.is_prorrogado ? 'Sim' : 'Não'}</p>
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider">Candidatos no Banco</label>
+            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Candidatos no Banco</label>
             <p className="text-sm font-bold text-primary">{banco.quantidade_banco || 'Não informado'}</p>
           </div>
         </div>
 
-        <div className="p-4 bg-muted/30 rounded-xl border border-border/40">
-          <label className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider mb-1 block">Observações do Banco</label>
-          <p className="text-sm text-muted-foreground">{banco.observacoes || 'Sem observações.'}</p>
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+          <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1 block">Observações do Banco</label>
+          <p className="text-sm text-slate-600">{banco.observacoes || 'Sem observações.'}</p>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
@@ -1719,7 +1719,7 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
         </Button>
       </div>
 
-      <Card className="border-border/60 shadow-sm overflow-hidden">
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <Table>
             <TableHeader >
@@ -1738,16 +1738,16 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
-                      <span className="text-[11px] text-muted-foreground/80 font-medium">{c.horario}</span>
+                      <span className="text-[11px] text-slate-400 font-medium">{c.horario}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-700">{c.nome_candidato}</span>
-                      <span className="text-[11px] text-muted-foreground/80 font-medium">{c.tipo_convocacao}</span>
+                      <span className="text-[11px] text-slate-400 font-medium">{c.tipo_convocacao}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center font-bold text-muted-foreground">{c.classificacao}º</TableCell>
+                  <TableCell className="text-center font-bold text-slate-600">{c.classificacao}º</TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className="text-[11px] font-bold">
                       {String(c.status || 'SEM STATUS').toUpperCase()}
@@ -1761,7 +1761,7 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
               ))}
               {convocacoes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground/80 font-medium italic">
+                  <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
                     Nenhuma convocação realizada para esta vaga.
                   </TableCell>
                 </TableRow>

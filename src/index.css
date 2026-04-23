@@ -15,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 213 54% 15%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 215 45% 25%; /* Petroleum Blue / Institutional Blue */
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11.2%;
@@ -34,16 +34,16 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-     --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --sidebar-background: 213 54% 6%;
+    --sidebar-background: 215 45% 25%; /* Blue sidebar for executive feel */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
-    --sidebar-primary-foreground: 213 54% 6%;
-    --sidebar-accent: 213 54% 12%;
+    --sidebar-primary-foreground: 215 45% 25%;
+    --sidebar-accent: 215 45% 30%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 215 45% 20%;
+    --sidebar-ring: 210 40% 98%;
 
     --success: 142 60% 42%;
     --success-foreground: 0 0% 100%;
@@ -52,11 +52,12 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    --status-open: 221.2 83.2% 53.3%;
+    /* Status colors refined */
+    --status-open: 215 45% 25%;
     --status-edital: 38 92% 50%;
     --status-closed: 142 60% 42%;
-    --status-pending: 215 20.2% 65.1%;
-    --status-alert: 0 84.2% 60.2%;
+    --status-pending: 215 25% 45%;
+    --status-alert: 0 84% 60%;
   }
 }
 
@@ -64,9 +65,10 @@
   * {
     @apply border-border;
   }
-    body {
-      @apply bg-background text-foreground;
-    }
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/10 selection:text-primary;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
 }
 
 @layer utilities {
@@ -88,4 +90,11 @@
     @apply bg-blue-500/10 rounded-full hover:bg-blue-500/30 transition-all duration-300;
   }
 
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .neo-blur {
+    @apply bg-white/40 backdrop-blur-xl border border-white/30 shadow-2xl;
+  }
 }

@@ -200,12 +200,12 @@ export const AgieChat = memo(() => {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 flex flex-col bg-muted/30 relative overflow-hidden">
+            <div className="flex-1 flex flex-col bg-slate-50 relative overflow-hidden">
               {step !== 'INITIAL' && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute top-2 left-2 z-10 text-muted-foreground gap-1 h-8"
+                  className="absolute top-2 left-2 z-10 text-slate-500 gap-1 h-8"
                   onClick={handleBack}
                 >
                   <ChevronLeft className="w-4 h-4" /> Voltar
@@ -218,17 +218,17 @@ export const AgieChat = memo(() => {
                   {step === 'INITIAL' && (
                     <div className="pt-4 animate-in fade-in slide-in-from-bottom-4">
                       <div className="mb-6">
-                        <h2 className="text-xl font-bold text-foreground">
+                        <h2 className="text-xl font-bold text-slate-800">
                           Olá, {userProfile?.nome_completo?.split(' ')[0] || 'colega'}! 👋
                         </h2>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-sm text-slate-500 mt-1">
                           O que você gostaria de ver agora?
                         </p>
                       </div>
                       <div className="grid gap-3">
                         <Button
                           variant="outline"
-                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-primary transition-all border-border/60 group"
+                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-primary transition-all border-slate-200 group"
                           onClick={() => setStep('ALERTS')}
                         >
                           <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-primary/10 transition-colors relative">
@@ -240,36 +240,36 @@ export const AgieChat = memo(() => {
                             )}
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-foreground">Alertas do Sistema</p>
-                            <p className="text-[11px] text-muted-foreground">Prazos, tarefas e avisos importantes</p>
+                            <p className="font-bold text-slate-800">Alertas do Sistema</p>
+                            <p className="text-[11px] text-slate-500">Prazos, tarefas e avisos importantes</p>
                           </div>
                         </Button>
 
                         <Button
                           variant="outline"
-                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-amber-500 transition-all border-border/60 group"
+                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-amber-500 transition-all border-slate-200 group"
                           onClick={() => setStep('FEEDBACK')}
                         >
                           <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
-                            <Lightbulb className="w-5 h-5 text-warning" />
+                            <Lightbulb className="w-5 h-5 text-amber-600" />
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-foreground">Feedback / Melhoria</p>
-                            <p className="text-[11px] text-muted-foreground">Ajude-nos a melhorar o sistema</p>
+                            <p className="font-bold text-slate-800">Feedback / Melhoria</p>
+                            <p className="text-[11px] text-slate-500">Ajude-nos a melhorar o sistema</p>
                           </div>
                         </Button>
 
                         <Button
                           variant="outline"
-                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-purple-500 transition-all border-border/60 group"
+                          className="justify-start gap-3 h-auto py-4 bg-white hover:bg-slate-100 hover:border-purple-500 transition-all border-slate-200 group"
                           onClick={() => setStep('NEWS')}
                         >
                           <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                            <Sparkles className="w-5 h-5 text-primary" />
+                            <Sparkles className="w-5 h-5 text-purple-600" />
                           </div>
                           <div className="text-left">
-                            <p className="font-bold text-foreground">Novidades do Sistema</p>
-                            <p className="text-[11px] text-muted-foreground">Veja o que há de novo por aqui</p>
+                            <p className="font-bold text-slate-800">Novidades do Sistema</p>
+                            <p className="text-[11px] text-slate-500">Veja o que há de novo por aqui</p>
                           </div>
                         </Button>
                       </div>
@@ -279,14 +279,14 @@ export const AgieChat = memo(() => {
                   {/* ALERTS */}
                   {step === 'ALERTS' && (
                     <div className="pt-8 space-y-3 animate-in fade-in slide-in-from-right-4">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Alertas do Sistema</p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Alertas do Sistema</p>
                       {allAlertas.length === 0 ? (
                         <div className="bg-white p-6 rounded-xl border text-center space-y-2">
                           <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center mx-auto">
                             <Bell className="w-5 h-5 text-green-500" />
                           </div>
                           <p className="text-sm font-bold text-slate-700">Tudo em dia!</p>
-                          <p className="text-[11px] text-muted-foreground">Nenhum alerta no momento.</p>
+                          <p className="text-[11px] text-slate-500">Nenhum alerta no momento.</p>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -299,7 +299,7 @@ export const AgieChat = memo(() => {
                               )}
                             >
                               <div className="flex justify-between items-start gap-2">
-                                <p className="text-xs font-bold text-foreground leading-tight">
+                                <p className="text-xs font-bold text-slate-800 leading-tight">
                                   {alerta.titulo || alerta.mensagem || 'Alerta'}
                                 </p>
                                 {!alerta.lida && (
@@ -307,9 +307,9 @@ export const AgieChat = memo(() => {
                                 )}
                               </div>
                               {alerta.mensagem && alerta.titulo && (
-                                <p className="text-[11px] text-muted-foreground leading-relaxed">{alerta.mensagem}</p>
+                                <p className="text-[11px] text-slate-500 leading-relaxed">{alerta.mensagem}</p>
                               )}
-                              <p className="text-[9px] text-muted-foreground/80">
+                              <p className="text-[9px] text-slate-400">
                                 {alerta.data || alerta.created_at
                                   ? format(new Date(alerta.data || alerta.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
                                   : ''}
@@ -325,13 +325,13 @@ export const AgieChat = memo(() => {
                   {step === 'FEEDBACK' && (
                     <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
                       <div className="space-y-2">
-                        <h3 className="font-bold text-foreground">Enviar Feedback</h3>
-                        <p className="text-xs text-muted-foreground">Sua opinião é fundamental para evoluirmos.</p>
+                        <h3 className="font-bold text-slate-800">Enviar Feedback</h3>
+                        <p className="text-xs text-slate-500">Sua opinião é fundamental para evoluirmos.</p>
                       </div>
 
                       <div className="space-y-4 bg-white p-4 rounded-xl border shadow-sm">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground/80">Tipo de Feedback</label>
+                          <label className="text-[10px] font-bold uppercase text-slate-400">Tipo de Feedback</label>
                           <Select value={feedbackType} onValueChange={(v: any) => setFeedbackType(v)}>
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Selecione o tipo" />
@@ -345,7 +345,7 @@ export const AgieChat = memo(() => {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase text-muted-foreground/80">Mensagem</label>
+                          <label className="text-[10px] font-bold uppercase text-slate-400">Mensagem</label>
                           <Textarea
                             placeholder="Descreva sua sugestão ou problema detalhadamente..."
                             className="min-h-[120px] resize-none"
@@ -376,15 +376,15 @@ export const AgieChat = memo(() => {
                   {/* NEWS */}
                   {step === 'NEWS' && (
                     <div className="pt-8 space-y-4 animate-in fade-in slide-in-from-right-4">
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Novidades do Sistema</p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Novidades do Sistema</p>
                       <div className="space-y-3">
                         <div className="bg-white p-4 rounded-xl border shadow-sm space-y-2 border-l-4 border-l-primary">
                           <div className="flex justify-between items-start">
                             <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">Atualização</span>
-                            <span className="text-[10px] text-muted-foreground/80">Hoje</span>
+                            <span className="text-[10px] text-slate-400">Hoje</span>
                           </div>
-                          <h4 className="font-bold text-foreground text-sm">AGIE simplificada</h4>
-                          <p className="text-xs text-muted-foreground leading-relaxed">
+                          <h4 className="font-bold text-slate-800 text-sm">AGIE simplificada</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed">
                             A AGIE agora foca em três pontos: alertas do sistema, feedback e novidades.
                             O envio de mensagens entre usuários foi descontinuado.
                           </p>
@@ -392,10 +392,10 @@ export const AgieChat = memo(() => {
                         <div className="bg-white p-4 rounded-xl border shadow-sm space-y-2 border-l-4 border-l-green-500">
                           <div className="flex justify-between items-start">
                             <span className="text-[10px] font-black bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Melhoria</span>
-                            <span className="text-[10px] text-muted-foreground/80">22/05/2024</span>
+                            <span className="text-[10px] text-slate-400">22/05/2024</span>
                           </div>
-                          <h4 className="font-bold text-foreground text-sm">Filtros Avançados</h4>
-                          <p className="text-xs text-muted-foreground leading-relaxed">Melhoramos o desempenho da busca no Banco de Talentos.</p>
+                          <h4 className="font-bold text-slate-800 text-sm">Filtros Avançados</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed">Melhoramos o desempenho da busca no Banco de Talentos.</p>
                         </div>
                       </div>
                     </div>
@@ -440,7 +440,7 @@ export const AgieChat = memo(() => {
             isOpen
               ? "bg-white border-primary rotate-90"
               : hasNewRealNotification
-                ? "bg-destructive border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
+                ? "bg-red-600 border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
                 : "bg-primary border-white hover:shadow-primary/40 shadow-xl"
           )}
         >

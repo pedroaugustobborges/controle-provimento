@@ -13,7 +13,7 @@ export function SaveStatusIndicator({ status, className, pendingCount = 0 }: Pro
 
   if (offline || pendingCount > 0) {
     return (
-      <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-warning', className)}>
+      <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600', className)}>
         <CloudOff className="h-3.5 w-3.5" />
         {offline ? 'Offline' : `${pendingCount} pendente(s)`} — salvarei quando voltar
       </span>
@@ -23,13 +23,13 @@ export function SaveStatusIndicator({ status, className, pendingCount = 0 }: Pro
   switch (status) {
     case 'saving':
       return (
-        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground', className)}>
+        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500', className)}>
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando…
         </span>
       );
     case 'saved':
       return (
-        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-success', className)}>
+        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600', className)}>
           <Check className="h-3.5 w-3.5" /> Salvo
         </span>
       );
@@ -41,7 +41,7 @@ export function SaveStatusIndicator({ status, className, pendingCount = 0 }: Pro
       );
     case 'dirty':
       return (
-        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-primary', className)}>
+        <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600', className)}>
           <Pencil className="h-3.5 w-3.5" /> Editando…
         </span>
       );

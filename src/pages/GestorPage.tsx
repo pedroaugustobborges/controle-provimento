@@ -47,22 +47,22 @@ export default function GestorPage() {
         title="Administração e Gestão"
         actions={
           <>
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-border/60 shadow-inner mr-2">
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner mr-2">
               <button 
                 onClick={() => setActiveTab('stats')}
-                className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded-lg transition-all ${activeTab === 'stats' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-slate-700'}`}
+                className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded-lg transition-all ${activeTab === 'stats' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Indicadores
               </button>
               <button 
                 onClick={() => setActiveTab('history')}
-                className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded-lg transition-all ${activeTab === 'history' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-slate-700'}`}
+                className={`px-4 py-1.5 text-[11px] font-bold uppercase rounded-lg transition-all ${activeTab === 'history' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Histórico
               </button>
             </div>
             <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-              <SelectTrigger className="w-[200px] bg-white border-border/60 h-10 rounded-xl font-bold text-xs"><SelectValue placeholder="Todas Unidades" /></SelectTrigger>
+              <SelectTrigger className="w-[200px] bg-white border-slate-200 h-10 rounded-xl font-bold text-xs"><SelectValue placeholder="Todas Unidades" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas Unidades</SelectItem>
                 {unidades.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
@@ -76,18 +76,18 @@ export default function GestorPage() {
       {activeTab === 'stats' ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="border-border/60 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider">Total de Vagas</p><p className="text-3xl font-bold text-foreground">{filtered.length}</p></CardContent></Card>
-            <Card className="border-border/60 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-primary uppercase tracking-wider">Em Andamento</p><p className="text-3xl font-bold text-foreground">{filtered.filter((v) => !['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)).length}</p></CardContent></Card>
-            <Card className="border-border/60 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-warning uppercase tracking-wider">Tempo Médio (dias)</p><p className="text-3xl font-bold text-foreground">{tempoMedio}</p></CardContent></Card>
+            <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Vagas</p><p className="text-3xl font-bold text-slate-800">{filtered.length}</p></CardContent></Card>
+            <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-primary uppercase tracking-wider">Em Andamento</p><p className="text-3xl font-bold text-slate-800">{filtered.filter((v) => !['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)).length}</p></CardContent></Card>
+            <Card className="border-slate-200 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Tempo Médio (dias)</p><p className="text-3xl font-bold text-slate-800">{tempoMedio}</p></CardContent></Card>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2 bg-muted/30/50 border-b"><CardTitle className="text-muted-foreground">Por Unidade</CardTitle></CardHeader>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Unidade</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {unidades.map(u => (
                   <div key={u} className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-medium">{u}</span>
+                    <span className="text-slate-600 font-medium">{u}</span>
                     <Badge variant="secondary" className="font-bold">
                       {vagas.filter(v => v.unidade === u).length}
                     </Badge>
@@ -95,23 +95,23 @@ export default function GestorPage() {
                 ))}
               </CardContent>
             </Card>
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2 bg-muted/30/50 border-b"><CardTitle className="text-muted-foreground">Por Analista</CardTitle></CardHeader>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Analista</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {[...new Set(vagas.map(v => v.analista_responsavel))].map(a => (
                   <div key={a} className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-medium">{a}</span>
+                    <span className="text-slate-600 font-medium">{a}</span>
                     <Badge variant="secondary" className="font-bold bg-blue-50 text-blue-700">{vagas.filter(v => v.analista_responsavel === a).length}</Badge>
                   </div>
                 ))}
               </CardContent>
             </Card>
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2 bg-muted/30/50 border-b"><CardTitle className="text-muted-foreground">Por Assistente</CardTitle></CardHeader>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 bg-slate-50/50 border-b"><CardTitle className="text-slate-500">Por Assistente</CardTitle></CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {[...new Set(vagas.flatMap(v => v.assistentes || []))].map(a => (
                   <div key={a} className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-medium">{a}</span>
+                    <span className="text-slate-600 font-medium">{a}</span>
                     <Badge variant="secondary" className="font-bold bg-purple-50 text-purple-700">{vagas.filter(v => (v.assistentes || []).includes(a)).length}</Badge>
                   </div>
                 ))}
@@ -120,8 +120,8 @@ export default function GestorPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2 border-b bg-muted/30/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Distribuição por Status</CardTitle></CardHeader>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Distribuição por Status</CardTitle></CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
@@ -133,8 +133,8 @@ export default function GestorPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2 border-b bg-muted/30/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Distribuição por Tipo</CardTitle></CardHeader>
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Distribuição por Tipo</CardTitle></CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={tipoData}>
@@ -149,8 +149,8 @@ export default function GestorPage() {
             </Card>
           </div>
 
-          <Card className="border-border/60 shadow-sm overflow-hidden">
-            <CardHeader className="pb-2 border-b bg-muted/30/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Listagem Consolidada</CardTitle></CardHeader>
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 border-b bg-slate-50/50"><CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Listagem Consolidada</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
@@ -170,15 +170,15 @@ export default function GestorPage() {
                       <TableRow key={v.id}>
                         <TableCell className="font-mono text-xs text-primary font-bold">{v.numero_requisicao}</TableCell>
                         <TableCell className="font-semibold text-slate-700">{v.cargo}</TableCell>
-                        <TableCell className="text-muted-foreground">{v.unidade}</TableCell>
+                        <TableCell className="text-slate-500">{v.unidade}</TableCell>
                         <TableCell><StatusBadge status={v.status_geral} /></TableCell>
-                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap">{formatDate(v.data_abertura)}</TableCell>
+                        <TableCell className="text-slate-500 text-xs whitespace-nowrap">{formatDate(v.data_abertura)}</TableCell>
                         <TableCell className="text-center">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 text-muted-foreground font-bold text-[11px]">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold text-[11px]">
                             {calcDiasAberto(v.data_abertura, v.data_encerramento)}
                           </span>
                         </TableCell>
-                        <TableCell className="text-xs font-medium text-muted-foreground">{v.analista_responsavel}</TableCell>
+                        <TableCell className="text-xs font-medium text-slate-500">{v.analista_responsavel}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -188,8 +188,8 @@ export default function GestorPage() {
           </Card>
         </>
       ) : (
-        <Card className="border-border/60 shadow-sm overflow-hidden">
-          <CardHeader className="pb-3 border-b bg-muted/30/50">
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <CardHeader className="pb-3 border-b bg-slate-50/50">
             <div className="flex items-center gap-2">
               <History className="h-5 w-5 text-primary" />
               <div>
@@ -218,26 +218,26 @@ export default function GestorPage() {
                     <TableRow key={h.id}>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground/80" />
+                          <Clock className="h-3.5 w-3.5 text-slate-400" />
                           <span className="text-xs font-medium text-slate-700">{new Date(h.data).toLocaleString()}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5 text-muted-foreground/80" />
-                          <span className="text-xs font-semibold text-muted-foreground">{h.usuario}</span>
+                          <User className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="text-xs font-semibold text-slate-600">{h.usuario}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <FileSpreadsheet className="h-3.5 w-3.5 text-success" />
-                          <span className="text-xs font-mono text-muted-foreground truncate max-w-[150px]">{h.nome_arquivo}</span>
+                          <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
+                          <span className="text-xs font-mono text-slate-500 truncate max-w-[150px]">{h.nome_arquivo}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center font-bold">{h.total_lidos}</TableCell>
-                      <TableCell className="text-center text-success font-bold">{h.total_novos}</TableCell>
-                      <TableCell className="text-center text-warning font-bold">{h.repeticoes_tratadas}</TableCell>
-                      <TableCell className="text-center text-destructive font-bold">{h.total_erros}</TableCell>
+                      <TableCell className="text-center text-green-600 font-bold">{h.total_novos}</TableCell>
+                      <TableCell className="text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</TableCell>
+                      <TableCell className="text-center text-red-600 font-bold">{h.total_erros}</TableCell>
                       <TableCell className="text-right">
                         <Badge variant="outline" className={`bg-green-50 text-green-700 border-green-200 text-[11px] font-bold uppercase tracking-wider`}>
                           <CheckCircle2 className="h-3 w-3 mr-1" /> Concluído

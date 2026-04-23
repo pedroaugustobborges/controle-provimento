@@ -85,10 +85,10 @@ export default function ValidacaoPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Validar Convocações</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Validar Convocações</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2 bg-white border-border/60">
+          <Button variant="outline" className="gap-2 bg-white border-slate-200">
             <Lock className="h-4 w-4" /> Bloquear Horários
           </Button>
         </div>
@@ -99,10 +99,10 @@ export default function ValidacaoPage() {
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-4">
               <div className="bg-amber-100 p-3 rounded-xl">
-                <Clock className="h-6 w-6 text-warning" />
+                <Clock className="h-6 w-6 text-amber-600" />
               </div>
               <div>
-                <p className="text-[11px] text-warning font-bold uppercase tracking-wider">Aguardando Validação</p>
+                <p className="text-[11px] text-amber-600 font-bold uppercase tracking-wider">Aguardando Validação</p>
                 <p className="text-3xl font-bold text-amber-700">{pendentes.length}</p>
               </div>
             </div>
@@ -112,10 +112,10 @@ export default function ValidacaoPage() {
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-4">
               <div className="bg-green-100 p-3 rounded-xl">
-                <FileCheck className="h-6 w-6 text-success" />
+                <FileCheck className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-[11px] text-success font-bold uppercase tracking-wider">Validadas (Total)</p>
+                <p className="text-[11px] text-green-600 font-bold uppercase tracking-wider">Validadas (Total)</p>
                 <p className="text-3xl font-bold text-green-700">{validadas.length}</p>
               </div>
             </div>
@@ -125,10 +125,10 @@ export default function ValidacaoPage() {
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-4">
               <div className="bg-blue-100 p-3 rounded-xl">
-                <Calendar className="h-6 w-6 text-primary" />
+                <Calendar className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-[11px] text-primary font-bold uppercase tracking-wider">Total Visível</p>
+                <p className="text-[11px] text-blue-600 font-bold uppercase tracking-wider">Total Visível</p>
                 <p className="text-3xl font-bold text-blue-700">{filteredConvocacoes.length}</p>
               </div>
             </div>
@@ -136,15 +136,15 @@ export default function ValidacaoPage() {
         </Card>
       </div>
 
-      <Card className="border-border/60 shadow-sm overflow-hidden">
-        <CardHeader className="pb-3 border-b bg-muted/30/50 flex flex-row items-center justify-between">
+      <Card className="border-slate-200 shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" />
-            <CardTitle className="text-lg font-bold text-foreground">Fila de Conferência</CardTitle>
+            <CardTitle className="text-lg font-bold text-slate-800">Fila de Conferência</CardTitle>
           </div>
           <div className="flex gap-2">
             <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/80" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input 
                 placeholder="Filtrar por nome ou unidade..." 
                 className="pl-9 h-10 bg-white" 
@@ -152,7 +152,7 @@ export default function ValidacaoPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="sm" className="gap-2 bg-white border-border/60">
+            <Button variant="outline" size="sm" className="gap-2 bg-white border-slate-200">
               <Filter className="h-4 w-4" /> Filtros
             </Button>
           </div>
@@ -171,23 +171,23 @@ export default function ValidacaoPage() {
             </TableHeader>
             <TableBody>
               {pendentes.map((c) => (
-                <TableRow key={c.id} className="hover:bg-muted/30/50 transition-colors group">
+                <TableRow key={c.id} className="hover:bg-slate-50/50 transition-colors group">
                   <TableCell className="text-center">
                     <div className="flex flex-col items-center">
                       <span className="text-sm font-bold text-slate-700">{formatDate(c.data_convocacao)}</span>
-                      <span className="text-[11px] text-muted-foreground/80 font-medium">{c.horario}</span>
+                      <span className="text-[11px] text-slate-400 font-medium">{c.horario}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-700">{c.nome_candidato}</span>
-                      <span className="text-[11px] text-muted-foreground/80 font-medium">Class: {c.classificacao}º</span>
+                      <span className="text-[11px] text-slate-400 font-medium">Class: {c.classificacao}º</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-muted-foreground">{c.unidade}</span>
-                      <span className="text-[11px] text-muted-foreground/80 font-medium truncate max-w-[150px]">{c.cargo}</span>
+                      <span className="text-xs font-bold text-slate-600">{c.unidade}</span>
+                      <span className="text-[11px] text-slate-400 font-medium truncate max-w-[150px]">{c.cargo}</span>
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs text-primary font-bold">{c.requisicao}</TableCell>
@@ -232,7 +232,7 @@ export default function ValidacaoPage() {
               ))}
               {pendentes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-40 text-center text-muted-foreground/80 font-medium italic">
+                  <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">
                     Tudo pronto! Nenhuma convocação pendente de validação para suas unidades.
                   </TableCell>
                 </TableRow>

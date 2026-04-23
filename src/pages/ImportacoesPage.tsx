@@ -166,9 +166,9 @@ export default function ImportacoesPage() {
 
   const getFileStatusBadge = (status: string) => {
     switch (status) {
-      case 'processado': return <Badge className="bg-green-50 text-success hover:bg-green-100 font-medium border-green-100">Processado</Badge>;
-      case 'enviado': return <Badge className="bg-blue-50 text-primary hover:bg-blue-100 font-medium border-blue-100">Enviado</Badge>;
-      case 'erro': return <Badge className="bg-red-50 text-destructive hover:bg-red-100 font-medium border-red-100">Erro</Badge>;
+      case 'processado': return <Badge className="bg-green-50 text-green-600 hover:bg-green-100 font-medium border-green-100">Processado</Badge>;
+      case 'enviado': return <Badge className="bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium border-blue-100">Enviado</Badge>;
+      case 'erro': return <Badge className="bg-red-50 text-red-600 hover:bg-red-100 font-medium border-red-100">Erro</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -186,7 +186,7 @@ export default function ImportacoesPage() {
           <>
             <Button 
               variant="outline" 
-              className="gap-2 border-red-200 text-destructive hover:bg-red-50 hover:text-red-700 hover:border-red-300 h-10 px-4 rounded-xl font-bold"
+              className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 h-10 px-4 rounded-xl font-bold"
               onClick={() => setIsClearAllDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4" /> Limpar Dados
@@ -200,58 +200,58 @@ export default function ImportacoesPage() {
 
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-border/60 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
               <div className="bg-blue-100 p-2.5 rounded-lg">
-                <FileText className="h-5 w-5 text-primary" />
+                <FileText className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Arquivos Enviados</p>
-                <p className="text-2xl font-bold text-foreground">{importedFiles.length}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Arquivos Enviados</p>
+                <p className="text-2xl font-bold text-slate-800">{importedFiles.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border/60 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
               <div className="bg-green-100 p-2.5 rounded-lg">
-                <FileCheck className="h-5 w-5 text-success" />
+                <FileCheck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Concluídas</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Concluídas</p>
+                <p className="text-2xl font-bold text-slate-800">
                   {importHistory.filter(h => h.status === 'concluido').length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border/60 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
               <div className="bg-red-100 p-2.5 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Com Erro</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Com Erro</p>
+                <p className="text-2xl font-bold text-slate-800">
                   {importHistory.filter(h => h.status === 'erro').length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border/60 shadow-sm bg-white">
+        <Card className="border-slate-200 shadow-sm bg-white">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
               <div className="bg-primary/10 p-2.5 rounded-lg">
                 <History className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Último Upload</p>
-                <p className="text-sm font-bold text-foreground truncate max-w-[120px]">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Último Upload</p>
+                <p className="text-sm font-bold text-slate-800 truncate max-w-[120px]">
                   {importedFiles[0]?.nome_original || 'Nenhum'}
                 </p>
               </div>
@@ -271,11 +271,11 @@ export default function ImportacoesPage() {
         </TabsList>
 
         <TabsContent value="historico">
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-muted/30/50">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
-                <History className="h-5 w-5 text-muted-foreground/80" />
-                <CardTitle className="text-lg font-bold text-foreground">Log de Processamento</CardTitle>
+                <History className="h-5 w-5 text-slate-400" />
+                <CardTitle className="text-lg font-bold text-slate-800">Log de Processamento</CardTitle>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="gap-2 bg-white">
@@ -297,53 +297,53 @@ export default function ImportacoesPage() {
                 </TableHeader>
                 <TableBody>
                   {importHistory.map((h) => (
-                    <TableRow key={h.id} className="hover:bg-muted/30/50 transition-colors group">
+                    <TableRow key={h.id} className="hover:bg-slate-50/50 transition-colors group">
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-slate-700">{h.arquivo || h.nome_arquivo}</span>
-                          <span className="text-[11px] text-muted-foreground/80 font-mono">{h.id}</span>
+                          <span className="text-[11px] text-slate-400 font-mono">{h.id}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="bg-muted/30">
+                        <Badge variant="outline" className="bg-slate-50">
                           {h.tipo_importacao || 'vagas'}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
                           <div className="flex flex-col items-center">
-                            <span className="text-xs font-bold text-success">{h.total_novos}</span>
-                            <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Novos</span>
+                            <span className="text-xs font-bold text-green-600">{h.total_novos}</span>
+                            <span className="text-[8px] text-slate-400 uppercase font-bold">Novos</span>
                           </div>
                           <div className="w-px h-6 bg-slate-100" />
                           <div className="flex flex-col items-center">
-                            <span className="text-xs font-bold text-primary">{h.total_atualizados}</span>
-                            <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Att.</span>
+                            <span className="text-xs font-bold text-blue-600">{h.total_atualizados}</span>
+                            <span className="text-[8px] text-slate-400 uppercase font-bold">Att.</span>
                           </div>
                           <div className="w-px h-6 bg-slate-100" />
                           <div className="flex flex-col items-center">
                             <span className="text-xs font-bold text-red-500">{h.total_erros}</span>
-                            <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Erro</span>
+                            <span className="text-[8px] text-slate-400 uppercase font-bold">Erro</span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">{getStatusBadge(h.status)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground font-medium">
+                      <TableCell className="text-xs text-slate-500 font-medium">
                         {formatDate(h.data_hora || h.data || '')}
-                        <p className="text-[9px] text-muted-foreground/80">{h.usuario}</p>
+                        <p className="text-[9px] text-slate-400">{h.usuario}</p>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/80 hover:text-primary" title="Ver Detalhes">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Ver Detalhes">
                             <Info className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/80 hover:text-primary" title="Baixar Relatório">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Baixar Relatório">
                             <Download className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-muted-foreground/80 hover:text-destructive group-hover:bg-destructive/5" 
+                            className="h-8 w-8 text-slate-400 hover:text-destructive group-hover:bg-destructive/5" 
                             title="Excluir Lote e Registros"
                             onClick={() => setBatchParaExcluir(h)}
                           >
@@ -355,7 +355,7 @@ export default function ImportacoesPage() {
                   ))}
                   {importHistory.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center text-muted-foreground/80 font-medium italic">
+                      <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
                         Nenhuma importação registrada no sistema.
                       </TableCell>
                     </TableRow>
@@ -367,11 +367,11 @@ export default function ImportacoesPage() {
         </TabsContent>
 
         <TabsContent value="arquivos">
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-muted/30/50">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-muted-foreground/80" />
-                <CardTitle className="text-lg font-bold text-foreground">Repositório de Arquivos</CardTitle>
+                <Layers className="h-5 w-5 text-slate-400" />
+                <CardTitle className="text-lg font-bold text-slate-800">Repositório de Arquivos</CardTitle>
               </div>
               <Button variant="outline" size="sm" className="gap-2 bg-white">
                 <Search className="h-4 w-4" /> Filtrar Arquivos
@@ -391,28 +391,28 @@ export default function ImportacoesPage() {
                 </TableHeader>
                 <TableBody>
                   {importedFiles.map((f) => (
-                    <TableRow key={f.id} className="hover:bg-muted/30/50 transition-colors">
+                    <TableRow key={f.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="bg-blue-50 p-2 rounded-lg">
-                            <FileSpreadsheet className="h-4 w-4 text-primary" />
+                            <FileSpreadsheet className="h-4 w-4 text-blue-600" />
                           </div>
                           <div className="flex flex-col">
                             <span className="text-sm font-bold text-slate-700">{f.nome_original}</span>
-                            <span className="text-[9px] text-muted-foreground/80 uppercase font-bold tracking-tight">{f.modulo_origem}</span>
+                            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-tight">{f.modulo_origem}</span>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground font-medium">
+                      <TableCell className="text-xs text-slate-500 font-medium">
                         {formatDate(f.data_upload)}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-muted-foreground">{f.usuario}</span>
-                          <span className="text-[9px] text-muted-foreground/80">{f.email_usuario}</span>
+                          <span className="text-xs font-bold text-slate-600">{f.usuario}</span>
+                          <span className="text-[9px] text-slate-400">{f.email_usuario}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="text-xs text-slate-500">
                         {(f.tamanho / 1024).toFixed(1)} KB
                       </TableCell>
                       <TableCell className="text-center">{getFileStatusBadge(f.status)}</TableCell>
@@ -425,7 +425,7 @@ export default function ImportacoesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem onClick={() => handleReprocess(f)} className="gap-2">
-                              <RefreshCw className="h-4 w-4 text-primary" /> Reprocessar
+                              <RefreshCw className="h-4 w-4 text-blue-600" /> Reprocessar
                             </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2">
                               <Download className="h-4 w-4" /> Baixar Original
@@ -440,7 +440,7 @@ export default function ImportacoesPage() {
                                 setFileParaExcluir(f.id);
                                 setIsDeleteDialogOpen(true);
                               }} 
-                              className="gap-2 text-destructive focus:text-destructive focus:bg-red-50"
+                              className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" /> Excluir Arquivo
                             </DropdownMenuItem>
@@ -451,7 +451,7 @@ export default function ImportacoesPage() {
                   ))}
                   {importedFiles.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center text-muted-foreground/80 font-medium italic">
+                      <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium italic">
                         Nenhum arquivo enviado ao sistema.
                       </TableCell>
                     </TableRow>
@@ -476,7 +476,7 @@ export default function ImportacoesPage() {
               Remover do histórico?
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
-              <p className="font-medium text-foreground">
+              <p className="font-medium text-slate-900">
                 Tem certeza que deseja remover este registro do histórico? Essa ação não pode ser desfeita.
               </p>
               <div className="bg-destructive/5 p-3 rounded-lg border border-destructive/10 text-destructive text-xs space-y-1">
@@ -508,10 +508,10 @@ export default function ImportacoesPage() {
               Remover arquivo do histórico?
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
-              <p className="font-medium text-foreground">
+              <p className="font-medium text-slate-900">
                 Tem certeza que deseja remover este registro do histórico? Essa ação não pode ser desfeita.
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-500">
                 O arquivo e seus registros associados serão removidos permanentemente do banco de dados.
               </p>
             </AlertDialogDescription>
@@ -536,14 +536,14 @@ export default function ImportacoesPage() {
               <p>
                 Esta ação <strong>excluirá permanentemente</strong> todos os registros de vagas, banco de talentos, convocações, editais e histórico de importações.
               </p>
-              <p className="font-bold text-foreground">
+              <p className="font-bold text-slate-900">
                 Esta operação é irreversível e removerá todos os dados acumulados indevidamente.
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClearAllData} className="bg-destructive text-white hover:bg-red-700">
+            <AlertDialogAction onClick={handleClearAllData} className="bg-red-600 text-white hover:bg-red-700">
               Confirmar Limpeza Total
             </AlertDialogAction>
           </AlertDialogFooter>

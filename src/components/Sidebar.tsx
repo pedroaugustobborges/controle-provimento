@@ -1,64 +1,48 @@
 import React from 'react';
-import {
-  LayoutDashboard,
-  Briefcase,
-  FileText,
-  Users,
-  Bell,
+import { 
+  LayoutDashboard, 
+  Briefcase, 
+  FileText, 
+  Search, 
+  Users, 
+  Bell, 
+  CheckSquare, 
+  History, 
   Settings,
   LogOut,
   PlusCircle,
   FileSearch,
-  Users2,
-  ShieldCheck,
-  History,
-  TrendingUp,
-  FileSpreadsheet,
-  MessageSquare
+  Users2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { Link, useLocation } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Início', icon: LayoutDashboard, href: '/' },
-  { name: 'Controle de Vagas', icon: Briefcase, href: '/vagas' },
-  { name: 'Publicação de Edital', icon: PlusCircle, href: '/fila-editais' },
-  { name: 'Redação de Edital', icon: FileText, href: '/fila-analista-edital' },
-  { name: 'Validação de Edital', icon: FileSearch, href: '/validacao-editais' },
-  { name: 'Cadastro Reserva', icon: Users, href: '/banco-talentos' },
+  { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
+  { name: 'Vagas', icon: Briefcase, href: '/vagas' },
+  { name: 'Fila de Editais', icon: PlusCircle, href: '/fila-editais' },
+  { name: 'Redação do Edital', icon: FileText, href: '/fila-analista-edital' },
+  { name: 'Editais', icon: FileText, href: '/editais' },
+  { name: 'Acompanhamento', icon: FileSearch, href: '/acompanhamento' },
+  { name: 'Banco / Reserva', icon: Users, href: '/banco' },
   { name: 'Convocações', icon: Users2, href: '/convocacoes' },
-  { name: 'Alertas e Tarefas', icon: Bell, href: '/alertas-tarefas' },
-  { name: 'Monitoramento', icon: TrendingUp, href: '/monitoramento' },
-  { name: 'Importações', icon: History, href: '/importacoes' },
-  { name: 'Relatórios', icon: FileSpreadsheet, href: '/relatorios' },
-  { name: 'Mensagens', icon: MessageSquare, href: '/mensagens' },
-  { name: 'Administração', icon: Settings, href: '/gestor' },
-  { name: 'Portal RH', icon: ShieldCheck, href: '/portal-rh' },
+  { name: 'Tarefas', icon: CheckSquare, href: '/tarefas' },
+  { name: 'Alertas', icon: Bell, href: '/alertas' },
+  { name: 'Importação', icon: History, href: '/importacao' },
+  { name: 'Histórico', icon: History, href: '/historico' },
+  { name: 'Configurações', icon: Settings, href: '/configuracoes' },
 ];
 
 export function Sidebar() {
   const location = useLocation();
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
-  };
 
   return (
-    <div className="flex h-full flex-col gap-y-5 bg-slate-900 px-6 pb-4 border-r border-white/10">
+    <div className="flex h-full flex-col gap-y-5 bg-card px-6 pb-4 border-r">
       <div className="flex h-16 shrink-0 items-center">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-            <ShieldCheck className="text-white h-5 w-5" />
-          </div>
-          <h1 className="text-xl font-black text-white tracking-tight uppercase">AGIR</h1>
-        </div>
+        <h1 className="text-2xl font-bold text-primary">HR Management</h1>
       </div>
       <nav className="flex flex-1 flex-col">
-        <ul role="list" className="flex flex-1 flex-col gap-y-4">
+        <ul role="list" className="flex flex-1 flex-col gap-y-7">
           <li>
             <ul role="list" className="-mx-2 space-y-1">
               {navigation.map((item) => (
@@ -67,15 +51,15 @@ export function Sidebar() {
                     to={item.href}
                     className={cn(
                       location.pathname === item.href
-                        ? 'bg-white/10 text-white'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5',
-                      'group flex gap-x-3 rounded-xl p-2.5 text-[13px] leading-6 font-bold transition-all duration-200'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-primary hover:bg-muted',
+                      'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors'
                     )}
                   >
                     <item.icon
                       className={cn(
-                        location.pathname === item.href ? 'text-primary' : 'text-slate-500 group-hover:text-white',
-                        'h-5 w-5 shrink-0 transition-colors'
+                        location.pathname === item.href ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-primary',
+                        'h-6 w-6 shrink-0'
                       )}
                       aria-hidden="true"
                     />
@@ -86,10 +70,7 @@ export function Sidebar() {
             </ul>
           </li>
           <li className="mt-auto">
-            <button 
-              onClick={handleLogout}
-              className="group -mx-2 flex gap-x-3 rounded-xl p-2.5 text-[13px] font-bold leading-6 text-slate-400 hover:bg-white/5 hover:text-rose-400 transition-all w-full"
-            >
+            <button className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-muted-foreground hover:bg-muted hover:text-primary transition-colors w-full">
               <LogOut
                 className="h-6 w-6 shrink-0 text-muted-foreground group-hover:text-primary"
                 aria-hidden="true"

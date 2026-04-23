@@ -14,7 +14,7 @@ export default function MensagensPage() {
       <Card className="border-none shadow-sm">
         <CardContent className="p-10 text-center space-y-5">
           <div className="w-14 h-14 mx-auto rounded-full bg-amber-50 flex items-center justify-center">
-            <Info className="h-7 w-7 text-warning" />
+            <Info className="h-7 w-7 text-amber-600" />
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">Funcionalidade descontinuada</h2>

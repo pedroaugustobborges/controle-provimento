@@ -60,11 +60,9 @@ export function Layout({ children }: { children?: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          {children || (
-            <Suspense fallback={<PageSkeleton />}>
-              <Outlet />
-            </Suspense>
-          )}
+          <Suspense fallback={<PageSkeleton />}>
+            {children || <Outlet />}
+          </Suspense>
         </main>
       </div>
     </div>

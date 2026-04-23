@@ -191,7 +191,7 @@
        <div className="px-6 py-4">
          <PageHeader 
            title="Organograma Corporativo" 
-           description="Estrutura hierárquica da equipe de Recursos Humanos e Provimento."
+           subtitle="Estrutura hierárquica da equipe de Recursos Humanos e Provimento."
          />
        </div>
        
@@ -237,7 +237,7 @@
                  <Download className="h-4 w-4 mr-2" />
                  Exportar
                </Button>
-               <Button variant="primary" size="sm">
+               <Button variant="default" size="sm">
                  <Share2 className="h-4 w-4 mr-2" />
                  Compartilhar
                </Button>

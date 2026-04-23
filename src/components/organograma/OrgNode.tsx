@@ -1,3 +1,4 @@
+ import { Clock } from "lucide-react";
  import { Handle, Position } from '@xyflow/react';
  import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
  import { Badge } from "@/components/ui/badge";
@@ -72,11 +73,17 @@
            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider line-clamp-1">
              {data.role}
            </p>
-           {data.area && (
-             <Badge variant="outline" className="text-[9px] mt-2 font-normal bg-background/50">
-               {data.area}
+           <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+             {data.area && (
+               <Badge variant="outline" className="text-[9px] font-normal bg-background/50 border-primary/20">
+                 {data.area}
+               </Badge>
+             )}
+             <Badge variant="secondary" className="text-[9px] font-normal flex items-center gap-1">
+               <Clock className="h-2 w-2" />
+               Provimento Digital
              </Badge>
-           )}
+           </div>
          </div>
  
          <button className="absolute top-2 right-2 text-muted-foreground hover:text-primary transition-colors">

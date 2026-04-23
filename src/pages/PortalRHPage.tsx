@@ -804,7 +804,10 @@ import {
                return (
                  <button
                    key={item.id}
-                   onClick={() => setActiveTab(item.id)}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setIsMobileMenuOpen(false);
+                    }}
                     className={cn(
                       "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
                       isActive 
@@ -844,8 +847,18 @@ import {
  
        {/* Main Content Area */}
        <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-scrollbar">
-          <header className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-10 flex items-center justify-between sticky top-0 z-10">
-            <div className="flex items-center gap-6">
+           <header className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 lg:px-10 flex items-center justify-between sticky top-0 z-10">
+             <div className="flex items-center gap-4 lg:gap-6">
+               <Button 
+                 variant="ghost" 
+                 size="icon" 
+                 className="lg:hidden rounded-xl bg-slate-50 border border-slate-100"
+                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                 aria-label="Toggle menu"
+               >
+                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+               </Button>
+               <div className="flex flex-col">
               <div className="flex flex-col">
                 <h2 className="text-[22px] font-black text-slate-900 tracking-tight">
                   {menuItems.find(m => m.id === activeTab)?.label}
@@ -882,7 +895,7 @@ import {
            </div>
          </header>
  
-          <div className="p-10 max-w-[1600px] mx-auto w-full">
+           <div className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
            <AnimatePresence mode="wait">
              <motion.div
                key={activeTab}

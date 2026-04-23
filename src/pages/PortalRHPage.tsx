@@ -763,8 +763,8 @@
                  <ShieldCheck className="text-white h-7 w-7" />
                </div>
                <div>
-                 <h1 className="font-black text-slate-900 tracking-tighter text-xl uppercase leading-none">Portal RH</h1>
-                 <p className="text-[9px] uppercase tracking-[0.3em] text-slate-400 font-black mt-1">Executive Suite</p>
+                  <h1 className="font-black text-slate-900 tracking-tighter text-xl uppercase leading-none">Gestão Estratégica</h1>
+                  <p className="text-[9px] uppercase tracking-[0.3em] text-indigo-600 font-black mt-1">Painel Executivo</p>
                </div>
              </div>
  
@@ -775,13 +775,15 @@
                  <button
                    key={item.id}
                    onClick={() => setActiveTab(item.id)}
-                   className={cn(
-                     "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 group relative",
-                     isActive 
-                       ? "bg-indigo-600 text-white shadow-xl shadow-indigo-100 translate-x-1" 
-                       : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                   )}
-                 >
+                    className={cn(
+                      "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+                      isActive 
+                        ? "bg-indigo-600 text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] translate-x-1" 
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
+                    )}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-label={item.label}
+                  >
                    <item.icon className={cn(
                      "h-[18px] w-[18px] transition-all duration-500 group-hover:scale-110",
                      isActive ? "text-white" : "text-slate-400"
@@ -843,7 +845,7 @@
                    {currentUser?.cargo || 'Analista'}
                  </p>
                </div>
-               <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white transition-transform hover:scale-105">
                  {currentUser?.nome_completo?.charAt(0)}
                </div>
              </div>

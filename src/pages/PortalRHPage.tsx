@@ -133,10 +133,21 @@
            <TableBody>
              {absences.map(item => (
                <TableRow key={item.id}>
-                 <TableCell><p className="font-bold">{item.name}</p></TableCell>
-                 <TableCell><Badge className="capitalize">{item.type}</Badge></TableCell>
-                 <TableCell>{item.start} - {item.end}</TableCell>
-                 <TableCell><Badge variant="outline">{item.status}</Badge></TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-slate-900">{item.name}</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">{item.role}</span>
+                  </div>
+                </TableCell>
+                <TableCell><Badge className={cn("capitalize border-none font-bold text-[10px] px-2 py-0.5", item.type === 'férias' ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700")}>{item.type}</Badge></TableCell>
+                <TableCell className="text-sm font-medium text-slate-600">{item.start} - {item.end}</TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-700">{item.coverage}</span>
+                    {item.coveredBy !== '-' && <span className="text-[10px] text-slate-400">Por: {item.coveredBy}</span>}
+                  </div>
+                </TableCell>
+                <TableCell><Badge variant="outline" className="capitalize border-none bg-slate-100 font-bold text-[10px]">{item.status}</Badge></TableCell>
                </TableRow>
              ))}
            </TableBody>

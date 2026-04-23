@@ -29,14 +29,14 @@ import {
  
    const Dashboard = () => {
      const stats = [
-        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-primary', bg: 'bg-blue-50/80', border: 'border-blue-100' },
-        { label: 'Assistentes', value: 12, icon: Users, color: 'text-primary', bg: 'bg-indigo-50/80', border: 'border-indigo-100' },
+        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+        { label: 'Assistentes', value: 12, icon: Users, color: 'text-primary', bg: 'bg-primary/10/80', border: 'border-primary/20' },
         { label: 'Férias', value: 3, icon: Calendar, color: 'text-warning', bg: 'bg-amber-50/80', border: 'border-amber-100' },
         { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-success', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
         { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100' },
         { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-muted-foreground', bg: 'bg-muted/30/80', border: 'border-border/40' },
-        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-primary', bg: 'bg-cyan-50/80', border: 'border-cyan-100' },
-        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-primary', bg: 'bg-purple-50/80', border: 'border-purple-100' },
+        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
      ];
  
    const chartData = [
@@ -58,7 +58,7 @@ import {
               transition={{ delay: i * 0.05, duration: 0.4 }}
               whileHover={{ y: -4 }}
             >
-              <Card className="border border-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 rounded-2xl overflow-hidden group">
+              <Card className="border border-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 rounded-xl overflow-hidden group">
                 <CardContent className="p-5 relative">
                   <div className={cn("absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500", stat.bg.replace('bg-', 'bg-').split('/')[0])} />
                   <div className="flex items-start justify-between relative z-10">
@@ -76,7 +76,7 @@ import {
          ))}
        </div>
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border border-border/40 shadow-sm rounded-2xl">
+          <Card className="border border-border/40 shadow-sm rounded-xl">
             <CardHeader><CardTitle className="text-lg font-bold text-foreground">Distribuição de Unidades por Analista</CardTitle></CardHeader>
            <CardContent className="h-[300px]">
              <ResponsiveContainer width="100%" height="100%">
@@ -88,15 +88,15 @@ import {
                   <Bar dataKey="unidades" fill="url(#barGradient)" radius={[6, 6, 0, 0]} barSize={32} />
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" />
-                      <stop offset="100%" stopColor="#818cf8" />
+                      <stop offset="0%" stopColor="var(--primary)" />
+                      <stop offset="100%" stopColor="var(--primary)" />
                     </linearGradient>
                   </defs>
                </BarChart>
              </ResponsiveContainer>
            </CardContent>
          </Card>
-          <Card className="border border-border/40 shadow-sm rounded-2xl">
+          <Card className="border border-border/40 shadow-sm rounded-xl">
            <CardHeader className="flex flex-row items-center justify-between">
              <div>
                 <CardTitle className="text-lg font-bold text-foreground">Próximos Eventos</CardTitle>
@@ -135,12 +135,12 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-xl border border-border/40 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-foreground tracking-tight">Férias, Folgas e Day Off</h3>
              <p className="text-sm text-muted-foreground font-medium">Gestão centralizada de ausências e coberturas</p>
            </div>
-            <Button className="w-full sm:w-auto bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
+            <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all active:scale-95">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
@@ -151,7 +151,7 @@ import {
              { label: 'Folgas Pendentes', value: '5', color: 'text-warning', bg: 'bg-amber-50' },
              { label: 'Day Offs (Mês)', value: '8', color: 'text-success', bg: 'bg-emerald-50' },
            ].map((stat, i) => (
-             <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-2xl">
+             <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-xl">
                <div className="flex items-center gap-4">
                  <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", stat.bg)}>
                    <Calendar className={cn("h-5 w-5", stat.color)} />
@@ -165,13 +165,13 @@ import {
            ))}
          </div>
  
-          <Card className="border border-border/40 shadow-sm overflow-hidden rounded-2xl bg-white">
+          <Card className="border border-border/40 shadow-sm overflow-hidden rounded-xl bg-white">
             <div className="p-4 border-b border-border/40 bg-muted/30/30 flex flex-wrap gap-4 items-center justify-between">
               <div className="relative w-full lg:w-80">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
                <Input 
                  placeholder="Buscar colaborador..." 
-                  className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all"
+                  className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-primary transition-all"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
@@ -247,12 +247,12 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-xl border border-border/40 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-foreground tracking-tight">Funções e Escopos</h3>
              <p className="text-sm text-muted-foreground font-medium">Definição clara de responsabilidades por cargo</p>
            </div>
-           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Escopo
            </Button>
          </div>
@@ -309,12 +309,12 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-xl border border-border/40 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-foreground tracking-tight">Prazos e Rotinas</h3>
              <p className="text-sm text-muted-foreground font-medium">Monitoramento de entregas e obrigações recorrentes</p>
            </div>
-           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Nova Atividade
            </Button>
          </div>
@@ -326,7 +326,7 @@ import {
              { label: 'Próximas 48h', value: '4', icon: Clock, color: 'text-warning', bg: 'bg-amber-50' },
              { label: 'Concluídas', value: '6', icon: CheckCircle2, color: 'text-success', bg: 'bg-emerald-50' },
            ].map((stat, i) => (
-             <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-2xl">
+             <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-xl">
                <div className="flex items-center justify-between">
                  <div className={cn("p-2 rounded-xl", stat.bg)}>
                    <stat.icon className={cn("h-5 w-5", stat.color)} />
@@ -340,11 +340,11 @@ import {
            ))}
          </div>
  
-         <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+         <Card className="border-none shadow-sm rounded-xl overflow-hidden bg-white">
             <div className="p-4 border-b border-border/40 bg-muted/30/30 flex flex-col sm:flex-row gap-4 items-center justify-between">
               <div className="relative w-full sm:w-80">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
-                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500" />
+                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-border/60 rounded-xl focus-visible:ring-2 focus-visible:ring-primary" />
               </div>
               <Button variant="outline" className="w-full sm:w-auto h-10 rounded-xl border-border/60 font-bold text-muted-foreground text-xs hover:bg-muted/30 transition-colors">
                <Filter className="h-4 w-4 mr-2" /> Prioridade
@@ -398,7 +398,7 @@ import {
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm">
+         <div className="flex items-center justify-between bg-white p-6 rounded-xl border border-border/40 shadow-sm">
            <div>
              <h3 className="text-2xl font-black text-foreground tracking-tight">Escala e Acompanhamento</h3>
              <p className="text-sm text-muted-foreground font-medium">Status da equipe em tempo real por unidade</p>
@@ -416,24 +416,24 @@ import {
  
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
            {teamStatus.map((t, i) => (
-              <Card key={i} className="border border-border/40 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-3xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-indigo-500">
+              <Card key={i} className="border border-border/40 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-primary">
                <div className={cn(
                  "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150",
-                 t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-indigo-500"
+                 t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-primary"
                )} />
                
                <div className="flex flex-col items-center text-center">
                  <div className="relative mb-4">
                     <div className={cn(
-                      "h-20 w-20 rounded-2xl flex items-center justify-center font-black text-2xl border-2 transition-transform duration-500 group-hover:rotate-6",
+                      "h-20 w-20 rounded-xl flex items-center justify-center font-black text-2xl border-2 transition-transform duration-500 group-hover:rotate-6",
                       t.status === 'Ativo' ? "bg-emerald-50 border-emerald-100 text-success" : 
-                      t.status === 'Ausente' ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-indigo-50 border-indigo-100 text-primary"
+                      t.status === 'Ausente' ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-primary/10 border-primary/20 text-primary"
                     )}>
                       {t.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className={cn(
                       "absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white",
-                      t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-indigo-500"
+                      t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-primary"
                     )} />
                  </div>
                  
@@ -449,7 +449,7 @@ import {
                      <Badge className={cn(
                        "border-none font-black text-[9px] px-2.5 py-0.5 rounded-lg uppercase tracking-wider",
                        t.status === 'Ativo' ? "bg-emerald-50 text-emerald-700" : 
-                       t.status === 'Ausente' ? "bg-rose-50 text-rose-700" : "bg-indigo-50 text-indigo-700"
+                       t.status === 'Ausente' ? "bg-rose-50 text-rose-700" : "bg-primary/10 text-primary/90"
                      )}>{t.status}</Badge>
                    </div>
                    {t.coverage !== '-' && (
@@ -476,22 +476,22 @@ import {
      ];
      return (
        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-xl border border-border/40 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-foreground tracking-tight">Alinhamentos e Treinamentos</h3>
              <p className="text-sm text-muted-foreground font-medium">Desenvolvimento contínuo e sincronização de processos</p>
            </div>
-           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-primary/30 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
  
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-50 shadow-sm">
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-50 shadow-sm">
              <div className="relative w-full lg:flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
               <Input 
                 placeholder="Buscar por tema ou colaborador..." 
-                className="pl-10 h-10 border-border/60 rounded-xl focus-visible:ring-indigo-500" 
+                className="pl-10 h-10 border-border/60 rounded-xl focus-visible:ring-primary" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -509,11 +509,11 @@ import {
          <div className="relative space-y-4">
            <div className="absolute left-[31px] top-4 bottom-4 w-0.5 bg-slate-100 hidden md:block" />
            {records.map((r, i) => (
-             <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl bg-white overflow-hidden group">
+             <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all duration-300 rounded-xl bg-white overflow-hidden group">
                <div className="p-5 md:p-6 flex flex-col md:flex-row gap-6">
                  <div className="relative z-10 hidden md:flex items-center justify-center shrink-0">
                     <div className={cn(
-                      "h-16 w-16 rounded-2xl flex items-center justify-center border-4 border-white shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+                      "h-16 w-16 rounded-xl flex items-center justify-center border-4 border-white shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
                       r.type === 'Alinhamento' ? "bg-cyan-50 text-primary" : "bg-purple-50 text-primary"
                     )}>
                       {r.type === 'Alinhamento' ? <MessageSquare className="h-7 w-7" /> : <GraduationCap className="h-7 w-7" />}
@@ -547,7 +547,7 @@ import {
                         </div>
                         <span className="text-xs font-bold text-slate-700">Responsável: {r.person}</span>
                      </div>
-                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-primary hover:bg-indigo-50">
+                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-primary hover:bg-primary/10">
                        Detalhes do Registro
                      </Button>
                    </div>
@@ -562,14 +562,14 @@ import {
  
    const ExportModule = () => {
      const exportOptions = [
-       { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'], icon: Users, color: 'text-primary', bg: 'bg-indigo-50' },
+       { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'], icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
        { title: 'Relatório de Ausências', formats: ['Excel', 'PDF'], icon: Calendar, color: 'text-primary', bg: 'bg-blue-50' },
        { title: 'Escala e Acompanhamento', formats: ['Excel'], icon: Activity, color: 'text-success', bg: 'bg-emerald-50' },
        { title: 'Histórico de Treinamentos', formats: ['PDF', 'Excel'], icon: GraduationCap, color: 'text-primary', bg: 'bg-purple-50' },
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm">
+         <div className="flex items-center justify-between bg-white p-6 rounded-xl border border-border/40 shadow-sm">
            <div>
              <h3 className="text-2xl font-black text-foreground tracking-tight">Central de Exportações</h3>
              <p className="text-sm text-muted-foreground font-medium">Extração de dados e relatórios gerenciais</p>
@@ -583,7 +583,7 @@ import {
                <div className={cn("absolute top-0 right-0 w-40 h-40 -mr-20 -mt-20 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150", opt.bg.replace('bg-', 'bg-'))} />
                
                <div className="flex items-start gap-6 relative z-10">
-                 <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center border border-white shadow-inner shrink-0 group-hover:scale-110 transition-transform duration-500", opt.bg)}>
+                 <div className={cn("h-14 w-14 rounded-xl flex items-center justify-center border border-white shadow-inner shrink-0 group-hover:scale-110 transition-transform duration-500", opt.bg)}>
                    <opt.icon className={cn("h-7 w-7", opt.color)} />
                  </div>
                  <div className="flex-1">
@@ -592,7 +592,7 @@ import {
                    
                    <div className="flex flex-wrap gap-2">
                      {opt.formats.map(fmt => (
-                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted/30 hover:text-primary hover:border-indigo-200 transition-all">
+                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted/30 hover:text-primary hover:border-primary/30 transition-all">
                          {fmt}
                        </Button>
                      ))}
@@ -612,7 +612,7 @@ import {
  
      return (
        <div className="space-y-6">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-white p-6 rounded-2xl border border-border/40 shadow-sm gap-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-white p-6 rounded-xl border border-border/40 shadow-sm gap-6">
                <div>
                  <h3 className="text-2xl font-black text-foreground tracking-tight">Quadro da Equipe</h3>
                  <p className="text-sm text-muted-foreground font-medium">Estrutura organizacional e alocação de talentos</p>
@@ -639,7 +639,7 @@ import {
                     <Button variant="outline" className="flex-1 lg:flex-none rounded-xl border-border/60 h-10 px-6 font-bold text-muted-foreground text-xs">
                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
                    </Button>
-                    <Button className="flex-1 lg:flex-none bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
+                    <Button className="flex-1 lg:flex-none bg-primary hover:bg-primary/90 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-primary/30 transition-all">
                      <Plus className="h-4 w-4 mr-2" /> Novo Vínculo
                    </Button>
                </div>
@@ -651,7 +651,7 @@ import {
                      <Card key={i} className="bg-white p-0 rounded-[2rem] shadow-sm border border-border/40 group hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
                          <div className="p-8">
                            <div className="flex justify-between items-start mb-6">
-                             <div className="h-14 w-14 bg-indigo-50/50 rounded-2xl flex items-center justify-center border border-indigo-100 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                             <div className="h-14 w-14 bg-primary/10/50 rounded-xl flex items-center justify-center border border-primary/20 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
                                <Building2 className="h-7 w-7 text-primary" />
                              </div>
                              <Badge variant="outline" className="border-border/40 bg-muted/30 text-muted-foreground/80 font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 rounded-full">
@@ -666,7 +666,7 @@ import {
                            </div>
  
                            <div className="mt-8 space-y-4">
-                               <div className="bg-muted/30/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
+                               <div className="bg-muted/30/50 p-4 rounded-xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
                                    <p className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest mb-1.5 flex items-center gap-2">
                                      <span className="h-1 w-1 rounded-full bg-indigo-400" />
                                      Analista Responsável
@@ -676,7 +676,7 @@ import {
                                      <ChevronRight className="h-3 w-3 opacity-0 group-hover/info:opacity-100 transition-opacity" />
                                    </p>
                                </div>
-                               <div className="bg-muted/30/50 p-4 rounded-2xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
+                               <div className="bg-muted/30/50 p-4 rounded-xl border border-slate-50 relative group/info hover:bg-white hover:shadow-md transition-all duration-300">
                                    <p className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest mb-1.5 flex items-center gap-2">
                                      <span className="h-1 w-1 rounded-full bg-cyan-400" />
                                      Assistente ADM
@@ -704,7 +704,7 @@ import {
                  ))}
              </div>
            ) : (
-             <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+             <Card className="border-none shadow-sm rounded-xl overflow-hidden bg-white">
                 <Table>
                   <TableHeader className="bg-muted/30/50">
                     <TableRow className="border-border/40">
@@ -784,16 +784,16 @@ import {
 
         {/* Sidebar (Desktop & Mobile) */}
         <aside className={cn(
-          "w-80 bg-white border-r border-border/60/60 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
+          "w-80 bg-[#070e17] border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
           isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
         )}>
          <div className="p-8 flex flex-col h-full">
              <div className="flex items-center gap-4 mb-12 group cursor-pointer" onClick={() => navigate('/')}>
-                <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/10 group-hover:scale-105 transition-transform duration-500">
-                  <ShieldCheck className="text-primary-foreground h-7 w-7" />
-               </div>
+                <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-xl shadow-primary/10 group-hover:scale-105 transition-transform duration-500">
+                   <ShieldCheck className="text-white h-7 w-7" />
+                </div>
                <div>
-                  <h1 className="font-black text-foreground tracking-tighter text-xl uppercase leading-none">Gestão Estratégica</h1>
+                  <h1 className="font-black text-white tracking-tighter text-xl uppercase leading-none">Portal RH</h1>
                   <p className="text-[9px] uppercase tracking-[0.3em] text-primary font-black mt-1">Painel Executivo</p>
                </div>
              </div>
@@ -809,10 +809,10 @@ import {
                       setIsMobileMenuOpen(false);
                     }}
                     className={cn(
-                      "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
-                      isActive 
-                        ? "bg-primary text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] translate-x-1" 
-                        : "text-muted-foreground hover:bg-muted/30 hover:text-foreground active:scale-[0.98]"
+                     "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                     isActive 
+                       ? "bg-primary text-white shadow-[0_10px_20px_-10px_rgba(0,0,0,0.4)] translate-x-1" 
+                       : "text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98]"
                     )}
                     aria-current={isActive ? 'page' : undefined}
                     aria-label={item.label}
@@ -833,15 +833,15 @@ import {
              })}
            </nav>
  
-           <div className="mt-auto pt-6 border-t border-slate-50">
-             <button 
-               onClick={() => navigate('/')}
-               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-muted-foreground/80 hover:bg-muted/30 hover:text-rose-600 transition-all group"
-             >
-               <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
-               Sair do Portal
-             </button>
-           </div>
+            <div className="mt-auto pt-6 border-t border-white/5">
+              <button 
+                onClick={() => navigate('/')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:bg-white/5 hover:text-rose-400 transition-all group"
+              >
+                <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                Sair do Portal
+              </button>
+            </div>
          </div>
        </aside>
  
@@ -874,7 +874,7 @@ import {
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                <Input 
                  placeholder="Pesquisa executiva..." 
-                 className="pl-10 w-64 bg-muted/30 border-none focus-visible:ring-indigo-500 rounded-full h-10 text-[13px] font-medium"
+                 className="pl-10 w-64 bg-muted/30 border-none focus-visible:ring-primary rounded-full h-10 text-[13px] font-medium"
                />
              </div>
              
@@ -887,7 +887,7 @@ import {
                    {currentUser?.cargo || 'Analista'}
                  </p>
                </div>
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white transition-transform hover:scale-105">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-primary/20 border-2 border-white transition-transform hover:scale-105">
                  {currentUser?.nome_completo?.charAt(0)}
                </div>
              </div>

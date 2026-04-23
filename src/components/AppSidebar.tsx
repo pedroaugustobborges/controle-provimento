@@ -389,15 +389,15 @@ export function AppSidebar() {
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active
-                              ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20"
-                              : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
+                              ? "bg-sidebar-accent text-sidebar-foreground shadow-sm ring-1 ring-border/30"
+                              : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground hover:translate-x-1"
                           )}
                         >
                           <item.icon className={cn(
                             "h-5 w-5 shrink-0 transition-all duration-300",
                             active
-                              ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
-                              : "text-slate-400 group-hover:text-white group-hover:scale-110"
+                              ? "text-primary scale-110"
+                              : "text-muted-foreground/60 group-hover:text-sidebar-foreground group-hover:scale-110"
                           )} />
                           {!collapsed && (
                             <span className={cn(
@@ -408,7 +408,7 @@ export function AppSidebar() {
                             </span>
                           )}
                           {active && !collapsed && (
-                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
+                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-primary" />
                           )}
                         </NavLink>
                       )}
@@ -421,27 +421,27 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/10 py-6 px-4">
+      <SidebarFooter className="border-t border-border/40 py-6 px-4">
         {!collapsed && (
           <div className="flex flex-col gap-4">
             <button 
               onClick={() => setShowSupport(true)}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition-all group border border-white/10"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-sidebar-accent/30 text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all group border border-border/40 shadow-sm"
             >
-              <HelpCircle className="h-5 w-5 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-white" />
+              <HelpCircle className="h-5 w-5 group-hover:scale-110 transition-transform text-muted-foreground/60 group-hover:text-primary" />
               <span className="text-sm font-bold tracking-tight">Suporte Técnico</span>
             </button>
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-sidebar-accent/40 to-transparent border border-border/30">
               <div className="flex flex-col overflow-hidden mb-3">
-                <span className="text-sm font-bold text-white truncate leading-tight">
+                <span className="text-sm font-bold text-sidebar-foreground truncate leading-tight">
                   {currentUser?.nome_completo || 'Usuário'}
                 </span>
-                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight">
+                <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-wider truncate leading-tight">
                   {currentUser?.perfil || 'Acesso Restrito'}
                 </span>
               </div>
               <div className="flex gap-2">
-                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
+                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-sidebar-accent/50 text-xs font-bold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all border border-border/40">
                   Acessar Perfil
                 </button>
                 <button 

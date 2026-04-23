@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-import logoAgir from '@/assets/logo-agir.png';
+import logoAgir from '@/assets/logo-agir-white.png';
 
 import { NavLink } from '@/components/NavLink';
 import { Button } from '@/components/ui/button';

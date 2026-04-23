@@ -173,10 +173,10 @@ export function AppSidebar() {
     { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: getPermissions('monitoramento').canRead },
     { title: 'Relatórios', url: '/relatorios', icon: FileSpreadsheet, visible: isManagement || hasFullAccess },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
-   { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
-   { title: 'Portal RH', url: '/portal-rh', icon: ShieldCheck, visible: isAdminAnalyst || isManagement || hasFullAccess },
-   { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: true, external: true },
- ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess, isAdminAnalyst]);
+     { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
+     { title: 'Portal RH Executive', url: '/portal-rh', icon: ShieldCheck, visible: isAdminAnalyst || isManagement || hasFullAccess },
+     { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: true, external: true },
+   ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess, isAdminAnalyst]);
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [activeParent, setActiveParent] = useState<string | null>(null);
@@ -195,18 +195,20 @@ export function AppSidebar() {
   }, [location.pathname, location.search, mainItems, isParentActive, activeParent]);
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
-      <SidebarHeader className="border-b border-white/10 py-6 px-4">
+     <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#070e17] shadow-2xl">
+       <SidebarHeader className="border-b border-white/5 py-8 px-6">
         <div className="flex items-center gap-4 transition-all duration-300">
           <div className="relative group">
             <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
-            <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
+             <img src={logoAgir} alt="AGIR" className="relative h-10 w-10 shrink-0 rounded-xl object-contain bg-white/5 p-1.5 shadow-2xl ring-1 ring-white/10" />
           </div>
           {!collapsed && (
             <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
-              <span className="font-extrabold text-sm text-white tracking-tight leading-tight whitespace-nowrap">
-                Provimento Digital
-              </span>
+               <span className="font-black text-xs text-white uppercase tracking-[0.2em] leading-tight whitespace-nowrap ml-1 opacity-90">
+                 Provimento
+                 <br />
+                 <span className="text-primary-foreground/60 tracking-[0.4em] font-medium text-[9px]">Digital</span>
+               </span>
             </div>
           )}
         </div>
@@ -214,10 +216,10 @@ export function AppSidebar() {
 
       <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="px-3">
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
-            <div className="h-[1px] w-6 bg-white/15" />
-            FLUXO PROVIMENTO
-          </SidebarGroupLabel>
+           <SidebarGroupLabel className="px-4 text-[9px] font-black uppercase tracking-[0.4em] text-white/30 mb-6 flex items-center gap-3">
+             <div className="h-[1px] w-4 bg-white/10" />
+             OPERACIONAL
+           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5">
               {mainItems.filter(item => item.visible !== false).map((item) => {
@@ -237,106 +239,103 @@ export function AppSidebar() {
                         className="w-full"
                       >
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton asChild tooltip={item.title}>
-                            <NavLink
-                              to={item.url}
-                              className={cn(
-                                "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none cursor-pointer w-full",
-                                active 
-                                  ? "text-white" 
-                                  : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
-                              )}
-                            >
-                              <item.icon className={cn(
-                                "h-5 w-5 shrink-0 transition-all duration-300",
-                                active 
-                                  ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
-                                  : "text-slate-500 group-hover:text-white group-hover:scale-110"
-                              )} />
-                              {!collapsed && (
-                                <span className={cn(
-                                  "text-[13.5px] font-bold tracking-tight",
-                                  !active && "group-hover:translate-x-0.5 transition-transform duration-300"
-                                )}>
-                                  {item.title}
-                                </span>
-                              )}
-                              {!collapsed && (
-                                <ChevronDown className={cn(
-                                  "absolute right-3 h-3.5 w-3.5 text-white/50 transition-transform duration-300",
-                                  isOpen && "rotate-180"
-                                )} />
-                              )}
-                            </NavLink>
-                          </SidebarMenuButton>
+                           <SidebarMenuButton asChild tooltip={item.title}>
+                             <NavLink
+                               to={item.url}
+                               className={cn(
+                                 "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative select-none cursor-pointer w-full",
+                                 active 
+                                   ? "text-white bg-white/5" 
+                                   : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                               )}
+                             >
+                               <item.icon className={cn(
+                                 "h-[18px] w-[18px] shrink-0 transition-all duration-300",
+                                 active 
+                                   ? "text-white" 
+                                   : "text-slate-500 group-hover:text-slate-200"
+                               )} />
+                               {!collapsed && (
+                                 <span className={cn(
+                                   "text-[13px] font-semibold tracking-tight",
+                                   active ? "opacity-100" : "opacity-70 group-hover:opacity-100"
+                                 )}>
+                                   {item.title}
+                                 </span>
+                               )}
+                               {!collapsed && (
+                                 <ChevronDown className={cn(
+                                   "ml-auto h-3.5 w-3.5 text-white/20 transition-transform duration-300",
+                                   isOpen && "rotate-180"
+                                 )} />
+                               )}
+                             </NavLink>
+                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         {!collapsed && (
                           <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                            <SidebarMenuSub className="ml-6 mt-1 border-l-2 border-white/20 space-y-0.5 py-1.5 pl-3 relative">
-                              {item.subMenu.map((sub) => {
-                                const subActive = isUrlActive(sub.url);
-                                return (
-                                  <SidebarMenuSubItem key={sub.title}>
-                                    <SidebarMenuSubButton asChild>
-                                      <a
-                                        href={sub.url}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          navigate(sub.url);
-                                        }}
-                                        className={cn(
-                                          "text-[11.5px] py-2.5 px-4 rounded-lg transition-all duration-300 block relative select-none group/sub font-bold whitespace-nowrap",
-                                          subActive
-                                            ? "text-white bg-white/15 shadow-[0_2px_10px_-3px_rgba(255,255,255,0.15)]"
-                                            : "text-slate-500 hover:text-slate-200 hover:bg-white/5 hover:translate-x-0.5"
-                                        )}
-                                      >
-                                        <span className="relative z-10 flex items-center gap-2.5 leading-tight">
-                                          <span className={cn(
-                                            "h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300",
-                                            subActive ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" : "bg-slate-600"
-                                          )} />
-                                          {sub.title}
-                                        </span>
-                                      </a>
-                                    </SidebarMenuSubButton>
-                                  </SidebarMenuSubItem>
-                                );
-                              })}
-                            </SidebarMenuSub>
+                           <SidebarMenuSub className="ml-5 mt-1 border-l border-white/10 space-y-1 py-1 pl-4 relative">
+                             {item.subMenu.map((sub) => {
+                               const subActive = isUrlActive(sub.url);
+                               return (
+                                 <SidebarMenuSubItem key={sub.title}>
+                                   <SidebarMenuSubButton asChild>
+                                     <a
+                                       href={sub.url}
+                                       onClick={(e) => {
+                                         e.preventDefault();
+                                         navigate(sub.url);
+                                       }}
+                                       className={cn(
+                                         "text-[12px] py-2 px-3 rounded-lg transition-all duration-300 block relative select-none group/sub font-medium",
+                                         subActive
+                                           ? "text-white bg-white/5"
+                                           : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]"
+                                       )}
+                                     >
+                                       <span className="relative z-10 flex items-center gap-2.5">
+                                         <span className={cn(
+                                           "h-1 w-1 rounded-full shrink-0 transition-all duration-300",
+                                           subActive ? "bg-white" : "bg-white/10 group-hover/sub:bg-white/30"
+                                         )} />
+                                         {sub.title}
+                                       </span>
+                                     </a>
+                                   </SidebarMenuSubButton>
+                                 </SidebarMenuSubItem>
+                               );
+                             })}
+                           </SidebarMenuSub>
                           </CollapsibleContent>
                         )}
                       </Collapsible>
                     ) : (
                       <SidebarMenuButton asChild tooltip={item.title}>
-                        <NavLink
-                          to={item.url}
-                          end={item.url === '/'}
-                          className={cn(
-                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                            active 
-                              ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20" 
-                              : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
-                          )}
-                        >
-                          <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-all duration-300",
-                            active 
-                              ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
-                              : "text-slate-400 group-hover:text-white group-hover:scale-110"
-                          )} />
-                          {!collapsed && (
-                            <span className={cn(
-                              "text-[13.5px] font-bold tracking-tight",
-                              !active && "group-hover:translate-x-0.5 transition-transform duration-300"
-                            )}>
-                              {item.title}
-                            </span>
-                          )}
-                          {active && !collapsed && (
-                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
-                          )}
-                        </NavLink>
+                       <NavLink
+                         to={item.url}
+                         end={item.url === '/'}
+                         className={cn(
+                           "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative select-none",
+                           active 
+                             ? "bg-white/10 text-white shadow-xl border border-white/10" 
+                             : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                         )}
+                       >
+                         <item.icon className={cn(
+                           "h-[18px] w-[18px] shrink-0 transition-all duration-300",
+                           active 
+                             ? "text-white" 
+                             : "text-slate-500 group-hover:text-slate-200"
+                         )} />
+                         {!collapsed && (
+                           <span className={cn(
+                             "text-[13px] font-semibold tracking-tight",
+                             active ? "opacity-100" : "opacity-70 group-hover:opacity-100"
+                           )}>
+                             {item.title}
+                           </span>
+                         )}
+                       </NavLink>
                       </SidebarMenuButton>
                     )}
                   </SidebarMenuItem>

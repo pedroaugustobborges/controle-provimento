@@ -1,3 +1,5 @@
+ const OrganogramaPage = lazy(() => import("@/pages/OrganogramaPage"));
+               <Route path="/organograma" element={<OrganogramaPage />} />
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";

@@ -4,7 +4,7 @@
    Users, Briefcase, ChevronRight, Search, Filter, 
    ShieldCheck, MapPin, ListTodo, Network, 
    Layers, LayoutGrid, Download, MoreVertical, Building2,
-   Star, Target, Globe, Cpu, ChevronDown, 
+   Star, Target, Globe, Cpu, ChevronDown, FileSpreadsheet,
    ExternalLink, Info, CheckCircle2, TrendingUp,
    ArrowRight, Award, Zap
  } from 'lucide-react';

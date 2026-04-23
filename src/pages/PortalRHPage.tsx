@@ -29,14 +29,14 @@ import {
  
    const Dashboard = () => {
      const stats = [
-        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-primary', bg: 'bg-blue-50/80', border: 'border-blue-100' },
+        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
         { label: 'Assistentes', value: 12, icon: Users, color: 'text-primary', bg: 'bg-primary/10/80', border: 'border-primary/20' },
         { label: 'Férias', value: 3, icon: Calendar, color: 'text-warning', bg: 'bg-amber-50/80', border: 'border-amber-100' },
         { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-success', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
         { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100' },
         { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-muted-foreground', bg: 'bg-muted/30/80', border: 'border-border/40' },
-        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-primary', bg: 'bg-cyan-50/80', border: 'border-cyan-100' },
-        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-primary', bg: 'bg-purple-50/80', border: 'border-purple-100' },
+        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
      ];
  
    const chartData = [

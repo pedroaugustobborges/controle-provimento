@@ -789,8 +789,8 @@ import {
         )}>
          <div className="p-8 flex flex-col h-full">
              <div className="flex items-center gap-4 mb-12 group cursor-pointer" onClick={() => navigate('/')}>
-               <div className="h-12 w-12 bg-[#070e17] rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-200 group-hover:scale-105 transition-transform duration-500">
-                 <ShieldCheck className="text-white h-7 w-7" />
+                <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/10 group-hover:scale-105 transition-transform duration-500">
+                  <ShieldCheck className="text-primary-foreground h-7 w-7" />
                </div>
                <div>
                   <h1 className="font-black text-foreground tracking-tighter text-xl uppercase leading-none">Gestão Estratégica</h1>

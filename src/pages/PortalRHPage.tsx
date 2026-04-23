@@ -135,12 +135,12 @@
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Férias, Folgas e Day Off</h3>
              <p className="text-sm text-slate-500 font-medium">Gestão centralizada de ausências e coberturas</p>
            </div>
-           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+            <Button className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
@@ -165,13 +165,13 @@
            ))}
          </div>
  
-         <Card className="border-none shadow-sm overflow-hidden rounded-2xl bg-white">
-           <div className="p-4 border-b border-slate-50 bg-slate-50/30 flex flex-wrap gap-4 items-center justify-between">
-             <div className="relative w-full md:w-80">
+          <Card className="border border-slate-100 shadow-sm overflow-hidden rounded-2xl bg-white">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex flex-wrap gap-4 items-center justify-between">
+              <div className="relative w-full lg:w-80">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                <Input 
                  placeholder="Buscar colaborador..." 
-                 className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-indigo-500"
+                  className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
@@ -341,12 +341,12 @@
          </div>
  
          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-           <div className="p-4 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-             <div className="relative w-80">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div className="relative w-full sm:w-80">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-               <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-slate-200 rounded-xl" />
-             </div>
-             <Button variant="outline" className="h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs">
+                <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500" />
+              </div>
+              <Button variant="outline" className="w-full sm:w-auto h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs hover:bg-slate-50 transition-colors">
                <Filter className="h-4 w-4 mr-2" /> Prioridade
              </Button>
            </div>

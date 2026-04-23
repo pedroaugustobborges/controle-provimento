@@ -7,7 +7,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { PageSkeleton } from './PageSkeleton';
 import { Suspense } from 'react';
 
-export function Layout() {
+export function Layout({ children }: { children?: React.ReactNode }) {
   const { currentUser } = useAdminStore();
   
   const userName = currentUser?.nome_completo || 'Usuário';
@@ -60,9 +60,11 @@ export function Layout() {
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          <Suspense fallback={<PageSkeleton />}>
-            <Outlet />
-          </Suspense>
+          {children || (
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
+          )}
         </main>
       </div>
     </div>

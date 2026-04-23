@@ -11,9 +11,10 @@ import {
   Bell,
   ChevronDown,
   FileText,
-  FileCheck,
-  Check,
-  Search,
+   FileCheck,
+   Check,
+   Search,
+   ShieldCheck,
   LogOut,
   Circle,
   Building2,
@@ -172,9 +173,10 @@ export function AppSidebar() {
     { title: 'Monitoramento de Prazos', url: '/monitoramento', icon: TrendingUp, visible: getPermissions('monitoramento').canRead },
     { title: 'Relatórios', url: '/relatorios', icon: FileSpreadsheet, visible: isManagement || hasFullAccess },
     { title: 'Importações', url: '/importacoes', icon: FileSpreadsheet, visible: getPermissions('importacoes').canRead },
-    { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
-    { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: true, external: true },
-  ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess]);
+   { title: 'Administração', url: '/gestor', icon: Settings, visible: getPermissions('administracao').canRead },
+   { title: 'Portal RH', url: '/portal-rh', icon: ShieldCheck, visible: isAdminAnalyst || isManagement || hasFullAccess },
+   { title: 'Portal da Unidade', url: '/portal-unidade', icon: Building2, visible: true, external: true },
+ ].filter(item => item.visible), [getPermissions, isManagement, hasFullAccess, isAdminAnalyst]);
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [activeParent, setActiveParent] = useState<string | null>(null);

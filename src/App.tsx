@@ -32,7 +32,8 @@ const RelatoriosPage = lazy(() => import("@/pages/RelatoriosPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const UnidadePortalPage = lazy(() => import("@/pages/UnidadePortalPage"));
+ const UnidadePortalPage = lazy(() => import("@/pages/UnidadePortalPage"));
+ const PortalRHPage = lazy(() => import("@/pages/PortalRHPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -154,9 +155,10 @@ const App = () => (
               <Route path="/editais" element={<EditaisPage />} />
             </Route>
 
-            <Route element={<UnidadeRouteWrapper />}>
-              <Route path="/portal-unidade" element={<UnidadePortalPage />} />
-            </Route>
+             <Route element={<UnidadeRouteWrapper />}>
+               <Route path="/portal-unidade" element={<UnidadePortalPage />} />
+               <Route path="/portal-rh" element={<PortalRHPage />} />
+             </Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>

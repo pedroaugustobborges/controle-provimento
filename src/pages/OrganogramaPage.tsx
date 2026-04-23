@@ -89,7 +89,7 @@
          { id: "carolina-leles", name: "Carolina Leles", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
          { id: "ellen-leticia", name: "Ellen Leticia Cardoso", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
          { id: "ana-caroline-enc", name: "Ana Caroline", role: "Encarregada de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
-         { id: "wanessa-gomes", name: "Wanessa Gomes de ...", nameFull: "Wanessa Gomes de Oliveira", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
+         { id: "wanessa-gomes", name: "Wanessa Gomes", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
          { id: "ketty-lorrane", name: "Ketty Lorrane", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
          { id: "lis-angela", name: "Lis Angela Menezes", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },
          { id: "sannya-laryssa-rh", name: "Sannya Laryssa", role: "Analista de Recursos Humanos", level: 5, reportsTo: "ana-carolina-nunes" },

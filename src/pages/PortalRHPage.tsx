@@ -29,14 +29,14 @@
  
    const Dashboard = () => {
      const stats = [
-       { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50/50' },
-       { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50/50' },
-       { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50/50' },
-       { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
-       { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/50' },
-       { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50/50' },
-       { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50/50' },
-       { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50/50' },
+        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50/80', border: 'border-blue-100' },
+        { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50/80', border: 'border-indigo-100' },
+        { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-100' },
+        { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
+        { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100' },
+        { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50/80', border: 'border-slate-100' },
+        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50/80', border: 'border-cyan-100' },
+        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50/80', border: 'border-purple-100' },
      ];
  
    const chartData = [
@@ -51,43 +51,56 @@
      <div className="space-y-6">
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
          {stats.map((stat, i) => (
-           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-             <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
-               <CardContent className="p-5">
-                 <div className="flex items-start justify-between">
-                   <div className={cn("p-2.5 rounded-xl border border-white shadow-sm", stat.bg)}>
-                     <stat.icon className={cn("h-5 w-5", stat.color)} />
-                   </div>
-                   <div className="flex flex-col items-end">
-                     <span className="text-2xl font-black text-slate-900 tracking-tight">{stat.value}</span>
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{stat.label}</span>
-                   </div>
-                 </div>
-               </CardContent>
-             </Card>
-           </motion.div>
+            <motion.div 
+              key={stat.label} 
+              initial={{ opacity: 0, scale: 0.95 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+              whileHover={{ y: -4 }}
+            >
+              <Card className="border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.08)] transition-all duration-300 rounded-2xl overflow-hidden group">
+                <CardContent className="p-5 relative">
+                  <div className={cn("absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 rounded-full opacity-10 group-hover:scale-110 transition-transform duration-500", stat.bg.replace('bg-', 'bg-').split('/')[0])} />
+                  <div className="flex items-start justify-between relative z-10">
+                    <div className={cn("p-2.5 rounded-xl border shadow-sm transition-transform group-hover:scale-110 duration-300", stat.bg, stat.border)}>
+                      <stat.icon className={cn("h-5 w-5", stat.color)} />
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">{stat.value}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{stat.label}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
          ))}
        </div>
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <Card className="border-none shadow-sm">
-           <CardHeader><CardTitle className="text-lg font-semibold">Distribuição de Unidades por Analista</CardTitle></CardHeader>
+          <Card className="border border-slate-100 shadow-sm rounded-2xl">
+            <CardHeader><CardTitle className="text-lg font-bold text-slate-800">Distribuição de Unidades por Analista</CardTitle></CardHeader>
            <CardContent className="h-[300px]">
              <ResponsiveContainer width="100%" height="100%">
                <BarChart data={chartData}>
-                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#f1f5f9" />
                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={12} tick={{ fill: '#64748b' }} />
                  <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: '#64748b' }} />
-                 <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none' }} cursor={{ fill: '#f8fafc' }} />
-                 <Bar dataKey="unidades" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #f1f5f9', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} cursor={{ fill: '#f8fafc' }} />
+                  <Bar dataKey="unidades" fill="url(#barGradient)" radius={[6, 6, 0, 0]} barSize={32} />
+                  <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#818cf8" />
+                    </linearGradient>
+                  </defs>
                </BarChart>
              </ResponsiveContainer>
            </CardContent>
          </Card>
-         <Card className="border-none shadow-sm">
+          <Card className="border border-slate-100 shadow-sm rounded-2xl">
            <CardHeader className="flex flex-row items-center justify-between">
              <div>
-               <CardTitle className="text-lg font-semibold">Próximos Eventos</CardTitle>
-               <CardDescription>Agenda interna da equipe</CardDescription>
+                <CardTitle className="text-lg font-bold text-slate-800">Próximos Eventos</CardTitle>
+                <CardDescription className="text-xs font-medium text-slate-400">Agenda interna da equipe</CardDescription>
              </div>
            </CardHeader>
            <CardContent>

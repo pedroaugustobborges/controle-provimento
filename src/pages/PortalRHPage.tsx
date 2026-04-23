@@ -309,7 +309,7 @@ import {
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Prazos e Rotinas</h3>
              <p className="text-sm text-slate-500 font-medium">Monitoramento de entregas e obrigações recorrentes</p>
@@ -579,7 +579,7 @@ import {
  
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
            {exportOptions.map((opt, i) => (
-             <Card key={i} className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] p-8 bg-white group overflow-hidden relative">
+              <Card key={i} className="border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 rounded-[2rem] p-8 bg-white group overflow-hidden relative">
                <div className={cn("absolute top-0 right-0 w-40 h-40 -mr-20 -mt-20 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150", opt.bg.replace('bg-', 'bg-'))} />
                
                <div className="flex items-start gap-6 relative z-10">
@@ -612,13 +612,13 @@ import {
  
      return (
        <div className="space-y-6">
-           <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-6">
                <div>
                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Quadro da Equipe</h3>
                  <p className="text-sm text-slate-500 font-medium">Estrutura organizacional e alocação de talentos</p>
                </div>
                <div className="flex gap-3">
-                   <div className="bg-slate-50 p-1 rounded-xl border border-slate-100 flex gap-1 mr-2">
+                    <div className="bg-slate-50 p-1 rounded-xl border border-slate-100 flex gap-1 mr-2 w-fit">
                       <Button 
                         variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
                         size="sm" 
@@ -636,10 +636,10 @@ import {
                         Tabela
                       </Button>
                    </div>
-                   <Button variant="outline" className="rounded-xl border-slate-200 h-10 px-6 font-bold text-slate-600 text-xs">
+                    <Button variant="outline" className="flex-1 lg:flex-none rounded-xl border-slate-200 h-10 px-6 font-bold text-slate-600 text-xs">
                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
                    </Button>
-                   <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
+                    <Button className="flex-1 lg:flex-none bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
                      <Plus className="h-4 w-4 mr-2" /> Novo Vínculo
                    </Button>
                </div>

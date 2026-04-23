@@ -756,17 +756,17 @@
    return (
      <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
        {/* Desktop Sidebar */}
-       <aside className="w-72 bg-white border-r border-slate-100 hidden lg:flex flex-col sticky top-0 h-screen z-20">
+       <aside className="w-80 bg-white border-r border-slate-200/60 hidden lg:flex flex-col sticky top-0 h-screen z-20">
          <div className="p-8 flex flex-col h-full">
-           <div className="flex items-center gap-3 mb-10 group cursor-pointer" onClick={() => navigate('/')}>
-             <div className="h-10 w-10 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100 group-hover:scale-105 transition-transform">
-               <ShieldCheck className="text-white h-6 w-6" />
+             <div className="flex items-center gap-4 mb-12 group cursor-pointer" onClick={() => navigate('/')}>
+               <div className="h-12 w-12 bg-[#070e17] rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-200 group-hover:scale-105 transition-transform duration-500">
+                 <ShieldCheck className="text-white h-7 w-7" />
+               </div>
+               <div>
+                 <h1 className="font-black text-slate-900 tracking-tighter text-xl uppercase leading-none">Portal RH</h1>
+                 <p className="text-[9px] uppercase tracking-[0.3em] text-slate-400 font-black mt-1">Executive Suite</p>
+               </div>
              </div>
-             <div>
-               <h1 className="font-bold text-slate-900 tracking-tight leading-tight">Portal RH</h1>
-               <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Gestão Interna</p>
-             </div>
-           </div>
  
            <nav className="space-y-1 flex-1">
              {menuItems.map((item) => {
@@ -776,15 +776,15 @@
                    key={item.id}
                    onClick={() => setActiveTab(item.id)}
                    className={cn(
-                     "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group relative",
+                     "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-500 group relative",
                      isActive 
-                       ? "bg-indigo-50/50 text-indigo-600 shadow-sm" 
+                       ? "bg-indigo-600 text-white shadow-xl shadow-indigo-100 translate-x-1" 
                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                    )}
                  >
                    <item.icon className={cn(
-                     "h-5 w-5 transition-transform duration-300 group-hover:scale-110",
-                     isActive ? "text-indigo-600" : "text-slate-400"
+                     "h-[18px] w-[18px] transition-all duration-500 group-hover:scale-110",
+                     isActive ? "text-white" : "text-slate-400"
                    )} />
                    {item.label}
                    {isActive && (
@@ -812,17 +812,18 @@
  
        {/* Main Content Area */}
        <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-scrollbar">
-         {/* Header */}
-         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-10">
-           <div className="flex items-center gap-4">
-             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-               {menuItems.find(m => m.id === activeTab)?.label}
-             </h2>
-             <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-             <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border-none hidden sm:flex font-bold text-[10px] uppercase tracking-wider">
-               Sistema Ativo
-             </Badge>
-           </div>
+          <header className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-10 flex items-center justify-between sticky top-0 z-10">
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <h2 className="text-[22px] font-black text-slate-900 tracking-tight">
+                  {menuItems.find(m => m.id === activeTab)?.label}
+                </h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Executivo • Online</span>
+                </div>
+              </div>
+            </div>
  
            <div className="flex items-center gap-6">
              <div className="relative hidden xl:block">
@@ -849,7 +850,7 @@
            </div>
          </header>
  
-         <div className="p-8 max-w-7xl mx-auto w-full">
+          <div className="p-10 max-w-[1600px] mx-auto w-full">
            <AnimatePresence mode="wait">
              <motion.div
                key={activeTab}

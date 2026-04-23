@@ -253,7 +253,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Header */}
           <header className="shrink-0 z-20 sticky top-0 bg-background transition-all duration-300">
             {/* Top bar */}
-            <div className={`flex items-center justify-between px-6 border-b transition-all duration-300 ${
+             <div className={`flex items-center justify-between px-8 border-b transition-all duration-300 ${
               isCompact 
                 ? 'h-12 bg-background shadow-sm border-border/40' 
                 : 'h-16 bg-gradient-to-r from-background via-background to-primary/[0.03] border-border/60'
@@ -267,13 +267,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 }`}>
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <Sparkles className="h-3.5 w-3.5 text-warning" />
-                    <span className="text-sm font-semibold text-foreground">
+                     <span className="text-[13px] font-bold text-slate-800">
                       {getGreeting()}, <span className="text-primary">{userName}</span>
                     </span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-medium tracking-wide whitespace-nowrap">
-                    {currentUser?.cargo || 'Sistema AGIR'} · {currentUser?.perfil || 'Usuário'}
-                  </span>
+                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest whitespace-nowrap">
+                     {currentUser?.cargo || 'Sistema AGIR'} <span className="mx-1 opacity-30">•</span> {currentUser?.perfil || 'Usuário'}
+                   </span>
                 </div>
 
                 {/* Route context icon — shown when compact */}
@@ -302,11 +302,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Popover>
                 )}
 
-                <div className={`hidden xl:flex items-center gap-2 text-[10px] text-muted-foreground font-semibold bg-success/5 text-success px-3 py-1.5 rounded-full border border-success/20 transition-all duration-300 ${
+                 <div className={`hidden xl:flex items-center gap-2 text-[9px] text-emerald-600 font-black uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100/50 transition-all duration-300 ${
                   isCompact ? 'opacity-0 max-w-0 overflow-hidden px-0 border-0' : 'opacity-100 max-w-xs'
                 }`}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  Sistema sincronizado
+                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                   Sistema Ativo
                 </div>
 
                 <Popover>
@@ -382,12 +382,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 
                 <div className="h-8 w-px bg-border/50 mx-1" />
                 
-                <button 
-                  onClick={() => setShowProfile(true)}
-                  className={`rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 hover:ring-primary ${
-                    isCompact ? 'h-8 w-8' : 'h-10 w-10'
-                  }`}
-                >
+                 <button 
+                   onClick={() => setShowProfile(true)}
+                   className={`rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-slate-200 transition-all duration-300 hover:ring-primary hover:shadow-lg ${
+                     isCompact ? 'h-8 w-8' : 'h-10 w-10'
+                   }`}
+                 >
                   {currentUser?.avatar_url ? (
                     <img src={currentUser.avatar_url} alt={userName} className="h-full w-full object-cover" />
                   ) : (

@@ -27,17 +27,17 @@
    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/><path d="M15 2h2a2 2 0 0 1 2 2v18"/></svg>
  );
  
- const Dashboard = () => {
-   const stats = [
-     { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
-     { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-     { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50' },
-     { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-     { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50' },
-     { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50' },
-     { label: 'Alinhamentos (Mês)', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50' },
-     { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' },
-   ];
+   const Dashboard = () => {
+     const stats = [
+       { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50/50' },
+       { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50/50' },
+       { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50/50' },
+       { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
+       { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/50' },
+       { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-slate-600', bg: 'bg-slate-50/50' },
+       { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50/50' },
+       { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50/50' },
+     ];
  
    const chartData = [
      { name: 'Analista A', unidades: 4 },
@@ -53,16 +53,15 @@
          {stats.map((stat, i) => (
            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
              <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
-               <CardContent className="p-6">
-                 <div className="flex items-center justify-between">
-                   <div className={cn("p-2 rounded-lg", stat.bg)}>
+               <CardContent className="p-5">
+                 <div className="flex items-start justify-between">
+                   <div className={cn("p-2.5 rounded-xl border border-white shadow-sm", stat.bg)}>
                      <stat.icon className={cn("h-5 w-5", stat.color)} />
                    </div>
-                   <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none">+12%</Badge>
-                 </div>
-                 <div className="mt-4">
-                   <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                   <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
+                   <div className="flex flex-col items-end">
+                     <span className="text-2xl font-black text-slate-900 tracking-tight">{stat.value}</span>
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{stat.label}</span>
+                   </div>
                  </div>
                </CardContent>
              </Card>
@@ -115,47 +114,118 @@
    );
  };
  
- const AbsenceModule = () => {
-   const [searchTerm, setSearchTerm] = useState('');
-   const absences = [
-     { id: 1, name: 'Ana Silva', role: 'Analista ADM', type: 'férias', start: '2023-11-01', end: '2023-11-30', status: 'aprovado', coverage: 'Sim', coveredBy: 'Bruno G.' },
-     { id: 2, name: 'Bruno Gomes', role: 'Analista ADM', type: 'folga', start: '2023-10-25', end: '2023-10-25', status: 'em_analise', coverage: 'Não', coveredBy: '-' },
-   ];
-   return (
-     <div className="space-y-6">
-       <div className="flex items-center justify-between">
-         <h3 className="text-2xl font-bold text-slate-900">Controle de Ausências</h3>
-         <Button className="bg-indigo-600 text-white rounded-full">Novo Registro</Button>
-       </div>
-       <Card className="border-none shadow-sm overflow-hidden rounded-2xl">
-         <Table>
-           <TableHeader className="bg-slate-50/50"><TableRow><TableHead>Colaborador</TableHead><TableHead>Tipo</TableHead><TableHead>Período</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-           <TableBody>
-             {absences.map(item => (
-               <TableRow key={item.id}>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-900">{item.name}</span>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">{item.role}</span>
-                  </div>
-                </TableCell>
-                <TableCell><Badge className={cn("capitalize border-none font-bold text-[10px] px-2 py-0.5", item.type === 'férias' ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700")}>{item.type}</Badge></TableCell>
-                <TableCell className="text-sm font-medium text-slate-600">{item.start} - {item.end}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-700">{item.coverage}</span>
-                    {item.coveredBy !== '-' && <span className="text-[10px] text-slate-400">Por: {item.coveredBy}</span>}
-                  </div>
-                </TableCell>
-                <TableCell><Badge variant="outline" className="capitalize border-none bg-slate-100 font-bold text-[10px]">{item.status}</Badge></TableCell>
+   const AbsenceModule = () => {
+     const [searchTerm, setSearchTerm] = useState('');
+     const absences = [
+       { id: 1, name: 'Ana Silva', role: 'Analista ADM', type: 'férias', start: '2023-11-01', end: '2023-11-30', status: 'aprovado', coverage: 'Sim', coveredBy: 'Bruno G.' },
+       { id: 2, name: 'Bruno Gomes', role: 'Analista ADM', type: 'folga', start: '2023-10-25', end: '2023-10-25', status: 'em_analise', coverage: 'Não', coveredBy: '-' },
+     ];
+     return (
+       <div className="space-y-6">
+         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+           <div>
+             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Férias, Folgas e Day Off</h3>
+             <p className="text-sm text-slate-500 font-medium">Gestão centralizada de ausências e coberturas</p>
+           </div>
+           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+             <Plus className="h-4 w-4 mr-2" /> Novo Registro
+           </Button>
+         </div>
+ 
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+           {[
+             { label: 'Férias Ativas', value: '3', color: 'text-blue-600', bg: 'bg-blue-50' },
+             { label: 'Folgas Pendentes', value: '5', color: 'text-amber-600', bg: 'bg-amber-50' },
+             { label: 'Day Offs (Mês)', value: '8', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+           ].map((stat, i) => (
+             <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-2xl">
+               <div className="flex items-center gap-4">
+                 <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", stat.bg)}>
+                   <Calendar className={cn("h-5 w-5", stat.color)} />
+                 </div>
+                 <div>
+                   <p className="text-2xl font-black text-slate-900">{stat.value}</p>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                 </div>
+               </div>
+             </Card>
+           ))}
+         </div>
+ 
+         <Card className="border-none shadow-sm overflow-hidden rounded-2xl bg-white">
+           <div className="p-4 border-b border-slate-50 bg-slate-50/30 flex flex-wrap gap-4 items-center justify-between">
+             <div className="relative w-full md:w-80">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+               <Input 
+                 placeholder="Buscar colaborador..." 
+                 className="pl-10 h-10 bg-white border-slate-200 rounded-xl focus-visible:ring-indigo-500"
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+               />
+             </div>
+             <div className="flex gap-2">
+               <Button variant="outline" className="h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs">
+                 <Filter className="h-4 w-4 mr-2" /> Filtros
+               </Button>
+               <Button variant="outline" className="h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs">
+                 Outubro 2023
+               </Button>
+             </div>
+           </div>
+           <Table>
+             <TableHeader className="bg-slate-50/50">
+               <TableRow className="hover:bg-transparent border-slate-100">
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Colaborador</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Tipo</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Período</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Cobertura</TableHead>
+                 <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Status</TableHead>
                </TableRow>
-             ))}
-           </TableBody>
-         </Table>
-       </Card>
-     </div>
-   );
- };
+             </TableHeader>
+             <TableBody>
+               {absences.map(item => (
+                 <TableRow key={item.id} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
+                  <TableCell className="py-4">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-900 text-sm">{item.name}</span>
+                      <span className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">{item.role}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={cn(
+                      "border-none font-bold text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-wider", 
+                      item.type === 'férias' ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"
+                    )}>
+                      {item.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs font-semibold text-slate-600">
+                    {item.start} <span className="text-slate-300 mx-1">→</span> {item.end}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className={cn("text-[10px] font-black uppercase tracking-widest", item.coverage === 'Sim' ? "text-indigo-600" : "text-slate-400")}>
+                        {item.coverage === 'Sim' ? 'Com Cobertura' : 'Sem Cobertura'}
+                      </span>
+                      {item.coveredBy !== '-' && <span className="text-xs font-bold text-slate-600 mt-0.5">{item.coveredBy}</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn(
+                      "capitalize border-none font-bold text-[10px] px-3 py-1 rounded-full",
+                      item.status === 'aprovado' ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                    )}>
+                      {item.status.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
+                 </TableRow>
+               ))}
+             </TableBody>
+           </Table>
+         </Card>
+       </div>
+     );
+   };
  
  const ScopesModule = () => {
    const scopes = [

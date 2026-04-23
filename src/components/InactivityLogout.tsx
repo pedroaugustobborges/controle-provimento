@@ -91,13 +91,13 @@ export function InactivityLogout() {
       <DialogContent className="sm:max-w-[425px] border-none shadow-2xl bg-white/95 backdrop-blur-md">
         <DialogHeader>
           <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-            <Clock className="h-6 w-6 text-amber-600 animate-pulse" />
+            <Clock className="h-6 w-6 text-warning animate-pulse" />
           </div>
           <DialogTitle className="text-center text-xl font-bold text-foreground">
             Sessão expirando
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground pt-2">
-            Sua sessão expirará em <span className="font-bold text-amber-600">{formatTime(timeLeft)}</span> por inatividade. Deseja continuar conectado?
+            Sua sessão expirará em <span className="font-bold text-warning">{formatTime(timeLeft)}</span> por inatividade. Deseja continuar conectado?
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center gap-2 mt-6">

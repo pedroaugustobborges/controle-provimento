@@ -153,8 +153,8 @@ export default function AlertasTarefasPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <div className={`p-2 rounded-lg ${
-                      alerta.tipo === 'atraso' ? 'bg-red-100 text-red-600' :
-                      alerta.tipo === 'validacao' ? 'bg-blue-100 text-blue-600' :
+                      alerta.tipo === 'atraso' ? 'bg-red-100 text-destructive' :
+                      alerta.tipo === 'validacao' ? 'bg-blue-100 text-primary' :
                       'bg-slate-100 text-muted-foreground'
                     }`}>
                       {alerta.tipo === 'atraso' ? <Clock className="h-5 w-5" /> :
@@ -224,7 +224,7 @@ export default function AlertasTarefasPage() {
                           <div className="flex justify-between items-start">
                             <Badge variant="outline" className={cn(
                               "text-[10px] uppercase font-bold",
-                              msg.remetente === 'Agie' ? "bg-purple-50 text-purple-600 border-purple-200" : "bg-blue-50 text-blue-600 border-blue-200"
+                              msg.remetente === 'Agie' ? "bg-purple-50 text-primary border-purple-200" : "bg-blue-50 text-primary border-blue-200"
                             )}>
                               {msg.remetente}
                             </Badge>
@@ -244,7 +244,7 @@ export default function AlertasTarefasPage() {
                                 marcarMensagemLida(msg.id);
                                 toast.success('Mensagem marcada como lida.');
                               }}
-                              className="w-full h-8 text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-600"
+                              className="w-full h-8 text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-primary"
                             >
                               <CheckCircle2 className="h-3 w-3 mr-1.5" /> Marcar como lida
                             </Button>

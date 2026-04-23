@@ -106,7 +106,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
               <Button 
                 type="button"
                 variant={devolutiva === 'aceitou' ? 'default' : 'outline'}
-                className={`h-20 flex-col gap-2 ${devolutiva === 'aceitou' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                className={`h-20 flex-col gap-2 ${devolutiva === 'aceitou' ? 'bg-success hover:bg-green-700' : ''}`}
                 onClick={() => setDevolutiva('aceitou')}
               >
                 <CheckCircle2 className="h-6 w-6" />
@@ -115,7 +115,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
               <Button 
                 type="button"
                 variant={devolutiva === 'recusou' ? 'default' : 'outline'}
-                className={`h-20 flex-col gap-2 ${devolutiva === 'recusou' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                className={`h-20 flex-col gap-2 ${devolutiva === 'recusou' ? 'bg-destructive hover:bg-red-700' : ''}`}
                 onClick={() => setDevolutiva('recusou')}
               >
                 <XCircle className="h-6 w-6" />

@@ -251,7 +251,7 @@ export const AgieChat = memo(() => {
                           onClick={() => setStep('FEEDBACK')}
                         >
                           <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
-                            <Lightbulb className="w-5 h-5 text-amber-600" />
+                            <Lightbulb className="w-5 h-5 text-warning" />
                           </div>
                           <div className="text-left">
                             <p className="font-bold text-foreground">Feedback / Melhoria</p>
@@ -265,7 +265,7 @@ export const AgieChat = memo(() => {
                           onClick={() => setStep('NEWS')}
                         >
                           <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                            <Sparkles className="w-5 h-5 text-purple-600" />
+                            <Sparkles className="w-5 h-5 text-primary" />
                           </div>
                           <div className="text-left">
                             <p className="font-bold text-foreground">Novidades do Sistema</p>
@@ -440,7 +440,7 @@ export const AgieChat = memo(() => {
             isOpen
               ? "bg-white border-primary rotate-90"
               : hasNewRealNotification
-                ? "bg-red-600 border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
+                ? "bg-destructive border-white hover:shadow-red-500/40 ring-4 ring-red-400/30 animate-bounce"
                 : "bg-primary border-white hover:shadow-primary/40 shadow-xl"
           )}
         >

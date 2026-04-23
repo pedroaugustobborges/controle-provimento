@@ -573,7 +573,7 @@ export default function BancoTalentosPage() {
                         </div>
                         <div className="space-y-0.5">
                           <p className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Data Convocação</p>
-                          <p className="text-[11px] font-semibold text-green-600">{c.data_convocacao ? formatDate(c.data_convocacao) : "—"}</p>
+                          <p className="text-[11px] font-semibold text-success">{c.data_convocacao ? formatDate(c.data_convocacao) : "—"}</p>
                         </div>
                         <div className="space-y-0.5">
                           <p className="text-[9px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Unidade Convocação</p>
@@ -650,13 +650,13 @@ export default function BancoTalentosPage() {
                   {selectedBanco.nova_data_validade && (
                     <div className="space-y-1">
                       <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Validade Prorrogada</p>
-                      <p className="text-sm font-semibold text-blue-600 font-bold">{formatDate(selectedBanco.nova_data_validade)}</p>
+                      <p className="text-sm font-semibold text-primary font-bold">{formatDate(selectedBanco.nova_data_validade)}</p>
                     </div>
                   )}
                   {selectedBanco.data_convocacao && (
                     <div className="space-y-1">
                       <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-tighter">Data Convocação</p>
-                      <p className="text-sm font-semibold text-green-600 font-bold">{formatDate(selectedBanco.data_convocacao)}</p>
+                      <p className="text-sm font-semibold text-success font-bold">{formatDate(selectedBanco.data_convocacao)}</p>
                     </div>
                   )}
                 </div>
@@ -735,7 +735,7 @@ export default function BancoTalentosPage() {
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
-                    <Users className="h-5 w-5 text-purple-600" />
+                    <Users className="h-5 w-5 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider truncate">Convocados</p>
@@ -752,7 +752,7 @@ export default function BancoTalentosPage() {
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider truncate">Vencidos</p>
@@ -769,7 +769,7 @@ export default function BancoTalentosPage() {
               <CardContent className="pt-6 px-4 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <CheckCircle2 className="h-5 w-5 text-success" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider truncate">Total Vigentes</p>
@@ -934,7 +934,7 @@ export default function BancoTalentosPage() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="font-bold text-xs text-amber-600 hover:bg-amber-50 h-8"
+                              className="font-bold text-xs text-warning hover:bg-amber-50 h-8"
                               onClick={() => {
                                 setBancoForUpdate(group.candidatos[0]);
                                 setIsRequestUpdateOpen(true);
@@ -1094,7 +1094,7 @@ export default function BancoTalentosPage() {
                               {b.classificacao}°
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-xs font-bold text-green-600">
+                          <TableCell className="text-xs font-bold text-success">
                             {b.data_convocacao ? formatDate(b.data_convocacao) : '-'}
                           </TableCell>
                           <TableCell className="text-xs font-medium text-muted-foreground">
@@ -1202,7 +1202,7 @@ export default function BancoTalentosPage() {
                             {b.classificacao}°
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs font-bold text-red-600">
+                        <TableCell className="text-xs font-bold text-destructive">
                           {b.data_validade ? formatDate(b.data_validade) : '-'}
                         </TableCell>
                         <TableCell className="text-center">
@@ -1214,7 +1214,7 @@ export default function BancoTalentosPage() {
                               <Button 
                                 variant="outline" 
                                 size="sm" 
-                                className="font-bold text-xs text-blue-600 border-blue-200 hover:bg-blue-50 h-8 gap-1"
+                                className="font-bold text-xs text-primary border-blue-200 hover:bg-blue-50 h-8 gap-1"
                                 disabled={prorrogandoId === b.id}
                                 onClick={() => handleProrrogacao(b)}
                               >
@@ -1270,7 +1270,7 @@ export default function BancoTalentosPage() {
                     <TableCell className="text-xs">{h.data_hora ? formatDate(h.data_hora.split('T')[0]) : '-'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                        <FileSpreadsheet className="h-4 w-4 text-success" />
                         <span className="text-xs font-medium">{h.arquivo || h.nome_arquivo}</span>
                       </div>
                     </TableCell>
@@ -1302,7 +1302,7 @@ export default function BancoTalentosPage() {
           <TabsContent value="audit" className="space-y-6">
             <div className="bg-muted/30 border border-border/60 p-6 rounded-xl space-y-4 shadow-sm">
               <h3 className="font-bold text-foreground flex items-center gap-2 text-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" /> RESUMO FINAL DA AUDITORIA (STATUS CALCULADO)
+                <CheckCircle2 className="h-5 w-5 text-success" /> RESUMO FINAL DA AUDITORIA (STATUS CALCULADO)
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Este painel reflete o <strong>Status Calculado</strong> em tempo real, aplicando as regras de prioridade: 
@@ -1318,10 +1318,10 @@ export default function BancoTalentosPage() {
                 const stats = calculateStats(bancos);
                 const auditItems = [
                   { label: 'Cadastro Reserva', value: stats['Cadastro Reserva'], color: 'text-primary', description: 'Vigente pela validade normal' },
-                  { label: 'Convocados', value: stats['Convocados'], color: 'text-purple-600', description: 'Status original CONVOCADO' },
-                  { label: 'Prorrogados ("SIM")', value: stats['Prorrogados por "SIM"'], color: 'text-blue-600', description: 'Coluna prorrogação = SIM' },
-                  { label: 'Prorrogados (Data)', value: stats['Prorrogados por data manual'], color: 'text-indigo-600', description: 'Coluna prorrogação = data' },
-                  { label: 'Prorrogados (Original)', value: stats['Prorrogados por status original'], color: 'text-cyan-600', description: 'Status/flag já era PRORROGADO' },
+                  { label: 'Convocados', value: stats['Convocados'], color: 'text-primary', description: 'Status original CONVOCADO' },
+                  { label: 'Prorrogados ("SIM")', value: stats['Prorrogados por "SIM"'], color: 'text-primary', description: 'Coluna prorrogação = SIM' },
+                  { label: 'Prorrogados (Data)', value: stats['Prorrogados por data manual'], color: 'text-primary', description: 'Coluna prorrogação = data' },
+                  { label: 'Prorrogados (Original)', value: stats['Prorrogados por status original'], color: 'text-primary', description: 'Status/flag já era PRORROGADO' },
                   { label: 'Vencidos (Validade)', value: stats['Vencidos por validade normal'], color: 'text-red-500', description: 'Validade original expirada' },
                   { label: 'Vencidos (Prorrog.)', value: stats['Vencidos por prorrogação expirada'], color: 'text-red-700', description: 'Prorrogação expirada' },
                   { label: 'Vencidos (Original)', value: stats['Vencidos por status original'], color: 'text-red-900', description: 'Status original VENCIDO confirmado' },

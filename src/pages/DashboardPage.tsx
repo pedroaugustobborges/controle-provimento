@@ -228,18 +228,18 @@ export default function DashboardPage() {
 
   const stats = useMemo(() => [
     { label: 'Total de Vagas', value: totalVagas, icon: Briefcase, color: 'text-primary', bg: 'bg-primary/5', description: 'Base ativa' },
-    { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', description: 'Vagas concluídas' },
-    { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50', description: 'Processos ativos' },
-    { label: 'Convocações', value: counts.convocacoes, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', description: 'Em convocação' },
+    { label: 'Concluídas', value: counts.concluidas, icon: CheckCircle, color: 'text-success', bg: 'bg-green-50', description: 'Vagas concluídas' },
+    { label: 'Em Andamento', value: counts.em_andamento, icon: Activity, color: 'text-primary', bg: 'bg-blue-50', description: 'Processos ativos' },
+    { label: 'Convocações', value: counts.convocacoes, icon: Users, color: 'text-primary', bg: 'bg-purple-50', description: 'Em convocação' },
     { label: 'Aguardando', value: counts.aguardando_unidade, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', description: 'Aguardando retorno' },
     { label: 'Documentação', value: counts.documentacao, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', description: 'Pendência documental' },
-    { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
-    { label: 'Suspensa', value: counts.suspensa, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', description: 'Vagas suspensas' },
+    { label: 'Fila de Editais', value: counts.fila_edital, icon: FileText, color: 'text-warning', bg: 'bg-amber-50', description: 'Editais aguardando publicação' },
+    { label: 'Suspensa', value: counts.suspensa, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-red-50', description: 'Vagas suspensas' },
     { label: 'Cancelada', value: counts.cancelada, icon: AlertCircle, color: 'text-muted-foreground', bg: 'bg-muted/30', description: 'Vagas canceladas' },
-    { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-indigo-600', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
-    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-cyan-600', bg: 'bg-cyan-50', description: 'Movimentações internas' },
-    { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Fase final' },
-    { label: 'Banco Disponível', value: totalBancosDisponiveis, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', description: 'Bancos ativos' },
+    { label: 'Liderança', value: counts.vagas_lideranca, icon: Star, color: 'text-primary', bg: 'bg-indigo-50', description: 'Vagas estratégicas' },
+    { label: 'Mov. Interna', value: counts.movimentacao_interna, icon: ArrowLeftRight, color: 'text-primary', bg: 'bg-cyan-50', description: 'Movimentações internas' },
+    { label: 'Em Admissão', value: counts.em_admissao, icon: UserCheck, color: 'text-success', bg: 'bg-emerald-50', description: 'Fase final' },
+    { label: 'Banco Disponível', value: totalBancosDisponiveis, icon: ShieldCheck, color: 'text-success', bg: 'bg-emerald-50', description: 'Bancos ativos' },
   ], [totalVagas, counts, totalBancosDisponiveis, totalTarefasPendentes]);
 
   const strategicScopeByUnit = useMemo(() => {
@@ -712,7 +712,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertTriangle className="h-4 w-4 text-warning" />
                 </div>
                 <div>
                   <CardTitle className="text-lg font-bold text-foreground">Vagas sem Movimentação</CardTitle>
@@ -733,7 +733,7 @@ export default function DashboardPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1.5 gap-2">
                         <span className="text-[11px] font-mono font-bold text-slate-300 group-hover:text-primary/40 transition-colors uppercase truncate">#{alert.reference}</span>
-                        <span className={`text-[11px] font-bold flex items-center gap-1 uppercase bg-white border px-2 py-0.5 rounded-md shrink-0 ${alert.type === 'vaga' ? 'text-amber-600 border-amber-100' : 'text-red-600 border-red-100'}`}>
+                        <span className={`text-[11px] font-bold flex items-center gap-1 uppercase bg-white border px-2 py-0.5 rounded-md shrink-0 ${alert.type === 'vaga' ? 'text-warning border-amber-100' : 'text-destructive border-red-100'}`}>
                           {alert.type === 'vaga' ? <Clock className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />} {alert.badge}
                         </span>
                       </div>
@@ -773,7 +773,7 @@ export default function DashboardPage() {
           <DialogHeader className="p-6 border-b bg-muted/30/50">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <AlertTriangle className="h-5 w-5 text-warning" />
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold text-foreground">Vagas sem Movimentação</DialogTitle>
@@ -828,7 +828,7 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell className="py-4 px-6 text-center">
                         <span className={`text-[11px] font-black px-2.5 py-1 rounded-md ${
-                          vaga.daysOpen > 20 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                          vaga.daysOpen > 20 ? 'bg-red-50 text-destructive border border-red-100' : 'bg-amber-50 text-warning border border-amber-100'
                         }`}>
                           {vaga.daysOpen} dias
                         </span>

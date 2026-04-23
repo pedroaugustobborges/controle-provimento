@@ -99,10 +99,10 @@ export default function ValidacaoPage() {
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-4">
               <div className="bg-amber-100 p-3 rounded-xl">
-                <Clock className="h-6 w-6 text-amber-600" />
+                <Clock className="h-6 w-6 text-warning" />
               </div>
               <div>
-                <p className="text-[11px] text-amber-600 font-bold uppercase tracking-wider">Aguardando Validação</p>
+                <p className="text-[11px] text-warning font-bold uppercase tracking-wider">Aguardando Validação</p>
                 <p className="text-3xl font-bold text-amber-700">{pendentes.length}</p>
               </div>
             </div>
@@ -112,10 +112,10 @@ export default function ValidacaoPage() {
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-4">
               <div className="bg-green-100 p-3 rounded-xl">
-                <FileCheck className="h-6 w-6 text-green-600" />
+                <FileCheck className="h-6 w-6 text-success" />
               </div>
               <div>
-                <p className="text-[11px] text-green-600 font-bold uppercase tracking-wider">Validadas (Total)</p>
+                <p className="text-[11px] text-success font-bold uppercase tracking-wider">Validadas (Total)</p>
                 <p className="text-3xl font-bold text-green-700">{validadas.length}</p>
               </div>
             </div>
@@ -125,10 +125,10 @@ export default function ValidacaoPage() {
           <CardContent className="pt-6 pb-6">
             <div className="flex items-center gap-4">
               <div className="bg-blue-100 p-3 rounded-xl">
-                <Calendar className="h-6 w-6 text-blue-600" />
+                <Calendar className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-[11px] text-blue-600 font-bold uppercase tracking-wider">Total Visível</p>
+                <p className="text-[11px] text-primary font-bold uppercase tracking-wider">Total Visível</p>
                 <p className="text-3xl font-bold text-blue-700">{filteredConvocacoes.length}</p>
               </div>
             </div>

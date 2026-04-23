@@ -268,7 +268,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-border/60/60 shadow-2xl">
         <DialogHeader className="p-6 border-b bg-muted/30/50">
           <div className="flex items-center gap-3 mb-1">
-            <div className="p-2 bg-blue-600 rounded-lg text-white">
+            <div className="p-2 bg-primary rounded-lg text-white">
               <DatabaseZap className="h-5 w-5" />
             </div>
             <div>
@@ -298,7 +298,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                 <div key={s.id} className="flex flex-col items-center gap-2">
                   <div className={cn(
                     "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
-                    active ? "bg-blue-600 border-blue-600 text-white shadow-lg scale-110" : 
+                    active ? "bg-primary border-blue-600 text-white shadow-lg scale-110" : 
                     completed ? "bg-green-500 border-green-500 text-white" : 
                     "bg-white border-border/60 text-muted-foreground/80"
                   )}>
@@ -306,7 +306,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   </div>
                   <span className={cn(
                     "text-[10px] font-bold uppercase tracking-widest",
-                    active ? "text-blue-600" : "text-muted-foreground/80"
+                    active ? "text-primary" : "text-muted-foreground/80"
                   )}>{s.label}</span>
                 </div>
               );
@@ -328,7 +328,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-border/40 hover:border-blue-500 hover:bg-blue-50/50 transition-all group"
                 >
                   <div className="p-4 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
-                    <Users className="h-10 w-10 text-blue-600" />
+                    <Users className="h-10 w-10 text-primary" />
                   </div>
                   <div className="text-center">
                     <span className="block font-black text-foreground text-lg">Banco de Talentos</span>
@@ -341,7 +341,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                   className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-border/40 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all group"
                 >
                   <div className="p-4 bg-indigo-50 rounded-2xl group-hover:bg-indigo-100 transition-colors">
-                    <Briefcase className="h-10 w-10 text-indigo-600" />
+                    <Briefcase className="h-10 w-10 text-primary" />
                   </div>
                   <div className="text-center">
                     <span className="block font-black text-foreground text-lg">Vagas</span>
@@ -356,7 +356,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
             <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed border-border/60 rounded-3xl bg-muted/30/50 hover:bg-muted/30 hover:border-blue-400/50 transition-all cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
               <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx, .xlsm" onChange={handleFileSelect} />
               <div className="p-6 bg-white rounded-2xl shadow-sm border border-border/40 group-hover:scale-110 transition-transform">
-                <Upload className="h-10 w-10 text-blue-600" />
+                <Upload className="h-10 w-10 text-primary" />
               </div>
               <div className="text-center mt-6">
                 <p className="font-black text-xl text-foreground">Selecione o arquivo Excel</p>
@@ -365,7 +365,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
               
               <div className="mt-8 flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full">
                 <span className="text-[10px] font-black text-muted-foreground/80 uppercase tracking-widest">Tipo Selecionado:</span>
-                <Badge className={cn("font-black", importType === 'vagas' ? "bg-indigo-600" : "bg-blue-600")}>
+                <Badge className={cn("font-black", importType === 'vagas' ? "bg-primary" : "bg-primary")}>
                   {importType === 'vagas' ? 'Vagas' : 'Banco de Talentos'}
                 </Badge>
                 <Button variant="ghost" className="h-6 w-6 p-0 rounded-full hover:bg-slate-200" onClick={(e) => { e.stopPropagation(); setStep('type-selection'); }}>
@@ -409,7 +409,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                 <CardContent className="p-0">
                   <div className="p-4 bg-muted/30/80 border-b flex items-center justify-between">
                     <h3 className="font-bold text-slate-700 flex items-center gap-2">
-                      <ListChecks className="h-4 w-4 text-blue-600" />
+                      <ListChecks className="h-4 w-4 text-primary" />
                       Mapeamento de Colunas
                     </h3>
                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 font-bold">
@@ -551,7 +551,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
               <div className="relative">
                 <div className="h-24 w-24 rounded-full border-4 border-border/40 border-t-blue-600 animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-black text-blue-600">{importProgress.percentage}%</span>
+                  <span className="text-xl font-black text-primary">{importProgress.percentage}%</span>
                 </div>
               </div>
               
@@ -586,7 +586,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
               <div className="grid grid-cols-2 gap-4">
                 <Card className="border-border/40 bg-muted/30/50">
                   <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-                    <span className="text-3xl font-black text-blue-600">{importProgress.processedRows}</span>
+                    <span className="text-3xl font-black text-primary">{importProgress.processedRows}</span>
                     <span className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">Confirmados no banco</span>
                   </CardContent>
                 </Card>
@@ -622,7 +622,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
                 Voltar
               </Button>
               <Button
-                className="h-11 px-8 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 gap-2"
+                className="h-11 px-8 rounded-xl font-bold bg-primary hover:bg-blue-700 shadow-lg shadow-blue-200 gap-2"
                 onClick={handleStartImport}
                 disabled={missingRequiredFields.length > 0}
               >
@@ -632,7 +632,7 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           )}
 
           {step === 'processing' && (
-            <div className="flex items-center gap-2 text-blue-600 font-bold text-sm">
+            <div className="flex items-center gap-2 text-primary font-bold text-sm">
               <Loader2 className="h-4 w-4 animate-spin" />
               Por favor, aguarde a conclusão...
             </div>

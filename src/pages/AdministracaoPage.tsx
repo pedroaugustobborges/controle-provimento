@@ -697,12 +697,12 @@ export default function AdministracaoPage() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               {user.status !== 'ativo' && (
-                                <DropdownMenuItem className="text-green-600" onClick={() => handleStatusChange(user.id, 'ativo')}>
+                                <DropdownMenuItem className="text-success" onClick={() => handleStatusChange(user.id, 'ativo')}>
                                   <UserCheck className="mr-2 h-4 w-4" /> Reativar acesso
                                 </DropdownMenuItem>
                               )}
                               {user.status === 'ativo' && (
-                                <DropdownMenuItem className="text-amber-600" onClick={() => handleStatusChange(user.id, 'suspenso')}>
+                                <DropdownMenuItem className="text-warning" onClick={() => handleStatusChange(user.id, 'suspenso')}>
                                   <Ban className="mr-2 h-4 w-4" /> Suspender acesso
                                 </DropdownMenuItem>
                               )}
@@ -908,7 +908,7 @@ export default function AdministracaoPage() {
                             <div className="flex items-center gap-2">
                               <span className="line-through text-muted-foreground/80">{log.valor_anterior || '-'}</span>
                               <MoreVertical className="h-3 w-3 rotate-90 text-slate-300" />
-                              <span className="text-green-600 font-bold">{log.valor_novo || '-'}</span>
+                              <span className="text-success font-bold">{log.valor_novo || '-'}</span>
                             </div>
                           ) : (
                             <span className="text-slate-300 italic">N/A</span>
@@ -928,7 +928,7 @@ export default function AdministracaoPage() {
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="border-b bg-blue-50/30">
               <div className="flex items-center gap-2.5">
-                <Database className="h-5 w-5 text-blue-600" />
+                <Database className="h-5 w-5 text-primary" />
                 <div>
                   <CardTitle className="text-lg font-bold text-foreground">Conferência de Status (Dados Reais)</CardTitle>
                   <CardDescription className="text-xs font-medium text-muted-foreground/80">Validação objetiva de como cada registro original está sendo classificado.</CardDescription>
@@ -1020,7 +1020,7 @@ export default function AdministracaoPage() {
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
                     <span className="text-xs font-medium text-muted-foreground">Próximo Backup</span>
-                    <span className="text-xs font-bold text-blue-600">Em 12 minutos</span>
+                    <span className="text-xs font-bold text-primary">Em 12 minutos</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
                     <span className="text-xs font-medium text-muted-foreground">Registros Copiados</span>
@@ -1077,12 +1077,12 @@ export default function AdministracaoPage() {
                           <TableCell className="font-mono text-xs">{b.data_hora}</TableCell>
                           <TableCell className="font-bold text-muted-foreground text-xs">{b.quantidade_registros}</TableCell>
                           <TableCell>
-                            <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[11px]">
+                            <div className="flex items-center justify-center gap-1.5 text-success font-bold text-[11px]">
                               <CheckCircle className="h-3 w-3" /> Sucesso
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" className="h-8 gap-2 text-blue-600 font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
+                            <Button variant="ghost" size="sm" className="h-8 gap-2 text-primary font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1230,7 +1230,7 @@ export default function AdministracaoPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Alterar Status</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'lido')}>
-                                  <Check className="mr-2 h-4 w-4 text-green-600" /> Marcar como lido
+                                  <Check className="mr-2 h-4 w-4 text-success" /> Marcar como lido
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'respondido')}>
                                   <Send className="mr-2 h-4 w-4 text-primary" /> Marcar como respondido
@@ -1308,7 +1308,7 @@ export default function AdministracaoPage() {
                               <Button variant="ghost" size="icon" onClick={() => openEditHoliday(f)} className="h-8 w-8">
                                 <Edit2 className="h-4 w-4 text-muted-foreground/80" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteFeriado(f.id)} className="h-8 w-8 hover:text-red-600">
+                              <Button variant="ghost" size="icon" onClick={() => deleteFeriado(f.id)} className="h-8 w-8 hover:text-destructive">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -1612,7 +1612,7 @@ export default function AdministracaoPage() {
                 <Switch checked={newUser.acesso_portal_unidade} onCheckedChange={(v) => setNewUser(p => ({ ...p, acesso_portal_unidade: v }))} />
                 <div>
                   <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
-                  <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
+                  <p className="text-[10px] text-primary mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
                 </div>
               </div>
             </div>
@@ -1856,7 +1856,7 @@ export default function AdministracaoPage() {
                   <Switch checked={editingUser?.acesso_portal_unidade || false} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, acesso_portal_unidade: v }))} />
                   <div>
                     <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
-                    <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
+                    <p className="text-[10px] text-primary mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
                   </div>
                 </div>
               </div>

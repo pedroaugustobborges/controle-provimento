@@ -302,7 +302,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Popover>
                 )}
 
-                 <div className={`hidden xl:flex items-center gap-2 text-[9px] text-emerald-600 font-black uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100/50 transition-all duration-300 ${
+                 <div className={`hidden xl:flex items-center gap-2 text-[9px] text-success font-black uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100/50 transition-all duration-300 ${
                   isCompact ? 'opacity-0 max-w-0 overflow-hidden px-0 border-0' : 'opacity-100 max-w-xs'
                 }`}>
                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -353,9 +353,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                               }`}
                             >
                               <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                                alerta.tipo === 'atraso' ? 'bg-amber-100 text-amber-600' :
-                                alerta.tipo === 'critico' ? 'bg-red-100 text-red-600' :
-                                'bg-blue-100 text-blue-600'
+                                alerta.tipo === 'atraso' ? 'bg-amber-100 text-warning' :
+                                alerta.tipo === 'critico' ? 'bg-red-100 text-destructive' :
+                                'bg-blue-100 text-primary'
                               }`}>
                                 {alerta.tipo === 'atraso' ? <AlertTriangle className="h-4 w-4" /> :
                                  alerta.tipo === 'critico' ? <Bell className="h-4 w-4" /> :
@@ -518,7 +518,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
-                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-primary">
                     <Mail className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
@@ -528,7 +528,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
-                  <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                  <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-primary">
                     <Shield className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">

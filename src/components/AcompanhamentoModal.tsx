@@ -336,7 +336,7 @@ export function AcompanhamentoModal({ isOpen, onClose, vaga, onSave }: Acompanha
                     </div>
                     <Button 
                       size="sm" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-9 shadow-sm"
+                      className="bg-primary hover:bg-blue-700 text-white font-bold h-9 shadow-sm"
                       onClick={handleAutoFillDates}
                     >
                       <Zap className="h-3.5 w-3.5 mr-2" />

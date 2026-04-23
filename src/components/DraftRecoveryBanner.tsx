@@ -23,7 +23,7 @@ export function DraftRecoveryBanner({ count, onRecover, onDiscard }: Props) {
         <Button size="sm" variant="outline" onClick={onDiscard} className="h-8 text-xs">
           <X className="h-3.5 w-3.5 mr-1" /> Descartar
         </Button>
-        <Button size="sm" onClick={onRecover} className="h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white">
+        <Button size="sm" onClick={onRecover} className="h-8 text-xs bg-warning hover:bg-amber-700 text-white">
           <RotateCcw className="h-3.5 w-3.5 mr-1" /> Recuperar
         </Button>
       </div>

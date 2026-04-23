@@ -224,7 +224,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
                         <div className="flex items-center gap-1.5">
                           <span className="text-[10px] font-medium text-muted-foreground">Interatividade:</span>
                           {session.hasActivity ? (
-                            <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 flex items-center gap-1 text-[9px] h-5 px-1.5">
+                            <Badge className="bg-emerald-50 text-success border-emerald-100 flex items-center gap-1 text-[9px] h-5 px-1.5">
                               <CheckCircle2 className="h-2.5 w-2.5" />
                               Sim
                             </Badge>

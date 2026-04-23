@@ -563,7 +563,7 @@ export default function FilaAnalistaEditalPage() {
     return (
       <div className="space-y-4 p-4 rounded-xl border border-amber-200 bg-amber-50/30">
         <div className="flex items-center gap-2 mb-2">
-          <Calendar className="h-4 w-4 text-amber-600" />
+          <Calendar className="h-4 w-4 text-warning" />
           <h4 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Cronograma</h4>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -585,7 +585,7 @@ export default function FilaAnalistaEditalPage() {
     <div className="space-y-6">
       <PageHeader title="Fila do Edital (Redação)" helpContent={<HelpGuide />} />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-blue-50 border-blue-100 shadow-sm"><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-5 w-5 text-blue-600" /><div><p className="text-xs font-bold text-blue-600 uppercase">Aguardando Redação</p><p className="text-2xl font-bold text-foreground">{editalVagas.length}</p></div></div></CardContent></Card>
+        <Card className="bg-blue-50 border-blue-100 shadow-sm"><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-5 w-5 text-primary" /><div><p className="text-xs font-bold text-primary uppercase">Aguardando Redação</p><p className="text-2xl font-bold text-foreground">{editalVagas.length}</p></div></div></CardContent></Card>
       </div>
 
       {selectedForGroup.size >= 1 && (
@@ -601,7 +601,7 @@ export default function FilaAnalistaEditalPage() {
             <Button
               size="sm"
               variant="secondary"
-              className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+              className="h-8 bg-emerald-500 hover:bg-success text-white border-0 font-semibold"
               onClick={handleOpenGroupModal}
               disabled={selectedForGroup.size < 1 || (selectedForGroup.size === 1 && !groupValidation.ok && false)}
               title="Agrupar ou Anexar cargos selecionados"
@@ -612,7 +612,7 @@ export default function FilaAnalistaEditalPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-8 bg-amber-500 hover:bg-amber-600 text-white border-0 font-semibold"
+                className="h-8 bg-amber-500 hover:bg-warning text-white border-0 font-semibold"
                 onClick={() => {
                   setReturnToFilaTargets(editalVagas.filter(v => selectedForGroup.has(v.id) && v.status_fluxo_edital === 'em_redacao'));
                   setIsReturnToFilaOpen(true);
@@ -672,7 +672,7 @@ export default function FilaAnalistaEditalPage() {
                               handleOpenGroupModal();
                             }} 
                             title="Agrupar / Anexar" 
-                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            className="text-success hover:text-emerald-700 hover:bg-emerald-50"
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -681,7 +681,7 @@ export default function FilaAnalistaEditalPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            className="text-warning hover:text-amber-700 hover:bg-amber-50"
                             title="Devolver para a Fila de Editais"
                             onClick={() => { setReturnToFilaTargets([v]); setIsReturnToFilaOpen(true); }}
                           >
@@ -821,12 +821,12 @@ export default function FilaAnalistaEditalPage() {
                     
                     {nomeArquivo ? (
                       <>
-                        <div className="p-3 bg-emerald-100 rounded-full text-emerald-600">
+                        <div className="p-3 bg-emerald-100 rounded-full text-success">
                           <Check className="h-8 w-8" />
                         </div>
                         <div className="text-center">
                           <p className="font-bold text-emerald-800">{nomeArquivo}</p>
-                          <p className="text-sm text-emerald-600">Arquivo selecionado com sucesso</p>
+                          <p className="text-sm text-success">Arquivo selecionado com sucesso</p>
                         </div>
                         <Button 
                           variant="ghost" 
@@ -1014,7 +1014,7 @@ export default function FilaAnalistaEditalPage() {
             <AlertDialogAction
               onClick={(e) => { e.preventDefault(); handleConfirmReturnToFila(); }}
               disabled={returnToFilaSubmitting}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-warning hover:bg-amber-700 text-white"
             >
               {returnToFilaSubmitting ? 'Devolvendo...' : 'Confirmar devolução'}
             </AlertDialogAction>

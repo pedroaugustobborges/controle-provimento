@@ -166,9 +166,9 @@ export default function ImportacoesPage() {
 
   const getFileStatusBadge = (status: string) => {
     switch (status) {
-      case 'processado': return <Badge className="bg-green-50 text-green-600 hover:bg-green-100 font-medium border-green-100">Processado</Badge>;
-      case 'enviado': return <Badge className="bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium border-blue-100">Enviado</Badge>;
-      case 'erro': return <Badge className="bg-red-50 text-red-600 hover:bg-red-100 font-medium border-red-100">Erro</Badge>;
+      case 'processado': return <Badge className="bg-green-50 text-success hover:bg-green-100 font-medium border-green-100">Processado</Badge>;
+      case 'enviado': return <Badge className="bg-blue-50 text-primary hover:bg-blue-100 font-medium border-blue-100">Enviado</Badge>;
+      case 'erro': return <Badge className="bg-red-50 text-destructive hover:bg-red-100 font-medium border-red-100">Erro</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -186,7 +186,7 @@ export default function ImportacoesPage() {
           <>
             <Button 
               variant="outline" 
-              className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 h-10 px-4 rounded-xl font-bold"
+              className="gap-2 border-red-200 text-destructive hover:bg-red-50 hover:text-red-700 hover:border-red-300 h-10 px-4 rounded-xl font-bold"
               onClick={() => setIsClearAllDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4" /> Limpar Dados
@@ -204,7 +204,7 @@ export default function ImportacoesPage() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
               <div className="bg-blue-100 p-2.5 rounded-lg">
-                <FileText className="h-5 w-5 text-blue-600" />
+                <FileText className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Arquivos Enviados</p>
@@ -217,7 +217,7 @@ export default function ImportacoesPage() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
               <div className="bg-green-100 p-2.5 rounded-lg">
-                <FileCheck className="h-5 w-5 text-green-600" />
+                <FileCheck className="h-5 w-5 text-success" />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Concluídas</p>
@@ -232,7 +232,7 @@ export default function ImportacoesPage() {
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
               <div className="bg-red-100 p-2.5 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <AlertTriangle className="h-5 w-5 text-destructive" />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">Com Erro</p>
@@ -312,12 +312,12 @@ export default function ImportacoesPage() {
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
                           <div className="flex flex-col items-center">
-                            <span className="text-xs font-bold text-green-600">{h.total_novos}</span>
+                            <span className="text-xs font-bold text-success">{h.total_novos}</span>
                             <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Novos</span>
                           </div>
                           <div className="w-px h-6 bg-slate-100" />
                           <div className="flex flex-col items-center">
-                            <span className="text-xs font-bold text-blue-600">{h.total_atualizados}</span>
+                            <span className="text-xs font-bold text-primary">{h.total_atualizados}</span>
                             <span className="text-[8px] text-muted-foreground/80 uppercase font-bold">Att.</span>
                           </div>
                           <div className="w-px h-6 bg-slate-100" />
@@ -395,7 +395,7 @@ export default function ImportacoesPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="bg-blue-50 p-2 rounded-lg">
-                            <FileSpreadsheet className="h-4 w-4 text-blue-600" />
+                            <FileSpreadsheet className="h-4 w-4 text-primary" />
                           </div>
                           <div className="flex flex-col">
                             <span className="text-sm font-bold text-slate-700">{f.nome_original}</span>
@@ -425,7 +425,7 @@ export default function ImportacoesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem onClick={() => handleReprocess(f)} className="gap-2">
-                              <RefreshCw className="h-4 w-4 text-blue-600" /> Reprocessar
+                              <RefreshCw className="h-4 w-4 text-primary" /> Reprocessar
                             </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2">
                               <Download className="h-4 w-4" /> Baixar Original
@@ -440,7 +440,7 @@ export default function ImportacoesPage() {
                                 setFileParaExcluir(f.id);
                                 setIsDeleteDialogOpen(true);
                               }} 
-                              className="gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                              className="gap-2 text-destructive focus:text-destructive focus:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" /> Excluir Arquivo
                             </DropdownMenuItem>
@@ -543,7 +543,7 @@ export default function ImportacoesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClearAllData} className="bg-red-600 text-white hover:bg-red-700">
+            <AlertDialogAction onClick={handleClearAllData} className="bg-destructive text-white hover:bg-red-700">
               Confirmar Limpeza Total
             </AlertDialogAction>
           </AlertDialogFooter>

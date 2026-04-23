@@ -711,7 +711,7 @@ export default function VagasPage() {
               <CardTitle className="text-xs font-bold text-amber-800 uppercase flex items-center gap-2">
                 <Bug className="h-3 w-3" /> Diagnóstico de Paridade Excel (Audit)
               </CardTitle>
-              <CardDescription className="text-[11px] text-amber-600 font-medium">
+              <CardDescription className="text-[11px] text-warning font-medium">
                 Comparação entre dados importados e regras de negócio de contagem.
               </CardDescription>
             </div>
@@ -733,7 +733,7 @@ export default function VagasPage() {
                 <div className="text-[11px] font-mono text-amber-900 leading-tight">
                   <p>Excel Parity Count: <span className="font-bold">{parityAudit.excelCount}</span></p>
                   <p>App Card Count: <span className="font-bold">{parityAudit.appCount}</span></p>
-                  <p>Diferença: <span className={`font-bold ${parityAudit.difference !== 0 ? 'text-red-600' : 'text-green-600'}`}>{parityAudit.difference}</span></p>
+                  <p>Diferença: <span className={`font-bold ${parityAudit.difference !== 0 ? 'text-destructive' : 'text-success'}`}>{parityAudit.difference}</span></p>
                 </div>
               </div>
               <div className="space-y-1">
@@ -773,15 +773,15 @@ export default function VagasPage() {
                           <TableCell className="h-8">{m.data_abertura}</TableCell>
                           <TableCell className="h-8 truncate max-w-[120px]">{m.cargo}</TableCell>
                           <TableCell className="h-8 font-bold text-blue-700">{m.parsedMonth}</TableCell>
-                          <TableCell className="h-8 text-center">{m.includedByExcelParity ? <CheckCircle2 className="h-3 w-3 text-green-600 inline" /> : <X className="h-3 w-3 text-red-600 inline" />}</TableCell>
-                          <TableCell className="h-8 text-center">{m.includedByApp ? <CheckCircle2 className="h-3 w-3 text-green-600 inline" /> : <X className="h-3 w-3 text-red-600 inline" />}</TableCell>
+                          <TableCell className="h-8 text-center">{m.includedByExcelParity ? <CheckCircle2 className="h-3 w-3 text-success inline" /> : <X className="h-3 w-3 text-destructive inline" />}</TableCell>
+                          <TableCell className="h-8 text-center">{m.includedByApp ? <CheckCircle2 className="h-3 w-3 text-success inline" /> : <X className="h-3 w-3 text-destructive inline" />}</TableCell>
                           <TableCell className="h-8 text-red-700 font-medium">{m.rejectionReason || 'Diferença de filtro extra UI'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                   {parityAudit.mismatches.length > 10 && (
-                    <p className="text-[8px] text-amber-600 mt-1 italic">Mostrando 10 de {parityAudit.mismatches.length} divergências.</p>
+                    <p className="text-[8px] text-warning mt-1 italic">Mostrando 10 de {parityAudit.mismatches.length} divergências.</p>
                   )}
                 </div>
               ) : (
@@ -817,7 +817,7 @@ export default function VagasPage() {
             navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
           }}
         >
-          <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
+          <div className="bg-primary p-2.5 rounded-lg shadow-md shadow-blue-200">
             <TrendingUp className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -826,7 +826,7 @@ export default function VagasPage() {
             </h3>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-blue-700">{countEmAndamento}</span>
-              <span className="text-[11px] text-blue-600/80 font-medium">vagas sendo processadas no momento</span>
+              <span className="text-[11px] text-primary/80 font-medium">vagas sendo processadas no momento</span>
             </div>
           </div>
         </div>
@@ -1008,7 +1008,7 @@ export default function VagasPage() {
             <Button 
               variant={filterVagasNovas ? "default" : "outline"} 
               size="sm" 
-              className={`h-9 text-[11px] font-bold gap-2 ${filterVagasNovas ? 'bg-blue-600' : 'border-border/60 text-muted-foreground bg-white'}`}
+              className={`h-9 text-[11px] font-bold gap-2 ${filterVagasNovas ? 'bg-primary' : 'border-border/60 text-muted-foreground bg-white'}`}
               onClick={() => setFilterVagasNovas(!filterVagasNovas)}
             >
               <Sparkles className={`h-3.5 w-3.5 ${filterVagasNovas ? 'text-white' : 'text-blue-500'}`} />
@@ -1018,7 +1018,7 @@ export default function VagasPage() {
             <Button 
               variant={filterComBanco ? "default" : "outline"} 
               size="sm" 
-              className={`h-9 text-[11px] font-bold gap-2 ${filterComBanco ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-border/60 text-muted-foreground bg-white'}`}
+              className={`h-9 text-[11px] font-bold gap-2 ${filterComBanco ? 'bg-success hover:bg-emerald-700' : 'border-border/60 text-muted-foreground bg-white'}`}
               onClick={() => setFilterComBanco(!filterComBanco)}
             >
               <Database className={`h-3.5 w-3.5 ${filterComBanco ? 'text-white' : 'text-emerald-500'}`} />
@@ -1053,13 +1053,13 @@ export default function VagasPage() {
             <TabsTrigger value="todas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Todas as Vagas ({canonicalBase.length})
             </TabsTrigger>
-            <TabsTrigger value="em_andamento" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
+            <TabsTrigger value="em_andamento" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Em Andamento ({counts.fila_edital + counts.em_andamento + counts.convocacao + counts.documentacao + counts.aguardando_unidade + ((counts as any).em_admissao || 0)})
             </TabsTrigger>
             <TabsTrigger value="ativas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao + counts.em_admissao + counts.movimentacao_interna})
             </TabsTrigger>
-            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
+            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-success data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
             </TabsTrigger>
           </TabsList>
@@ -1122,7 +1122,7 @@ export default function VagasPage() {
                           <div className="font-semibold text-foreground whitespace-normal break-words leading-tight max-w-[300px] flex items-center flex-wrap gap-2" title={v.cargo}>
                             {v.cargo}
                             {v.origem === 'manual' && v.data_criacao && (new Date().getTime() - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000 && (
-                              <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase">
+                              <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-primary border-blue-200 animate-pulse font-bold uppercase">
                                 <Sparkles className="h-2 w-2 mr-0.5" /> Nova Vaga
                               </Badge>
                             )}
@@ -1136,7 +1136,7 @@ export default function VagasPage() {
                         <div className="flex flex-col">
                           <span>{v.unidade}</span>
                           {v.unidade_trabalho && v.unidade_trabalho !== v.unidade && (
-                            <span className="text-[9px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
+                            <span className="text-[9px] text-primary font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
                               TRABALHANDO: {v.unidade_trabalho}
                             </span>
                           )}
@@ -1156,7 +1156,7 @@ export default function VagasPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700" 
+                            className="h-8 w-8 text-success hover:bg-green-50 hover:text-green-700" 
                             title="Realizar Convocação"
                             onClick={() => navigate(`/convocacoes?open=true&vagaId=${v.id}`)}
                           >
@@ -1203,7 +1203,7 @@ export default function VagasPage() {
                                   setVagaForUpdate(v);
                                   setIsRequestUpdateOpen(true);
                                 }} 
-                                className="gap-2 text-amber-600"
+                                className="gap-2 text-warning"
                               >
                                 <AlertCircle className="h-4 w-4" /> Solicitar Atualização
                               </DropdownMenuItem>
@@ -1225,7 +1225,7 @@ export default function VagasPage() {
                                     toast.success('Vaga enviada para Fila de Editais');
                                   }
                                 }} 
-                                className="gap-2 text-amber-600"
+                                className="gap-2 text-warning"
                               >
                                 <FileText className="h-4 w-4" /> Enviar para Fila de Editais
                               </DropdownMenuItem>
@@ -1240,7 +1240,7 @@ export default function VagasPage() {
                                     toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
                                   }
                                 }} 
-                                className="gap-2 text-green-600"
+                                className="gap-2 text-success"
                               >
                                 <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
                               </DropdownMenuItem>
@@ -1607,11 +1607,11 @@ function AcompanhamentoEditalList() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="center" className="min-w-[120px]">
-                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-amber-600">PENDENTE</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-green-600">CONCLUÍDO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-red-600">ATRASADO</DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-primary">EM ANDAMENTO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-warning">PENDENTE</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-primary">EM ANDAMENTO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-success">CONCLUÍDO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-destructive">ATRASADO</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -1619,7 +1619,7 @@ function AcompanhamentoEditalList() {
                       <TableCell className="text-center font-bold text-muted-foreground">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</TableCell>
                       <TableCell className="text-center font-bold text-muted-foreground">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</TableCell>
                       <TableCell className="text-center font-bold text-muted-foreground">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</TableCell>
-                      <TableCell className="text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-success">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => navigate(`/vagas/${v.id}`)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />

@@ -29,14 +29,14 @@ import {
  
    const Dashboard = () => {
      const stats = [
-        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50/80', border: 'border-blue-100' },
-        { label: 'Assistentes', value: 12, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50/80', border: 'border-indigo-100' },
-        { label: 'Férias', value: 3, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-100' },
-        { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
+        { label: 'Analistas', value: 8, icon: ShieldCheck, color: 'text-primary', bg: 'bg-blue-50/80', border: 'border-blue-100' },
+        { label: 'Assistentes', value: 12, icon: Users, color: 'text-primary', bg: 'bg-indigo-50/80', border: 'border-indigo-100' },
+        { label: 'Férias', value: 3, icon: Calendar, color: 'text-warning', bg: 'bg-amber-50/80', border: 'border-amber-100' },
+        { label: 'Folgas/Day Off', value: 2, icon: Clock, color: 'text-success', bg: 'bg-emerald-50/80', border: 'border-emerald-100' },
         { label: 'Coberturas Ativas', value: 4, icon: Activity, color: 'text-rose-600', bg: 'bg-rose-50/80', border: 'border-rose-100' },
         { label: 'Unidades Ativas', value: 24, icon: Building2, color: 'text-muted-foreground', bg: 'bg-muted/30/80', border: 'border-border/40' },
-        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-50/80', border: 'border-cyan-100' },
-        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50/80', border: 'border-purple-100' },
+        { label: 'Alinhamentos', value: 15, icon: MessageSquare, color: 'text-primary', bg: 'bg-cyan-50/80', border: 'border-cyan-100' },
+        { label: 'Treinamentos', value: 6, icon: GraduationCap, color: 'text-primary', bg: 'bg-purple-50/80', border: 'border-purple-100' },
      ];
  
    const chartData = [
@@ -66,7 +66,7 @@ import {
                       <stat.icon className={cn("h-5 w-5", stat.color)} />
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-2xl font-black text-foreground tracking-tight group-hover:text-indigo-600 transition-colors">{stat.value}</span>
+                      <span className="text-2xl font-black text-foreground tracking-tight group-hover:text-primary transition-colors">{stat.value}</span>
                       <span className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest mt-1">{stat.label}</span>
                     </div>
                   </div>
@@ -140,16 +140,16 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Férias, Folgas e Day Off</h3>
              <p className="text-sm text-muted-foreground font-medium">Gestão centralizada de ausências e coberturas</p>
            </div>
-            <Button className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
+            <Button className="w-full sm:w-auto bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
  
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
            {[
-             { label: 'Férias Ativas', value: '3', color: 'text-blue-600', bg: 'bg-blue-50' },
-             { label: 'Folgas Pendentes', value: '5', color: 'text-amber-600', bg: 'bg-amber-50' },
-             { label: 'Day Offs (Mês)', value: '8', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+             { label: 'Férias Ativas', value: '3', color: 'text-primary', bg: 'bg-blue-50' },
+             { label: 'Folgas Pendentes', value: '5', color: 'text-warning', bg: 'bg-amber-50' },
+             { label: 'Day Offs (Mês)', value: '8', color: 'text-success', bg: 'bg-emerald-50' },
            ].map((stat, i) => (
              <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-2xl">
                <div className="flex items-center gap-4">
@@ -217,7 +217,7 @@ import {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className={cn("text-[10px] font-black uppercase tracking-widest", item.coverage === 'Sim' ? "text-indigo-600" : "text-muted-foreground/80")}>
+                      <span className={cn("text-[10px] font-black uppercase tracking-widest", item.coverage === 'Sim' ? "text-primary" : "text-muted-foreground/80")}>
                         {item.coverage === 'Sim' ? 'Com Cobertura' : 'Sem Cobertura'}
                       </span>
                       {item.coveredBy !== '-' && <span className="text-xs font-bold text-muted-foreground mt-0.5">{item.coveredBy}</span>}
@@ -252,7 +252,7 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Funções e Escopos</h3>
              <p className="text-sm text-muted-foreground font-medium">Definição clara de responsabilidades por cargo</p>
            </div>
-           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Escopo
            </Button>
          </div>
@@ -262,14 +262,14 @@ import {
                <div className="p-8">
                  <div className="flex items-start justify-between mb-8">
                    <div className="flex items-center gap-5">
-                     <div className="h-16 w-16 bg-muted/30 rounded-[1.25rem] flex items-center justify-center text-indigo-600 border border-border/40 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                     <div className="h-16 w-16 bg-muted/30 rounded-[1.25rem] flex items-center justify-center text-primary border border-border/40 shadow-inner group-hover:scale-110 transition-transform duration-500">
                        <Briefcase className="h-8 w-8" />
                      </div>
                      <div>
                        <h4 className="font-black text-xl text-foreground tracking-tight">{s.role}</h4>
                        <div className="flex items-center gap-2 mt-1">
                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                         <p className="text-sm text-indigo-600 font-black uppercase tracking-widest">{s.name}</p>
+                         <p className="text-sm text-primary font-black uppercase tracking-widest">{s.name}</p>
                        </div>
                      </div>
                    </div>
@@ -289,7 +289,7 @@ import {
                    </div>
                  </div>
                  <div className="mt-8 pt-6 border-t border-slate-50 flex justify-end">
-                    <Button variant="link" className="text-indigo-600 font-black uppercase tracking-widest text-[10px] h-auto p-0 hover:no-underline hover:translate-x-1 transition-transform">
+                    <Button variant="link" className="text-primary font-black uppercase tracking-widest text-[10px] h-auto p-0 hover:no-underline hover:translate-x-1 transition-transform">
                       Ver Histórico <ChevronRight className="h-3 w-3 ml-1" />
                     </Button>
                  </div>
@@ -314,7 +314,7 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Prazos e Rotinas</h3>
              <p className="text-sm text-muted-foreground font-medium">Monitoramento de entregas e obrigações recorrentes</p>
            </div>
-           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Nova Atividade
            </Button>
          </div>
@@ -323,8 +323,8 @@ import {
            {[
              { label: 'Total Tarefas', value: '12', icon: ListTodo, color: 'text-muted-foreground', bg: 'bg-muted/30' },
              { label: 'Em Atraso', value: '2', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-             { label: 'Próximas 48h', value: '4', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
-             { label: 'Concluídas', value: '6', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+             { label: 'Próximas 48h', value: '4', icon: Clock, color: 'text-warning', bg: 'bg-amber-50' },
+             { label: 'Concluídas', value: '6', icon: CheckCircle2, color: 'text-success', bg: 'bg-emerald-50' },
            ].map((stat, i) => (
              <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-2xl">
                <div className="flex items-center justify-between">
@@ -404,7 +404,7 @@ import {
              <p className="text-sm text-muted-foreground font-medium">Status da equipe em tempo real por unidade</p>
            </div>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-success rounded-full border border-emerald-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                18 Ativos
              </div>
@@ -426,8 +426,8 @@ import {
                  <div className="relative mb-4">
                     <div className={cn(
                       "h-20 w-20 rounded-2xl flex items-center justify-center font-black text-2xl border-2 transition-transform duration-500 group-hover:rotate-6",
-                      t.status === 'Ativo' ? "bg-emerald-50 border-emerald-100 text-emerald-600" : 
-                      t.status === 'Ausente' ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-indigo-50 border-indigo-100 text-indigo-600"
+                      t.status === 'Ativo' ? "bg-emerald-50 border-emerald-100 text-success" : 
+                      t.status === 'Ausente' ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-indigo-50 border-indigo-100 text-primary"
                     )}>
                       {t.name.split(' ').map(n => n[0]).join('')}
                     </div>
@@ -455,7 +455,7 @@ import {
                    {t.coverage !== '-' && (
                       <div className="flex justify-between items-center mt-3 p-2 bg-muted/30 rounded-xl">
                         <span className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-widest">Cobertura</span>
-                        <span className="text-[10px] font-bold text-indigo-600">{t.coverage}</span>
+                        <span className="text-[10px] font-bold text-primary">{t.coverage}</span>
                       </div>
                    )}
                  </div>
@@ -481,7 +481,7 @@ import {
              <h3 className="text-2xl font-black text-foreground tracking-tight">Alinhamentos e Treinamentos</h3>
              <p className="text-sm text-muted-foreground font-medium">Desenvolvimento contínuo e sincronização de processos</p>
            </div>
-           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+           <Button className="bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
              <Plus className="h-4 w-4 mr-2" /> Novo Registro
            </Button>
          </div>
@@ -514,7 +514,7 @@ import {
                  <div className="relative z-10 hidden md:flex items-center justify-center shrink-0">
                     <div className={cn(
                       "h-16 w-16 rounded-2xl flex items-center justify-center border-4 border-white shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
-                      r.type === 'Alinhamento' ? "bg-cyan-50 text-cyan-600" : "bg-purple-50 text-purple-600"
+                      r.type === 'Alinhamento' ? "bg-cyan-50 text-primary" : "bg-purple-50 text-primary"
                     )}>
                       {r.type === 'Alinhamento' ? <MessageSquare className="h-7 w-7" /> : <GraduationCap className="h-7 w-7" />}
                     </div>
@@ -537,7 +537,7 @@ import {
                      </Badge>
                    </div>
                    
-                   <h4 className="text-xl font-black text-foreground tracking-tight group-hover:text-indigo-600 transition-colors">{r.theme}</h4>
+                   <h4 className="text-xl font-black text-foreground tracking-tight group-hover:text-primary transition-colors">{r.theme}</h4>
                    <p className="text-sm text-muted-foreground font-medium mt-2 leading-relaxed">{r.description}</p>
                    
                    <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-50">
@@ -547,7 +547,7 @@ import {
                         </div>
                         <span className="text-xs font-bold text-slate-700">Responsável: {r.person}</span>
                      </div>
-                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-indigo-600 hover:bg-indigo-50">
+                     <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-primary hover:bg-indigo-50">
                        Detalhes do Registro
                      </Button>
                    </div>
@@ -562,10 +562,10 @@ import {
  
    const ExportModule = () => {
      const exportOptions = [
-       { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'], icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-       { title: 'Relatório de Ausências', formats: ['Excel', 'PDF'], icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50' },
-       { title: 'Escala e Acompanhamento', formats: ['Excel'], icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-       { title: 'Histórico de Treinamentos', formats: ['PDF', 'Excel'], icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' },
+       { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'], icon: Users, color: 'text-primary', bg: 'bg-indigo-50' },
+       { title: 'Relatório de Ausências', formats: ['Excel', 'PDF'], icon: Calendar, color: 'text-primary', bg: 'bg-blue-50' },
+       { title: 'Escala e Acompanhamento', formats: ['Excel'], icon: Activity, color: 'text-success', bg: 'bg-emerald-50' },
+       { title: 'Histórico de Treinamentos', formats: ['PDF', 'Excel'], icon: GraduationCap, color: 'text-primary', bg: 'bg-purple-50' },
      ];
      return (
        <div className="space-y-6">
@@ -587,12 +587,12 @@ import {
                    <opt.icon className={cn("h-7 w-7", opt.color)} />
                  </div>
                  <div className="flex-1">
-                   <h4 className="font-black text-xl text-foreground tracking-tight mb-2 group-hover:text-indigo-600 transition-colors">{opt.title}</h4>
+                   <h4 className="font-black text-xl text-foreground tracking-tight mb-2 group-hover:text-primary transition-colors">{opt.title}</h4>
                    <p className="text-sm text-muted-foreground font-medium mb-6">Selecione o formato desejado para download do relatório completo.</p>
                    
                    <div className="flex flex-wrap gap-2">
                      {opt.formats.map(fmt => (
-                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted/30 hover:text-indigo-600 hover:border-indigo-200 transition-all">
+                       <Button key={fmt} variant="outline" className="h-9 px-4 rounded-xl border-border/60 text-[10px] font-black uppercase tracking-widest hover:bg-muted/30 hover:text-primary hover:border-indigo-200 transition-all">
                          {fmt}
                        </Button>
                      ))}
@@ -639,7 +639,7 @@ import {
                     <Button variant="outline" className="flex-1 lg:flex-none rounded-xl border-border/60 h-10 px-6 font-bold text-muted-foreground text-xs">
                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
                    </Button>
-                    <Button className="flex-1 lg:flex-none bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
+                    <Button className="flex-1 lg:flex-none bg-primary hover:bg-indigo-700 text-white rounded-xl px-6 h-10 font-bold shadow-lg shadow-indigo-200 transition-all">
                      <Plus className="h-4 w-4 mr-2" /> Novo Vínculo
                    </Button>
                </div>
@@ -652,14 +652,14 @@ import {
                          <div className="p-8">
                            <div className="flex justify-between items-start mb-6">
                              <div className="h-14 w-14 bg-indigo-50/50 rounded-2xl flex items-center justify-center border border-indigo-100 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                               <Building2 className="h-7 w-7 text-indigo-600" />
+                               <Building2 className="h-7 w-7 text-primary" />
                              </div>
                              <Badge variant="outline" className="border-border/40 bg-muted/30 text-muted-foreground/80 font-black text-[9px] uppercase tracking-[0.2em] px-3 py-1 rounded-full">
                                Ativo
                              </Badge>
                            </div>
                            
-                           <h4 className="font-black text-xl text-foreground tracking-tight group-hover:text-indigo-600 transition-colors">Unidade Hospitalar {i}</h4>
+                           <h4 className="font-black text-xl text-foreground tracking-tight group-hover:text-primary transition-colors">Unidade Hospitalar {i}</h4>
                            <div className="flex items-center gap-2 mt-1">
                              <MapPin className="h-3 w-3 text-slate-300" />
                              <p className="text-[10px] text-muted-foreground/80 font-black uppercase tracking-[0.2em]">Goiânia - GO</p>
@@ -696,7 +696,7 @@ import {
                                 </div>
                               ))}
                             </div>
-                            <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-indigo-600 transition-colors">
+                            <Button variant="ghost" className="h-8 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 hover:text-primary transition-colors">
                               Gerenciar Equipe
                             </Button>
                          </div>
@@ -794,7 +794,7 @@ import {
                </div>
                <div>
                   <h1 className="font-black text-foreground tracking-tighter text-xl uppercase leading-none">Gestão Estratégica</h1>
-                  <p className="text-[9px] uppercase tracking-[0.3em] text-indigo-600 font-black mt-1">Painel Executivo</p>
+                  <p className="text-[9px] uppercase tracking-[0.3em] text-primary font-black mt-1">Painel Executivo</p>
                </div>
              </div>
  
@@ -811,7 +811,7 @@ import {
                     className={cn(
                       "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
                       isActive 
-                        ? "bg-indigo-600 text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] translate-x-1" 
+                        ? "bg-primary text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] translate-x-1" 
                         : "text-muted-foreground hover:bg-muted/30 hover:text-foreground active:scale-[0.98]"
                     )}
                     aria-current={isActive ? 'page' : undefined}
@@ -825,7 +825,7 @@ import {
                    {isActive && (
                      <motion.div 
                        layoutId="sidebar-active"
-                       className="absolute left-0 w-1 h-6 bg-indigo-600 rounded-r-full"
+                       className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
                      />
                    )}
                  </button>

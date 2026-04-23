@@ -402,7 +402,7 @@ export default function VagaDetalhePage() {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-2xl font-bold text-foreground">{vaga.cargo}</h2>
-              {vaga.reabertura_suspeita && <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 font-bold">REABERTURA</Badge>}
+              {vaga.reabertura_suspeita && <Badge variant="outline" className="bg-amber-50 text-warning border-amber-200 font-bold">REABERTURA</Badge>}
             </div>
             <p className="text-sm text-muted-foreground font-medium">
               {vaga.requisicao || vaga.numero_requisicao} · {vaga.unidade}
@@ -429,7 +429,7 @@ export default function VagaDetalhePage() {
           {permissions.canDirectEdit() && (
             <Button 
               variant="outline" 
-              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
+              className="text-warning border-amber-200 hover:bg-amber-50 gap-2 font-bold"
               onClick={() => setIsEditVagaOpen(true)}
             >
               <Edit className="h-4 w-4" /> Editar Registro
@@ -438,7 +438,7 @@ export default function VagaDetalhePage() {
           {permissions.canRequestUpdate() && (
             <Button 
               variant="outline" 
-              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
+              className="text-warning border-amber-200 hover:bg-amber-50 gap-2 font-bold"
               onClick={() => setIsRequestUpdateOpen(true)}
             >
               <AlertCircle className="h-4 w-4" /> Solicitar Atualização
@@ -458,9 +458,9 @@ export default function VagaDetalhePage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura), color: 'text-blue-600', bg: 'bg-blue-50' },
-          { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias`, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { icon: FileSpreadsheet, label: 'Origem', value: vaga.origem_importacao || 'Manual', color: 'text-green-600', bg: 'bg-green-50' },
+          { icon: Calendar, label: 'Abertura', value: formatDate(vaga.data_abertura), color: 'text-primary', bg: 'bg-blue-50' },
+          { icon: Clock, label: 'Dias Aberto', value: `${calcDiasAberto(vaga.data_abertura, vaga.data_encerramento)} dias`, color: 'text-warning', bg: 'bg-amber-50' },
+          { icon: FileSpreadsheet, label: 'Origem', value: vaga.origem_importacao || 'Manual', color: 'text-success', bg: 'bg-green-50' },
           { icon: Building2, label: 'Qtd. Vagas', value: vaga.numero_vagas || vaga.quantidade || 0, color: 'text-primary', bg: 'bg-primary/5' },
         ].map((item) => (
           <Card key={item.label} className="border-border/60 shadow-sm">
@@ -561,7 +561,7 @@ export default function VagaDetalhePage() {
                 <div className="space-y-1">
                   <label className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3" /> Banco Ativo?</label>
                   <div className="flex items-center gap-2">
-                    <p className={`text-sm font-bold ${banco ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    <p className={`text-sm font-bold ${banco ? 'text-success' : 'text-muted-foreground'}`}>
                       {banco ? `Sim (${banco.numero_edital})` : 'Não'}
                     </p>
                     {banco && (
@@ -630,7 +630,7 @@ export default function VagaDetalhePage() {
                     {isEditingIndicators ? (
                       <Input type="number" value={indicators.aprovados_finais} onChange={(e) => setIndicators({ ...indicators, aprovados_finais: +e.target.value })} className="h-8 bg-white" />
                     ) : (
-                      <p className="text-xl font-bold text-green-600">{vaga.aprovados_finais || 0}</p>
+                      <p className="text-xl font-bold text-success">{vaga.aprovados_finais || 0}</p>
                     )}
                   </div>
                 </div>
@@ -1145,10 +1145,10 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                           <div className="flex items-center gap-3">
                             {isCompleted ? (
                               <div className="text-right">
-                                <p className="text-[11px] font-bold text-green-600 uppercase">Concluído em: {status.data_conclusao}</p>
+                                <p className="text-[11px] font-bold text-success uppercase">Concluído em: {status.data_conclusao}</p>
                                 <p className="text-[9px] text-muted-foreground/80">Por: {status.usuario_conclusao}</p>
                                 {status.no_prazo === false && (
-                                  <Badge className="bg-red-50 text-red-600 border-red-100 text-[8px] h-4 mt-0.5">ATRASO</Badge>
+                                  <Badge className="bg-red-50 text-destructive border-red-100 text-[8px] h-4 mt-0.5">ATRASO</Badge>
                                 )}
                               </div>
                             ) : (
@@ -1210,11 +1210,11 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                   {[
-                    { label: 'Inscritos', key: 'total_inscritos', icon: Users, color: 'text-blue-600' },
-                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: SearchIcon, color: 'text-purple-600' },
-                    { label: 'Avaliação OK', key: 'aprovados_avaliacao_especifica', icon: Zap, color: 'text-cyan-600' },
-                    { label: 'Entrevista', key: 'convocados_entrevista', icon: UserCheck, color: 'text-amber-600' },
-                    { label: 'Aprovados', key: 'aprovados_finais', icon: CheckCircle, color: 'text-green-600' },
+                    { label: 'Inscritos', key: 'total_inscritos', icon: Users, color: 'text-primary' },
+                    { label: 'Triagem OK', key: 'aprovados_triagem', icon: SearchIcon, color: 'text-primary' },
+                    { label: 'Avaliação OK', key: 'aprovados_avaliacao_especifica', icon: Zap, color: 'text-primary' },
+                    { label: 'Entrevista', key: 'convocados_entrevista', icon: UserCheck, color: 'text-warning' },
+                    { label: 'Aprovados', key: 'aprovados_finais', icon: CheckCircle, color: 'text-success' },
                   ].map((item) => (
                     <div key={item.key} className="bg-muted/30 p-3 rounded-xl border border-border/40 flex flex-col gap-2">
                       <div className="flex items-center gap-2">
@@ -1244,7 +1244,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
 
               <div className="flex items-center gap-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
                 <div className="p-2 bg-amber-100 rounded-lg">
-                  <FileSpreadsheet className="h-5 w-5 text-amber-600" />
+                  <FileSpreadsheet className="h-5 w-5 text-warning" />
                 </div>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-amber-800">Geração de Banco de Talentos</p>
@@ -1255,7 +1255,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                     type="checkbox" 
                     checked={form.gerou_banco} 
                     onChange={(e) => setForm({ ...form, gerou_banco: e.target.checked })}
-                    className="h-5 w-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                    className="h-5 w-5 rounded border-amber-300 text-warning focus:ring-amber-500"
                   />
                   {form.gerou_banco && (
                     <div className="flex items-center gap-1">
@@ -1363,11 +1363,11 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                         isCompleted ? 'border-green-500 bg-green-500' : 'border-slate-300'
                       }`} />
                       <div className="flex flex-col">
-                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <span className={`text-xs font-bold ${isCurrent ? 'text-primary' : isCompleted ? 'text-success' : 'text-muted-foreground'}`}>
                           {ETAPA_LABELS[e]}
                         </span>
                         {date && <span className="text-[11px] text-muted-foreground/80 font-medium uppercase tracking-tighter">Previsto: {formatDate(date)}</span>}
-                        {isCompleted && status.data_conclusao && <span className="text-[9px] text-green-600 font-bold uppercase">Realizado: {formatDate(status.data_conclusao)}</span>}
+                        {isCompleted && status.data_conclusao && <span className="text-[9px] text-success font-bold uppercase">Realizado: {formatDate(status.data_conclusao)}</span>}
                         {isCurrent && (
                           <div className="mt-2 p-2 bg-primary/5 rounded border border-primary/10">
                             <p className="text-[9px] font-bold text-primary uppercase">Etapa em andamento</p>
@@ -1391,7 +1391,7 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                 variant="outline" 
                 type="button"
                 onClick={onEditVaga}
-                className="w-full text-amber-600 border-amber-200 hover:bg-amber-50 font-bold h-12"
+                className="w-full text-warning border-amber-200 hover:bg-amber-50 font-bold h-12"
               >
                 <Edit className="h-4 w-4 mr-2" /> Editar Registro
               </Button>
@@ -1609,7 +1609,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
           <div className="flex gap-3">
             <Button 
               onClick={() => handleDecisao('aprovado')} 
-              className="bg-green-600 hover:bg-green-700 text-white shadow-md px-6 gap-2"
+              className="bg-success hover:bg-green-700 text-white shadow-md px-6 gap-2"
             >
               <CheckCircle2 className="h-4 w-4" /> Aprovar
             </Button>
@@ -1661,7 +1661,7 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
         <div className="flex items-center justify-between pb-4 border-b">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${isValido ? 'bg-green-50' : 'bg-red-50'}`}>
-              <CheckCircle2 className={`h-6 w-6 ${isValido ? 'text-green-600' : 'text-red-600'}`} />
+              <CheckCircle2 className={`h-6 w-6 ${isValido ? 'text-success' : 'text-destructive'}`} />
             </div>
             <div>
               <h3 className="font-bold text-foreground">{banco.numero_edital}</h3>

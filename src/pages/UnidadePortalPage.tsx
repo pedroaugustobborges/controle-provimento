@@ -630,9 +630,9 @@ export default function UnidadePortalPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: 'Total Vagas', value: dashStats.totalVagas, icon: Briefcase, color: 'text-foreground', bg: 'bg-slate-100' },
-                { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
-                { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                { label: 'Em Andamento', value: dashStats.emAndamento, icon: Activity, color: 'text-primary', bg: 'bg-blue-50' },
+                { label: 'Concluídas', value: dashStats.concluidas, icon: CheckCircle2, color: 'text-success', bg: 'bg-emerald-50' },
+                { label: 'Conv. Hoje', value: convStats.total, icon: CalendarIcon, color: 'text-primary', bg: 'bg-indigo-50' },
               ].map(({ label, value, icon: Icon, color, bg }) => (
                 <Card key={label} className="border-border/60/60 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all">
                   <CardContent className="p-4 flex items-center gap-4">
@@ -887,7 +887,7 @@ export default function UnidadePortalPage() {
                               <div className="space-y-1.5 max-w-md bg-muted/30 rounded-lg p-2.5 border border-border/40">
                                 {unidadeDestino && (
                                   <div className="flex items-start gap-2">
-                                    <MapPin className="h-3.5 w-3.5 text-blue-600 mt-0.5 shrink-0" />
+                                    <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
                                     <div className="flex flex-col">
                                       <span className="text-[9px] uppercase font-bold text-muted-foreground/80 tracking-wide">Unidade Destino</span>
                                       <p className="text-xs text-slate-700 font-semibold whitespace-pre-wrap break-words leading-snug">{unidadeDestino}</p>
@@ -896,7 +896,7 @@ export default function UnidadePortalPage() {
                                 )}
                                 {horarioPlantao && (
                                   <div className="flex items-start gap-2">
-                                    <Clock className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                                    <Clock className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
                                     <div className="flex flex-col">
                                       <span className="text-[9px] uppercase font-bold text-muted-foreground/80 tracking-wide">Horário / Plantão</span>
                                       <p className="text-xs text-slate-700 font-semibold whitespace-pre-wrap break-words leading-snug">{horarioPlantao}</p>
@@ -905,7 +905,7 @@ export default function UnidadePortalPage() {
                                 )}
                                 {hasObs && (
                                   <div className="flex items-start gap-2">
-                                    <MessageSquare className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                                    <MessageSquare className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
                                     <div className="flex flex-col">
                                       <span className="text-[9px] uppercase font-bold text-muted-foreground/80 tracking-wide">Observação</span>
                                       <p className="text-xs text-slate-700 font-medium whitespace-pre-wrap break-words leading-snug">{obs}</p>
@@ -925,7 +925,7 @@ export default function UnidadePortalPage() {
                               title={hasObs ? 'Editar observação' : 'Adicionar observação'}
                               className={cn(hasObs && "bg-amber-50 hover:bg-amber-100")}
                             >
-                              <MessageSquare className={cn("h-4 w-4", hasObs ? "text-amber-600" : "text-muted-foreground/80")} />
+                              <MessageSquare className={cn("h-4 w-4", hasObs ? "text-warning" : "text-muted-foreground/80")} />
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -1086,7 +1086,7 @@ export default function UnidadePortalPage() {
                                     onCheckedChange={(v) => setObsField(c.id, c, 'aceito', v)}
                                     aria-label="Aceito"
                                   />
-                                  <span className={cn("text-[10px] font-black uppercase", edit.aceito ? "text-emerald-600" : "text-muted-foreground/80")}>
+                                  <span className={cn("text-[10px] font-black uppercase", edit.aceito ? "text-success" : "text-muted-foreground/80")}>
                                     {edit.aceito ? 'Sim' : 'Não'}
                                   </span>
                                 </div>
@@ -1108,7 +1108,7 @@ export default function UnidadePortalPage() {
                                     className={cn(
                                       "rounded-lg font-bold text-xs gap-1.5 h-9 px-3 transition-all",
                                       hasChanges
-                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                                        ? "bg-success hover:bg-emerald-700 text-white shadow-sm"
                                         : "bg-slate-100 text-muted-foreground/80 cursor-not-allowed"
                                     )}
                                   >

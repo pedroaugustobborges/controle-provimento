@@ -84,7 +84,7 @@ export function HelpGuide({ activeTab }: { activeTab?: string } = {}) {
     <Dialog>
       <DialogTrigger asChild>
         <button 
-          className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer bg-transparent border-none p-0"
+          className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-blue-800 font-medium transition-colors cursor-pointer bg-transparent border-none p-0"
         >
           <HelpCircle className="h-3.5 w-3.5" />
           Como usar este menu?
@@ -94,7 +94,7 @@ export function HelpGuide({ activeTab }: { activeTab?: string } = {}) {
         <DialogHeader className="space-y-3 pb-4 border-b border-border/60">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <Lightbulb className="h-5 w-5 text-blue-600" />
+              <Lightbulb className="h-5 w-5 text-primary" />
             </div>
             <DialogTitle className="text-xl font-black text-foreground tracking-tight">Guia de Uso</DialogTitle>
           </div>
@@ -125,7 +125,7 @@ export function HelpGuide({ activeTab }: { activeTab?: string } = {}) {
                   <ArrowRight className="h-4 w-4 text-slate-300" />
                   <div className="flex flex-col gap-1 text-right">
                     <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/80">Próxima Etapa</span>
-                    <span className="text-xs font-bold text-blue-600">{section.nextStage}</span>
+                    <span className="text-xs font-bold text-primary">{section.nextStage}</span>
                   </div>
                 </div>
               )}
@@ -134,7 +134,7 @@ export function HelpGuide({ activeTab }: { activeTab?: string } = {}) {
         </div>
         
         <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex gap-3">
-          <Info className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+          <Info className="h-5 w-5 text-success shrink-0 mt-0.5" />
           <p className="text-xs text-emerald-800 font-medium leading-relaxed">
             Dica: Utilize os filtros no topo da página para refinar os resultados e focar no que é prioritário para sua unidade.
           </p>

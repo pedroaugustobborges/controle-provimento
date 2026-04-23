@@ -78,7 +78,7 @@ export default function GestorPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card className="border-border/60 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-muted-foreground/80 uppercase tracking-wider">Total de Vagas</p><p className="text-3xl font-bold text-foreground">{filtered.length}</p></CardContent></Card>
             <Card className="border-border/60 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-primary uppercase tracking-wider">Em Andamento</p><p className="text-3xl font-bold text-foreground">{filtered.filter((v) => !['encerrada', 'finalizada', 'cancelada'].includes(v.status_geral)).length}</p></CardContent></Card>
-            <Card className="border-border/60 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Tempo Médio (dias)</p><p className="text-3xl font-bold text-foreground">{tempoMedio}</p></CardContent></Card>
+            <Card className="border-border/60 shadow-sm"><CardContent className="pt-6"><p className="text-xs font-bold text-warning uppercase tracking-wider">Tempo Médio (dias)</p><p className="text-3xl font-bold text-foreground">{tempoMedio}</p></CardContent></Card>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -230,14 +230,14 @@ export default function GestorPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
+                          <FileSpreadsheet className="h-3.5 w-3.5 text-success" />
                           <span className="text-xs font-mono text-muted-foreground truncate max-w-[150px]">{h.nome_arquivo}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-center font-bold">{h.total_lidos}</TableCell>
-                      <TableCell className="text-center text-green-600 font-bold">{h.total_novos}</TableCell>
-                      <TableCell className="text-center text-amber-600 font-bold">{h.repeticoes_tratadas}</TableCell>
-                      <TableCell className="text-center text-red-600 font-bold">{h.total_erros}</TableCell>
+                      <TableCell className="text-center text-success font-bold">{h.total_novos}</TableCell>
+                      <TableCell className="text-center text-warning font-bold">{h.repeticoes_tratadas}</TableCell>
+                      <TableCell className="text-center text-destructive font-bold">{h.total_erros}</TableCell>
                       <TableCell className="text-right">
                         <Badge variant="outline" className={`bg-green-50 text-green-700 border-green-200 text-[11px] font-bold uppercase tracking-wider`}>
                           <CheckCircle2 className="h-3 w-3 mr-1" /> Concluído

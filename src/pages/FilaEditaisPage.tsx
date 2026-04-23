@@ -378,9 +378,9 @@ export default function FilaEditaisPage() {
         <Card className="bg-amber-50/50 border-amber-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-amber-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-amber-600" /></div>
+              <div className="bg-amber-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-warning" /></div>
               <div>
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Total na Fila</p>
+                <p className="text-xs font-bold text-warning uppercase tracking-wider">Total na Fila</p>
                 <p className="text-2xl font-bold text-foreground">{pendingVagas.length}</p>
               </div>
             </div>
@@ -389,9 +389,9 @@ export default function FilaEditaisPage() {
         <Card className="bg-blue-50/50 border-blue-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-lg"><FileText className="h-5 w-5 text-blue-600" /></div>
+              <div className="bg-blue-100 p-2 rounded-lg"><FileText className="h-5 w-5 text-primary" /></div>
               <div>
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Aguardando Redação</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Aguardando Redação</p>
                 <p className="text-2xl font-bold text-foreground">{pendingVagas.filter(v => !v.numero_edital).length}</p>
               </div>
             </div>
@@ -417,7 +417,7 @@ export default function FilaEditaisPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+                className="h-8 bg-emerald-500 hover:bg-success text-white border-0 font-semibold"
                 onClick={handleOpenBatchSend}
                 disabled={!sendGroupedValidation.ok}
                 title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
@@ -429,7 +429,7 @@ export default function FilaEditaisPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-8 bg-amber-500 hover:bg-amber-600 text-white border-0 font-semibold"
+                className="h-8 bg-amber-500 hover:bg-warning text-white border-0 font-semibold"
                 onClick={() => handleOpenReturnModal(selectedVagas)}
                 title="Devolver vagas selecionadas ao Controle de Vagas"
               >
@@ -547,7 +547,7 @@ export default function FilaEditaisPage() {
                         {calcDiasAberto(v.data_recebimento || v.data_abertura)}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-200">
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary bg-blue-50 border-blue-200">
                           {v.status || v.status_geral || 'Sem Status'}
                         </Badge>
                       </TableCell>
@@ -559,10 +559,10 @@ export default function FilaEditaisPage() {
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
+                          <Button variant="ghost" size="icon" className="text-primary hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
                             <Send className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50" title="Devolver ao Controle de Vagas" onClick={() => handleOpenReturnModal([v])}>
+                          <Button variant="ghost" size="icon" className="text-warning hover:text-amber-700 hover:bg-amber-50" title="Devolver ao Controle de Vagas" onClick={() => handleOpenReturnModal([v])}>
                             <Undo2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -642,7 +642,7 @@ export default function FilaEditaisPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsBatchSendOpen(false)}>Cancelar</Button>
-            <Button onClick={handleConfirmBatchSend} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleConfirmBatchSend} className="bg-success hover:bg-emerald-700">
               Confirmar e enviar agrupado
             </Button>
           </DialogFooter>
@@ -780,7 +780,7 @@ export default function FilaEditaisPage() {
             <Button
               onClick={handleConfirmReturn}
               disabled={returnSubmitting || returnObs.trim().length < 10}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-warning hover:bg-amber-700 text-white"
             >
               {returnSubmitting ? 'Devolvendo...' : 'Confirmar devolução'}
             </Button>

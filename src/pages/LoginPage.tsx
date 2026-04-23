@@ -107,10 +107,10 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(215,25%,35%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
         <div className="relative rounded-2xl bg-white/[0.08] backdrop-blur-sm border border-white/[0.15] shadow-2xl shadow-black/40 overflow-hidden">
           {/* Top bar */}
-          <div className="bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] px-6 py-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img src={logoWhite} alt="AGIR" className="h-7 brightness-110" />
               <div className="h-4 w-px bg-white/20" />
@@ -125,10 +125,10 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             {phase === 'loading' ? (
               <div className="flex flex-col items-center justify-center py-20 animate-[fadeIn_0.3s_ease-out]">
                 <div className="relative">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30 animate-pulse">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] flex items-center justify-center shadow-lg shadow-[hsl(215,30%,15%)]/30 animate-pulse">
                     <img src={logoWhite} alt="" className="h-9 w-9 object-contain brightness-110" />
                   </div>
-                  <div className="absolute -inset-2 rounded-3xl border-2 border-[hsl(200,70%,50%)]/20 animate-[ping_1.5s_ease-in-out_infinite]" />
+                  <div className="absolute -inset-2 rounded-3xl border-2 border-[hsl(215,25%,40%)]/20 animate-[ping_1.5s_ease-in-out_infinite]" />
                 </div>
                 <p className="text-sm text-[hsl(210,20%,55%)] mt-6 font-medium">Autenticando...</p>
               </div>
@@ -151,24 +151,24 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">E-mail</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(215,25%,45%)] transition-colors" />
                       <input type="email" placeholder="seu.email@agir.org.br" value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="email" />
+                        className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(215,25%,30%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(215,25%,30%)]/20 transition-all" autoComplete="email" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">Senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(215,25%,45%)] transition-colors" />
                       <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                        className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="current-password" />
+                        className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(215,25%,30%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(215,25%,30%)]/20 transition-all" autoComplete="current-password" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,40%)] hover:text-white/70 transition-colors">
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
                   <button type="submit"
-                    className="w-full h-12 rounded-xl bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,30%)]/30 active:scale-[0.98] mt-2">
+                    className="w-full h-12 rounded-xl bg-gradient-to-r from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] hover:from-[hsl(215,25%,30%)] hover:to-[hsl(215,30%,25%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(215,30%,15%)]/30 active:scale-[0.98] mt-2">
                     <LogIn className="h-4 w-4" /> Entrar
                   </button>
                   <p className="text-center text-[11px] text-[hsl(210,20%,45%)] mt-3">
@@ -207,9 +207,9 @@ function AccessRequestModal({ open, onClose }: { open: boolean; onClose: () => v
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-[fadeIn_0.3s_ease-out]" />
       <div className="relative w-full max-w-[480px] animate-[modalIn_0.4s_cubic-bezier(0.16,1,0.3,1)]" onClick={(e) => e.stopPropagation()}>
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(215,25%,35%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
         <div className="relative rounded-2xl bg-[#0d1a30]/90 backdrop-blur-2xl border border-white/[0.1] shadow-2xl shadow-black/50 overflow-hidden">
-          <div className="bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] px-6 py-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <UserPlus className="h-4 w-4 text-white/80" />
               <span className="text-white/90 text-sm font-semibold">Solicitar Acesso</span>
@@ -244,16 +244,16 @@ function AccessRequestModal({ open, onClose }: { open: boolean; onClose: () => v
                   ].map((field) => (
                     <div key={field.key} className="space-y-1.5">
                       <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">
-                        {field.label} {field.required && <span className="text-[hsl(200,70%,50%)]">*</span>}
+                        {field.label} {field.required && <span className="text-[hsl(215,25%,40%)]">*</span>}
                       </Label>
                       <div className="relative group">
-                        <field.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
+                        <field.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(215,25%,45%)] transition-colors" />
                         <input
                           type={field.type || 'text'}
                           placeholder={field.placeholder}
                           value={(form as any)[field.key]}
                           onChange={(e) => setForm(f => ({ ...f, [field.key]: e.target.value }))}
-                          className="w-full h-11 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all"
+                          className="w-full h-11 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(215,25%,30%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(215,25%,30%)]/20 transition-all"
                         />
                       </div>
                     </div>
@@ -261,18 +261,18 @@ function AccessRequestModal({ open, onClose }: { open: boolean; onClose: () => v
                   <div className="space-y-1.5">
                     <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">Motivo da solicitação</Label>
                     <div className="relative group">
-                      <MessageSquare className="absolute left-3.5 top-3 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
+                      <MessageSquare className="absolute left-3.5 top-3 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(215,25%,45%)] transition-colors" />
                       <textarea
                         placeholder="Descreva brevemente por que precisa de acesso..."
                         value={form.motivo}
                         onChange={(e) => setForm(f => ({ ...f, motivo: e.target.value }))}
                         rows={3}
-                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all resize-none"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(215,25%,30%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(215,25%,30%)]/20 transition-all resize-none"
                       />
                     </div>
                   </div>
                   <button type="submit"
-                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,30%)]/30 active:scale-[0.98]">
+                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] hover:from-[hsl(215,25%,30%)] hover:to-[hsl(215,30%,25%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(215,30%,15%)]/30 active:scale-[0.98]">
                     <UserPlus className="h-4 w-4" /> Enviar solicitação
                   </button>
                 </form>
@@ -400,7 +400,7 @@ const slidesData = [
   {
     state: 'Goiás',
     subtitle: 'Unidades Hospitalares',
-    color: 'hsl(200,70%,40%)',
+    color: 'hsl(215,25%,27%)',
     sections: [
       {
         title: 'Unidades Hospitalares',
@@ -418,7 +418,7 @@ const slidesData = [
   {
     state: 'Goiás',
     subtitle: 'Rede Teia Agir',
-    color: 'hsl(200,70%,40%)',
+    color: 'hsl(215,25%,27%)',
     sections: [
       {
         title: 'Rede Teia Agir',
@@ -573,7 +573,7 @@ function UnitsCarouselInline() {
               onClick={() => setCurrent(i)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === current
-                  ? 'w-5 bg-[hsl(200,70%,50%)]'
+                  ? 'w-5 bg-[hsl(215,25%,40%)]'
                   : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
               }`}
               title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
@@ -651,7 +651,7 @@ export default function LoginPage() {
               <Building2 className="h-3.5 w-3.5" /> Acesso Unidade
             </button>
             <button onClick={() => setShowLogin(true)}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/20 transition-all active:scale-[0.97]">
+              className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] hover:from-[hsl(215,25%,30%)] hover:to-[hsl(215,30%,25%)] shadow-lg shadow-[hsl(215,30%,15%)]/20 transition-all active:scale-[0.97]">
               <LogIn className="h-3.5 w-3.5" /> Entrar
             </button>
           </div>
@@ -662,7 +662,7 @@ export default function LoginPage() {
           <div className="w-full max-w-[1100px] mx-auto">
             {/* Unified glassmorphism card */}
             <div className="relative">
-              <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
+              <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(215,25%,27%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
               <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
                 <div className="flex flex-col lg:flex-row">
                   {/* Left column — info + CTAs */}
@@ -696,7 +696,7 @@ export default function LoginPage() {
                     {/* CTA buttons */}
                     <div className="flex flex-col gap-2">
                       <button onClick={() => setShowLogin(true)}
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] hover:from-[hsl(215,25%,30%)] hover:to-[hsl(215,30%,25%)] shadow-lg shadow-[hsl(215,30%,15%)]/30 transition-all active:scale-[0.98]">
                         <LogIn className="h-4 w-4" /> Login Provimento
                         <ChevronRight className="h-3.5 w-3.5 opacity-60" />
                       </button>
@@ -714,7 +714,7 @@ export default function LoginPage() {
                   {/* Right column — carousel */}
                   <div className="flex-[55] p-6 lg:p-8 h-[420px]">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
+                      <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[hsl(215,25%,27%)] to-[hsl(215,30%,20%)] flex items-center justify-center shadow-lg shadow-[hsl(215,30%,15%)]/30">
                         <MapPin className="h-3.5 w-3.5 text-white" />
                       </div>
                       <div>

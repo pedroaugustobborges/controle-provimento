@@ -372,20 +372,114 @@
    };
  
    return (
-     <div className="flex min-h-screen bg-[#F8FAFC]">
-       <aside className="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col p-8">
-         <div className="flex items-center gap-3 mb-10"><div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center"><ShieldCheck className="text-white h-6 w-6" /></div><h1 className="font-bold text-slate-900">Portal RH</h1></div>
-         <nav className="space-y-1">
-           {menuItems.map((item) => (
-             <button key={item.id} onClick={() => setActiveTab(item.id)} className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold", activeTab === item.id ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50")}>
-               <item.icon className="h-5 w-5" /> {item.label}
+     <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
+       {/* Desktop Sidebar */}
+       <aside className="w-72 bg-white border-r border-slate-100 hidden lg:flex flex-col sticky top-0 h-screen z-20">
+         <div className="p-8 flex flex-col h-full">
+           <div className="flex items-center gap-3 mb-10 group cursor-pointer" onClick={() => navigate('/')}>
+             <div className="h-10 w-10 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100 group-hover:scale-105 transition-transform">
+               <ShieldCheck className="text-white h-6 w-6" />
+             </div>
+             <div>
+               <h1 className="font-bold text-slate-900 tracking-tight leading-tight">Portal RH</h1>
+               <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Gestão Interna</p>
+             </div>
+           </div>
+ 
+           <nav className="space-y-1 flex-1">
+             {menuItems.map((item) => {
+               const isActive = activeTab === item.id;
+               return (
+                 <button
+                   key={item.id}
+                   onClick={() => setActiveTab(item.id)}
+                   className={cn(
+                     "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-bold transition-all duration-300 group relative",
+                     isActive 
+                       ? "bg-indigo-50/50 text-indigo-600 shadow-sm" 
+                       : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                   )}
+                 >
+                   <item.icon className={cn(
+                     "h-5 w-5 transition-transform duration-300 group-hover:scale-110",
+                     isActive ? "text-indigo-600" : "text-slate-400"
+                   )} />
+                   {item.label}
+                   {isActive && (
+                     <motion.div 
+                       layoutId="sidebar-active"
+                       className="absolute left-0 w-1 h-6 bg-indigo-600 rounded-r-full"
+                     />
+                   )}
+                 </button>
+               );
+             })}
+           </nav>
+ 
+           <div className="mt-auto pt-6 border-t border-slate-50">
+             <button 
+               onClick={() => navigate('/')}
+               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-50 hover:text-rose-600 transition-all group"
+             >
+               <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+               Sair do Portal
              </button>
-           ))}
-         </nav>
+           </div>
+         </div>
        </aside>
-       <main className="flex-1 p-8">
-         <header className="flex justify-between items-center mb-8"><h2 className="text-2xl font-bold">{menuItems.find(m => m.id === activeTab)?.label}</h2></header>
-         {renderContent()}
+ 
+       {/* Main Content Area */}
+       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto custom-scrollbar">
+         {/* Header */}
+         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-10">
+           <div className="flex items-center gap-4">
+             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+               {menuItems.find(m => m.id === activeTab)?.label}
+             </h2>
+             <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+             <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border-none hidden sm:flex font-bold text-[10px] uppercase tracking-wider">
+               Sistema Ativo
+             </Badge>
+           </div>
+ 
+           <div className="flex items-center gap-6">
+             <div className="relative hidden xl:block">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+               <Input 
+                 placeholder="Pesquisa executiva..." 
+                 className="pl-10 w-64 bg-slate-50 border-none focus-visible:ring-indigo-500 rounded-full h-10 text-[13px] font-medium"
+               />
+             </div>
+             
+             <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
+               <div className="text-right hidden sm:block">
+                 <p className="text-[13px] font-bold text-slate-900 leading-none">
+                   {currentUser?.nome_completo?.split(' ')[0]}
+                 </p>
+                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                   {currentUser?.cargo || 'Analista'}
+                 </p>
+               </div>
+               <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white">
+                 {currentUser?.nome_completo?.charAt(0)}
+               </div>
+             </div>
+           </div>
+         </header>
+ 
+         <div className="p-8 max-w-7xl mx-auto w-full">
+           <AnimatePresence mode="wait">
+             <motion.div
+               key={activeTab}
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0, y: -10 }}
+               transition={{ duration: 0.3, ease: "easeOut" }}
+             >
+               {renderContent()}
+             </motion.div>
+           </AnimatePresence>
+         </div>
        </main>
      </div>
    );

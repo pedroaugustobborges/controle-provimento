@@ -365,17 +365,17 @@ export function AppSidebar() {
                           href={item.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={cn(
-                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                            active
-                              ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20"
-                              : "text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300 hover:translate-x-1"
-                          )}
-                        >
-                          <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-all duration-300",
-                            active ? "text-emerald-300 scale-110" : "text-slate-400 group-hover:text-emerald-300 group-hover:scale-110"
-                          )} />
+                            className={cn(
+                              "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                              active
+                                ? "bg-success/10 text-success border border-success/20 shadow-sm"
+                                : "text-muted-foreground hover:bg-success/5 hover:text-success hover:translate-x-1"
+                            )}
+                          >
+                            <item.icon className={cn(
+                              "h-5 w-5 shrink-0 transition-all duration-300",
+                              active ? "text-success scale-110" : "text-muted-foreground/50 group-hover:text-success group-hover:scale-110"
+                            )} />
                           {!collapsed && (
                             <>
                               <span className="text-[13.5px] font-bold tracking-tight flex-1">{item.title}</span>
@@ -446,7 +446,7 @@ export function AppSidebar() {
                 </button>
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-red-500/10 text-xs font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-destructive/5 text-xs font-bold text-destructive hover:bg-destructive/10 hover:text-destructive transition-all border border-destructive/10"
                   title="Sair do sistema"
                 >
                   <LogOut className="h-3.5 w-3.5" />

@@ -57,14 +57,14 @@ function getGreeting(): string {
 }
 
 const routeContextMap: Record<string, { color: string; bgLight: string; icon: React.ElementType }> = {
-  'vagas': { color: 'text-blue-600', bgLight: 'bg-blue-50 border-blue-200', icon: Briefcase },
-  'editais': { color: 'text-teal-600', bgLight: 'bg-teal-50 border-teal-200', icon: FileText },
-  'fila-editais': { color: 'text-cyan-600', bgLight: 'bg-cyan-50 border-cyan-200', icon: ListOrdered },
-  'convocacoes': { color: 'text-amber-600', bgLight: 'bg-amber-50 border-amber-200', icon: Megaphone },
-  'validacao': { color: 'text-emerald-600', bgLight: 'bg-emerald-50 border-emerald-200', icon: ShieldCheck },
-  'gestor': { color: 'text-purple-600', bgLight: 'bg-purple-50 border-purple-200', icon: Settings },
-  'banco-talentos': { color: 'text-indigo-600', bgLight: 'bg-indigo-50 border-indigo-200', icon: Users },
-  'importacoes': { color: 'text-green-600', bgLight: 'bg-green-50 border-green-200', icon: Upload },
+  'vagas': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: Briefcase },
+  'editais': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: FileText },
+  'fila-editais': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: ListOrdered },
+  'convocacoes': { color: 'text-warning', bgLight: 'bg-warning/5 border-warning/10', icon: Megaphone },
+  'validacao': { color: 'text-success', bgLight: 'bg-success/5 border-success/10', icon: ShieldCheck },
+  'gestor': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: Settings },
+  'banco-talentos': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: Users },
+  'importacoes': { color: 'text-success', bgLight: 'bg-success/5 border-success/10', icon: Upload },
 };
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -267,11 +267,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 }`}>
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <Sparkles className="h-3.5 w-3.5 text-warning" />
-                     <span className="text-[13px] font-bold text-slate-800">
+                     <span className="text-[13px] font-bold text-foreground">
                       {getGreeting()}, <span className="text-primary">{userName}</span>
                     </span>
                   </div>
-                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest whitespace-nowrap">
+                   <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest whitespace-nowrap">
                      {currentUser?.cargo || 'Sistema AGIR'} <span className="mx-1 opacity-30">•</span> {currentUser?.perfil || 'Usuário'}
                    </span>
                 </div>

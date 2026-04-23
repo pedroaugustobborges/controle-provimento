@@ -247,7 +247,7 @@
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Funções e Escopos</h3>
              <p className="text-sm text-slate-500 font-medium">Definição clara de responsabilidades por cargo</p>
@@ -403,20 +403,20 @@
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Escala e Acompanhamento</h3>
              <p className="text-sm text-slate-500 font-medium">Status da equipe em tempo real por unidade</p>
            </div>
-           <div className="flex gap-2">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[10px] font-bold uppercase tracking-widest">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                18 Ativos
              </div>
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[10px] font-bold uppercase tracking-widest">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
                2 Ausentes
              </div>
            </div>
          </div>
  
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
            {teamStatus.map((t, i) => (
-             <Card key={i} className="border-none shadow-sm hover:shadow-lg transition-all duration-300 rounded-[1.5rem] p-6 bg-white relative overflow-hidden group">
+              <Card key={i} className="border border-slate-100 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-3xl p-6 bg-white relative overflow-hidden group border-b-4 border-b-transparent hover:border-b-indigo-500">
                <div className={cn(
                  "absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150",
                  t.status === 'Ativo' ? "bg-emerald-500" : t.status === 'Ausente' ? "bg-rose-500" : "bg-indigo-500"
@@ -476,7 +476,7 @@
      ];
      return (
        <div className="space-y-6">
-         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm gap-4">
            <div>
              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Alinhamentos e Treinamentos</h3>
              <p className="text-sm text-slate-500 font-medium">Desenvolvimento contínuo e sincronização de processos</p>
@@ -486,8 +486,8 @@
            </Button>
          </div>
  
-         <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-50 shadow-sm">
-            <div className="relative flex-1 min-w-[300px]">
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-50 shadow-sm">
+             <div className="relative w-full lg:flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input 
                 placeholder="Buscar por tema ou colaborador..." 

@@ -453,31 +453,6 @@
      </div>
    );
  };
- 
-                   {currentUser?.nome_completo?.split(' ')[0]}
-                 </p>
-                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                   {currentUser?.cargo || 'Analista'}
-                 </p>
-               </div>
-               <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-100 border-2 border-white">
-                 {currentUser?.nome_completo?.charAt(0)}
-               </div>
-             </div>
-           </div>
-         </header>
- 
-         <div className="p-8 max-w-7xl mx-auto w-full">
-           <AnimatePresence mode="wait">
-             <motion.div
-               key={activeTab}
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -10 }}
-               transition={{ duration: 0.3, ease: "easeOut" }}
-             >
-               {renderContent()}
-             </motion.div>
            </AnimatePresence>
          </div>
        </main>

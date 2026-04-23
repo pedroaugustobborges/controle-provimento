@@ -115,10 +115,10 @@ export default function MonitoramentoAdminPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Painel de Monitoramento</h1>
-          <p className="text-slate-500 mt-1">Acompanhamento diário das atualizações de editais e cumprimento de prazos.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Painel de Monitoramento</h1>
+          <p className="text-muted-foreground mt-1">Acompanhamento diário das atualizações de editais e cumprimento de prazos.</p>
         </div>
-        <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-border/60 shadow-sm">
           <Calendar className="h-4 w-4 text-primary" />
           <span className="text-sm font-bold text-slate-700">{formatDate(today)}</span>
           <Badge variant="outline" className="ml-2 font-bold text-[11px] uppercase">
@@ -131,10 +131,10 @@ export default function MonitoramentoAdminPage() {
         <Card className="bg-blue-50/50 border-blue-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-lg"><ClipboardList className="h-5 w-5 text-blue-600" /></div>
+              <div className="bg-blue-100 p-2 rounded-lg"><ClipboardList className="h-5 w-5 text-primary" /></div>
               <div>
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Editais Ativos</p>
-                <p className="text-2xl font-bold text-slate-800">{dailyStats.total}</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Editais Ativos</p>
+                <p className="text-2xl font-bold text-foreground">{dailyStats.total}</p>
               </div>
             </div>
           </CardContent>
@@ -142,10 +142,10 @@ export default function MonitoramentoAdminPage() {
         <Card className="bg-amber-50/50 border-amber-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-amber-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-amber-600" /></div>
+              <div className="bg-amber-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-warning" /></div>
               <div>
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Previstos para Hoje</p>
-                <p className="text-2xl font-bold text-slate-800">{dailyStats.previstosHoje}</p>
+                <p className="text-xs font-bold text-warning uppercase tracking-wider">Previstos para Hoje</p>
+                <p className="text-2xl font-bold text-foreground">{dailyStats.previstosHoje}</p>
               </div>
             </div>
           </CardContent>
@@ -153,37 +153,37 @@ export default function MonitoramentoAdminPage() {
         <Card className="bg-green-50/50 border-green-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-green-100 p-2 rounded-lg"><CheckCircle2 className="h-5 w-5 text-green-600" /></div>
+              <div className="bg-green-100 p-2 rounded-lg"><CheckCircle2 className="h-5 w-5 text-success" /></div>
               <div>
-                <p className="text-xs font-bold text-green-600 uppercase tracking-wider">Atualizados Hoje</p>
-                <p className="text-2xl font-bold text-slate-800">{dailyStats.atualizadosHoje}</p>
+                <p className="text-xs font-bold text-success uppercase tracking-wider">Atualizados Hoje</p>
+                <p className="text-2xl font-bold text-foreground">{dailyStats.atualizadosHoje}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className={`shadow-sm ${dailyStats.atrasados > 0 ? 'bg-red-50/50 border-red-100' : 'bg-slate-50/50 border-slate-100'}`}>
+        <Card className={`shadow-sm ${dailyStats.atrasados > 0 ? 'bg-red-50/50 border-red-100' : 'bg-muted/30/50 border-border/40'}`}>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className={`${dailyStats.atrasados > 0 ? 'bg-red-100' : 'bg-slate-100'} p-2 rounded-lg`}>
-                <AlertCircle className={`h-5 w-5 ${dailyStats.atrasados > 0 ? 'text-red-600' : 'text-slate-400'}`} />
+                <AlertCircle className={`h-5 w-5 ${dailyStats.atrasados > 0 ? 'text-destructive' : 'text-muted-foreground/80'}`} />
               </div>
               <div>
-                <p className={`text-xs font-bold uppercase tracking-wider ${dailyStats.atrasados > 0 ? 'text-red-600' : 'text-slate-400'}`}>Pendentes/Atrasados</p>
-                <p className={`text-2xl font-bold ${dailyStats.atrasados > 0 ? 'text-red-600' : 'text-slate-800'}`}>{dailyStats.atrasados}</p>
+                <p className={`text-xs font-bold uppercase tracking-wider ${dailyStats.atrasados > 0 ? 'text-destructive' : 'text-muted-foreground/80'}`}>Pendentes/Atrasados</p>
+                <p className={`text-2xl font-bold ${dailyStats.atrasados > 0 ? 'text-destructive' : 'text-foreground'}`}>{dailyStats.atrasados}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-slate-200 shadow-sm overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardHeader className="bg-muted/30/50 border-b py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg font-bold">Monitoramento de Atualizações</CardTitle>
           </div>
           <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/80" />
             <Input 
               placeholder="Buscar por cargo, unidade ou analista..." 
               className="pl-9 h-10 bg-white"
@@ -217,24 +217,24 @@ export default function MonitoramentoAdminPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="text-slate-600">{v.unidade}</span>
+                        <Building2 className="h-3.5 w-3.5 text-muted-foreground/80" />
+                        <span className="text-muted-foreground">{v.unidade}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="text-slate-600">{v.analista_responsavel}</span>
+                        <User className="h-3.5 w-3.5 text-muted-foreground/80" />
+                        <span className="text-muted-foreground">{v.analista_responsavel}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-bold text-[11px] uppercase border-slate-200">
+                      <Badge variant="outline" className="font-bold text-[11px] uppercase border-border/60">
                         {v.etapaLabel}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex flex-col items-center">
-                        <span className={`text-xs font-bold ${v.isPrevistoHoje ? 'text-amber-600' : 'text-slate-500'}`}>
+                        <span className={`text-xs font-bold ${v.isPrevistoHoje ? 'text-warning' : 'text-muted-foreground'}`}>
                           {v.dataPrevista ? formatDate(v.dataPrevista) : '—'}
                         </span>
                         {v.isPrevistoHoje && <span className="text-[9px] font-bold text-amber-500 uppercase">Hoje</span>}
@@ -242,12 +242,12 @@ export default function MonitoramentoAdminPage() {
                     </TableCell>
                     <TableCell className="text-center">
                       {v.isConcluidoHoje ? (
-                        <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-xs">
+                        <div className="flex items-center justify-center gap-1.5 text-success font-bold text-xs">
                           <CheckCircle2 className="h-4 w-4" />
                           Atualizado
                         </div>
                       ) : v.isAtrasado ? (
-                        <div className="flex items-center justify-center gap-1.5 text-red-600 font-bold text-xs animate-pulse">
+                        <div className="flex items-center justify-center gap-1.5 text-destructive font-bold text-xs animate-pulse">
                           <AlertCircle className="h-4 w-4" />
                           Atrasado
                         </div>
@@ -257,7 +257,7 @@ export default function MonitoramentoAdminPage() {
                           Pendente
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-xs">Em andamento</span>
+                        <span className="text-muted-foreground/80 text-xs">Em andamento</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -277,7 +277,7 @@ export default function MonitoramentoAdminPage() {
                     <TableCell colSpan={7} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
-                        <p className="text-slate-500 font-medium">Nenhum processo em acompanhamento ativo encontrado.</p>
+                        <p className="text-muted-foreground font-medium">Nenhum processo em acompanhamento ativo encontrado.</p>
                       </div>
                     </TableCell>
                   </TableRow>

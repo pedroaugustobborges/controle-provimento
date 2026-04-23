@@ -211,21 +211,21 @@ export default function ValidacaoEditaisPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm">
           <CardContent className="pt-6 pb-6 text-center">
-            <Clock className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Aguardando Validação</p>
+            <Clock className="h-8 w-8 text-warning mx-auto mb-2" />
+            <p className="text-xs font-bold text-warning uppercase tracking-wider">Aguardando Validação</p>
             <p className="text-3xl font-bold text-amber-700">{pendingEditais.length}</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-slate-200 shadow-sm overflow-hidden">
-        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-row items-center justify-between">
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 border-b bg-muted/30/50 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" />
-            <CardTitle className="text-lg font-bold text-slate-800">Editais Pendentes</CardTitle>
+            <CardTitle className="text-lg font-bold text-foreground">Editais Pendentes</CardTitle>
           </div>
           <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/80" />
             <Input 
               placeholder="Filtrar..." 
               className="pl-9 h-10 bg-white" 
@@ -251,18 +251,18 @@ export default function ValidacaoEditaisPage() {
                 <TableRow key={v.id} className="group">
                   <TableCell className="font-medium text-slate-700">{v.unidade}</TableCell>
                   <TableCell>
-                    <div className="font-semibold text-slate-800">{v.cargo}</div>
-                    <div className="text-[11px] text-slate-400">{v.requisicao}</div>
+                    <div className="font-semibold text-foreground">{v.cargo}</div>
+                    <div className="text-[11px] text-muted-foreground/80">{v.requisicao}</div>
                   </TableCell>
                   <td className="px-6 py-4">
                     <div className="text-sm font-bold text-primary">{v.numero_edital || '-'}</div>
-                    <div className="text-[11px] text-slate-500">{v.numero_processo || '-'}</div>
+                    <div className="text-[11px] text-muted-foreground">{v.numero_processo || '-'}</div>
                   </td>
                   <td className="px-6 py-4 max-w-[150px]">
-                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
+                    <p className="text-[10px] text-muted-foreground truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
                   </td>
                   <td className="px-6 py-4 max-w-[150px]">
-                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
+                    <p className="text-[10px] text-muted-foreground truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2 items-center">
@@ -280,7 +280,7 @@ export default function ValidacaoEditaisPage() {
               ))}
               {pendingEditais.length === 0 && (
                 <TableRow>
-                  <td colSpan={6} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                  <td colSpan={6} className="px-6 py-20 text-center text-muted-foreground/80 font-medium italic">
                     Nenhum edital pendente de validação administrativa.
                   </td>
                 </TableRow>
@@ -304,41 +304,41 @@ export default function ValidacaoEditaisPage() {
           
           <div className="space-y-6 py-4">
             {/* Resumo da Vaga */}
-            <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-3 rounded-lg border border-border/40">
               <div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Edital</p>
-                <p className="font-bold text-slate-800">{selectedVaga?.numero_edital}</p>
+                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase">Nº Edital</p>
+                <p className="font-bold text-foreground">{selectedVaga?.numero_edital}</p>
               </div>
               <div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase">Nº Processo</p>
-                <p className="font-bold text-slate-800">{selectedVaga?.numero_processo}</p>
+                <p className="text-[11px] font-bold text-muted-foreground/80 uppercase">Nº Processo</p>
+                <p className="font-bold text-foreground">{selectedVaga?.numero_processo}</p>
               </div>
             </div>
 
             {/* Link Reachr */}
             <div className="space-y-2">
               <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Link2 className="h-4 w-4 text-blue-600" /> Endereço da Vaga no Reachr
+                <Link2 className="h-4 w-4 text-primary" /> Endereço da Vaga no Reachr
               </h4>
               <div className="flex gap-2">
                 <Input 
                   value={reachrUrl} 
                   onChange={(e) => setReachrUrl(e.target.value)} 
-                  className="bg-white border-slate-200 flex-1" 
+                  className="bg-white border-border/60 flex-1" 
                   placeholder="https://www.reachr.com.br/vaga/..." 
                 />
                 {reachrUrl && (
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="gap-1 text-blue-600 border-blue-200 hover:bg-blue-50 shrink-0"
+                    className="gap-1 text-primary border-blue-200 hover:bg-blue-50 shrink-0"
                     onClick={() => window.open(reachrUrl.startsWith('http') ? reachrUrl : `https://${reachrUrl}`, '_blank')}
                   >
                     <ExternalLink className="h-3.5 w-3.5" /> Abrir
                   </Button>
                 )}
               </div>
-              <p className="text-[10px] text-slate-400">Cole o link da vaga publicada no portal www.reachr.com.br</p>
+              <p className="text-[10px] text-muted-foreground/80">Cole o link da vaga publicada no portal www.reachr.com.br</p>
             </div>
 
             {/* Arquivo do Edital */}
@@ -349,12 +349,12 @@ export default function ValidacaoEditaisPage() {
               {selectedVaga?.arquivo_edital ? (
                 <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-lg group">
                   <div className="flex items-center gap-3">
-                    <div className="bg-blue-600 p-2 rounded text-white">
+                    <div className="bg-primary p-2 rounded text-white">
                       <FileDown className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-sm font-bold text-blue-900">{selectedVaga.arquivo_edital}</p>
-                      <p className="text-[10px] text-blue-600">Documento Word (.docx)</p>
+                      <p className="text-[10px] text-primary">Documento Word (.docx)</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800 hover:bg-blue-100">
@@ -362,8 +362,8 @@ export default function ValidacaoEditaisPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="p-4 border border-dashed border-slate-200 rounded-lg text-center">
-                  <p className="text-sm text-slate-400 italic">Nenhum arquivo anexado.</p>
+                <div className="p-4 border border-dashed border-border/60 rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground/80 italic">Nenhum arquivo anexado.</p>
                 </div>
               )}
             </div>
@@ -375,25 +375,25 @@ export default function ValidacaoEditaisPage() {
               </h4>
               
               <div className="space-y-3">
-                <div className="relative pl-6 pb-2 border-l-2 border-slate-100">
+                <div className="relative pl-6 pb-2 border-l-2 border-border/40">
                   <div className="absolute left-[-9px] top-0 bg-white p-0.5">
-                    <div className="bg-amber-100 p-1 rounded-full"><Building2 className="h-3 w-3 text-amber-600" /></div>
+                    <div className="bg-amber-100 p-1 rounded-full"><Building2 className="h-3 w-3 text-warning" /></div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Analista da Unidade</span>
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase">Analista da Unidade</span>
+                    <div className="bg-muted/30 p-2.5 rounded-lg border border-border/40 text-sm text-slate-700 italic">
                       {selectedVaga?.observacoes_unidade || 'Nenhuma observação informada pela unidade.'}
                     </div>
                   </div>
                 </div>
 
-                <div className="relative pl-6 border-l-2 border-slate-100">
+                <div className="relative pl-6 border-l-2 border-border/40">
                   <div className="absolute left-[-9px] top-0 bg-white p-0.5">
-                    <div className="bg-blue-100 p-1 rounded-full"><User className="h-3 w-3 text-blue-600" /></div>
+                    <div className="bg-blue-100 p-1 rounded-full"><User className="h-3 w-3 text-primary" /></div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Analista do Edital</span>
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-sm text-slate-700 italic">
+                    <span className="text-[10px] font-bold text-muted-foreground/80 uppercase">Analista do Edital</span>
+                    <div className="bg-muted/30 p-2.5 rounded-lg border border-border/40 text-sm text-slate-700 italic">
                       {selectedVaga?.observacoes_edital || 'Nenhuma observação informada pelo analista do edital.'}
                     </div>
                   </div>
@@ -404,7 +404,7 @@ export default function ValidacaoEditaisPage() {
             <div className="p-4 bg-blue-50/30 rounded-xl border border-blue-100/50 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Bot className="h-4 w-4 text-blue-600" />
+                  <Bot className="h-4 w-4 text-primary" />
                   <span className="text-xs font-bold text-blue-900">IA: Sugestão de Datas</span>
                 </div>
                 <Button 
@@ -418,18 +418,18 @@ export default function ValidacaoEditaisPage() {
               </div>
               <div className="grid grid-cols-2 gap-2 text-[10px]">
                 <div className="bg-white p-1.5 rounded border border-blue-100">
-                  <span className="text-slate-400 block uppercase font-black tracking-tighter">Inscrições</span>
+                  <span className="text-muted-foreground/80 block uppercase font-black tracking-tighter">Inscrições</span>
                   <span className="font-bold text-blue-700">01/01/2024 a 15/01/2024</span>
                 </div>
                 <div className="bg-white p-1.5 rounded border border-blue-100">
-                  <span className="text-slate-400 block uppercase font-black tracking-tighter">Triagem</span>
+                  <span className="text-muted-foreground/80 block uppercase font-black tracking-tighter">Triagem</span>
                   <span className="font-bold text-blue-700">20/01/2024</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-400 uppercase">Observações da Validação Final</label>
+              <label className="text-[11px] font-bold text-muted-foreground/80 uppercase">Observações da Validação Final</label>
               <Textarea 
                 placeholder="Informe o motivo da reprovação, ajuste ou observações da aprovação..." 
                 value={obs}
@@ -441,7 +441,7 @@ export default function ValidacaoEditaisPage() {
             {selectedVaga?.status_fluxo_edital === 'enviado_validacao' && (
               <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-3">
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-amber-600" />
+                  <User className="h-4 w-4 text-warning" />
                   <span className="text-xs font-bold text-amber-900">Solicitar Aprovação de Gestor</span>
                 </div>
                 <div className="flex gap-2">
@@ -466,7 +466,7 @@ export default function ValidacaoEditaisPage() {
                     Solicitar
                   </Button>
                 </div>
-                <p className="text-[10px] text-amber-600 italic">O gestor selecionado receberá uma notificação para validar este edital.</p>
+                <p className="text-[10px] text-warning italic">O gestor selecionado receberá uma notificação para validar este edital.</p>
               </div>
             )}
           </div>
@@ -474,20 +474,20 @@ export default function ValidacaoEditaisPage() {
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 flex-wrap">
             <Button 
               variant="outline" 
-              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-1" 
+              className="text-warning border-amber-200 hover:bg-amber-50 gap-1" 
               onClick={() => handleAction(selectedVaga.id, 'ajuste')}
             >
               <RotateCcw className="h-4 w-4" /> Devolver para Ajuste
             </Button>
             <Button 
               variant="outline" 
-              className="text-red-600 border-red-200 hover:bg-red-50 gap-1" 
+              className="text-destructive border-red-200 hover:bg-red-50 gap-1" 
               onClick={() => handleAction(selectedVaga.id, 'reprovado')}
             >
               <XCircle className="h-4 w-4" /> Rejeitar
             </Button>
             <Button 
-              className="bg-green-600 hover:bg-green-700 text-white gap-1" 
+              className="bg-success hover:bg-green-700 text-white gap-1" 
               onClick={() => handleAction(selectedVaga.id, 'aprovado')}
             >
               <CheckCircle2 className="h-4 w-4" /> Aprovar Edital

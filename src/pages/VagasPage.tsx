@@ -665,7 +665,7 @@ export default function VagasPage() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className={`text-[11px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-slate-500 hover:text-primary hover:bg-slate-100'}`}
+                    className={`text-[11px] h-8 gap-1 font-bold ${isDebugOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-primary hover:bg-slate-100'}`}
                     onClick={() => setIsDebugOpen(!isDebugOpen)}
                   >
                     <Bug className="h-3 w-3" /> Audit
@@ -675,7 +675,7 @@ export default function VagasPage() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="text-[11px] text-slate-500 hover:text-primary hover:bg-slate-100 h-8 gap-1 font-bold"
+                    className="text-[11px] text-muted-foreground hover:text-primary hover:bg-slate-100 h-8 gap-1 font-bold"
                     onClick={() => {
                       const diag = getMatchingDiagnostic();
                       toast.info(`${diag.length} vagas sem banco encontradas.`);
@@ -688,10 +688,10 @@ export default function VagasPage() {
                   data={prepareVagasForExport(filtered)} 
                   filename="vagas_export"
                   label="Exportar Excel"
-                  className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl"
+                  className="gap-2 border-border/60 hover:bg-muted/30 text-muted-foreground font-bold shadow-sm h-10 px-6 transition-all rounded-xl"
                 />
                 {permissions.canImport() && (
-                  <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
+                  <Button variant="outline" className="gap-2 border-border/60 hover:bg-muted/30 text-muted-foreground font-bold shadow-sm h-10 px-6 transition-all rounded-xl" onClick={() => setIsImportOpen(true)}>
                     <FileSpreadsheet className="h-4 w-4 text-primary/80" /> Importar Excel
                   </Button>
                 )}
@@ -711,7 +711,7 @@ export default function VagasPage() {
               <CardTitle className="text-xs font-bold text-amber-800 uppercase flex items-center gap-2">
                 <Bug className="h-3 w-3" /> Diagnóstico de Paridade Excel (Audit)
               </CardTitle>
-              <CardDescription className="text-[11px] text-amber-600 font-medium">
+              <CardDescription className="text-[11px] text-warning font-medium">
                 Comparação entre dados importados e regras de negócio de contagem.
               </CardDescription>
             </div>
@@ -733,7 +733,7 @@ export default function VagasPage() {
                 <div className="text-[11px] font-mono text-amber-900 leading-tight">
                   <p>Excel Parity Count: <span className="font-bold">{parityAudit.excelCount}</span></p>
                   <p>App Card Count: <span className="font-bold">{parityAudit.appCount}</span></p>
-                  <p>Diferença: <span className={`font-bold ${parityAudit.difference !== 0 ? 'text-red-600' : 'text-green-600'}`}>{parityAudit.difference}</span></p>
+                  <p>Diferença: <span className={`font-bold ${parityAudit.difference !== 0 ? 'text-destructive' : 'text-success'}`}>{parityAudit.difference}</span></p>
                 </div>
               </div>
               <div className="space-y-1">
@@ -773,15 +773,15 @@ export default function VagasPage() {
                           <TableCell className="h-8">{m.data_abertura}</TableCell>
                           <TableCell className="h-8 truncate max-w-[120px]">{m.cargo}</TableCell>
                           <TableCell className="h-8 font-bold text-blue-700">{m.parsedMonth}</TableCell>
-                          <TableCell className="h-8 text-center">{m.includedByExcelParity ? <CheckCircle2 className="h-3 w-3 text-green-600 inline" /> : <X className="h-3 w-3 text-red-600 inline" />}</TableCell>
-                          <TableCell className="h-8 text-center">{m.includedByApp ? <CheckCircle2 className="h-3 w-3 text-green-600 inline" /> : <X className="h-3 w-3 text-red-600 inline" />}</TableCell>
+                          <TableCell className="h-8 text-center">{m.includedByExcelParity ? <CheckCircle2 className="h-3 w-3 text-success inline" /> : <X className="h-3 w-3 text-destructive inline" />}</TableCell>
+                          <TableCell className="h-8 text-center">{m.includedByApp ? <CheckCircle2 className="h-3 w-3 text-success inline" /> : <X className="h-3 w-3 text-destructive inline" />}</TableCell>
                           <TableCell className="h-8 text-red-700 font-medium">{m.rejectionReason || 'Diferença de filtro extra UI'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                   {parityAudit.mismatches.length > 10 && (
-                    <p className="text-[8px] text-amber-600 mt-1 italic">Mostrando 10 de {parityAudit.mismatches.length} divergências.</p>
+                    <p className="text-[8px] text-warning mt-1 italic">Mostrando 10 de {parityAudit.mismatches.length} divergências.</p>
                   )}
                 </div>
               ) : (
@@ -817,7 +817,7 @@ export default function VagasPage() {
             navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
           }}
         >
-          <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
+          <div className="bg-primary p-2.5 rounded-lg shadow-md shadow-blue-200">
             <TrendingUp className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -826,7 +826,7 @@ export default function VagasPage() {
             </h3>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-blue-700">{countEmAndamento}</span>
-              <span className="text-[11px] text-blue-600/80 font-medium">vagas sendo processadas no momento</span>
+              <span className="text-[11px] text-primary/80 font-medium">vagas sendo processadas no momento</span>
             </div>
           </div>
         </div>
@@ -836,7 +836,7 @@ export default function VagasPage() {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-800 font-bold rounded-lg"
+              className="flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-foreground font-bold rounded-lg"
               title="Voltar ao Controle de Vagas"
               onClick={(e) => {
                 e.stopPropagation();
@@ -882,7 +882,7 @@ export default function VagasPage() {
         </div>
       </div>
 
-      <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">
+      <Card className="border-border/60 shadow-sm bg-muted/30/50 rounded-xl">
         <CardContent className="pt-4 pb-3">
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-[240px]">
@@ -894,7 +894,7 @@ export default function VagasPage() {
             {filtroEspecial === 'pcd' ? (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-slate-400" />
+                  <Building2 className="h-4 w-4 text-muted-foreground/80" />
                   {Object.keys(PCD_REGIOES).map(regiao => (
                     <Button
                       key={regiao}
@@ -910,7 +910,7 @@ export default function VagasPage() {
                     </Button>
                   ))}
                   {pcdRegiao && (
-                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400" onClick={() => { setPcdRegiao(null); setFilterUnidade('all'); }}>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground/80" onClick={() => { setPcdRegiao(null); setFilterUnidade('all'); }}>
                       <X className="h-3 w-3 mr-1" /> Limpar
                     </Button>
                   )}
@@ -1008,7 +1008,7 @@ export default function VagasPage() {
             <Button 
               variant={filterVagasNovas ? "default" : "outline"} 
               size="sm" 
-              className={`h-9 text-[11px] font-bold gap-2 ${filterVagasNovas ? 'bg-blue-600' : 'border-slate-200 text-slate-600 bg-white'}`}
+              className={`h-9 text-[11px] font-bold gap-2 ${filterVagasNovas ? 'bg-primary' : 'border-border/60 text-muted-foreground bg-white'}`}
               onClick={() => setFilterVagasNovas(!filterVagasNovas)}
             >
               <Sparkles className={`h-3.5 w-3.5 ${filterVagasNovas ? 'text-white' : 'text-blue-500'}`} />
@@ -1018,7 +1018,7 @@ export default function VagasPage() {
             <Button 
               variant={filterComBanco ? "default" : "outline"} 
               size="sm" 
-              className={`h-9 text-[11px] font-bold gap-2 ${filterComBanco ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-slate-200 text-slate-600 bg-white'}`}
+              className={`h-9 text-[11px] font-bold gap-2 ${filterComBanco ? 'bg-success hover:bg-emerald-700' : 'border-border/60 text-muted-foreground bg-white'}`}
               onClick={() => setFilterComBanco(!filterComBanco)}
             >
               <Database className={`h-3.5 w-3.5 ${filterComBanco ? 'text-white' : 'text-emerald-500'}`} />
@@ -1028,7 +1028,7 @@ export default function VagasPage() {
             <Button 
               variant={filterSemMovimentacao ? "default" : "outline"} 
               size="sm" 
-              className={`h-9 text-[11px] font-bold gap-2 ${filterSemMovimentacao ? 'bg-orange-600 hover:bg-orange-700' : 'border-slate-200 text-slate-600 bg-white'}`}
+              className={`h-9 text-[11px] font-bold gap-2 ${filterSemMovimentacao ? 'bg-orange-600 hover:bg-orange-700' : 'border-border/60 text-muted-foreground bg-white'}`}
               onClick={() => setFilterSemMovimentacao(!filterSemMovimentacao)}
             >
               <AlertCircle className={`h-3.5 w-3.5 ${filterSemMovimentacao ? 'text-white' : 'text-orange-500'}`} />
@@ -1036,7 +1036,7 @@ export default function VagasPage() {
             </Button>
 
             {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-slate-500 hover:text-slate-800"><X className="h-4 w-4 mr-1" /> Limpar Filtros</Button>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4 mr-1" /> Limpar Filtros</Button>
             )}
           </div>
         </CardContent>
@@ -1050,23 +1050,23 @@ export default function VagasPage() {
           navigate(`${location.pathname}?${newParams.toString()}`, { replace: true });
         }} className="w-full">
           <TabsList className="bg-slate-100/50 p-1 rounded-xl flex-wrap h-auto">
-            <TabsTrigger value="todas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+            <TabsTrigger value="todas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Todas as Vagas ({canonicalBase.length})
             </TabsTrigger>
-            <TabsTrigger value="em_andamento" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+            <TabsTrigger value="em_andamento" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Em Andamento ({counts.fila_edital + counts.em_andamento + counts.convocacao + counts.documentacao + counts.aguardando_unidade + ((counts as any).em_admissao || 0)})
             </TabsTrigger>
-            <TabsTrigger value="ativas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+            <TabsTrigger value="ativas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Vagas Ativas ({counts.fila_edital + counts.em_andamento + counts.vagas_lideranca + counts.convocacao + counts.aguardando_unidade + counts.documentacao + counts.em_admissao + counts.movimentacao_interna})
             </TabsTrigger>
-            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm">
+            <TabsTrigger value="concluidas" className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-success data-[state=active]:shadow-sm transition-all text-muted-foreground text-xs sm:text-sm">
               Concluídas/Encerradas ({counts.concluidas + counts.vagas_interrompidas})
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      <Card className="border-slate-200 shadow-sm overflow-hidden">
+      <Card className="border-border/60 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -1098,13 +1098,13 @@ export default function VagasPage() {
                   return (
                     <TableRow
                       key={v.id}
-                      className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
+                      className="cursor-pointer hover:bg-muted/30/80 even:bg-muted/30/30 transition-colors border-b border-border/40 group"
                       onClick={() => navigate(`/vagas/${v.id}`)}
                     >
-                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                      <TableCell className="text-muted-foreground text-[11px] font-medium py-3 px-4 h-14">
                         {v.data_abertura ? formatDate(v.data_abertura) : '-'}
                       </TableCell>
-                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                      <TableCell className="text-muted-foreground text-[11px] font-medium py-3 px-4 h-14">
                         {v.data_recebimento ? formatDate(v.data_recebimento) : '-'}
                       </TableCell>
                       <TableCell className="py-3 px-4 h-14">
@@ -1113,36 +1113,36 @@ export default function VagasPage() {
                             {v.requisicao || v.numero_requisicao || '-'}
                           </div>
                           {v.source_row_index && (
-                            <span className="text-[9px] text-slate-400 ml-1">Linha {v.source_row_index}</span>
+                            <span className="text-[9px] text-muted-foreground/80 ml-1">Linha {v.source_row_index}</span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="py-3 px-4 h-14">
                         <div className="flex flex-col">
-                          <div className="font-semibold text-slate-800 whitespace-normal break-words leading-tight max-w-[300px] flex items-center flex-wrap gap-2" title={v.cargo}>
+                          <div className="font-semibold text-foreground whitespace-normal break-words leading-tight max-w-[300px] flex items-center flex-wrap gap-2" title={v.cargo}>
                             {v.cargo}
                             {v.origem === 'manual' && v.data_criacao && (new Date().getTime() - new Date(v.data_criacao).getTime()) < 24 * 60 * 60 * 1000 && (
-                              <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase">
+                              <Badge variant="outline" className="h-4 text-[8px] px-1 bg-blue-50 text-primary border-blue-200 animate-pulse font-bold uppercase">
                                 <Sparkles className="h-2 w-2 mr-0.5" /> Nova Vaga
                               </Badge>
                             )}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                      <TableCell className="text-muted-foreground text-[11px] font-medium py-3 px-4 h-14">
                         {TIPO_VAGA_LABELS[v.tipo_vaga] || '-'}
                       </TableCell>
-                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
+                      <TableCell className="text-muted-foreground text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
                         <div className="flex flex-col">
                           <span>{v.unidade}</span>
                           {v.unidade_trabalho && v.unidade_trabalho !== v.unidade && (
-                            <span className="text-[9px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
+                            <span className="text-[9px] text-primary font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
                               TRABALHANDO: {v.unidade_trabalho}
                             </span>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[150px] leading-tight" title={v.secao}>
+                      <TableCell className="text-muted-foreground text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[150px] leading-tight" title={v.secao}>
                         {v.secao || '-'}
                       </TableCell>
                       <TableCell className="text-center py-3 px-4 h-14">
@@ -1156,7 +1156,7 @@ export default function VagasPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700" 
+                            className="h-8 w-8 text-success hover:bg-green-50 hover:text-green-700" 
                             title="Realizar Convocação"
                             onClick={() => navigate(`/convocacoes?open=true&vagaId=${v.id}`)}
                           >
@@ -1166,7 +1166,7 @@ export default function VagasPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-slate-300 hover:bg-slate-50" 
+                            className="h-8 w-8 text-slate-300 hover:bg-muted/30" 
                             title="Banco não encontrado"
                             onClick={() => toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`)}
                           >
@@ -1178,11 +1178,11 @@ export default function VagasPage() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
-                              <MoreVertical className="h-4 w-4 text-slate-500" />
+                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-slate-400">Ações</DropdownMenuLabel>
+                            <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-muted-foreground/80">Ações</DropdownMenuLabel>
                             
                             <DropdownMenuItem onClick={() => navigate(`/vagas/${v.id}`)} className="gap-2">
                               <FileText className="h-4 w-4 text-blue-500" /> Ver Detalhes
@@ -1203,7 +1203,7 @@ export default function VagasPage() {
                                   setVagaForUpdate(v);
                                   setIsRequestUpdateOpen(true);
                                 }} 
-                                className="gap-2 text-amber-600"
+                                className="gap-2 text-warning"
                               >
                                 <AlertCircle className="h-4 w-4" /> Solicitar Atualização
                               </DropdownMenuItem>
@@ -1225,7 +1225,7 @@ export default function VagasPage() {
                                     toast.success('Vaga enviada para Fila de Editais');
                                   }
                                 }} 
-                                className="gap-2 text-amber-600"
+                                className="gap-2 text-warning"
                               >
                                 <FileText className="h-4 w-4" /> Enviar para Fila de Editais
                               </DropdownMenuItem>
@@ -1240,7 +1240,7 @@ export default function VagasPage() {
                                     toast.error(`Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`);
                                   }
                                 }} 
-                                className="gap-2 text-green-600"
+                                className="gap-2 text-success"
                               >
                                 <CheckCircle2 className="h-4 w-4" /> Realizar Convocação
                               </DropdownMenuItem>
@@ -1259,7 +1259,7 @@ export default function VagasPage() {
                                 setIsHistoryOpen(true);
                               }}
                             >
-                              <History className="h-4 w-4 text-slate-500" /> Histórico Completo
+                              <History className="h-4 w-4 text-muted-foreground" /> Histórico Completo
                             </DropdownMenuItem>
 
                             {permissions.canDeleteRecords() && (
@@ -1292,7 +1292,7 @@ export default function VagasPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="px-6 py-4 border-t text-[11px] text-muted-foreground/80 font-bold uppercase tracking-wider bg-muted/30/50 flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex flex-col gap-1">
               <span>Exibindo {paginatedData.length} de {filtered.length} filtrados</span>
               <span className="text-[10px] opacity-70">(Total no sistema: {vagas.length})</span>
@@ -1501,20 +1501,20 @@ function AcompanhamentoEditalList() {
         <div className="flex flex-wrap items-center gap-3">
           {/* Busca por Texto */}
           <div className="relative group w-full md:w-[300px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80 group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="Buscar por cargo ou edital..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-10 bg-white border-slate-200 rounded-xl shadow-sm focus:ring-primary/20 transition-all font-medium"
+              className="pl-10 h-10 bg-white border-border/60 rounded-xl shadow-sm focus:ring-primary/20 transition-all font-medium"
             />
           </div>
 
           {/* Filtro por Status */}
-          <div className="flex items-center gap-2 bg-white p-2 h-10 rounded-xl shadow-sm border border-slate-200">
-            <ListFilter className="h-4 w-4 text-slate-400 ml-2" />
+          <div className="flex items-center gap-2 bg-white p-2 h-10 rounded-xl shadow-sm border border-border/60">
+            <ListFilter className="h-4 w-4 text-muted-foreground/80 ml-2" />
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px] border-none shadow-none focus:ring-0 font-bold text-slate-600 h-8">
+              <SelectTrigger className="w-[180px] border-none shadow-none focus:ring-0 font-bold text-muted-foreground h-8">
                 <SelectValue placeholder="Status/Etapa" />
               </SelectTrigger>
               <SelectContent>
@@ -1528,10 +1528,10 @@ function AcompanhamentoEditalList() {
           </div>
 
           {canFilterByUnit && (
-            <div className="flex items-center gap-2 bg-white p-2 h-10 rounded-xl shadow-sm border border-slate-200">
-              <Building2 className="h-4 w-4 text-slate-400 ml-2" />
+            <div className="flex items-center gap-2 bg-white p-2 h-10 rounded-xl shadow-sm border border-border/60">
+              <Building2 className="h-4 w-4 text-muted-foreground/80 ml-2" />
               <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-                <SelectTrigger className="w-[200px] border-none shadow-none focus:ring-0 font-bold text-slate-600 h-8">
+                <SelectTrigger className="w-[200px] border-none shadow-none focus:ring-0 font-bold text-muted-foreground h-8">
                   <SelectValue placeholder="Filtrar por Unidade" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1549,7 +1549,7 @@ function AcompanhamentoEditalList() {
 
 
 
-      <Card className="border-slate-200 shadow-sm overflow-hidden">
+      <Card className="border-border/60 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -1575,12 +1575,12 @@ function AcompanhamentoEditalList() {
                   const isSync = v.acompanhamento?.etapa_atual === autoEtapa;
 
                   return (
-                    <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
+                    <TableRow key={v.id} className="hover:bg-muted/30/50 transition-colors">
                       <TableCell className="font-medium text-slate-700 whitespace-nowrap">{v.unidade}</TableCell>
-                      <TableCell className="font-semibold text-slate-800">
+                      <TableCell className="font-semibold text-foreground">
                         <div className="flex flex-col">
                           <span>{v.cargo}</span>
-                          <span className="text-[11px] text-slate-400 font-mono">{v.requisicao || v.numero_requisicao}</span>
+                          <span className="text-[11px] text-muted-foreground/80 font-mono">{v.requisicao || v.numero_requisicao}</span>
                         </div>
                       </TableCell>
                       <TableCell className="font-bold text-primary whitespace-nowrap">{v.numero_edital || '—'}</TableCell>
@@ -1607,19 +1607,19 @@ function AcompanhamentoEditalList() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="center" className="min-w-[120px]">
-                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-amber-600">PENDENTE</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-blue-600">EM ANDAMENTO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-green-600">CONCLUÍDO</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-red-600">ATRASADO</DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-primary">EM ANDAMENTO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'pendente')} className="text-[11px] font-bold text-warning">PENDENTE</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'em_andamento')} className="text-[11px] font-bold text-primary">EM ANDAMENTO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'concluido')} className="text-[11px] font-bold text-success">CONCLUÍDO</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateSituacao(v.id, 'atrasada')} className="text-[11px] font-bold text-destructive">ATRASADO</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                       <TableCell className="text-center font-bold text-slate-700">{v.total_inscritos || v.acompanhamento?.total_inscritos || 0}</TableCell>
-                      <TableCell className="text-center font-bold text-slate-600">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</TableCell>
-                      <TableCell className="text-center font-bold text-slate-600">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</TableCell>
-                      <TableCell className="text-center font-bold text-slate-600">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</TableCell>
-                      <TableCell className="text-center font-bold text-green-600">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-muted-foreground">{v.aprovados_triagem || v.acompanhamento?.aprovados_triagem || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-muted-foreground">{v.acompanhamento?.aprovados_avaliacao_especifica || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-muted-foreground">{v.convocados_entrevista || v.acompanhamento?.convocados_entrevista || 0}</TableCell>
+                      <TableCell className="text-center font-bold text-success">{v.aprovados_finais || v.acompanhamento?.aprovados_finais || 0}</TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <Button size="sm" variant="ghost" className="h-8 text-primary font-bold hover:bg-primary/5 px-2 flex items-center gap-1.5" onClick={() => navigate(`/vagas/${v.id}`)}>
                           Atualizar <ArrowRight className="h-3.5 w-3.5" />
@@ -1630,7 +1630,7 @@ function AcompanhamentoEditalList() {
                 })}
                 {editaisEmAndamento.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                    <TableCell colSpan={11} className="px-6 py-20 text-center text-muted-foreground/80 font-medium italic">
 
                       Nenhum edital em andamento visível para suas unidades.
                     </TableCell>

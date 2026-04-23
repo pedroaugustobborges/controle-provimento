@@ -546,9 +546,9 @@ export default function AdministracaoPage() {
     const map: Record<string, string> = {
       'ativo': 'bg-green-100 text-green-700',
       'suspenso': 'bg-amber-100 text-amber-700',
-      'inativo': 'bg-slate-100 text-slate-500',
+      'inativo': 'bg-slate-100 text-muted-foreground',
     };
-    return map[status] || 'bg-slate-100 text-slate-500';
+    return map[status] || 'bg-slate-100 text-muted-foreground';
   };
 
   return (
@@ -609,7 +609,7 @@ export default function AdministracaoPage() {
 
         {/* USUÁRIOS */}
         <TabsContent value="usuarios">
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border/60 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0">
               <div>
                 <CardTitle className="text-lg font-bold">Usuários Cadastrados</CardTitle>
@@ -639,33 +639,33 @@ export default function AdministracaoPage() {
                   </TableHeader>
                   <TableBody>
                     {users.map((user) => (
-                      <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                      <TableRow key={user.id} className="hover:bg-muted/30/50 transition-colors">
                         <TableCell className="text-left">
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
+                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-border/60">
                               {user.avatar_url ? (
                                 <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
                               ) : (
-                                <UserIcon className="h-4 w-4 text-slate-400" />
+                                <UserIcon className="h-4 w-4 text-muted-foreground/80" />
                               )}
                             </div>
                             <div className="flex flex-col">
                               <span className="font-bold text-slate-700">{user.nome_completo}</span>
-                              <span className="text-xs text-slate-400 font-medium">{user.email}</span>
+                              <span className="text-xs text-muted-foreground/80 font-medium">{user.email}</span>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-left">
                           <div className="flex flex-col gap-0.5 items-start">
                             <Badge variant="outline" className="w-fit text-[10px] font-bold py-0 h-4 bg-blue-50 text-blue-700 border-blue-100 uppercase tracking-tighter">{user.perfil}</Badge>
-                            <span className="text-[11px] text-slate-500 font-medium ml-0.5">{user.cargo}</span>
+                            <span className="text-[11px] text-muted-foreground font-medium ml-0.5">{user.cargo}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-left">
                           {user.visualiza_todas_unidades ? (
                             <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Todas</Badge>
                           ) : (
-                            <span className="text-[11px] text-slate-500">{user.unidades_vinculadas?.length || 0} unid.</span>
+                            <span className="text-[11px] text-muted-foreground">{user.unidades_vinculadas?.length || 0} unid.</span>
                           )}
                         </TableCell>
                         <TableCell className="text-left">
@@ -673,13 +673,13 @@ export default function AdministracaoPage() {
                             {user.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-left text-xs text-slate-500 font-medium">
+                        <TableCell className="text-left text-xs text-muted-foreground font-medium">
                           {user.ultimo_acesso ? new Date(user.ultimo_acesso).toLocaleDateString('pt-BR') : 'Nunca'}
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4 text-slate-400" /></Button>
+                              <Button variant="ghost" className="h-8 w-8 p-0"><MoreVertical className="h-4 w-4 text-muted-foreground/80" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
                               <DropdownMenuLabel>Ações</DropdownMenuLabel>
@@ -697,17 +697,17 @@ export default function AdministracaoPage() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               {user.status !== 'ativo' && (
-                                <DropdownMenuItem className="text-green-600" onClick={() => handleStatusChange(user.id, 'ativo')}>
+                                <DropdownMenuItem className="text-success" onClick={() => handleStatusChange(user.id, 'ativo')}>
                                   <UserCheck className="mr-2 h-4 w-4" /> Reativar acesso
                                 </DropdownMenuItem>
                               )}
                               {user.status === 'ativo' && (
-                                <DropdownMenuItem className="text-amber-600" onClick={() => handleStatusChange(user.id, 'suspenso')}>
+                                <DropdownMenuItem className="text-warning" onClick={() => handleStatusChange(user.id, 'suspenso')}>
                                   <Ban className="mr-2 h-4 w-4" /> Suspender acesso
                                 </DropdownMenuItem>
                               )}
                               {user.status !== 'inativo' && (
-                                <DropdownMenuItem className="text-slate-500" onClick={() => handleStatusChange(user.id, 'inativo')}>
+                                <DropdownMenuItem className="text-muted-foreground" onClick={() => handleStatusChange(user.id, 'inativo')}>
                                   <X className="mr-2 h-4 w-4" /> Inativar usuário
                                 </DropdownMenuItem>
                               )}
@@ -735,7 +735,7 @@ export default function AdministracaoPage() {
 
         {/* UNIDADES E PERMISSÕES */}
         <TabsContent value="permissoes">
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border/60 shadow-sm">
             <CardHeader className="border-b">
               <CardTitle className="text-lg font-bold">Gerenciar Unidades e Permissões</CardTitle>
               <CardDescription>Defina a quais unidades cada usuário tem acesso e o que ele pode fazer em cada uma.</CardDescription>
@@ -768,7 +768,7 @@ export default function AdministracaoPage() {
                               user.unidades_vinculadas.map(u => (
                                 <Badge key={u} variant="secondary" className="text-[11px] bg-slate-100">{u}</Badge>
                               )) : 
-                              <span className="text-[11px] text-slate-400 italic">Nenhuma unidade vinculada</span>
+                              <span className="text-[11px] text-muted-foreground/80 italic">Nenhuma unidade vinculada</span>
                             }
                           </div>
                         )}
@@ -793,7 +793,7 @@ export default function AdministracaoPage() {
 
         {/* SUPORTE */}
         <TabsContent value="suporte">
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border/60 shadow-sm">
             <CardHeader className="border-b">
               <CardTitle className="text-lg font-bold">Suporte Técnico</CardTitle>
               <CardDescription>Analistas administrativos responsáveis por cada região. Para alterar, edite o cadastro do usuário na aba "Usuários" e defina o cargo como "Analista Administrativo" com a região de suporte.</CardDescription>
@@ -812,7 +812,7 @@ export default function AdministracaoPage() {
 
                 if (analistas.length === 0) {
                   return (
-                    <div className="p-8 text-center text-slate-400">
+                    <div className="p-8 text-center text-muted-foreground/80">
                       <Bell className="h-10 w-10 mx-auto mb-2 opacity-40" />
                       <p className="font-medium">Nenhum analista administrativo com região de suporte definida.</p>
                       <p className="text-sm mt-1">Vá à aba "Usuários", edite um usuário com cargo "Analista Administrativo" e defina a região de suporte.</p>
@@ -826,17 +826,17 @@ export default function AdministracaoPage() {
                     {regioes.map(regiao => {
                       const responsaveis = analistas.filter(a => a.regiao_suporte === regiao);
                       return (
-                        <div key={regiao} className="border rounded-xl p-5 bg-slate-50/50">
+                        <div key={regiao} className="border rounded-xl p-5 bg-muted/30/50">
                           <h3 className="font-bold text-sm text-primary mb-1">{regiaoLabels[regiao]}</h3>
-                          <p className="text-[10px] text-slate-400 mb-4">{(regiaoUnidades[regiao] || []).join(', ')}</p>
+                          <p className="text-[10px] text-muted-foreground/80 mb-4">{(regiaoUnidades[regiao] || []).join(', ')}</p>
                           {responsaveis.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic">Nenhum responsável definido</p>
+                            <p className="text-xs text-muted-foreground/80 italic">Nenhum responsável definido</p>
                           ) : (
                             <div className="space-y-3">
                               {responsaveis.map(resp => (
                                 <div key={resp.id} className="bg-white rounded-lg p-3 border shadow-sm">
                                   <p className="font-bold text-sm text-slate-700">{resp.nome_completo}</p>
-                                  <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
+                                  <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
                                     <Mail className="h-3 w-3" /> {resp.email}
                                   </div>
                                 </div>
@@ -855,7 +855,7 @@ export default function AdministracaoPage() {
 
         {/* AUDITORIA */}
         <TabsContent value="auditoria">
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border/60 shadow-sm">
             <CardHeader className="border-b">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -886,29 +886,29 @@ export default function AdministracaoPage() {
                   <TableBody>
                     {auditLogs.map((log) => (
                       <TableRow key={log.id} className="text-xs">
-                        <TableCell className="font-mono text-slate-500">
+                        <TableCell className="font-mono text-muted-foreground">
                           {log.created_at ? new Date(log.created_at).toLocaleDateString('pt-BR') : log.data} <br/> 
                           {log.created_at ? new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : log.hora}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-bold text-slate-700">{log.usuario_nome}</span>
-                            <span className="text-[11px] text-slate-400">{log.perfil}</span>
+                            <span className="text-[11px] text-muted-foreground/80">{log.perfil}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-bold text-primary">{log.acao}</span>
-                            <span className="text-[11px] text-slate-400 uppercase font-bold">{log.modulo}</span>
+                            <span className="text-[11px] text-muted-foreground/80 uppercase font-bold">{log.modulo}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium text-slate-600">{log.registro_afetado}</TableCell>
+                        <TableCell className="font-medium text-muted-foreground">{log.registro_afetado}</TableCell>
                         <TableCell>
                           {log.valor_anterior || log.valor_novo ? (
                             <div className="flex items-center gap-2">
-                              <span className="line-through text-slate-400">{log.valor_anterior || '-'}</span>
+                              <span className="line-through text-muted-foreground/80">{log.valor_anterior || '-'}</span>
                               <MoreVertical className="h-3 w-3 rotate-90 text-slate-300" />
-                              <span className="text-green-600 font-bold">{log.valor_novo || '-'}</span>
+                              <span className="text-success font-bold">{log.valor_novo || '-'}</span>
                             </div>
                           ) : (
                             <span className="text-slate-300 italic">N/A</span>
@@ -925,13 +925,13 @@ export default function AdministracaoPage() {
 
         {/* CONFERÊNCIA DE STATUS */}
         <TabsContent value="conferencia">
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border/60 shadow-sm">
             <CardHeader className="border-b bg-blue-50/30">
               <div className="flex items-center gap-2.5">
-                <Database className="h-5 w-5 text-blue-600" />
+                <Database className="h-5 w-5 text-primary" />
                 <div>
-                  <CardTitle className="text-lg font-bold text-slate-800">Conferência de Status (Dados Reais)</CardTitle>
-                  <CardDescription className="text-xs font-medium text-slate-400">Validação objetiva de como cada registro original está sendo classificado.</CardDescription>
+                  <CardTitle className="text-lg font-bold text-foreground">Conferência de Status (Dados Reais)</CardTitle>
+                  <CardDescription className="text-xs font-medium text-muted-foreground/80">Validação objetiva de como cada registro original está sendo classificado.</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -970,10 +970,10 @@ export default function AdministracaoPage() {
                     return Array.from(distribution.entries())
                       .sort((a, b) => b[1].count - a[1].count)
                       .map(([status, data]) => (
-                        <TableRow key={status} className="hover:bg-slate-50/50 transition-colors h-14">
+                        <TableRow key={status} className="hover:bg-muted/30/50 transition-colors h-14">
                           <TableCell className="text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
                           <TableCell className="text-center">
-                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold text-xs">
+                            <span className="bg-slate-100 text-muted-foreground px-3 py-1 rounded-full font-bold text-xs">
                               {data.count}
                             </span>
                           </TableCell>
@@ -987,7 +987,7 @@ export default function AdministracaoPage() {
                                 data.group.includes('Aguardando') ? 'bg-yellow-500' :
                                 'bg-blue-400'
                               }`}></div>
-                              <span className="text-slate-500 font-bold uppercase text-[11px] tracking-tight">{data.group}</span>
+                              <span className="text-muted-foreground font-bold uppercase text-[11px] tracking-tight">{data.group}</span>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1003,35 +1003,35 @@ export default function AdministracaoPage() {
         <TabsContent value="backup">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1 space-y-6">
-              <Card className="border-slate-200 shadow-sm overflow-hidden">
+              <Card className="border-border/60 shadow-sm overflow-hidden">
                 <div className="bg-primary/5 p-4 border-b border-primary/10">
                   <div className="flex items-center gap-3">
                     <div className="bg-primary/10 p-2 rounded-lg"><HardDrive className="h-5 w-5 text-primary" /></div>
                     <div>
-                      <h3 className="font-bold text-slate-800">Status do Backup</h3>
-                      <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Automático (30 em 30 min)</p>
+                      <h3 className="font-bold text-foreground">Status do Backup</h3>
+                      <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">Automático (30 em 30 min)</p>
                     </div>
                   </div>
                 </div>
                 <CardContent className="pt-6 space-y-4">
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-xs font-medium text-slate-500">Último Backup</span>
-                    <span className="text-xs font-bold text-slate-800">{backups[0]?.data_hora || '-'}</span>
+                    <span className="text-xs font-medium text-muted-foreground">Último Backup</span>
+                    <span className="text-xs font-bold text-foreground">{backups[0]?.data_hora || '-'}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-xs font-medium text-slate-500">Próximo Backup</span>
-                    <span className="text-xs font-bold text-blue-600">Em 12 minutos</span>
+                    <span className="text-xs font-medium text-muted-foreground">Próximo Backup</span>
+                    <span className="text-xs font-bold text-primary">Em 12 minutos</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-xs font-medium text-slate-500">Registros Copiados</span>
-                    <span className="text-xs font-bold text-slate-800">{backups[0]?.quantidade_registros || 0}</span>
+                    <span className="text-xs font-medium text-muted-foreground">Registros Copiados</span>
+                    <span className="text-xs font-bold text-foreground">{backups[0]?.quantidade_registros || 0}</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-xs font-medium text-slate-500">Status Sistema</span>
+                    <span className="text-xs font-medium text-muted-foreground">Status Sistema</span>
                     <Badge className="bg-green-100 text-green-700 font-bold text-[9px]">Protegido</Badge>
                   </div>
                 </CardContent>
-                <CardFooter className="bg-slate-50/50 pt-4">
+                <CardFooter className="bg-muted/30/50 pt-4">
                   <Button onClick={() => {
                     generateBackup();
                     toast.success('Backup manual iniciado!');
@@ -1041,7 +1041,7 @@ export default function AdministracaoPage() {
                 </CardFooter>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm bg-amber-50/30 border-amber-100">
+              <Card className="border-border/60 shadow-sm bg-amber-50/30 border-amber-100">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-bold flex items-center gap-2 text-amber-700">
                     <Info className="h-4 w-4" /> Política de Retenção
@@ -1056,7 +1056,7 @@ export default function AdministracaoPage() {
             </div>
 
             <div className="md:col-span-2">
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="border-border/60 shadow-sm">
                 <CardHeader className="border-b">
                   <CardTitle className="text-lg font-bold">Histórico de Backups</CardTitle>
                   <CardDescription>Lista dos últimos snapshots realizados pelo sistema.</CardDescription>
@@ -1075,14 +1075,14 @@ export default function AdministracaoPage() {
                       {backups.map((b) => (
                         <TableRow key={b.id}>
                           <TableCell className="font-mono text-xs">{b.data_hora}</TableCell>
-                          <TableCell className="font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
+                          <TableCell className="font-bold text-muted-foreground text-xs">{b.quantidade_registros}</TableCell>
                           <TableCell>
-                            <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[11px]">
+                            <div className="flex items-center justify-center gap-1.5 text-success font-bold text-[11px]">
                               <CheckCircle className="h-3 w-3" /> Sucesso
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" className="h-8 gap-2 text-blue-600 font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
+                            <Button variant="ghost" size="sm" className="h-8 gap-2 text-primary font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1097,7 +1097,7 @@ export default function AdministracaoPage() {
         {/* PARÂMETROS GERAIS */}
         <TabsContent value="parametros">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-border/60 shadow-sm">
               <CardHeader className="border-b">
                 <CardTitle className="text-lg font-bold">Configurações do Fluxo</CardTitle>
                 <CardDescription>Ajuste as regras de negócio aplicadas ao controle de provimento.</CardDescription>
@@ -1106,51 +1106,51 @@ export default function AdministracaoPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-bold">Validação Obrigatória</Label>
-                    <p className="text-xs text-slate-500">Exigir validação da unidade para toda convocação.</p>
+                    <p className="text-xs text-muted-foreground">Exigir validação da unidade para toda convocação.</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-bold">Bloqueio de Vagas Suspensas</Label>
-                    <p className="text-xs text-slate-500">Impedir qualquer ação em vagas com status "Suspensa".</p>
+                    <p className="text-xs text-muted-foreground">Impedir qualquer ação em vagas com status "Suspensa".</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-bold">Alerta de Banco Vencendo</Label>
-                    <p className="text-xs text-slate-500">Notificar analistas 30 dias antes do vencimento do banco.</p>
+                    <p className="text-xs text-muted-foreground">Notificar analistas 30 dias antes do vencimento do banco.</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
               </CardContent>
-              <CardFooter className="border-t bg-slate-50/50">
+              <CardFooter className="border-t bg-muted/30/50">
                 <Button className="ml-auto gap-2"><Save className="h-4 w-4" /> Salvar Configurações</Button>
               </CardFooter>
             </Card>
 
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-border/60 shadow-sm">
               <CardHeader className="border-b">
                 <CardTitle className="text-lg font-bold">Segurança e Acesso</CardTitle>
                 <CardDescription>Configurações globais de segurança.</CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500 uppercase">Tempo de Sessão (minutos)</Label>
+                  <Label className="text-xs font-bold text-muted-foreground uppercase">Tempo de Sessão (minutos)</Label>
                   <Input type="number" defaultValue="120" className="w-[100px]" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-bold">Log de Auditoria Estendido</Label>
-                    <p className="text-xs text-slate-500">Registrar IP e dados de navegador em todos os logs.</p>
+                    <p className="text-xs text-muted-foreground">Registrar IP e dados de navegador em todos os logs.</p>
                   </div>
                   <Switch />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-sm font-bold">Forçar Troca de Senha</Label>
-                    <p className="text-xs text-slate-500">Exigir nova senha no primeiro acesso de novos usuários.</p>
+                    <p className="text-xs text-muted-foreground">Exigir nova senha no primeiro acesso de novos usuários.</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
@@ -1161,10 +1161,10 @@ export default function AdministracaoPage() {
 
         {/* FEEDBACKS */}
         <TabsContent value="feedbacks">
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-border/60 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0">
               <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Feedback dos Usuários</CardTitle>
+                <CardTitle className="text-lg font-bold text-foreground">Feedback dos Usuários</CardTitle>
                 <CardDescription>Sugestões, problemas e oportunidades reportadas via Assistente Agie.</CardDescription>
               </div>
             </CardHeader>
@@ -1184,14 +1184,14 @@ export default function AdministracaoPage() {
                   <TableBody>
                     {feedbacks && feedbacks.length > 0 ? (
                       feedbacks.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                          <TableCell className="text-xs font-medium text-slate-500">
+                        <TableRow key={item.id} className="hover:bg-muted/30/50 transition-colors">
+                          <TableCell className="text-xs font-medium text-muted-foreground">
                             {new Date(item.created_at).toLocaleString('pt-BR')}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-bold text-slate-700 text-sm">{item.user_name}</span>
-                              <span className="text-[10px] text-slate-400 font-medium">{item.user_email}</span>
+                              <span className="text-[10px] text-muted-foreground/80 font-medium">{item.user_email}</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
@@ -1206,14 +1206,14 @@ export default function AdministracaoPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="max-w-md">
-                            <p className="text-xs text-slate-600 leading-relaxed truncate hover:whitespace-normal transition-all cursor-help" title={item.mensagem}>
+                            <p className="text-xs text-muted-foreground leading-relaxed truncate hover:whitespace-normal transition-all cursor-help" title={item.mensagem}>
                               {item.mensagem}
                             </p>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className={cn(
                               "text-[10px] font-bold uppercase",
-                              item.status === 'pendente' ? "bg-slate-100 text-slate-500" :
+                              item.status === 'pendente' ? "bg-slate-100 text-muted-foreground" :
                               item.status === 'lido' ? "bg-green-100 text-green-700" :
                               "bg-primary/10 text-primary"
                             )}>
@@ -1224,19 +1224,19 @@ export default function AdministracaoPage() {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreVertical className="h-4 w-4 text-slate-400" />
+                                  <MoreVertical className="h-4 w-4 text-muted-foreground/80" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Alterar Status</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'lido')}>
-                                  <Check className="mr-2 h-4 w-4 text-green-600" /> Marcar como lido
+                                  <Check className="mr-2 h-4 w-4 text-success" /> Marcar como lido
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'respondido')}>
                                   <Send className="mr-2 h-4 w-4 text-primary" /> Marcar como respondido
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'pendente')}>
-                                  <Clock className="mr-2 h-4 w-4 text-slate-500" /> Marcar como pendente
+                                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" /> Marcar como pendente
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1245,7 +1245,7 @@ export default function AdministracaoPage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-32 text-center text-slate-400 italic">
+                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground/80 italic">
                           Nenhum feedback recebido até o momento.
                         </TableCell>
                       </TableRow>
@@ -1259,10 +1259,10 @@ export default function AdministracaoPage() {
 
         {/* FERIADOS LOCAIS */}
         <TabsContent value="feriados">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0 bg-slate-50/50">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0 bg-muted/30/50">
               <div>
-                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-primary" />
                   Gerenciamento de Feriados Locais
                 </CardTitle>
@@ -1287,7 +1287,7 @@ export default function AdministracaoPage() {
                   <TableBody>
                     {feriados && feriados.length > 0 ? (
                       feriados.map((f) => (
-                        <TableRow key={f.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableRow key={f.id} className="hover:bg-muted/30/50 transition-colors">
                           <TableCell className="font-mono text-sm font-bold text-primary">
                             {new Date(f.data + 'T00:00:00').toLocaleDateString('pt-BR')}
                           </TableCell>
@@ -1300,15 +1300,15 @@ export default function AdministracaoPage() {
                               {f.tipo}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-xs text-slate-500">
+                          <TableCell className="text-xs text-muted-foreground">
                             {f.tipo === 'municipal' ? `${f.cidade} / ${f.estado}` : f.estado}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="icon" onClick={() => openEditHoliday(f)} className="h-8 w-8">
-                                <Edit2 className="h-4 w-4 text-slate-400" />
+                                <Edit2 className="h-4 w-4 text-muted-foreground/80" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteFeriado(f.id)} className="h-8 w-8 hover:text-red-600">
+                              <Button variant="ghost" size="icon" onClick={() => deleteFeriado(f.id)} className="h-8 w-8 hover:text-destructive">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -1317,7 +1317,7 @@ export default function AdministracaoPage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-32 text-center text-slate-400 italic">
+                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground/80 italic">
                           Nenhum feriado local cadastrado.
                         </TableCell>
                       </TableRow>
@@ -1340,9 +1340,9 @@ export default function AdministracaoPage() {
             <DialogDescription>Preencha os dados, defina a senha e as permissões iniciais.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-5 py-4">
-            <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+            <div className="flex items-center gap-6 p-4 bg-muted/30 rounded-xl border border-border/40">
               <div className="relative group">
-                <div className="h-20 w-20 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                <div className="h-20 w-20 rounded-full bg-white border-2 border-border/60 flex items-center justify-center overflow-hidden shadow-sm">
                   {newUser.avatar_url ? (
                     <img src={newUser.avatar_url} alt="Preview" className="h-full w-full object-cover" />
                   ) : (
@@ -1368,8 +1368,8 @@ export default function AdministracaoPage() {
                 />
               </div>
               <div className="flex-1 space-y-1">
-                <h4 className="text-sm font-bold text-slate-800">Foto de Perfil</h4>
-                <p className="text-xs text-slate-500">Adicione uma foto para facilitar a identificação do usuário no sistema.</p>
+                <h4 className="text-sm font-bold text-foreground">Foto de Perfil</h4>
+                <p className="text-xs text-muted-foreground">Adicione uma foto para facilitar a identificação do usuário no sistema.</p>
                 <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-primary px-0 hover:bg-transparent" onClick={() => fileInputRef.current?.click()}>
                   <Upload className="h-3 w-3 mr-1" /> Alterar foto
                 </Button>
@@ -1546,10 +1546,10 @@ export default function AdministracaoPage() {
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
-                <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
+                <Badge variant="outline" className="text-[10px] bg-muted/30 text-muted-foreground font-bold border-border/60">Personalizado por Perfil</Badge>
               </div>
               
-              <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <div className="grid grid-cols-1 gap-2 bg-muted/30/50 p-4 rounded-xl border border-border/40">
                 {MODULOS_SISTEMA.map(modulo => {
                   const isChecked = newUser.modulos_acesso?.includes(modulo.id);
                   const canEdit = newUser.permissoes_modulo?.[modulo.id] === 'edit';
@@ -1612,7 +1612,7 @@ export default function AdministracaoPage() {
                 <Switch checked={newUser.acesso_portal_unidade} onCheckedChange={(v) => setNewUser(p => ({ ...p, acesso_portal_unidade: v }))} />
                 <div>
                   <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
-                  <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
+                  <p className="text-[10px] text-primary mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
                 </div>
               </div>
             </div>
@@ -1649,9 +1649,9 @@ export default function AdministracaoPage() {
           </DialogHeader>
           {editingUser && (
             <div className="grid gap-5 py-4">
-              <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="flex items-center gap-6 p-4 bg-muted/30 rounded-xl border border-border/40">
                 <div className="relative group">
-                  <div className="h-20 w-20 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                  <div className="h-20 w-20 rounded-full bg-white border-2 border-border/60 flex items-center justify-center overflow-hidden shadow-sm">
                     {editingUser.avatar_url ? (
                       <img src={editingUser.avatar_url} alt="Preview" className="h-full w-full object-cover" />
                     ) : (
@@ -1677,8 +1677,8 @@ export default function AdministracaoPage() {
                   />
                 </div>
                 <div className="flex-1 space-y-1">
-                  <h4 className="text-sm font-bold text-slate-800">Foto de Perfil</h4>
-                  <p className="text-xs text-slate-500">Adicione uma foto para facilitar a identificação do usuário no sistema.</p>
+                  <h4 className="text-sm font-bold text-foreground">Foto de Perfil</h4>
+                  <p className="text-xs text-muted-foreground">Adicione uma foto para facilitar a identificação do usuário no sistema.</p>
                   <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-primary px-0 hover:bg-transparent" onClick={() => editFileInputRef.current?.click()}>
                     <Upload className="h-3 w-3 mr-1" /> Alterar foto
                   </Button>
@@ -1791,10 +1791,10 @@ export default function AdministracaoPage() {
               <div className="space-y-4 border-t pt-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
-                  <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
+                  <Badge variant="outline" className="text-[10px] bg-muted/30 text-muted-foreground font-bold border-border/60">Personalizado por Perfil</Badge>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                <div className="grid grid-cols-1 gap-2 bg-muted/30/50 p-4 rounded-xl border border-border/40">
                   {MODULOS_SISTEMA.map(modulo => {
                     const isChecked = editingUser.modulos_acesso?.includes(modulo.id);
                     const canEdit = editingUser.permissoes_modulo?.[modulo.id] === 'edit';
@@ -1856,7 +1856,7 @@ export default function AdministracaoPage() {
                   <Switch checked={editingUser?.acesso_portal_unidade || false} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, acesso_portal_unidade: v }))} />
                   <div>
                     <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
-                    <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
+                    <p className="text-[10px] text-primary mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
                   </div>
                 </div>
               </div>

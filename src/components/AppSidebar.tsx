@@ -195,8 +195,8 @@ export function AppSidebar() {
   }, [location.pathname, location.search, mainItems, isParentActive, activeParent]);
 
   return (
-     <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#070e17] shadow-2xl">
-       <SidebarHeader className="border-b border-white/5 py-8 px-6">
+      <Sidebar collapsible="icon" className="border-r border-border/40 bg-sidebar shadow-xl">
+        <SidebarHeader className="border-b border-border/40 py-8 px-6">
         <div className="flex items-center gap-4 transition-all duration-300">
           <div className="relative group">
             <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
@@ -204,10 +204,10 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
-               <span className="font-black text-xs text-white uppercase tracking-[0.2em] leading-tight whitespace-nowrap ml-1 opacity-90">
+               <span className="font-black text-xs text-sidebar-foreground uppercase tracking-[0.2em] leading-tight whitespace-nowrap ml-1 opacity-90">
                  Provimento
                  <br />
-                 <span className="text-primary-foreground/60 tracking-[0.4em] font-medium text-[9px]">Digital</span>
+                  <span className="text-muted-foreground tracking-[0.4em] font-medium text-[9px]">Digital</span>
                </span>
             </div>
           )}
@@ -216,8 +216,8 @@ export function AppSidebar() {
 
       <SidebarContent className="py-6 custom-scrollbar overflow-y-auto overflow-x-hidden">
         <SidebarGroup className="px-3">
-           <SidebarGroupLabel className="px-4 text-[9px] font-black uppercase tracking-[0.4em] text-white/30 mb-6 flex items-center gap-3">
-             <div className="h-[1px] w-4 bg-white/10" />
+           <SidebarGroupLabel className="px-4 text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60 mb-6 flex items-center gap-3">
+             <div className="h-[1px] w-4 bg-border/40" />
              OPERACIONAL
            </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -244,16 +244,16 @@ export function AppSidebar() {
                                to={item.url}
                                className={cn(
                                  "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative select-none cursor-pointer w-full",
-                                 active 
-                                   ? "text-white bg-white/5" 
-                                   : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                                 active
+                                   ? "text-sidebar-foreground bg-sidebar-accent shadow-sm ring-1 ring-border/30"
+                                   : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                                )}
                              >
                                <item.icon className={cn(
                                  "h-[18px] w-[18px] shrink-0 transition-all duration-300",
-                                 active 
-                                   ? "text-white" 
-                                   : "text-slate-500 group-hover:text-slate-200"
+                                 active
+                                   ? "text-primary"
+                                   : "text-muted-foreground/60 group-hover:text-sidebar-foreground"
                                )} />
                                {!collapsed && (
                                  <span className={cn(
@@ -265,7 +265,7 @@ export function AppSidebar() {
                                )}
                                {!collapsed && (
                                  <ChevronDown className={cn(
-                                   "ml-auto h-3.5 w-3.5 text-white/20 transition-transform duration-300",
+                                   "ml-auto h-3.5 w-3.5 text-muted-foreground/30 transition-transform duration-300",
                                    isOpen && "rotate-180"
                                  )} />
                                )}
@@ -274,7 +274,7 @@ export function AppSidebar() {
                         </CollapsibleTrigger>
                         {!collapsed && (
                           <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                           <SidebarMenuSub className="ml-5 mt-1 border-l border-white/10 space-y-1 py-1 pl-4 relative">
+                           <SidebarMenuSub className="ml-5 mt-1 border-l border-border/60 space-y-1 py-1 pl-4 relative">
                              {item.subMenu.map((sub) => {
                                const subActive = isUrlActive(sub.url);
                                return (
@@ -288,15 +288,15 @@ export function AppSidebar() {
                                        }}
                                        className={cn(
                                          "text-[12px] py-2 px-3 rounded-lg transition-all duration-300 block relative select-none group/sub font-medium",
-                                         subActive
-                                           ? "text-white bg-white/5"
-                                           : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]"
+                                           subActive
+                                             ? "text-primary font-bold bg-sidebar-accent/50"
+                                             : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
                                        )}
                                      >
                                        <span className="relative z-10 flex items-center gap-2.5">
                                          <span className={cn(
                                            "h-1 w-1 rounded-full shrink-0 transition-all duration-300",
-                                           subActive ? "bg-white" : "bg-white/10 group-hover/sub:bg-white/30"
+                                             subActive ? "bg-primary" : "bg-border group-hover/sub:bg-muted-foreground/30"
                                          )} />
                                          {sub.title}
                                        </span>
@@ -316,16 +316,16 @@ export function AppSidebar() {
                          end={item.url === '/'}
                          className={cn(
                            "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group relative select-none",
-                           active 
-                             ? "bg-white/10 text-white shadow-xl border border-white/10" 
-                             : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                           active
+                             ? "bg-sidebar-accent text-sidebar-foreground shadow-sm ring-1 ring-border/30"
+                             : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                          )}
                        >
                          <item.icon className={cn(
                            "h-[18px] w-[18px] shrink-0 transition-all duration-300",
-                           active 
-                             ? "text-white" 
-                             : "text-slate-500 group-hover:text-slate-200"
+                           active
+                             ? "text-primary"
+                             : "text-muted-foreground/60 group-hover:text-sidebar-foreground"
                          )} />
                          {!collapsed && (
                            <span className={cn(
@@ -345,11 +345,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <div className="mx-5 my-3 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        <div className="mx-5 my-3 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
 
         <SidebarGroup className="px-3 mt-1">
-          <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
-            <div className="h-[1px] w-6 bg-white/15" />
+          <SidebarGroupLabel className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-5 flex items-center gap-3">
+            <div className="h-[1px] w-6 bg-border/40" />
             CONTROLE OPERACIONAL
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -365,17 +365,17 @@ export function AppSidebar() {
                           href={item.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={cn(
-                            "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
-                            active
-                              ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20"
-                              : "text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300 hover:translate-x-1"
-                          )}
-                        >
-                          <item.icon className={cn(
-                            "h-5 w-5 shrink-0 transition-all duration-300",
-                            active ? "text-emerald-300 scale-110" : "text-slate-400 group-hover:text-emerald-300 group-hover:scale-110"
-                          )} />
+                            className={cn(
+                              "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
+                              active
+                                ? "bg-success/10 text-success border border-success/20 shadow-sm"
+                                : "text-muted-foreground hover:bg-success/5 hover:text-success hover:translate-x-1"
+                            )}
+                          >
+                            <item.icon className={cn(
+                              "h-5 w-5 shrink-0 transition-all duration-300",
+                              active ? "text-success scale-110" : "text-muted-foreground/50 group-hover:text-success group-hover:scale-110"
+                            )} />
                           {!collapsed && (
                             <>
                               <span className="text-[13.5px] font-bold tracking-tight flex-1">{item.title}</span>
@@ -389,15 +389,15 @@ export function AppSidebar() {
                           className={cn(
                             "flex items-center gap-3.5 px-3 py-3 rounded-xl transition-all duration-300 group relative select-none",
                             active
-                              ? "bg-white/10 text-white shadow-[0_4px_15px_-5px_rgba(255,255,255,0.1)] border border-white/20"
-                              : "text-slate-300 hover:bg-white/5 hover:text-slate-100 hover:translate-x-1"
+                              ? "bg-sidebar-accent text-sidebar-foreground shadow-sm ring-1 ring-border/30"
+                              : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground hover:translate-x-1"
                           )}
                         >
                           <item.icon className={cn(
                             "h-5 w-5 shrink-0 transition-all duration-300",
                             active
-                              ? "text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
-                              : "text-slate-400 group-hover:text-white group-hover:scale-110"
+                              ? "text-primary scale-110"
+                              : "text-muted-foreground/60 group-hover:text-sidebar-foreground group-hover:scale-110"
                           )} />
                           {!collapsed && (
                             <span className={cn(
@@ -408,7 +408,7 @@ export function AppSidebar() {
                             </span>
                           )}
                           {active && !collapsed && (
-                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1)]" />
+                            <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-primary" />
                           )}
                         </NavLink>
                       )}
@@ -421,32 +421,32 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/10 py-6 px-4">
+      <SidebarFooter className="border-t border-border/40 py-6 px-4">
         {!collapsed && (
           <div className="flex flex-col gap-4">
             <button 
               onClick={() => setShowSupport(true)}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition-all group border border-white/10"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-sidebar-accent/30 text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all group border border-border/40 shadow-sm"
             >
-              <HelpCircle className="h-5 w-5 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-white" />
+              <HelpCircle className="h-5 w-5 group-hover:scale-110 transition-transform text-muted-foreground/60 group-hover:text-primary" />
               <span className="text-sm font-bold tracking-tight">Suporte Técnico</span>
             </button>
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-sidebar-accent/40 to-transparent border border-border/30">
               <div className="flex flex-col overflow-hidden mb-3">
-                <span className="text-sm font-bold text-white truncate leading-tight">
+                <span className="text-sm font-bold text-sidebar-foreground truncate leading-tight">
                   {currentUser?.nome_completo || 'Usuário'}
                 </span>
-                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight">
+                <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-wider truncate leading-tight">
                   {currentUser?.perfil || 'Acesso Restrito'}
                 </span>
               </div>
               <div className="flex gap-2">
-                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
+                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-sidebar-accent/50 text-xs font-bold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all border border-border/40">
                   Acessar Perfil
                 </button>
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-red-500/10 text-xs font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-destructive/5 text-xs font-bold text-destructive hover:bg-destructive/10 hover:text-destructive transition-all border border-destructive/10"
                   title="Sair do sistema"
                 >
                   <LogOut className="h-3.5 w-3.5" />

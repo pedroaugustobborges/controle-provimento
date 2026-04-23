@@ -57,7 +57,7 @@ export function LogoutConfirmDialog({ open, onOpenChange }: Props) {
       <AlertDialogContent className="sm:max-w-[420px]">
         <AlertDialogHeader>
           <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
-            <LogOut className="h-6 w-6 text-red-600" />
+            <LogOut className="h-6 w-6 text-destructive" />
           </div>
           <AlertDialogTitle className="text-center">Sair do sistema</AlertDialogTitle>
           <AlertDialogDescription className="text-center">
@@ -71,7 +71,7 @@ export function LogoutConfirmDialog({ open, onOpenChange }: Props) {
               e.preventDefault();
               handleConfirm();
             }}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-destructive hover:bg-red-700 text-white"
           >
             Sim, sair
           </AlertDialogAction>

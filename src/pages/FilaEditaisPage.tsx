@@ -361,8 +361,8 @@ export default function FilaEditaisPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800">Fila de Editais</h1>
-          <p className="text-slate-500 mt-1">Vagas aguardando redação e publicação de novo edital.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Fila de Editais</h1>
+          <p className="text-muted-foreground mt-1">Vagas aguardando redação e publicação de novo edital.</p>
           <div className="mt-2"><HelpGuide /></div>
         </div>
         {permissions.canImport() && (
@@ -378,10 +378,10 @@ export default function FilaEditaisPage() {
         <Card className="bg-amber-50/50 border-amber-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-amber-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-amber-600" /></div>
+              <div className="bg-amber-100 p-2 rounded-lg"><Clock className="h-5 w-5 text-warning" /></div>
               <div>
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Total na Fila</p>
-                <p className="text-2xl font-bold text-slate-800">{pendingVagas.length}</p>
+                <p className="text-xs font-bold text-warning uppercase tracking-wider">Total na Fila</p>
+                <p className="text-2xl font-bold text-foreground">{pendingVagas.length}</p>
               </div>
             </div>
           </CardContent>
@@ -389,10 +389,10 @@ export default function FilaEditaisPage() {
         <Card className="bg-blue-50/50 border-blue-100 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-lg"><FileText className="h-5 w-5 text-blue-600" /></div>
+              <div className="bg-blue-100 p-2 rounded-lg"><FileText className="h-5 w-5 text-primary" /></div>
               <div>
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Aguardando Redação</p>
-                <p className="text-2xl font-bold text-slate-800">{pendingVagas.filter(v => !v.numero_edital).length}</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Aguardando Redação</p>
+                <p className="text-2xl font-bold text-foreground">{pendingVagas.filter(v => !v.numero_edital).length}</p>
               </div>
             </div>
           </CardContent>
@@ -417,7 +417,7 @@ export default function FilaEditaisPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold"
+                className="h-8 bg-emerald-500 hover:bg-success text-white border-0 font-semibold"
                 onClick={handleOpenBatchSend}
                 disabled={!sendGroupedValidation.ok}
                 title={!sendGroupedValidation.ok ? sendGroupedValidation.reason : 'Enviar todos selecionados como 1 edital agrupado'}
@@ -429,7 +429,7 @@ export default function FilaEditaisPage() {
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-8 bg-amber-500 hover:bg-amber-600 text-white border-0 font-semibold"
+                className="h-8 bg-amber-500 hover:bg-warning text-white border-0 font-semibold"
                 onClick={() => handleOpenReturnModal(selectedVagas)}
                 title="Devolver vagas selecionadas ao Controle de Vagas"
               >
@@ -443,15 +443,15 @@ export default function FilaEditaisPage() {
         </div>
       )}
 
-      <Card className="shadow-sm border-slate-200 overflow-hidden">
-        <CardHeader className="pb-3 border-b bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="shadow-sm border-border/60 overflow-hidden">
+        <CardHeader className="pb-3 border-b bg-muted/30/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <ListFilter className="h-5 w-5 text-primary" />
             Vagas para Publicação
           </CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/80" />
               <Input 
                 placeholder="Buscar cargo ou REQ..." 
                 className="pl-9 w-[250px] bg-white" 
@@ -461,7 +461,7 @@ export default function FilaEditaisPage() {
             </div>
             <Select value={filterUnidade} onValueChange={setFilterUnidade}>
               <SelectTrigger className="w-[200px] bg-white">
-                <Building2 className="h-4 w-4 mr-2 text-slate-400" />
+                <Building2 className="h-4 w-4 mr-2 text-muted-foreground/80" />
                 <SelectValue placeholder="Todas as Unidades" />
               </SelectTrigger>
               <SelectContent>
@@ -530,39 +530,39 @@ export default function FilaEditaisPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                          <Building2 className="h-3.5 w-3.5 text-muted-foreground/80" />
                           <span className="font-medium text-slate-700">{v.unidade}</span>
                           {isUngroupedFromConsolidated && (
                             <Badge variant="outline" className="text-[9px] bg-amber-50 text-amber-700 border-amber-200">desagrupado</Badge>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-semibold text-slate-800">{v.cargo}</TableCell>
-                      <TableCell className="text-[11px] font-bold uppercase text-slate-500">{v.tipo_vaga}</TableCell>
+                      <TableCell className="font-semibold text-foreground">{v.cargo}</TableCell>
+                      <TableCell className="text-[11px] font-bold uppercase text-muted-foreground">{v.tipo_vaga}</TableCell>
                       <TableCell className="text-center font-bold text-slate-700">{v.numero_vagas || v.quantidade}</TableCell>
-                      <TableCell className="text-slate-500 whitespace-nowrap">
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
                         {formatDate(v.data_recebimento!)}
                       </TableCell>
                       <TableCell className="text-center font-bold text-slate-700">
                         {calcDiasAberto(v.data_recebimento || v.data_abertura)}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 border-blue-200">
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary bg-blue-50 border-blue-200">
                           {v.status || v.status_geral || 'Sem Status'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs font-medium text-slate-600">
-                        {v.analista_responsavel || <span className="italic text-slate-400">—</span>}
+                      <TableCell className="text-xs font-medium text-muted-foreground">
+                        {v.analista_responsavel || <span className="italic text-muted-foreground/80">—</span>}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" title="Redigir" onClick={() => navigate(`/vagas/${v.id}`)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
+                          <Button variant="ghost" size="icon" className="text-primary hover:text-blue-700 hover:bg-blue-50" title="Encaminhar para Publicação" onClick={() => handleOpenSendModal(v)}>
                             <Send className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50" title="Devolver ao Controle de Vagas" onClick={() => handleOpenReturnModal([v])}>
+                          <Button variant="ghost" size="icon" className="text-warning hover:text-amber-700 hover:bg-amber-50" title="Devolver ao Controle de Vagas" onClick={() => handleOpenReturnModal([v])}>
                             <Undo2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -575,7 +575,7 @@ export default function FilaEditaisPage() {
                     <TableCell colSpan={11} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <CheckCircle2 className="h-10 w-10 text-slate-200" />
-                        <p className="text-slate-500 font-medium">Nenhuma pendência encontrada na fila de editais.</p>
+                        <p className="text-muted-foreground font-medium">Nenhuma pendência encontrada na fila de editais.</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -599,22 +599,22 @@ export default function FilaEditaisPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-              <p className="text-[10px] text-slate-500 uppercase font-bold mb-2">
+            <div className="bg-muted/30 p-3 rounded-lg border border-border/40">
+              <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">
                 Região: <span className="text-slate-700">{regiaoSelecionada}</span>
                 <span className="ml-3">Unidades: <span className="text-slate-700">{Array.from(new Set(selectedVagas.map(v => v.unidade))).join(', ')}</span></span>
               </p>
               <ul className="space-y-1 max-h-[180px] overflow-y-auto">
                 {selectedVagas.map(v => (
-                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-border/40 last:border-b-0">
                     <span className="font-medium text-slate-700">{v.cargo}</span>
-                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                    <span className="text-muted-foreground font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-slate-800">Validações obrigatórias (aplicam-se a todos)</Label>
+              <Label className="text-sm font-semibold text-foreground">Validações obrigatórias (aplicam-se a todos)</Label>
               {[
                 { key: 'cargo' as const, label: 'Cargo validado com a unidade' },
                 { key: 'carga' as const, label: 'Carga horária validada com a unidade' },
@@ -622,7 +622,7 @@ export default function FilaEditaisPage() {
               ].map(item => (
                 <div
                   key={item.key}
-                  className="flex items-center space-x-3 p-2 rounded-md border border-slate-100 hover:bg-slate-50 cursor-pointer"
+                  className="flex items-center space-x-3 p-2 rounded-md border border-border/40 hover:bg-muted/30 cursor-pointer"
                   onClick={() => setBatchValidacoes(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
                 >
                   <Checkbox checked={batchValidacoes[item.key]} onCheckedChange={(c) => setBatchValidacoes(prev => ({ ...prev, [item.key]: !!c }))} />
@@ -631,7 +631,7 @@ export default function FilaEditaisPage() {
               ))}
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-semibold text-slate-800">Observações para a Redação</Label>
+              <Label className="text-sm font-semibold text-foreground">Observações para a Redação</Label>
               <Textarea
                 placeholder="Instruções comuns ao edital agrupado..."
                 className="min-h-[80px] resize-none"
@@ -642,7 +642,7 @@ export default function FilaEditaisPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsBatchSendOpen(false)}>Cancelar</Button>
-            <Button onClick={handleConfirmBatchSend} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleConfirmBatchSend} className="bg-success hover:bg-emerald-700">
               Confirmar e enviar agrupado
             </Button>
           </DialogFooter>
@@ -665,52 +665,52 @@ export default function FilaEditaisPage() {
           
           {selectedVaga && (
             <div className="space-y-6 py-4">
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-2">
+              <div className="bg-muted/30 p-3 rounded-lg border border-border/40 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Unidade:</span>
+                  <span className="text-muted-foreground font-medium">Unidade:</span>
                   <span className="font-bold text-slate-700">{selectedVaga.unidade}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Cargo:</span>
+                  <span className="text-muted-foreground font-medium">Cargo:</span>
                   <span className="font-bold text-slate-700">{selectedVaga.cargo}</span>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <CheckSquare className="h-4 w-4 text-primary" />
                   Validações Obrigatórias
                 </h4>
                 
                 <div className="space-y-3">
-                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setCargoValidado(!cargoValidado)}>
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-border/40 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setCargoValidado(!cargoValidado)}>
                     <Checkbox id="cargo" checked={cargoValidado} onCheckedChange={(checked) => setCargoValidado(checked as boolean)} />
                     <div className="grid gap-1.5 leading-none">
                       <Label htmlFor="cargo" className="text-sm font-medium cursor-pointer">Cargo validado com a unidade</Label>
-                      <p className="text-xs text-slate-500">Confirmo que a nomenclatura do cargo está correta.</p>
+                      <p className="text-xs text-muted-foreground">Confirmo que a nomenclatura do cargo está correta.</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setCargaValidada(!cargaValidada)}>
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-border/40 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setCargaValidada(!cargaValidada)}>
                     <Checkbox id="carga" checked={cargaValidada} onCheckedChange={(checked) => setCargaValidada(checked as boolean)} />
                     <div className="grid gap-1.5 leading-none">
                       <Label htmlFor="carga" className="text-sm font-medium cursor-pointer">Carga horária validada com a unidade</Label>
-                      <p className="text-xs text-slate-500">Confirmo que a jornada semanal está correta.</p>
+                      <p className="text-xs text-muted-foreground">Confirmo que a jornada semanal está correta.</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-3 p-3 rounded-md border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setSalarioValidado(!salarioValidado)}>
+                  <div className="flex items-start space-x-3 p-3 rounded-md border border-border/40 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSalarioValidado(!salarioValidado)}>
                     <Checkbox id="salario" checked={salarioValidado} onCheckedChange={(checked) => setSalarioValidado(checked as boolean)} />
                     <div className="grid gap-1.5 leading-none">
                       <Label htmlFor="salario" className="text-sm font-medium cursor-pointer">Salário validado com a unidade</Label>
-                      <p className="text-xs text-slate-500">Confirmo que a remuneração está atualizada.</p>
+                      <p className="text-xs text-muted-foreground">Confirmo que a remuneração está atualizada.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="obs" className="text-sm font-semibold text-slate-800">Observações para Redação/Publicação</Label>
+                <Label htmlFor="obs" className="text-sm font-semibold text-foreground">Observações para Redação/Publicação</Label>
                 <Textarea 
                   id="obs" 
                   placeholder="Instruções sobre salário, carga horária, urgência ou perfil da vaga..."
@@ -744,12 +744,12 @@ export default function FilaEditaisPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 max-h-[160px] overflow-y-auto">
+            <div className="bg-muted/30 p-3 rounded-lg border border-border/40 max-h-[160px] overflow-y-auto">
               <ul className="space-y-1">
                 {returnTargets.map(v => (
-                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-slate-100 last:border-b-0">
-                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-slate-400">— {v.unidade}</span></span>
-                    <span className="text-slate-500 font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
+                  <li key={v.id} className="text-xs flex justify-between gap-2 py-1 border-b border-border/40 last:border-b-0">
+                    <span className="font-medium text-slate-700">{v.cargo} <span className="text-muted-foreground/80">— {v.unidade}</span></span>
+                    <span className="text-muted-foreground font-mono text-[10px]">{v.requisicao || v.numero_requisicao}</span>
                   </li>
                 ))}
               </ul>
@@ -772,7 +772,7 @@ export default function FilaEditaisPage() {
                 onChange={(e) => setReturnObs(e.target.value)}
                 className="min-h-[90px] resize-none"
               />
-              <p className="text-[11px] text-slate-500">{returnObs.trim().length}/10 caracteres mínimos</p>
+              <p className="text-[11px] text-muted-foreground">{returnObs.trim().length}/10 caracteres mínimos</p>
             </div>
           </div>
           <DialogFooter>
@@ -780,7 +780,7 @@ export default function FilaEditaisPage() {
             <Button
               onClick={handleConfirmReturn}
               disabled={returnSubmitting || returnObs.trim().length < 10}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-warning hover:bg-amber-700 text-white"
             >
               {returnSubmitting ? 'Devolvendo...' : 'Confirmar devolução'}
             </Button>

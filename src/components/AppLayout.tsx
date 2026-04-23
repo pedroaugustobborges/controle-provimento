@@ -57,14 +57,14 @@ function getGreeting(): string {
 }
 
 const routeContextMap: Record<string, { color: string; bgLight: string; icon: React.ElementType }> = {
-  'vagas': { color: 'text-blue-600', bgLight: 'bg-blue-50 border-blue-200', icon: Briefcase },
-  'editais': { color: 'text-teal-600', bgLight: 'bg-teal-50 border-teal-200', icon: FileText },
-  'fila-editais': { color: 'text-cyan-600', bgLight: 'bg-cyan-50 border-cyan-200', icon: ListOrdered },
-  'convocacoes': { color: 'text-amber-600', bgLight: 'bg-amber-50 border-amber-200', icon: Megaphone },
-  'validacao': { color: 'text-emerald-600', bgLight: 'bg-emerald-50 border-emerald-200', icon: ShieldCheck },
-  'gestor': { color: 'text-purple-600', bgLight: 'bg-purple-50 border-purple-200', icon: Settings },
-  'banco-talentos': { color: 'text-indigo-600', bgLight: 'bg-indigo-50 border-indigo-200', icon: Users },
-  'importacoes': { color: 'text-green-600', bgLight: 'bg-green-50 border-green-200', icon: Upload },
+  'vagas': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: Briefcase },
+  'editais': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: FileText },
+  'fila-editais': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: ListOrdered },
+  'convocacoes': { color: 'text-warning', bgLight: 'bg-warning/5 border-warning/10', icon: Megaphone },
+  'validacao': { color: 'text-success', bgLight: 'bg-success/5 border-success/10', icon: ShieldCheck },
+  'gestor': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: Settings },
+  'banco-talentos': { color: 'text-primary', bgLight: 'bg-primary/5 border-primary/10', icon: Users },
+  'importacoes': { color: 'text-success', bgLight: 'bg-success/5 border-success/10', icon: Upload },
 };
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -267,11 +267,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 }`}>
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <Sparkles className="h-3.5 w-3.5 text-warning" />
-                     <span className="text-[13px] font-bold text-slate-800">
+                     <span className="text-[13px] font-bold text-foreground">
                       {getGreeting()}, <span className="text-primary">{userName}</span>
                     </span>
                   </div>
-                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest whitespace-nowrap">
+                   <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-widest whitespace-nowrap">
                      {currentUser?.cargo || 'Sistema AGIR'} <span className="mx-1 opacity-30">•</span> {currentUser?.perfil || 'Usuário'}
                    </span>
                 </div>
@@ -302,7 +302,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Popover>
                 )}
 
-                 <div className={`hidden xl:flex items-center gap-2 text-[9px] text-emerald-600 font-black uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100/50 transition-all duration-300 ${
+                 <div className={`hidden xl:flex items-center gap-2 text-[9px] text-success font-black uppercase tracking-widest bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100/50 transition-all duration-300 ${
                   isCompact ? 'opacity-0 max-w-0 overflow-hidden px-0 border-0' : 'opacity-100 max-w-xs'
                 }`}>
                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -318,9 +318,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       )}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-slate-200/60 shadow-xl rounded-xl">
-                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                      <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-border/60/60 shadow-xl rounded-xl">
+                    <div className="p-4 border-b border-border/40 flex items-center justify-between bg-muted/30/50">
+                      <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Bell className="h-4 w-4 text-primary" />
                         Notificações
                       </h3>
@@ -348,23 +348,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                   updateAlerta(alerta.id, { status: 'lido' });
                                 }
                               }}
-                              className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors group relative ${
+                              className={`flex gap-3 p-4 hover:bg-muted/30 transition-colors group relative ${
                                 alerta.status === 'nao_lido' ? 'bg-primary/5' : ''
                               }`}
                             >
                               <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                                alerta.tipo === 'atraso' ? 'bg-amber-100 text-amber-600' :
-                                alerta.tipo === 'critico' ? 'bg-red-100 text-red-600' :
-                                'bg-blue-100 text-blue-600'
+                                alerta.tipo === 'atraso' ? 'bg-amber-100 text-warning' :
+                                alerta.tipo === 'critico' ? 'bg-red-100 text-destructive' :
+                                'bg-blue-100 text-primary'
                               }`}>
                                 {alerta.tipo === 'atraso' ? <AlertTriangle className="h-4 w-4" /> :
                                  alerta.tipo === 'critico' ? <Bell className="h-4 w-4" /> :
                                  <Info className="h-4 w-4" />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-800 line-clamp-1">{alerta.titulo}</p>
-                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{alerta.mensagem}</p>
-                                <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
+                                <p className="text-sm font-medium text-foreground line-clamp-1">{alerta.titulo}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{alerta.mensagem}</p>
+                                <p className="text-[10px] text-muted-foreground/80 mt-1 uppercase font-semibold tracking-wider">
                                   {format(parseISO(alerta.data_criacao), "dd 'de' MMMM", { locale: ptBR })}
                                 </p>
                               </div>
@@ -518,7 +518,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
-                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+                  <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-primary">
                     <Mail className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
@@ -528,7 +528,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <div className="flex items-center gap-4 p-3 rounded-xl bg-muted/30 border border-border/40 transition-all hover:bg-muted/50">
-                  <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                  <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-primary">
                     <Shield className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">

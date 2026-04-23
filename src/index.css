@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 215 45% 25%; /* Petroleum Blue / Institutional Blue */
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -36,14 +36,14 @@
 
      --radius: 0.75rem;
 
-    --sidebar-background: 215 45% 25%; /* Blue sidebar for executive feel */
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 40% 98%;
-    --sidebar-primary-foreground: 215 45% 25%;
-    --sidebar-accent: 215 45% 30%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 45% 20%;
-    --sidebar-ring: 210 40% 98%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-primary: 222.2 47.4% 11.2%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
 
     --success: 142 60% 42%;
     --success-foreground: 0 0% 100%;
@@ -52,12 +52,11 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    /* Status colors refined */
-    --status-open: 215 45% 25%;
+    --status-open: 221.2 83.2% 53.3%;
     --status-edital: 38 92% 50%;
     --status-closed: 142 60% 42%;
-    --status-pending: 215 25% 45%;
-    --status-alert: 0 84% 60%;
+    --status-pending: 215 20.2% 65.1%;
+    --status-alert: 0 84.2% 60.2%;
   }
 }
 
@@ -65,30 +64,9 @@
   * {
     @apply border-border;
   }
-   body {
-     @apply bg-[#f8fafc] text-slate-900 font-sans antialiased selection:bg-primary/10 selection:text-primary;
-     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-     letter-spacing: -0.011em;
-   }
-   .premium-card {
-     @apply bg-white border border-slate-200/60 shadow-[0_2px_4px_rgba(0,0,0,0.02),0_1px_1px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 rounded-2xl;
-   }
- 
-   .premium-table-header {
-     @apply bg-slate-50/50 border-b border-slate-100 text-[10px] font-bold uppercase tracking-widest text-slate-500 py-4 px-6;
-   }
- 
-   .premium-badge {
-     @apply inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-tight transition-all duration-200;
-   }
- 
-   .sidebar-item-active {
-     @apply bg-white/10 text-white shadow-[0_4px_12px_-4px_rgba(255,255,255,0.1)] border border-white/20;
-   }
- 
-   .sidebar-item-hover {
-     @apply hover:bg-white/5 hover:text-white transition-all duration-200;
-   }
+    body {
+      @apply bg-background text-foreground;
+    }
 }
 
 @layer utilities {
@@ -110,11 +88,4 @@
     @apply bg-blue-500/10 rounded-full hover:bg-blue-500/30 transition-all duration-300;
   }
 
-  .glass-card {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
-  }
-
-  .neo-blur {
-    @apply bg-white/40 backdrop-blur-xl border border-white/30 shadow-2xl;
-  }
 }

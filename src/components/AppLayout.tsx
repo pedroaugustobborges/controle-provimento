@@ -254,9 +254,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <header className="shrink-0 z-20 sticky top-0 bg-background transition-all duration-300">
             {/* Top bar */}
              <div className={`flex items-center justify-between px-8 border-b transition-all duration-300 ${
-              isCompact 
-                ? 'h-12 bg-background shadow-sm border-border/40' 
-                : 'h-16 bg-gradient-to-r from-background via-background to-primary/[0.03] border-border/60'
+              isCompact ? 'h-12 bg-background' : 'h-16 bg-background'
             }`}>
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all rounded-lg border border-border/50" />

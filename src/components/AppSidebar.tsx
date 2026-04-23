@@ -195,13 +195,10 @@ export function AppSidebar() {
   }, [location.pathname, location.search, mainItems, isParentActive, activeParent]);
 
   return (
-      <Sidebar collapsible="icon" className="border-r border-border/40 bg-sidebar shadow-xl">
-        <SidebarHeader className="border-b border-border/40 py-8 px-6">
-        <div className="flex items-center gap-4 transition-all duration-300">
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
-             <img src={logoAgir} alt="AGIR" className="relative h-10 w-10 shrink-0 rounded-xl object-contain bg-white/5 p-1.5 shadow-2xl ring-1 ring-white/10" />
-          </div>
+      <Sidebar collapsible="icon" className="border-r border-border/50 bg-sidebar">
+        <SidebarHeader className="border-b border-border/50 py-4 px-4">
+        <div className="flex items-center gap-3">
+          <img src={logoAgir} alt="AGIR" className="h-8 w-8 shrink-0 object-contain" />
           {!collapsed && (
             <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
                <span className="font-black text-xs text-sidebar-foreground uppercase tracking-[0.2em] leading-tight whitespace-nowrap ml-1 opacity-90">

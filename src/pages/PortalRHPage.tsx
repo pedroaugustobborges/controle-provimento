@@ -784,16 +784,16 @@ import {
 
         {/* Sidebar (Desktop & Mobile) */}
         <aside className={cn(
-          "w-80 bg-white border-r border-border/60/60 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
+          "w-80 bg-[#070e17] border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-[50] lg:sticky lg:h-screen transition-transform duration-500 ease-in-out lg:translate-x-0",
           isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
         )}>
          <div className="p-8 flex flex-col h-full">
              <div className="flex items-center gap-4 mb-12 group cursor-pointer" onClick={() => navigate('/')}>
                 <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-xl shadow-primary/10 group-hover:scale-105 transition-transform duration-500">
-                  <ShieldCheck className="text-primary-foreground h-7 w-7" />
-               </div>
+                   <ShieldCheck className="text-white h-7 w-7" />
+                </div>
                <div>
-                  <h1 className="font-black text-foreground tracking-tighter text-xl uppercase leading-none">Portal RH</h1>
+                  <h1 className="font-black text-white tracking-tighter text-xl uppercase leading-none">Portal RH</h1>
                   <p className="text-[9px] uppercase tracking-[0.3em] text-primary font-black mt-1">Painel Executivo</p>
                </div>
              </div>
@@ -809,10 +809,10 @@ import {
                       setIsMobileMenuOpen(false);
                     }}
                     className={cn(
-                      "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
-                      isActive 
-                        ? "bg-primary text-white shadow-[0_10px_20px_-10px_rgba(79,70,229,0.4)] translate-x-1" 
-                        : "text-muted-foreground hover:bg-muted/30 hover:text-foreground active:scale-[0.98]"
+                     "w-full flex items-center gap-3.5 px-5 py-3.5 rounded-xl text-[13px] font-bold transition-all duration-300 group relative outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                     isActive 
+                       ? "bg-primary text-white shadow-[0_10px_20px_-10px_rgba(0,0,0,0.4)] translate-x-1" 
+                       : "text-slate-400 hover:bg-white/5 hover:text-white active:scale-[0.98]"
                     )}
                     aria-current={isActive ? 'page' : undefined}
                     aria-label={item.label}
@@ -833,15 +833,15 @@ import {
              })}
            </nav>
  
-           <div className="mt-auto pt-6 border-t border-slate-50">
-             <button 
-               onClick={() => navigate('/')}
-               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-muted-foreground/80 hover:bg-muted/30 hover:text-rose-600 transition-all group"
-             >
-               <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
-               Sair do Portal
-             </button>
-           </div>
+            <div className="mt-auto pt-6 border-t border-white/5">
+              <button 
+                onClick={() => navigate('/')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:bg-white/5 hover:text-rose-400 transition-all group"
+              >
+                <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                Sair do Portal
+              </button>
+            </div>
          </div>
        </aside>
  

@@ -858,17 +858,16 @@ import {
                >
                  {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                </Button>
-               <div className="flex flex-col">
-              <div className="flex flex-col">
-                <h2 className="text-[22px] font-black text-slate-900 tracking-tight">
-                  {menuItems.find(m => m.id === activeTab)?.label}
-                </h2>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Executivo • Online</span>
+                <div className="flex flex-col">
+                  <h2 className="text-[22px] font-black text-slate-900 tracking-tight">
+                    {menuItems.find(m => m.id === activeTab)?.label}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acesso Executivo • Online</span>
+                  </div>
                 </div>
               </div>
-            </div>
  
            <div className="flex items-center gap-6">
              <div className="relative hidden xl:block">

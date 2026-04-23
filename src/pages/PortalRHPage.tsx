@@ -227,83 +227,153 @@
      );
    };
  
- const ScopesModule = () => {
-   const scopes = [
-     { role: 'Analista ADM', name: 'Ricardo M.', scope: 'Gestão de Unidades e Escala', responsibilities: 'Controle de frequência, validação de plantões e cobertura de férias.' },
-     { role: 'Assistente ADM', name: 'Juliana F.', scope: 'Suporte Operacional', responsibilities: 'Lançamento de dados, atendimento à ponta e auxílio em relatórios.' },
-   ];
-   return (
-     <div className="space-y-6">
-       <div className="flex items-center justify-between">
-         <h3 className="text-2xl font-bold text-slate-900">Funções e Escopos</h3>
-         <Button className="bg-indigo-600 rounded-full">Novo Escopo</Button>
+   const ScopesModule = () => {
+     const scopes = [
+       { role: 'Analista ADM', name: 'Ricardo M.', scope: 'Gestão de Unidades e Escala', responsibilities: 'Controle de frequência, validação de plantões e cobertura de férias.' },
+       { role: 'Assistente ADM', name: 'Juliana F.', scope: 'Suporte Operacional', responsibilities: 'Lançamento de dados, atendimento à ponta e auxílio em relatórios.' },
+     ];
+     return (
+       <div className="space-y-6">
+         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+           <div>
+             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Funções e Escopos</h3>
+             <p className="text-sm text-slate-500 font-medium">Definição clara de responsabilidades por cargo</p>
+           </div>
+           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+             <Plus className="h-4 w-4 mr-2" /> Novo Escopo
+           </Button>
+         </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+           {scopes.map((s, i) => (
+             <Card key={i} className="border-none shadow-sm hover:shadow-xl transition-all duration-500 rounded-[2rem] bg-white overflow-hidden group">
+               <div className="p-8">
+                 <div className="flex items-start justify-between mb-8">
+                   <div className="flex items-center gap-5">
+                     <div className="h-16 w-16 bg-slate-50 rounded-[1.25rem] flex items-center justify-center text-indigo-600 border border-slate-100 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                       <Briefcase className="h-8 w-8" />
+                     </div>
+                     <div>
+                       <h4 className="font-black text-xl text-slate-900 tracking-tight">{s.role}</h4>
+                       <div className="flex items-center gap-2 mt-1">
+                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                         <p className="text-sm text-indigo-600 font-black uppercase tracking-widest">{s.name}</p>
+                       </div>
+                     </div>
+                   </div>
+                   <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-50">
+                     <MoreHorizontal className="h-5 w-5 text-slate-400" />
+                   </Button>
+                 </div>
+                 <div className="space-y-6 relative">
+                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-50 rounded-full" />
+                   <div className="pl-6">
+                     <p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em] mb-2">Escopo Principal</p>
+                     <p className="text-base text-slate-800 font-bold leading-relaxed">{s.scope}</p>
+                   </div>
+                   <div className="pl-6">
+                     <p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em] mb-2">Atribuições Detalhadas</p>
+                     <p className="text-sm text-slate-500 leading-relaxed font-medium">{s.responsibilities}</p>
+                   </div>
+                 </div>
+                 <div className="mt-8 pt-6 border-t border-slate-50 flex justify-end">
+                    <Button variant="link" className="text-indigo-600 font-black uppercase tracking-widest text-[10px] h-auto p-0 hover:no-underline hover:translate-x-1 transition-transform">
+                      Ver Histórico <ChevronRight className="h-3 w-3 ml-1" />
+                    </Button>
+                 </div>
+               </div>
+             </Card>
+           ))}
+         </div>
        </div>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-         {scopes.map((s, i) => (
-           <Card key={i} className="border-none shadow-sm rounded-3xl p-6">
-             <div className="flex items-center gap-4 mb-4">
-               <div className="h-12 w-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600">
-                 <Briefcase className="h-6 w-6" />
-               </div>
-               <div>
-                 <h4 className="font-bold text-slate-900">{s.role}</h4>
-                 <p className="text-sm text-indigo-600 font-semibold">{s.name}</p>
-               </div>
-             </div>
-             <div className="space-y-3">
-               <div>
-                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Escopo de Atuação</p>
-                 <p className="text-sm text-slate-700 font-medium">{s.scope}</p>
-               </div>
-               <div>
-                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Responsabilidades</p>
-                 <p className="text-sm text-slate-600">{s.responsibilities}</p>
-               </div>
-             </div>
-           </Card>
-         ))}
-       </div>
-     </div>
-   );
- };
+     );
+   };
  
- const RoutinesModule = () => {
-   const routines = [
-     { task: 'Fechamento de Ponto', deadline: 'Todo dia 05', status: 'pendente', priority: 'alta' },
-     { task: 'Relatório de Absenteísmo', deadline: 'Semanal (Sexta)', status: 'em_andamento', priority: 'media' },
-     { task: 'Validação de Coberturas', deadline: 'Diário', status: 'concluido', priority: 'alta' },
-   ];
-   return (
-     <div className="space-y-6">
-       <div className="flex items-center justify-between">
-         <h3 className="text-2xl font-bold text-slate-900">Prazos e Rotinas</h3>
-         <Button className="bg-indigo-600 rounded-full">Nova Atividade</Button>
-       </div>
-       <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
-         <Table>
-           <TableHeader className="bg-slate-50/50">
-             <TableRow><TableHead>Atividade</TableHead><TableHead>Prazo</TableHead><TableHead>Prioridade</TableHead><TableHead>Status</TableHead></TableRow>
-           </TableHeader>
-           <TableBody>
-             {routines.map((r, i) => (
-               <TableRow key={i}>
-                 <TableCell className="font-bold text-slate-800">{r.task}</TableCell>
-                 <TableCell className="text-slate-600 font-medium">{r.deadline}</TableCell>
-                 <TableCell>
-                   <Badge variant="outline" className={cn(
-                     "border-none font-bold text-[10px] px-2.5 py-0.5 rounded-full",
-                     r.priority === 'alta' ? "bg-rose-50 text-rose-700" : "bg-blue-50 text-blue-700"
-                   )}>{r.priority}</Badge>
-                 </TableCell>
-                 <TableCell><Badge variant="outline" className="capitalize border-none bg-slate-100">{r.status.replace('_', ' ')}</Badge></TableCell>
+   const RoutinesModule = () => {
+     const routines = [
+       { task: 'Fechamento de Ponto', deadline: 'Todo dia 05', status: 'pendente', priority: 'alta' },
+       { task: 'Relatório de Absenteísmo', deadline: 'Semanal (Sexta)', status: 'em_andamento', priority: 'media' },
+       { task: 'Validação de Coberturas', deadline: 'Diário', status: 'concluido', priority: 'alta' },
+     ];
+     return (
+       <div className="space-y-6">
+         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+           <div>
+             <h3 className="text-2xl font-black text-slate-900 tracking-tight">Prazos e Rotinas</h3>
+             <p className="text-sm text-slate-500 font-medium">Monitoramento de entregas e obrigações recorrentes</p>
+           </div>
+           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 h-11 font-bold shadow-lg shadow-indigo-200 transition-all">
+             <Plus className="h-4 w-4 mr-2" /> Nova Atividade
+           </Button>
+         </div>
+ 
+         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+           {[
+             { label: 'Total Tarefas', value: '12', icon: ListTodo, color: 'text-slate-600', bg: 'bg-slate-50' },
+             { label: 'Em Atraso', value: '2', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+             { label: 'Próximas 48h', value: '4', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+             { label: 'Concluídas', value: '6', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+           ].map((stat, i) => (
+             <Card key={i} className="border-none shadow-sm bg-white p-5 rounded-2xl">
+               <div className="flex items-center justify-between">
+                 <div className={cn("p-2 rounded-xl", stat.bg)}>
+                   <stat.icon className={cn("h-5 w-5", stat.color)} />
+                 </div>
+                 <div className="text-right">
+                   <p className="text-xl font-black text-slate-900">{stat.value}</p>
+                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                 </div>
+               </div>
+             </Card>
+           ))}
+         </div>
+ 
+         <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+           <div className="p-4 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+             <div className="relative w-80">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+               <Input placeholder="Filtrar atividades..." className="pl-10 h-10 bg-white border-slate-200 rounded-xl" />
+             </div>
+             <Button variant="outline" className="h-10 rounded-xl border-slate-200 font-bold text-slate-600 text-xs">
+               <Filter className="h-4 w-4 mr-2" /> Prioridade
+             </Button>
+           </div>
+           <Table>
+             <TableHeader className="bg-slate-50/50">
+               <TableRow className="border-slate-100">
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Atividade</TableHead>
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Prazo Fatal</TableHead>
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Prioridade</TableHead>
+                 <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4">Status</TableHead>
                </TableRow>
-             ))}
-           </TableBody>
-         </Table>
-       </Card>
-     </div>
-   );
- };
+             </TableHeader>
+             <TableBody>
+               {routines.map((r, i) => (
+                 <TableRow key={i} className="border-slate-50 hover:bg-slate-50/50 transition-colors">
+                   <TableCell className="font-bold text-slate-800 py-5">{r.task}</TableCell>
+                   <TableCell className="text-slate-500 font-bold text-xs">{r.deadline}</TableCell>
+                   <TableCell>
+                     <Badge className={cn(
+                       "border-none font-black text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-wider",
+                       r.priority === 'alta' ? "bg-rose-50 text-rose-700 shadow-sm shadow-rose-100" : "bg-blue-50 text-blue-700 shadow-sm shadow-blue-100"
+                     )}>{r.priority}</Badge>
+                   </TableCell>
+                   <TableCell>
+                      <Badge variant="outline" className={cn(
+                        "capitalize border-none font-bold text-[10px] px-3 py-1 rounded-full",
+                        r.status === 'concluido' ? "bg-emerald-50 text-emerald-700" : 
+                        r.status === 'em_andamento' ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"
+                      )}>
+                        {r.status.replace('_', ' ')}
+                      </Badge>
+                   </TableCell>
+                 </TableRow>
+               ))}
+             </TableBody>
+           </Table>
+         </Card>
+       </div>
+     );
+   };
  
  const ScaleModule = () => {
    const teamStatus = [

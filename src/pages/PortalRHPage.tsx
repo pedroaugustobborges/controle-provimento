@@ -142,14 +142,198 @@
    );
  };
  
+ const ScopesModule = () => {
+   const scopes = [
+     { role: 'Analista ADM', name: 'Ricardo M.', scope: 'Gestão de Unidades e Escala', responsibilities: 'Controle de frequência, validação de plantões e cobertura de férias.' },
+     { role: 'Assistente ADM', name: 'Juliana F.', scope: 'Suporte Operacional', responsibilities: 'Lançamento de dados, atendimento à ponta e auxílio em relatórios.' },
+   ];
+   return (
+     <div className="space-y-6">
+       <div className="flex items-center justify-between">
+         <h3 className="text-2xl font-bold text-slate-900">Funções e Escopos</h3>
+         <Button className="bg-indigo-600 rounded-full">Novo Escopo</Button>
+       </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         {scopes.map((s, i) => (
+           <Card key={i} className="border-none shadow-sm rounded-3xl p-6">
+             <div className="flex items-center gap-4 mb-4">
+               <div className="h-12 w-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600">
+                 <Briefcase className="h-6 w-6" />
+               </div>
+               <div>
+                 <h4 className="font-bold text-slate-900">{s.role}</h4>
+                 <p className="text-sm text-indigo-600 font-semibold">{s.name}</p>
+               </div>
+             </div>
+             <div className="space-y-3">
+               <div>
+                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Escopo de Atuação</p>
+                 <p className="text-sm text-slate-700 font-medium">{s.scope}</p>
+               </div>
+               <div>
+                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Responsabilidades</p>
+                 <p className="text-sm text-slate-600">{s.responsibilities}</p>
+               </div>
+             </div>
+           </Card>
+         ))}
+       </div>
+     </div>
+   );
+ };
+ 
+ const RoutinesModule = () => {
+   const routines = [
+     { task: 'Fechamento de Ponto', deadline: 'Todo dia 05', status: 'pendente', priority: 'alta' },
+     { task: 'Relatório de Absenteísmo', deadline: 'Semanal (Sexta)', status: 'em_andamento', priority: 'media' },
+     { task: 'Validação de Coberturas', deadline: 'Diário', status: 'concluido', priority: 'alta' },
+   ];
+   return (
+     <div className="space-y-6">
+       <div className="flex items-center justify-between">
+         <h3 className="text-2xl font-bold text-slate-900">Prazos e Rotinas</h3>
+         <Button className="bg-indigo-600 rounded-full">Nova Atividade</Button>
+       </div>
+       <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
+         <Table>
+           <TableHeader className="bg-slate-50/50">
+             <TableRow><TableHead>Atividade</TableHead><TableHead>Prazo</TableHead><TableHead>Prioridade</TableHead><TableHead>Status</TableHead></TableRow>
+           </TableHeader>
+           <TableBody>
+             {routines.map((r, i) => (
+               <TableRow key={i}>
+                 <TableCell className="font-bold text-slate-800">{r.task}</TableCell>
+                 <TableCell className="text-slate-600 font-medium">{r.deadline}</TableCell>
+                 <TableCell>
+                   <Badge variant="outline" className={cn(
+                     "border-none font-bold text-[10px] px-2.5 py-0.5 rounded-full",
+                     r.priority === 'alta' ? "bg-rose-50 text-rose-700" : "bg-blue-50 text-blue-700"
+                   )}>{r.priority}</Badge>
+                 </TableCell>
+                 <TableCell><Badge variant="outline" className="capitalize border-none bg-slate-100">{r.status.replace('_', ' ')}</Badge></TableCell>
+               </TableRow>
+             ))}
+           </TableBody>
+         </Table>
+       </Card>
+     </div>
+   );
+ };
+ 
+ const ScaleModule = () => {
+   const teamStatus = [
+     { name: 'Ana Silva', status: 'Ativo', coverage: '-', location: 'Unidade Central' },
+     { name: 'Bruno Gomes', status: 'Ausente', coverage: 'Ricardo M.', location: 'Unidade Sul' },
+     { name: 'Ricardo M.', status: 'Cobrindo', coverage: 'Cobrindo Bruno G.', location: 'Unidade Sul' },
+   ];
+   return (
+     <div className="space-y-6">
+       <h3 className="text-2xl font-bold text-slate-900">Escala e Acompanhamento</h3>
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+         {teamStatus.map((t, i) => (
+           <Card key={i} className="border-none shadow-sm rounded-3xl p-5 flex items-center gap-4">
+             <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">
+               {t.name.charAt(0)}
+             </div>
+             <div className="flex-1">
+               <p className="font-bold text-slate-900">{t.name}</p>
+               <p className="text-xs text-slate-400 font-medium">{t.location}</p>
+             </div>
+             <Badge variant="outline" className={cn(
+               "border-none font-bold text-[10px] px-2.5 py-0.5 rounded-full",
+               t.status === 'Ativo' ? "bg-emerald-50 text-emerald-700" : 
+               t.status === 'Ausente' ? "bg-rose-50 text-rose-700" : "bg-indigo-50 text-indigo-700"
+             )}>{t.status}</Badge>
+           </Card>
+         ))}
+       </div>
+     </div>
+   );
+ };
+ 
+ const TrainingModule = () => {
+   const records = [
+     { person: 'Juliana F.', type: 'Alinhamento', theme: 'Novas Regras de Escala', date: '22 Out 2023', status: 'concluido' },
+     { person: 'Ricardo M.', type: 'Treinamento', theme: 'Ferramenta de Dashboards', date: '20 Out 2023', status: 'concluido' },
+   ];
+   return (
+     <div className="space-y-6">
+       <div className="flex items-center justify-between">
+         <h3 className="text-2xl font-bold text-slate-900">Alinhamentos e Treinamentos</h3>
+         <Button className="bg-indigo-600 rounded-full">Novo Registro</Button>
+       </div>
+       <div className="space-y-4">
+         {records.map((r, i) => (
+           <Card key={i} className="border-none shadow-sm rounded-2xl p-4 flex items-center justify-between">
+             <div className="flex items-center gap-4">
+               <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                 <GraduationCap className="h-5 w-5" />
+               </div>
+               <div>
+                 <p className="font-bold text-slate-900">{r.theme}</p>
+                 <p className="text-xs text-slate-500 font-medium">{r.person} • {r.date}</p>
+               </div>
+             </div>
+             <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-none font-bold text-[10px]">{r.type}</Badge>
+           </Card>
+         ))}
+       </div>
+     </div>
+   );
+ };
+ 
+ const ExportModule = () => {
+   const exportOptions = [
+     { title: 'Quadro da Equipe', formats: ['PDF', 'Imagem', 'Excel'] },
+     { title: 'Relatório de Ausências', formats: ['Excel', 'PDF'] },
+     { title: 'Escala e Acompanhamento', formats: ['Excel'] },
+   ];
+   return (
+     <div className="space-y-6">
+       <h3 className="text-2xl font-bold text-slate-900">Central de Exportações</h3>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         {exportOptions.map((opt, i) => (
+           <Card key={i} className="border-none shadow-sm rounded-3xl p-6">
+             <h4 className="font-bold text-lg mb-4">{opt.title}</h4>
+             <div className="flex gap-2">
+               {opt.formats.map(fmt => (
+                 <Button key={fmt} variant="outline" className="rounded-xl border-slate-200 text-xs font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                   {fmt}
+                 </Button>
+               ))}
+             </div>
+           </Card>
+         ))}
+       </div>
+     </div>
+   );
+ };
+ 
  const TeamModule = () => (
      <div className="space-y-6">
-         <h3 className="text-2xl font-bold text-slate-900">Quadro da Equipe</h3>
+         <div className="flex items-center justify-between">
+             <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Quadro da Equipe</h3>
+             <div className="flex gap-2">
+                 <Button variant="outline" className="rounded-full border-slate-200">Exportar PDF</Button>
+                 <Button className="bg-indigo-600 rounded-full">Novo Vínculo</Button>
+             </div>
+         </div>
          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-             {[1,2,3].map(i => (
-                 <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                     <Building2 className="h-8 w-8 text-indigo-600 mb-4" />
-                     <h4 className="font-bold">Unidade {i}</h4>
+             {[1,2,3,4,5,6].map(i => (
+                 <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-md transition-all">
+                     <Building2 className="h-10 w-10 text-indigo-600 mb-4 bg-indigo-50 p-2 rounded-xl" />
+                     <h4 className="font-bold text-slate-900">Unidade {i}</h4>
+                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Goiânia - GO</p>
+                     <div className="mt-6 pt-4 border-t border-slate-50 space-y-2">
+                         <div className="flex justify-between">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Analista</span>
+                             <span className="text-xs font-bold text-slate-700">Ricardo M.</span>
+                         </div>
+                         <div className="flex justify-between">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assistente</span>
+                             <span className="text-xs font-bold text-slate-700">Juliana F.</span>
+                         </div>
+                     </div>
                  </div>
              ))}
          </div>
@@ -178,7 +362,12 @@
        case 'dashboard': return <Dashboard />;
        case 'absences': return <AbsenceModule />;
        case 'team': return <TeamModule />;
-       default: return <div className="text-slate-400">Em desenvolvimento</div>;
+       case 'scopes': return <ScopesModule />;
+       case 'routines': return <RoutinesModule />;
+       case 'scale': return <ScaleModule />;
+       case 'training': return <TrainingModule />;
+       case 'export': return <ExportModule />;
+       default: return <div className="text-slate-400">Módulo em desenvolvimento</div>;
      }
    };
  

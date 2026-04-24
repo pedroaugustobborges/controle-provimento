@@ -1,0 +1,220 @@
+[
+  {
+    "id": "7ec9cd3d-ca89-4461-b80e-6677336666a4",
+    "tipo": "banco",
+    "usuario_id": "70dba236-ce7a-429c-9921-211c3d4dfa79",
+    "status": "concluido",
+    "quantidade_apagada": 0,
+    "quantidade_inserida": 6778,
+    "arquivo": "IMPORT-1776004750143",
+    "observacoes": "Banco geral - Todas as regiões | Modo: substituição • Verificado: 6778 registros confirmados na tabela banco_candidatos.",
+    "created_at": "2026-04-12T14:39:11.323571+00:00",
+    "nome_arquivo": "BANCO_UNIFICADO.xlsx",
+    "modo_importacao": "substituir_escopo_do_banco",
+    "origem_base": "banco_geral_todas",
+    "quantidade_processada": 6778,
+    "quantidade_atualizada": 0,
+    "quantidade_ignorada": 0,
+    "quantidade_erro": 0,
+    "quantidade_confirmada": 6778,
+    "tabela_destino": "banco_candidatos",
+    "aba_planilha": "BANCO_GERAL",
+    "linha_cabecalho": 1,
+    "detalhes": {
+      "mapeamento": [
+        {
+          "excel": "NOME",
+          "isDate": false,
+          "system": "nome"
+        },
+        {
+          "excel": "CARGO",
+          "isDate": false,
+          "system": "cargo"
+        },
+        {
+          "excel": "UNIDADE",
+          "isDate": false,
+          "system": "unidade"
+        },
+        {
+          "excel": "EDITAL",
+          "isDate": false,
+          "system": "numero_edital"
+        },
+        {
+          "excel": "CLASSIFICACAO",
+          "isDate": false,
+          "system": "classificacao"
+        },
+        {
+          "excel": "STATUS",
+          "isDate": false,
+          "system": "status"
+        },
+        {
+          "excel": "PUBLICACAO",
+          "isDate": true,
+          "system": "data_publicacao"
+        },
+        {
+          "excel": "DATA_CONVOCACAO",
+          "isDate": true,
+          "system": "data_convocacao"
+        },
+        {
+          "excel": "VALIDADE",
+          "isDate": true,
+          "system": "data_validade"
+        },
+        {
+          "excel": "N_PROCESSO",
+          "isDate": false,
+          "system": "numero_processo_seletivo"
+        },
+        {
+          "excel": "UNIDADE_CONVOCACAO",
+          "isDate": false,
+          "system": "unidade_convocacao"
+        },
+        {
+          "excel": "N_CHAMADA",
+          "isDate": false,
+          "system": "numero_chamada"
+        },
+        {
+          "excel": "PRORROGACAO",
+          "isDate": false,
+          "system": "prorrogacao"
+        }
+      ],
+      "usuario_nome": "Izac Cézar",
+      "usuario_email": "izac.jesus@agirsaude.org.br"
+    },
+    "updated_at": "2026-04-12T14:39:29.213821+00:00"
+  },
+  {
+    "id": "d04c554b-4b0c-48a0-83a1-b91d1d20b00b",
+    "tipo": "vagas",
+    "usuario_id": "70dba236-ce7a-429c-9921-211c3d4dfa79",
+    "status": "concluido",
+    "quantidade_apagada": 0,
+    "quantidade_inserida": 4453,
+    "arquivo": "IMPORT-1776004784169",
+    "observacoes": "Verificado: 4453 registros confirmados na tabela vagas.",
+    "created_at": "2026-04-12T14:39:45.280809+00:00",
+    "nome_arquivo": "VAGAS_UNIFICADO.xlsx",
+    "modo_importacao": "substituir_todas_as_vagas",
+    "origem_base": "planilha_de_vagas",
+    "quantidade_processada": 4453,
+    "quantidade_atualizada": 0,
+    "quantidade_ignorada": 0,
+    "quantidade_erro": 0,
+    "quantidade_confirmada": 4453,
+    "tabela_destino": "vagas",
+    "aba_planilha": "VAGAS_GERAL",
+    "linha_cabecalho": 1,
+    "detalhes": {
+      "mapeamento": [
+        {
+          "excel": "ABERTURA",
+          "isDate": true,
+          "system": "data_abertura"
+        },
+        {
+          "excel": "RECEBIMENTO",
+          "isDate": true,
+          "system": "data_recebimento"
+        },
+        {
+          "excel": "UNIDADE",
+          "isDate": false,
+          "system": "unidade"
+        },
+        {
+          "excel": "REQUISICAO",
+          "isDate": false,
+          "system": "numero_processo_seletivo"
+        },
+        {
+          "excel": "CARGO",
+          "isDate": false,
+          "system": "cargo"
+        },
+        {
+          "excel": "TIPO",
+          "isDate": false,
+          "system": "tipo_vaga"
+        },
+        {
+          "excel": "VAGAS",
+          "isDate": false,
+          "system": "numero_vagas"
+        },
+        {
+          "excel": "STATUS",
+          "isDate": false,
+          "system": "status"
+        },
+        {
+          "excel": "SECAO",
+          "isDate": false,
+          "system": "secao"
+        },
+        {
+          "excel": "DATA_CONVOCACAO",
+          "isDate": true,
+          "system": "data_convocacao_planilha"
+        },
+        {
+          "excel": "HORARIO_CONVOCACAO",
+          "isDate": false,
+          "system": "horario_convocacao_planilha"
+        },
+        {
+          "excel": "CANDIDATO_CONVOCADO",
+          "isDate": false,
+          "system": "candidato_convocado_planilha"
+        },
+        {
+          "excel": "CLASSIFICACAO_CONV",
+          "isDate": false,
+          "system": "classificacao_convocacao_planilha"
+        },
+        {
+          "excel": "FORMA_CONV",
+          "isDate": false,
+          "system": "forma_convocacao_planilha"
+        },
+        {
+          "excel": "STATUS_OITIVA",
+          "isDate": false,
+          "system": "status_oitiva_convocacao_planilha"
+        },
+        {
+          "excel": "ADMISSAO_ENVIADA",
+          "isDate": false,
+          "system": "admissao_enviada_acompanhamento"
+        },
+        {
+          "excel": "ADMISSAO_EFETIVADA",
+          "isDate": false,
+          "system": "admissao_efetivada_acompanhamento"
+        },
+        {
+          "excel": "DETALHES",
+          "isDate": false,
+          "system": "detalhes_acompanhamento"
+        },
+        {
+          "excel": "OBSERVACAO",
+          "isDate": false,
+          "system": "observacao"
+        }
+      ],
+      "usuario_nome": "Izac Cézar",
+      "usuario_email": "izac.jesus@agirsaude.org.br"
+    },
+    "updated_at": "2026-04-12T14:39:56.896168+00:00"
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "eade27ce-2c97-4757-b368-d8a0cea20c28",
+    "user_id": "70dba236-ce7a-429c-9921-211c3d4dfa79",
+    "role": "admin"
+  },
+  {
+    "id": "1b3ad3a9-9c25-4344-a70a-e84522a5a63b",
+    "user_id": "e923770e-6ef4-475d-b93f-c363dc444712",
+    "role": "gestor"
+  },
+  {
+    "id": "ed15e05f-3d15-457a-bb64-291e26b0ebbf",
+    "user_id": "70dad3cd-6706-4e8f-8e3e-1a5f0a443a09",
+    "role": "gestor"
+  },
+  {
+    "id": "6b34527f-b0b9-46f1-9564-50a9737c8386",
+    "user_id": "55248cf7-70f6-4bdf-a0bf-df89f85fbe6f",
+    "role": "gestor"
+  },
+  {
+    "id": "d0ccf6fc-e5a2-448b-bae0-5efccc2c61b3",
+    "user_id": "2c3647ee-af38-43ff-85de-3217085b9fa0",
+    "role": "analista"
+  },
+  {
+    "id": "2a3e4726-e56e-4572-b8cd-5e3698e6289f",
+    "user_id": "5bb77266-4b80-4a06-a05e-c9e790c1f434",
+    "role": "analista"
+  },
+  {
+    "id": "48ae4650-efb3-4e79-b592-0b78db76c4f0",
+    "user_id": "9d084b35-6c78-42e4-8bea-f822540088f6",
+    "role": "visualizador"
+  },
+  {
+    "id": "ee087019-e149-48af-96ba-b9b7aad179f3",
+    "user_id": "50a950f2-2b95-4935-9559-d66c3b623988",
+    "role": "visualizador"
+  },
+  {
+    "id": "434509df-232d-4063-ab57-98f786c8ec1f",
+    "user_id": "cad32eee-cc1a-4529-931c-9bbdfd45a123",
+    "role": "visualizador"
+  }
+]

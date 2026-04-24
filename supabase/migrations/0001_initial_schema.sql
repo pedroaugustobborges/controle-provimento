@@ -1,0 +1,1 @@
+python scripts/import_db.py

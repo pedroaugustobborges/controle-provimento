@@ -1,0 +1,42 @@
+[
+  {
+    "id": "0f0412cd-943f-4a71-b353-af2b6559b546",
+    "nome": "Dia da Consciência Negra",
+    "data": "2024-11-20",
+    "tipo": "municipal",
+    "cidade": "Goiânia",
+    "estado": "GO",
+    "created_at": "2026-04-17T12:25:02.187974+00:00",
+    "updated_at": "2026-04-17T12:25:02.187974+00:00"
+  },
+  {
+    "id": "3ae5fe2b-93d3-4c9e-b88e-e170ffaea736",
+    "nome": "Dia da Consciência Negra",
+    "data": "2025-11-20",
+    "tipo": "municipal",
+    "cidade": "Goiânia",
+    "estado": "GO",
+    "created_at": "2026-04-17T12:25:02.187974+00:00",
+    "updated_at": "2026-04-17T12:25:02.187974+00:00"
+  },
+  {
+    "id": "b459817d-b3cc-462f-bce0-eb17113e20b2",
+    "nome": "Aniversário de Goiânia",
+    "data": "2024-10-24",
+    "tipo": "municipal",
+    "cidade": "Goiânia",
+    "estado": "GO",
+    "created_at": "2026-04-17T12:25:02.187974+00:00",
+    "updated_at": "2026-04-17T12:25:02.187974+00:00"
+  },
+  {
+    "id": "eb42da24-29f8-4c61-8f8a-c4ee812ccdda",
+    "nome": "Aniversário de Goiânia",
+    "data": "2025-10-24",
+    "tipo": "municipal",
+    "cidade": "Goiânia",
+    "estado": "GO",
+    "created_at": "2026-04-17T12:25:02.187974+00:00",
+    "updated_at": "2026-04-17T12:25:02.187974+00:00"
+  }
+]

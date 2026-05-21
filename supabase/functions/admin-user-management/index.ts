@@ -78,14 +78,14 @@ Deno.serve(async (req) => {
       return jsonFail("Não autorizado: sessão inválida.");
     }
 
-    const { data: callerRole } = await supabaseAdmin
+    const { data: callerRoles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", caller.id)
       .eq("role", "admin")
-      .maybeSingle();
+      .limit(1);
 
-    if (!callerRole) {
+    if (!callerRoles || callerRoles.length === 0) {
       return jsonFail("Acesso negado. Somente administradores.");
     }
 

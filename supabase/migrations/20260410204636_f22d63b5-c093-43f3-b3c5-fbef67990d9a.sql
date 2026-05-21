@@ -1,0 +1,1 @@
+ALTER TABLE public.banco_candidatos ADD COLUMN IF NOT EXISTS numero_chamada text DEFAULT '';

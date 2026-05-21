@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN regiao_suporte TEXT DEFAULT NULL;

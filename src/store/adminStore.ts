@@ -1,0 +1,462 @@
+import { create } from 'zustand';
+import { User, AuditLog, SupportConfig, BackupRecord, Feedback } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { generateTempPassword, getAdminPasswordErrorMessage } from '@/lib/adminPasswordUtils';
+
+export interface LocalHoliday {
+  id: string;
+  nome: string;
+  data: string;
+  tipo: 'municipal' | 'estadual';
+  cidade?: string;
+  estado: string;
+  created_at: string;
+}
+
+interface AdminState {
+  users: User[];
+  auditLogs: AuditLog[];
+  supportConfigs: SupportConfig[];
+  backups: BackupRecord[];
+  feedbacks: Feedback[];
+  feriados: LocalHoliday[];
+  currentUser: User | null;
+  selectedRegion: string;
+  selectedUnit: string;
+  selectedUnits: string[];
+  loading: boolean;
+
+  // Data fetching
+  fetchUsers: () => Promise<void>;
+  fetchAuditLogs: () => Promise<void>;
+  fetchFeedbacks: () => Promise<void>;
+  fetchCurrentProfile: () => Promise<void>;
+  fetchFeriados: () => Promise<void>;
+
+  // User actions via edge function
+  addUser: (user: Partial<User> & { email: string; password: string; sendWelcomeEmail?: boolean }) => Promise<void>;
+  updateUser: (id: string, data: Partial<User>) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
+  updateUserStatus: (id: string, status: 'ativo' | 'suspenso' | 'inativo') => Promise<void>;
+  resetUserPassword: (userId: string, newPassword: string) => Promise<void>;
+  sendWelcomeEmail: (userId: string, password: string) => Promise<void>;
+  setCurrentUser: (user: User | null) => void;
+  setSelectedRegion: (region: string) => void;
+  setSelectedUnit: (unit: string) => void;
+  setSelectedUnits: (units: string[]) => void;
+
+  // Feedback actions
+  updateFeedbackStatus: (id: string, status: 'pendente' | 'lido' | 'respondido') => Promise<void>;
+
+  // Audit actions
+  addAuditLog: (log: Omit<AuditLog, 'id'>) => Promise<void>;
+
+  // Support actions
+  fetchSupportConfigs: () => Promise<void>;
+  addSupportConfig: (config: Omit<SupportConfig, 'id'>) => Promise<void>;
+  updateSupportConfig: (id: string, data: Partial<SupportConfig>) => Promise<void>;
+  deleteSupportConfig: (id: string) => Promise<void>;
+
+  // Holiday actions
+  addFeriado: (feriado: Omit<LocalHoliday, 'id' | 'created_at'>) => Promise<void>;
+  updateFeriado: (id: string, feriado: Partial<LocalHoliday>) => Promise<void>;
+  deleteFeriado: (id: string) => Promise<void>;
+
+  // Backup actions
+  generateBackup: () => void;
+
+  // Realtime
+  subscribeRealtime: () => void;
+  unsubscribeRealtime: () => void;
+
+  // Legacy compat
+  toggleUserStatus: (id: string) => Promise<void>;
+}
+
+export { generateTempPassword } from '@/lib/adminPasswordUtils';
+
+export const useAdminStore = create<AdminState>((set, get) => ({
+  users: [],
+  auditLogs: [],
+  supportConfigs: [],
+  backups: [],
+  feedbacks: [],
+  feriados: [],
+  currentUser: null,
+  selectedRegion: 'all',
+  selectedUnit: 'all',
+  selectedUnits: ['all'],
+  loading: false,
+
+  fetchUsers: async () => {
+    set({ loading: true });
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      set({ users: (data || []) as User[] });
+    } catch (err) {
+      console.error('Erro ao buscar usuários:', err);
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchAuditLogs: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      set({ auditLogs: (data || []) as AuditLog[] });
+    } catch (err) {
+      console.error('Erro ao buscar logs:', err);
+    }
+  },
+
+  fetchFeedbacks: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      set({ feedbacks: (data || []) as Feedback[] });
+    } catch (err) {
+      console.error('Erro ao buscar feedbacks:', err);
+    }
+  },
+
+  fetchCurrentProfile: async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (profile) {
+        // Sync email from auth if different
+        if (user.email && profile.email !== user.email) {
+          await supabase
+            .from('profiles')
+            .update({ email: user.email })
+            .eq('id', user.id);
+          (profile as any).email = user.email;
+        }
+        set({ currentUser: profile as User });
+      }
+    } catch (err) {
+      console.error('Erro ao buscar perfil:', err);
+    }
+  },
+
+  addUser: async (userData) => {
+    const { email, password, sendWelcomeEmail, ...profileData } = userData;
+
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: {
+        action: 'create_user',
+        email,
+        password,
+        nome_completo: profileData.nome_completo || '',
+        perfil: profileData.perfil || 'Analista de RH',
+        cargo: profileData.cargo || '',
+        status: profileData.status || 'ativo',
+        visualiza_todas_unidades: profileData.visualiza_todas_unidades || false,
+        unidades_vinculadas: profileData.unidades_vinculadas || [],
+        modulos_acesso: profileData.modulos_acesso || [],
+        permissoes_modulo: profileData.permissoes_modulo || {},
+        avatar_url: profileData.avatar_url || null,
+        pode_incluir_registros: profileData.pode_incluir_registros || false,
+        pode_excluir_requisicoes: profileData.pode_excluir_requisicoes || false,
+        pode_editar_configuracoes: profileData.pode_editar_configuracoes || false,
+        pode_gerenciar_usuarios: profileData.pode_gerenciar_usuarios || false,
+        acesso_portal_unidade: profileData.acesso_portal_unidade || false,
+        regiao_suporte: profileData.regiao_suporte || null,
+      },
+    });
+
+    if (error) throw new Error(getAdminPasswordErrorMessage(error.message));
+    if (data?.error) throw new Error(getAdminPasswordErrorMessage(data.error));
+
+    // Send welcome email if requested
+    if (sendWelcomeEmail && data?.user_id) {
+      try {
+        await get().sendWelcomeEmail(data.user_id, password);
+      } catch (e) {
+        console.error('Erro ao enviar e-mail de boas-vindas:', e);
+      }
+    }
+
+    await get().fetchUsers();
+  },
+
+  updateUser: async (id, data) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', id);
+    if (error) throw error;
+    await get().fetchUsers();
+  },
+
+  deleteUser: async (id) => {
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: { action: 'delete_user', user_id: id },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    await get().fetchUsers();
+  },
+
+  updateUserStatus: async (id, status) => {
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: { action: 'update_status', user_id: id, new_status: status },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    await get().fetchUsers();
+  },
+
+  toggleUserStatus: async (id) => {
+    const user = get().users.find(u => u.id === id);
+    if (!user) return;
+    const newStatus = user.status === 'ativo' ? 'inativo' : 'ativo';
+    await get().updateUserStatus(id, newStatus);
+  },
+
+  resetUserPassword: async (userId, newPassword) => {
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: { action: 'reset_password', user_id: userId, new_password: newPassword },
+    });
+    if (error) throw new Error(getAdminPasswordErrorMessage(error.message));
+    if (data?.error) throw new Error(getAdminPasswordErrorMessage(data.error));
+  },
+
+  sendWelcomeEmail: async (userId, password) => {
+    const user = get().users.find(u => u.id === userId);
+    if (!user) {
+      // Refetch and try again
+      await get().fetchUsers();
+      const u = get().users.find(u => u.id === userId);
+      if (!u) throw new Error('Usuário não encontrado');
+    }
+    const targetUser = get().users.find(u => u.id === userId)!;
+    
+    const siteUrl = window.location.origin;
+    const { data, error } = await supabase.functions.invoke('admin-user-management', {
+      body: {
+        action: 'send_welcome_email',
+        user_email: targetUser.email,
+        user_name: targetUser.nome_completo,
+        password,
+        site_url: siteUrl,
+      },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+  },
+
+  updateFeedbackStatus: async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from('feedbacks')
+        .update({ status })
+        .eq('id', id);
+      if (error) throw error;
+      await get().fetchFeedbacks();
+    } catch (err) {
+      console.error('Erro ao atualizar status do feedback:', err);
+    }
+  },
+
+  setCurrentUser: (user) => set({ currentUser: user }),
+  setSelectedRegion: (region) => set({ selectedRegion: region, selectedUnits: ['all'], selectedUnit: 'all' }),
+  setSelectedUnit: (unit) => set({ selectedUnit: unit }),
+  setSelectedUnits: (units) => set({ selectedUnits: units }),
+
+  addAuditLog: async (log) => {
+    try {
+      // Always use the live auth session to get the correct user ID — never rely on cached store state
+      const { data: { user: liveUser } } = await supabase.auth.getUser();
+      const newLog = {
+        usuario_id: liveUser?.id ?? get().currentUser?.id,
+        usuario_nome: log.usuario_nome,
+        usuario_email: log.usuario_email || '',
+        perfil: log.perfil || '',
+        acao: log.acao,
+        modulo: log.modulo,
+        registro_afetado: log.registro_afetado,
+        valor_anterior: log.valor_anterior,
+        valor_novo: log.valor_novo,
+        ip: log.ip || '',
+      };
+      
+      const { data, error } = await supabase.from('audit_logs').insert(newLog).select().single();
+      
+      if (error) throw error;
+      
+      // Update local state to show the log immediately
+      if (data) {
+        set((s) => ({ auditLogs: [data as AuditLog, ...s.auditLogs].slice(0, 100) }));
+      }
+    } catch (err) {
+      console.error('Erro ao salvar log de auditoria:', err);
+    }
+  },
+
+  fetchSupportConfigs: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('support_configs')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      set({ supportConfigs: (data || []) as SupportConfig[] });
+    } catch (err) {
+      console.error('Erro ao buscar configurações de suporte:', err);
+    }
+  },
+
+  addSupportConfig: async (config) => {
+    const { error } = await supabase.from('support_configs').insert(config);
+    if (error) throw error;
+    await get().fetchSupportConfigs();
+  },
+
+  updateSupportConfig: async (id, data) => {
+    const { error } = await supabase.from('support_configs').update(data).eq('id', id);
+    if (error) throw error;
+    await get().fetchSupportConfigs();
+  },
+
+  deleteSupportConfig: async (id) => {
+    const { error } = await supabase.from('support_configs').delete().eq('id', id);
+    if (error) throw error;
+    await get().fetchSupportConfigs();
+  },
+
+  fetchFeriados: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feriados_locais')
+        .select('*')
+        .order('data', { ascending: true });
+      if (error) throw error;
+      set({ feriados: (data || []) as LocalHoliday[] });
+    } catch (err) {
+      console.error('Erro ao buscar feriados:', err);
+    }
+  },
+
+  addFeriado: async (feriado) => {
+    const { error } = await supabase.from('feriados_locais').insert(feriado);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
+  updateFeriado: async (id, data) => {
+    const { error } = await supabase.from('feriados_locais').update(data).eq('id', id);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
+  deleteFeriado: async (id) => {
+    const { error } = await supabase.from('feriados_locais').delete().eq('id', id);
+    if (error) throw error;
+    await get().fetchFeriados();
+  },
+
+  generateBackup: () => set((s) => {
+    const newBackup: BackupRecord = {
+      id: Math.random().toString(36).substr(2, 9),
+      data_hora: new Date().toLocaleString(),
+      status: 'sucesso',
+      quantidade_registros: s.users.length
+    };
+    return { backups: [newBackup, ...s.backups] };
+  }),
+
+  subscribeRealtime: () => {
+    const channel = supabase
+      .channel('realtime-admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        (payload) => {
+          const { eventType, new: newRow, old: oldRow } = payload;
+          if (eventType === 'INSERT' || eventType === 'UPDATE') {
+            const row = newRow as any;
+            set((s) => {
+              const exists = s.users.some((u) => u.id === row.id);
+              const mapped: User = {
+                id: row.id,
+                nome_completo: row.nome_completo || '',
+                email: row.email || '',
+                perfil: row.perfil || 'Analista',
+                cargo: row.cargo || '',
+                status: row.status || 'ativo',
+                visualiza_todas_unidades: row.visualiza_todas_unidades || false,
+                unidades_vinculadas: row.unidades_vinculadas || [],
+                pode_incluir_registros: row.pode_incluir_registros || false,
+                pode_excluir_requisicoes: row.pode_excluir_requisicoes || false,
+                pode_editar_configuracoes: row.pode_editar_configuracoes || false,
+                pode_gerenciar_usuarios: row.pode_gerenciar_usuarios || false,
+                ultimo_acesso: row.ultimo_acesso || '',
+                created_at: row.created_at || '',
+                avatar_url: row.avatar_url || '',
+                modulos_acesso: row.modulos_acesso || [],
+                permissoes_modulo: row.permissoes_modulo || {},
+                acesso_portal_unidade: row.acesso_portal_unidade || false,
+                regiao_suporte: row.regiao_suporte || '',
+              };
+              if (exists) {
+                const updatedUsers = s.users.map((u) => u.id === mapped.id ? mapped : u);
+                const updatedCurrent = s.currentUser?.id === mapped.id ? mapped : s.currentUser;
+                return { users: updatedUsers, currentUser: updatedCurrent };
+              }
+              return { users: [mapped, ...s.users] };
+            });
+          } else if (eventType === 'DELETE') {
+            const deletedId = (oldRow as any)?.id;
+            if (deletedId) {
+              set((s) => ({ users: s.users.filter((u) => u.id !== deletedId) }));
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'audit_logs' },
+        () => { get().fetchAuditLogs(); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedbacks' },
+        () => { get().fetchFeedbacks(); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_configs' },
+        () => { get().fetchSupportConfigs(); }
+      )
+      .subscribe();
+
+    (window as any).__realtimeAdminChannel = channel;
+  },
+
+  unsubscribeRealtime: () => {
+    const channel = (window as any).__realtimeAdminChannel;
+    if (channel) {
+      supabase.removeChannel(channel);
+      delete (window as any).__realtimeAdminChannel;
+    }
+  },
+}));

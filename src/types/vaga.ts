@@ -1,0 +1,682 @@
+export type TipoVaga = 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
+export type StatusVaga =
+  | 'CONCLUÍDAS'
+  | 'CONCLUÍDA'
+  | 'EM ANDAMENTO'
+  | 'MOV. INTERNA'
+  | 'MOVIMENTAÇÃO INTERNA'
+  | 'ADMISSÃO ENVIADA'
+  | 'ADMISSÃO'
+  | 'EM EDITAL'
+  | 'PUBLICAR NOVO EDITAL'
+  | 'REALIZAR CONVOCAÇÃO'
+  | 'VAGA DE LIDERANÇA'
+  | 'DOCUMENTAÇÃO'
+  | 'CONVOCAÇÕES'
+  | 'FILA DE EDITAIS'
+  | 'PUBLICAR EDITAL'
+  | 'ACOMPANHAMENTO DE EDITAL'
+  | 'SUSPENSA'
+  | 'PAUSADA'
+  | 'AGUARDANDO UNIDADE'
+  | 'ESTRATÉGICAS'
+  | 'CANCELADAS'
+  
+  | 'SEM STATUS' 
+  | 'publicar_novo_edital' 
+  | 'em_edital' 
+  | 'em_documentacao' 
+  | 'documentacao_ok_azul_pendente' 
+  | 'documentacao_pendente_azul_ok' 
+  | 'em_admissao' 
+  | 'admissao_enviada' 
+  | 'admissao_efetivada' 
+  | 'dispensa' 
+  | 'cancelada' 
+  | 'aguardar_anuencia' 
+  | 'aguardar_unidade' 
+  | 'movimentacao_interna' 
+  | 'vaga_lideranca' 
+  | 'realizar_convocacao' 
+  | 'aberta' 
+  | 'em_triagem' 
+  | 'entrevista' 
+  | 'finalizada' 
+  | 'encerrada';
+
+export type StatusGeral = StatusVaga;
+export type StatusConvocacao = 
+  | 'aceite' 
+  | 'recusa_plantao' 
+  | 'recusa_unidade' 
+  | 'recusa_horario' 
+  | 'desistiu' 
+  | 'faltou'
+  | 'pendente';
+
+export type StatusEdital = 'Nova vaga' | 'Aguardando processo' | 'Aguardando edital' | 'Aguardando processo e edital' | 'Em andamento' | 'Encerrada';
+export type StatusPublicacao = 'pendente' | 'publicado' | 'encerrado';
+export type StatusValidacao = 'pendente' | 'aprovado' | 'reprovado';
+export type EtapaEdital = 
+  | 'validacao_edital'
+  | 'inscricoes' 
+  | 'triagem' 
+  | 'resultado_da_triagem'
+  | 'avaliacao_especifica_online'
+  | 'resultado_preliminar_avaliacao_especifica_online'
+  | 'recurso_avaliacao_especifica_online'
+  | 'resultado_recurso_avaliacao_especifica_online'
+  | 'resultado_final_avaliacao_especifica_online'
+  | 'envio_certificados_titulos'
+  | 'declaracao_experiencia'
+  | 'analise_curricular_preliminar'
+  | 'recurso_analise_curricular'
+  | 'resultado_recurso_analise_curricular'
+  | 'analise_curricular_final'
+  | 'entrevistas' 
+  | 'resultado_final' 
+  | 'convocacao_do_edital'
+  | 'encerramento'
+  | 'banco_gerado'
+  | 'sem_exito'
+  | 'aguardar_anuencia'
+  | 'publicar_novo_edital';
+
+
+export interface VagaCronograma {
+  data_validacao_edital?: string;
+  data_publicacao_edital?: string;
+  data_inscricao?: string; // Mantido para compatibilidade
+  data_inicio_inscricao?: string;
+  data_fim_inscricao?: string;
+  data_triagem?: string;
+  data_resultado_triagem?: string;
+  data_avaliacao_especifica_online?: string;
+  data_resultado_preliminar_avaliacao_especifica?: string;
+  data_recurso_avaliacao_especifica?: string;
+  data_resultado_recurso_avaliacao_especifica?: string;
+  data_resultado_final_avaliacao_especifica?: string;
+  data_envio_certificados_titulos?: string;
+  data_declaracao_experiencia?: string;
+  data_analise_curricular_preliminar?: string;
+  data_recurso_analise_curricular?: string;
+  data_resultado_recurso_analise_curricular?: string;
+  data_analise_curricular_final?: string;
+  data_entrevistas?: string;
+  data_resultado_final?: string; // Mantido para compatibilidade
+  data_resultado_final_seletivo?: string;
+  data_convocacao?: string;
+  data_encerramento_processo?: string;
+}
+
+export interface EtapaStatus {
+  etapa: EtapaEdital | string;
+  concluida: boolean;
+  data_prevista?: string;
+  data_realizada?: string;
+  usuario_conclusao?: string;
+  timestamp_conclusao?: string; 
+  no_prazo?: boolean;
+  observacoes?: string;
+}
+
+export interface VagaAcompanhamento {
+  etapa_atual: EtapaEdital | string;
+  total_inscritos?: number;
+  aprovados_triagem?: number;
+  aprovados_avaliacao_especifica?: number;
+  convocados_entrevista?: number;
+  aprovados_finais?: number;
+  gerou_banco?: boolean;
+  quantidade_banco?: number;
+  observacoes_etapa?: string;
+  data_real_etapa?: string;
+  situacao_etapa?: 'pendente' | 'em_andamento' | 'concluido' | 'atrasada';
+  etapas_habilitadas?: EtapaEdital[];
+  historico_etapas?: EtapaStatus[];
+}
+
+export interface Vaga {
+  id: string;
+  version?: number;
+  data_abertura: string;
+  data_recebimento?: string;
+  data_criacao: string;
+  created_at?: string;
+  unidade: string;
+  requisicao: string;
+  numero_requisicao?: string; 
+  cargo: string;
+  secao: string;
+  tipo_vaga: TipoVaga;
+  numero_vagas: number;
+  quantidade?: number; 
+  analista_responsavel: string;
+  assistentes?: string[];
+  observacoes_internas: string;
+  observacoes?: string; 
+  status: StatusVaga;
+  status_geral?: StatusGeral; 
+  tem_banco_valido: boolean;
+  banco_id?: string;
+  numero_processo?: string;
+  numero_edital?: string;
+  arquivo_edital?: string; // URL ou nome do arquivo
+  validado_por?: string;
+  data_validacao?: string;
+  observacoes_validacao?: string;
+  status_validacao?: StatusValidacao;
+  
+  // Novos campos para fluxo de edital
+  cargo_validado?: boolean;
+  carga_horaria_validada?: boolean;
+  salario_validado?: boolean;
+  observacoes_unidade?: string;
+  observacoes_edital?: string;
+  status_fluxo_edital?: 'pendente_unidade' | 'encaminhado_edital' | 'em_redacao' | 'enviado_validacao' | 'aguardando_aprovacao_gestor' | 'aprovado_administrativo' | 'publicado';
+  status_origem?: StatusVaga;
+
+  historico: HistoricoItem[];
+  origem: 'manual' | 'importada';
+  
+  // Acompanhamento do Edital
+  cronograma?: VagaCronograma;
+  acompanhamento?: VagaAcompanhamento;
+
+  // Compatibilidade e Extras
+  pcd?: boolean;
+  estado?: string;
+  selecao?: string;
+  origem_importacao?: string;
+  data_importacao?: string;
+  lote_importacao?: string;
+  reabertura_suspeita?: boolean;
+  data_encerramento?: string;
+  status_edital?: StatusEdital;
+  total_inscritos?: number;
+  aprovados_triagem?: number;
+  aprovados_finais?: number;
+  convocados_entrevista?: number;
+  trace_key?: string;
+  vaga?: string; 
+  source_row_index?: number;
+  import_batch_id?: string;
+  raw_row_hash?: string;
+  source_sheet?: string;
+  
+  // Campos complementares de convocação (Item 7)
+  data_convocacao_planilha?: string;
+  horario_convocacao_planilha?: string;
+  candidato_convocado_planilha?: string;
+  classificacao_convocacao_planilha?: string;
+  forma_convocacao_planilha?: string;
+  status_oitiva_convocacao_planilha?: string;
+
+  // Colunas auxiliares de acompanhamento (Item 2)
+  admissao_enviada_acompanhamento?: string;
+  admissao_efetivada_acompanhamento?: string;
+  detalhes_acompanhamento?: string;
+  categoria_status?: string;
+  
+  // Novos campos para fluxo de edital (Melhorias Reachr e Gestor)
+  url_reachr?: string;
+  gestor_aprovador_id?: string;
+  status_aprovacao_gestor?: 'pendente' | 'aprovado' | 'devolvido';
+  observacoes_gestor?: string;
+  distribuicao_vagas?: Record<string, number>;
+  unidade_trabalho?: string;
+  unidades_banco_talentos?: string[];
+  is_pcd?: boolean;
+  is_teia?: boolean;
+}
+
+export const UNIDADES_GOIANIA = [
+  'HECAD',
+  'CRER',
+  'AGIR',
+  'HUGOL',
+  'HDS',
+  'TEIA ANÁPOLIS',
+  'TEIA CANEDO',
+  'TEIA APARECIDA',
+  'TEIA GOIÂNIA',
+  'SUÁ',
+  'SÃO PEDRO',
+  'JATAÍ',
+  'POLICLÍNICA',
+  'VITÓRIA'
+];
+
+export interface BancoTalentos {
+  id: string;
+  version?: number;
+  unidade: string;
+  cargo: string;
+  secao?: string;
+  numero_edital: string;
+  data_abertura_edital: string;
+  data_publicacao?: string;
+  data_validade: string;
+  is_prorrogado: boolean;
+  prorrogacao?: string; // "SIM" or manual date
+  nova_data_validade?: string;
+  data_convocacao?: string;
+  unidade_convocacao?: string;
+  observacoes: string;
+  status: 'CADASTRO RESERVA' | 'CONVOCADO' | 'VENCIDO' | 'valido' | 'prorrogado' | 'nenhum' | string;
+  status_original?: string;
+  status_calculado?: string;
+  motivo_do_calculo?: string;
+  data_base_do_calculo?: string;
+  data_referencia_usada?: string;
+  status_import?: string;
+  numero_processo?: string;
+  nome?: string;
+  classificacao?: string | number;
+  quantidade_banco?: string | number;
+  numero_chamada?: string;
+  numero_processo_seletivo?: string;
+  numero_vaga_aproveitamento?: string;
+  cargo_normalizado?: string;
+  import_batch_id?: string;
+  data_importacao?: string;
+  origem_importacao?: string;
+  regiao?: 'GO_ES' | 'AMAZONAS' | 'OUTRAS_UNIDADES';
+}
+
+export type TipoAtendimento = 'presencial' | 'online';
+
+export interface BloqueioHorario {
+  id: string;
+  data: string;
+  horario?: string; // undefined = dia inteiro
+  dia_inteiro: boolean;
+  motivo: string;
+  vagas_bloqueadas?: number; // 1-5, se undefined e horário setado = bloqueia todos os slots
+  link_teams?: string;
+  criado_por: string;
+  created_at: string;
+}
+
+export interface Convocacao {
+  id: string;
+  version?: number;
+  vaga_id: string;
+  data_convocacao: string;
+  horario: string;
+  nome_candidato: string;
+  classificacao: number;
+  tipo_convocacao: string;
+  cargo: string;
+  unidade: string;
+  secao?: string;
+  carga_horaria?: string;
+  horario_trabalho?: string;
+  edoc?: string;
+  requisicao: string;
+  unidade_alternativa?: string;
+  edital_relacionado?: string;
+  banco_relacionado?: string;
+  observacoes: string;
+  devolutiva?: 'aceitou' | 'recusou';
+  motivo_recusa?: 'recusa_unidade' | 'recusa_horario' | 'recusa_plantao' | 'outros';
+  observacao_devolutiva?: string;
+  responsavel: string;
+  status: StatusConvocacao;
+  resultado_final?: string;
+  validado_por?: string;
+  data_validacao?: string;
+  tipo_atendimento?: TipoAtendimento;
+  link_teams?: string;
+}
+
+export interface Tarefa {
+  id: string;
+  titulo: string;
+  descricao: string;
+  status: 'pendente' | 'concluida';
+  prioridade: 'baixa' | 'media' | 'alta';
+  data_criacao: string;
+  data_vencimento?: string;
+  atribuido_a: string;
+  perfil_destinatario?: string;
+  relacionado_a?: {
+    tipo: 'vaga' | 'edital' | 'banco' | 'convocacao';
+    id: string;
+  };
+}
+
+export interface Alerta {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: 'atraso' | 'validacao' | 'informativo' | 'critico';
+  status: 'lido' | 'nao_lido' | 'resolvido';
+  data_criacao: string;
+  destinatario: string; // Perfil ou ID
+  link?: string;
+}
+
+export interface HistoricoItem {
+  id: string;
+  data: string;
+  descricao: string;
+  usuario: string;
+}
+
+export interface ImportHistory {
+  id: string;
+  data_hora?: string;
+  data?: string;
+  usuario_id?: string;
+  usuario: string;
+  email_usuario?: string;
+  arquivo?: string;
+  nome_arquivo?: string;
+  tipo_importacao?: 'vagas' | 'banco' | 'convocacoes';
+  planilha_aba?: string;
+  aba_utilizada?: string;
+  linha_cabecalho?: number;
+  colunas_reconhecidas?: string;
+  total_lidos: number;
+  total_novos: number;
+  total_atualizados: number;
+  total_ignorados: number;
+  total_erros: number;
+  repeticoes_tratadas?: number;
+  quantidade_confirmada?: number;
+  modo_importacao?: string;
+  origem_base?: string;
+  tabela_destino?: string;
+  status: 'concluido' | 'concluido_alertas' | 'erro' | 'em_processamento' | 'cancelado' | 'reprocessado';
+  observacoes?: string;
+  referencia_arquivo?: string;
+  relatorio_erros?: string;
+  mapeamento_aplicado?: any;
+}
+
+export interface ImportedFile {
+  id: string;
+  nome_original: string;
+  nome_interno: string;
+  tipo: string;
+  tamanho: number;
+  data_upload: string;
+  usuario: string;
+  email_usuario?: string;
+  modulo_origem: string;
+  status: 'enviado' | 'processando' | 'processado' | 'erro' | 'arquivado';
+  vaga_importacao_id?: string;
+  content?: string; // Armazenar o conteúdo base64 ou similar para reprocessamento
+}
+
+export interface MensagemHistorico {
+  id: string;
+  data: string;
+  remetente: string;
+  conteudo: string;
+  lida: boolean;
+  perfil_destinatario?: string;
+  remetente_id?: string | null;
+  destinatario_id?: string | null;
+  destinatario_nome?: string | null;
+  titulo?: string;
+}
+
+
+export interface Edital {
+  id: string;
+  vaga_id: string;
+  numero_processo: string;
+  numero_edital: string;
+  data_abertura_edital: string;
+  data_prova?: string;
+  data_entrevista?: string;
+  data_encerramento_edital?: string;
+  etapa_atual: EtapaEdital;
+  total_inscritos: number;
+  aprovados_triagem: number;
+  convocados_entrevista: number;
+  aprovados_finais: number;
+  possui_banco_talentos: boolean;
+  status_publicacao: StatusPublicacao;
+}
+
+export interface ValidacaoEdital {
+  id: string;
+  vaga_id: string;
+  precisa_validacao: boolean;
+  responsavel_validacao: string;
+  tipo_validacao: string;
+  observacao: string;
+  etapa_finalizada: boolean;
+  status_validacao: StatusValidacao;
+}
+
+export const TIPO_VAGA_LABELS: Partial<Record<TipoVaga, string>> = {
+  substituicao: 'Substituição',
+  aumento: 'Aumento',
+};
+
+export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {
+  'CONCLUÍDAS': 'Concluídas',
+  'CONCLUÍDA': 'Concluída',
+  'EM ANDAMENTO': 'Em Andamento',
+  'MOV. INTERNA': 'Mov. Interna',
+  'MOVIMENTAÇÃO INTERNA': 'Movimentação Interna',
+  'ADMISSÃO ENVIADA': 'Admissão Enviada',
+  'ADMISSÃO': 'Admissão',
+  'EM EDITAL': 'Em Edital',
+  'PUBLICAR NOVO EDITAL': 'Publicar Novo Edital',
+  'REALIZAR CONVOCAÇÃO': 'Realizar Convocação',
+  'VAGA DE LIDERANÇA': 'Vaga de Liderança',
+  'DOCUMENTAÇÃO': 'Documentação',
+  'CONVOCAÇÕES': 'Convocações',
+  'FILA DE EDITAIS': 'Fila de Editais',
+  'PUBLICAR EDITAL': 'Publicar Edital',
+  'ACOMPANHAMENTO DE EDITAL': 'Acompanhamento de Edital',
+  'SUSPENSA': 'Suspensa',
+  'PAUSADA': 'Pausada',
+  'AGUARDANDO UNIDADE': 'Aguardando Unidade',
+  'ESTRATÉGICAS': 'Estratégicas',
+  'CANCELADAS': 'Canceladas',
+  'SEM STATUS': 'Sem Status',
+  publicar_novo_edital: 'Publicar Novo Edital',
+  em_edital: 'Em Edital',
+  em_documentacao: 'Em Documentação',
+  documentacao_ok_azul_pendente: 'Doc. OK e Azul Pendente',
+  documentacao_pendente_azul_ok: 'Doc. Pendente e Azul OK',
+  em_admissao: 'Em Admissão',
+  admissao_enviada: 'Admissão Enviada',
+  admissao_efetivada: 'Admissão Efetivada',
+  dispensa: 'Dispensa',
+  cancelada: 'Cancelada',
+  aguardar_anuencia: 'Aguardar Anuência',
+  aguardar_unidade: 'Aguardar Unidade',
+  movimentacao_interna: 'Movimentação Interna',
+  vaga_lideranca: 'Vaga de Liderança',
+  realizar_convocacao: 'Realizar Convocação',
+  aberta: 'Aberta',
+  em_triagem: 'Em Triagem',
+  entrevista: 'Entrevista',
+  finalizada: 'Finalizada',
+  encerrada: 'Encerrada',
+};
+
+export const STATUS_LABELS = STATUS_VAGA_LABELS;
+
+// Mapeamento simplificado para filtros - agrupa status sinônimos
+export const STATUS_FILTER_OPTIONS: Record<string, { label: string; matches: StatusVaga[] }> = {
+  'CONCLUÍDA': {
+    label: 'Concluída',
+    matches: ['CONCLUÍDAS', 'CONCLUÍDA', 'admissao_efetivada'],
+  },
+  'MOVIMENTAÇÃO INTERNA': {
+    label: 'Movimentação Interna',
+    matches: ['MOV. INTERNA', 'MOVIMENTAÇÃO INTERNA', 'movimentacao_interna'],
+  },
+  'ADMISSÃO': {
+    label: 'Admissão',
+    matches: ['ADMISSÃO ENVIADA', 'ADMISSÃO', 'em_admissao', 'admissao_enviada'],
+  },
+  'EM EDITAL': {
+    label: 'Em Edital',
+    matches: ['EM ANDAMENTO', 'EM EDITAL', 'em_edital', 'em_triagem', 'entrevista', 'aberta'],
+  },
+  'FILA DE EDITAIS': {
+    label: 'Fila de Editais',
+    matches: ['FILA DE EDITAIS', 'PUBLICAR EDITAL', 'PUBLICAR NOVO EDITAL', 'publicar_novo_edital'],
+  },
+  'REALIZAR CONVOCAÇÃO': {
+    label: 'Realizar Convocação',
+    matches: ['REALIZAR CONVOCAÇÃO', 'CONVOCAÇÕES', 'realizar_convocacao'],
+  },
+  'DOCUMENTAÇÃO': {
+    label: 'Documentação',
+    matches: ['DOCUMENTAÇÃO', 'documentacao_ok_azul_pendente', 'documentacao_pendente_azul_ok', 'em_documentacao'],
+  },
+  'VAGA DE LIDERANÇA': {
+    label: 'Vaga de Liderança',
+    matches: ['VAGA DE LIDERANÇA', 'ESTRATÉGICAS', 'vaga_lideranca'],
+  },
+  'AGUARDANDO UNIDADE': {
+    label: 'Aguardando Unidade',
+    matches: ['AGUARDANDO UNIDADE', 'aguardar_unidade', 'aguardar_anuencia'],
+  },
+  'SUSPENSA': {
+    label: 'Suspensa',
+    matches: ['SUSPENSA', 'PAUSADA'],
+  },
+  'CANCELADAS': {
+    label: 'Canceladas',
+    matches: ['CANCELADAS', 'cancelada', 'dispensa'],
+  },
+  'SEM STATUS': {
+    label: 'Sem Status',
+    matches: ['SEM STATUS'],
+  },
+};
+
+// Mapeamento de qualquer status para seu label unificado de exibição
+export const STATUS_DISPLAY_MAP: Record<string, string> = {};
+Object.entries(STATUS_FILTER_OPTIONS).forEach(([_key, { label, matches }]) => {
+  matches.forEach(m => {
+    STATUS_DISPLAY_MAP[m] = label;
+  });
+});
+// Adicionar labels uppercase também
+Object.entries(STATUS_VAGA_LABELS).forEach(([k]) => {
+  if (!STATUS_DISPLAY_MAP[k]) {
+    // Tentar encontrar pelo agrupamento
+    for (const { label, matches } of Object.values(STATUS_FILTER_OPTIONS)) {
+      if (matches.includes(k as StatusVaga)) {
+        STATUS_DISPLAY_MAP[k] = label;
+        break;
+      }
+    }
+  }
+});
+
+// Helper para detectar unidades TEIA
+export const isTeiaUnit = (u: string | undefined | null): boolean =>
+  (u || '').toUpperCase().includes('TEIA');
+
+// Lista reduzida de status para Unidades TEIA
+export const STATUS_FILTER_OPTIONS_TEIA: Record<string, { label: string; matches: StatusVaga[] }> = {
+  'EM EDITAL': {
+    label: 'Processo Seletivo',
+    matches: [
+      ...STATUS_FILTER_OPTIONS['EM EDITAL'].matches,
+      ...STATUS_FILTER_OPTIONS['FILA DE EDITAIS'].matches,
+      ...STATUS_FILTER_OPTIONS['REALIZAR CONVOCAÇÃO'].matches,
+    ],
+  },
+  'DOCUMENTAÇÃO': STATUS_FILTER_OPTIONS['DOCUMENTAÇÃO'],
+  'ADMISSÃO ENVIADA': {
+    label: 'Admissão Enviada',
+    matches: ['ADMISSÃO ENVIADA', 'admissao_enviada'],
+  },
+  'CONCLUÍDA': STATUS_FILTER_OPTIONS['CONCLUÍDA'],
+  'MOVIMENTAÇÃO INTERNA': STATUS_FILTER_OPTIONS['MOVIMENTAÇÃO INTERNA'],
+  'ADMISSÃO': {
+    label: 'Admissão',
+    matches: ['ADMISSÃO', 'em_admissao'],
+  },
+  'VAGA DE LIDERANÇA': STATUS_FILTER_OPTIONS['VAGA DE LIDERANÇA'],
+  'SUSPENSA': STATUS_FILTER_OPTIONS['SUSPENSA'],
+  'CANCELADAS': {
+    label: 'Cancelada',
+    matches: STATUS_FILTER_OPTIONS['CANCELADAS'].matches,
+  },
+  'SEM STATUS': STATUS_FILTER_OPTIONS['SEM STATUS'],
+};
+
+export const STATUS_CONVOCACAO_LABELS: Record<StatusConvocacao, string> = {
+  aceite: 'Aceite',
+  recusa_plantao: 'Recusa Plantão',
+  recusa_unidade: 'Recusa Unidade',
+  recusa_horario: 'Recusa Horário',
+  desistiu: 'Desistiu',
+  faltou: 'Faltou',
+  pendente: 'Pendente',
+};
+
+export const ETAPA_LABELS: Record<EtapaEdital, string> = {
+  validacao_edital: 'Validação do Edital',
+  inscricoes: 'Inscrições',
+  triagem: 'Triagem',
+  resultado_da_triagem: 'Resultado da Triagem',
+  avaliacao_especifica_online: 'Avaliação Específica Online',
+  resultado_preliminar_avaliacao_especifica_online: 'Res. Preliminar Avaliação Online',
+  recurso_avaliacao_especifica_online: 'Recurso Avaliação Online',
+  resultado_recurso_avaliacao_especifica_online: 'Resultado Recurso Avaliação Online',
+  resultado_final_avaliacao_especifica_online: 'Resultado Final Avaliação Online',
+  envio_certificados_titulos: 'Envio de Certificados e Títulos',
+  declaracao_experiencia: 'Declaração de Experiência',
+  analise_curricular_preliminar: 'Análise Curricular Preliminar',
+  recurso_analise_curricular: 'Recurso Análise Curricular',
+  resultado_recurso_analise_curricular: 'Res. Recurso Análise Curricular',
+  analise_curricular_final: 'Análise Curricular Final',
+  entrevistas: 'Entrevistas',
+  resultado_final: 'Resultado Final do Seletivo',
+  convocacao_do_edital: 'Convocação do Edital',
+  encerramento: 'Encerramento',
+  banco_gerado: 'Banco Gerado',
+  sem_exito: 'Sem Êxito',
+  aguardar_anuencia: 'Aguardar Anuência',
+  publicar_novo_edital: 'Publicar Novo Edital',
+};
+
+
+export const STATUS_EDITAL_COLORS: Record<StatusEdital, string> = {
+  'Nova vaga': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Aguardando processo': 'bg-amber-100 text-amber-700 border-amber-200',
+  'Aguardando edital': 'bg-orange-100 text-orange-700 border-orange-200',
+  'Aguardando processo e edital': 'bg-red-100 text-red-700 border-red-200',
+  'Em andamento': 'bg-green-100 text-green-700 border-green-200',
+  'Encerrada': 'bg-gray-100 text-gray-700 border-gray-200',
+};
+
+export const TODAS_AS_ETAPAS: EtapaEdital[] = [
+  'validacao_edital',
+  'inscricoes',
+  'triagem',
+  'resultado_da_triagem',
+  'avaliacao_especifica_online',
+  'resultado_preliminar_avaliacao_especifica_online',
+  'recurso_avaliacao_especifica_online',
+  'resultado_recurso_avaliacao_especifica_online',
+  'resultado_final_avaliacao_especifica_online',
+  'envio_certificados_titulos',
+  'declaracao_experiencia',
+  'analise_curricular_preliminar',
+  'recurso_analise_curricular',
+  'resultado_recurso_analise_curricular',
+  'analise_curricular_final',
+  'entrevistas',
+  'resultado_final',
+  'convocacao_do_edital',
+  'encerramento',
+  'banco_gerado',
+  'sem_exito'
+];

@@ -145,7 +145,6 @@ export default function AdministracaoPage() {
   const [passwordMode, setPasswordMode] = useState<'manual' | 'temp'>('temp');
   const [manualPassword, setManualPassword] = useState('');
   const [generatedPassword, setGeneratedPassword] = useState('');
-  const [sendEmailAfterPassword, setSendEmailAfterPassword] = useState(true);
 
   // Support config state
   const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
@@ -328,12 +327,7 @@ export default function AdministracaoPage() {
     setSaving(true);
     try {
       await resetUserPassword(passwordUser.id, pwd);
-      if (sendEmailAfterPassword) {
-        await sendWelcomeEmail(passwordUser.id, pwd);
-        toast.success('Senha redefinida e dados de acesso reenviados por e-mail.');
-      } else {
-        toast.success('Senha redefinida com sucesso.');
-      }
+      toast.success('Senha redefinida com sucesso.');
       setIsPasswordDialogOpen(false);
       setPasswordUser(null);
     } catch (err: any) {
@@ -404,7 +398,6 @@ export default function AdministracaoPage() {
     setPasswordMode('temp');
     setGeneratedPassword(generateTempPassword());
     setManualPassword('');
-    setSendEmailAfterPassword(true);
     setShowResetPassword(false);
     setIsPasswordDialogOpen(true);
   };
@@ -1923,16 +1916,6 @@ export default function AdministracaoPage() {
                 </p>
               </div>
             )}
-            <div className="flex items-center gap-3 pt-2">
-              <Checkbox 
-                id="sendEmailPassword" 
-                checked={sendEmailAfterPassword} 
-                onCheckedChange={(v) => setSendEmailAfterPassword(!!v)} 
-              />
-              <label htmlFor="sendEmailPassword" className="text-sm font-medium cursor-pointer flex items-center gap-2">
-                <Mail className="h-4 w-4 text-primary" /> Reenviar dados de acesso por e-mail
-              </label>
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>Cancelar</Button>

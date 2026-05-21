@@ -241,7 +241,8 @@ export function ImportStagedDialog({ open, onOpenChange, type: initialType }: Im
           if (p.phase === 'success' || p.phase === 'error') {
             setStep('result');
             void Promise.all([
-              importType === 'vagas' ? fetchVagas() : fetchBancos(),
+              // force: true bypasses the "already loaded" guard so freshly imported data appears immediately
+              importType === 'vagas' ? fetchVagas({ force: true }) : fetchBancos({ force: true }),
               fetchImportHistory(),
             ]);
           }

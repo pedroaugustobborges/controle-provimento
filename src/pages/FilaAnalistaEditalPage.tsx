@@ -414,9 +414,23 @@ export default function FilaAnalistaEditalPage() {
   const handleSendToValidation = async () => {
     const vToUpdate = isBatchMode ? selectedBatchVagas : (selectedVaga ? [selectedVaga] : []);
     if (vToUpdate.length === 0) return;
-    if (!nomeArquivo) return toast.error('Anexe o arquivo Word.');
+    if (!nomeArquivo) return toast.error('Anexe o arquivo do edital (Word/PDF) antes de enviar.');
     if (!numeroEdital || !numeroProcesso) return toast.error('Informe os números do edital/processo.');
     if (!responsavelValidacao) return toast.error('Selecione o validador.');
+
+    // Validate that all vagas have the minimum required cronograma dates
+    const REQUIRED_CRONO_FIELDS: { key: string; label: string }[] = [
+      { key: 'data_publicacao_edital', label: 'Publicação do Edital' },
+      { key: 'data_inicio_inscricao', label: 'Início das Inscrições' },
+      { key: 'data_resultado_final_seletivo', label: 'Resultado Final' },
+    ];
+    for (const v of vToUpdate) {
+      const currentCrono = isBatchMode ? batchCronogramas[v.id] : cronograma;
+      const missing = REQUIRED_CRONO_FIELDS.filter(f => !currentCrono?.[f.key]);
+      if (missing.length > 0) {
+        return toast.error(`[${v.cargo}] Cronograma incompleto — preencha: ${missing.map(f => f.label).join(', ')}.`);
+      }
+    }
 
     for (const v of vToUpdate) {
       const currentCrono = isBatchMode ? batchCronogramas[v.id] : cronograma;

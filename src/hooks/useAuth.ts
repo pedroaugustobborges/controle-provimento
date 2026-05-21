@@ -67,15 +67,36 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Record logout time before signing out
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_sessions')
+          .update({ logout_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+          .is('logout_at', null);
+        await supabase.from('audit_logs').insert({
+          usuario_id: user.id,
+          acao: 'LOGOUT',
+          modulo: 'autenticacao',
+          registro_afetado: user.id,
+        });
+      }
+    } catch {
+      // Audit/session update failures must never block logout
+    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);
 
-  const resetPassword = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) throw error;
+  /**
+   * @deprecated Admin-driven password reset via edge function is the correct flow.
+   * Self-service password change is available in the profile dialog inside the app.
+   * This function is intentionally a no-op to prevent accidental email link usage.
+   */
+  const resetPassword = useCallback(async (_email: string) => {
+    throw new Error('Redefinição de senha por e-mail não está disponível. Solicite ao administrador do sistema que redefina sua senha diretamente no painel.');
   }, []);
 
   const updatePassword = useCallback(async (newPassword: string) => {

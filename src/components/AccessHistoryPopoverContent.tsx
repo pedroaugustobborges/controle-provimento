@@ -19,6 +19,7 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
   const [date, setDate] = useState<Date>(new Date());
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchHistory();
@@ -26,15 +27,19 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
 
   const fetchHistory = async () => {
     setLoading(true);
+    setFetchError(null);
     const start = startOfDay(date).toISOString();
     const end = endOfDay(date).toISOString();
 
-    // Fetch sessions with profile join via the new FK
-    const { data: sessions, error } = await supabase
+    // Fetch sessions — try joined query first, fall back to simple query if FK join fails
+    let sessions: any[] | null = null;
+    let queryError: any = null;
+
+    const joinedResult = await supabase
       .from('user_sessions')
       .select(`
         *,
-        profiles!user_sessions_profile_fkey (
+        profiles!user_sessions_user_id_fkey (
           nome_completo,
           perfil,
           cargo
@@ -44,9 +49,23 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
       .gte('last_activity_at', start)
       .order('login_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching history:', error);
-      toast.error('Erro ao carregar histórico de acessos');
+    if (joinedResult.error) {
+      // Fallback: fetch without the join
+      const simpleResult = await supabase
+        .from('user_sessions')
+        .select('*')
+        .lte('login_at', end)
+        .gte('last_activity_at', start)
+        .order('login_at', { ascending: false });
+      sessions = simpleResult.data;
+      queryError = simpleResult.error;
+    } else {
+      sessions = joinedResult.data;
+    }
+
+    if (queryError) {
+      console.error('Error fetching history:', queryError);
+      setFetchError('Erro ao carregar histórico de acessos. Tente novamente.');
       setLoading(false);
       return;
     }
@@ -188,12 +207,27 @@ export function AccessHistoryPopoverContent({ onlineUsers }: AccessHistoryPopove
           <ScrollArea className="h-80">
             <div className="p-2">
               {loading ? (
-                <div className="p-8 text-center text-xs text-muted-foreground animate-pulse">
-                  Carregando histórico...
+                <div className="space-y-2 p-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-3 rounded-xl border border-slate-100 bg-white animate-pulse">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-7 w-7 rounded-full bg-slate-200" />
+                        <div className="space-y-1 flex-1">
+                          <div className="h-3 bg-slate-200 rounded w-32" />
+                          <div className="h-2 bg-slate-100 rounded w-20" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : fetchError ? (
+                <div className="p-6 text-center">
+                  <p className="text-xs font-semibold text-red-600 mb-1">{fetchError}</p>
+                  <button onClick={fetchHistory} className="text-[10px] text-primary hover:underline">Tentar novamente</button>
                 </div>
               ) : history.length === 0 ? (
                 <div className="p-8 text-center text-xs text-muted-foreground">
-                  Nenhum registro encontrado para este dia.
+                  Nenhum registro encontrado para o período selecionado.
                 </div>
               ) : (
                 <div className="space-y-3">

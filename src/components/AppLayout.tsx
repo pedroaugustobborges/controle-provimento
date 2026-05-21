@@ -13,11 +13,12 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { 
-  Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut, 
-  Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users, 
+import {
+  Bell, Search, Home, ChevronRight, Sparkles, User, Settings, LogOut,
+  Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users,
   Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
-  History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera, FileBarChart
+  History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera, FileBarChart,
+  KeyRound, Eye, EyeOff
 } from 'lucide-react';
 import { AgieChat } from './chat/AgieChat';
 import { InactivityLogout } from './InactivityLogout';
@@ -75,6 +76,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const [isCompact, setIsCompact] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [cpCurrentPassword, setCpCurrentPassword] = useState('');
+  const [cpNewPassword, setCpNewPassword] = useState('');
+  const [cpConfirmPassword, setCpConfirmPassword] = useState('');
+  const [cpShowCurrent, setCpShowCurrent] = useState(false);
+  const [cpShowNew, setCpShowNew] = useState(false);
+  const [cpSaving, setCpSaving] = useState(false);
   const { alertas, updateAlerta, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime } = useVagasStore();
   const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length;
   const mainRef = useRef<HTMLDivElement>(null);
@@ -237,6 +245,55 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   const breadcrumbs = getBreadcrumbs();
+
+  const handleChangeOwnPassword = async () => {
+    if (!currentUser) return;
+    if (cpNewPassword !== cpConfirmPassword) {
+      toast.error('As senhas não coincidem.');
+      return;
+    }
+    if (cpNewPassword.length < 8 || !/[A-Za-z]/.test(cpNewPassword) || !/\d/.test(cpNewPassword) || !/[^A-Za-z0-9]/.test(cpNewPassword)) {
+      toast.error('A senha deve ter no mínimo 8 caracteres com letra, número e símbolo.');
+      return;
+    }
+    setCpSaving(true);
+    try {
+      // Verify current password by re-authenticating
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password: cpCurrentPassword,
+      });
+      if (authError) {
+        toast.error('Senha atual incorreta.');
+        setCpSaving(false);
+        return;
+      }
+      // Update to new password
+      const { error } = await supabase.auth.updateUser({ password: cpNewPassword });
+      if (error) throw error;
+
+      // Log to audit (fire-and-forget)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        supabase.from('audit_logs').insert({
+          usuario_id: user.id,
+          acao: 'PASSWORD_CHANGED_BY_USER',
+          modulo: 'usuarios',
+          registro_afetado: user.id,
+        }).then();
+      }
+
+      toast.success('Senha alterada com sucesso!');
+      setShowChangePassword(false);
+      setCpCurrentPassword('');
+      setCpNewPassword('');
+      setCpConfirmPassword('');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao alterar senha.');
+    } finally {
+      setCpSaving(false);
+    }
+  };
 
   const userName = currentUser?.nome_completo?.split(' ')[0] || 'Usuário';
   const initials = currentUser?.nome_completo
@@ -565,14 +622,107 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <CheckCircle2 className="h-4 w-4 text-success" />
                   Sessão autenticada e segura
                 </div>
-                <button 
-                  onClick={() => setShowProfile(false)}
-                  className="text-xs font-bold text-primary hover:underline underline-offset-4"
-                >
-                  Fechar informações
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setShowProfile(false); setShowChangePassword(true); }}
+                    className="text-xs font-bold text-slate-500 hover:text-primary hover:underline underline-offset-4 flex items-center gap-1"
+                  >
+                    <KeyRound className="h-3.5 w-3.5" /> Alterar Senha
+                  </button>
+                  <button
+                    onClick={() => setShowProfile(false)}
+                    className="text-xs font-bold text-primary hover:underline underline-offset-4"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG: ALTERAR SENHA PRÓPRIA */}
+      <Dialog open={showChangePassword} onOpenChange={(open) => {
+        setShowChangePassword(open);
+        if (!open) { setCpCurrentPassword(''); setCpNewPassword(''); setCpConfirmPassword(''); }
+      }}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              Alterar Minha Senha
+            </DialogTitle>
+            <DialogDescription>
+              Informe sua senha atual e escolha uma nova senha forte.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">Senha Atual</label>
+              <div className="relative">
+                <input
+                  type={cpShowCurrent ? 'text' : 'password'}
+                  value={cpCurrentPassword}
+                  onChange={(e) => setCpCurrentPassword(e.target.value)}
+                  placeholder="Sua senha atual"
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 pr-9 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  autoComplete="current-password"
+                />
+                <button type="button" onClick={() => setCpShowCurrent(v => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {cpShowCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">Nova Senha</label>
+              <div className="relative">
+                <input
+                  type={cpShowNew ? 'text' : 'password'}
+                  value={cpNewPassword}
+                  onChange={(e) => setCpNewPassword(e.target.value)}
+                  placeholder="Mínimo 8 caracteres, letra, número, símbolo"
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 pr-9 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  autoComplete="new-password"
+                />
+                <button type="button" onClick={() => setCpShowNew(v => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {cpShowNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">Confirmar Nova Senha</label>
+              <input
+                type="password"
+                value={cpConfirmPassword}
+                onChange={(e) => setCpConfirmPassword(e.target.value)}
+                placeholder="Repita a nova senha"
+                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                autoComplete="new-password"
+              />
+              {cpConfirmPassword && cpNewPassword !== cpConfirmPassword && (
+                <p className="text-xs text-destructive">As senhas não coincidem.</p>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Requisitos: mínimo 8 caracteres, incluindo letras, números e ao menos um símbolo (@, #, !, etc.).
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              onClick={() => setShowChangePassword(false)}
+              className="h-9 px-4 rounded-md border border-input text-sm font-medium hover:bg-accent transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleChangeOwnPassword}
+              disabled={cpSaving || !cpCurrentPassword || !cpNewPassword || cpNewPassword !== cpConfirmPassword}
+              className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2"
+            >
+              <KeyRound className="h-4 w-4" />
+              {cpSaving ? 'Salvando...' : 'Salvar Nova Senha'}
+            </button>
           </div>
         </DialogContent>
       </Dialog>

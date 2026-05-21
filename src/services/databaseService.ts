@@ -174,14 +174,13 @@ export class DatabaseService {
     contextoAdicional?: any
   ) {
     try {
-      const { error } = await supabase.from('auditoria_logs').insert({
+      const { error } = await supabase.from('audit_logs').insert({
         modulo,
-        registro_id: registroId,
+        registro_afetado: registroId,
         acao,
         usuario_id: usuarioId,
         valor_anterior: valorAnterior,
-        valor_novo: valorNovo,
-        contexto_adicional: contextoAdicional,
+        valor_novo: valorNovo ?? contextoAdicional,
       });
       
       if (error) console.error('Audit logging failed:', error);

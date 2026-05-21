@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
             pode_gerenciar_usuarios: pode_gerenciar_usuarios || false,
             acesso_portal_unidade: acesso_portal_unidade || false,
             regiao_suporte: regiao_suporte || null,
+            must_change_password: true, // Force password change on first login
           });
 
         if (profileError) console.error("Profile error:", profileError);
@@ -200,11 +201,31 @@ Deno.serve(async (req) => {
             : error.message || "Falha ao atualizar a senha.");
         }
         console.log("[reset_password] success", { user_id: updated?.user?.id });
+
+        // Clear must_change_password when admin explicitly sets a new password
+        await supabaseAdmin.from("profiles").update({ must_change_password: false }).eq("id", user_id);
+
+        // Audit log
+        await supabaseAdmin.from("audit_logs").insert({
+          usuario_id: caller.id,
+          acao: "PASSWORD_RESET_BY_ADMIN",
+          modulo: "usuarios",
+          registro_afetado: user_id,
+        }).then();
+
         return jsonOk();
       }
 
       case "update_status": {
         const { user_id, new_status } = body;
+
+        // Fetch previous status for audit trail
+        const { data: prevProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("status, nome_completo")
+          .eq("id", user_id)
+          .maybeSingle();
+
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
           .update({ status: new_status })
@@ -220,6 +241,16 @@ Deno.serve(async (req) => {
             ban_duration: "none",
           });
         }
+
+        // Audit log
+        await supabaseAdmin.from("audit_logs").insert({
+          usuario_id: caller.id,
+          acao: `STATUS_CHANGED_TO_${new_status.toUpperCase()}`,
+          modulo: "usuarios",
+          registro_afetado: user_id,
+          valor_anterior: prevProfile?.status,
+          valor_novo: new_status,
+        }).then();
 
         return jsonOk();
       }

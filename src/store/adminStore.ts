@@ -49,7 +49,7 @@ interface AdminState {
   updateFeedbackStatus: (id: string, status: 'pendente' | 'lido' | 'respondido') => Promise<void>;
 
   // Audit actions
-  addAuditLog: (log: Omit<AuditLog, 'id'>) => void;
+  addAuditLog: (log: Omit<AuditLog, 'id'>) => Promise<void>;
 
   // Support actions
   fetchSupportConfigs: () => Promise<void>;
@@ -284,8 +284,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   addAuditLog: async (log) => {
     try {
+      // Always use the live auth session to get the correct user ID — never rely on cached store state
+      const { data: { user: liveUser } } = await supabase.auth.getUser();
       const newLog = {
-        usuario_id: get().currentUser?.id,
+        usuario_id: liveUser?.id ?? get().currentUser?.id,
         usuario_nome: log.usuario_nome,
         usuario_email: log.usuario_email || '',
         perfil: log.perfil || '',

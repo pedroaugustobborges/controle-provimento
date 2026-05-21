@@ -22,6 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseLocalDate, formatLocalDate } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo } from 'react';
@@ -1316,16 +1317,16 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                               )}
                             >
                               <Calendar className="mr-2 h-3 w-3 text-primary" />
-                              {cronograma[cronoKey] ? format(new Date(cronograma[cronoKey]), "dd/MM/yyyy") : "Selecionar"}
+                              {cronograma[cronoKey] ? format(parseLocalDate(cronograma[cronoKey]), "dd/MM/yyyy") : "Selecionar"}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 z-[9999]" align="end" sideOffset={8}>
                             <CalendarComponent
                               mode="single"
-                              selected={cronograma[cronoKey] ? new Date(cronograma[cronoKey]) : undefined}
+                              selected={cronograma[cronoKey] ? parseLocalDate(cronograma[cronoKey]) : undefined}
                               onSelect={(date) => {
                                 if (date) {
-                                  setCronograma({ ...cronograma, [cronoKey]: date.toISOString().split('T')[0] });
+                                  setCronograma({ ...cronograma, [cronoKey]: formatLocalDate(date) });
                                 }
                               }}
                               initialFocus

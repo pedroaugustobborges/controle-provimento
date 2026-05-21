@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,8 @@ import { LogoutOverlay } from "@/components/LogoutOverlay";
 import { useMaintenanceMode } from "@/hooks/useMaintenanceMode";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import MaintenancePage from "@/pages/MaintenancePage";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const VagasPage = lazy(() => import("@/pages/VagasPage"));
@@ -31,6 +32,7 @@ const MensagensPage = lazy(() => import("@/pages/MensagensPage"));
 const RelatoriosPage = lazy(() => import("@/pages/RelatoriosPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
  const UnidadePortalPage = lazy(() => import("@/pages/UnidadePortalPage"));
   const GestaoEstrategicaPage = lazy(() => import("@/pages/PortalRHPage"));
@@ -47,9 +49,11 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRouteWrapper() {
-  const { isAuthenticated, loading, signOut } = useAuth();
+  const { isAuthenticated, loading, signOut, user } = useAuth();
   const { state: maintenance, loading: maintLoading } = useMaintenanceMode();
   const isAdmin = useIsAdmin();
+  const [mustChangePassword, setMustChangePassword] = useState<boolean | null>(null);
+  const location = useLocation();
 
   // Auto-deslogar não-admin quando manutenção é ativada em tempo real
   useEffect(() => {
@@ -58,7 +62,23 @@ function ProtectedRouteWrapper() {
     }
   }, [maintenance?.is_active, isAdmin, isAuthenticated, signOut]);
 
-  if (loading || maintLoading || isAdmin === null) {
+  // Check must_change_password flag — only when authenticated and not already on change-password page
+  useEffect(() => {
+    if (!isAuthenticated || !user || location.pathname === '/change-password') {
+      setMustChangePassword(false);
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('must_change_password')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setMustChangePassword(data?.must_change_password ?? false);
+      });
+  }, [isAuthenticated, user, location.pathname]);
+
+  if (loading || maintLoading || isAdmin === null || (isAuthenticated && mustChangePassword === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -71,6 +91,10 @@ function ProtectedRouteWrapper() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (mustChangePassword) {
+    return <Navigate to="/change-password" replace />;
   }
 
   if (maintenance?.is_active && !isAdmin) {
@@ -134,6 +158,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/change-password" element={<Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}><ChangePasswordPage /></Suspense>} />
             
             <Route element={<ProtectedRouteWrapper />}>
               <Route path="/" element={<DashboardPage />} />

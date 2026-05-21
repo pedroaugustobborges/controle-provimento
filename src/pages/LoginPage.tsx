@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LogIn, Mail, Lock, Eye, EyeOff, X, UserPlus, ChevronRight, Building2, Briefcase, User, MessageSquare, Users, MapPin } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -40,7 +41,6 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       const result = await signIn(email, password);
 
       // Verifica modo de manutenção
-      const { supabase } = await import('@/integrations/supabase/client');
       const { data: maint } = await supabase
         .from('system_maintenance')
         .select('is_active,message')
@@ -73,6 +73,17 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           await supabase.auth.signOut();
           throw new Error(maint.message || 'Sistema em manutenção. Tente novamente mais tarde.');
         }
+      }
+
+      // Record login audit (fire-and-forget — must not block navigation)
+      if (result.user?.id) {
+        const uid = result.user.id;
+        supabase.from('audit_logs').insert({
+          usuario_id: uid,
+          acao: 'LOGIN',
+          modulo: 'autenticacao',
+          registro_afetado: uid,
+        }).then();
       }
 
       navigate('/', { replace: true });

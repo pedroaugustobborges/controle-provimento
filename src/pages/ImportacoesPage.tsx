@@ -337,7 +337,7 @@ export default function ImportacoesPage() {
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Ver Detalhes">
                             <Info className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Baixar Relatório">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Baixar Relatório" onClick={() => toast.info('Relatório de importação não disponível — o arquivo original não foi salvo no repositório durante esta importação.')}>
                             <Download className="h-4 w-4" />
                           </Button>
                           <Button 
@@ -427,7 +427,24 @@ export default function ImportacoesPage() {
                             <DropdownMenuItem onClick={() => handleReprocess(f)} className="gap-2">
                               <RefreshCw className="h-4 w-4 text-blue-600" /> Reprocessar
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={async () => {
+                              if (!f.nome_interno || f.nome_interno === f.id) {
+                                toast.info('Arquivo original não disponível — o arquivo não foi salvo no repositório durante esta importação.');
+                                return;
+                              }
+                              try {
+                                const { data, error } = await supabase.storage
+                                  .from('importacoes')
+                                  .createSignedUrl(f.nome_interno, 3600);
+                                if (error || !data?.signedUrl) {
+                                  toast.info('Arquivo original não disponível para download.');
+                                  return;
+                                }
+                                window.open(data.signedUrl, '_blank');
+                              } catch {
+                                toast.error('Erro ao gerar link de download.');
+                              }
+                            }}>
                               <Download className="h-4 w-4" /> Baixar Original
                             </DropdownMenuItem>
                             {f.vaga_importacao_id && (

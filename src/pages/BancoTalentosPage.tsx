@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle } from 'lucide-react';
+import { Search, Plus, Filter, Calendar, Info, Clock, CheckCircle2, AlertTriangle, FileSpreadsheet, History, Download, Trash2, AlertCircle, User, Users, Briefcase, Building, FileText, ClipboardList, CheckCircle, ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { RequestUpdateDialog } from '@/components/RequestUpdateDialog';
 import { ExportButton } from '@/components/ExportButton';
@@ -26,7 +26,7 @@ const getRegiaoFromUnit = (unidade: string): string | undefined => {
   }
   return undefined;
 };
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/pagination";
 
 export default function BancoTalentosPage() {
+  const navigate = useNavigate();
   const { bancos, importHistory, importedFiles, deleteBanco, fetchBancos } = useVagasStore();
   
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function BancoTalentosPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'list');
+  const vagaIdContext = searchParams.get('vagaId');
   const [unidadeFilter, setUnidadeFilter] = useState('todas');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [convocadosSearch, setConvocadosSearch] = useState('');
@@ -486,6 +488,21 @@ export default function BancoTalentosPage() {
         }
       />
 
+
+      {vagaIdContext && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
+          <Info className="h-4 w-4 shrink-0 text-blue-500" />
+          <span>Você está consultando bancos de talentos a partir de uma vaga. Os resultados já foram filtrados pelo cargo.</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto gap-1.5 text-blue-700 hover:text-blue-900 hover:bg-blue-100 h-7 px-2"
+            onClick={() => navigate(`/vagas/${vagaIdContext}`)}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Voltar à Vaga
+          </Button>
+        </div>
+      )}
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl">

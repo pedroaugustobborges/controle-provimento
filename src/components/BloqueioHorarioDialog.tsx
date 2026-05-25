@@ -10,9 +10,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { HORARIOS_FIXOS_CONVOCACAO } from '@/lib/convocacaoUtils';
+import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { BloqueioHorario } from '@/types/vaga';
-import { Lock } from 'lucide-react';
+import { Lock, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const TODAS_AS_UNIDADES = Object.values(UNIDADES_POR_REGIAO).flat();
 
 interface BloqueioHorarioDialogProps {
   open: boolean;
@@ -30,6 +33,14 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
   const [vagasBloqueadas, setVagasBloqueadas] = useState(5);
   const [motivo, setMotivo] = useState('');
   const [linkTeams, setLinkTeams] = useState('');
+  const [unidadesSelecionadas, setUnidadesSelecionadas] = useState<string[]>([]);
+  const [todasUnidades, setTodasUnidades] = useState(true);
+
+  const toggleUnidade = (u: string) => {
+    setUnidadesSelecionadas(prev =>
+      prev.includes(u) ? prev.filter(x => x !== u) : [...prev, u]
+    );
+  };
 
   const toggleHorario = (h: string) => {
     setHorariosSelected(prev =>
@@ -60,6 +71,7 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
         motivo,
         vagas_bloqueadas: diaInteiro ? 5 : vagasBloqueadas,
         link_teams: linkTeams.trim() || undefined,
+        unidades: todasUnidades ? undefined : unidadesSelecionadas,
         criado_por: currentUser?.nome_completo || 'Analista',
         created_at: new Date().toISOString(),
       };
@@ -95,6 +107,8 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
     setLinkTeams('');
     setVagasBloqueadas(5);
     setDiaInteiro(false);
+    setUnidadesSelecionadas([]);
+    setTodasUnidades(true);
   };
 
   return (
@@ -175,6 +189,39 @@ export function BloqueioHorarioDialog({ open, onOpenChange, defaultDate }: Bloqu
               </p>
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" /> Unidades afetadas</Label>
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox
+                id="todas-unidades"
+                checked={todasUnidades}
+                onCheckedChange={(v) => {
+                  setTodasUnidades(!!v);
+                  if (v) setUnidadesSelecionadas([]);
+                }}
+              />
+              <Label htmlFor="todas-unidades" className="cursor-pointer text-sm font-normal">
+                Todas as unidades
+              </Label>
+            </div>
+            {!todasUnidades && (
+              <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-200 p-2 space-y-1 bg-slate-50">
+                {TODAS_AS_UNIDADES.map((u) => (
+                  <div key={u} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`unidade-${u}`}
+                      checked={unidadesSelecionadas.includes(u)}
+                      onCheckedChange={() => toggleUnidade(u)}
+                    />
+                    <Label htmlFor={`unidade-${u}`} className="cursor-pointer text-xs font-normal">
+                      {u}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="bloq-motivo">Motivo do bloqueio *</Label>

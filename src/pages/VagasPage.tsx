@@ -1042,7 +1042,7 @@ export default function VagasPage() {
         </CardContent>
       </Card>
 
-      <div className="mb-4">
+      <div className="mb-4 space-y-2">
         <Tabs value={vacancyStatusTab} onValueChange={(val) => {
           setVacancyStatusTab(val);
           const newParams = new URLSearchParams(searchParams);
@@ -1064,6 +1064,18 @@ export default function VagasPage() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+        {vacancyStatusTab === 'em_andamento' && (
+          <p className="text-[11px] text-blue-600 flex items-center gap-1.5 px-1">
+            <Info className="h-3 w-3 shrink-0" />
+            Vagas com processo ativo em curso: fila de edital, convocação, documentação ou em admissão.
+          </p>
+        )}
+        {vacancyStatusTab === 'ativas' && (
+          <p className="text-[11px] text-slate-500 flex items-center gap-1.5 px-1">
+            <Info className="h-3 w-3 shrink-0" />
+            Todas as vagas abertas e não encerradas, incluindo as em liderança e movimentação interna.
+          </p>
+        )}
       </div>
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">

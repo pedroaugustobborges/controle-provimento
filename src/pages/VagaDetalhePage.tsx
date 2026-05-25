@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { ConvocacaoDetalhesModal } from '@/components/ConvocacaoDetalhesModal';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,10 +14,10 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
 import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS, isTeiaUnit } from '@/types/vaga';
 import { 
-  ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus, 
-  FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check, 
+  ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus,
+  FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check,
   Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
-  AlertTriangle, ArrowRightCircle, ExternalLink, Edit
+  AlertTriangle, ArrowRightCircle, ExternalLink, Edit, Copy
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -525,7 +526,14 @@ export default function VagaDetalhePage() {
           <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>
           <TabsTrigger value="edital" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Edital e Fila</TabsTrigger>
           <TabsTrigger value="acompanhamento" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Acompanhamento</TabsTrigger>
-          <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Banco de Talentos</TabsTrigger>
+          <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6 gap-2">
+            Banco de Talentos
+            {banco?.quantidade_banco ? (
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black bg-primary text-white data-[state=active]:bg-primary">
+                {banco.quantidade_banco}
+              </span>
+            ) : null}
+          </TabsTrigger>
           <TabsTrigger value="convocacoes" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Convocações</TabsTrigger>
           <TabsTrigger value="validacao" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Validação</TabsTrigger>
           <TabsTrigger value="historico" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Histórico</TabsTrigger>
@@ -1286,6 +1294,32 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
                 <Button size="sm" variant="outline" onClick={() => applyTemplate('comum')} className="h-8 border-2">Template Comum</Button>
                 <Button size="sm" variant="outline" onClick={() => applyTemplate('especifico')} className="h-8 border-2">Template Saúde/Títulos</Button>
                 <Button size="sm" variant="ghost" onClick={() => setForm({ ...form, etapas_habilitadas: TODAS_AS_ETAPAS })} className="h-8 text-primary">Habilitar Todas</Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-slate-600 gap-1.5"
+                  onClick={() => {
+                    const etapasAtivas = (form.etapas_habilitadas || []) as EtapaEdital[];
+                    const primeiraData = etapasAtivas
+                      .map((e) => cronograma[CRONOGRAMA_KEYS[e]])
+                      .find(Boolean);
+                    if (!primeiraData) {
+                      toast.error('Defina ao menos uma data antes de replicar.');
+                      return;
+                    }
+                    const novosCronograma = { ...cronograma };
+                    etapasAtivas.forEach((e) => {
+                      const key = CRONOGRAMA_KEYS[e];
+                      if (!novosCronograma[key]) {
+                        novosCronograma[key] = primeiraData;
+                      }
+                    });
+                    setCronograma(novosCronograma);
+                    toast.success('Datas replicadas para etapas sem data.');
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" /> Replicar Datas
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -1498,7 +1532,7 @@ function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
 
 function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any }) {
   const { updateValidacao, addValidacao, addMensagem, getVaga } = useVagasStore();
-  const { currentUser } = useAdminStore();
+  const { currentUser, users } = useAdminStore();
   const [form, setForm] = useState(validacao || {
     id: `v-${Date.now()}`, vaga_id: vagaId,
     precisa_validacao: true,
@@ -1508,6 +1542,8 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
     etapa_finalizada: false,
     status_validacao: 'pendente',
   });
+
+  const isLocked = form.status_validacao === 'aprovado' || form.status_validacao === 'reprovado';
 
   const vaga = getVaga(vagaId);
 
@@ -1546,8 +1582,8 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
       lida: false,
     });
 
-    toast.success(decisao === 'aprovado' 
-      ? 'Validação aprovada! Notificação enviada à AGIE.' 
+    toast.success(decisao === 'aprovado'
+      ? 'Validação aprovada! Notificação enviada à AGIE.'
       : 'Validação reprovada! Notificação enviada à AGIE.');
   };
 
@@ -1559,71 +1595,104 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   return (
     <Card className="border-slate-200 shadow-sm">
       <CardContent className="pt-6 space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div
-            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.precisa_validacao ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
-            onClick={() => setForm({ ...form, precisa_validacao: !form.precisa_validacao })}
-          >
+        {isLocked && (
+          <div className={`flex items-center gap-3 p-4 rounded-xl border ${form.status_validacao === 'aprovado' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            {form.status_validacao === 'aprovado'
+              ? <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
+              : <XCircle className="h-6 w-6 text-red-600 shrink-0" />
+            }
             <div>
-              <p className="text-sm font-bold text-slate-700">Precisa de Validação?</p>
-              <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Requer aprovação de gestor</p>
+              <p className={`font-bold text-sm ${form.status_validacao === 'aprovado' ? 'text-green-700' : 'text-red-700'}`}>
+                {form.status_validacao === 'aprovado' ? 'Validação Aprovada' : 'Validação Reprovada'}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">Esta validação já foi finalizada e não pode ser alterada.</p>
             </div>
-            {getIcon(form.precisa_validacao)}
-          </div>
-          <div
-            className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.etapa_finalizada ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
-            onClick={() => setForm({ ...form, etapa_finalizada: !form.etapa_finalizada })}
-          >
-            <div>
-              <p className="text-sm font-bold text-slate-700">Etapa Finalizada?</p>
-              <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Conclusão do processo</p>
-            </div>
-            {getIcon(form.etapa_finalizada)}
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Responsável pela Validação</label>
-            <Input value={form.responsavel_validacao} onChange={(e) => setForm({ ...form, responsavel_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Nome do gestor ou analista..." />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Validação</label>
-            <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Ex: Técnica, Comportamental..." />
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Observações e Parecer</label>
-          <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="bg-white border-slate-200 min-h-[120px]" placeholder="Descreva os detalhes da validação..." />
-        </div>
-
-        {form.status_validacao !== 'pendente' && (
-          <div className={`p-4 rounded-xl border ${form.status_validacao === 'aprovado' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-            <p className={`text-sm font-bold ${form.status_validacao === 'aprovado' ? 'text-green-700' : 'text-red-700'}`}>
-              {form.status_validacao === 'aprovado' ? '✅ Validação Aprovada' : '❌ Validação Reprovada'}
-            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto text-slate-500 hover:text-slate-700 text-xs"
+              onClick={() => setForm({ ...form, status_validacao: 'pendente', etapa_finalizada: false })}
+            >
+              Reabrir
+            </Button>
           </div>
         )}
 
-        <div className="flex justify-between items-center gap-3">
-          <div className="flex gap-3">
-            <Button 
-              onClick={() => handleDecisao('aprovado')} 
-              className="bg-green-600 hover:bg-green-700 text-white shadow-md px-6 gap-2"
+        <fieldset disabled={isLocked} className="space-y-6 disabled:opacity-60 disabled:pointer-events-none">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.precisa_validacao ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
+              onClick={() => !isLocked && setForm({ ...form, precisa_validacao: !form.precisa_validacao })}
             >
-              <CheckCircle2 className="h-4 w-4" /> Aprovar
-            </Button>
-            <Button 
-              onClick={() => handleDecisao('reprovado')} 
-              variant="destructive"
-              className="shadow-md px-6 gap-2"
+              <div>
+                <p className="text-sm font-bold text-slate-700">Precisa de Validação?</p>
+                <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Requer aprovação de gestor</p>
+              </div>
+              {getIcon(form.precisa_validacao)}
+            </div>
+            <div
+              className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.etapa_finalizada ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
+              onClick={() => !isLocked && setForm({ ...form, etapa_finalizada: !form.etapa_finalizada })}
             >
-              <XCircle className="h-4 w-4" /> Reprovar
-            </Button>
+              <div>
+                <p className="text-sm font-bold text-slate-700">Etapa Finalizada?</p>
+                <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Conclusão do processo</p>
+              </div>
+              {getIcon(form.etapa_finalizada)}
+            </div>
           </div>
-          <Button onClick={save} className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 px-8">Salvar Validação</Button>
-        </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Responsável pela Validação</label>
+              <Select
+                value={form.responsavel_validacao || ''}
+                onValueChange={(val) => setForm({ ...form, responsavel_validacao: val })}
+              >
+                <SelectTrigger className="bg-white border-slate-200">
+                  <SelectValue placeholder="Selecionar responsável..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {(users || []).filter((u: any) => u.status === 'ativo').map((u: any) => (
+                    <SelectItem key={u.id} value={u.nome_completo}>
+                      {u.nome_completo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Validação</label>
+              <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Ex: Técnica, Comportamental..." />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Observações e Parecer</label>
+            <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="bg-white border-slate-200 min-h-[120px]" placeholder="Descreva os detalhes da validação..." />
+          </div>
+        </fieldset>
+
+        {!isLocked && (
+          <div className="flex justify-between items-center gap-3">
+            <div className="flex gap-3">
+              <Button
+                onClick={() => handleDecisao('aprovado')}
+                className="bg-green-600 hover:bg-green-700 text-white shadow-md px-6 gap-2"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Aprovar
+              </Button>
+              <Button
+                onClick={() => handleDecisao('reprovado')}
+                variant="destructive"
+                className="shadow-md px-6 gap-2"
+              >
+                <XCircle className="h-4 w-4" /> Reprovar
+              </Button>
+            </div>
+            <Button onClick={save} className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 px-8">Salvar Validação</Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -1632,6 +1701,7 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
 function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: () => void }) {
   const { getBancoByVaga } = useVagasStore();
   const banco = getBancoByVaga(vaga.id);
+  const navigate = useNavigate();
 
   if (!banco) {
     return (
@@ -1645,7 +1715,7 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
           <Button 
             variant="outline" 
             className="mt-6 gap-2"
-            onClick={() => window.location.href = `/banco-talentos?search=${vaga.cargo}`}
+            onClick={() => navigate(`/banco-talentos?search=${encodeURIComponent(vaga.cargo)}&vagaId=${vaga.id}`)}
           >
             Consultar Outros Bancos
           </Button>
@@ -1699,8 +1769,23 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="outline" className="text-xs font-bold uppercase tracking-wider">Ver Edital Completo</Button>
-          <Button onClick={onStartConvocacao} className="text-xs font-bold uppercase tracking-wider bg-primary">Realizar Convocação</Button>
+          <Button
+            variant="outline"
+            className="text-xs font-bold uppercase tracking-wider gap-2"
+            onClick={() => navigate(`/banco-talentos?search=${encodeURIComponent(vaga.cargo)}&vagaId=${vaga.id}`)}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Ver Candidatos no Banco
+            {banco?.quantidade_banco ? (
+              <span className="ml-0.5 bg-slate-100 text-slate-600 rounded-full px-1.5 py-0.5 text-[10px] font-black">
+                {banco.quantidade_banco}
+              </span>
+            ) : null}
+          </Button>
+          <Button onClick={onStartConvocacao} className="text-xs font-bold uppercase tracking-wider bg-primary gap-2">
+            <Send className="h-3.5 w-3.5" />
+            Realizar Convocação
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -1710,6 +1795,8 @@ function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: (
 function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConvocacao: () => void }) {
   const { getConvocacoesByVaga } = useVagasStore();
   const convocacoes = getConvocacoesByVaga(vagaId);
+  const [selectedConvocacao, setSelectedConvocacao] = useState<Convocacao | null>(null);
+  const [isDetalhesOpen, setIsDetalhesOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -1756,7 +1843,13 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{c.edoc || '—'}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Ver Detalhes</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setSelectedConvocacao(c); setIsDetalhesOpen(true); }}
+                    >
+                      Ver Detalhes
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -1771,6 +1864,12 @@ function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConv
           </Table>
         </CardContent>
       </Card>
+
+      <ConvocacaoDetalhesModal
+        convocacao={selectedConvocacao}
+        open={isDetalhesOpen}
+        onOpenChange={setIsDetalhesOpen}
+      />
     </div>
   );
 }

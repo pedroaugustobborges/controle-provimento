@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, ChevronLeft, Send, Sparkles,
-  Lightbulb, Bell, Info
+  Lightbulb, Bell, Info, Minus, Maximize2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,6 +24,7 @@ import { ptBR } from "date-fns/locale";
 
 export const AgieChat = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [step, setStep] = useState<ChatStep>('INITIAL');
 
   // Feedback state
@@ -97,6 +98,7 @@ export const AgieChat = memo(() => {
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
+    setIsMinimized(false);
     setStep('INITIAL');
   }, []);
 
@@ -153,8 +155,44 @@ export const AgieChat = memo(() => {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {/* Chat Window */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && isMinimized && (
           <motion.div
+            key="minimized"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="mb-4 w-[280px] bg-primary rounded-2xl shadow-2xl overflow-hidden"
+          >
+            <div className="p-3 text-white flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-xs font-bold">A</div>
+                <span className="font-bold text-sm">AGIE — Notificações</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/10 rounded-full w-7 h-7"
+                  onClick={() => setIsMinimized(false)}
+                  title="Expandir"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/10 rounded-full w-7 h-7"
+                  onClick={handleClose}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        {isOpen && !isMinimized && (
+          <motion.div
+            key="expanded"
             initial={{ opacity: 0, scale: 0.9, y: 20, transformOrigin: 'bottom right' }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -194,9 +232,20 @@ export const AgieChat = memo(() => {
                   <p className="text-[10px] text-white/70 uppercase tracking-widest font-black">Notificações do Sistema</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full" onClick={handleClose}>
-                <X className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/10 rounded-full w-8 h-8"
+                  onClick={() => setIsMinimized(true)}
+                  title="Minimizar"
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full" onClick={handleClose}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
             {/* Content Area */}

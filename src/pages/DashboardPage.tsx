@@ -1,13 +1,10 @@
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
-import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
@@ -52,6 +49,9 @@ import {
   ChevronDown,
   Filter,
   RefreshCcw,
+  Search,
+  X,
+  Check,
 } from 'lucide-react';
 import {
   BarChart,
@@ -76,6 +76,25 @@ const UNIT_MAPPING = [
   { bank: 'GOIÂNIA', vacancies: ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR'], display: 'GOIÂNIA (HOSPITAIS)' },
   { bank: 'UPA', vacancies: ['SÃO PEDRO', 'SUÁ', 'UPA'], display: 'VITÓRIA' },
 ];
+
+const UNIT_GROUPS = [
+  {
+    key: 'go_es',
+    label: 'Goiás / Espírito Santo',
+    color: 'text-emerald-600',
+    dot: 'bg-emerald-500',
+    units: ['CRER', 'HUGOL', 'HECAD', 'HDS', 'AGIR', 'TEIA GOIÂNIA', 'TEIA ANÁPOLIS', 'TEIA APARECIDA', 'TEIA CANEDO', 'JATAÍ', 'POLICLÍNICA', 'SUÁ', 'SÃO PEDRO', 'VITÓRIA'],
+  },
+  {
+    key: 'outras',
+    label: 'Demais Unidades',
+    color: 'text-violet-600',
+    dot: 'bg-violet-500',
+    units: ['HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'DOURADOS', 'TEIA CEN', 'TEIA PIN', 'CHS', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'],
+  },
+] as const;
+
+const ALL_UNITS_FLAT = UNIT_GROUPS.flatMap((g) => g.units);
 
 const canonicalCache = new Map<string, string>();
 const resolveCanonicalName = (unitName: string) => {
@@ -108,21 +127,23 @@ export default function DashboardPage() {
     isLoadingBancos,
     isInitialLoad,
   } = useVagasStore();
-  const { selectedRegion, selectedUnits, setSelectedRegion, setSelectedUnits } = useAdminStore();
+  const { selectedRegion, selectedUnits, setSelectedUnits } = useAdminStore();
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
+  const [isUnitPickerOpen, setIsUnitPickerOpen] = useState(false);
+  const [unitSearch, setUnitSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
   const filterDashboardRecords = useCallback(<T extends { unidade?: string | null }>(records: T[]) => {
-    const base = filterByRegionAndUnit(records, selectedRegion, 'all');
     if (selectedUnits.length > 0 && !selectedUnits.includes('all')) {
-      return base.filter(r => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(r.unidade || '')));
+      return records.filter(r => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(r.unidade || '')));
     }
-    return base;
-  }, [selectedRegion, selectedUnits]);
+    return records;
+  }, [selectedUnits]);
 
   const filteredVagas = useMemo(() => {
     const base = filterDashboardRecords(allVagas);
@@ -475,75 +496,232 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg">
-              <Filter className="h-4 w-4 text-slate-500" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Região</span>
-            </div>
-            
-            <Select value={selectedRegion} onValueChange={(val) => { setSelectedRegion(val); setSelectedUnits(['all']); }}>
-              <SelectTrigger className="h-9 w-[180px] rounded-lg border-slate-200 bg-white text-[11px] font-black uppercase tracking-wider text-slate-600 shadow-sm hover:border-primary/30 transition-colors">
-                <SelectValue placeholder="Todas as Regiões" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-xs font-bold uppercase">Todas as Regiões</SelectItem>
-                <SelectItem value="Goiânia" className="text-xs font-bold uppercase">Goiânia</SelectItem>
-                <SelectItem value="Vitória" className="text-xs font-bold uppercase">Vitória</SelectItem>
-                <SelectItem value="Demais Unidades" className="text-xs font-bold uppercase">Demais Unidades</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {selectedRegion !== 'all' && (
-              <div className="h-4 w-[1px] bg-slate-200 mx-1 hidden sm:block" />
-            )}
-
-            {selectedRegion !== 'all' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-full transition-all ${
-                  selectedUnits.includes('all')
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
-                onClick={() => setSelectedUnits(['all'])}
+        {/* ── Unit multi-select picker ────────────────────── */}
+        <div className="flex flex-col gap-2">
+          <Popover
+            open={isUnitPickerOpen}
+            onOpenChange={(open) => {
+              setIsUnitPickerOpen(open);
+              if (open) setTimeout(() => searchInputRef.current?.focus(), 80);
+              else setUnitSearch('');
+            }}
+          >
+            <PopoverTrigger asChild>
+              <button
+                className={`
+                  group flex items-center gap-2 h-9 pl-3 pr-2.5 rounded-xl border text-[11px] font-bold
+                  uppercase tracking-wider transition-all duration-200 shadow-sm select-none
+                  ${selectedUnits.includes('all')
+                    ? 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:shadow'
+                    : 'bg-primary/5 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50 shadow-primary/10'}
+                `}
               >
-                Todas as Unidades
-              </Button>
-            )}
-          </div>
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="max-w-[220px] truncate">
+                  {selectedUnits.includes('all')
+                    ? 'Todas as Unidades'
+                    : selectedUnits.length === 1
+                      ? selectedUnits[0]
+                      : `${selectedUnits.length} unidades`}
+                </span>
+                {!selectedUnits.includes('all') && (
+                  <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[9px] font-black text-white px-1">
+                    {selectedUnits.length}
+                  </span>
+                )}
+                <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-200 ${isUnitPickerOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </PopoverTrigger>
 
-          {selectedRegion !== 'all' && UNIDADES_POR_REGIAO[selectedRegion] && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-              {UNIDADES_POR_REGIAO[selectedRegion].map((u) => {
-                const isSelected = selectedUnits.includes(u);
-                return (
-                  <button
-                    key={u}
-                    onClick={() => {
-                      let newUnits = [...selectedUnits];
-                      if (newUnits.includes('all')) {
-                        newUnits = [u];
-                      } else if (newUnits.includes(u)) {
-                        newUnits = newUnits.filter((x) => x !== u);
-                        if (newUnits.length === 0) newUnits = ['all'];
-                      } else {
-                        newUnits.push(u);
-                      }
-                      setSelectedUnits(newUnits);
-                    }}
-                    className={`shrink-0 h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border-2 whitespace-nowrap ${
-                      isSelected
-                        ? 'bg-primary/5 text-primary border-primary shadow-sm'
-                        : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    {u}
+            <PopoverContent
+              align="end"
+              sideOffset={6}
+              className="w-72 p-0 shadow-xl border-slate-200 rounded-xl overflow-hidden"
+            >
+              {/* Search */}
+              <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 bg-slate-50">
+                <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <input
+                  ref={searchInputRef}
+                  value={unitSearch}
+                  onChange={(e) => setUnitSearch(e.target.value)}
+                  placeholder="Buscar unidade..."
+                  className="flex-1 bg-transparent text-xs font-medium text-slate-700 placeholder:text-slate-400 outline-none"
+                />
+                {unitSearch && (
+                  <button onClick={() => setUnitSearch('')} className="text-slate-400 hover:text-slate-600 transition-colors">
+                    <X className="h-3 w-3" />
                   </button>
-                );
-              })}
+                )}
+              </div>
+
+              {/* Quick actions */}
+              <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100">
+                <button
+                  onClick={() => setSelectedUnits(['all'])}
+                  className={`flex-1 h-6 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                    selectedUnits.includes('all')
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  Todas
+                </button>
+                <button
+                  onClick={() => setSelectedUnits([...ALL_UNITS_FLAT])}
+                  className={`flex-1 h-6 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                    !selectedUnits.includes('all') && selectedUnits.length === ALL_UNITS_FLAT.length
+                      ? 'bg-primary text-white'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  Selecionar Todas
+                </button>
+                {!selectedUnits.includes('all') && (
+                  <button
+                    onClick={() => setSelectedUnits(['all'])}
+                    className="h-6 w-6 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors shrink-0"
+                    title="Limpar filtro"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Unit list */}
+              <div className="overflow-y-auto max-h-[280px] py-1">
+                {UNIT_GROUPS.map((group) => {
+                  const filteredUnits = unitSearch.trim()
+                    ? group.units.filter((u) => u.toLowerCase().includes(unitSearch.toLowerCase()))
+                    : group.units;
+                  if (filteredUnits.length === 0) return null;
+
+                  const groupSelected = filteredUnits.every((u) => selectedUnits.includes(u));
+
+                  return (
+                    <div key={group.key}>
+                      {/* Group header */}
+                      <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full ${group.dot}`} />
+                          <span className={`text-[9px] font-black uppercase tracking-widest ${group.color}`}>
+                            {group.label}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const allSelected = filteredUnits.every((u) => selectedUnits.includes(u));
+                            if (allSelected) {
+                              const newUnits = selectedUnits.filter((u) => !filteredUnits.includes(u as any));
+                              setSelectedUnits(newUnits.length === 0 ? ['all'] : newUnits);
+                            } else {
+                              const base = selectedUnits.includes('all') ? [] : [...selectedUnits];
+                              const merged = Array.from(new Set([...base, ...filteredUnits]));
+                              setSelectedUnits(merged);
+                            }
+                          }}
+                          className={`text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                            groupSelected ? 'text-slate-400 hover:text-red-500' : `${group.color} hover:opacity-70`
+                          }`}
+                        >
+                          {groupSelected ? 'Desmarcar' : 'Selecionar grupo'}
+                        </button>
+                      </div>
+
+                      {/* Units */}
+                      {filteredUnits.map((unit) => {
+                        const isSelected = !selectedUnits.includes('all') && selectedUnits.includes(unit);
+                        return (
+                          <button
+                            key={unit}
+                            onClick={() => {
+                              let next: string[];
+                              if (selectedUnits.includes('all')) {
+                                next = [unit];
+                              } else if (selectedUnits.includes(unit)) {
+                                next = selectedUnits.filter((u) => u !== unit);
+                                if (next.length === 0) next = ['all'];
+                              } else {
+                                next = [...selectedUnits, unit];
+                              }
+                              setSelectedUnits(next);
+                            }}
+                            className={`
+                              w-full flex items-center gap-2.5 px-3 py-1.5 text-left transition-colors
+                              ${isSelected ? 'bg-primary/5' : 'hover:bg-slate-50'}
+                            `}
+                          >
+                            <div className={`
+                              w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all
+                              ${isSelected
+                                ? 'bg-primary border-primary'
+                                : 'border-slate-300 bg-white group-hover:border-slate-400'}
+                            `}>
+                              {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                            </div>
+                            <span className={`text-xs font-bold tracking-wide ${isSelected ? 'text-primary' : 'text-slate-600'}`}>
+                              {unit}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+
+                {unitSearch && UNIT_GROUPS.every((g) => g.units.filter((u) => u.toLowerCase().includes(unitSearch.toLowerCase())).length === 0) && (
+                  <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                    Nenhuma unidade encontrada para "{unitSearch}"
+                  </div>
+                )}
+              </div>
+
+              {/* Footer summary */}
+              {!selectedUnits.includes('all') && (
+                <div className="border-t border-slate-100 px-3 py-2 bg-slate-50 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-500">
+                    {selectedUnits.length} de {ALL_UNITS_FLAT.length} selecionadas
+                  </span>
+                  <button
+                    onClick={() => setSelectedUnits(['all'])}
+                    className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    Limpar
+                  </button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {/* Selected unit chips */}
+          {!selectedUnits.includes('all') && selectedUnits.length <= 5 && (
+            <div className="flex flex-wrap gap-1.5">
+              {selectedUnits.map((unit) => (
+                <span
+                  key={unit}
+                  className="inline-flex items-center gap-1 h-6 pl-2.5 pr-1.5 rounded-full bg-primary/8 border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-wide"
+                >
+                  {unit}
+                  <button
+                    onClick={() => {
+                      const next = selectedUnits.filter((u) => u !== unit);
+                      setSelectedUnits(next.length === 0 ? ['all'] : next);
+                    }}
+                    className="flex items-center justify-center w-3.5 h-3.5 rounded-full hover:bg-primary/20 transition-colors"
+                  >
+                    <X className="h-2 w-2" />
+                  </button>
+                </span>
+              ))}
             </div>
+          )}
+          {!selectedUnits.includes('all') && selectedUnits.length > 5 && (
+            <p className="text-[10px] font-bold text-primary/70 pl-1">
+              {selectedUnits.length} unidades filtradas —{' '}
+              <button onClick={() => setSelectedUnits(['all'])} className="underline hover:text-red-500 transition-colors">
+                limpar filtro
+              </button>
+            </p>
           )}
         </div>
       </div>

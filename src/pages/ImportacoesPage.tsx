@@ -31,6 +31,8 @@ import { formatDate } from '@/lib/vagaUtils';
 import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { useState } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -48,6 +50,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService } from '@/services/databaseService';
 import { PageHeader } from '@/components/PageHeader';
 import { useEffect } from 'react';
+import * as XLSX from 'xlsx';
 
 
 export default function ImportacoesPage() {
@@ -76,6 +79,8 @@ export default function ImportacoesPage() {
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [fileParaExcluir, setFileParaExcluir] = useState<string | null>(null);
   const [batchParaExcluir, setBatchParaExcluir] = useState<any | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<any | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const { deleteImportBatch } = useVagasStore();
   const permissions = usePermissions();
 
@@ -178,14 +183,63 @@ export default function ImportacoesPage() {
     setIsImportOpen(true);
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = ['Nome', 'CPF', 'Email', 'Telefone', 'Cargo', 'Formacao', 'Unidade', 'Edital', 'Status', 'Observacao'];
+    const sample = [
+      'João Silva',
+      '000.000.000-00',
+      'joao@email.com',
+      '(62) 99999-9999',
+      'Técnico de Enfermagem',
+      'Graduação',
+      'Agir Goiânia',
+      'Edital 01/2026',
+      'Disponível',
+      '',
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([headers, sample]);
+    ws['!cols'] = headers.map(() => ({ wch: 22 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
+    XLSX.writeFile(wb, 'modelo_importacao_banco_talentos.xlsx');
+    toast.success('Modelo baixado com sucesso.');
+  };
+
+  const handleDownloadErrorReport = (batch: any) => {
+    const errors = batch.erros || batch.error_details || [];
+    if (!errors.length) {
+      toast.info('Nenhum erro registrado neste lote.');
+      return;
+    }
+    const rows = errors.map((e: any) => ({
+      Linha: e.linha || e.row || '',
+      Campo: e.campo || e.field || '',
+      Valor: e.valor || e.value || '',
+      Mensagem: e.mensagem || e.message || String(e),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 8 }, { wch: 20 }, { wch: 30 }, { wch: 60 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Erros');
+    XLSX.writeFile(wb, `erros_importacao_${batch.id?.slice(0, 8) || 'lote'}.xlsx`);
+    toast.success('Relatório de erros baixado.');
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader 
         title="Importações de Dados"
         actions={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
+              className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 h-10 px-4 rounded-xl font-bold"
+              onClick={handleDownloadTemplate}
+            >
+              <Download className="h-4 w-4" /> Baixar Modelo
+            </Button>
+            <Button
+              variant="outline"
               className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 h-10 px-4 rounded-xl font-bold"
               onClick={() => setIsClearAllDialogOpen(true)}
             >
@@ -334,10 +388,22 @@ export default function ImportacoesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Ver Detalhes">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-400 hover:text-primary"
+                            title="Ver Detalhes"
+                            onClick={() => { setSelectedBatch(h); setIsDetailsOpen(true); }}
+                          >
                             <Info className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" title="Baixar Relatório" onClick={() => toast.info('Relatório de importação não disponível — o arquivo original não foi salvo no repositório durante esta importação.')}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-400 hover:text-primary"
+                            title="Baixar Relatório de Erros"
+                            onClick={() => handleDownloadErrorReport(h)}
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
                           <Button 
@@ -480,10 +546,80 @@ export default function ImportacoesPage() {
         </TabsContent>
       </Tabs>
 
-      <ImportStagedDialog 
-        open={isImportOpen} 
+      <ImportStagedDialog
+        open={isImportOpen}
         onOpenChange={setIsImportOpen}
       />
+
+      {/* Import batch details modal */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-800">
+              <Info className="h-5 w-5 text-primary" /> Detalhes da Importação
+            </DialogTitle>
+          </DialogHeader>
+          {selectedBatch && (
+            <div className="space-y-4 pt-1">
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Arquivo</p>
+                <p className="text-sm font-medium text-slate-800">{selectedBatch.arquivo || selectedBatch.nome_arquivo || '—'}</p>
+                <p className="text-[10px] font-mono text-slate-400">{selectedBatch.id}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tipo</p>
+                  <Badge variant="outline">{selectedBatch.tipo_importacao || 'vagas'}</Badge>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Status</p>
+                  {getStatusBadge(selectedBatch.status)}
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Data</p>
+                  <p className="text-sm font-medium text-slate-800">{formatDate(selectedBatch.data_hora || selectedBatch.data || '')}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Usuário</p>
+                  <p className="text-sm font-medium text-slate-800">{selectedBatch.usuario}</p>
+                </div>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-4 gap-3 text-center">
+                <div className="bg-slate-50 rounded-lg p-3 border">
+                  <p className="text-xl font-black text-slate-700">{selectedBatch.total_lidos || 0}</p>
+                  <p className="text-[10px] font-bold uppercase text-slate-400">Lidos</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+                  <p className="text-xl font-black text-green-600">{selectedBatch.total_novos || 0}</p>
+                  <p className="text-[10px] font-bold uppercase text-green-500">Novos</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                  <p className="text-xl font-black text-blue-600">{selectedBatch.total_atualizados || 0}</p>
+                  <p className="text-[10px] font-bold uppercase text-blue-500">Att.</p>
+                </div>
+                <div className="bg-red-50 rounded-lg p-3 border border-red-100">
+                  <p className="text-xl font-black text-red-600">{selectedBatch.total_erros || 0}</p>
+                  <p className="text-[10px] font-bold uppercase text-red-500">Erros</p>
+                </div>
+              </div>
+              {selectedBatch.observacoes && (
+                <div className="bg-slate-50 rounded-lg p-3 border text-sm text-slate-600">
+                  {selectedBatch.observacoes}
+                </div>
+              )}
+              {selectedBatch.total_erros > 0 && (
+                <button
+                  className="w-full flex items-center justify-center gap-2 py-2 text-sm font-bold text-destructive border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                  onClick={() => { handleDownloadErrorReport(selectedBatch); setIsDetailsOpen(false); }}
+                >
+                  <Download className="h-4 w-4" /> Baixar Relatório de Erros
+                </button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!batchParaExcluir} onOpenChange={(open) => !open && setBatchParaExcluir(null)}>
         <AlertDialogContent>

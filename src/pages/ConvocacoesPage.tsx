@@ -1,12 +1,13 @@
 import { KanbanBoard } from '@/components/KanbanBoard';
 import { AgendaDiaria } from '@/components/AgendaDiaria';
 import { BloqueioHorarioDialog } from '@/components/BloqueioHorarioDialog';
+import { ConvocacaoDetalhesModal } from '@/components/ConvocacaoDetalhesModal';
 import { Button } from '@/components/ui/button';
-import { 
-  Plus, Search, Filter, Download, LayoutGrid, List, 
-  Calendar as CalendarIcon, MapPin, Building2, User, CheckCircle2, 
+import {
+  Plus, Search, Filter, Download, LayoutGrid, List,
+  Calendar as CalendarIcon, MapPin, Building2, User, CheckCircle2,
   AlertCircle, ArrowRight, Database, MoreVertical,
-  History, Eye, Edit, Trash2, X, Clock, Lock
+  History, Eye, Edit, Trash2, X, Clock, Lock, Send, UserX, FileCheck
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -60,8 +61,8 @@ import { PageSkeleton } from '@/components/PageSkeleton';
 export default function ConvocacoesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { vagas, convocacoes, bancos, bloqueios, getBancoByVaga, isInitialLoad, isLoading } = useVagasStore();
-  const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
+  const { vagas, convocacoes, bancos, bloqueios, getBancoByVaga, isInitialLoad, isLoading, updateConvocacao } = useVagasStore();
+  const { currentUser, selectedRegion, selectedUnit: globalUnit, addAuditLog } = useAdminStore();
   const [view, setView] = useState<'kanban' | 'list' | 'diaria' | 'pending'>('diaria');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDevolutivaOpen, setIsDevolutivaOpen] = useState(false);
@@ -71,6 +72,10 @@ export default function ConvocacoesPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
   const [isBloqueioOpen, setIsBloqueioOpen] = useState(false);
+  const [isDetalhesOpen, setIsDetalhesOpen] = useState(false);
+  const [isDesistenciaOpen, setIsDesistenciaOpen] = useState(false);
+  const [desistenciaMotivo, setDesistenciaMotivo] = useState('');
+  const [convocacaoParaAcao, setConvocacaoParaAcao] = useState<any>(null);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
@@ -122,6 +127,55 @@ export default function ConvocacoesPage() {
       setIsDeleteDialogOpen(false);
       setRegistroParaExcluir(null);
     }
+  };
+
+  const handleValidarEdital = async (c: any) => {
+    if (c.status !== 'enviado') {
+      toast.info('Apenas convocações com status "Enviado" podem ser validadas.');
+      return;
+    }
+    await updateConvocacao(c.id, { status: 'confirmado' });
+    addAuditLog({
+      tabela: 'convocacoes',
+      registro_id: c.id,
+      acao: 'UPDATE',
+      usuario_id: currentUser?.id || '',
+      usuario_nome: currentUser?.nome_completo || '',
+      dados_novos: { status: 'confirmado' },
+    } as any);
+    toast.success('Convocação validada como confirmada.');
+  };
+
+  const handleRegistrarDesistencia = async () => {
+    if (!convocacaoParaAcao) return;
+    await updateConvocacao(convocacaoParaAcao.id, {
+      status: 'desistencia',
+      observacoes: desistenciaMotivo || convocacaoParaAcao.observacoes,
+    });
+    addAuditLog({
+      tabela: 'convocacoes',
+      registro_id: convocacaoParaAcao.id,
+      acao: 'UPDATE',
+      usuario_id: currentUser?.id || '',
+      usuario_nome: currentUser?.nome_completo || '',
+      dados_novos: { status: 'desistencia', motivo: desistenciaMotivo },
+    } as any);
+    toast.success('Desistência registrada.');
+    setIsDesistenciaOpen(false);
+    setConvocacaoParaAcao(null);
+    setDesistenciaMotivo('');
+  };
+
+  const handleReenviar = async (c: any) => {
+    toast.success(`Notificação de reenvio registrada para ${c.nome_candidato}.`);
+    addAuditLog({
+      tabela: 'convocacoes',
+      registro_id: c.id,
+      acao: 'REENVIO',
+      usuario_id: currentUser?.id || '',
+      usuario_nome: currentUser?.nome_completo || '',
+      dados_novos: { acao: 'reenvio', data: new Date().toISOString() },
+    } as any);
   };
 
   const unidades = useMemo(() => {
@@ -510,12 +564,32 @@ export default function ConvocacoesPage() {
                               <MoreVertical className="h-4 w-4 text-slate-400" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem className="gap-2">
-                              <Eye className="h-4 w-4 text-blue-500" /> Detalhes
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuItem
+                              className="gap-2"
+                              onClick={() => { setConvocacaoParaAcao(c); setIsDetalhesOpen(true); }}
+                            >
+                              <Eye className="h-4 w-4 text-blue-500" /> Ver Detalhes
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
-                              <Edit className="h-4 w-4 text-amber-500" /> Validar/Editar
+                            <DropdownMenuItem
+                              className="gap-2"
+                              onClick={() => handleReenviar(c)}
+                            >
+                              <Send className="h-4 w-4 text-primary" /> Reenviar Comunicação
+                            </DropdownMenuItem>
+                            {c.status === 'enviado' && (
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={() => handleValidarEdital(c)}
+                              >
+                                <FileCheck className="h-4 w-4 text-green-500" /> Validar Edital
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="gap-2"
+                              onClick={() => { setConvocacaoParaAcao(c); setIsDesistenciaOpen(true); }}
+                            >
+                              <UserX className="h-4 w-4 text-amber-500" /> Registrar Desistência
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -625,6 +699,45 @@ export default function ConvocacoesPage() {
         onOpenChange={setIsBloqueioOpen}
         defaultDate={format(selectedDate, 'yyyy-MM-dd')}
       />
+
+      <ConvocacaoDetalhesModal
+        convocacao={convocacaoParaAcao}
+        open={isDetalhesOpen}
+        onOpenChange={setIsDetalhesOpen}
+      />
+
+      <AlertDialog open={isDesistenciaOpen} onOpenChange={setIsDesistenciaOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-700">
+              <UserX className="h-5 w-5" /> Registrar Desistência
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600">
+              {convocacaoParaAcao && (
+                <span>Candidato: <strong>{convocacaoParaAcao.nome_candidato}</strong></span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-6 pb-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Motivo da Desistência</label>
+            <textarea
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none min-h-[80px]"
+              placeholder="Descreva o motivo da desistência..."
+              value={desistenciaMotivo}
+              onChange={(e) => setDesistenciaMotivo(e.target.value)}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setConvocacaoParaAcao(null); setDesistenciaMotivo(''); }}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRegistrarDesistencia}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              Confirmar Desistência
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

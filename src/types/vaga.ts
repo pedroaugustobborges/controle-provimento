@@ -441,6 +441,8 @@ export interface Edital {
   aprovados_finais: number;
   possui_banco_talentos: boolean;
   status_publicacao: StatusPublicacao;
+  arquivo_path?: string; // path inside 'editais' storage bucket
+  arquivo_nome?: string;
 }
 
 export interface ValidacaoEdital {

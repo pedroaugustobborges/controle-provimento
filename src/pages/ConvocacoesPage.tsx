@@ -136,13 +136,14 @@ export default function ConvocacoesPage() {
     }
     await updateConvocacao(c.id, { status: 'confirmado' });
     addAuditLog({
-      tabela: 'convocacoes',
-      registro_id: c.id,
-      acao: 'UPDATE',
-      usuario_id: currentUser?.id || '',
-      usuario_nome: currentUser?.nome_completo || '',
-      dados_novos: { status: 'confirmado' },
-    } as any);
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || '',
+      perfil: currentUser?.perfil || '',
+      acao: 'Validar Edital',
+      modulo: 'Convocações',
+      registro_afetado: c.id,
+      valor_novo: { status: 'confirmado' },
+    });
     toast.success('Convocação validada como confirmada.');
   };
 
@@ -153,13 +154,14 @@ export default function ConvocacoesPage() {
       observacoes: desistenciaMotivo || convocacaoParaAcao.observacoes,
     });
     addAuditLog({
-      tabela: 'convocacoes',
-      registro_id: convocacaoParaAcao.id,
-      acao: 'UPDATE',
-      usuario_id: currentUser?.id || '',
-      usuario_nome: currentUser?.nome_completo || '',
-      dados_novos: { status: 'desistencia', motivo: desistenciaMotivo },
-    } as any);
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || '',
+      perfil: currentUser?.perfil || '',
+      acao: 'Registrar Desistência',
+      modulo: 'Convocações',
+      registro_afetado: convocacaoParaAcao.id,
+      valor_novo: { status: 'desistencia', motivo: desistenciaMotivo },
+    });
     toast.success('Desistência registrada.');
     setIsDesistenciaOpen(false);
     setConvocacaoParaAcao(null);
@@ -169,13 +171,13 @@ export default function ConvocacoesPage() {
   const handleReenviar = async (c: any) => {
     toast.success(`Notificação de reenvio registrada para ${c.nome_candidato}.`);
     addAuditLog({
-      tabela: 'convocacoes',
-      registro_id: c.id,
-      acao: 'REENVIO',
-      usuario_id: currentUser?.id || '',
-      usuario_nome: currentUser?.nome_completo || '',
-      dados_novos: { acao: 'reenvio', data: new Date().toISOString() },
-    } as any);
+      usuario_nome: currentUser?.nome_completo || 'Sistema',
+      usuario_email: currentUser?.email || '',
+      perfil: currentUser?.perfil || '',
+      acao: 'Reenviar Convocação',
+      modulo: 'Convocações',
+      registro_afetado: c.id,
+    });
   };
 
   const unidades = useMemo(() => {

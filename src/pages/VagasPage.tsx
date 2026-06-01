@@ -1702,27 +1702,27 @@ export default function VagasPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="min-w-[100px]">Abertura</TableHead>
-                      <TableHead className="min-w-[100px]">
+                      <TableHead className="min-w-[76px]">Abertura</TableHead>
+                      <TableHead className="min-w-[76px]">
                         Recebimento
                       </TableHead>
-                      <TableHead className="min-w-[120px]">
+                      <TableHead className="min-w-[80px]">
                         Requisição
                       </TableHead>
-                      <TableHead className="min-w-[250px]">Cargo</TableHead>
-                      <TableHead className="min-w-[120px]">Tipo</TableHead>
-                      <TableHead className="min-w-[180px]">Unidade</TableHead>
-                      <TableHead className="min-w-[150px]">Seção</TableHead>
-                      <TableHead className="min-w-[150px] text-center">
+                      <TableHead className="min-w-[200px]">Cargo</TableHead>
+                      <TableHead className="min-w-[100px]">Tipo</TableHead>
+                      <TableHead className="min-w-[140px]">Unidade</TableHead>
+                      <TableHead className="min-w-[120px]">Seção</TableHead>
+                      <TableHead className="min-w-[130px] text-center">
                         Status
                       </TableHead>
-                      <TableHead className="min-w-[80px] text-center">
+                      <TableHead className="min-w-[56px] text-center">
                         Vaga(s)
                       </TableHead>
-                      <TableHead className="min-w-[80px] text-center">
+                      <TableHead className="min-w-[56px] text-center">
                         Banco
                       </TableHead>
-                      <TableHead className="text-right min-w-[80px]">
+                      <TableHead className="text-right min-w-[60px]">
                         Ações
                       </TableHead>
                     </TableRow>
@@ -1758,17 +1758,17 @@ export default function VagasPage() {
                           className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
                           onClick={() => navigate(`/vagas/${v.id}`)}
                         >
-                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-2 h-14">
                             {v.data_abertura
                               ? formatDate(v.data_abertura)
                               : "-"}
                           </TableCell>
-                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
+                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-2 h-14">
                             {v.data_recebimento
                               ? formatDate(v.data_recebimento)
                               : "-"}
                           </TableCell>
-                          <TableCell className="py-3 px-4 h-14">
+                          <TableCell className="py-3 px-2 h-14">
                             <div className="flex flex-col gap-0.5">
                               <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
                                 {v.requisicao || v.numero_requisicao || "-"}
@@ -1783,7 +1783,7 @@ export default function VagasPage() {
                           <TableCell className="py-3 px-4 h-14">
                             <div className="flex flex-col">
                               <div
-                                className="font-semibold text-slate-800 whitespace-normal break-words leading-tight max-w-[300px] flex items-center flex-wrap gap-2"
+                                className="font-semibold text-slate-800 whitespace-normal break-words leading-tight max-w-[200px] flex items-center flex-wrap gap-2"
                                 title={v.cargo}
                               >
                                 {v.cargo}
@@ -1804,7 +1804,7 @@ export default function VagasPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
-                            {TIPO_VAGA_LABELS[v.tipo_vaga] || "-"}
+                            {TIPO_VAGA_LABELS[v.tipo_vaga] || v.tipo_vaga || "-"}
                           </TableCell>
                           <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
                             <div className="flex flex-col">
@@ -1826,11 +1826,11 @@ export default function VagasPage() {
                           <TableCell className="text-center py-3 px-4 h-14">
                             <StatusBadge status={v.status || v.status_geral} />
                           </TableCell>
-                          <TableCell className="text-center font-bold text-slate-700 py-3 px-4 h-14">
+                          <TableCell className="text-center font-bold text-slate-700 py-3 px-2 h-14">
                             {v.numero_vagas || v.quantidade || 0}
                           </TableCell>
                           <TableCell
-                            className="text-center py-3 px-4 h-14"
+                            className="text-center py-3 px-2 h-14"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {bancoFound ? (

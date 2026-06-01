@@ -1,4 +1,4 @@
-export type TipoVaga = 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
+export type TipoVaga = 'PCD' | 'Comum' | 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
 export type StatusVaga =
   | 'CONCLUÍDAS'
   | 'CONCLUÍDA'
@@ -457,8 +457,15 @@ export interface ValidacaoEdital {
 }
 
 export const TIPO_VAGA_LABELS: Partial<Record<TipoVaga, string>> = {
+  PCD: 'PCD',
+  Comum: 'COMUM',
   substituicao: 'Substituição',
   aumento: 'Aumento',
+  lideranca: 'Liderança',
+  movimentacao_interna: 'Mov. Interna',
+  quadro: 'Quadro',
+  banco_talentos: 'Banco Talentos',
+  edital: 'Edital',
 };
 
 export const STATUS_VAGA_LABELS: Record<StatusVaga, string> = {

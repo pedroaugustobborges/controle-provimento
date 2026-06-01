@@ -98,3 +98,99 @@
     @apply bg-white/40 backdrop-blur-xl border border-white/30 shadow-2xl;
   }
 }
+
+/* ── Dashboard RGB / Glassmorphism animations ─────────────────────────── */
+
+@keyframes dashRgbBorder {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+@keyframes dashAmbientFloat {
+  0%, 100% { transform: translateY(0px) scale(1);    opacity: 0.18; }
+  50%       { transform: translateY(-22px) scale(1.06); opacity: 0.25; }
+}
+
+@keyframes dashNeonPulse {
+  0%, 100% { opacity: 0.7; box-shadow: 0 0 6px currentColor; }
+  50%       { opacity: 1;   box-shadow: 0 0 14px currentColor, 0 0 28px currentColor; }
+}
+
+@keyframes dashNumberPop {
+  from { opacity: 0; transform: scale(0.7) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+.dash-rgb-card-wrap {
+  position: relative;
+  border-radius: 16px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #818cf8, #f472b6, #fbbf24, #22d3ee, #34d399, #a78bfa, #818cf8);
+  background-size: 400% 400%;
+  animation: dashRgbBorder 6s ease-in-out infinite;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.dash-rgb-card-wrap:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.25);
+}
+
+.dash-rgb-card-inner {
+  border-radius: 14.5px;
+  overflow: hidden;
+  height: 100%;
+  background: linear-gradient(145deg, rgba(13, 17, 38, 0.96) 0%, rgba(10, 14, 28, 0.94) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 16px;
+}
+
+.dash-glass-panel {
+  background: rgba(11, 16, 34, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.dash-glass-filter {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 16px;
+  padding: 12px 16px;
+}
+
+.dash-neon-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #10b981;
+  animation: dashNeonPulse 2s ease-in-out infinite;
+}
+
+.dash-stat-number {
+  animation: dashNumberPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Light mode panel variants */
+.dash-light-panel {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.dash-light-filter {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 12px 16px;
+}

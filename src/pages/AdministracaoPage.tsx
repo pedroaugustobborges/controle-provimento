@@ -54,17 +54,9 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
-import { UNIDADES_POR_REGIAO } from '@/lib/vagaUtils';
 import { generateTempPassword, getAdminPasswordErrorMessage, validateAdminPassword } from '@/lib/adminPasswordUtils';
 import { SistemaTab } from '@/components/admin/SistemaTab';
-
-const REGIOES_SELECAO = {
-  'Goiânia': UNIDADES_POR_REGIAO['Goiânia'] || [],
-  'Vitória (ES)': UNIDADES_POR_REGIAO['Vitória'] || [],
-  'Demais Unidades': UNIDADES_POR_REGIAO['Demais Unidades'] || [],
-};
-
-const ALL_UNIDADES = Object.values(REGIOES_SELECAO).flat();
+import { UnidadesPicker, ALL_UNIDADES, UNIDADES_GRUPOS } from '@/components/UnidadesPicker';
 
 const MODULOS_SISTEMA = [
   { id: 'vagas', label: 'Vagas (Painel Principal)' },
@@ -402,27 +394,6 @@ export default function AdministracaoPage() {
     setIsPasswordDialogOpen(true);
   };
 
-  const toggleUnidade = (unidade: string) => {
-    setNewUser(prev => ({
-      ...prev,
-      unidades_vinculadas: prev.unidades_vinculadas.includes(unidade)
-        ? prev.unidades_vinculadas.filter(u => u !== unidade)
-        : [...prev.unidades_vinculadas, unidade]
-    }));
-  };
-
-  const toggleEditUnidade = (unidade: string) => {
-    if (!editingUser) return;
-    setEditingUser((prev: any) => {
-      const current: string[] = Array.isArray(prev.unidades_vinculadas) ? prev.unidades_vinculadas : [];
-      return {
-        ...prev,
-        unidades_vinculadas: current.includes(unidade)
-          ? current.filter((u: string) => u !== unidade)
-          : [...current, unidade],
-      };
-    });
-  };
 
   const handleUploadPhoto = async (file: File, isEdit = false) => {
     try {
@@ -799,8 +770,8 @@ export default function AdministracaoPage() {
                   demais: 'Demais Unidades',
                 };
                 const regiaoUnidades: Record<string, string[]> = {
-                  go_es: [...(REGIOES_SELECAO['Goiânia'] || []), ...(REGIOES_SELECAO['Vitória (ES)'] || [])],
-                  demais: REGIOES_SELECAO['Demais Unidades'] || [],
+                  go_es: UNIDADES_GRUPOS[0]?.units || [],
+                  demais: UNIDADES_GRUPOS[1]?.units || [],
                 };
 
                 if (analistas.length === 0) {
@@ -1475,62 +1446,46 @@ export default function AdministracaoPage() {
               )}
             </div>
 
-            {/* Unidades e Permissões */}
+            {/* Unidades Vinculadas */}
             <div className="space-y-4 border-t pt-4">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
-              
               <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold">Visualizar todas as unidades</Label>
-                  <p className="text-[11px] text-muted-foreground">O usuário terá acesso a todos os registros do sistema.</p>
-                </div>
-                <Switch checked={newUser.visualiza_todas_unidades} onCheckedChange={(v) => setNewUser(p => ({ ...p, visualiza_todas_unidades: v }))} />
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
+                {newUser.visualiza_todas_unidades && (
+                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
+                    Acesso total
+                  </Badge>
+                )}
               </div>
 
-              {!newUser.visualiza_todas_unidades && (
-                <div className="space-y-3">
-                  {/* Seleção rápida por região */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase">Selecionar por região:</span>
-                    {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => {
-                      const allSelected = unidades.length > 0 && unidades.every(u => newUser.unidades_vinculadas.includes(u));
-                      return (
-                        <Button
-                          key={regiao}
-                          type="button"
-                          variant={allSelected ? "default" : "outline"}
-                          size="sm"
-                          className="h-7 text-[11px] font-bold"
-                          onClick={() => {
-                            if (allSelected) {
-                              setNewUser(p => ({ ...p, unidades_vinculadas: p.unidades_vinculadas.filter(u => !unidades.includes(u)) }));
-                            } else {
-                              setNewUser(p => ({ ...p, unidades_vinculadas: [...new Set([...p.unidades_vinculadas, ...unidades])] }));
-                            }
-                          }}
-                        >
-                          {regiao} {allSelected && <Check className="h-3 w-3 ml-1" />}
-                        </Button>
-                      );
-                    })}
-                  </div>
+              {/* Toggle: acesso total */}
+              <div
+                className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-colors cursor-pointer ${newUser.visualiza_todas_unidades ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}
+                onClick={() => setNewUser(p => ({ ...p, visualiza_todas_unidades: !p.visualiza_todas_unidades, unidades_vinculadas: !p.visualiza_todas_unidades ? [] : p.unidades_vinculadas }))}
+              >
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold cursor-pointer">Visualizar todas as unidades</Label>
+                  <p className="text-[11px] text-muted-foreground">O usuário terá acesso irrestrito a todos os registros.</p>
+                </div>
+                <Switch
+                  checked={newUser.visualiza_todas_unidades}
+                  onCheckedChange={(v) => setNewUser(p => ({ ...p, visualiza_todas_unidades: v, unidades_vinculadas: v ? [] : p.unidades_vinculadas }))}
+                  onClick={e => e.stopPropagation()}
+                />
+              </div>
 
-                  {/* Checkboxes individuais agrupados por região */}
-                  <div className="space-y-3 max-h-[220px] overflow-y-auto">
-                    {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => (
-                      <div key={regiao}>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{regiao}</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {unidades.map(u => (
-                            <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleUnidade(u)}>
-                              <input type="checkbox" checked={newUser.unidades_vinculadas.includes(u)} readOnly className="h-3 w-3 rounded" />
-                              <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {/* Unit picker — only when not full access */}
+              {!newUser.visualiza_todas_unidades && (
+                <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
+                  <UnidadesPicker
+                    value={newUser.unidades_vinculadas}
+                    onChange={(units) => setNewUser(p => ({ ...p, unidades_vinculadas: units }))}
+                  />
+                  {newUser.unidades_vinculadas.length === 0 && (
+                    <p className="text-[11px] text-amber-600 font-medium mt-3 flex items-center gap-1.5">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      Nenhuma unidade selecionada — o usuário não verá nenhum dado.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -1726,56 +1681,44 @@ export default function AdministracaoPage() {
               </div>
 
               <div className="space-y-4 border-t pt-4">
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-bold">Visualizar todas as unidades</Label>
-                  <Switch checked={editingUser.visualiza_todas_unidades} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: v }))} />
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
+                  {editingUser.visualiza_todas_unidades && (
+                    <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
+                      Acesso total
+                    </Badge>
+                  )}
                 </div>
-                {!editingUser.visualiza_todas_unidades && (
-                  <div className="space-y-3 animate-fade-in">
-                    {/* Seleção rápida por região */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase">Selecionar por região:</span>
-                      {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => {
-                        const selected: string[] = editingUser.unidades_vinculadas || [];
-                        const allSelected = unidades.length > 0 && unidades.every(u => selected.includes(u));
-                        return (
-                          <Button
-                            key={regiao}
-                            type="button"
-                            variant={allSelected ? "default" : "outline"}
-                            size="sm"
-                            className="h-7 text-[11px] font-bold"
-                            onClick={() => {
-                              if (allSelected) {
-                                setEditingUser((p: any) => ({ ...p, unidades_vinculadas: (p.unidades_vinculadas || []).filter((u: string) => !unidades.includes(u)) }));
-                              } else {
-                                setEditingUser((p: any) => ({ ...p, unidades_vinculadas: [...new Set([...(p.unidades_vinculadas || []), ...unidades])] }));
-                              }
-                            }}
-                          >
-                            {regiao} {allSelected && <Check className="h-3 w-3 ml-1" />}
-                          </Button>
-                        );
-                      })}
-                    </div>
 
-                    {/* Checkboxes individuais agrupados por região */}
-                    <div className="space-y-3 max-h-[220px] overflow-y-auto">
-                      {Object.entries(REGIOES_SELECAO).map(([regiao, unidades]) => (
-                        <div key={regiao}>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{regiao}</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {unidades.map(u => (
-                              <div key={u} className="flex items-center gap-2 border rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleEditUnidade(u)}>
-                                <input type="checkbox" checked={(editingUser.unidades_vinculadas || []).includes(u)} readOnly className="h-3 w-3 rounded" />
-                                <label className="text-[11px] font-bold text-foreground/70 cursor-pointer">{u}</label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                {/* Toggle: acesso total */}
+                <div
+                  className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-colors cursor-pointer ${editingUser.visualiza_todas_unidades ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}
+                  onClick={() => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: !p.visualiza_todas_unidades }))}
+                >
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold cursor-pointer">Visualizar todas as unidades</Label>
+                    <p className="text-[11px] text-muted-foreground">O usuário terá acesso irrestrito a todos os registros.</p>
+                  </div>
+                  <Switch
+                    checked={editingUser.visualiza_todas_unidades}
+                    onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: v }))}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  />
+                </div>
+
+                {/* Unit picker — only when not full access */}
+                {!editingUser.visualiza_todas_unidades && (
+                  <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
+                    <UnidadesPicker
+                      value={editingUser.unidades_vinculadas || []}
+                      onChange={(units) => setEditingUser((p: any) => ({ ...p, unidades_vinculadas: units }))}
+                    />
+                    {(editingUser.unidades_vinculadas || []).length === 0 && (
+                      <p className="text-[11px] text-amber-600 font-medium mt-3 flex items-center gap-1.5">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Nenhuma unidade selecionada — o usuário não verá nenhum dado.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

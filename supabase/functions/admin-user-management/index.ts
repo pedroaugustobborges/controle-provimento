@@ -85,7 +85,18 @@ Deno.serve(async (req) => {
       .eq("role", "admin")
       .limit(1);
 
-    if (!callerRoles || callerRoles.length === 0) {
+    const { data: callerProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("perfil, pode_gerenciar_usuarios")
+      .eq("id", caller.id)
+      .maybeSingle();
+
+    const isAdmin =
+      (callerRoles && callerRoles.length > 0) ||
+      (callerProfile?.perfil && callerProfile.perfil.toLowerCase().includes("admin")) ||
+      callerProfile?.pode_gerenciar_usuarios === true;
+
+    if (!isAdmin) {
       return jsonFail("Acesso negado. Somente administradores.");
     }
 
@@ -141,6 +152,7 @@ Deno.serve(async (req) => {
         const roleMap: Record<string, string> = {
           "Administrador": "admin",
           "Admin": "admin",
+          "Administrador do Sistema": "admin",
           "Analista de RH": "analista",
           "Analista Administrativo": "analista",
           "Analista de Edital": "analista",

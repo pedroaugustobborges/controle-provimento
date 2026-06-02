@@ -606,6 +606,7 @@ export const useVagasStore = create<VagasState>()(
       updateBancoAsync: async (id, data) => {
         const { DatabaseService } = await import('@/services/databaseService');
         const { useAdminStore } = await import('./adminStore');
+        const { supabase } = await import('@/integrations/supabase/client');
         const { currentUser } = useAdminStore.getState();
         if (!currentUser) return false;
 
@@ -615,11 +616,19 @@ export const useVagasStore = create<VagasState>()(
         // Optimistic local update for snappy UX
         get().updateBanco(id, data);
 
+        // Always fetch the current version from DB to avoid optimistic concurrency mismatch
+        const { data: dbRow } = await supabase
+          .from('banco_candidatos')
+          .select('version')
+          .eq('id', id)
+          .maybeSingle();
+        const currentVersion = (dbRow as any)?.version ?? 0;
+
         const { data: updated, error } = await DatabaseService.saveWithConcurrency('banco_candidatos', {
           ...currentBanco,
           ...data,
           id,
-          version: (currentBanco as any).version || 0
+          version: currentVersion,
         }, currentUser.id);
 
         if (error) {

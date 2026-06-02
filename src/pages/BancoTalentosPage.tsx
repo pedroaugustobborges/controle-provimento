@@ -33,6 +33,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Separator } from '@/components/ui/separator';
 import { BancoTalentosForm } from '@/components/BancoTalentosForm';
 import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
+import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
+import { Convocacao } from '@/types/vaga';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -87,6 +89,8 @@ export default function BancoTalentosPage() {
   const pageSize = 50;
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
   const [bancoForUpdate, setBancoForUpdate] = useState<BancoTalentos | null>(null);
+  const [isConvocacaoOpen, setIsConvocacaoOpen] = useState(false);
+  const [convocacaoInitialData, setConvocacaoInitialData] = useState<Partial<Convocacao> | undefined>(undefined);
 
   const handleDelete = () => {
     if (bancoParaExcluir) {
@@ -534,6 +538,15 @@ export default function BancoTalentosPage() {
         onConfirm={handleRequestUpdate}
       />
 
+      <ConvocacaoDialog
+        open={isConvocacaoOpen}
+        onOpenChange={(v) => {
+          setIsConvocacaoOpen(v);
+          if (!v) setConvocacaoInitialData(undefined);
+        }}
+        initialData={convocacaoInitialData}
+      />
+
       <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
           <SheetHeader className="mb-6">
@@ -596,6 +609,30 @@ export default function BancoTalentosPage() {
                           <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Unidade Convocação</p>
                           <p className="text-[11px] font-semibold text-slate-700">{c.unidade_convocacao || "—"}</p>
                         </div>
+                      </div>
+
+                      {/* Convocar button */}
+                      <div className="pt-2 border-t border-slate-200/50">
+                        <Button
+                          size="sm"
+                          className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-bold shadow-sm shadow-primary/20"
+                          onClick={() => {
+                            setConvocacaoInitialData({
+                              nome_candidato: c.nome || '',
+                              classificacao: Number(c.classificacao) || 1,
+                              cargo: selectedBanco!.cargo,
+                              unidade: selectedBanco!.unidade,
+                              secao: selectedBanco!.secao || '',
+                              edital_relacionado: selectedBanco!.numero_edital || '',
+                              banco_id: c.id,
+                              requisicao: c.numero_processo_seletivo || c.numero_chamada || '',
+                            });
+                            setIsConvocacaoOpen(true);
+                          }}
+                        >
+                          <Clock className="h-3.5 w-3.5" />
+                          Convocar
+                        </Button>
                       </div>
                     </div>
                   ))}

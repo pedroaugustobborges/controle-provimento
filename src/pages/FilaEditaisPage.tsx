@@ -180,15 +180,6 @@ export default function FilaEditaisPage() {
     };
   }, [pendingVagas]);
 
-  // Reset page when filters change
-  useEffect(() => { setCurrentPage(1); }, [search, filterUnidade]);
-
-  const paginatedVagas = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return groupedVagas.otherVagas.slice(start, start + pageSize);
-  }, [groupedVagas.otherVagas, currentPage, pageSize]);
-
-  const totalPages = Math.ceil(groupedVagas.otherVagas.length / pageSize);
 
   // Selected rows -> cargos eligible to regroup (only cargos currently in ungrouped set with 2+ selected of same cargo)
   const regroupableCargos = useMemo(() => {
@@ -277,6 +268,16 @@ export default function FilaEditaisPage() {
       bottomEl.removeEventListener("scroll", fromBottom);
     };
   }, [tableScrollWidth]);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [search, filterUnidade]);
+
+  const paginatedVagas = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return groupedVagas.otherVagas.slice(start, start + pageSize);
+  }, [groupedVagas.otherVagas, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(groupedVagas.otherVagas.length / pageSize);
 
   const [batchObs, setBatchObs] = useState('');
   const [batchValidacoes, setBatchValidacoes] = useState({ cargo: false, carga: false, salario: false });

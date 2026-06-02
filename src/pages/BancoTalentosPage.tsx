@@ -117,6 +117,75 @@ export default function BancoTalentosPage() {
     };
   }, [tableScrollWidth]);
 
+  // Dual synchronized scrollbars — convocados tab
+  const convocadosScrollRef = useRef<HTMLDivElement>(null);
+  const convocadosTopRef = useRef<HTMLDivElement>(null);
+  const convocadosBottomRef = useRef<HTMLDivElement>(null);
+  const [convocadosScrollWidth, setConvocadosScrollWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (convocadosScrollRef.current) {
+      const w = convocadosScrollRef.current.scrollWidth;
+      setConvocadosScrollWidth((prev) => (prev !== w ? w : prev));
+    }
+  });
+
+  useEffect(() => {
+    const tableEl = convocadosScrollRef.current;
+    const topEl = convocadosTopRef.current;
+    const bottomEl = convocadosBottomRef.current;
+    if (!tableEl || !topEl || !bottomEl || convocadosScrollWidth === 0) return;
+    let syncing = false;
+    const fromTable = () => { if (syncing) return; syncing = true; topEl.scrollLeft = tableEl.scrollLeft; bottomEl.scrollLeft = tableEl.scrollLeft; syncing = false; };
+    const fromTop = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = topEl.scrollLeft; bottomEl.scrollLeft = topEl.scrollLeft; syncing = false; };
+    const fromBottom = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = bottomEl.scrollLeft; topEl.scrollLeft = bottomEl.scrollLeft; syncing = false; };
+    tableEl.addEventListener("scroll", fromTable);
+    topEl.addEventListener("scroll", fromTop);
+    bottomEl.addEventListener("scroll", fromBottom);
+    return () => {
+      tableEl.removeEventListener("scroll", fromTable);
+      topEl.removeEventListener("scroll", fromTop);
+      bottomEl.removeEventListener("scroll", fromBottom);
+    };
+  }, [convocadosScrollWidth]);
+
+  // Dual synchronized scrollbars — vencidos tab
+  const vencidosScrollRef = useRef<HTMLDivElement>(null);
+  const vencidosTopRef = useRef<HTMLDivElement>(null);
+  const vencidosBottomRef = useRef<HTMLDivElement>(null);
+  const [vencidosScrollWidth, setVencidosScrollWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (vencidosScrollRef.current) {
+      const w = vencidosScrollRef.current.scrollWidth;
+      setVencidosScrollWidth((prev) => (prev !== w ? w : prev));
+    }
+  });
+
+  useEffect(() => {
+    const tableEl = vencidosScrollRef.current;
+    const topEl = vencidosTopRef.current;
+    const bottomEl = vencidosBottomRef.current;
+    if (!tableEl || !topEl || !bottomEl || vencidosScrollWidth === 0) return;
+    let syncing = false;
+    const fromTable = () => { if (syncing) return; syncing = true; topEl.scrollLeft = tableEl.scrollLeft; bottomEl.scrollLeft = tableEl.scrollLeft; syncing = false; };
+    const fromTop = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = topEl.scrollLeft; bottomEl.scrollLeft = topEl.scrollLeft; syncing = false; };
+    const fromBottom = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = bottomEl.scrollLeft; topEl.scrollLeft = bottomEl.scrollLeft; syncing = false; };
+    tableEl.addEventListener("scroll", fromTable);
+    topEl.addEventListener("scroll", fromTop);
+    bottomEl.addEventListener("scroll", fromBottom);
+    return () => {
+      tableEl.removeEventListener("scroll", fromTable);
+      topEl.removeEventListener("scroll", fromTop);
+      bottomEl.removeEventListener("scroll", fromBottom);
+    };
+  }, [vencidosScrollWidth]);
+
+  // Pagination for convocados and vencidos tabs
+  const [convocadosPage, setConvocadosPage] = useState(1);
+  const [vencidosPage, setVencidosPage] = useState(1);
+  const tabPageSize = 50;
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
@@ -216,6 +285,10 @@ export default function BancoTalentosPage() {
       return matchSearch && matchUnidade && matchCargo;
     });
   }, [bancos, currentUser, convocadosSearch, convocadosUnidadeFilter, convocadosCargoFilter]);
+
+  useEffect(() => { setConvocadosPage(1); }, [convocadosSearch, convocadosUnidadeFilter, convocadosCargoFilter]);
+  const paginatedConvocados = useMemo(() => convocadosFiltered.slice((convocadosPage - 1) * tabPageSize, convocadosPage * tabPageSize), [convocadosFiltered, convocadosPage, tabPageSize]);
+  const convocadosTotalPages = Math.ceil(convocadosFiltered.length / tabPageSize);
 
   const convocadosCargos = useMemo(() => {
     const cargos = [...new Set(bancos.filter(b => b.status === 'CONVOCADO').map(b => b.cargo).filter(Boolean))];
@@ -385,6 +458,10 @@ export default function BancoTalentosPage() {
         normalizeCargo(b.numero_edital).includes(normalizedSearch);
     });
   }, [bancos, currentUser, vencidosSearch]);
+
+  useEffect(() => { setVencidosPage(1); }, [vencidosSearch]);
+  const paginatedVencidos = useMemo(() => vencidosFiltered.slice((vencidosPage - 1) * tabPageSize, vencidosPage * tabPageSize), [vencidosFiltered, vencidosPage, tabPageSize]);
+  const vencidosTotalPages = Math.ceil(vencidosFiltered.length / tabPageSize);
 
   const canProrrogate = useMemo(() => {
     if (!currentUser) return false;
@@ -1169,22 +1246,25 @@ export default function BancoTalentosPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader >
+              <div ref={convocadosTopRef} className="table-scroll-top overflow-x-scroll overflow-y-hidden" style={{ height: "20px", background: "#221f44", scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.3) #2c2960" }}>
+                <div style={{ width: convocadosScrollWidth, height: "1px" }} />
+              </div>
+              <div ref={convocadosScrollRef} className="table-hide-scrollbar overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                <table className="w-full caption-bottom text-sm">
+                  <TableHeader>
                     <TableRow>
-                      <TableHead >Nome</TableHead>
-                      <TableHead >Cargo</TableHead>
-                      <TableHead >Edital</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Edital</TableHead>
                       <TableHead className="text-center">Class.</TableHead>
-                      <TableHead >Data Conv.</TableHead>
-                      <TableHead >Unid. Conv.</TableHead>
+                      <TableHead>Data Conv.</TableHead>
+                      <TableHead>Unid. Conv.</TableHead>
                       <TableHead className="text-center">Status / Devolutiva</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {convocadosFiltered.map((b) => {
+                    {paginatedConvocados.map((b) => {
                       // Encontrar a convocação diária relacionada
                       const dailyConvocacao = useVagasStore.getState().convocacoes.find(c => 
                         c.banco_relacionado === b.id || 
@@ -1258,7 +1338,33 @@ export default function BancoTalentosPage() {
                       </TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </table>
+              </div>
+              <div ref={convocadosBottomRef} className="table-scroll-bottom overflow-x-scroll overflow-y-hidden" style={{ height: "20px", background: "#e8edf4", borderTop: "1px solid #dde3ec", scrollbarWidth: "thin", scrollbarColor: "#94a3b8 #e8edf4" }}>
+                <div style={{ width: convocadosScrollWidth, height: "1px" }} />
+              </div>
+              <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                <span>Exibindo {paginatedConvocados.length} de {convocadosFiltered.length} registros</span>
+                {convocadosTotalPages > 1 && (
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious onClick={() => setConvocadosPage(p => Math.max(1, p - 1))} className={convocadosPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                      </PaginationItem>
+                      {[...Array(convocadosTotalPages)].map((_, i) => {
+                        const page = i + 1;
+                        if (page === 1 || page === convocadosTotalPages || (page >= convocadosPage - 1 && page <= convocadosPage + 1)) {
+                          return <PaginationItem key={page}><PaginationLink isActive={convocadosPage === page} onClick={() => setConvocadosPage(page)} className="cursor-pointer">{page}</PaginationLink></PaginationItem>;
+                        }
+                        if (page === convocadosPage - 2 || page === convocadosPage + 2) return <PaginationEllipsis key={page} />;
+                        return null;
+                      })}
+                      <PaginationItem>
+                        <PaginationNext onClick={() => setConvocadosPage(p => Math.min(convocadosTotalPages, p + 1))} className={convocadosPage === convocadosTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1283,8 +1389,11 @@ export default function BancoTalentosPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
+              <div ref={vencidosTopRef} className="table-scroll-top overflow-x-scroll overflow-y-hidden" style={{ height: "20px", background: "#221f44", scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.3) #2c2960" }}>
+                <div style={{ width: vencidosScrollWidth, height: "1px" }} />
+              </div>
+              <div ref={vencidosScrollRef} className="table-hide-scrollbar overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                <table className="w-full caption-bottom text-sm">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="whitespace-nowrap">Nome</TableHead>
@@ -1298,7 +1407,7 @@ export default function BancoTalentosPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vencidosFiltered.map((b) => (
+                    {paginatedVencidos.map((b) => (
                       <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors">
                         <TableCell className="font-bold text-slate-900 text-xs">{b.nome || "Não identificado"}</TableCell>
                         <TableCell className="text-xs font-medium text-slate-700">{b.cargo}</TableCell>
@@ -1352,7 +1461,33 @@ export default function BancoTalentosPage() {
                       </TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </table>
+              </div>
+              <div ref={vencidosBottomRef} className="table-scroll-bottom overflow-x-scroll overflow-y-hidden" style={{ height: "20px", background: "#e8edf4", borderTop: "1px solid #dde3ec", scrollbarWidth: "thin", scrollbarColor: "#94a3b8 #e8edf4" }}>
+                <div style={{ width: vencidosScrollWidth, height: "1px" }} />
+              </div>
+              <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                <span>Exibindo {paginatedVencidos.length} de {vencidosFiltered.length} registros</span>
+                {vencidosTotalPages > 1 && (
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious onClick={() => setVencidosPage(p => Math.max(1, p - 1))} className={vencidosPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                      </PaginationItem>
+                      {[...Array(vencidosTotalPages)].map((_, i) => {
+                        const page = i + 1;
+                        if (page === 1 || page === vencidosTotalPages || (page >= vencidosPage - 1 && page <= vencidosPage + 1)) {
+                          return <PaginationItem key={page}><PaginationLink isActive={vencidosPage === page} onClick={() => setVencidosPage(page)} className="cursor-pointer">{page}</PaginationLink></PaginationItem>;
+                        }
+                        if (page === vencidosPage - 2 || page === vencidosPage + 2) return <PaginationEllipsis key={page} />;
+                        return null;
+                      })}
+                      <PaginationItem>
+                        <PaginationNext onClick={() => setVencidosPage(p => Math.min(vencidosTotalPages, p + 1))} className={vencidosPage === vencidosTotalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -29,14 +29,17 @@ import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
 import { PageSkeleton } from '@/components/PageSkeleton';
 
-import { useState, useMemo } from 'react';
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription 
+import { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
+import {
+  Pagination, PaginationContent, PaginationEllipsis,
+  PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
+} from "@/components/ui/pagination";
 
 
 export default function ValidacaoEditaisPage() {
@@ -49,6 +52,42 @@ export default function ValidacaoEditaisPage() {
   const [reachrUrl, setReachrUrl] = useState('');
   const [selectedGestorId, setSelectedGestorId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
+
+  // Dual synchronized scrollbars
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (tableScrollRef.current) {
+      const w = tableScrollRef.current.scrollWidth;
+      setTableScrollWidth((prev) => (prev !== w ? w : prev));
+    }
+  });
+
+  useEffect(() => {
+    const tableEl = tableScrollRef.current;
+    const topEl = topScrollRef.current;
+    const bottomEl = bottomScrollRef.current;
+    if (!tableEl || !topEl || !bottomEl || tableScrollWidth === 0) return;
+    let syncing = false;
+    const fromTable = () => { if (syncing) return; syncing = true; topEl.scrollLeft = tableEl.scrollLeft; bottomEl.scrollLeft = tableEl.scrollLeft; syncing = false; };
+    const fromTop = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = topEl.scrollLeft; bottomEl.scrollLeft = topEl.scrollLeft; syncing = false; };
+    const fromBottom = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = bottomEl.scrollLeft; topEl.scrollLeft = bottomEl.scrollLeft; syncing = false; };
+    tableEl.addEventListener("scroll", fromTable);
+    topEl.addEventListener("scroll", fromTop);
+    bottomEl.addEventListener("scroll", fromBottom);
+    return () => {
+      tableEl.removeEventListener("scroll", fromTable);
+      topEl.removeEventListener("scroll", fromTop);
+      bottomEl.removeEventListener("scroll", fromBottom);
+    };
+  }, [tableScrollWidth]);
 
   useEffect(() => {
     fetchUsers();
@@ -91,6 +130,15 @@ export default function ValidacaoEditaisPage() {
     });
   }, [vagas, currentUser, search]);
 
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [search]);
+
+  const paginatedEditais = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return pendingEditais.slice(start, start + pageSize);
+  }, [pendingEditais, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(pendingEditais.length / pageSize);
 
   const handleAction = async (vagaId: string, actionStatus: 'aprovado' | 'reprovado' | 'ajuste') => {
     const vaga = vagas.find(v => v.id === vagaId);
@@ -235,58 +283,118 @@ export default function ValidacaoEditaisPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Unidade</TableHead>
-                <TableHead>Cargo / REQ</TableHead>
-                <TableHead>Edital / Processo</TableHead>
-                <TableHead>Obs. Unidade</TableHead>
-                <TableHead>Obs. Analista</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingEditais.map((v) => (
-                <TableRow key={v.id} className="group">
-                  <TableCell className="font-medium text-slate-700">{v.unidade}</TableCell>
-                  <TableCell>
-                    <div className="font-semibold text-slate-800">{v.cargo}</div>
-                    <div className="text-[11px] text-slate-400">{v.requisicao}</div>
-                  </TableCell>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-bold text-primary">{v.numero_edital || '-'}</div>
-                    <div className="text-[11px] text-slate-500">{v.numero_processo || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 max-w-[150px]">
-                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
-                  </td>
-                  <td className="px-6 py-4 max-w-[150px]">
-                    <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2 items-center">
-                      {v.status_fluxo_edital === 'aguardando_aprovacao_gestor' && (
-                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 animate-pulse">
-                          Aguardando Gestor
-                        </Badge>
-                      )}
-                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setReachrUrl((v as any).url_reachr || ''); setIsModalOpen(true); }}>
-                        <Eye className="h-3.5 w-3.5" /> Analisar
-                      </Button>
-                    </div>
-                  </td>
-                </TableRow>
-              ))}
-              {pendingEditais.length === 0 && (
+          {/* Top synchronized scrollbar */}
+          <div
+            ref={topScrollRef}
+            className="table-scroll-top overflow-x-scroll overflow-y-hidden"
+            style={{ height: "20px", background: "#221f44", scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.3) #2c2960" }}
+          >
+            <div style={{ width: tableScrollWidth, height: "1px" }} />
+          </div>
+
+          {/* Table container */}
+          <div ref={tableScrollRef} className="table-hide-scrollbar overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <table className="w-full caption-bottom text-sm">
+              <TableHeader>
                 <TableRow>
-                  <td colSpan={6} className="px-6 py-20 text-center text-slate-400 font-medium italic">
-                    Nenhum edital pendente de validação administrativa.
-                  </td>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Cargo / REQ</TableHead>
+                  <TableHead>Edital / Processo</TableHead>
+                  <TableHead>Obs. Unidade</TableHead>
+                  <TableHead>Obs. Analista</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {paginatedEditais.map((v) => (
+                  <TableRow key={v.id} className="group">
+                    <TableCell className="font-medium text-slate-700">{v.unidade}</TableCell>
+                    <TableCell>
+                      <div className="font-semibold text-slate-800">{v.cargo}</div>
+                      <div className="text-[11px] text-slate-400">{v.requisicao}</div>
+                    </TableCell>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-bold text-primary">{v.numero_edital || '-'}</div>
+                      <div className="text-[11px] text-slate-500">{v.numero_processo || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 max-w-[150px]">
+                      <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_unidade}>{v.observacoes_unidade || '-'}</p>
+                    </td>
+                    <td className="px-6 py-4 max-w-[150px]">
+                      <p className="text-[10px] text-slate-500 truncate" title={v.observacoes_edital}>{v.observacoes_edital || '-'}</p>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2 items-center">
+                        {v.status_fluxo_edital === 'aguardando_aprovacao_gestor' && (
+                          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 animate-pulse">
+                            Aguardando Gestor
+                          </Badge>
+                        )}
+                        <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { setSelectedVaga(v); setReachrUrl((v as any).url_reachr || ''); setIsModalOpen(true); }}>
+                          <Eye className="h-3.5 w-3.5" /> Analisar
+                        </Button>
+                      </div>
+                    </td>
+                  </TableRow>
+                ))}
+                {pendingEditais.length === 0 && (
+                  <TableRow>
+                    <td colSpan={6} className="px-6 py-20 text-center text-slate-400 font-medium italic">
+                      Nenhum edital pendente de validação administrativa.
+                    </td>
+                  </TableRow>
+                )}
+              </TableBody>
+            </table>
+          </div>
+
+          {/* Bottom synchronized scrollbar */}
+          <div
+            ref={bottomScrollRef}
+            className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
+            style={{ height: "20px", background: "#e8edf4", borderTop: "1px solid #dde3ec", scrollbarWidth: "thin", scrollbarColor: "#94a3b8 #e8edf4" }}
+          >
+            <div style={{ width: tableScrollWidth, height: "1px" }} />
+          </div>
+
+          {/* Pagination footer */}
+          <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+            <span>Exibindo {paginatedEditais.length} de {pendingEditais.length} registros</span>
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink isActive={currentPage === page} onClick={() => setCurrentPage(page)} className="cursor-pointer">
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return <PaginationEllipsis key={page} />;
+                    }
+                    return null;
+                  })}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
         </CardContent>
       </Card>
 

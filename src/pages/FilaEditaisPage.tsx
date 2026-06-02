@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronDown, ChevronRight, Unlink, Link2, MapPin as MapPinIcon } from 'lucide-react';
@@ -37,6 +37,10 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { PageSkeleton } from '@/components/PageSkeleton';
+import {
+  Pagination, PaginationContent, PaginationEllipsis,
+  PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
+} from "@/components/ui/pagination";
 
 
 export default function FilaEditaisPage() {
@@ -176,6 +180,16 @@ export default function FilaEditaisPage() {
     };
   }, [pendingVagas]);
 
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [search, filterUnidade]);
+
+  const paginatedVagas = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return groupedVagas.otherVagas.slice(start, start + pageSize);
+  }, [groupedVagas.otherVagas, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(groupedVagas.otherVagas.length / pageSize);
+
   // Selected rows -> cargos eligible to regroup (only cargos currently in ungrouped set with 2+ selected of same cargo)
   const regroupableCargos = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -227,6 +241,43 @@ export default function FilaEditaisPage() {
    *  Persiste o lote em sessionStorage; a página de Redação detecta e abre
    *  o modal de redação multi-cargo com as vagas mapeadas. */
   const [isBatchSendOpen, setIsBatchSendOpen] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
+
+  // Dual synchronized scrollbars
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (tableScrollRef.current) {
+      const w = tableScrollRef.current.scrollWidth;
+      setTableScrollWidth((prev) => (prev !== w ? w : prev));
+    }
+  });
+
+  useEffect(() => {
+    const tableEl = tableScrollRef.current;
+    const topEl = topScrollRef.current;
+    const bottomEl = bottomScrollRef.current;
+    if (!tableEl || !topEl || !bottomEl || tableScrollWidth === 0) return;
+    let syncing = false;
+    const fromTable = () => { if (syncing) return; syncing = true; topEl.scrollLeft = tableEl.scrollLeft; bottomEl.scrollLeft = tableEl.scrollLeft; syncing = false; };
+    const fromTop = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = topEl.scrollLeft; bottomEl.scrollLeft = topEl.scrollLeft; syncing = false; };
+    const fromBottom = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = bottomEl.scrollLeft; topEl.scrollLeft = bottomEl.scrollLeft; syncing = false; };
+    tableEl.addEventListener("scroll", fromTable);
+    topEl.addEventListener("scroll", fromTop);
+    bottomEl.addEventListener("scroll", fromBottom);
+    return () => {
+      tableEl.removeEventListener("scroll", fromTable);
+      topEl.removeEventListener("scroll", fromTop);
+      bottomEl.removeEventListener("scroll", fromBottom);
+    };
+  }, [tableScrollWidth]);
+
   const [batchObs, setBatchObs] = useState('');
   const [batchValidacoes, setBatchValidacoes] = useState({ cargo: false, carga: false, salario: false });
 
@@ -484,8 +535,18 @@ export default function FilaEditaisPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          {/* Top synchronized scrollbar */}
+          <div
+            ref={topScrollRef}
+            className="table-scroll-top overflow-x-scroll overflow-y-hidden"
+            style={{ height: "20px", background: "#221f44", scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.3) #2c2960" }}
+          >
+            <div style={{ width: tableScrollWidth, height: "1px" }} />
+          </div>
+
+          {/* Table container */}
+          <div ref={tableScrollRef} className="table-hide-scrollbar overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <table className="w-full caption-bottom text-sm">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10"></TableHead>
@@ -502,11 +563,7 @@ export default function FilaEditaisPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* Vagas Agrupadas (Consolidadas) */}
-                {/* Vagas rendered individually as requested */}
-
-                {/* Demais Vagas (incluindo desagrupadas) */}
-                {groupedVagas.otherVagas.map((v) => {
+                {paginatedVagas.map((v) => {
                   const goianiaCargo = UNIDADES_GOIANIA.includes(normalizeUnitName(v.unidade));
                   const cargoKey = v.cargo.toUpperCase().trim();
                   const isUngroupedFromConsolidated = goianiaCargo && ungrouped.has(cargoKey);
@@ -581,7 +638,55 @@ export default function FilaEditaisPage() {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
+            </table>
+          </div>
+
+          {/* Bottom synchronized scrollbar */}
+          <div
+            ref={bottomScrollRef}
+            className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
+            style={{ height: "20px", background: "#e8edf4", borderTop: "1px solid #dde3ec", scrollbarWidth: "thin", scrollbarColor: "#94a3b8 #e8edf4" }}
+          >
+            <div style={{ width: tableScrollWidth, height: "1px" }} />
+          </div>
+
+          {/* Pagination footer */}
+          <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+            <span>Exibindo {paginatedVagas.length} de {groupedVagas.otherVagas.length} registros</span>
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink isActive={currentPage === page} onClick={() => setCurrentPage(page)} className="cursor-pointer">
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return <PaginationEllipsis key={page} />;
+                    }
+                    return null;
+                  })}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
           </div>
         </CardContent>
       </Card>

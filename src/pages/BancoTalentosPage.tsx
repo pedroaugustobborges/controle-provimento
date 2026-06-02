@@ -14,7 +14,7 @@ import { ExportButton } from '@/components/ExportButton';
 
 import { formatDate, normalizeCargo, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normalizeUnitName } from '@/lib/vagaUtils';
 import { calculateBancoStatus, calculateStats } from '@/lib/bancoTalentosUtils';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 
 const getRegiaoFromUnit = (unidade: string): string | undefined => {
   const normalized = normalizeUnitName(unidade);
@@ -85,6 +85,38 @@ export default function BancoTalentosPage() {
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
   const [selectedBanco, setSelectedBanco] = useState<BancoTalentos | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  // Dual synchronized scrollbars
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (tableScrollRef.current) {
+      const w = tableScrollRef.current.scrollWidth;
+      setTableScrollWidth((prev) => (prev !== w ? w : prev));
+    }
+  });
+
+  useEffect(() => {
+    const tableEl = tableScrollRef.current;
+    const topEl = topScrollRef.current;
+    const bottomEl = bottomScrollRef.current;
+    if (!tableEl || !topEl || !bottomEl || tableScrollWidth === 0) return;
+    let syncing = false;
+    const fromTable = () => { if (syncing) return; syncing = true; topEl.scrollLeft = tableEl.scrollLeft; bottomEl.scrollLeft = tableEl.scrollLeft; syncing = false; };
+    const fromTop = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = topEl.scrollLeft; bottomEl.scrollLeft = topEl.scrollLeft; syncing = false; };
+    const fromBottom = () => { if (syncing) return; syncing = true; tableEl.scrollLeft = bottomEl.scrollLeft; topEl.scrollLeft = bottomEl.scrollLeft; syncing = false; };
+    tableEl.addEventListener("scroll", fromTable);
+    topEl.addEventListener("scroll", fromTop);
+    bottomEl.addEventListener("scroll", fromBottom);
+    return () => {
+      tableEl.removeEventListener("scroll", fromTable);
+      topEl.removeEventListener("scroll", fromTop);
+      bottomEl.removeEventListener("scroll", fromBottom);
+    };
+  }, [tableScrollWidth]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
@@ -929,100 +961,121 @@ export default function BancoTalentosPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="whitespace-nowrap">Edital</TableHead>
-                    <TableHead className="whitespace-nowrap">Proc. Seletivo</TableHead>
-                    <TableHead className="whitespace-nowrap">Cargo</TableHead>
-                    <TableHead className="whitespace-nowrap">Unidade</TableHead>
-                    <TableHead className="whitespace-nowrap text-center">Região</TableHead>
-                    <TableHead className="whitespace-nowrap text-center">Status</TableHead>
-                    <TableHead className="whitespace-nowrap text-center">Qtd.</TableHead>
-                    <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                   {paginatedGroups.map((group) => (
-                    <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
-                      <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
-                      <TableCell className="text-xs font-semibold text-slate-600 italic">
-                        {group.processoSeletivo || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-semibold text-slate-800">{group.cargo}</div>
-                        <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
-                      </TableCell>
-                       <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
-                      <TableCell className="text-center">
-                        {group.regiao ? (
-                          <Badge variant="outline" className={cn(
-                            "text-[10px] font-bold",
-                            group.regiao === 'GO_ES' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-                            'bg-slate-50 text-slate-600 border-slate-200'
-                          )}>
-                            {group.regiao === 'GO_ES' ? 'GO/ES' : 'OUTRAS'}
-                          </Badge>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">{getStatusBadge(group.status)}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="outline" className="font-bold bg-slate-50 text-[10px]">{group.qtdBanco || group.candidatos.length}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
-                            onClick={() => {
-                              setSelectedBanco(group.candidatos[0]);
-                              setIsDetailsOpen(true);
-                            }}
-                          >
-                            Detalhes ({group.candidatos.length})
-                          </Button>
-                          {permissions.canRequestUpdate() && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="font-bold text-xs text-amber-600 hover:bg-amber-50 h-8"
-                              onClick={() => {
-                                setBancoForUpdate(group.candidatos[0]);
-                                setIsRequestUpdateOpen(true);
-                              }}
-                            >
-                              Solicitar Atualização
-                            </Button>
-                          )}
-                          {permissions.canDeleteRecords() && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => {
-                                setBancoParaExcluir(group.id);
-                                setIsDeleteDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {filteredGroups.length === 0 && (
+              {/* Top synchronized scrollbar */}
+              <div
+                ref={topScrollRef}
+                className="table-scroll-top overflow-x-scroll overflow-y-hidden"
+                style={{ height: "20px", background: "#221f44", scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.3) #2c2960" }}
+              >
+                <div style={{ width: tableScrollWidth, height: "1px" }} />
+              </div>
+
+              {/* Table container */}
+              <div ref={tableScrollRef} className="table-hide-scrollbar overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                <table className="w-full caption-bottom text-sm">
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
-                        Nenhum banco de talentos encontrado para os filtros aplicados.
-                      </TableCell>
+                      <TableHead className="whitespace-nowrap">Edital</TableHead>
+                      <TableHead className="whitespace-nowrap">Proc. Seletivo</TableHead>
+                      <TableHead className="whitespace-nowrap">Cargo</TableHead>
+                      <TableHead className="whitespace-nowrap">Unidade</TableHead>
+                      <TableHead className="whitespace-nowrap text-center">Região</TableHead>
+                      <TableHead className="whitespace-nowrap text-center">Status</TableHead>
+                      <TableHead className="whitespace-nowrap text-center">Qtd.</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                     {paginatedGroups.map((group) => (
+                      <TableRow key={group.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-primary text-xs">{group.edital}</TableCell>
+                        <TableCell className="text-xs font-semibold text-slate-600 italic">
+                          {group.processoSeletivo || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-semibold text-slate-800">{group.cargo}</div>
+                          <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">{group.candidatos[0]?.secao || '—'}</div>
+                        </TableCell>
+                         <TableCell className="text-slate-600 font-medium">{group.unidade}</TableCell>
+                        <TableCell className="text-center">
+                          {group.regiao ? (
+                            <Badge variant="outline" className={cn(
+                              "text-[10px] font-bold",
+                              group.regiao === 'GO_ES' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              'bg-slate-50 text-slate-600 border-slate-200'
+                            )}>
+                              {group.regiao === 'GO_ES' ? 'GO/ES' : 'OUTRAS'}
+                            </Badge>
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">{getStatusBadge(group.status)}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="font-bold bg-slate-50 text-[10px]">{group.qtdBanco || group.candidatos.length}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
+                              onClick={() => {
+                                setSelectedBanco(group.candidatos[0]);
+                                setIsDetailsOpen(true);
+                              }}
+                            >
+                              Detalhes ({group.candidatos.length})
+                            </Button>
+                            {permissions.canRequestUpdate() && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="font-bold text-xs text-amber-600 hover:bg-amber-50 h-8"
+                                onClick={() => {
+                                  setBancoForUpdate(group.candidatos[0]);
+                                  setIsRequestUpdateOpen(true);
+                                }}
+                              >
+                                Solicitar Atualização
+                              </Button>
+                            )}
+                            {permissions.canDeleteRecords() && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => {
+                                  setBancoParaExcluir(group.id);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredGroups.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="h-40 text-center text-slate-400 font-medium italic">
+                          Nenhum banco de talentos encontrado para os filtros aplicados.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </table>
+              </div>
+
+              {/* Bottom synchronized scrollbar */}
+              <div
+                ref={bottomScrollRef}
+                className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
+                style={{ height: "20px", background: "#e8edf4", borderTop: "1px solid #dde3ec", scrollbarWidth: "thin", scrollbarColor: "#94a3b8 #e8edf4" }}
+              >
+                <div style={{ width: tableScrollWidth, height: "1px" }} />
+              </div>
             </CardContent>
           </Card>
           

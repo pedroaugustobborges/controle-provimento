@@ -97,6 +97,43 @@
   .neo-blur {
     @apply bg-white/40 backdrop-blur-xl border border-white/30 shadow-2xl;
   }
+
+  /* Top scrollbar — dark, blends with the table header */
+  .table-scroll-top::-webkit-scrollbar {
+    height: 10px;
+  }
+  .table-scroll-top::-webkit-scrollbar-track {
+    background: #2c2960;
+  }
+  .table-scroll-top::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.28);
+    border-radius: 99px;
+    border: 2px solid #221f44;
+  }
+  .table-scroll-top::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.52);
+  }
+
+  /* Bottom scrollbar — light, blends with the card footer */
+  .table-scroll-bottom::-webkit-scrollbar {
+    height: 10px;
+  }
+  .table-scroll-bottom::-webkit-scrollbar-track {
+    background: #e8edf4;
+  }
+  .table-scroll-bottom::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 99px;
+    border: 2px solid #e8edf4;
+  }
+  .table-scroll-bottom::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+
+  /* Hide native scrollbar on the table container (scrolled via sync bars) */
+  .table-hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ── Dashboard RGB / Glassmorphism animations ─────────────────────────── */

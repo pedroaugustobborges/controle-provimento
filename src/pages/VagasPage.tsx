@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useLayoutEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useVagasStore } from "@/store/vagasStore";
 import { useAdminStore } from "@/store/adminStore";
@@ -357,6 +357,60 @@ export default function VagasPage() {
     currentUser?.perfil === "Admin" || currentUser?.pode_excluir_requisicoes;
   const canInclude =
     currentUser?.perfil === "Admin" || currentUser?.pode_incluir_registros;
+
+  // ── Dual synchronized scrollbar (top + bottom) ───────────────────────────
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+
+  // Measure table content width after every render (handles isInitialLoad flip)
+  useLayoutEffect(() => {
+    if (tableScrollRef.current) {
+      const w = tableScrollRef.current.scrollWidth;
+      setTableScrollWidth((prev) => (prev !== w ? w : prev));
+    }
+  });
+
+  // Attach native scroll sync listeners once we have a real width
+  useEffect(() => {
+    const tableEl = tableScrollRef.current;
+    const topEl = topScrollRef.current;
+    const bottomEl = bottomScrollRef.current;
+    if (!tableEl || !topEl || !bottomEl || tableScrollWidth === 0) return;
+
+    let syncing = false;
+    const fromTable = () => {
+      if (syncing) return;
+      syncing = true;
+      topEl.scrollLeft = tableEl.scrollLeft;
+      bottomEl.scrollLeft = tableEl.scrollLeft;
+      syncing = false;
+    };
+    const fromTop = () => {
+      if (syncing) return;
+      syncing = true;
+      tableEl.scrollLeft = topEl.scrollLeft;
+      bottomEl.scrollLeft = topEl.scrollLeft;
+      syncing = false;
+    };
+    const fromBottom = () => {
+      if (syncing) return;
+      syncing = true;
+      tableEl.scrollLeft = bottomEl.scrollLeft;
+      topEl.scrollLeft = bottomEl.scrollLeft;
+      syncing = false;
+    };
+
+    tableEl.addEventListener("scroll", fromTable);
+    topEl.addEventListener("scroll", fromTop);
+    bottomEl.addEventListener("scroll", fromBottom);
+    return () => {
+      tableEl.removeEventListener("scroll", fromTable);
+      topEl.removeEventListener("scroll", fromTop);
+      bottomEl.removeEventListener("scroll", fromBottom);
+    };
+  }, [tableScrollWidth]);
 
   const handleDelete = () => {
     if (vagaParaExcluir && canDelete) {
@@ -1696,19 +1750,36 @@ export default function VagasPage() {
             )}
           </div>
 
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden">
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
+              {/* Top synchronized scrollbar — dark, part of the header visual */}
+              <div
+                ref={topScrollRef}
+                className="table-scroll-top overflow-x-scroll overflow-y-hidden"
+                style={{
+                  height: "20px",
+                  background: "#221f44",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "rgba(255,255,255,0.3) #2c2960",
+                }}
+              >
+                <div style={{ width: tableScrollWidth, height: "1px" }} />
+              </div>
+
+              {/* Table — raw <table> so tableScrollRef owns the overflow correctly */}
+              <div
+                ref={tableScrollRef}
+                className="table-hide-scrollbar overflow-x-auto"
+                style={{ scrollbarWidth: "none" }}
+              >
+                <table className="w-full caption-bottom text-sm">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[76px]">Abertura</TableHead>
                       <TableHead className="min-w-[76px]">
                         Recebimento
                       </TableHead>
-                      <TableHead className="min-w-[80px]">
-                        Requisição
-                      </TableHead>
+                      <TableHead className="min-w-[80px]">Requisição</TableHead>
                       <TableHead className="min-w-[200px]">Cargo</TableHead>
                       <TableHead className="min-w-[100px]">Tipo</TableHead>
                       <TableHead className="min-w-[140px]">Unidade</TableHead>
@@ -1804,7 +1875,9 @@ export default function VagasPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
-                            {TIPO_VAGA_LABELS[v.tipo_vaga] || v.tipo_vaga || "-"}
+                            {TIPO_VAGA_LABELS[v.tipo_vaga] ||
+                              v.tipo_vaga ||
+                              "-"}
                           </TableCell>
                           <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
                             <div className="flex flex-col">
@@ -2028,7 +2101,22 @@ export default function VagasPage() {
                       </TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </table>
+              </div>
+
+              {/* Bottom synchronized scrollbar — light, part of the footer visual */}
+              <div
+                ref={bottomScrollRef}
+                className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
+                style={{
+                  height: "20px",
+                  background: "#e8edf4",
+                  borderTop: "1px solid #dde3ec",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#94a3b8 #e8edf4",
+                }}
+              >
+                <div style={{ width: tableScrollWidth, height: "1px" }} />
               </div>
               <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex flex-col gap-1">

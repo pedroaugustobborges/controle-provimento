@@ -166,6 +166,7 @@ export default function AdministracaoPage() {
     acesso_portal_unidade: false,
     sendWelcomeEmail: true,
     regiao_suporte: null as string | null,
+    responsavel_fluxo: null as boolean | null,
   });
 
   useEffect(() => {
@@ -251,6 +252,7 @@ export default function AdministracaoPage() {
       pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
       acesso_portal_unidade: false, sendWelcomeEmail: true,
       regiao_suporte: null as string | null,
+      responsavel_fluxo: null as boolean | null,
     });
   };
 
@@ -264,6 +266,10 @@ export default function AdministracaoPage() {
       toast.error(passwordError);
       return;
     }
+    if (newUser.responsavel_fluxo === null) {
+      toast.error('Defina se este usuário será responsável pelo fluxo de provimento.');
+      return;
+    }
     setSaving(true);
     try {
       await addUser({
@@ -271,6 +277,34 @@ export default function AdministracaoPage() {
         perfil: newUser.perfil as any,
         sendWelcomeEmail: newUser.sendWelcomeEmail,
       });
+
+      // If responsible for the flow, assign analista_responsavel on matching vagas
+      if (newUser.responsavel_fluxo === true) {
+        const unidades = newUser.visualiza_todas_unidades
+          ? null // null = all units
+          : newUser.unidades_vinculadas;
+
+        if (unidades === null || unidades.length > 0) {
+          const { supabase } = await import('@/integrations/supabase/client');
+          let query = supabase
+            .from('vagas')
+            .update({ analista_responsavel: newUser.nome_completo });
+          if (unidades !== null) {
+            query = query.in('unidade', unidades);
+          }
+          const { error } = await query;
+          if (error) {
+            console.error('[handleCreateUser] Bulk vaga assignment error:', error);
+            toast.warning('Usuário criado, mas houve um erro ao atribuir vagas. Verifique manualmente.');
+          } else {
+            const { updateVaga } = useVagasStore.getState();
+            useVagasStore.getState().vagas
+              .filter(v => unidades === null || unidades.includes(v.unidade))
+              .forEach(v => updateVaga(v.id, { analista_responsavel: newUser.nome_completo }));
+          }
+        }
+      }
+
       toast.success('Usuário criado com sucesso!');
       setIsNewUserOpen(false);
       resetNewUserForm();
@@ -1533,6 +1567,95 @@ export default function AdministracaoPage() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Responsabilidade pelo Fluxo de Provimento */}
+            <div className="space-y-4 border-t pt-4">
+              <div>
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Responsabilidade pelo Fluxo de Provimento
+                  <span className="text-red-500 font-black text-sm leading-none">*</span>
+                </h4>
+                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                  Quando um usuário é responsável pelo fluxo, todos os provimentos da unidade hospitalar selecionada serão atribuídos a este usuário. Ao marcar <strong>"Não"</strong>, este usuário poderá apenas ver o fluxo de provimentos, sem ter responsabilidade por sua execução.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Sim */}
+                <button
+                  type="button"
+                  onClick={() => setNewUser(p => ({ ...p, responsavel_fluxo: true }))}
+                  className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
+                    newUser.responsavel_fluxo === true
+                      ? 'border-emerald-500 bg-emerald-50 shadow-sm shadow-emerald-100'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {newUser.responsavel_fluxo === true && (
+                    <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500">
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    </span>
+                  )}
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${newUser.responsavel_fluxo === true ? 'bg-emerald-500' : 'bg-slate-100'}`}>
+                    <Check className={`h-4 w-4 ${newUser.responsavel_fluxo === true ? 'text-white' : 'text-slate-400'}`} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-black ${newUser.responsavel_fluxo === true ? 'text-emerald-700' : 'text-slate-700'}`}>Sim</p>
+                    <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">Será atribuído às vagas das unidades selecionadas</p>
+                  </div>
+                </button>
+
+                {/* Não */}
+                <button
+                  type="button"
+                  onClick={() => setNewUser(p => ({ ...p, responsavel_fluxo: false }))}
+                  className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
+                    newUser.responsavel_fluxo === false
+                      ? 'border-slate-500 bg-slate-50 shadow-sm shadow-slate-100'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {newUser.responsavel_fluxo === false && (
+                    <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-500">
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    </span>
+                  )}
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${newUser.responsavel_fluxo === false ? 'bg-slate-500' : 'bg-slate-100'}`}>
+                    <X className={`h-4 w-4 ${newUser.responsavel_fluxo === false ? 'text-white' : 'text-slate-400'}`} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-black ${newUser.responsavel_fluxo === false ? 'text-slate-700' : 'text-slate-700'}`}>Não</p>
+                    <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">Acesso de visualização sem atribuição de vagas</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Contextual info when Sim is selected */}
+              {newUser.responsavel_fluxo === true && (
+                <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="text-[11px] text-amber-700 font-medium leading-relaxed">
+                    {newUser.visualiza_todas_unidades ? (
+                      <span>Todas as vagas do sistema serão atribuídas a <strong>{newUser.nome_completo || 'este usuário'}</strong> como analista responsável.</span>
+                    ) : newUser.unidades_vinculadas.length > 0 ? (
+                      <span>
+                        As vagas das unidades <strong>{newUser.unidades_vinculadas.join(', ')}</strong> serão atribuídas a <strong>{newUser.nome_completo || 'este usuário'}</strong>.
+                      </span>
+                    ) : (
+                      <span>Selecione as unidades acima para que as vagas sejam atribuídas a este usuário.</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {newUser.responsavel_fluxo === null && (
+                <p className="text-[11px] text-red-500 font-medium flex items-center gap-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500" />
+                  Campo obrigatório — selecione uma opção acima.
+                </p>
+              )}
             </div>
 
             {/* Permissões específicas (Legacy Flags) */}

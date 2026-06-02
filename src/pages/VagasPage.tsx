@@ -1784,6 +1784,7 @@ export default function VagasPage() {
                       <TableHead className="min-w-[100px]">Tipo</TableHead>
                       <TableHead className="min-w-[140px]">Unidade</TableHead>
                       <TableHead className="min-w-[120px]">Seção</TableHead>
+                      <TableHead className="min-w-[160px]">Motivo</TableHead>
                       <TableHead className="min-w-[130px] text-center">
                         Status
                       </TableHead>
@@ -1895,6 +1896,18 @@ export default function VagasPage() {
                             title={v.secao}
                           >
                             {v.secao || "-"}
+                          </TableCell>
+                          <TableCell className="py-3 px-4 h-14 max-w-[160px]">
+                            {v.motivo ? (
+                              <span
+                                className="text-[11px] text-slate-600 font-medium whitespace-normal break-words leading-tight block"
+                                title={v.motivo}
+                              >
+                                {v.motivo}
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-300">—</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-center py-3 px-4 h-14">
                             <StatusBadge status={v.status || v.status_geral} />
@@ -2093,7 +2106,7 @@ export default function VagasPage() {
                     {filtered.length === 0 && (
                       <TableRow>
                         <TableCell
-                          colSpan={9}
+                          colSpan={12}
                           className="px-6 py-20 text-center text-muted-foreground font-medium"
                         >
                           Nenhuma vaga encontrada para os filtros aplicados.

@@ -228,6 +228,7 @@ export interface Vaga {
   unidades_banco_talentos?: string[];
   is_pcd?: boolean;
   is_teia?: boolean;
+  motivo?: string;
 }
 
 export const UNIDADES_GOIANIA = [

@@ -292,19 +292,32 @@ export default function DashboardPage() {
     { label: 'Banco Disponível', value: totalBancosDisponiveis,       icon: ShieldCheck,    glowColor: '#a3e635', iconBg: 'rgba(163,230,53,0.15)',   description: 'Bancos ativos' },
   ], [totalVagas, counts, totalBancosDisponiveis, totalTarefasPendentes]);
 
+  // Derive bar label from secao: take the segment after the last ' - '.
+  // e.g. "SEHIG - SERVICO DE HIGIENIZACAO - HUGOL" → "HUGOL"
+  // Falls back to the unit name when secao is absent.
+  const secaoBarLabel = (secao: string | undefined, fallback: string): string => {
+    if (secao && secao.trim()) {
+      const parts = secao.split(' - ');
+      const last = parts[parts.length - 1].trim();
+      if (last) return last;
+    }
+    return resolveCanonicalName(fallback) || fallback;
+  };
+
   const strategicScopeByUnit = useMemo(() => {
     const unitMap = new Map<string, any>();
-    const getEntry = (unitName: string) => {
-      const canonicalName = resolveCanonicalName(unitName);
-      if (!canonicalName) return null;
-      if (!unitMap.has(canonicalName)) {
-        unitMap.set(canonicalName, { name: canonicalName, region: getRegionForUnit(canonicalName), vagas: 0, vagasAbertas: 0, bancos: 0, bancosCR: 0, bancosDisponiveis: 0, pendencias: 0 });
+    const getEntry = (label: string, unitName: string) => {
+      if (!label) return null;
+      if (!unitMap.has(label)) {
+        const canonical = resolveCanonicalName(unitName) || unitName;
+        unitMap.set(label, { name: label, region: getRegionForUnit(canonical), vagas: 0, vagasAbertas: 0, bancos: 0, bancosCR: 0, bancosDisponiveis: 0, pendencias: 0 });
       }
-      return unitMap.get(canonicalName);
+      return unitMap.get(label);
     };
     const statusConcluidos = ['concluida', 'concluidas', 'cancelada', 'canceladas', 'suspensa'];
     vagas.forEach((vaga) => {
-      const entry = getEntry(vaga.unidade);
+      const label = secaoBarLabel(vaga.secao, vaga.unidade);
+      const entry = getEntry(label, vaga.unidade);
       if (entry) {
         entry.vagas++;
         const cat = getCategoriaStatus(vaga);
@@ -315,7 +328,8 @@ export default function DashboardPage() {
       }
     });
     filteredBancos.forEach((banco) => {
-      const entry = getEntry(banco.unidade);
+      const label = secaoBarLabel((banco as any).secao, banco.unidade);
+      const entry = getEntry(label, banco.unidade);
       if (entry) {
         entry.bancos++;
         const s = normStatus(banco.status || '');

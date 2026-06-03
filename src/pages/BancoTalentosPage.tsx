@@ -792,23 +792,25 @@ export default function BancoTalentosPage() {
                         {getStatusBadge(c.status)}
                       </div>
 
-                      {/* Dados de Convocação e Detalhes */}
+                      {/* Dados de Contato */}
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-slate-200/50">
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Chamada</p>
-                          <p className="text-[11px] font-semibold text-slate-700">{c.numero_chamada || "—"}</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Telefone</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{(c as any).telefone || "—"}</p>
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Vagas Aproveitamento</p>
-                          <p className="text-[11px] font-semibold text-slate-700">{c.numero_vaga_aproveitamento || "—"}</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">CPF</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{(c as any).cpf || "—"}</p>
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Data Convocação</p>
-                          <p className="text-[11px] font-semibold text-green-600">{c.data_convocacao ? formatDate(c.data_convocacao) : "—"}</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">E-mail</p>
+                          <p className="text-[11px] font-semibold text-slate-700">{(c as any).email || "—"}</p>
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Unidade Convocação</p>
-                          <p className="text-[11px] font-semibold text-slate-700">{c.unidade_convocacao || "—"}</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Observação</p>
+                          <p className="text-[11px] font-semibold text-slate-700">
+                            {(c as any).observacao && (c as any).observacao !== 'nan' ? (c as any).observacao : "—"}
+                          </p>
                         </div>
                       </div>
 

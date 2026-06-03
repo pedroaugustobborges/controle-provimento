@@ -900,8 +900,8 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* ── 3-column chart grid ──────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* ── Top chart row: Visão por Unidade + Motivo da Vaga ────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* Bar chart */}
           <div className={`${t.panelClass} flex flex-col`}>
@@ -959,51 +959,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Monthly area chart */}
-          <div className={`${t.panelClass} flex flex-col`}>
-            <div style={{ height: '3px', background: 'linear-gradient(90deg, #60a5fa, #34d399)', flexShrink: 0 }} />
-            <div style={{ padding: '16px 18px 12px', borderBottom: t.phBorder, background: t.phBg }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(96,165,250,0.18)', boxShadow: '0 0 12px rgba(96,165,250,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <TrendingUp style={{ width: '15px', height: '15px', color: '#60a5fa' }} />
-                </div>
-                <span style={{ fontSize: '13px', fontWeight: 800, color: t.tx1 }}>Evolução Mensal</span>
-              </div>
-              <p style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, marginLeft: '36px' }}>Vagas abertas vs. concluídas (12 meses)</p>
-            </div>
-            <div style={{ padding: '16px', flex: 1 }}>
-              {monthlyData.every(m => m.abertas === 0 && m.concluidas === 0) ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '8px' }}>
-                  <TrendingUp style={{ width: '32px', height: '32px', color: t.tx4 }} />
-                  <p style={{ fontSize: '12px', color: t.tx3, fontWeight: 500 }}>Sem dados de abertura registrados</p>
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={monthlyData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gradAbertas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={t.areaBlue} stopOpacity={0.35} />
-                        <stop offset="95%" stopColor={t.areaBlue} stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradConcluidas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={t.areaGreen} stopOpacity={0.35} />
-                        <stop offset="95%" stopColor={t.areaGreen} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="4 4" stroke={t.gridLine} vertical={false} />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 8, fontWeight: 700, fill: t.axisColor }} interval={1} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fontWeight: 700, fill: t.axisColor }} />
-                    <Tooltip contentStyle={t.tooltip} itemStyle={{ padding: '2px 0', color: t.tooltip.color }} />
-                    <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', color: t.legendColor }} />
-                    <Area type="monotone" dataKey="abertas" name="Abertas" stroke={t.areaBlue} strokeWidth={2.5} fill="url(#gradAbertas)" dot={false} activeDot={{ r: 5, fill: t.areaBlue, stroke: `${t.areaBlue}40`, strokeWidth: 6 }} />
-                    <Area type="monotone" dataKey="concluidas" name="Concluídas" stroke={t.areaGreen} strokeWidth={2.5} fill="url(#gradConcluidas)" dot={false} activeDot={{ r: 5, fill: t.areaGreen, stroke: `${t.areaGreen}40`, strokeWidth: 6 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-
-          {/* Donut chart */}
+          {/* Motivo da Vaga — donut */}
           <div className={`${t.panelClass} flex flex-col`}>
             <div style={{ height: '3px', background: 'linear-gradient(90deg, #a78bfa, #f472b6)', flexShrink: 0 }} />
             <div style={{ padding: '16px 18px 12px', borderBottom: t.phBorder, background: t.phBg }}>
@@ -1054,6 +1010,50 @@ export default function DashboardPage() {
                 </>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* ── Evolução Mensal — full width ─────────────────────────────── */}
+        <div className={`${t.panelClass} flex flex-col`}>
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, #60a5fa, #34d399)', flexShrink: 0 }} />
+          <div style={{ padding: '16px 18px 12px', borderBottom: t.phBorder, background: t.phBg }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(96,165,250,0.18)', boxShadow: '0 0 12px rgba(96,165,250,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <TrendingUp style={{ width: '15px', height: '15px', color: '#60a5fa' }} />
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: t.tx1 }}>Evolução Mensal</span>
+            </div>
+            <p style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, marginLeft: '36px' }}>Vagas abertas vs. concluídas (12 meses)</p>
+          </div>
+          <div style={{ padding: '16px', flex: 1 }}>
+            {monthlyData.every(m => m.abertas === 0 && m.concluidas === 0) ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '8px' }}>
+                <TrendingUp style={{ width: '32px', height: '32px', color: t.tx4 }} />
+                <p style={{ fontSize: '12px', color: t.tx3, fontWeight: 500 }}>Sem dados de abertura registrados</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={monthlyData} margin={{ top: 8, right: 24, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gradAbertas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={t.areaBlue} stopOpacity={0.35} />
+                      <stop offset="95%" stopColor={t.areaBlue} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gradConcluidas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={t.areaGreen} stopOpacity={0.35} />
+                      <stop offset="95%" stopColor={t.areaGreen} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" stroke={t.gridLine} vertical={false} />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: t.axisColor }} interval={0} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: t.axisColor }} />
+                  <Tooltip contentStyle={t.tooltip} itemStyle={{ padding: '2px 0', color: t.tooltip.color }} />
+                  <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', color: t.legendColor }} />
+                  <Area type="monotone" dataKey="abertas" name="Abertas" stroke={t.areaBlue} strokeWidth={2.5} fill="url(#gradAbertas)" dot={false} activeDot={{ r: 5, fill: t.areaBlue, stroke: `${t.areaBlue}40`, strokeWidth: 6 }} />
+                  <Area type="monotone" dataKey="concluidas" name="Concluídas" stroke={t.areaGreen} strokeWidth={2.5} fill="url(#gradConcluidas)" dot={false} activeDot={{ r: 5, fill: t.areaGreen, stroke: `${t.areaGreen}40`, strokeWidth: 6 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 

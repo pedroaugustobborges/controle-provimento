@@ -61,11 +61,12 @@ import {
 
 export default function BancoTalentosPage() {
   const navigate = useNavigate();
-  const { bancos, importHistory, importedFiles, deleteBanco, fetchBancos } = useVagasStore();
-  
+  const { bancos, importHistory, importedFiles, deleteBanco, fetchBancos, fetchImportHistory } = useVagasStore();
+
   useEffect(() => {
     fetchBancos();
-  }, [fetchBancos]);
+    fetchImportHistory();
+  }, [fetchBancos, fetchImportHistory]);
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
   const permissions = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -578,7 +579,9 @@ export default function BancoTalentosPage() {
   };
 
   const historyBT = useMemo(() => {
-    return importHistory.filter(h => h.tipo_importacao === 'banco');
+    return importHistory.filter(
+      h => h.tipo_importacao === 'banco' || (h as any).numero_edital
+    );
   }, [importHistory]);
 
   const getStatusBadge = (status: string) => {
@@ -1564,7 +1567,7 @@ export default function BancoTalentosPage() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Edital</TableHead>
-                  <TableHead>Usuário</TableHead>
+                  <TableHead>Cadastrado Por</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>

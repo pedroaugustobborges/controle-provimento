@@ -197,17 +197,70 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-white/5 bg-[#0A192F] shadow-2xl">
       <SidebarHeader className="border-b border-white/10 py-6 px-4">
-        <div className="flex items-center gap-4 transition-all duration-300">
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
-            <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 shrink-0 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
+        <div className="flex items-center gap-3 transition-all duration-300">
+
+          {/* ── Agir logo — brand mark ──────────────────────────────────── */}
+          <div className="relative group shrink-0">
+            <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200" />
+            <img src={logoAgir} alt="AGIR" className="relative h-11 w-11 rounded-lg object-contain bg-white/5 p-1 shadow-inner" />
           </div>
+
           {!collapsed && (
-            <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
-              <span className="font-extrabold text-sm text-white tracking-tight leading-tight whitespace-nowrap">
-                Provimento Digital
-              </span>
-            </div>
+            <>
+              {/* ── Brand-hierarchy divider ─────────────────────────────── */}
+              <div
+                className="shrink-0 self-stretch"
+                style={{
+                  width: '1px',
+                  background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.22) 30%, rgba(255,255,255,0.22) 70%, transparent)',
+                  margin: '4px 2px',
+                }}
+              />
+
+              {/* ── Product lockup ──────────────────────────────────────── */}
+              <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
+
+                {/* Acronym + accent dot */}
+                <div className="flex items-center gap-[5px]">
+                  <span
+                    className="leading-none text-white whitespace-nowrap select-none"
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: 900,
+                      letterSpacing: '-0.045em',
+                      fontFamily: "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif",
+                    }}
+                  >
+                    CDP
+                  </span>
+                  {/* Cyan neon dot — accent from the dashboard palette */}
+                  <span
+                    className="shrink-0 rounded-full"
+                    style={{
+                      width: '5px',
+                      height: '5px',
+                      marginBottom: '2px',
+                      background: '#22d3ee',
+                      boxShadow: '0 0 6px rgba(34,211,238,0.7), 0 0 14px rgba(34,211,238,0.3)',
+                    }}
+                  />
+                </div>
+
+                {/* Subtitle — title-case, muted sky tone */}
+                <span
+                  className="whitespace-nowrap font-medium"
+                  style={{
+                    fontSize: '9px',
+                    letterSpacing: '0.16em',
+                    color: 'rgba(186,230,253,0.5)',
+                    marginTop: '4px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Controle de Provimento
+                </span>
+              </div>
+            </>
           )}
         </div>
       </SidebarHeader>

@@ -32,7 +32,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { BancoTalentosForm } from '@/components/BancoTalentosForm';
-import { ImportStagedDialog } from '@/components/import/ImportStagedDialog';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
 import { Convocacao } from '@/types/vaga';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -80,7 +79,9 @@ export default function BancoTalentosPage() {
   const [convocadosUnidadeFilter, setConvocadosUnidadeFilter] = useState('todas');
   const [convocadosCargoFilter, setConvocadosCargoFilter] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isCadastrarEditalOpen, setIsCadastrarEditalOpen] = useState(false);
+  const [novoEditalNumero, setNovoEditalNumero] = useState('');
+  const [savingEdital, setSavingEdital] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
   const [selectedBanco, setSelectedBanco] = useState<BancoTalentos | null>(null);
@@ -207,6 +208,40 @@ export default function BancoTalentosPage() {
     // For now, we'll just show a success message.
     toast.success('Solicitação de atualização enviada para a gestão.');
     console.log(`Request update for ${recordId}: ${description}`);
+  };
+
+  const handleCadastrarEdital = async () => {
+    if (!novoEditalNumero.trim()) {
+      toast.error('Informe o número do edital.');
+      return;
+    }
+    setSavingEdital(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { error } = await supabase.from('importacoes').insert({
+        tipo: 'banco',
+        numero_edital: novoEditalNumero.trim(),
+        arquivo: novoEditalNumero.trim(),
+        status: 'aguardando_processamento',
+        usuario_id: authUser?.id || '',
+        quantidade_processada: 0,
+        quantidade_inserida: 0,
+        quantidade_atualizada: 0,
+        quantidade_ignorada: 0,
+        quantidade_erro: 0,
+      });
+      if (error) throw error;
+      toast.success('Edital cadastrado! Os candidatos estarão disponíveis amanhã.');
+      setNovoEditalNumero('');
+      setIsCadastrarEditalOpen(false);
+      const { fetchImportHistory } = useVagasStore.getState();
+      await fetchImportHistory();
+    } catch (err: any) {
+      toast.error(`Erro ao cadastrar edital: ${err.message}`);
+    } finally {
+      setSavingEdital(false);
+    }
   };
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -581,12 +616,12 @@ export default function BancoTalentosPage() {
               className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
             />
             {permissions.canImport() && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
-                onClick={() => setIsImportOpen(true)}
+                onClick={() => setIsCadastrarEditalOpen(true)}
               >
-                <FileSpreadsheet className="h-4 w-4 text-primary" /> Importar Excel
+                <FileText className="h-4 w-4 text-primary" /> Cadastrar Edital
               </Button>
             )}
             {permissions.canIncludeRecords() && (
@@ -629,11 +664,40 @@ export default function BancoTalentosPage() {
         </DialogContent>
       </Dialog>
 
-      <ImportStagedDialog 
-        open={isImportOpen} 
-        onOpenChange={setIsImportOpen} 
-        type="banco"
-      />
+      {/* Cadastrar Edital modal */}
+      <Dialog open={isCadastrarEditalOpen} onOpenChange={open => { setIsCadastrarEditalOpen(open); if (!open) setNovoEditalNumero(''); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Cadastrar Edital
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Cadastre o número de um edital já finalizado para importação automática dos candidato(a)s. Digite o número com atenção que amanhã os candidatos estarão aqui.
+            </p>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Número do Edital</label>
+              <Input
+                placeholder="Ex: 001/2025"
+                value={novoEditalNumero}
+                onChange={e => setNovoEditalNumero(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleCadastrarEdital(); }}
+                className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" className="rounded-xl" onClick={() => { setIsCadastrarEditalOpen(false); setNovoEditalNumero(''); }}>
+                Cancelar
+              </Button>
+              <Button className="rounded-xl gap-2 bg-primary hover:bg-primary/90 text-white" onClick={handleCadastrarEdital} disabled={savingEdital || !novoEditalNumero.trim()}>
+                {savingEdital ? 'Cadastrando...' : 'Cadastrar'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <RequestUpdateDialog
         isOpen={isRequestUpdateOpen}
@@ -1496,42 +1560,42 @@ export default function BancoTalentosPage() {
         <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <Table>
-              <TableHeader >
+              <TableHeader>
                 <TableRow>
-                  <TableHead >Data/Hora</TableHead>
-                  <TableHead >Arquivo</TableHead>
-                  <TableHead className="text-center">Registros</TableHead>
-                  <TableHead >Usuário</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Edital</TableHead>
+                  <TableHead>Usuário</TableHead>
                   <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {historyBT.map((h) => (
                   <TableRow key={h.id}>
-                    <TableCell className="text-xs">{h.data_hora ? formatDate(h.data_hora.split('T')[0]) : '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <FileSpreadsheet className="h-4 w-4 text-green-600" />
-                        <span className="text-xs font-medium">{h.arquivo || h.nome_arquivo}</span>
-                      </div>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {h.data_hora ? formatDate(h.data_hora.split('T')[0]) : '-'}
                     </TableCell>
-                    <TableCell className="text-xs text-center font-bold">{h.total_novos}</TableCell>
+                    <TableCell className="text-xs font-semibold">
+                      {h.numero_edital || h.arquivo || '-'}
+                    </TableCell>
                     <TableCell className="text-xs text-slate-500">{h.usuario}</TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">Concluído</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      {(() => {
+                        const s = (h.status || '').toLowerCase();
+                        if (s === 'aguardando_processamento')
+                          return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[11px]">Aguardando</Badge>;
+                        if (s === 'em_processamento')
+                          return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[11px]">Processando</Badge>;
+                        if (s === 'erro')
+                          return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[11px]">Erro</Badge>;
+                        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">Concluído</Badge>;
+                      })()}
                     </TableCell>
                   </TableRow>
                 ))}
                 {historyBT.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-40 text-center text-slate-400 font-medium italic">
-                      Nenhuma importação realizada até o momento.
+                    <TableCell colSpan={4} className="h-40 text-center text-slate-400 font-medium italic">
+                      Nenhum edital cadastrado até o momento.
                     </TableCell>
                   </TableRow>
                 )}

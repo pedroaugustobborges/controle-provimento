@@ -394,6 +394,7 @@ export interface ImportHistory {
   observacoes?: string;
   referencia_arquivo?: string;
   relatorio_erros?: string;
+  numero_edital?: string;
   mapeamento_aplicado?: any;
 }
 

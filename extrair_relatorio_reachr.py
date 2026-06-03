@@ -146,7 +146,7 @@ def run():
 
         # Wait for dashboard to load
         logger.info("Waiting for dashboard…")
-        time.sleep(5)
+        time.sleep(8)
 
         # ------------------------------------------------------------------
         # 5. Click "Filtros" / expand filter panel

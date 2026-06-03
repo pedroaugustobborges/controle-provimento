@@ -292,6 +292,7 @@ export const useVagasStore = create<VagasState>()(
               arquivo: item.nome_arquivo || item.arquivo || `Importação ${item.id.slice(0, 8)}`,
               data_hora: item.created_at,
               referencia_arquivo: item.arquivo || item.nome_arquivo || item.id,
+              numero_edital: item.numero_edital,
             } as ImportHistory;
           });
 

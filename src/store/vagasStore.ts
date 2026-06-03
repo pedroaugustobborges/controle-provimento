@@ -949,6 +949,9 @@ export const useVagasStore = create<VagasState>()(
       getMatchingDiagnostic: () => [],
       fixWrongImportBatches: () => {},
       subscribeRealtime: () => {
+        const CHANNEL_NAME = 'realtime-vagas-bancos';
+        const MAX_RETRIES = 5;
+
         // Avoid duplicate subscriptions
         if ((window as any).__realtimeChannel) {
           const currentChannel = (window as any).__realtimeChannel;
@@ -961,7 +964,7 @@ export const useVagasStore = create<VagasState>()(
         }
 
         import('@/integrations/supabase/client').then(({ supabase }) => {
-          const channelName = `realtime-vagas-bancos-${Math.random().toString(36).slice(2, 8)}`;
+          const channelName = CHANNEL_NAME;
           console.log(`[Realtime] Initiating subscription on channel: ${channelName}`);
           
           const channel = supabase
@@ -1137,13 +1140,25 @@ export const useVagasStore = create<VagasState>()(
             .subscribe((status, err) => {
               console.log(`[Realtime] Channel status: ${status}`);
               if (err) console.error(`[Realtime] Subscription error:`, err);
-              
+
               if (status === 'CHANNEL_ERROR') {
-                console.error('[Realtime] Channel error detected, attempting to reconnect in 5s...');
+                const retryCount: number = ((window as any).__realtimeRetryCount || 0) + 1;
+                (window as any).__realtimeRetryCount = retryCount;
+
+                if (retryCount > MAX_RETRIES) {
+                  console.warn(`[Realtime] Max retries (${MAX_RETRIES}) reached. Stopping reconnect attempts.`);
+                  get().unsubscribeRealtime();
+                  return;
+                }
+
+                const delay = Math.min(5000 * retryCount, 60000);
+                console.error(`[Realtime] Channel error detected (attempt ${retryCount}/${MAX_RETRIES}), reconnecting in ${delay / 1000}s...`);
                 setTimeout(() => {
                   get().unsubscribeRealtime();
                   get().subscribeRealtime();
-                }, 5000);
+                }, delay);
+              } else if (status === 'SUBSCRIBED') {
+                (window as any).__realtimeRetryCount = 0;
               }
             });
 
@@ -1157,6 +1172,7 @@ export const useVagasStore = create<VagasState>()(
           import('@/integrations/supabase/client').then(({ supabase }) => {
             supabase.removeChannel(channel);
             delete (window as any).__realtimeChannel;
+            delete (window as any).__realtimeRetryCount;
           });
         }
       },

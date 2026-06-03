@@ -598,11 +598,36 @@ export default function BancoTalentosPage() {
 
   const prepareBancoForExport = (data: BancoTalentos[]) => {
     return data.map(b => ({
-      'Unidade': b.unidade || '',
-      'Cargo': b.cargo || '',
-      'Vigência': b.data_validade ? formatDate(b.data_validade) : '',
-      'Qtd. Candidatos': b.quantidade_banco || 0,
-      'Status': b.status || ''
+      'id':                      (b as any).id || '',
+      'nome':                    (b as any).nome || '',
+      'cpf':                     (b as any).cpf || '',
+      'data_nascimento':         (b as any).data_nascimento || '',
+      'email':                   (b as any).email || '',
+      'telefone':                (b as any).telefone || '',
+      'cargo':                   b.cargo || '',
+      'cargo_normalizado':       b.cargo_normalizado || '',
+      'secao':                   (b as any).secao || '',
+      'unidade':                 b.unidade || '',
+      'unidade_convocacao':      b.unidade_convocacao || '',
+      'status':                  b.status || '',
+      'status_calculado':        (b as any).status_calculado || '',
+      'status_original':         (b as any).status_original || '',
+      'classificacao':           b.classificacao != null ? String(b.classificacao) : '',
+      'nota_avaliacao':          (b as any).nota_avaliacao || '',
+      'nota_entrevista':         (b as any).nota_entrevista || '',
+      'numero_edital':           b.numero_edital || '',
+      'numero_processo_seletivo': b.numero_processo_seletivo || b.numero_processo || '',
+      'data_publicacao':         (b as any).data_publicacao || '',
+      'data_validade':           b.data_validade || '',
+      'data_convocacao':         b.data_convocacao || '',
+      'is_prorrogado':           b.is_prorrogado ? 'SIM' : 'NÃO',
+      'quantidade_banco':        b.quantidade_banco != null ? String(b.quantidade_banco) : '',
+      'observacao':              b.observacoes || (b as any).observacao || '',
+      'origem':                  (b as any).origem || '',
+      'data_importacao':         (b as any).data_importacao || '',
+      'import_batch_id':         b.import_batch_id || '',
+      'created_at':              (b as any).created_at || '',
+      'updated_at':              (b as any).updated_at || '',
     }));
   };
 
@@ -614,7 +639,7 @@ export default function BancoTalentosPage() {
           <>
             <ExportButton 
               data={prepareBancoForExport(filtered)} 
-              filename="banco_talentos_export"
+              filename="banco_candidatos"
               label="Exportar Excel"
               className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
             />

@@ -83,7 +83,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [cpShowCurrent, setCpShowCurrent] = useState(false);
   const [cpShowNew, setCpShowNew] = useState(false);
   const [cpSaving, setCpSaving] = useState(false);
-  const { alertas, updateAlerta, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime } = useVagasStore();
+  const { alertas, updateAlerta, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime, getVaga } = useVagasStore();
   const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length;
   const mainRef = useRef<HTMLDivElement>(null);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
@@ -187,6 +187,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     // Explicit overrides based on path requirements and sidebar hierarchy
     if (path === '/vagas') {
       breadcrumbs.push({ label: 'Controle de Vagas', path: '/vagas' });
+      return breadcrumbs;
+    }
+
+    if (pathnames[0] === 'vagas' && pathnames.length === 2) {
+      const vagaId = pathnames[1];
+      const vaga = getVaga(vagaId);
+      breadcrumbs.push({ label: 'Controle de Vagas', path: '/vagas' });
+      breadcrumbs.push({ label: vaga?.cargo || vagaId, path: path });
       return breadcrumbs;
     }
 

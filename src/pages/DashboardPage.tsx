@@ -427,10 +427,10 @@ export default function DashboardPage() {
     return months.map(({ month, abertas, concluidas }) => ({ month, abertas, concluidas }));
   }, [allVagas]);
 
-  const tipoVagaData = useMemo(() => {
+  const motivoVagaData = useMemo(() => {
     const map = new Map<string, number>();
     filteredVagas.forEach(v => {
-      const key = ((v as any).tipo_vaga as string | undefined)?.trim() || 'Não informado';
+      const key = ((v as any).motivo as string | undefined)?.trim() || 'Não informado';
       map.set(key, (map.get(key) || 0) + 1);
     });
     return Array.from(map.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
@@ -1011,12 +1011,12 @@ export default function DashboardPage() {
                 <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(167,139,250,0.18)', boxShadow: '0 0 12px rgba(167,139,250,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Briefcase style={{ width: '15px', height: '15px', color: '#a78bfa' }} />
                 </div>
-                <span style={{ fontSize: '13px', fontWeight: 800, color: t.tx1 }}>Tipo de Vaga</span>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: t.tx1 }}>Motivo da Vaga</span>
               </div>
-              <p style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, marginLeft: '36px' }}>Distribuição por tipo no filtro ativo</p>
+              <p style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, marginLeft: '36px' }}>Distribuição por motivo no filtro ativo</p>
             </div>
             <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              {tipoVagaData.length === 0 ? (
+              {motivoVagaData.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', gap: '8px' }}>
                   <Briefcase style={{ width: '32px', height: '32px', color: t.tx4 }} />
                   <p style={{ fontSize: '12px', color: t.tx3, fontWeight: 500 }}>Nenhum dado disponível</p>
@@ -1025,8 +1025,8 @@ export default function DashboardPage() {
                 <>
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
-                      <Pie data={tipoVagaData} cx="50%" cy="50%" innerRadius={55} outerRadius={82} paddingAngle={3} dataKey="value">
-                        {tipoVagaData.map((_, idx) => (
+                      <Pie data={motivoVagaData} cx="50%" cy="50%" innerRadius={55} outerRadius={82} paddingAngle={3} dataKey="value">
+                        {motivoVagaData.map((_, idx) => (
                           <Cell key={`cd-${idx}`} fill={t.donutColors[idx % t.donutColors.length]}
                             style={isDark ? { filter: `drop-shadow(0 0 6px ${t.donutColors[idx % t.donutColors.length]}80)` } : undefined} />
                         ))}
@@ -1035,7 +1035,7 @@ export default function DashboardPage() {
                     </PieChart>
                   </ResponsiveContainer>
                   <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-                    {tipoVagaData.slice(0, 5).map((item, idx) => {
+                    {motivoVagaData.slice(0, 5).map((item, idx) => {
                       const pct = totalVagas > 0 ? Math.round((item.value / totalVagas) * 100) : 0;
                       const color = t.donutColors[idx % t.donutColors.length];
                       return (
@@ -1047,8 +1047,8 @@ export default function DashboardPage() {
                         </div>
                       );
                     })}
-                    {tipoVagaData.length > 5 && (
-                      <p style={{ fontSize: '9px', color: t.tx3, fontWeight: 500, textAlign: 'center', paddingTop: '4px' }}>+{tipoVagaData.length - 5} outros tipos</p>
+                    {motivoVagaData.length > 5 && (
+                      <p style={{ fontSize: '9px', color: t.tx3, fontWeight: 500, textAlign: 'center', paddingTop: '4px' }}>+{motivoVagaData.length - 5} outros motivos</p>
                     )}
                   </div>
                 </>

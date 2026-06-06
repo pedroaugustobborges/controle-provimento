@@ -2112,9 +2112,18 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">{(b as any).unidade || '—'}</TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[10px] font-bold">
-                          {String((b as any).status_calculado || (b as any).status || '').toUpperCase()}
-                        </Badge>
+                        {(() => {
+                          const st = String((b as any).status_calculado || (b as any).status || '');
+                          const isConvocado = st.toLowerCase().includes('convocado') || st === 'Convocado(a)';
+                          return (
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] font-bold ${isConvocado ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ''}`}
+                            >
+                              {isConvocado ? 'Convocado(a)' : st}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

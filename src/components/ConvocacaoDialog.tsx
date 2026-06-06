@@ -288,17 +288,20 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit, i
       const bancoId = formData.banco_id || (formData as any).banco_relacionado;
       if (bancoId) {
         updateBancoAsync(bancoId, {
-          status: 'CONVOCADO',
+          status: 'Convocado(a)',
+          status_calculado: 'Convocado(a)',
           data_convocacao: formData.data_convocacao,
           unidade_convocacao: formData.unidade || vaga?.unidade,
         });
       }
 
       if (vaga) {
+        const fromBanco = !!(formData.banco_id || (formData as any).banco_relacionado);
         updateVagaAsync(vaga.id, {
           status: 'EM ANDAMENTO',
           etapa: 'Convocação' as any,
           status_processo: 'Em Andamento' as any,
+          ...(fromBanco && { tratativa: 'Aproveitamento de Banco de Talentos' as any }),
         });
       }
     }

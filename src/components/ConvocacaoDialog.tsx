@@ -295,7 +295,11 @@ export function ConvocacaoDialog({ open, onOpenChange, vaga, convocacaoToEdit, i
       }
 
       if (vaga) {
-        updateVagaAsync(vaga.id, { status: 'CONVOCAÇÕES' });
+        updateVagaAsync(vaga.id, {
+          status: 'EM ANDAMENTO',
+          etapa: 'Convocação' as any,
+          status_processo: 'Em Andamento' as any,
+        });
       }
     }
 

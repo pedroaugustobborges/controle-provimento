@@ -1,4 +1,31 @@
 export type TipoVaga = 'PCD' | 'Comum' | 'substituicao' | 'aumento' | 'lideranca' | 'movimentacao_interna' | 'quadro' | 'banco_talentos' | 'edital';
+
+export type TratativaVaga =
+  | 'Aproveitamento de Banco de Talentos'
+  | 'Publicação de Edital'
+  | 'Movimentação Interna'
+  | 'Vaga de Liderança';
+
+export type EtapaVaga =
+  | 'Divulgação de Vaga'
+  | 'Triagem'
+  | 'Avaliação Específica'
+  | 'Avaliação Curricular'
+  | 'Entrevista'
+  | 'Convocação'
+  | 'Documentação'
+  | 'Elaboração do Edital'
+  | 'Validação do Edital'
+  | 'Publicação do Edital'
+  | 'Enviado para Formalização'
+  | 'Admissão Efetivada';
+
+export type StatusProcesso =
+  | 'Solicitada'
+  | 'Em Andamento'
+  | 'Cancelada'
+  | 'Suspensa'
+  | 'Concluída';
 export type StatusVaga =
   | 'CONCLUÍDAS'
   | 'CONCLUÍDA'
@@ -229,6 +256,11 @@ export interface Vaga {
   is_pcd?: boolean;
   is_teia?: boolean;
   motivo?: string;
+
+  // Workflow fields
+  tratativa?: TratativaVaga;
+  etapa?: EtapaVaga;
+  status_processo?: StatusProcesso;
 }
 
 export const UNIDADES_GOIANIA = [

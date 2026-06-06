@@ -1910,7 +1910,7 @@ export default function VagasPage() {
                             )}
                           </TableCell>
                           <TableCell className="text-center py-3 px-4 h-14">
-                            <StatusBadge status={v.status || v.status_geral} />
+                            <StatusBadge status={(v.status_processo || v.status || v.status_geral) as any} />
                           </TableCell>
                           <TableCell className="text-center font-bold text-slate-700 py-3 px-2 h-14">
                             {v.numero_vagas || v.quantidade || 0}

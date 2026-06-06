@@ -13,12 +13,13 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS, isTeiaUnit } from '@/types/vaga';
-import { 
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS, isTeiaUnit, TratativaVaga, EtapaVaga, StatusProcesso } from '@/types/vaga';
+import {
   ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus,
   FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check,
   Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
-  AlertTriangle, ArrowRightCircle, ExternalLink, Edit, Copy
+  AlertTriangle, ArrowRightCircle, ExternalLink, Edit, Copy, ArrowLeftRight, Crown,
+  Target, ChevronRight
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -52,6 +53,51 @@ import {
 } from "@/components/ui/dialog";
 
 
+// ── Workflow constants ─────────────────────────────────────────────────────
+const TRATATIVAS: TratativaVaga[] = [
+  'Aproveitamento de Banco de Talentos',
+  'Publicação de Edital',
+  'Movimentação Interna',
+  'Vaga de Liderança',
+];
+
+const ETAPAS: EtapaVaga[] = [
+  'Divulgação de Vaga',
+  'Triagem',
+  'Avaliação Específica',
+  'Avaliação Curricular',
+  'Entrevista',
+  'Convocação',
+  'Documentação',
+  'Elaboração do Edital',
+  'Validação do Edital',
+  'Publicação do Edital',
+  'Enviado para Formalização',
+  'Admissão Efetivada',
+];
+
+const STATUS_PROCESSO_CONFIG: Record<StatusProcesso, { dot: string; bg: string; text: string; border: string; iconBg: string }> = {
+  'Solicitada':   { dot: 'bg-slate-400',   bg: 'bg-slate-50',   text: 'text-slate-600',  border: 'border-slate-200', iconBg: 'bg-slate-100' },
+  'Em Andamento': { dot: 'bg-blue-500',    bg: 'bg-blue-50',    text: 'text-blue-700',   border: 'border-blue-200',  iconBg: 'bg-blue-100' },
+  'Cancelada':    { dot: 'bg-red-500',     bg: 'bg-red-50',     text: 'text-red-700',    border: 'border-red-200',   iconBg: 'bg-red-100' },
+  'Suspensa':     { dot: 'bg-amber-500',   bg: 'bg-amber-50',   text: 'text-amber-700',  border: 'border-amber-200', iconBg: 'bg-amber-100' },
+  'Concluída':    { dot: 'bg-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700',border: 'border-emerald-200',iconBg: 'bg-emerald-100' },
+};
+
+function calcSimilarity(vagaCargo: string, bancoCargo: string): number {
+  if (!vagaCargo || !bancoCargo) return 0;
+  const norm = (s: string) =>
+    s.toLowerCase()
+     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+     .replace(/[^a-z0-9\s]/g, ' ')
+     .replace(/\s+/g, ' ').trim();
+  const tokensVaga = norm(vagaCargo).split(' ').filter(t => t.length >= 3);
+  const normBanco  = norm(bancoCargo);
+  if (!tokensVaga.length) return 0;
+  const matches = tokensVaga.filter(t => normBanco.includes(t));
+  return matches.length / tokensVaga.length;
+}
+
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -68,6 +114,7 @@ export default function VagaDetalhePage() {
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('dados');
   
   const [indicators, setIndicators] = useState({
     total_inscritos: 0,
@@ -221,6 +268,53 @@ export default function VagaDetalhePage() {
 
     toast.success('Status atualizado');
     setPendingStatus(null);
+  };
+
+  const handleTratativaChange = async (tratativa: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const currentSP = vaga.status_processo;
+    await updateVagaAsync(vaga.id, {
+      tratativa: (tratativa || undefined) as TratativaVaga | undefined,
+      status_processo: (currentSP === 'Concluída' || currentSP === 'Cancelada') ? currentSP : 'Em Andamento',
+      historico: [...(vaga.historico || []), {
+        id: `h-${Date.now()}`,
+        data: today,
+        descricao: `Tratativa definida: ${tratativa || 'Não definida'}`,
+        usuario: currentUser?.nome_completo || 'Sistema',
+      }],
+    });
+  };
+
+  const handleEtapaChange = async (etapa: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const isAdmissao = etapa === 'Admissão Efetivada';
+    const currentSP = vaga.status_processo;
+    const novoStatus: StatusProcesso = isAdmissao
+      ? 'Concluída'
+      : (currentSP === 'Concluída' || currentSP === 'Cancelada') ? currentSP : 'Em Andamento';
+    await updateVagaAsync(vaga.id, {
+      etapa: (etapa || undefined) as EtapaVaga | undefined,
+      status_processo: novoStatus,
+      historico: [...(vaga.historico || []), {
+        id: `h-${Date.now()}`,
+        data: today,
+        descricao: `Etapa: ${etapa || 'Não definida'}${isAdmissao ? ' → Status: Concluída' : ''}`,
+        usuario: currentUser?.nome_completo || 'Sistema',
+      }],
+    });
+  };
+
+  const handleStatusProcessoChange = async (sp: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    await updateVagaAsync(vaga.id, {
+      status_processo: sp as StatusProcesso,
+      historico: [...(vaga.historico || []), {
+        id: `h-${Date.now()}`,
+        data: today,
+        descricao: `Status do processo: ${sp}`,
+        usuario: currentUser?.nome_completo || 'Sistema',
+      }],
+    });
   };
 
   const handleRequestUpdate = (recordId: string, description: string) => {
@@ -483,28 +577,40 @@ export default function VagaDetalhePage() {
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-          <h3 className="font-bold text-slate-800">Ações Operacionais Rápidas</h3>
+          <h3 className="font-bold text-slate-800">Tratativas</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button 
-            onClick={handleQuickConvocacao}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Aproveitamento do Banco de Talentos */}
+          <Button
+            onClick={async () => {
+              setActiveTab('banco');
+              if (vaga.tratativa !== 'Aproveitamento de Banco de Talentos') {
+                await handleTratativaChange('Aproveitamento de Banco de Talentos');
+              }
+            }}
             className="h-auto py-4 px-6 justify-between border-2 border-primary/10 hover:border-primary/30 hover:bg-primary/5 bg-white text-primary group transition-all"
             variant="outline"
           >
             <div className="flex items-center gap-4">
               <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
-                <UserCheck className="h-6 w-6" />
+                <Users className="h-6 w-6" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-base">Realizar convocação</p>
-                <p className="text-xs text-slate-500 font-medium">Usar banco de talentos vinculado para esta vaga</p>
+                <p className="font-bold text-base">Aproveitamento do Banco de Talentos</p>
+                <p className="text-xs text-slate-500 font-medium">Ver candidatos com perfil similar a esta vaga</p>
               </div>
             </div>
             <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
           </Button>
 
-          <Button 
-            onClick={handlePublicarEdital}
+          {/* Publicação de Edital */}
+          <Button
+            onClick={async () => {
+              if (vaga.tratativa !== 'Publicação de Edital') {
+                await handleTratativaChange('Publicação de Edital');
+              }
+              handlePublicarEdital();
+            }}
             className="h-auto py-4 px-6 justify-between border-2 border-rose-100 hover:border-rose-200 hover:bg-rose-50 bg-white text-rose-600 group transition-all"
             variant="outline"
           >
@@ -513,27 +619,56 @@ export default function VagaDetalhePage() {
                 <Send className="h-6 w-6" />
               </div>
               <div className="text-left">
-                <p className="font-bold text-base">Enviar para Fila de Editais</p>
+                <p className="font-bold text-base">Publicação de Edital</p>
                 <p className="text-xs text-slate-500 font-medium">Encaminhar para fila de novos editais/publicações</p>
               </div>
             </div>
             <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
           </Button>
+
+          {/* Movimentação Interna — em breve */}
+          <button
+            disabled
+            className="h-auto py-4 px-6 flex items-center justify-between border-2 border-purple-100 bg-white rounded-md text-purple-400 opacity-60 cursor-not-allowed transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-purple-50 p-2 rounded-lg">
+                <ArrowLeftRight className="h-6 w-6 text-purple-400" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-base">Movimentação Interna</p>
+                <p className="text-xs text-slate-400 font-medium">Transferência entre unidades da rede</p>
+              </div>
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-500 px-2 py-0.5 rounded-full shrink-0">Em breve</span>
+          </button>
+
+          {/* Vaga de Liderança — em breve */}
+          <button
+            disabled
+            className="h-auto py-4 px-6 flex items-center justify-between border-2 border-amber-100 bg-white rounded-md text-amber-400 opacity-60 cursor-not-allowed transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-50 p-2 rounded-lg">
+                <Crown className="h-6 w-6 text-amber-400" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-base">Vaga de Liderança</p>
+                <p className="text-xs text-slate-400 font-medium">Processo seletivo para cargos de gestão</p>
+              </div>
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-500 px-2 py-0.5 rounded-full shrink-0">Em breve</span>
+          </button>
         </div>
       </div>
 
-      <Tabs defaultValue="dados" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>
           <TabsTrigger value="edital" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Edital e Fila</TabsTrigger>
           <TabsTrigger value="acompanhamento" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Acompanhamento</TabsTrigger>
-          <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6 gap-2">
+          <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">
             Banco de Talentos
-            {banco?.quantidade_banco ? (
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black bg-primary text-white data-[state=active]:bg-primary">
-                {banco.quantidade_banco}
-              </span>
-            ) : null}
           </TabsTrigger>
           <TabsTrigger value="convocacoes" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Convocações</TabsTrigger>
           <TabsTrigger value="validacao" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Validação</TabsTrigger>
@@ -646,12 +781,14 @@ export default function VagaDetalhePage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b">
                   <Info className="h-4 w-4 text-slate-400" />
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Informações Complementares</h4>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+
+                {/* Import metadata */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="space-y-1">
                     <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Origem Importação</label>
                     <p className="text-sm font-medium text-slate-600">{vaga.origem_importacao || 'Lançamento Manual'}</p>
@@ -661,87 +798,136 @@ export default function VagaDetalhePage() {
                     <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Lote de Importação</label>
                     <p className="text-sm font-mono text-slate-600">{vaga.lote_importacao || '—'}</p>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Status Atual</label>
-                    <div className="mt-1">
-                      <Select 
-                        value={(vaga.status || vaga.status_geral) as string} 
-                        onValueChange={handleStatusChange}
-                        disabled={!canEdit && !isAssistente}
-                      >
-                        <SelectTrigger className={`h-9 bg-white border-slate-200 ${getStatusColor(vaga.status || (vaga.status_geral as any))}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {isTeiaUnit(vaga.unidade) ? (
-                            <>
-                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b mb-1">Status TEIA</div>
-                              {([
-                                { value: 'EM EDITAL', label: 'Processo Seletivo' },
-                                { value: 'DOCUMENTAÇÃO', label: 'Documentação' },
-                                { value: 'ADMISSÃO ENVIADA', label: 'Admissão Enviada' },
-                                { value: 'CONCLUÍDA', label: 'Concluída' },
-                                { value: 'MOVIMENTAÇÃO INTERNA', label: 'Movimentação Interna' },
-                                { value: 'ADMISSÃO', label: 'Admissão' },
-                                { value: 'VAGA DE LIDERANÇA', label: 'Vaga de Liderança' },
-                                { value: 'SUSPENSA', label: 'Suspensa' },
-                                { value: 'CANCELADAS', label: 'Cancelada' },
-                                { value: 'SEM STATUS', label: 'Sem Status' },
-                              ] as { value: StatusVaga; label: string }[]).map(({ value, label }) => (
-                                <SelectItem key={value} value={value} className="focus:bg-slate-50">
-                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(value)} border border-current opacity-60`} />
-                                  {label}
-                                </SelectItem>
-                              ))}
-                            </>
-                          ) : (
-                            <>
-                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b mb-1">Fluxo Inicial</div>
-                              {['aberta', 'em_triagem', 'entrevista'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                                  {STATUS_LABELS[k as StatusVaga]}
-                                </SelectItem>
-                              ))}
-                              
-                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Processo Seletivo</div>
-                              {['publicado_edital', 'em_edital', 'realizar_convocacao'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                                  {STATUS_LABELS[k as StatusVaga]}
-                                </SelectItem>
-                              ))}
-                              
-                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Documentação e Admissão</div>
-                              {['documentacao', 'documentacao_ok', 'documentacao_pendente', 'casos_ok', 'admissao', 'admissao_enviada', 'admissao_efetivada'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                                  {STATUS_LABELS[k as StatusVaga]}
-                                </SelectItem>
-                              ))}
-                              
-                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Especiais / Outros</div>
-                              {['movimentacao_interna', 'vaga_lideranca', 'aguardando_unidade'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                                  {STATUS_LABELS[k as StatusVaga]}
-                                </SelectItem>
-                              ))}
-                              
-                              <div className="p-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b my-1">Finalização</div>
-                              {['suspensa', 'cancelada', 'finalizada', 'encerrada'].map(k => (
-                                <SelectItem key={k} value={k} className="focus:bg-slate-50">
-                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(k as any)} border border-current opacity-60`} />
-                                  {STATUS_LABELS[k as StatusVaga]}
-                                </SelectItem>
-                              ))}
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
                 </div>
+
+                {/* ── Fluxo do Processo ──────────────────────────────────── */}
+                {(() => {
+                  const sp: StatusProcesso = vaga.status_processo || 'Solicitada';
+                  const spCfg = STATUS_PROCESSO_CONFIG[sp] ?? STATUS_PROCESSO_CONFIG['Solicitada'];
+                  const canEditFlow = canEdit || isAssistente;
+                  return (
+                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                      {/* Header */}
+                      <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Fluxo do Processo</span>
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${spCfg.bg} ${spCfg.text} ${spCfg.border}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${spCfg.dot}`} />
+                          {sp}
+                        </span>
+                      </div>
+
+                      {/* Three panels */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+
+                        {/* TRATATIVA */}
+                        <div className="p-5 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                              <Target className="h-3.5 w-3.5 text-blue-500" />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tratativa</span>
+                          </div>
+                          {canEditFlow ? (
+                            <Select
+                              value={vaga.tratativa || '__none__'}
+                              onValueChange={v => handleTratativaChange(v === '__none__' ? '' : v)}
+                            >
+                              <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                <SelectValue placeholder="Selecionar..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">
+                                  <span className="text-slate-400">Não definida</span>
+                                </SelectItem>
+                                {TRATATIVAS.map(t => (
+                                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                              {vaga.tratativa || <span className="text-slate-400 italic">Não definida</span>}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* ETAPA */}
+                        <div className="p-5 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0">
+                              <ChevronRight className="h-3.5 w-3.5 text-purple-500" />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Etapa</span>
+                          </div>
+                          {canEditFlow ? (
+                            <Select
+                              value={vaga.etapa || '__none__'}
+                              onValueChange={v => handleEtapaChange(v === '__none__' ? '' : v)}
+                            >
+                              <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                <SelectValue placeholder="Selecionar..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">
+                                  <span className="text-slate-400">Não definida</span>
+                                </SelectItem>
+                                {ETAPAS.map(e => (
+                                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                              {vaga.etapa || <span className="text-slate-400 italic">Não definida</span>}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* STATUS DO PROCESSO */}
+                        <div className="p-5 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-7 h-7 rounded-full ${spCfg.iconBg} border ${spCfg.border} flex items-center justify-center shrink-0`}>
+                              <CheckCircle className={`h-3.5 w-3.5 ${spCfg.text}`} />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status</span>
+                          </div>
+                          {canEditFlow ? (
+                            <Select
+                              value={sp}
+                              onValueChange={handleStatusProcessoChange}
+                            >
+                              <SelectTrigger className={`h-9 text-sm font-bold border ${spCfg.border} ${spCfg.bg} ${spCfg.text}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(Object.keys(STATUS_PROCESSO_CONFIG) as StatusProcesso[]).map(s => {
+                                  const c = STATUS_PROCESSO_CONFIG[s];
+                                  return (
+                                    <SelectItem key={s} value={s}>
+                                      <span className="flex items-center gap-2 font-semibold">
+                                        <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+                                        {s}
+                                      </span>
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border ${spCfg.bg} ${spCfg.text} ${spCfg.border}`}>
+                              <span className={`w-2 h-2 rounded-full ${spCfg.dot}`} />
+                              {sp}
+                            </span>
+                          )}
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="space-y-2">
@@ -778,7 +964,7 @@ export default function VagaDetalhePage() {
         </TabsContent>
         
         <TabsContent value="banco">
-          <BancoTab vaga={vaga} onStartConvocacao={() => setIsConvocacaoDialogOpen(true)} />
+          <AproveitamentoBancoTab vaga={vaga} />
         </TabsContent>
 
         <TabsContent value="convocacoes">
@@ -1797,97 +1983,167 @@ function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any })
   );
 }
 
-function BancoTab({ vaga, onStartConvocacao }: { vaga: any; onStartConvocacao: () => void }) {
-  const { getBancoByVaga } = useVagasStore();
-  const banco = getBancoByVaga(vaga.id);
-  const navigate = useNavigate();
+function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
+  const { bancos } = useVagasStore();
+  const [search, setSearch] = useState('');
+  const [convocacaoInitial, setConvocacaoInitial] = useState<any>(null);
+  const [isConvocacaoOpen, setIsConvocacaoOpen] = useState(false);
 
-  if (!banco) {
-    return (
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-          <div className="bg-slate-50 p-4 rounded-full mb-4">
-            <XCircle className="h-10 w-10 text-slate-300" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-700">Sem Banco de Talentos</h3>
-          <p className="text-sm text-slate-500 max-w-xs mt-1">Não foi encontrado um banco de talentos válido para este cargo e unidade.</p>
-          <Button 
-            variant="outline" 
-            className="mt-6 gap-2"
-            onClick={() => navigate(`/banco-talentos?search=${encodeURIComponent(vaga.cargo)}&vagaId=${vaga.id}`)}
-          >
-            Consultar Outros Bancos
-          </Button>
-        </CardContent>
-      </Card>
+  const withScores = useMemo(() => {
+    return bancos
+      .map(b => ({ ...b, _score: calcSimilarity(vaga.cargo, (b as any).cargo || '') }))
+      .filter(b => b._score > 0)
+      .sort((a, b) => {
+        if (Math.abs(b._score - a._score) > 0.01) return b._score - a._score;
+        return (Number((a as any).classificacao) || 9999) - (Number((b as any).classificacao) || 9999);
+      })
+      .slice(0, 150);
+  }, [bancos, vaga.cargo]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return withScores;
+    const s = search.toLowerCase();
+    return withScores.filter(b =>
+      ((b as any).nome || '').toLowerCase().includes(s) ||
+      ((b as any).cargo || '').toLowerCase().includes(s) ||
+      ((b as any).unidade || '').toLowerCase().includes(s)
     );
-  }
+  }, [withScores, search]);
 
-  const isValido = banco.status === 'valido' || banco.status === 'prorrogado';
+  const handleConvocar = (candidato: any) => {
+    setConvocacaoInitial({
+      nome_candidato: candidato.nome || '',
+      vaga_id: vaga.id,
+      cargo: vaga.cargo,
+      unidade: vaga.unidade,
+      secao: vaga.secao || '',
+      requisicao: vaga.requisicao || vaga.numero_requisicao || '',
+      edital_relacionado: candidato.numero_edital || '',
+      banco_relacionado: candidato.id,
+      classificacao: Number(candidato.classificacao) || 1,
+    });
+    setIsConvocacaoOpen(true);
+  };
 
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="pt-6 space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isValido ? 'bg-green-50' : 'bg-red-50'}`}>
-              <CheckCircle2 className={`h-6 w-6 ${isValido ? 'text-green-600' : 'text-red-600'}`} />
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-700">Candidatos com Perfil Similar</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Ordenados por similaridade com <span className="font-semibold text-slate-700">"{vaga.cargo}"</span>
+          </p>
+        </div>
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <Input
+            className="pl-8 h-8 text-sm bg-white border-slate-200"
+            placeholder="Buscar nome, cargo, unidade..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Count */}
+      <p className="text-xs text-slate-500">
+        <span className="font-bold text-slate-700">{filtered.length}</span> candidato(s) encontrado(s)
+      </p>
+
+      {filtered.length === 0 ? (
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="py-12 text-center">
+            <div className="bg-slate-50 p-4 rounded-full w-fit mx-auto mb-4">
+              <Users className="h-10 w-10 text-slate-300" />
             </div>
-            <div>
-              <h3 className="font-bold text-slate-800">{banco.numero_edital}</h3>
-              <p className="text-xs text-slate-500 font-medium">Validade: {formatDate(banco.nova_data_validade || banco.data_validade)}</p>
-            </div>
+            <p className="text-slate-500 font-medium">Nenhum candidato com perfil similar encontrado.</p>
+            <p className="text-xs text-slate-400 mt-1">Verifique se os dados foram importados no Banco de Talentos.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-slate-50 z-10">
+                <TableRow>
+                  <TableHead className="w-16 text-center">Sim.</TableHead>
+                  <TableHead>Candidato</TableHead>
+                  <TableHead>Cargo (Banco)</TableHead>
+                  <TableHead className="text-center w-16">Class.</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-right w-24">Ação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((b) => {
+                  const score = (b as any)._score as number;
+                  const scoreLabel = `${Math.round(score * 100)}%`;
+                  const scoreStyle =
+                    score >= 0.8 ? 'bg-green-100 text-green-700' :
+                    score >= 0.5 ? 'bg-amber-100 text-amber-700' :
+                                   'bg-slate-100 text-slate-600';
+                  return (
+                    <TableRow key={(b as any).id} className="hover:bg-slate-50 transition-colors">
+                      <TableCell className="text-center">
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-black ${scoreStyle}`}>
+                          {scoreLabel}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-semibold text-sm text-slate-800">{(b as any).nome || '—'}</p>
+                          {(b as any).cpf && (
+                            <p className="text-[10px] text-slate-400 font-mono">{(b as any).cpf}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-xs text-slate-600 max-w-[220px] truncate" title={(b as any).cargo}>
+                          {(b as any).cargo}
+                        </p>
+                        {(b as any).numero_edital && (
+                          <p className="text-[10px] text-slate-400">{(b as any).numero_edital}</p>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-slate-700">
+                        {(b as any).classificacao ? `${(b as any).classificacao}º` : '—'}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">{(b as any).unidade || '—'}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-[10px] font-bold">
+                          {String((b as any).status_calculado || (b as any).status || '').toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs font-bold gap-1.5 bg-primary"
+                          onClick={() => handleConvocar(b)}
+                        >
+                          <Send className="h-3 w-3" />
+                          Convocar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
-          <Badge className={`${isValido ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-bold`}>
-            {String(banco.status || 'SEM STATUS').toUpperCase()}
-          </Badge>
-        </div>
+        </Card>
+      )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="space-y-1">
-            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Data de Abertura</label>
-            <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_abertura_edital)}</p>
-          </div>
-          <div className="space-y-1">
-            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Validade Original</label>
-            <p className="text-sm font-semibold text-slate-700">{formatDate(banco.data_validade)}</p>
-          </div>
-          <div className="space-y-1">
-            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Prorrogado?</label>
-            <p className="text-sm font-semibold text-slate-700">{banco.is_prorrogado ? 'Sim' : 'Não'}</p>
-          </div>
-          <div className="space-y-1">
-            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Candidatos no Banco</label>
-            <p className="text-sm font-bold text-primary">{banco.quantidade_banco || 'Não informado'}</p>
-          </div>
-        </div>
-
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-          <label className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1 block">Observações do Banco</label>
-          <p className="text-sm text-slate-600">{banco.observacoes || 'Sem observações.'}</p>
-        </div>
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Button
-            variant="outline"
-            className="text-xs font-bold uppercase tracking-wider gap-2"
-            onClick={() => navigate(`/banco-talentos?search=${encodeURIComponent(vaga.cargo)}&vagaId=${vaga.id}`)}
-          >
-            <Users className="h-3.5 w-3.5" />
-            Ver Candidatos no Banco
-            {banco?.quantidade_banco ? (
-              <span className="ml-0.5 bg-slate-100 text-slate-600 rounded-full px-1.5 py-0.5 text-[10px] font-black">
-                {banco.quantidade_banco}
-              </span>
-            ) : null}
-          </Button>
-          <Button onClick={onStartConvocacao} className="text-xs font-bold uppercase tracking-wider bg-primary gap-2">
-            <Send className="h-3.5 w-3.5" />
-            Realizar Convocação
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      {isConvocacaoOpen && (
+        <ConvocacaoDialog
+          open={isConvocacaoOpen}
+          onOpenChange={setIsConvocacaoOpen}
+          vaga={vaga}
+          initialData={convocacaoInitial}
+        />
+      )}
+    </div>
   );
 }
 

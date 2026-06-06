@@ -455,7 +455,8 @@ export const useVagasStore = create<VagasState>()(
             'analista_responsavel','assistentes','nome_substituido','data_abertura','data_recebimento','data_envio_edital','data_publicacao',
             'data_homologacao','data_convocacao','secao','numero_edital','numero_processo_seletivo','etapa','publicacao','prioridade',
             'mes_referencia','origem','unidade_trabalho','unidades_banco_talentos','is_pcd','is_teia','status_fluxo_edital',
-            'observacoes_unidade','observacoes_edital','observacoes_validacao','arquivo_edital','historico','distribuicao_vagas','url_reachr'
+            'observacoes_unidade','observacoes_edital','observacoes_validacao','arquivo_edital','historico','distribuicao_vagas','url_reachr',
+            'tratativa','status_processo'
           ]);
 
           const payloads = newVagas.map((v: any) => {

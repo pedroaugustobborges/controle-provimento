@@ -158,7 +158,7 @@ const categoriaStatusCache = new Map<string, string>();
 export function getCategoriaStatus(row: any, includeConvocacaoFields: boolean = false): keyof typeof CATEGORIAS_STATUS | 'sem_classificacao' {
   if (!row) return 'sem_classificacao';
   
-  const status = typeof row === 'string' ? row : (row.status || row.status_geral);
+  const status = typeof row === 'string' ? row : (row.status_processo || row.status || row.status_geral);
   
   if (!status || status === '' || status === 'nan' || status === 'null' || status === 'undefined' || String(status).trim() === '') {
     return 'sem_classificacao';

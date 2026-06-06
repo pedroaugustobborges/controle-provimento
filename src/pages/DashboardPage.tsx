@@ -421,8 +421,11 @@ export default function DashboardPage() {
     }
     allVagas.forEach(v => {
       if (v.data_abertura) { const e = months.find(m => m.key === (v.data_abertura as string).slice(0, 7)); if (e) e.abertas++; }
-      const dc = (v as any).data_conclusao as string | undefined;
-      if (dc) { const e = months.find(m => m.key === dc.slice(0, 7)); if (e) e.concluidas++; }
+      if (getCategoriaStatus(v) === 'concluidas') {
+        const lastHist = v.historico && v.historico.length > 0 ? v.historico[v.historico.length - 1]?.data : undefined;
+        const dc = lastHist || (v as any).updated_at || (v as any).data_homologacao;
+        if (dc) { const e = months.find(m => m.key === (dc as string).slice(0, 7)); if (e) e.concluidas++; }
+      }
     });
     return months.map(({ month, abertas, concluidas }) => ({ month, abertas, concluidas }));
   }, [allVagas]);

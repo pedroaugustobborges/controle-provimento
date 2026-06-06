@@ -513,7 +513,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {children}
             </div>
           </main>
-          <AgieChat />
+          {/* <AgieChat /> */}
           <InactivityLogout />
         </div>
       </div>

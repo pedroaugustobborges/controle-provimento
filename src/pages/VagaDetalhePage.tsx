@@ -1951,6 +1951,7 @@ function ValidacaoTab({ vagaId }: { vagaId: string; validacao?: any }) {
 function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
   const { bancos } = useVagasStore();
   const [search, setSearch] = useState('');
+  const [showFullBanco, setShowFullBanco] = useState(false);
   const [convocacaoInitial, setConvocacaoInitial] = useState<any>(null);
   const [isConvocacaoOpen, setIsConvocacaoOpen] = useState(false);
 
@@ -1965,15 +1966,29 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
       .slice(0, 150);
   }, [bancos, vaga.cargo]);
 
+  const hasMatches = withScores.length > 0;
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return withScores;
-    const s = search.toLowerCase();
+    const s = search.trim().toLowerCase();
+    if (!hasMatches || showFullBanco) {
+      // Full banco search mode
+      const pool = bancos.map(b => ({ ...b, _score: 0 as number }));
+      const sorted = pool.sort((a, b) => (Number((a as any).classificacao) || 9999) - (Number((b as any).classificacao) || 9999));
+      if (!s) return sorted.slice(0, 150);
+      return sorted.filter(b =>
+        ((b as any).nome || '').toLowerCase().includes(s) ||
+        ((b as any).cargo || '').toLowerCase().includes(s) ||
+        ((b as any).unidade || '').toLowerCase().includes(s)
+      ).slice(0, 150);
+    }
+    // Similarity mode
+    if (!s) return withScores;
     return withScores.filter(b =>
       ((b as any).nome || '').toLowerCase().includes(s) ||
       ((b as any).cargo || '').toLowerCase().includes(s) ||
       ((b as any).unidade || '').toLowerCase().includes(s)
     );
-  }, [withScores, search]);
+  }, [hasMatches, showFullBanco, withScores, bancos, search]);
 
   const handleConvocar = (candidato: any) => {
     setConvocacaoInitial({
@@ -1995,9 +2010,13 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-sm font-bold text-slate-700">Candidatos com Perfil Similar</h3>
+          <h3 className="text-sm font-bold text-slate-700">
+            {showFullBanco ? 'Banco de Talentos — Busca Manual' : 'Candidatos com Perfil Similar'}
+          </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Ordenados por similaridade com <span className="font-semibold text-slate-700">"{vaga.cargo}"</span>
+            {showFullBanco
+              ? 'Exibindo todos os candidatos. Use a busca para filtrar.'
+              : <>Ordenados por similaridade com <span className="font-semibold text-slate-700">"{vaga.cargo}"</span></>}
           </p>
         </div>
         <div className="relative flex-1 max-w-xs">
@@ -2016,14 +2035,30 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
         <span className="font-bold text-slate-700">{filtered.length}</span> candidato(s) encontrado(s)
       </p>
 
-      {filtered.length === 0 ? (
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="py-12 text-center">
-            <div className="bg-slate-50 p-4 rounded-full w-fit mx-auto mb-4">
-              <Users className="h-10 w-10 text-slate-300" />
+      {!hasMatches && !showFullBanco ? (
+        <Card className="border-amber-100 bg-amber-50 shadow-sm">
+          <CardContent className="py-10 text-center space-y-4">
+            <div className="bg-amber-100 p-4 rounded-full w-fit mx-auto">
+              <Users className="h-10 w-10 text-amber-400" />
             </div>
-            <p className="text-slate-500 font-medium">Nenhum candidato com perfil similar encontrado.</p>
-            <p className="text-xs text-slate-400 mt-1">Verifique se os dados foram importados no Banco de Talentos.</p>
+            <div>
+              <p className="text-amber-800 font-semibold">Nenhum candidato com perfil similar encontrado para <span className="font-bold">"{vaga.cargo}"</span>.</p>
+              <p className="text-xs text-amber-600 mt-1">Não foi encontrada correspondência automática com os cargos do banco de talentos.</p>
+            </div>
+            <Button
+              onClick={() => setShowFullBanco(true)}
+              className="gap-2 bg-primary mx-auto"
+            >
+              <Search className="h-4 w-4" />
+              Buscar manualmente no Banco de Talentos
+            </Button>
+          </CardContent>
+        </Card>
+      ) : filtered.length === 0 ? (
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="py-10 text-center">
+            <p className="text-slate-500 font-medium">Nenhum resultado{search.trim() ? ` para "${search}"` : ''}.</p>
+            <p className="text-xs text-slate-400 mt-1">Tente outros termos de busca.</p>
           </CardContent>
         </Card>
       ) : (

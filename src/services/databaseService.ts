@@ -68,6 +68,8 @@ export class DatabaseService {
       'status_fluxo_edital', 'observacoes_unidade', 'observacoes_edital',
       'observacoes_validacao', 'validado_por', 'data_validacao', 'arquivo_edital',
       'cargo_validado', 'carga_horaria_validada', 'salario_validado', 'historico',
+      // Process workflow columns
+      'tratativa', 'status_processo',
     ],
     banco_candidatos: [
       'nome', 'cargo', 'cargo_normalizado', 'unidade', 'status', 'numero_edital',

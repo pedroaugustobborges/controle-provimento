@@ -603,28 +603,22 @@ export default function VagaDetalhePage() {
             <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
           </Button>
 
-          {/* Publicação de Edital */}
-          <Button
-            onClick={async () => {
-              if (vaga.tratativa !== 'Publicação de Edital') {
-                await handleTratativaChange('Publicação de Edital');
-              }
-              handlePublicarEdital();
-            }}
-            className="h-auto py-4 px-6 justify-between border-2 border-rose-100 hover:border-rose-200 hover:bg-rose-50 bg-white text-rose-600 group transition-all"
-            variant="outline"
+          {/* Publicação de Edital — em breve */}
+          <button
+            disabled
+            className="h-auto py-4 px-6 flex items-center justify-between border-2 border-rose-100 bg-white rounded-md text-rose-400 opacity-60 cursor-not-allowed transition-all"
           >
             <div className="flex items-center gap-4">
-              <div className="bg-rose-100 p-2 rounded-lg group-hover:bg-rose-200 transition-colors">
-                <Send className="h-6 w-6" />
+              <div className="bg-rose-50 p-2 rounded-lg">
+                <Send className="h-6 w-6 text-rose-400" />
               </div>
               <div className="text-left">
                 <p className="font-bold text-base">Publicação de Edital</p>
-                <p className="text-xs text-slate-500 font-medium">Encaminhar para fila de novos editais/publicações</p>
+                <p className="text-xs text-slate-400 font-medium">Encaminhar para fila de novos editais/publicações</p>
               </div>
             </div>
-            <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-          </Button>
+            <span className="text-[9px] font-black uppercase tracking-wider bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full shrink-0">Em breve</span>
+          </button>
 
           {/* Movimentação Interna — em breve */}
           <button
@@ -665,8 +659,14 @@ export default function VagaDetalhePage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>
-          <TabsTrigger value="edital" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Edital e Fila</TabsTrigger>
-          <TabsTrigger value="acompanhamento" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Acompanhamento</TabsTrigger>
+          <TabsTrigger value="edital" disabled className="font-bold px-6 opacity-50 cursor-not-allowed gap-1.5">
+            Edital e Fila
+            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full">Em breve</span>
+          </TabsTrigger>
+          <TabsTrigger value="acompanhamento" disabled className="font-bold px-6 opacity-50 cursor-not-allowed gap-1.5">
+            Acompanhamento
+            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full">Em breve</span>
+          </TabsTrigger>
           <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">
             Banco de Talentos
           </TabsTrigger>
@@ -1815,168 +1815,133 @@ function EditalTab({ vagaId, edital }: { vagaId: string; edital: any }) {
   );
 }
 
-function ValidacaoTab({ vagaId, validacao }: { vagaId: string; validacao: any }) {
-  const { updateValidacao, addValidacao, addMensagem, getVaga } = useVagasStore();
-  const { currentUser, users } = useAdminStore();
-  const [form, setForm] = useState(validacao || {
-    id: `v-${Date.now()}`, vaga_id: vagaId,
-    precisa_validacao: true,
-    responsavel_validacao: '',
-    tipo_validacao: '',
-    observacao: '',
-    etapa_finalizada: false,
-    status_validacao: 'pendente',
-  });
-
-  const isLocked = form.status_validacao === 'aprovado' || form.status_validacao === 'reprovado';
-
+function ValidacaoTab({ vagaId }: { vagaId: string; validacao?: any }) {
+  const { getVaga, updateVagaAsync } = useVagasStore();
+  const { currentUser } = useAdminStore();
   const vaga = getVaga(vagaId);
+  const [confirming, setConfirming] = useState<'concluida' | 'cancelada' | 'suspensa' | null>(null);
 
-  const save = () => {
-    if (validacao) {
-      updateValidacao(validacao.id, form);
-    } else {
-      addValidacao(form);
-    }
-    toast.success('Validação salva!');
-  };
+  const statusProcesso = vaga?.status_processo;
+  const isAlreadyClosed = statusProcesso === 'Concluída' || statusProcesso === 'Cancelada' || statusProcesso === 'Suspensa';
 
-  const handleDecisao = (decisao: 'aprovado' | 'reprovado') => {
-    const updatedForm = { ...form, status_validacao: decisao, etapa_finalizada: true };
-    setForm(updatedForm);
-    if (validacao) {
-      updateValidacao(validacao.id, updatedForm);
-    } else {
-      addValidacao(updatedForm);
-    }
-
-    const vagaRef = vaga?.requisicao || vaga?.numero_processo || vagaId;
-    const cargoRef = vaga?.cargo || 'não informado';
-    const unidadeRef = vaga?.unidade || 'não informada';
-    const usuario = currentUser?.nome_completo || 'Sistema';
-
-    const mensagemTexto = decisao === 'aprovado'
-      ? `✅ A validação da vaga ${vagaRef} (${cargoRef} - ${unidadeRef}) foi APROVADA por ${usuario}. A vaga pode prosseguir para as próximas etapas.`
-      : `❌ A validação da vaga ${vagaRef} (${cargoRef} - ${unidadeRef}) foi REPROVADA por ${usuario}. Motivo: ${form.observacao || 'Não informado'}. Verifique as pendências antes de reenviar.`;
-
-    addMensagem({
-      id: `msg-val-${Date.now()}`,
-      data: new Date().toISOString(),
-      remetente: 'Agie',
-      conteudo: mensagemTexto,
-      lida: false,
+  const handleAcao = async (acao: 'concluida' | 'cancelada' | 'suspensa') => {
+    if (!vaga) return;
+    const map = { concluida: 'Concluída', cancelada: 'Cancelada', suspensa: 'Suspensa' } as const;
+    const novoStatus = map[acao];
+    const today = new Date().toISOString().split('T')[0];
+    const descMap = {
+      concluida: 'Convocação finalizada — vaga concluída',
+      cancelada: 'Vaga cancelada',
+      suspensa: 'Vaga suspensa',
+    };
+    await updateVagaAsync(vaga.id, {
+      status_processo: novoStatus,
+      historico: [...(vaga.historico || []), {
+        id: `h-${Date.now()}`,
+        data: today,
+        descricao: descMap[acao],
+        usuario: currentUser?.nome_completo || 'Sistema',
+      }],
     });
-
-    toast.success(decisao === 'aprovado'
-      ? 'Validação aprovada! Notificação enviada à AGIE.'
-      : 'Validação reprovada! Notificação enviada à AGIE.');
+    setConfirming(null);
+    toast.success(`Status atualizado para "${novoStatus}"`);
   };
 
-  const getIcon = (val: boolean) => {
-    if (val === true) return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-    return <XCircle className="h-5 w-5 text-red-500" />;
-  };
+  const ACOES = [
+    {
+      key: 'concluida' as const,
+      label: 'Finalizar Convocação da Vaga',
+      desc: 'Marca o processo como concluído com sucesso',
+      icon: <CheckCircle2 className="h-6 w-6" />,
+      color: 'border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50',
+      iconBg: 'bg-emerald-100',
+      badgeBg: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+      confirmColor: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+    },
+    {
+      key: 'cancelada' as const,
+      label: 'Cancelar Vaga',
+      desc: 'Encerra o processo sem preenchimento da vaga',
+      icon: <XCircle className="h-6 w-6" />,
+      color: 'border-red-200 bg-white text-red-700 hover:border-red-300 hover:bg-red-50',
+      iconBg: 'bg-red-100',
+      badgeBg: 'bg-red-50 border-red-200 text-red-700',
+      confirmColor: 'bg-red-600 hover:bg-red-700 text-white',
+    },
+    {
+      key: 'suspensa' as const,
+      label: 'Suspender Vaga',
+      desc: 'Pausa temporariamente o processo seletivo',
+      icon: <AlertCircle className="h-6 w-6" />,
+      color: 'border-amber-200 bg-white text-amber-700 hover:border-amber-300 hover:bg-amber-50',
+      iconBg: 'bg-amber-100',
+      badgeBg: 'bg-amber-50 border-amber-200 text-amber-700',
+      confirmColor: 'bg-amber-600 hover:bg-amber-700 text-white',
+    },
+  ];
 
   return (
     <Card className="border-slate-200 shadow-sm">
-      <CardContent className="pt-6 space-y-6">
-        {isLocked && (
-          <div className={`flex items-center gap-3 p-4 rounded-xl border ${form.status_validacao === 'aprovado' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-            {form.status_validacao === 'aprovado'
-              ? <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
-              : <XCircle className="h-6 w-6 text-red-600 shrink-0" />
-            }
+      <CardHeader className="pb-3 border-b bg-slate-50/50">
+        <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">Encerramento do Processo</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-6 space-y-4">
+        {isAlreadyClosed ? (
+          <div className={`flex items-center gap-3 p-5 rounded-xl border-2 ${
+            statusProcesso === 'Concluída' ? 'bg-emerald-50 border-emerald-200' :
+            statusProcesso === 'Cancelada' ? 'bg-red-50 border-red-200' :
+            'bg-amber-50 border-amber-200'
+          }`}>
+            {statusProcesso === 'Concluída' ? <CheckCircle2 className="h-7 w-7 text-emerald-600 shrink-0" /> :
+             statusProcesso === 'Cancelada' ? <XCircle className="h-7 w-7 text-red-600 shrink-0" /> :
+             <AlertCircle className="h-7 w-7 text-amber-600 shrink-0" />}
             <div>
-              <p className={`font-bold text-sm ${form.status_validacao === 'aprovado' ? 'text-green-700' : 'text-red-700'}`}>
-                {form.status_validacao === 'aprovado' ? 'Validação Aprovada' : 'Validação Reprovada'}
+              <p className={`font-bold text-base ${
+                statusProcesso === 'Concluída' ? 'text-emerald-700' :
+                statusProcesso === 'Cancelada' ? 'text-red-700' : 'text-amber-700'
+              }`}>
+                Vaga {statusProcesso}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">Esta validação já foi finalizada e não pode ser alterada.</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto text-slate-500 hover:text-slate-700 text-xs"
-              onClick={() => setForm({ ...form, status_validacao: 'pendente', etapa_finalizada: false })}
-            >
-              Reabrir
-            </Button>
-          </div>
-        )}
-
-        <fieldset disabled={isLocked} className="space-y-6 disabled:opacity-60 disabled:pointer-events-none">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div
-              className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.precisa_validacao ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
-              onClick={() => !isLocked && setForm({ ...form, precisa_validacao: !form.precisa_validacao })}
-            >
-              <div>
-                <p className="text-sm font-bold text-slate-700">Precisa de Validação?</p>
-                <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Requer aprovação de gestor</p>
-              </div>
-              {getIcon(form.precisa_validacao)}
-            </div>
-            <div
-              className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${form.etapa_finalizada ? 'border-green-200 bg-green-50/30' : 'border-slate-200 bg-slate-50'}`}
-              onClick={() => !isLocked && setForm({ ...form, etapa_finalizada: !form.etapa_finalizada })}
-            >
-              <div>
-                <p className="text-sm font-bold text-slate-700">Etapa Finalizada?</p>
-                <p className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">Conclusão do processo</p>
-              </div>
-              {getIcon(form.etapa_finalizada)}
+              <p className="text-xs text-slate-500 mt-0.5">O processo foi encerrado. Para reabrir, altere o status no painel "Fluxo do Processo".</p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Responsável pela Validação</label>
-              <Select
-                value={form.responsavel_validacao || ''}
-                onValueChange={(val) => setForm({ ...form, responsavel_validacao: val })}
-              >
-                <SelectTrigger className="bg-white border-slate-200">
-                  <SelectValue placeholder="Selecionar responsável..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {(users || []).filter((u: any) => u.status === 'ativo').map((u: any) => (
-                    <SelectItem key={u.id} value={u.nome_completo}>
-                      {u.nome_completo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        ) : (
+          <>
+            <p className="text-sm text-slate-500 pb-2">Selecione a ação de encerramento para esta vaga. Esta operação irá alterar o status do processo.</p>
+            <div className="grid gap-3">
+              {ACOES.map((acao) => (
+                <div key={acao.key}>
+                  {confirming === acao.key ? (
+                    <div className={`flex items-center justify-between p-4 rounded-xl border-2 gap-4 ${acao.color}`}>
+                      <p className="text-sm font-semibold">Confirmar: <span className="font-bold">{acao.label}</span>?</p>
+                      <div className="flex gap-2 shrink-0">
+                        <Button size="sm" variant="outline" onClick={() => setConfirming(null)}>Cancelar</Button>
+                        <Button size="sm" className={`gap-1.5 ${acao.confirmColor}`} onClick={() => handleAcao(acao.key)}>
+                          Confirmar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirming(acao.key)}
+                      className={`w-full flex items-center justify-between py-4 px-5 rounded-xl border-2 transition-all group ${acao.color}`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg ${acao.iconBg}`}>
+                          {acao.icon}
+                        </div>
+                        <div className="text-left">
+                          <p className="font-bold text-base">{acao.label}</p>
+                          <p className="text-xs text-slate-500 font-medium">{acao.desc}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo de Validação</label>
-              <Input value={form.tipo_validacao} onChange={(e) => setForm({ ...form, tipo_validacao: e.target.value })} className="bg-white border-slate-200" placeholder="Ex: Técnica, Comportamental..." />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Observações e Parecer</label>
-            <Textarea value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} className="bg-white border-slate-200 min-h-[120px]" placeholder="Descreva os detalhes da validação..." />
-          </div>
-        </fieldset>
-
-        {!isLocked && (
-          <div className="flex justify-between items-center gap-3">
-            <div className="flex gap-3">
-              <Button
-                onClick={() => handleDecisao('aprovado')}
-                className="bg-green-600 hover:bg-green-700 text-white shadow-md px-6 gap-2"
-              >
-                <CheckCircle2 className="h-4 w-4" /> Aprovar
-              </Button>
-              <Button
-                onClick={() => handleDecisao('reprovado')}
-                variant="destructive"
-                className="shadow-md px-6 gap-2"
-              >
-                <XCircle className="h-4 w-4" /> Reprovar
-              </Button>
-            </div>
-            <Button onClick={save} className="bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 px-8">Salvar Validação</Button>
-          </div>
+          </>
         )}
       </CardContent>
     </Card>

@@ -2157,10 +2157,14 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
 }
 
 function ConvocacoesTab({ vagaId, onNewConvocacao }: { vagaId: string; onNewConvocacao: () => void }) {
-  const { getConvocacoesByVaga } = useVagasStore();
+  const { getConvocacoesByVaga, fetchConvocacoes } = useVagasStore();
   const convocacoes = getConvocacoesByVaga(vagaId);
   const [selectedConvocacao, setSelectedConvocacao] = useState<Convocacao | null>(null);
   const [isDetalhesOpen, setIsDetalhesOpen] = useState(false);
+
+  useEffect(() => {
+    fetchConvocacoes();
+  }, [vagaId]);
 
   return (
     <div className="space-y-4">

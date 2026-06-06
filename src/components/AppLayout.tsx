@@ -209,10 +209,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     }
 
     if (path === '/fila-editais' || path === '/fila-analista-edital') {
-      breadcrumbs.push({ label: 'Publicação de Edital', path: '/fila-editais' });
       if (path === '/fila-editais') {
         breadcrumbs.push({ label: 'Fila de Editais', path: '/fila-editais' });
       } else {
+        breadcrumbs.push({ label: 'Publicação de Edital', path: '/fila-editais' });
         breadcrumbs.push({ label: 'Redação de Edital', path: '/fila-analista-edital' });
       }
       return breadcrumbs;

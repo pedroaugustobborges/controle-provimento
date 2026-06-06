@@ -521,7 +521,7 @@ export default function VagaDetalhePage() {
                 {vaga.status_edital}
               </Badge>
             )}
-            <StatusBadge status={vaga.status || vaga.status_geral || 'aberta'} />
+            <StatusBadge status={(vaga.status_processo || vaga.status || vaga.status_geral || 'aberta') as any} />
           </div>
           {permissions.canDirectEdit() && (
             <Button 
@@ -659,13 +659,13 @@ export default function VagaDetalhePage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="dados" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">Dados da Vaga</TabsTrigger>
-          <TabsTrigger value="edital" disabled className="font-bold px-6 opacity-50 cursor-not-allowed gap-1.5">
+          <TabsTrigger value="edital" disabled className="font-bold px-6 opacity-50 cursor-not-allowed flex-col gap-0">
             Edital e Fila
-            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full">Em breve</span>
+            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full leading-tight">Em breve</span>
           </TabsTrigger>
-          <TabsTrigger value="acompanhamento" disabled className="font-bold px-6 opacity-50 cursor-not-allowed gap-1.5">
+          <TabsTrigger value="acompanhamento" disabled className="font-bold px-6 opacity-50 cursor-not-allowed flex-col gap-0">
             Acompanhamento
-            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full">Em breve</span>
+            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full leading-tight">Em breve</span>
           </TabsTrigger>
           <TabsTrigger value="banco" className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6">
             Banco de Talentos

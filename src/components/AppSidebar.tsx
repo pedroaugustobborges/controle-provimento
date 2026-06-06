@@ -136,6 +136,7 @@ export function AppSidebar() {
         url: "/fila-editais",
         icon: FileText,
         visible: getPermissions("publicacao").canRead,
+        comingSoon: true,
         subMenu: [
           { title: "Fila de Editais", url: "/fila-editais" },
           { title: "Redação do Edital", url: "/fila-analista-edital" },
@@ -146,6 +147,7 @@ export function AppSidebar() {
         url: "/validacao-editais",
         icon: FileCheck,
         visible: getPermissions("validacao").canRead,
+        comingSoon: true,
       },
       {
         title: "Banco de Talentos",
@@ -182,6 +184,7 @@ export function AppSidebar() {
         url: "/alertas-tarefas",
         icon: Bell,
         visible: getPermissions("alertas").canRead,
+        comingSoon: true,
       },
     ],
     [getPermissions],
@@ -349,6 +352,25 @@ export function AppSidebar() {
                 .map((item) => {
                   const active = isParentActive(item);
                   const isOpen = openMenus.includes(item.title);
+
+                  if ((item as any).comingSoon) {
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <div
+                          className="flex items-center gap-3.5 px-3 py-3 rounded-xl opacity-40 cursor-not-allowed select-none"
+                          title="Em breve"
+                        >
+                          <item.icon className="h-5 w-5 shrink-0 text-slate-500" />
+                          {!collapsed && (
+                            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                              <span className="text-[13.5px] font-bold tracking-tight text-slate-300 leading-tight">{item.title}</span>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-cyan-400/70">Em breve</span>
+                            </div>
+                          )}
+                        </div>
+                      </SidebarMenuItem>
+                    );
+                  }
 
                   return (
                     <SidebarMenuItem key={item.title}>

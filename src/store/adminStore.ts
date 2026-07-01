@@ -150,7 +150,22 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             .eq('id', user.id);
           (profile as any).email = user.email;
         }
+        // Fill nome_completo from auth metadata if missing in profile
+        if (!profile.nome_completo) {
+          const metaName = user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.email?.split('@')[0] || '';
+          (profile as any).nome_completo = metaName;
+        }
         set({ currentUser: profile as User });
+      } else {
+        // No profile row yet — build a minimal currentUser from auth metadata
+        const metaName = user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.email?.split('@')[0] || '';
+        set({
+          currentUser: {
+            id: user.id,
+            email: user.email || '',
+            nome_completo: metaName,
+          } as unknown as User,
+        });
       }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);

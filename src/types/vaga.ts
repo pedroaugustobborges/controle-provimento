@@ -256,6 +256,7 @@ export interface Vaga {
   is_pcd?: boolean;
   is_teia?: boolean;
   motivo?: string;
+  nome_requisitante?: string;
 
   // Workflow fields
   tratativa?: TratativaVaga;

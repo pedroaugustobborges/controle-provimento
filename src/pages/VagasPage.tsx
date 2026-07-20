@@ -1784,6 +1784,7 @@ export default function VagasPage() {
                       <TableHead className="min-w-[100px]">Tipo</TableHead>
                       <TableHead className="min-w-[140px]">Unidade</TableHead>
                       <TableHead className="min-w-[120px]">Seção</TableHead>
+                      <TableHead className="min-w-[140px]">Requisitante</TableHead>
                       <TableHead className="min-w-[160px]">Motivo</TableHead>
                       <TableHead className="min-w-[130px] text-center">
                         Status
@@ -1896,6 +1897,18 @@ export default function VagasPage() {
                             title={v.secao}
                           >
                             {v.secao || "-"}
+                          </TableCell>
+                          <TableCell
+                            className="py-3 px-4 h-14 max-w-[140px]"
+                            title={v.nome_requisitante}
+                          >
+                            {v.nome_requisitante ? (
+                              <span className="text-[11px] text-slate-600 font-medium whitespace-normal break-words leading-tight block">
+                                {v.nome_requisitante}
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-300">—</span>
+                            )}
                           </TableCell>
                           <TableCell className="py-3 px-4 h-14 max-w-[160px]">
                             {v.motivo ? (

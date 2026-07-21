@@ -427,6 +427,33 @@ export function normalizeUnitName(name: string): string {
   return result;
 }
 
+/**
+ * Extracts the short prefix from a full unit name.
+ * "HUGOL - HOSPITAL ESTADUAL..." → "HUGOL"
+ * "TEIA GOIÂNIA - ..."          → "TEIA GOIÂNIA"
+ * "HUGOL"                       → "HUGOL"
+ */
+export function extractUnitPrefix(name: string): string {
+  if (!name) return '';
+  const upper = removeAccents(name.toUpperCase().trim().replace(/\s+/g, ' '));
+  const dashIdx = upper.indexOf(' - ');
+  return dashIdx > 0 ? upper.slice(0, dashIdx).trim() : upper;
+}
+
+/**
+ * Returns true if `vagaUnit` (which may be a full name like
+ * "HUGOL - HOSPITAL ESTADUAL...") matches any of the user's allowed units
+ * (which are stored as short prefixes like "HUGOL").
+ */
+export function unitIsAllowed(vagaUnit: string | undefined | null, allowedUnits: string[]): boolean {
+  if (!vagaUnit) return false;
+  const vagaPrefix = extractUnitPrefix(vagaUnit);
+  return allowedUnits.some(u => {
+    const allowed = extractUnitPrefix(u);
+    return vagaPrefix === allowed || vagaPrefix.startsWith(allowed + ' ') || allowed.startsWith(vagaPrefix + ' ');
+  });
+}
+
 export function parseSpreadsheetDate(value: any): Date | null {
   if (!value) return null;
   if (value instanceof Date) return value;

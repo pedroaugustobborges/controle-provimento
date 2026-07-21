@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { STATUS_EDITAL_COLORS, StatusEdital, Vaga } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel, getStatusFluxoLabel } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, unitIsAllowed, calcDiasAberto, getCategoriaStatus, filterByRegionAndUnit, UNIDADES_POR_REGIAO, normStatus, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel, getStatusFluxoLabel } from '@/lib/vagaUtils';
 import { UNIDADES_GOIANIA } from '@/types/vaga';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
@@ -150,10 +150,8 @@ export default function FilaEditaisPage() {
       
       // Unit access restriction (Permissions)
       if (!currentUser?.visualiza_todas_unidades) {
-        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-        if (!userUnidades.includes(vUnitNormalized)) {
-          return false;
-        }
+        const allowedUnits = currentUser?.unidades_vinculadas || [];
+        if (!unitIsAllowed(v.unidade, allowedUnits)) return false;
       }
 
       // Regra: Fila de Editais - Somente status PUBLICAR EDITAL

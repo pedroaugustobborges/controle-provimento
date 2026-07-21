@@ -19,7 +19,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
 import { StatusEdital, Vaga, UNIDADES_GOIANIA } from '@/types/vaga';
-import { formatDate, normalizeUnitName, calcDiasAberto, getCategoriaStatus, getStatusFluxoLabel, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, unitIsAllowed, calcDiasAberto, getCategoriaStatus, getStatusFluxoLabel, getRegiaoAgrupamento, getRegiaoAgrupamentoLabel } from '@/lib/vagaUtils';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogFooter, DialogDescription 
@@ -138,8 +138,8 @@ export default function FilaAnalistaEditalPage() {
     return vagas.filter(v => {
       const vUnitNormalized = normalizeUnitName(v.unidade);
       if (!currentUser?.visualiza_todas_unidades) {
-        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-        if (!userUnidades.includes(vUnitNormalized)) return false;
+        const allowedUnits = currentUser?.unidades_vinculadas || [];
+        if (!unitIsAllowed(v.unidade, allowedUnits)) return false;
       }
       // 'encaminhado_edital' belongs exclusively to Fila de Editais. All other
       // vagas com sinal de redação (status_fluxo_edital ativo, etapa em_redacao

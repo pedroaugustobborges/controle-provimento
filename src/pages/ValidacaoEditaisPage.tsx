@@ -24,7 +24,7 @@ import {
   RotateCcw,
   Link2
 } from 'lucide-react';
-import { formatDate, normalizeUnitName } from '@/lib/vagaUtils';
+import { formatDate, normalizeUnitName, unitIsAllowed } from '@/lib/vagaUtils';
 import { PageHeader } from '@/components/PageHeader';
 import { HelpGuide } from '@/components/HelpGuide';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -114,10 +114,7 @@ export default function ValidacaoEditaisPage() {
       }
 
       if (!currentUser?.visualiza_todas_unidades) {
-        const userUnidades = (currentUser?.unidades_vinculadas || []).map(u => normalizeUnitName(u));
-        if (!userUnidades.includes(normalizeUnitName(v.unidade))) {
-          return false;
-        }
+        if (!unitIsAllowed(v.unidade, currentUser?.unidades_vinculadas || [])) return false;
       }
 
       if (search) {

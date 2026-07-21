@@ -29,6 +29,7 @@ import {
   isVitoriaUnit,
   normalizeCargo,
   normalizeUnitName,
+  unitIsAllowed,
   countVacancies,
   getStatusSummary,
   getCategoriaStatus,
@@ -487,25 +488,21 @@ export default function VagasPage() {
     [vagas],
   );
 
-  // Restriction by unit - normalization for consistent comparison
+  // Restriction by unit — build the list of short unit names the user may see
   const visibleUnidades = useMemo(() => {
-    const userUnidades = (currentUser?.unidades_vinculadas || []).map((u) =>
-      normalizeUnitName(u),
-    );
-    const regionUnits =
-      selectedRegion !== "all"
-        ? (UNIDADES_POR_REGIAO[selectedRegion] || []).map((u) =>
-            normalizeUnitName(u),
-          )
-        : allUnidades;
+    // allUnidades contains short canonical names from UnidadesPicker (e.g. "HUGOL")
+    let base: string[];
+    if (currentUser?.visualiza_todas_unidades) {
+      base = allUnidades;
+    } else {
+      const allowed = currentUser?.unidades_vinculadas || [];
+      // Match using prefix so "HUGOL" matches "HUGOL - HOSPITAL ESTADUAL..."
+      base = allUnidades.filter(u => unitIsAllowed(u, allowed) || allowed.some(a => unitIsAllowed(a, [u])));
+    }
 
-    let base = currentUser?.visualiza_todas_unidades
-      ? allUnidades
-      : userUnidades;
-
-    // Intersect with region if selected
     if (selectedRegion !== "all") {
-      base = base.filter((u) => regionUnits.includes(u));
+      const regionUnits = (UNIDADES_POR_REGIAO[selectedRegion] || []).map(normalizeUnitName);
+      base = base.filter(u => regionUnits.includes(normalizeUnitName(u)));
     }
 
     return base;
@@ -621,6 +618,18 @@ export default function VagasPage() {
     // 1. Filtragem por Região e Unidade Global (Sidebar)
     let baseRecords = filterByRegionAndUnit(vagas, selectedRegion, globalUnit);
 
+    // 1b. Filtragem por unidades vinculadas ao usuário
+    // Users with visualiza_todas_unidades = true bypass this filter.
+    // The check uses prefix matching so that short names stored in
+    // unidades_vinculadas ("HUGOL") correctly match full names stored in
+    // vagas.unidade ("HUGOL - HOSPITAL ESTADUAL DE URGENCIAS...").
+    if (!currentUser?.visualiza_todas_unidades) {
+      const allowedUnits = currentUser?.unidades_vinculadas || [];
+      if (allowedUnits.length > 0) {
+        baseRecords = baseRecords.filter(v => unitIsAllowed(v.unidade, allowedUnits));
+      }
+    }
+
     // 2. Filtragem especial (TEIAs ou PCD)
     if (filtroEspecial === "teias") {
       baseRecords = baseRecords.filter(
@@ -664,6 +673,8 @@ export default function VagasPage() {
     filterMes,
     filtroEspecial,
     pcdRegiao,
+    currentUser?.visualiza_todas_unidades,
+    currentUser?.unidades_vinculadas,
   ]);
 
   const statusScopedBase = useMemo(() => {

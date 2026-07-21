@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   calcDiasAberto,
   normalizeUnitName,
+  unitIsAllowed,
   getCategoriaStatus,
   getValidVacancyBase,
   filterByRegionAndUnit,
@@ -159,7 +160,7 @@ export default function DashboardPage() {
     isLoadingBancos,
     isInitialLoad,
   } = useVagasStore();
-  const { selectedRegion, selectedUnits, setSelectedUnits } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnits, setSelectedUnits } = useAdminStore();
 
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
@@ -205,15 +206,25 @@ export default function DashboardPage() {
     setFilterTeia(false);
   }, [setSelectedUnits]);
 
+  // Apply user's unit restrictions before any UI filters.
+  // Uses prefix matching so "HUGOL" matches "HUGOL - HOSPITAL ESTADUAL...".
+  const userScopedVagas = useMemo(() => {
+    if (currentUser?.visualiza_todas_unidades) return allVagas;
+    const allowed = currentUser?.unidades_vinculadas || [];
+    if (allowed.length === 0) return allVagas;
+    return allVagas.filter(v => unitIsAllowed(v.unidade, allowed));
+  }, [allVagas, currentUser?.visualiza_todas_unidades, currentUser?.unidades_vinculadas]);
+
   const filterDashboardRecords = useCallback(<T extends { unidade?: string | null }>(records: T[]) => {
     if (selectedUnits.length > 0 && !selectedUnits.includes('all')) {
-      return records.filter(r => selectedUnits.some(u => normalizeUnitName(u) === normalizeUnitName(r.unidade || '')));
+      // Use unitIsAllowed for prefix-aware matching (short names vs full names)
+      return records.filter(r => unitIsAllowed(r.unidade, selectedUnits));
     }
     return records;
   }, [selectedUnits]);
 
   const filteredVagas = useMemo(() => {
-    let base = filterDashboardRecords(allVagas);
+    let base = filterDashboardRecords(userScopedVagas);
     if (dateFrom) base = base.filter(v => (v.data_abertura || '') >= dateFrom);
     if (dateTo) base = base.filter(v => (v.data_abertura || '') <= dateTo);
     if (filterPCD) base = base.filter(v => {
@@ -222,9 +233,16 @@ export default function DashboardPage() {
     });
     if (filterTeia) base = base.filter(v => normalizeUnitName(v.unidade || '').includes('teia'));
     return getValidVacancyBase(base, 'TODOS', 'TODOS');
-  }, [allVagas, filterDashboardRecords, dateFrom, dateTo, filterPCD, filterTeia]);
+  }, [userScopedVagas, filterDashboardRecords, dateFrom, dateTo, filterPCD, filterTeia]);
 
-  const filteredBancos = useMemo(() => filterDashboardRecords(bancos), [bancos, filterDashboardRecords]);
+  const userScopedBancos = useMemo(() => {
+    if (currentUser?.visualiza_todas_unidades) return bancos;
+    const allowed = currentUser?.unidades_vinculadas || [];
+    if (allowed.length === 0) return bancos;
+    return bancos.filter(b => unitIsAllowed((b as any).unidade, allowed));
+  }, [bancos, currentUser?.visualiza_todas_unidades, currentUser?.unidades_vinculadas]);
+
+  const filteredBancos = useMemo(() => filterDashboardRecords(userScopedBancos), [userScopedBancos, filterDashboardRecords]);
 
   const vagas = filteredVagas;
 
@@ -419,7 +437,7 @@ export default function DashboardPage() {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       months.push({ month: d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }), key, abertas: 0, concluidas: 0 });
     }
-    allVagas.forEach(v => {
+    userScopedVagas.forEach(v => {
       if (v.data_abertura) { const e = months.find(m => m.key === (v.data_abertura as string).slice(0, 7)); if (e) e.abertas++; }
       if (getCategoriaStatus(v) === 'concluidas') {
         const lastHist = v.historico && v.historico.length > 0 ? v.historico[v.historico.length - 1]?.data : undefined;
@@ -428,7 +446,7 @@ export default function DashboardPage() {
       }
     });
     return months.map(({ month, abertas, concluidas }) => ({ month, abertas, concluidas }));
-  }, [allVagas]);
+  }, [userScopedVagas]);
 
   const motivoVagaData = useMemo(() => {
     const map = new Map<string, number>();

@@ -104,17 +104,13 @@ import {
 } from "@/components/ui/popover";
 import {
   Search,
-  Upload,
-  Plus,
   FileText,
   X,
   Building2,
   Filter,
-  FileSpreadsheet,
   ListFilter,
   MoreVertical,
   Trash2,
-  Edit,
   History,
   AlertCircle,
   Database,
@@ -124,8 +120,6 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ImportStagedDialog } from "@/components/import/ImportStagedDialog";
-import { AddVagaDialog } from "@/components/AddVagaDialog";
 import { VagaHistoryDialog } from "@/components/VagaHistoryDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { HelpGuide } from "@/components/HelpGuide";
@@ -365,15 +359,12 @@ export default function VagasPage() {
     }
   }, [searchParams]);
 
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isAddVagaOpen, setIsAddVagaOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedVagaForHistory, setSelectedVagaForHistory] =
     useState<Vaga | null>(null);
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [vagaParaEditar, setVagaParaEditar] = useState<Vaga | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
@@ -382,8 +373,6 @@ export default function VagasPage() {
 
   const canDelete =
     currentUser?.perfil === "Admin" || currentUser?.pode_excluir_requisicoes;
-  const canInclude =
-    currentUser?.perfil === "Admin" || currentUser?.pode_incluir_registros;
 
   // ── Dual synchronized scrollbar (top + bottom) ───────────────────────────
   const tableScrollRef = useRef<HTMLDivElement>(null);
@@ -1133,24 +1122,6 @@ export default function VagasPage() {
                   label="Exportar Excel"
                   className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl"
                 />
-                {permissions.canImport() && (
-                  <Button
-                    variant="outline"
-                    className="gap-2 border-slate-200 hover:bg-slate-50 text-slate-600 font-bold shadow-sm h-10 px-6 transition-all rounded-xl"
-                    onClick={() => setIsImportOpen(true)}
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-primary/80" />{" "}
-                    Importar Excel
-                  </Button>
-                )}
-                {permissions.canIncludeRecords() && (
-                  <Button
-                    className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white font-bold h-10 px-6 transition-all rounded-xl"
-                    onClick={() => setIsAddVagaOpen(true)}
-                  >
-                    <Plus className="h-4 w-4" /> Nova Vaga
-                  </Button>
-                )}
               </>
             }
           />
@@ -2052,19 +2023,6 @@ export default function VagasPage() {
                                   Ver Detalhes
                                 </DropdownMenuItem>
 
-                                {permissions.canDirectEdit() &&
-                                  !isConsultaOnly && (
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setVagaParaEditar(v);
-                                        setIsAddVagaOpen(true);
-                                      }}
-                                      className="gap-2"
-                                    >
-                                      <Edit className="h-4 w-4 text-amber-500" />{" "}
-                                      Editar Registro
-                                    </DropdownMenuItem>
-                                  )}
 
                                 {permissions.canRequestUpdate() && (
                                   <DropdownMenuItem
@@ -2344,19 +2302,6 @@ export default function VagasPage() {
             </CardContent>
           </Card>
 
-          <ImportStagedDialog
-            open={isImportOpen}
-            onOpenChange={setIsImportOpen}
-            type="vagas"
-          />
-          <AddVagaDialog
-            open={isAddVagaOpen}
-            onOpenChange={(open) => {
-              setIsAddVagaOpen(open);
-              if (!open) setVagaParaEditar(null);
-            }}
-            vaga={vagaParaEditar}
-          />
           <VagaHistoryDialog
             vaga={selectedVagaForHistory}
             open={isHistoryOpen}

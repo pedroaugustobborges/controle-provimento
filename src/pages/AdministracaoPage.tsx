@@ -1803,122 +1803,138 @@ export default function AdministracaoPage() {
                 )}
               </div>
 
-              <div className="space-y-4 border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
-                  {editingUser.visualiza_todas_unidades && (
-                    <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
-                      Acesso total
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Toggle: acesso total */}
-                <div
-                  className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-colors cursor-pointer ${editingUser.visualiza_todas_unidades ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}
-                  onClick={() => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: !p.visualiza_todas_unidades }))}
-                >
-                  <div className="space-y-0.5">
-                    <Label className="text-sm font-bold cursor-pointer">Visualizar todas as unidades</Label>
-                    <p className="text-[11px] text-muted-foreground">O usuário terá acesso irrestrito a todos os registros.</p>
-                  </div>
-                  <Switch
-                    checked={editingUser.visualiza_todas_unidades}
-                    onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: v }))}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  />
-                </div>
-
-                {/* Unit picker — only when not full access */}
-                {!editingUser.visualiza_todas_unidades && (
-                  <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
-                    <UnidadesPicker
-                      value={editingUser.unidades_vinculadas || []}
-                      onChange={(units) => setEditingUser((p: any) => ({ ...p, unidades_vinculadas: units }))}
-                    />
-                    {(editingUser.unidades_vinculadas || []).length === 0 && (
-                      <p className="text-[11px] text-amber-600 font-medium mt-3 flex items-center gap-1.5">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        Nenhuma unidade selecionada — o usuário não verá nenhum dado.
+              {editingUser.perfil === 'Administrador' ? (
+                <div className="border-t pt-4">
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-violet-50 border border-violet-200">
+                    <ShieldCheck className="h-8 w-8 text-violet-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-violet-800">Acesso Total de Administrador</p>
+                      <p className="text-[11px] text-violet-600 mt-0.5">
+                        Este perfil possui acesso irrestrito a todas as unidades, módulos e permissões do sistema. Nenhuma configuração adicional é necessária.
                       </p>
-                    )}
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* Acesso a Módulos */}
-              <div className="space-y-4 border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
-                  <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
                 </div>
-                
-                <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                  {MODULOS_SISTEMA.map(modulo => {
-                    const isChecked = editingUser.modulos_acesso?.includes(modulo.id);
-                    const canEdit = editingUser.permissoes_modulo?.[modulo.id] === 'edit';
-                    
-                    return (
-                      <div key={modulo.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors">
-                        <div className="flex items-center gap-3">
-                          <Checkbox 
-                            id={`edit-mod-${modulo.id}`} 
-                            checked={isChecked}
-                            onCheckedChange={() => toggleModule(modulo.id, true)}
-                          />
-                          <Label htmlFor={`edit-mod-${modulo.id}`} className="text-sm font-bold text-slate-700 cursor-pointer">{modulo.label}</Label>
-                        </div>
-                        
-                        {isChecked && (
-                          <div className="flex items-center gap-2">
-                            <Badge 
-                              variant="outline" 
-                              className={cn(
-                                "text-[10px] font-bold cursor-pointer transition-all border-2",
-                                canEdit 
-                                  ? "bg-green-50 text-green-700 border-green-200 shadow-sm" 
-                                  : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
-                              )}
-                              onClick={() => togglePermission(modulo.id, true)}
-                            >
-                              {canEdit ? <><CheckCircle className="h-2.5 w-2.5 mr-1" /> Edição Completa</> : <><Eye className="h-2.5 w-2.5 mr-1" /> Somente Leitura</>}
-                            </Badge>
-                          </div>
+              ) : (
+                <>
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Unidades Vinculadas</h4>
+                      {editingUser.visualiza_todas_unidades && (
+                        <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
+                          Acesso total
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Toggle: acesso total */}
+                    <div
+                      className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-colors cursor-pointer ${editingUser.visualiza_todas_unidades ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}
+                      onClick={() => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: !p.visualiza_todas_unidades }))}
+                    >
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-bold cursor-pointer">Visualizar todas as unidades</Label>
+                        <p className="text-[11px] text-muted-foreground">O usuário terá acesso irrestrito a todos os registros.</p>
+                      </div>
+                      <Switch
+                        checked={editingUser.visualiza_todas_unidades}
+                        onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, visualiza_todas_unidades: v }))}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      />
+                    </div>
+
+                    {/* Unit picker — only when not full access */}
+                    {!editingUser.visualiza_todas_unidades && (
+                      <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
+                        <UnidadesPicker
+                          value={editingUser.unidades_vinculadas || []}
+                          onChange={(units) => setEditingUser((p: any) => ({ ...p, unidades_vinculadas: units }))}
+                        />
+                        {(editingUser.unidades_vinculadas || []).length === 0 && (
+                          <p className="text-[11px] text-amber-600 font-medium mt-3 flex items-center gap-1.5">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            Nenhuma unidade selecionada — o usuário não verá nenhum dado.
+                          </p>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                    )}
+                  </div>
 
-              <div className="space-y-3 border-t pt-4">
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Outras Permissões</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Switch checked={editingUser.pode_incluir_registros} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_incluir_registros: v }))} />
-                    <Label className="text-xs font-bold">Pode incluir registros</Label>
+                  {/* Acesso a Módulos */}
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Módulos e Menus de Acesso</h4>
+                      <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200">Personalizado por Perfil</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                      {MODULOS_SISTEMA.map(modulo => {
+                        const isChecked = editingUser.modulos_acesso?.includes(modulo.id);
+                        const canEdit = editingUser.permissoes_modulo?.[modulo.id] === 'edit';
+
+                        return (
+                          <div key={modulo.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors">
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                id={`edit-mod-${modulo.id}`}
+                                checked={isChecked}
+                                onCheckedChange={() => toggleModule(modulo.id, true)}
+                              />
+                              <Label htmlFor={`edit-mod-${modulo.id}`} className="text-sm font-bold text-slate-700 cursor-pointer">{modulo.label}</Label>
+                            </div>
+
+                            {isChecked && (
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-[10px] font-bold cursor-pointer transition-all border-2",
+                                    canEdit
+                                      ? "bg-green-50 text-green-700 border-green-200 shadow-sm"
+                                      : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                                  )}
+                                  onClick={() => togglePermission(modulo.id, true)}
+                                >
+                                  {canEdit ? <><CheckCircle className="h-2.5 w-2.5 mr-1" /> Edição Completa</> : <><Eye className="h-2.5 w-2.5 mr-1" /> Somente Leitura</>}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={editingUser.pode_excluir_requisicoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_excluir_requisicoes: v }))} />
-                    <Label className="text-xs font-bold">Pode excluir requisições</Label>
+
+                  <div className="space-y-3 border-t pt-4">
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Outras Permissões</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Switch checked={editingUser.pode_incluir_registros} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_incluir_registros: v }))} />
+                        <Label className="text-xs font-bold">Pode incluir registros</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={editingUser.pode_excluir_requisicoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_excluir_requisicoes: v }))} />
+                        <Label className="text-xs font-bold">Pode excluir requisições</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={editingUser.pode_editar_configuracoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_editar_configuracoes: v }))} />
+                        <Label className="text-xs font-bold">Pode editar configurações</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={editingUser.pode_gerenciar_usuarios} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_gerenciar_usuarios: v }))} />
+                        <Label className="text-xs font-bold">Pode gerenciar usuários</Label>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <Switch checked={editingUser?.acesso_portal_unidade || false} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, acesso_portal_unidade: v }))} />
+                      <div>
+                        <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
+                        <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={editingUser.pode_editar_configuracoes} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_editar_configuracoes: v }))} />
-                    <Label className="text-xs font-bold">Pode editar configurações</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={editingUser.pode_gerenciar_usuarios} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, pode_gerenciar_usuarios: v }))} />
-                    <Label className="text-xs font-bold">Pode gerenciar usuários</Label>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <Switch checked={editingUser?.acesso_portal_unidade || false} onCheckedChange={(v) => setEditingUser((p: any) => ({ ...p, acesso_portal_unidade: v }))} />
-                  <div>
-                    <Label className="text-xs font-bold text-blue-800">Habilitar acesso ao Portal da Unidade</Label>
-                    <p className="text-[10px] text-blue-600 mt-0.5">O usuário poderá acessar o Portal com as mesmas credenciais e unidades vinculadas.</p>
-                  </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           )}
           <DialogFooter>

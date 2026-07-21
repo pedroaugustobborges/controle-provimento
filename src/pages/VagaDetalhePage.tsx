@@ -19,7 +19,7 @@ import {
   FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check,
   Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
   AlertTriangle, ArrowRightCircle, ExternalLink, Edit, Copy, ArrowLeftRight, Crown,
-  Target, ChevronRight
+  Target, ChevronRight, MessageSquare, Loader2
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -98,6 +98,57 @@ function calcSimilarity(vagaCargo: string, bancoCargo: string): number {
   return matches.length / tokensVaga.length;
 }
 
+// ─── Observations ────────────────────────────────────────────────────────────
+
+interface ObsItem {
+  id: string;
+  text: string;
+  author_id: string;
+  author_name: string;
+  author_avatar: string | null;
+  created_at: string; // ISO or '' for legacy
+}
+
+function parseObsItems(raw: string | null | undefined): ObsItem[] {
+  if (!raw?.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as ObsItem[];
+  } catch {}
+  // Plain text → treat as legacy "OBS do RM" entry
+  return [{ id: 'legacy-rm', text: raw.trim(), author_id: 'rm', author_name: 'OBS do RM', author_avatar: null, created_at: '' }];
+}
+
+function obsRelativeTime(iso: string): string {
+  if (!iso) return 'Registro anterior ao sistema';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'agora mesmo';
+  if (mins < 60) return `há ${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `há ${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `há ${days} dia${days > 1 ? 's' : ''}`;
+  return format(new Date(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+}
+
+function ObsAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
+  const initials = name === 'OBS do RM'
+    ? 'RM'
+    : name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(n => n[0]).join('').toUpperCase() || '?';
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={name} className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm" />;
+  }
+  const isRm = name === 'OBS do RM';
+  return (
+    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold ring-2 ring-white shadow-sm shrink-0 ${isRm ? 'bg-amber-100 text-amber-700' : 'bg-primary/10 text-primary'}`}>
+      {initials}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -110,6 +161,8 @@ export default function VagaDetalhePage() {
   const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [newObsText, setNewObsText] = useState('');
+  const [isSavingObs, setIsSavingObs] = useState(false);
   const [isEditVagaOpen, setIsEditVagaOpen] = useState(false);
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
@@ -171,9 +224,9 @@ export default function VagaDetalhePage() {
   const validacao = getValidacaoByVaga(vaga.id);
   const banco = getBancoByVaga(vaga.id);
 
-  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.pode_excluir_requisicoes;
-  const canEdit = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Analista' || currentUser?.perfil === 'Gerência' || currentUser?.perfil === 'Coordenação' || currentUser?.perfil === 'Supervisão';
-  const isAssistente = currentUser?.perfil === 'Assistente';
+  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Administrador' || currentUser?.pode_excluir_requisicoes;
+  const canEdit = ['Admin', 'Administrador', 'Analista', 'Analista de RH', 'Analista Administrativo', 'Analista de Edital', 'Analista das Convocações', 'Assistente de RH', 'Gerência', 'Coordenação', 'Supervisão'].includes(currentUser?.perfil || '');
+  const isAssistente = currentUser?.perfil === 'Assistente' || currentUser?.perfil === 'Assistente de RH';
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === 'encerrada' || newStatus === 'finalizada') {
@@ -469,6 +522,29 @@ export default function VagaDetalhePage() {
     updateVaga(vaga.id, indicators);
     setIsEditingIndicators(false);
     toast.success('Indicadores atualizados');
+  };
+
+  const handleAddObs = async () => {
+    if (!newObsText.trim() || !currentUser) return;
+    setIsSavingObs(true);
+    const currentRaw = vaga.observacoes_internas || vaga.observacoes || '';
+    const existing = parseObsItems(currentRaw);
+    const newItem: ObsItem = {
+      id: crypto.randomUUID(),
+      text: newObsText.trim(),
+      author_id: currentUser.id,
+      author_name: currentUser.nome_completo,
+      author_avatar: (currentUser as any).avatar_url || null,
+      created_at: new Date().toISOString(),
+    };
+    const updated = [newItem, ...existing];
+    const serialized = JSON.stringify(updated);
+    const ok = await updateVagaAsync(vaga.id, { observacao: serialized, observacoes_internas: serialized } as any);
+    if (ok) {
+      setNewObsText('');
+      toast.success('Observação adicionada');
+    }
+    setIsSavingObs(false);
   };
 
   const handleDelete = () => {
@@ -930,12 +1006,78 @@ export default function VagaDetalhePage() {
                 })()}
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Observações Internas</label>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 min-h-[100px] text-sm text-slate-600 whitespace-pre-wrap">
-                  {vaga.observacoes_internas || vaga.observacoes || 'Nenhuma observação registrada.'}
-                </div>
-              </div>
+              {/* ── Observações Internas ── */}
+              {(() => {
+                const obsItems = parseObsItems(vaga.observacoes_internas || vaga.observacoes);
+                return (
+                  <div className="space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Observações Internas</label>
+                      {obsItems.length > 0 && (
+                        <span className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                          {obsItems.length}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* New observation input */}
+                    {canEdit && (
+                      <div className="flex gap-3">
+                        <ObsAvatar
+                          name={currentUser?.nome_completo || ''}
+                          avatarUrl={(currentUser as any)?.avatar_url || null}
+                        />
+                        <div className="flex-1 space-y-2">
+                          <Textarea
+                            value={newObsText}
+                            onChange={(e) => setNewObsText(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleAddObs(); }}
+                            className="min-h-[72px] text-sm resize-none bg-white border-slate-200 focus:border-primary/50 transition-colors"
+                            placeholder="Adicione uma observação interna... (Ctrl+Enter para enviar)"
+                          />
+                          <div className="flex justify-end">
+                            <Button
+                              size="sm"
+                              onClick={handleAddObs}
+                              disabled={!newObsText.trim() || isSavingObs}
+                              className="h-7 px-3 text-xs gap-1.5"
+                            >
+                              {isSavingObs
+                                ? <Loader2 className="h-3 w-3 animate-spin" />
+                                : <Send className="h-3 w-3" />}
+                              Publicar
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Feed */}
+                    {obsItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 gap-2 text-slate-400">
+                        <MessageSquare className="h-7 w-7 opacity-25" />
+                        <p className="text-xs">Nenhuma observação registrada.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1 pt-1">
+                        {obsItems.map((item, idx) => (
+                          <div key={item.id} className={`flex gap-3 p-3 rounded-xl transition-colors ${idx === 0 ? 'bg-slate-50/80 border border-slate-100' : 'hover:bg-slate-50/60'}`}>
+                            <ObsAvatar name={item.author_name} avatarUrl={item.author_avatar} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                <span className="text-xs font-semibold text-slate-800">{item.author_name}</span>
+                                <span className="text-[10px] text-slate-400">{obsRelativeTime(item.created_at)}</span>
+                              </div>
+                              <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{item.text}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-x-8 gap-y-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
                 <div className="flex items-center gap-1.5">

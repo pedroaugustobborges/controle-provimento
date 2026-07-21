@@ -303,7 +303,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const userName = currentUser?.nome_completo?.split(' ')[0] || 'Usuário';
+  const userName = currentUser?.nome_completo?.trim().split(/\s+/).filter(Boolean)[0] || 'Usuário';
   const initials = currentUser?.nome_completo
     ? currentUser.nome_completo.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'US';

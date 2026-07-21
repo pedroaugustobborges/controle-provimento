@@ -133,6 +133,20 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   fetchCurrentProfile: async () => {
     try {
+      // Step 1: Pre-populate from cached session immediately (no network request)
+      // This prevents showing "Usuário" while the full profile fetch is in flight
+      if (!get().currentUser) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const su = session.user;
+          const metaName = (su.user_metadata?.full_name || su.user_metadata?.nome_completo || su.email?.split('@')[0] || '').trim();
+          if (metaName) {
+            set({ currentUser: { id: su.id, email: su.email || '', nome_completo: metaName } as unknown as User });
+          }
+        }
+      }
+
+      // Step 2: Fetch the full profile from the database
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: profile, error } = await supabase
@@ -150,15 +164,17 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             .eq('id', user.id);
           (profile as any).email = user.email;
         }
-        // Fill nome_completo from auth metadata if missing in profile
-        if (!profile.nome_completo) {
-          const metaName = user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.email?.split('@')[0] || '';
+        // Fill nome_completo from auth metadata if missing or blank in profile
+        if (!profile.nome_completo?.trim()) {
+          const metaName = (user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.email?.split('@')[0] || '').trim();
           (profile as any).nome_completo = metaName;
+        } else {
+          (profile as any).nome_completo = profile.nome_completo.trim();
         }
         set({ currentUser: profile as User });
       } else {
         // No profile row yet — build a minimal currentUser from auth metadata
-        const metaName = user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.email?.split('@')[0] || '';
+        const metaName = (user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.email?.split('@')[0] || '').trim();
         set({
           currentUser: {
             id: user.id,

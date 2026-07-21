@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ConvocacaoDetalhesModal } from '@/components/ConvocacaoDetalhesModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useVagasStore } from '@/store/vagasStore';
@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatusColor } from '@/lib/vagaUtils';
-import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS, isTeiaUnit, TratativaVaga, EtapaVaga, StatusProcesso } from '@/types/vaga';
+import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS, isTeiaUnit, TratativaVaga, EtapaVaga, StatusProcesso, VagaFluxoItem } from '@/types/vaga';
 import {
   ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus,
   FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check,
@@ -98,6 +98,24 @@ function calcSimilarity(vagaCargo: string, bancoCargo: string): number {
   return matches.length / tokensVaga.length;
 }
 
+// ─── Multi-vaga flow helpers ──────────────────────────────────────────────────
+
+function getFluxoItems(vaga: Vaga): VagaFluxoItem[] {
+  const count = Math.max(Number(vaga.numero_vagas || vaga.quantidade) || 1, 1);
+  const stored = Array.isArray(vaga.distribuicao_vagas)
+    ? (vaga.distribuicao_vagas as VagaFluxoItem[])
+    : [];
+  return Array.from({ length: count }, (_, i) => {
+    const slot = i + 1;
+    const found = stored.find(e => e.slot === slot);
+    // slot 1 falls back to root vaga fields for backward compatibility
+    const root: Partial<VagaFluxoItem> = slot === 1
+      ? { tratativa: vaga.tratativa, etapa: vaga.etapa, status_processo: vaga.status_processo || 'Solicitada' }
+      : { status_processo: 'Solicitada' };
+    return { ...root, ...found, slot } as VagaFluxoItem;
+  });
+}
+
 // ─── Observations ────────────────────────────────────────────────────────────
 
 interface ObsItem {
@@ -152,6 +170,7 @@ function ObsAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | null
 export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateVagaAsync, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao, trackEditing, stopTrackingEditing, editingUsers } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const permissions = usePermissions();
@@ -163,6 +182,10 @@ export default function VagaDetalhePage() {
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
   const [newObsText, setNewObsText] = useState('');
   const [isSavingObs, setIsSavingObs] = useState(false);
+  const [activeFluxoSlot, setActiveFluxoSlot] = useState(() => {
+    const slot = parseInt(searchParams.get('slot') || '1', 10);
+    return isNaN(slot) || slot < 1 ? 1 : slot;
+  });
   const [isEditVagaOpen, setIsEditVagaOpen] = useState(false);
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
@@ -365,6 +388,38 @@ export default function VagaDetalhePage() {
         id: `h-${Date.now()}`,
         data: today,
         descricao: `Status do processo: ${sp}`,
+        usuario: currentUser?.nome_completo || 'Sistema',
+      }],
+    });
+  };
+
+  const handleFluxoSlotChange = async (slot: number, field: 'tratativa' | 'etapa' | 'status_processo', value: string) => {
+    const vagaCount = Math.max(Number(vaga.numero_vagas || vaga.quantidade) || 1, 1);
+    if (vagaCount <= 1) {
+      if (field === 'tratativa') { await handleTratativaChange(value); return; }
+      if (field === 'etapa') { await handleEtapaChange(value); return; }
+      if (field === 'status_processo') { await handleStatusProcessoChange(value); return; }
+      return;
+    }
+    const today = new Date().toISOString().split('T')[0];
+    const items = getFluxoItems(vaga);
+    const isAdmissao = field === 'etapa' && value === 'Admissão Efetivada';
+    const updated = items.map(item => {
+      if (item.slot !== slot) return item;
+      const newSP: StatusProcesso = field === 'status_processo'
+        ? (value as StatusProcesso)
+        : isAdmissao ? 'Concluída'
+        : (item.status_processo === 'Concluída' || item.status_processo === 'Cancelada') ? item.status_processo
+        : 'Em Andamento';
+      return { ...item, [field]: value || undefined, status_processo: newSP };
+    });
+    const fieldLabel = field === 'tratativa' ? 'Tratativa' : field === 'etapa' ? 'Etapa' : 'Status';
+    await updateVagaAsync(vaga.id, {
+      distribuicao_vagas: updated as any,
+      historico: [...(vaga.historico || []), {
+        id: `h-${Date.now()}`,
+        data: today,
+        descricao: `Vaga ${slot} — ${fieldLabel}: ${value || 'Não definido'}`,
         usuario: currentUser?.nome_completo || 'Sistema',
       }],
     });
@@ -878,9 +933,117 @@ export default function VagaDetalhePage() {
 
                 {/* ── Fluxo do Processo ──────────────────────────────────── */}
                 {(() => {
-                  const sp: StatusProcesso = vaga.status_processo || 'Solicitada';
+                  const vagaCount = Math.max(Number(vaga.numero_vagas || vaga.quantidade) || 1, 1);
+                  const isMulti = vagaCount > 1;
+                  const fluxoItems = getFluxoItems(vaga);
+                  const safeSlot = Math.min(activeFluxoSlot, vagaCount);
+                  const activeItem = fluxoItems[safeSlot - 1] ?? fluxoItems[0];
+                  const sp: StatusProcesso = activeItem?.status_processo || 'Solicitada';
                   const spCfg = STATUS_PROCESSO_CONFIG[sp] ?? STATUS_PROCESSO_CONFIG['Solicitada'];
                   const canEditFlow = canEdit || isAssistente;
+
+                  // Panels renderer — shared for single and multi
+                  const renderPanels = (item: VagaFluxoItem) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                      {/* TRATATIVA */}
+                      <div className="p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                            <Target className="h-3.5 w-3.5 text-blue-500" />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tratativa</span>
+                        </div>
+                        {canEditFlow ? (
+                          <Select
+                            value={item.tratativa || '__none__'}
+                            onValueChange={v => handleFluxoSlotChange(item.slot, 'tratativa', v === '__none__' ? '' : v)}
+                          >
+                            <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                              <SelectValue placeholder="Selecionar..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__"><span className="text-slate-400">Não definida</span></SelectItem>
+                              {TRATATIVAS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                            {item.tratativa || <span className="text-slate-400 italic">Não definida</span>}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* ETAPA */}
+                      <div className="p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0">
+                            <ChevronRight className="h-3.5 w-3.5 text-purple-500" />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Etapa</span>
+                        </div>
+                        {canEditFlow ? (
+                          <Select
+                            value={item.etapa || '__none__'}
+                            onValueChange={v => handleFluxoSlotChange(item.slot, 'etapa', v === '__none__' ? '' : v)}
+                          >
+                            <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                              <SelectValue placeholder="Selecionar..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__"><span className="text-slate-400">Não definida</span></SelectItem>
+                              {ETAPAS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                            {item.etapa || <span className="text-slate-400 italic">Não definida</span>}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* STATUS DO PROCESSO */}
+                      {(() => {
+                        const iSP = item.status_processo || 'Solicitada';
+                        const iCfg = STATUS_PROCESSO_CONFIG[iSP] ?? STATUS_PROCESSO_CONFIG['Solicitada'];
+                        return (
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-7 h-7 rounded-full ${iCfg.iconBg} border ${iCfg.border} flex items-center justify-center shrink-0`}>
+                                <CheckCircle className={`h-3.5 w-3.5 ${iCfg.text}`} />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status</span>
+                            </div>
+                            {canEditFlow ? (
+                              <Select value={iSP} onValueChange={v => handleFluxoSlotChange(item.slot, 'status_processo', v)}>
+                                <SelectTrigger className={`h-9 text-sm font-bold border ${iCfg.border} ${iCfg.bg} ${iCfg.text}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {(Object.keys(STATUS_PROCESSO_CONFIG) as StatusProcesso[]).map(s => {
+                                    const c = STATUS_PROCESSO_CONFIG[s];
+                                    return (
+                                      <SelectItem key={s} value={s}>
+                                        <span className="flex items-center gap-2 font-semibold">
+                                          <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+                                          {s}
+                                        </span>
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border ${iCfg.bg} ${iCfg.text} ${iCfg.border}`}>
+                                <span className={`w-2 h-2 rounded-full ${iCfg.dot}`} />
+                                {iSP}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+
                   return (
                     <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                       {/* Header */}
@@ -888,6 +1051,11 @@ export default function VagaDetalhePage() {
                         <div className="flex items-center gap-2">
                           <Activity className="h-4 w-4 text-primary" />
                           <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Fluxo do Processo</span>
+                          {isMulti && (
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                              {vagaCount} vagas
+                            </span>
+                          )}
                         </div>
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${spCfg.bg} ${spCfg.text} ${spCfg.border}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${spCfg.dot}`} />
@@ -895,112 +1063,34 @@ export default function VagaDetalhePage() {
                         </span>
                       </div>
 
-                      {/* Three panels */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
-
-                        {/* TRATATIVA */}
-                        <div className="p-5 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                              <Target className="h-3.5 w-3.5 text-blue-500" />
-                            </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tratativa</span>
-                          </div>
-                          {canEditFlow ? (
-                            <Select
-                              value={vaga.tratativa || '__none__'}
-                              onValueChange={v => handleTratativaChange(v === '__none__' ? '' : v)}
-                            >
-                              <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
-                                <SelectValue placeholder="Selecionar..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">
-                                  <span className="text-slate-400">Não definida</span>
-                                </SelectItem>
-                                {TRATATIVAS.map(t => (
-                                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
-                              {vaga.tratativa || <span className="text-slate-400 italic">Não definida</span>}
-                            </p>
-                          )}
+                      {/* Slot tabs — only for multi-vaga */}
+                      {isMulti && (
+                        <div className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-slate-100 bg-white overflow-x-auto">
+                          {fluxoItems.map(item => {
+                            const iSP = item.status_processo || 'Solicitada';
+                            const iCfg = STATUS_PROCESSO_CONFIG[iSP] ?? STATUS_PROCESSO_CONFIG['Solicitada'];
+                            const isActive = item.slot === safeSlot;
+                            return (
+                              <button
+                                key={item.slot}
+                                onClick={() => setActiveFluxoSlot(item.slot)}
+                                className={cn(
+                                  'flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-t-lg border-b-2 transition-all whitespace-nowrap',
+                                  isActive
+                                    ? 'border-primary text-primary bg-primary/5'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                )}
+                              >
+                                <span className={`w-2 h-2 rounded-full ${iCfg.dot}`} />
+                                Vaga {item.slot}
+                              </button>
+                            );
+                          })}
                         </div>
+                      )}
 
-                        {/* ETAPA */}
-                        <div className="p-5 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0">
-                              <ChevronRight className="h-3.5 w-3.5 text-purple-500" />
-                            </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Etapa</span>
-                          </div>
-                          {canEditFlow ? (
-                            <Select
-                              value={vaga.etapa || '__none__'}
-                              onValueChange={v => handleEtapaChange(v === '__none__' ? '' : v)}
-                            >
-                              <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
-                                <SelectValue placeholder="Selecionar..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">
-                                  <span className="text-slate-400">Não definida</span>
-                                </SelectItem>
-                                {ETAPAS.map(e => (
-                                  <SelectItem key={e} value={e}>{e}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
-                              {vaga.etapa || <span className="text-slate-400 italic">Não definida</span>}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* STATUS DO PROCESSO */}
-                        <div className="p-5 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-7 h-7 rounded-full ${spCfg.iconBg} border ${spCfg.border} flex items-center justify-center shrink-0`}>
-                              <CheckCircle className={`h-3.5 w-3.5 ${spCfg.text}`} />
-                            </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status</span>
-                          </div>
-                          {canEditFlow ? (
-                            <Select
-                              value={sp}
-                              onValueChange={handleStatusProcessoChange}
-                            >
-                              <SelectTrigger className={`h-9 text-sm font-bold border ${spCfg.border} ${spCfg.bg} ${spCfg.text}`}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {(Object.keys(STATUS_PROCESSO_CONFIG) as StatusProcesso[]).map(s => {
-                                  const c = STATUS_PROCESSO_CONFIG[s];
-                                  return (
-                                    <SelectItem key={s} value={s}>
-                                      <span className="flex items-center gap-2 font-semibold">
-                                        <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-                                        {s}
-                                      </span>
-                                    </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border ${spCfg.bg} ${spCfg.text} ${spCfg.border}`}>
-                              <span className={`w-2 h-2 rounded-full ${spCfg.dot}`} />
-                              {sp}
-                            </span>
-                          )}
-                        </div>
-
-                      </div>
+                      {/* Panels for active slot */}
+                      {renderPanels(activeItem)}
                     </div>
                   );
                 })()}

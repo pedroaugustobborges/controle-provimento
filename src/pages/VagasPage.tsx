@@ -18,6 +18,8 @@ import {
   ETAPA_LABELS,
   EtapaEdital,
   TODAS_AS_ETAPAS,
+  VagaFluxoItem,
+  StatusProcesso,
 } from "@/types/vaga";
 import { AcompanhamentoModal } from "@/components/AcompanhamentoModal";
 import {
@@ -43,6 +45,7 @@ import {
   Bug,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Info,
   Sparkles,
   Download,
@@ -51,6 +54,28 @@ import {
 } from "lucide-react";
 import { ExportButton } from "@/components/ExportButton";
 // ... keep existing code
+
+// ─── Multi-vaga fluxo helpers (mirrored from VagaDetalhePage) ────────────────
+const SP_CFG: Record<StatusProcesso, { dot: string; text: string; bg: string; border: string }> = {
+  'Solicitada':   { dot: 'bg-slate-400',   text: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200' },
+  'Em Andamento': { dot: 'bg-blue-500',    text: 'text-blue-700',   bg: 'bg-blue-50',    border: 'border-blue-200'  },
+  'Cancelada':    { dot: 'bg-red-500',     text: 'text-red-700',    bg: 'bg-red-50',     border: 'border-red-200'   },
+  'Suspensa':     { dot: 'bg-amber-500',   text: 'text-amber-700',  bg: 'bg-amber-50',   border: 'border-amber-200' },
+  'Concluída':    { dot: 'bg-emerald-500', text: 'text-emerald-700',bg: 'bg-emerald-50', border: 'border-emerald-200'},
+};
+function getVagaFluxoItems(v: Vaga): VagaFluxoItem[] {
+  const count = Math.max(Number(v.numero_vagas || v.quantidade) || 1, 1);
+  const stored = Array.isArray(v.distribuicao_vagas) ? (v.distribuicao_vagas as VagaFluxoItem[]) : [];
+  return Array.from({ length: count }, (_, i) => {
+    const slot = i + 1;
+    const found = stored.find(e => e.slot === slot);
+    const root: Partial<VagaFluxoItem> = slot === 1
+      ? { tratativa: v.tratativa, etapa: v.etapa, status_processo: v.status_processo || 'Solicitada' }
+      : { status_processo: 'Solicitada' };
+    return { ...root, ...found, slot } as VagaFluxoItem;
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 import {
   Card,
@@ -349,6 +374,7 @@ export default function VagasPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [vagaParaEditar, setVagaParaEditar] = useState<Vaga | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
   const [vagaForUpdate, setVagaForUpdate] = useState<Vaga | null>(null);
   const pageSize = 50;
@@ -1826,6 +1852,7 @@ export default function VagasPage() {
                       ].includes(categoria);
 
                       return (
+                        <>
                         <TableRow
                           key={v.id}
                           className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
@@ -1925,8 +1952,34 @@ export default function VagasPage() {
                           <TableCell className="text-center py-3 px-4 h-14">
                             <StatusBadge status={(v.status_processo || v.status || v.status_geral) as any} />
                           </TableCell>
-                          <TableCell className="text-center font-bold text-slate-700 py-3 px-2 h-14">
-                            {v.numero_vagas || v.quantidade || 0}
+                          <TableCell
+                            className="text-center py-3 px-2 h-14"
+                            onClick={(e) => {
+                              const count = Number(v.numero_vagas || v.quantidade) || 0;
+                              if (count <= 1) return;
+                              e.stopPropagation();
+                              setExpandedRows(prev => {
+                                const next = new Set(prev);
+                                next.has(v.id) ? next.delete(v.id) : next.add(v.id);
+                                return next;
+                              });
+                            }}
+                          >
+                            {(() => {
+                              const count = Number(v.numero_vagas || v.quantidade) || 0;
+                              const isExpanded = expandedRows.has(v.id);
+                              if (count <= 1) {
+                                return <span className="font-bold text-slate-700 text-sm">{count}</span>;
+                              }
+                              return (
+                                <button className="inline-flex items-center gap-1 font-bold text-primary hover:text-primary/80 transition-colors group">
+                                  <span className="text-sm">{count}</span>
+                                  <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                  </span>
+                                </button>
+                              );
+                            })()}
                           </TableCell>
                           <TableCell
                             className="text-center py-3 px-2 h-14"
@@ -2114,6 +2167,58 @@ export default function VagasPage() {
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
+
+                        {/* ── Sub-rows for multi-vaga requisições ── */}
+                        {expandedRows.has(v.id) && getVagaFluxoItems(v).map(item => {
+                          const iSP = item.status_processo || 'Solicitada';
+                          const cfg = SP_CFG[iSP] ?? SP_CFG['Solicitada'];
+                          return (
+                            <TableRow
+                              key={`${v.id}-slot-${item.slot}`}
+                              className="cursor-pointer bg-slate-50/70 hover:bg-primary/5 border-b border-dashed border-slate-200 transition-colors"
+                              onClick={() => navigate(`/vagas/${v.id}?slot=${item.slot}`)}
+                            >
+                              {/* indent: tree line + label spanning first 4 cols */}
+                              <TableCell colSpan={4} className="py-2 px-2 pl-8">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-px h-6 bg-slate-300 ml-2 shrink-0" />
+                                  <div className="w-4 h-px bg-slate-300 shrink-0" />
+                                  <span className="text-[11px] font-bold text-primary/80">
+                                    Vaga {item.slot}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
+                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
+                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
+                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
+                              {/* motivo col — repurposed to show etapa */}
+                              <TableCell className="py-2 px-4">
+                                {item.etapa
+                                  ? <span className="text-[11px] text-slate-600 font-medium">{item.etapa}</span>
+                                  : <span className="text-[11px] text-slate-300 italic">Etapa não definida</span>}
+                              </TableCell>
+                              {/* status */}
+                              <TableCell className="text-center py-2 px-4">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                                  {iSP}
+                                </span>
+                              </TableCell>
+                              <TableCell className="py-2 px-2" />
+                              <TableCell className="py-2 px-2" />
+                              <TableCell className="py-2 px-4 text-right">
+                                <button
+                                  className="text-[10px] text-primary font-bold hover:underline flex items-center gap-1 ml-auto"
+                                  onClick={e => { e.stopPropagation(); navigate(`/vagas/${v.id}?slot=${item.slot}`); }}
+                                >
+                                  Ver <ChevronRight className="h-3 w-3" />
+                                </button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        </>
                       );
                     })}
                     {filtered.length === 0 && (

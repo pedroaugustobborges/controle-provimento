@@ -26,6 +26,13 @@ export type StatusProcesso =
   | 'Cancelada'
   | 'Suspensa'
   | 'Concluída';
+
+export interface VagaFluxoItem {
+  slot: number;
+  tratativa?: TratativaVaga;
+  etapa?: EtapaVaga;
+  status_processo: StatusProcesso;
+}
 export type StatusVaga =
   | 'CONCLUÍDAS'
   | 'CONCLUÍDA'
@@ -250,7 +257,7 @@ export interface Vaga {
   gestor_aprovador_id?: string;
   status_aprovacao_gestor?: 'pendente' | 'aprovado' | 'devolvido';
   observacoes_gestor?: string;
-  distribuicao_vagas?: Record<string, number>;
+  distribuicao_vagas?: VagaFluxoItem[] | Record<string, number>;
   unidade_trabalho?: string;
   unidades_banco_talentos?: string[];
   is_pcd?: boolean;

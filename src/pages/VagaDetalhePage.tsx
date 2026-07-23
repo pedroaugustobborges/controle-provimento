@@ -358,7 +358,7 @@ export default function VagaDetalhePage() {
     stopTrackingEditing,
     editingUsers,
   } = useVagasStore();
-  const { currentUser, addAuditLog } = useAdminStore();
+  const { currentUser, addAuditLog, users, fetchUsers } = useAdminStore();
   const permissions = usePermissions();
 
   const [isConvocacaoDialogOpen, setIsConvocacaoDialogOpen] = useState(false);
@@ -430,6 +430,16 @@ export default function VagaDetalhePage() {
     "finalizada",
     "admissao_efetivada",
   ].includes(vaga?.status || vaga?.status_geral || "");
+
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  const userAvatarMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (users || []).forEach((u: any) => {
+      if (u.nome_completo && u.avatar_url) map.set(u.nome_completo, u.avatar_url);
+    });
+    return map;
+  }, [users]);
 
   useEffect(() => {
     if (vaga) {
@@ -1401,9 +1411,31 @@ export default function VagaDetalhePage() {
                   <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5">
                     <User className="h-3 w-3" /> Analista Resp.
                   </label>
-                  <p className="text-sm font-semibold text-slate-700">
-                    {vaga.analista_responsavel}
-                  </p>
+                  {vaga.analista_responsavel ? (
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const avatarUrl = userAvatarMap.get(vaga.analista_responsavel);
+                        const initials = vaga.analista_responsavel
+                          .split(' ').filter(Boolean).slice(0, 2)
+                          .map((n: string) => n[0].toUpperCase()).join('');
+                        return avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={vaga.analista_responsavel}
+                            className="w-7 h-7 rounded-full object-cover ring-2 ring-indigo-100 shrink-0"
+                            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-indigo-100 ring-2 ring-indigo-100 flex items-center justify-center shrink-0">
+                            <span className="text-[10px] font-black text-indigo-600">{initials}</span>
+                          </div>
+                        );
+                      })()}
+                      <span className="text-sm font-semibold text-slate-700">{vaga.analista_responsavel}</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">Não atribuído</p>
+                  )}
                 </div>
                 {vaga.assistentes && vaga.assistentes.length > 0 && (
                   <div className="space-y-1">

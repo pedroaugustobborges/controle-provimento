@@ -353,13 +353,7 @@ export default function VagasPage() {
   const [filterUnidade, setFilterUnidade] = useState("all");
   const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
   const [filterMes, setFilterMes] = useState("all");
-  const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
-
-  // Limpar filtros de status ao trocar entre submenu (TEIA / padrão / PCD)
-  // pois as listas de status disponíveis são diferentes
-  useEffect(() => {
-    setFilterStatuses([]);
-  }, [filtroEspecial]);
+  const [filterStatusProcesso, setFilterStatusProcesso] = useState("all");
 
   const [filterTratativa, setFilterTratativa] = useState("all");
   const [filterEtapa, setFilterEtapa] = useState("all");
@@ -721,63 +715,9 @@ export default function VagasPage() {
         (v.unidade || "").toLowerCase().includes(searchTerm) ||
         (v.analista_responsavel || "").toLowerCase().includes(searchTerm);
 
-      const activeStatusOptions =
-        filtroEspecial === "teias"
-          ? STATUS_FILTER_OPTIONS_TEIA
-          : STATUS_FILTER_OPTIONS;
       const matchStatus =
-        filterStatuses.length === 0 ||
-        filterStatuses.some((filterKey) => {
-          const filterOption = activeStatusOptions[filterKey];
-          if (!filterOption) return false;
-          const statusValue = v.status_geral || v.status || "";
-          // Check direct match with any of the grouped statuses
-          if (filterOption.matches.includes(statusValue as any)) return true;
-          // Check SEM STATUS special case
-          if (
-            filterKey === "SEM STATUS" &&
-            (!statusValue ||
-              statusValue.trim() === "" ||
-              statusValue === "SEM STATUS")
-          )
-            return true;
-          // Check by category
-          const category = v.categoria_status || getCategoriaStatus(v);
-          if (filterKey === "CONCLUÍDA" && category === "concluidas")
-            return true;
-          if (filterKey === "CONVOCAÇÕES" && category === "convocacao")
-            return true;
-          if (filterKey === "DOCUMENTAÇÃO" && category === "documentacao")
-            return true;
-          if (filterKey === "FILA DE EDITAIS" && category === "fila_edital")
-            return true;
-          if (filterKey === "EM EDITAL" && category === "em_andamento")
-            return true;
-          if (
-            filterKey === "VAGA DE LIDERANÇA" &&
-            category === "vagas_lideranca"
-          )
-            return true;
-          if (
-            filterKey === "CANCELADAS" &&
-            (category === "vagas_interrompidas" || category === "cancelada")
-          )
-            return true;
-          if (
-            filterKey === "AGUARDANDO UNIDADE" &&
-            category === "aguardando_unidade"
-          )
-            return true;
-          if (
-            filterKey === "MOVIMENTAÇÃO INTERNA" &&
-            category === "movimentacao_interna"
-          )
-            return true;
-          if (filterKey === "ADMISSÃO" && category === "em_admissao")
-            return true;
-          if (filterKey === "SUSPENSA" && category === "suspensa") return true;
-          return false;
-        });
+        filterStatusProcesso === "all" ||
+        (v.status_processo || "Solicitada") === filterStatusProcesso;
       const fluxoItems = getVagaFluxoItems(v);
       const matchTratativa =
         filterTratativa === "all" ||
@@ -846,7 +786,7 @@ export default function VagasPage() {
   }, [
     statusScopedBase,
     search,
-    filterStatuses,
+    filterStatusProcesso,
     filterTratativa,
     filterEtapa,
     filterAnalista,
@@ -864,7 +804,7 @@ export default function VagasPage() {
     search,
     filterUnidade,
     filterMes,
-    filterStatuses,
+    filterStatusProcesso,
     filterTratativa,
     filterEtapa,
     filterAnalista,
@@ -1081,7 +1021,7 @@ export default function VagasPage() {
     search ||
     filterUnidade !== "all" ||
     filterMes !== "all" ||
-    filterStatuses.length > 0 ||
+    filterStatusProcesso !== "all" ||
     filterTratativa !== "all" ||
     filterEtapa !== "all" ||
     filterAnalista !== "all" ||
@@ -1530,107 +1470,23 @@ export default function VagasPage() {
                     </SelectContent>
                   </Select>
                 )}
-                <Select value={filterMes} onValueChange={setFilterMes}>
-                  <SelectTrigger className="w-[160px] bg-white text-xs">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-3 w-3" />
-                      <SelectValue placeholder="Mês Abertura" />
-                    </div>
+                <Select value={filterStatusProcesso} onValueChange={setFilterStatusProcesso}>
+                  <SelectTrigger className="w-[160px] bg-white text-xs h-9">
+                    <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os Meses</SelectItem>
-                    {[
-                      "JANEIRO",
-                      "FEVEREIRO",
-                      "MARÇO",
-                      "ABRIL",
-                      "MAIO",
-                      "JUNHO",
-                      "JULHO",
-                      "AGOSTO",
-                      "SETEMBRO",
-                      "OUTUBRO",
-                      "NOVEMBRO",
-                      "DEZEMBRO",
-                    ].map((m) => (
-                      <SelectItem key={m} value={m} className="text-xs">
-                        {m}
-                      </SelectItem>
+                    <SelectItem value="all" className="text-xs font-medium text-slate-500">Todos os Status</SelectItem>
+                    {(["Solicitada", "Em Andamento", "Cancelada", "Suspensa", "Concluída"] as const).map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-[160px] bg-white text-xs h-9 justify-between font-normal"
-                    >
-                      <span className="truncate">
-                        {filterStatuses.length === 0
-                          ? "Status"
-                          : `${filterStatuses.length} selecionado(s)`}
-                      </span>
-                      <ChevronDown className="h-4 w-4 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[200px] p-0" align="start">
-                    <div className="p-2 space-y-1">
-                      <div
-                        className="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded-md cursor-pointer"
-                        onClick={() => setFilterStatuses([])}
-                      >
-                        <div
-                          className={`w-4 h-4 border rounded flex items-center justify-center ${filterStatuses.length === 0 ? "bg-primary border-primary" : "border-slate-300"}`}
-                        >
-                          {filterStatuses.length === 0 && (
-                            <Check className="h-3 w-3 text-white" />
-                          )}
-                        </div>
-                        <span className="text-xs font-medium">
-                          Todos Status
-                        </span>
-                      </div>
-                      <div className="h-px bg-slate-100 my-1" />
-                      <div className="max-h-[300px] overflow-y-auto space-y-1">
-                        {Object.entries(
-                          filtroEspecial === "teias"
-                            ? STATUS_FILTER_OPTIONS_TEIA
-                            : STATUS_FILTER_OPTIONS,
-                        ).map(([k, { label }]) => {
-                          const isSelected = filterStatuses.includes(k);
-                          return (
-                            <div
-                              key={k}
-                              className="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded-md cursor-pointer"
-                              onClick={() => {
-                                if (isSelected) {
-                                  setFilterStatuses(
-                                    filterStatuses.filter((s) => s !== k),
-                                  );
-                                } else {
-                                  setFilterStatuses([...filterStatuses, k]);
-                                }
-                              }}
-                            >
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={() => {}}
-                                className="pointer-events-none"
-                              />
-                              <span className="text-xs">{label}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
                 <Select
                   value={filterTratativa}
                   onValueChange={(v) => {
                     setFilterTratativa(v);
-                    setFilterEtapa("all"); // reset etapa when tratativa changes
+                    setFilterEtapa("all");
                   }}
                 >
                   <SelectTrigger className="w-[200px] bg-white text-xs h-9">
@@ -1658,6 +1514,36 @@ export default function VagasPage() {
                       : ALL_ETAPAS_FILTER
                     ).map((e) => (
                       <SelectItem key={e} value={e} className="text-xs">{e}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterMes} onValueChange={setFilterMes}>
+                  <SelectTrigger className="w-[160px] bg-white text-xs">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3 w-3" />
+                      <SelectValue placeholder="Mês Abertura" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Meses</SelectItem>
+                    {[
+                      "JANEIRO",
+                      "FEVEREIRO",
+                      "MARÇO",
+                      "ABRIL",
+                      "MAIO",
+                      "JUNHO",
+                      "JULHO",
+                      "AGOSTO",
+                      "SETEMBRO",
+                      "OUTUBRO",
+                      "NOVEMBRO",
+                      "DEZEMBRO",
+                    ].map((m) => (
+                      <SelectItem key={m} value={m} className="text-xs">
+                        {m}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

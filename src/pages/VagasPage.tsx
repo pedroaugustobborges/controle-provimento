@@ -1731,7 +1731,6 @@ export default function VagasPage() {
                       </TableHead>
                       <TableHead className="min-w-[80px]">Requisição</TableHead>
                       <TableHead className="min-w-[200px]">Cargo</TableHead>
-                      <TableHead className="min-w-[100px]">Tipo</TableHead>
                       <TableHead className="min-w-[140px]">Unidade</TableHead>
                       <TableHead className="min-w-[120px]">Seção</TableHead>
                       <TableHead className="min-w-[140px]">Requisitante</TableHead>
@@ -1826,11 +1825,6 @@ export default function VagasPage() {
                                   )}
                               </div>
                             </div>
-                          </TableCell>
-                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14">
-                            {TIPO_VAGA_LABELS[v.tipo_vaga] ||
-                              v.tipo_vaga ||
-                              "-"}
                           </TableCell>
                           <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
                             <div className="flex flex-col">

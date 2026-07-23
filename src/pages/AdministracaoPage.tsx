@@ -63,6 +63,8 @@ import { UnidadesPicker, ALL_UNIDADES, UNIDADES_GRUPOS } from '@/components/Unid
 const UNIT_ALIASES: Record<string, string[]> = {
   'HRD': ['CHRD'],          // "CHRD - COMPLEXO HOSPITALAR REGIONAL DE DOURADOS"
   'DOURADOS': ['CHRD'],     // legacy profiles that still store "DOURADOS"
+  'JATAÍ': ['HEJ'],         // "HEJ - HOSPITAL ESTADUAL DE JATAI DR. SERAFIM DE CARVALHO"
+  'JATAI': ['HEJ'],         // accent-stripped variant
 };
 
 /**

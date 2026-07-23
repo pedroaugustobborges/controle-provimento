@@ -991,8 +991,9 @@ export default function VagasPage() {
     setFilterUnidade("all");
     setPcdRegiao(null);
     setFilterMes("all");
-    setFilterStatuses([]);
-    setFilterTipo("all");
+    setFilterStatusProcesso("all");
+    setFilterTratativa("all");
+    setFilterEtapa("all");
     setFilterAnalista("all");
     setFilterAssistente("all");
     setFilterLideranca("all");

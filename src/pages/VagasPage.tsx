@@ -56,6 +56,26 @@ import {
 import { ExportButton } from "@/components/ExportButton";
 // ... keep existing code
 
+// ─── Fluxo filter constants ───────────────────────────────────────────────────
+const TRATATIVAS_FILTER = [
+  'Aproveitamento de Banco de Talentos',
+  'Publicação de Edital',
+  'Movimentação Interna',
+  'Vaga de Liderança',
+  'Aguardando Unidade',
+] as const;
+
+const ETAPAS_POR_TRATATIVA_FILTER: Record<string, string[]> = {
+  'Aproveitamento de Banco de Talentos': ['Convocação', 'Documentação', 'Enviado para Formalização', 'Admissão Efetivada'],
+  'Publicação de Edital': ['Publicar novo edital', 'Em edital', 'Triagem', 'Avaliação Específica', 'Recurso', 'Entrevista', 'Análise Curricular', 'Convocação', 'Documentação', 'Enviado para Formalização', 'Admissão Efetivada', 'Não logrou êxito'],
+  'Movimentação Interna': ['Movimentação direta', 'Processo Seletivo Interno', 'Documentação', 'Edoc'],
+  'Vaga de Liderança': ['Divulgação', 'Triagem', 'Entrevista', 'Documentação', 'Edoc', 'Admissão Efetivada'],
+  'Aguardando Unidade': ['Aguardando Unidade'],
+};
+
+// All unique etapas flattened (for when no tratativa is selected)
+const ALL_ETAPAS_FILTER = [...new Set(Object.values(ETAPAS_POR_TRATATIVA_FILTER).flat())];
+
 // ─── Multi-vaga fluxo helpers (mirrored from VagaDetalhePage) ────────────────
 const SP_CFG: Record<StatusProcesso, { dot: string; text: string; bg: string; border: string }> = {
   'Solicitada':   { dot: 'bg-slate-400',   text: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200' },
@@ -341,7 +361,8 @@ export default function VagasPage() {
     setFilterStatuses([]);
   }, [filtroEspecial]);
 
-  const [filterTipo, setFilterTipo] = useState("all");
+  const [filterTratativa, setFilterTratativa] = useState("all");
+  const [filterEtapa, setFilterEtapa] = useState("all");
   const [filterAnalista, setFilterAnalista] = useState("all");
   const [filterAssistente, setFilterAssistente] = useState("all");
   const [filterLideranca, setFilterLideranca] = useState("all");
@@ -757,7 +778,13 @@ export default function VagasPage() {
           if (filterKey === "SUSPENSA" && category === "suspensa") return true;
           return false;
         });
-      const matchTipo = filterTipo === "all" || v.tipo_vaga === filterTipo;
+      const fluxoItems = getVagaFluxoItems(v);
+      const matchTratativa =
+        filterTratativa === "all" ||
+        fluxoItems.some((item) => item.tratativa === filterTratativa);
+      const matchEtapa =
+        filterEtapa === "all" ||
+        fluxoItems.some((item) => item.etapa === filterEtapa);
       const matchAnalista =
         filterAnalista === "all" || v.analista_responsavel === filterAnalista;
       const matchAssistente =
@@ -806,7 +833,8 @@ export default function VagasPage() {
       return (
         matchSearch &&
         matchStatus &&
-        matchTipo &&
+        matchTratativa &&
+        matchEtapa &&
         matchAnalista &&
         matchAssistente &&
         matchLideranca &&
@@ -819,7 +847,8 @@ export default function VagasPage() {
     statusScopedBase,
     search,
     filterStatuses,
-    filterTipo,
+    filterTratativa,
+    filterEtapa,
     filterAnalista,
     filterAssistente,
     filterLideranca,
@@ -836,7 +865,8 @@ export default function VagasPage() {
     filterUnidade,
     filterMes,
     filterStatuses,
-    filterTipo,
+    filterTratativa,
+    filterEtapa,
     filterAnalista,
     filterAssistente,
     filterLideranca,
@@ -1052,7 +1082,8 @@ export default function VagasPage() {
     filterUnidade !== "all" ||
     filterMes !== "all" ||
     filterStatuses.length > 0 ||
-    filterTipo !== "all" ||
+    filterTratativa !== "all" ||
+    filterEtapa !== "all" ||
     filterAnalista !== "all" ||
     filterAssistente !== "all" ||
     filterLideranca !== "all" ||
@@ -1595,16 +1626,38 @@ export default function VagasPage() {
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Select value={filterTipo} onValueChange={setFilterTipo}>
-                  <SelectTrigger className="w-[160px] bg-white text-xs">
-                    <SelectValue placeholder="Tipo de Vaga" />
+                <Select
+                  value={filterTratativa}
+                  onValueChange={(v) => {
+                    setFilterTratativa(v);
+                    setFilterEtapa("all"); // reset etapa when tratativa changes
+                  }}
+                >
+                  <SelectTrigger className="w-[200px] bg-white text-xs h-9">
+                    <SelectValue placeholder="Tratativa" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos Tipos</SelectItem>
-                    {Object.entries(TIPO_VAGA_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k} className="text-xs">
-                        {v}
-                      </SelectItem>
+                    <SelectItem value="all" className="text-xs font-medium text-slate-500">Todas as Tratativas</SelectItem>
+                    {TRATATIVAS_FILTER.map((t) => (
+                      <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={filterEtapa}
+                  onValueChange={setFilterEtapa}
+                >
+                  <SelectTrigger className={`w-[190px] bg-white text-xs h-9 ${filterTratativa !== "all" ? "" : "opacity-60"}`}>
+                    <SelectValue placeholder="Etapa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs font-medium text-slate-500">Todas as Etapas</SelectItem>
+                    {(filterTratativa !== "all"
+                      ? ETAPAS_POR_TRATATIVA_FILTER[filterTratativa] ?? []
+                      : ALL_ETAPAS_FILTER
+                    ).map((e) => (
+                      <SelectItem key={e} value={e} className="text-xs">{e}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

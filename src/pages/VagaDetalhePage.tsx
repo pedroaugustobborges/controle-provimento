@@ -283,7 +283,7 @@ function parseObsItems(raw: string | null | undefined): ObsItem[] {
 }
 
 function obsRelativeTime(iso: string): string {
-  if (!iso) return "Registro anterior ao sistema";
+  if (!iso) return "Registro vindo do RM para o GDP";
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "agora mesmo";
@@ -452,10 +452,11 @@ export default function VagaDetalhePage() {
   }, [id, trackEditing, stopTrackingEditing]);
 
   // Keep a ref so event listeners always read the latest value without re-registering
+  // Covers both: unsaved fluxo changes AND unsubmitted obs text
   const fluxoDirtyRef = useRef(false);
   useEffect(() => {
-    fluxoDirtyRef.current = fluxoDirty;
-  }, [fluxoDirty]);
+    fluxoDirtyRef.current = fluxoDirty || newObsText.trim() !== "";
+  }, [fluxoDirty, newObsText]);
 
   useEffect(() => {
     // 1. Browser close / hard refresh
@@ -2311,12 +2312,32 @@ export default function VagaDetalhePage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
               <AlertTriangle className="h-5 w-5" />
-              Alterações não salvas no Fluxo do Processo
+              Você tem alterações não salvas
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-600">
-              Você fez alterações no <strong>Fluxo do Processo</strong> que
-              ainda não foram salvas. Se sair agora, essas alterações serão
-              perdidas.
+            <AlertDialogDescription asChild>
+              <div className="text-slate-600 space-y-2 text-sm">
+                <p>Se sair agora, as seguintes informações serão perdidas:</p>
+                <ul className="list-disc list-inside space-y-1 text-slate-500">
+                  {fluxoDirty && (
+                    <li>
+                      Alterações no{" "}
+                      <strong className="text-slate-700">
+                        Fluxo do Processo
+                      </strong>{" "}
+                      (Tratativa / Etapa / Status)
+                    </li>
+                  )}
+                  {newObsText.trim() !== "" && (
+                    <li>
+                      Observação interna digitada:{" "}
+                      <em className="text-slate-700">
+                        "{newObsText.trim().slice(0, 60)}
+                        {newObsText.trim().length > 60 ? "…" : ""}"
+                      </em>
+                    </li>
+                  )}
+                </ul>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col-reverse sm:flex-row gap-2">
@@ -2333,6 +2354,7 @@ export default function VagaDetalhePage() {
               onClick={() => {
                 setFluxoDirty(false);
                 setFluxoDraft({});
+                setNewObsText("");
                 setShowUnsavedAlert(false);
                 pendingNav?.();
                 setPendingNav(null);

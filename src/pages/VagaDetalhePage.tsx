@@ -16,7 +16,7 @@ import { calcDiasAberto, formatDate, getValidacaoColor, getEtapaColor, getStatus
 import { TIPO_VAGA_LABELS, STATUS_VAGA_LABELS, ETAPA_LABELS, StatusVaga, EtapaEdital, STATUS_EDITAL_COLORS, STATUS_LABELS, Vaga, Convocacao, Edital, VagaCronograma, TODAS_AS_ETAPAS, isTeiaUnit, TratativaVaga, EtapaVaga, StatusProcesso, VagaFluxoItem } from '@/types/vaga';
 import {
   ArrowLeft, Clock, User, MapPin, Hash, Calendar, CheckCircle2, XCircle, Minus,
-  FileSpreadsheet, Info, Building2, Plus, Trash2, AlertCircle, Activity, Check,
+  FileSpreadsheet, Info, Building2, Plus, AlertCircle, Activity, Check,
   Save, Users, Search as SearchIcon, Zap, UserCheck, CheckCircle, Send, Search,
   AlertTriangle, ArrowRightCircle, ExternalLink, Edit, Copy, ArrowLeftRight, Crown,
   Target, ChevronRight, MessageSquare, Loader2
@@ -30,7 +30,6 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useState, useEffect, useMemo, ChangeEvent } from 'react';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
-import { AddVagaDialog } from '@/components/AddVagaDialog';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   AlertDialog,
@@ -171,11 +170,10 @@ export default function VagaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateVagaAsync, updateEdital, updateValidacao, addEdital, addValidacao, deleteVaga, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao, trackEditing, stopTrackingEditing, editingUsers } = useVagasStore();
+  const { getVaga, getEditalByVaga, getValidacaoByVaga, updateVaga, updateVagaAsync, updateEdital, updateValidacao, addEdital, addValidacao, getBancoByVaga, addBanco, addTarefa, addAlerta, convocacoes, addConvocacao, trackEditing, stopTrackingEditing, editingUsers } = useVagasStore();
   const { currentUser, addAuditLog } = useAdminStore();
   const permissions = usePermissions();
   
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConvocacaoDialogOpen, setIsConvocacaoDialogOpen] = useState(false);
   const [isCreateBancoDialogOpen, setIsCreateBancoDialogOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
@@ -186,7 +184,6 @@ export default function VagaDetalhePage() {
     const slot = parseInt(searchParams.get('slot') || '1', 10);
     return isNaN(slot) || slot < 1 ? 1 : slot;
   });
-  const [isEditVagaOpen, setIsEditVagaOpen] = useState(false);
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
@@ -247,8 +244,7 @@ export default function VagaDetalhePage() {
   const validacao = getValidacaoByVaga(vaga.id);
   const banco = getBancoByVaga(vaga.id);
 
-  const canDelete = currentUser?.perfil === 'Admin' || currentUser?.perfil === 'Administrador' || currentUser?.pode_excluir_requisicoes;
-  const canEdit = ['Admin', 'Administrador', 'Analista', 'Analista de RH', 'Analista Administrativo', 'Analista de Edital', 'Analista das Convocações', 'Assistente de RH', 'Gerência', 'Coordenação', 'Supervisão'].includes(currentUser?.perfil || '');
+  const canEdit =['Admin', 'Administrador', 'Analista', 'Analista de RH', 'Analista Administrativo', 'Analista de Edital', 'Analista das Convocações', 'Assistente de RH', 'Gerência', 'Coordenação', 'Supervisão'].includes(currentUser?.perfil || '');
   const isAssistente = currentUser?.perfil === 'Assistente' || currentUser?.perfil === 'Assistente de RH';
 
   const handleStatusChange = (newStatus: string) => {
@@ -602,26 +598,6 @@ export default function VagaDetalhePage() {
     setIsSavingObs(false);
   };
 
-  const handleDelete = () => {
-    if (vaga && canDelete) {
-// ... keep existing code
-
-      deleteVaga(vaga.id);
-      addAuditLog({
-        usuario_nome: currentUser?.nome_completo || 'Sistema',
-        usuario_email: currentUser?.email || 'sistema@sistema.com',
-        perfil: currentUser?.perfil || 'Sistema',
-        data: new Date().toISOString().split('T')[0],
-        hora: new Date().toLocaleTimeString(),
-        acao: 'Excluir Requisição',
-        modulo: 'Vagas',
-        registro_afetado: vaga.requisicao || vaga.numero_requisicao || vaga.id,
-      });
-      toast.success('Requisição excluída com sucesso.');
-      navigate('/vagas');
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -654,15 +630,6 @@ export default function VagaDetalhePage() {
             )}
             <StatusBadge status={(vaga.status_processo || vaga.status || vaga.status_geral || 'aberta') as any} />
           </div>
-          {permissions.canDirectEdit() && (
-            <Button 
-              variant="outline" 
-              className="text-amber-600 border-amber-200 hover:bg-amber-50 gap-2 font-bold"
-              onClick={() => setIsEditVagaOpen(true)}
-            >
-              <Edit className="h-4 w-4" /> Editar Registro
-            </Button>
-          )}
           {permissions.canRequestUpdate() && (
             <Button 
               variant="outline" 
@@ -670,15 +637,6 @@ export default function VagaDetalhePage() {
               onClick={() => setIsRequestUpdateOpen(true)}
             >
               <AlertCircle className="h-4 w-4" /> Solicitar Atualização
-            </Button>
-          )}
-          {permissions.canDeleteRecords() && (
-            <Button 
-              variant="outline" 
-              className="text-destructive border-destructive/20 hover:bg-destructive/5 gap-2"
-              onClick={() => setIsDeleteDialogOpen(true)}
-            >
-              <Trash2 className="h-4 w-4" /> Excluir
             </Button>
           )}
         </div>
@@ -1192,7 +1150,7 @@ export default function VagaDetalhePage() {
         </TabsContent>
         
         <TabsContent value="acompanhamento">
-          <AcompanhamentoTab vaga={vaga} onEditVaga={() => setIsEditVagaOpen(true)} />
+          <AcompanhamentoTab vaga={vaga} />
         </TabsContent>
         
         <TabsContent value="banco">
@@ -1265,26 +1223,6 @@ export default function VagaDetalhePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" />
-              Excluir requisição?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Essa ação não pode ser desfeita. O registro será removido permanentemente do sistema e esta ação será auditada.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Confirmar Exclusão
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <Dialog open={isQuickConvocacaoOpen} onOpenChange={setIsQuickConvocacaoOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -1344,11 +1282,6 @@ export default function VagaDetalhePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <AddVagaDialog 
-        open={isEditVagaOpen} 
-        onOpenChange={setIsEditVagaOpen} 
-        vaga={vaga}
-      />
       <RequestUpdateDialog
         isOpen={isRequestUpdateOpen}
         onClose={() => setIsRequestUpdateOpen(false)}
@@ -1389,7 +1322,7 @@ const CRONOGRAMA_KEYS: Record<EtapaEdital, keyof VagaCronograma> = {
   publicar_novo_edital: 'data_encerramento_processo',
 };
 
-function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () => void }) {
+function AcompanhamentoTab({ vaga }: { vaga: Vaga }) {
   const { updateVaga } = useVagasStore();
   const [form, setForm] = useState<any>(vaga.acompanhamento || {
     etapa_atual: 'inscricoes',
@@ -1840,14 +1773,6 @@ function AcompanhamentoTab({ vaga, onEditVaga }: { vaga: Vaga, onEditVaga: () =>
             <div className="flex flex-col gap-3">
               <Button onClick={save} className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold h-12">
                 Salvar Acompanhamento
-              </Button>
-              <Button 
-                variant="outline" 
-                type="button"
-                onClick={onEditVaga}
-                className="w-full text-amber-600 border-amber-200 hover:bg-amber-50 font-bold h-12"
-              >
-                <Edit className="h-4 w-4 mr-2" /> Editar Registro
               </Button>
             </div>
             <p className="text-[11px] text-center text-slate-400 font-medium">As alterações serão registradas no histórico da vaga.</p>

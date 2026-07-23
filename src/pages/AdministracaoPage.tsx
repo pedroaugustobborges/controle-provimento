@@ -13,10 +13,10 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase';
 import { 
-  Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2, 
+  Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2,
   Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
   HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send, Eye, EyeOff,
-  MessageSquare, Camera, Upload, User as UserIcon, Calendar
+  MessageSquare, Camera, Upload, User as UserIcon, Calendar, AlertTriangle
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -118,6 +118,18 @@ export default function AdministracaoPage() {
 
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
+
+  // Map of unit → registered user name currently responsible (only real profile users, not static equipe.ts data)
+  const unitAnalystMap = useMemo(() => {
+    const userNames = new Set((users || []).map((u: any) => u.nome_completo).filter(Boolean));
+    const map = new Map<string, string>();
+    vagas.forEach(v => {
+      if (v.unidade && v.analista_responsavel && userNames.has(v.analista_responsavel) && !map.has(v.unidade)) {
+        map.set(v.unidade, v.analista_responsavel);
+      }
+    });
+    return map;
+  }, [vagas, users]);
   
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
@@ -166,7 +178,7 @@ export default function AdministracaoPage() {
     acesso_portal_unidade: false,
     sendWelcomeEmail: true,
     regiao_suporte: null as string | null,
-    responsavel_fluxo: null as boolean | null,
+    unidades_responsavel: [] as string[],
   });
 
   useEffect(() => {
@@ -252,7 +264,7 @@ export default function AdministracaoPage() {
       pode_editar_configuracoes: false, pode_gerenciar_usuarios: false,
       acesso_portal_unidade: false, sendWelcomeEmail: true,
       regiao_suporte: null as string | null,
-      responsavel_fluxo: null as boolean | null,
+      unidades_responsavel: [] as string[],
     });
   };
 
@@ -266,9 +278,13 @@ export default function AdministracaoPage() {
       toast.error(passwordError);
       return;
     }
-    if (newUser.responsavel_fluxo === null) {
-      toast.error('Defina se este usuário será responsável pelo fluxo de provimento.');
-      return;
+    const isAnalista = newUser.perfil === 'Analista de RH' || newUser.perfil === 'Analista Administrativo';
+    if (isAnalista && newUser.unidades_responsavel.length > 0) {
+      const conflictUnit = newUser.unidades_responsavel.find(u => unitAnalystMap.has(u));
+      if (conflictUnit) {
+        toast.error(`A unidade "${conflictUnit}" já possui um analista responsável: ${unitAnalystMap.get(conflictUnit)}. Remova o conflito antes de salvar.`);
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -278,30 +294,21 @@ export default function AdministracaoPage() {
         sendWelcomeEmail: newUser.sendWelcomeEmail,
       });
 
-      // If responsible for the flow, assign analista_responsavel on matching vagas
-      if (newUser.responsavel_fluxo === true) {
-        const unidades = newUser.visualiza_todas_unidades
-          ? null // null = all units
-          : newUser.unidades_vinculadas;
-
-        if (unidades === null || unidades.length > 0) {
-          const { supabase } = await import('@/integrations/supabase/client');
-          let query = supabase
-            .from('vagas')
-            .update({ analista_responsavel: newUser.nome_completo });
-          if (unidades !== null) {
-            query = query.in('unidade', unidades);
-          }
-          const { error } = await query;
-          if (error) {
-            console.error('[handleCreateUser] Bulk vaga assignment error:', error);
-            toast.warning('Usuário criado, mas houve um erro ao atribuir vagas. Verifique manualmente.');
-          } else {
-            const { updateVaga } = useVagasStore.getState();
-            useVagasStore.getState().vagas
-              .filter(v => unidades === null || unidades.includes(v.unidade))
-              .forEach(v => updateVaga(v.id, { analista_responsavel: newUser.nome_completo }));
-          }
+      // Assign analista_responsavel on vagas for selected responsible units
+      if (isAnalista && newUser.unidades_responsavel.length > 0) {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { error } = await supabase
+          .from('vagas')
+          .update({ analista_responsavel: newUser.nome_completo })
+          .in('unidade', newUser.unidades_responsavel);
+        if (error) {
+          console.error('[handleCreateUser] Bulk vaga assignment error:', error);
+          toast.warning('Usuário criado, mas houve um erro ao atribuir vagas. Verifique manualmente.');
+        } else {
+          const { updateVaga } = useVagasStore.getState();
+          useVagasStore.getState().vagas
+            .filter(v => newUser.unidades_responsavel.includes(v.unidade))
+            .forEach(v => updateVaga(v.id, { analista_responsavel: newUser.nome_completo }));
         }
       }
 
@@ -379,18 +386,37 @@ export default function AdministracaoPage() {
   };
 
   const openEditUser = (user: any) => {
+    // Derive which units this user is currently responsible for (from vagas data)
+    const currentResponsavelUnits = [...new Set(
+      vagas
+        .filter(v => v.analista_responsavel === user.nome_completo && v.unidade)
+        .map(v => v.unidade as string)
+    )];
     setEditingUser({
       ...user,
       unidades_vinculadas: Array.isArray(user.unidades_vinculadas) ? user.unidades_vinculadas : [],
       modulos_acesso: Array.isArray(user.modulos_acesso) ? user.modulos_acesso : [],
       permissoes_modulo: user.permissoes_modulo || {},
       visualiza_todas_unidades: !!user.visualiza_todas_unidades,
+      unidades_responsavel: currentResponsavelUnits,
     });
     setIsEditUserOpen(true);
   };
 
   const handleSaveEditUser = async () => {
     if (!editingUser) return;
+    const isAnalista = editingUser.perfil === 'Analista de RH' || editingUser.perfil === 'Analista Administrativo';
+    const newUnidadesResponsavel: string[] = editingUser.unidades_responsavel || [];
+    if (isAnalista && newUnidadesResponsavel.length > 0) {
+      const conflictUnit = newUnidadesResponsavel.find(u => {
+        const existing = unitAnalystMap.get(u);
+        return existing && existing !== editingUser.nome_completo;
+      });
+      if (conflictUnit) {
+        toast.error(`A unidade "${conflictUnit}" já possui outro analista responsável: ${unitAnalystMap.get(conflictUnit)}.`);
+        return;
+      }
+    }
     setSaving(true);
     try {
       await updateUser(editingUser.id, {
@@ -409,6 +435,43 @@ export default function AdministracaoPage() {
         permissoes_modulo: editingUser.permissoes_modulo,
         regiao_suporte: editingUser.cargo === 'Analista Administrativo' ? editingUser.regiao_suporte : null,
       });
+
+      // Handle analista_responsavel bulk update for Analista profiles
+      if (isAnalista) {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { updateVaga } = useVagasStore.getState();
+        const allVagas = useVagasStore.getState().vagas;
+
+        // Derive old responsible units
+        const oldUnidades = [...new Set(
+          allVagas
+            .filter(v => v.analista_responsavel === editingUser.nome_completo && v.unidade)
+            .map(v => v.unidade as string)
+        )];
+
+        // Clear from units that were removed
+        const unidadesToClear = oldUnidades.filter(u => !newUnidadesResponsavel.includes(u));
+        if (unidadesToClear.length > 0) {
+          await supabase.from('vagas')
+            .update({ analista_responsavel: null })
+            .eq('analista_responsavel', editingUser.nome_completo)
+            .in('unidade', unidadesToClear);
+          allVagas
+            .filter(v => unidadesToClear.includes(v.unidade) && v.analista_responsavel === editingUser.nome_completo)
+            .forEach(v => updateVaga(v.id, { analista_responsavel: null }));
+        }
+
+        // Set for new responsible units
+        if (newUnidadesResponsavel.length > 0) {
+          await supabase.from('vagas')
+            .update({ analista_responsavel: editingUser.nome_completo })
+            .in('unidade', newUnidadesResponsavel);
+          allVagas
+            .filter(v => newUnidadesResponsavel.includes(v.unidade))
+            .forEach(v => updateVaga(v.id, { analista_responsavel: editingUser.nome_completo }));
+        }
+      }
+
       toast.success('Dados do usuário atualizados.');
       setIsEditUserOpen(false);
       setEditingUser(null);
@@ -1569,94 +1632,94 @@ export default function AdministracaoPage() {
               </div>
             </div>
 
-            {/* Responsabilidade pelo Fluxo de Provimento */}
-            <div className="space-y-4 border-t pt-4">
-              <div>
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  Responsabilidade pelo Fluxo de Provimento
-                  <span className="text-red-500 font-black text-sm leading-none">*</span>
-                </h4>
-                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                  Quando um usuário é responsável pelo fluxo, todos os provimentos da unidade hospitalar selecionada serão atribuídos a este usuário. Ao marcar <strong>"Não"</strong>, este usuário poderá apenas ver o fluxo de provimentos, sem ter responsabilidade por sua execução.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Sim */}
-                <button
-                  type="button"
-                  onClick={() => setNewUser(p => ({ ...p, responsavel_fluxo: true }))}
-                  className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
-                    newUser.responsavel_fluxo === true
-                      ? 'border-emerald-500 bg-emerald-50 shadow-sm shadow-emerald-100'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  {newUser.responsavel_fluxo === true && (
-                    <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500">
-                      <Check className="h-2.5 w-2.5 text-white" />
-                    </span>
-                  )}
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${newUser.responsavel_fluxo === true ? 'bg-emerald-500' : 'bg-slate-100'}`}>
-                    <Check className={`h-4 w-4 ${newUser.responsavel_fluxo === true ? 'text-white' : 'text-slate-400'}`} />
-                  </div>
-                  <div>
-                    <p className={`text-sm font-black ${newUser.responsavel_fluxo === true ? 'text-emerald-700' : 'text-slate-700'}`}>Sim</p>
-                    <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">Será atribuído às vagas das unidades selecionadas</p>
-                  </div>
-                </button>
-
-                {/* Não */}
-                <button
-                  type="button"
-                  onClick={() => setNewUser(p => ({ ...p, responsavel_fluxo: false }))}
-                  className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-150 ${
-                    newUser.responsavel_fluxo === false
-                      ? 'border-slate-500 bg-slate-50 shadow-sm shadow-slate-100'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  {newUser.responsavel_fluxo === false && (
-                    <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-500">
-                      <Check className="h-2.5 w-2.5 text-white" />
-                    </span>
-                  )}
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${newUser.responsavel_fluxo === false ? 'bg-slate-500' : 'bg-slate-100'}`}>
-                    <X className={`h-4 w-4 ${newUser.responsavel_fluxo === false ? 'text-white' : 'text-slate-400'}`} />
-                  </div>
-                  <div>
-                    <p className={`text-sm font-black ${newUser.responsavel_fluxo === false ? 'text-slate-700' : 'text-slate-700'}`}>Não</p>
-                    <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">Acesso de visualização sem atribuição de vagas</p>
-                  </div>
-                </button>
-              </div>
-
-              {/* Contextual info when Sim is selected */}
-              {newUser.responsavel_fluxo === true && (
-                <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="text-[11px] text-amber-700 font-medium leading-relaxed">
-                    {newUser.visualiza_todas_unidades ? (
-                      <span>Todas as vagas do sistema serão atribuídas a <strong>{newUser.nome_completo || 'este usuário'}</strong> como analista responsável.</span>
-                    ) : newUser.unidades_vinculadas.length > 0 ? (
-                      <span>
-                        As vagas das unidades <strong>{newUser.unidades_vinculadas.join(', ')}</strong> serão atribuídas a <strong>{newUser.nome_completo || 'este usuário'}</strong>.
-                      </span>
-                    ) : (
-                      <span>Selecione as unidades acima para que as vagas sejam atribuídas a este usuário.</span>
-                    )}
-                  </div>
+            {/* Responsabilidade pelo Provimento — only for Analista profiles */}
+            {(newUser.perfil === 'Analista de RH' || newUser.perfil === 'Analista Administrativo') && (
+              <div className="space-y-4 border-t pt-4">
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                    Responsabilidade pelo Provimento
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    Este usuário será responsável pelo provimento de quais unidades? As vagas dessas unidades serão atribuídas a ele como <strong>Analista Resp.</strong>
+                  </p>
                 </div>
-              )}
 
-              {newUser.responsavel_fluxo === null && (
-                <p className="text-[11px] text-red-500 font-medium flex items-center gap-1.5">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500" />
-                  Campo obrigatório — selecione uma opção acima.
-                </p>
-              )}
-            </div>
+                {(() => {
+                  const availableUnits = newUser.visualiza_todas_unidades
+                    ? ALL_UNIDADES
+                    : newUser.unidades_vinculadas;
+
+                  if (availableUnits.length === 0) {
+                    return (
+                      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Selecione as unidades com acesso acima para definir a responsabilidade.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5 max-h-56 overflow-y-auto">
+                      {availableUnits.map((unit: string) => {
+                        const existingAnalyst = unitAnalystMap.get(unit);
+                        const hasConflict = !!existingAnalyst;
+                        const isSelected = newUser.unidades_responsavel.includes(unit);
+                        const toggle = () => {
+                          if (hasConflict && !isSelected) return;
+                          setNewUser(p => ({
+                            ...p,
+                            unidades_responsavel: isSelected
+                              ? p.unidades_responsavel.filter(u => u !== unit)
+                              : [...p.unidades_responsavel, unit],
+                          }));
+                        };
+                        return (
+                          <div
+                            key={unit}
+                            onClick={toggle}
+                            className={`flex items-center justify-between gap-3 p-2.5 rounded-lg border transition-all ${
+                              isSelected
+                                ? 'bg-indigo-50 border-indigo-300 cursor-pointer'
+                                : hasConflict
+                                ? 'bg-red-50/50 border-red-100 opacity-60 cursor-not-allowed'
+                                : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <Checkbox
+                                checked={isSelected}
+                                disabled={hasConflict && !isSelected}
+                                onCheckedChange={toggle}
+                                className="shrink-0"
+                              />
+                              <span className="text-[12px] font-semibold text-slate-700 truncate">{unit}</span>
+                            </div>
+                            {hasConflict && !isSelected && (
+                              <span className="text-[10px] font-bold text-red-500 shrink-0 flex items-center gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                {existingAnalyst}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
+                {newUser.unidades_responsavel.length > 1 && (
+                  <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
+                      Não é comum que um mesmo analista seja responsável pelo provimento de mais de uma unidade. Siga somente se tiver certeza.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Permissões específicas (Legacy Flags) */}
             <div className="space-y-3 border-t pt-4">
@@ -1859,6 +1922,95 @@ export default function AdministracaoPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Responsabilidade pelo Provimento — only for Analista profiles */}
+                  {(editingUser.perfil === 'Analista de RH' || editingUser.perfil === 'Analista Administrativo') && (
+                    <div className="space-y-4 border-t pt-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                          Responsabilidade pelo Provimento
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                          Este usuário será responsável pelo provimento de quais unidades? As vagas dessas unidades serão atribuídas a ele como <strong>Analista Resp.</strong>
+                        </p>
+                      </div>
+
+                      {(() => {
+                        const availableUnits = editingUser.visualiza_todas_unidades
+                          ? ALL_UNIDADES
+                          : (editingUser.unidades_vinculadas || []);
+
+                        if (availableUnits.length === 0) {
+                          return (
+                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                              <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                Selecione as unidades com acesso acima para definir a responsabilidade.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5 max-h-56 overflow-y-auto">
+                            {availableUnits.map((unit: string) => {
+                              const existingAnalyst = unitAnalystMap.get(unit);
+                              const hasConflict = !!existingAnalyst && existingAnalyst !== editingUser.nome_completo;
+                              const isSelected = (editingUser.unidades_responsavel || []).includes(unit);
+                              const toggle = () => {
+                                if (hasConflict && !isSelected) return;
+                                setEditingUser((p: any) => ({
+                                  ...p,
+                                  unidades_responsavel: isSelected
+                                    ? (p.unidades_responsavel || []).filter((u: string) => u !== unit)
+                                    : [...(p.unidades_responsavel || []), unit],
+                                }));
+                              };
+                              return (
+                                <div
+                                  key={unit}
+                                  onClick={toggle}
+                                  className={`flex items-center justify-between gap-3 p-2.5 rounded-lg border transition-all ${
+                                    isSelected
+                                      ? 'bg-indigo-50 border-indigo-300 cursor-pointer'
+                                      : hasConflict
+                                      ? 'bg-red-50/50 border-red-100 opacity-60 cursor-not-allowed'
+                                      : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/30 cursor-pointer'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <Checkbox
+                                      checked={isSelected}
+                                      disabled={hasConflict && !isSelected}
+                                      onCheckedChange={toggle}
+                                      className="shrink-0"
+                                    />
+                                    <span className="text-[12px] font-semibold text-slate-700 truncate">{unit}</span>
+                                  </div>
+                                  {hasConflict && !isSelected && (
+                                    <span className="text-[10px] font-bold text-red-500 shrink-0 flex items-center gap-1">
+                                      <AlertTriangle className="h-3 w-3" />
+                                      {existingAnalyst}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+
+                      {(editingUser.unidades_responsavel || []).length > 1 && (
+                        <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
+                            Não é comum que um mesmo analista seja responsável pelo provimento de mais de uma unidade. Siga somente se tiver certeza.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Acesso a Módulos */}
                   <div className="space-y-4 border-t pt-4">

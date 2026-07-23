@@ -713,7 +713,9 @@ export default function VagasPage() {
           .toLowerCase()
           .includes(searchTerm) ||
         (v.unidade || "").toLowerCase().includes(searchTerm) ||
-        (v.analista_responsavel || "").toLowerCase().includes(searchTerm);
+        (v.analista_responsavel || "").toLowerCase().includes(searchTerm) ||
+        (v.nome_requisitante || "").toLowerCase().includes(searchTerm) ||
+        (v.motivo || "").toLowerCase().includes(searchTerm);
 
       const matchStatus =
         filterStatusProcesso === "all" ||
@@ -1392,7 +1394,7 @@ export default function VagasPage() {
                   <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar cargo, requisição ou unidade..."
+                      placeholder="Buscar cargo, requisição, unidade, requisitante ou motivo..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className="pl-9 bg-white"

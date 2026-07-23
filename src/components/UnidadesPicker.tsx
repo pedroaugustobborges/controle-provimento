@@ -24,7 +24,7 @@ export const UNIDADES_GRUPOS: { label: string; color: string; dot: string; units
     dot: 'bg-violet-500',
     units: [
       'HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA',
-      'DOURADOS', 'TEIA CEN', 'TEIA PIN', 'CHS',
+      'TEIA CEN', 'TEIA PIN', 'CHS',
       'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3',
     ],
   },

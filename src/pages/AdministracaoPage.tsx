@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EQUIPE_POR_UNIDADE, RESPONSAVEL_LIDERANCA } from '@/data/equipe';
-import { getCategoriaStatus } from '@/lib/vagaUtils';
+import { getCategoriaStatus, unitIsAllowed, normalizeUnitName } from '@/lib/vagaUtils';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -57,6 +57,40 @@ import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
 import { generateTempPassword, getAdminPasswordErrorMessage, validateAdminPassword } from '@/lib/adminPasswordUtils';
 import { SistemaTab } from '@/components/admin/SistemaTab';
 import { UnidadesPicker, ALL_UNIDADES, UNIDADES_GRUPOS } from '@/components/UnidadesPicker';
+
+// Explicit aliases for units whose full name in `vagas.unidade` does not start
+// with the short name used in profiles/UnidadesPicker.
+const UNIT_ALIASES: Record<string, string[]> = {
+  'HRD': ['CHRD'],          // "CHRD - COMPLEXO HOSPITALAR REGIONAL DE DOURADOS"
+  'DOURADOS': ['CHRD'],     // legacy profiles that still store "DOURADOS"
+};
+
+/**
+ * Checks whether a full vaga unit name belongs to a short unit name.
+ * 1. Tries exact prefix match via unitIsAllowed.
+ * 2. Tries known aliases (e.g. HRD → CHRD).
+ * 3. Falls back to an `includes` check for remaining edge cases.
+ */
+const vagaMatchesShortUnits = (vagaUnidade: string | null | undefined, shortNames: string[]): boolean => {
+  if (!vagaUnidade || shortNames.length === 0) return false;
+  if (unitIsAllowed(vagaUnidade, shortNames)) return true;
+  const normFull = normalizeUnitName(vagaUnidade);
+  return shortNames.some(s => {
+    const normShort = normalizeUnitName(s);
+    if (normFull.includes(normShort)) return true;
+    // Check aliases: if s has known prefixes that appear in the full name
+    const prefixes = UNIT_ALIASES[s.toUpperCase()] || [];
+    return prefixes.some(p => normFull.startsWith(normalizeUnitName(p)));
+  });
+};
+
+/**
+ * Resolves a full vaga unit name to its canonical short name from ALL_UNIDADES.
+ * Falls back to the original string if no match is found.
+ */
+const resolveShortUnitName = (vagaUnidade: string): string => {
+  return ALL_UNIDADES.find(u => vagaMatchesShortUnits(vagaUnidade, [u])) ?? vagaUnidade;
+};
 
 const MODULOS_SISTEMA = [
   { id: 'vagas', label: 'Vagas (Painel Principal)' },
@@ -119,13 +153,16 @@ export default function AdministracaoPage() {
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
 
-  // Map of unit → registered user name currently responsible (only real profile users, not static equipe.ts data)
+  // Map of short unit name → registered user currently responsible
+  // Uses vagaMatchesShortUnits (prefix + includes) to handle all unit name formats
   const unitAnalystMap = useMemo(() => {
     const userNames = new Set((users || []).map((u: any) => u.nome_completo).filter(Boolean));
-    const map = new Map<string, string>();
+    const map = new Map<string, string>(); // shortName → analystName
     vagas.forEach(v => {
-      if (v.unidade && v.analista_responsavel && userNames.has(v.analista_responsavel) && !map.has(v.unidade)) {
-        map.set(v.unidade, v.analista_responsavel);
+      if (!v.unidade || !v.analista_responsavel || !userNames.has(v.analista_responsavel)) return;
+      const shortName = resolveShortUnitName(v.unidade);
+      if (shortName && !map.has(shortName)) {
+        map.set(shortName, v.analista_responsavel);
       }
     });
     return map;
@@ -294,21 +331,26 @@ export default function AdministracaoPage() {
         sendWelcomeEmail: newUser.sendWelcomeEmail,
       });
 
-      // Assign analista_responsavel on vagas for selected responsible units
+      // Assign analista_responsavel on vagas for selected responsible units (prefix match)
       if (isAnalista && newUser.unidades_responsavel.length > 0) {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { error } = await supabase
-          .from('vagas')
-          .update({ analista_responsavel: newUser.nome_completo })
-          .in('unidade', newUser.unidades_responsavel);
-        if (error) {
-          console.error('[handleCreateUser] Bulk vaga assignment error:', error);
-          toast.warning('Usuário criado, mas houve um erro ao atribuir vagas. Verifique manualmente.');
-        } else {
-          const { updateVaga } = useVagasStore.getState();
-          useVagasStore.getState().vagas
-            .filter(v => newUser.unidades_responsavel.includes(v.unidade))
-            .forEach(v => updateVaga(v.id, { analista_responsavel: newUser.nome_completo }));
+        const allVagas = useVagasStore.getState().vagas;
+        const matchingVagas = allVagas.filter(v =>
+          vagaMatchesShortUnits(v.unidade, newUser.unidades_responsavel)
+        );
+        const matchingIds = matchingVagas.map(v => v.id);
+        if (matchingIds.length > 0) {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { error } = await supabase
+            .from('vagas')
+            .update({ analista_responsavel: newUser.nome_completo })
+            .in('id', matchingIds);
+          if (error) {
+            console.error('[handleCreateUser] Bulk vaga assignment error:', error);
+            toast.warning('Usuário criado, mas houve um erro ao atribuir vagas. Verifique manualmente.');
+          } else {
+            const { updateVaga } = useVagasStore.getState();
+            matchingVagas.forEach(v => updateVaga(v.id, { analista_responsavel: newUser.nome_completo }));
+          }
         }
       }
 
@@ -386,11 +428,12 @@ export default function AdministracaoPage() {
   };
 
   const openEditUser = (user: any) => {
-    // Derive which units this user is currently responsible for (from vagas data)
+    // Derive which units this user is currently responsible for, normalising full vaga unit names to short names
     const currentResponsavelUnits = [...new Set(
       vagas
         .filter(v => v.analista_responsavel === user.nome_completo && v.unidade)
-        .map(v => v.unidade as string)
+        .map(v => resolveShortUnitName(v.unidade as string))
+        .filter(Boolean)
     )];
     setEditingUser({
       ...user,
@@ -436,39 +479,35 @@ export default function AdministracaoPage() {
         regiao_suporte: editingUser.cargo === 'Analista Administrativo' ? editingUser.regiao_suporte : null,
       });
 
-      // Handle analista_responsavel bulk update for Analista profiles
+      // Handle analista_responsavel bulk update for Analista profiles (prefix match for full unit names)
       if (isAnalista) {
         const { supabase } = await import('@/integrations/supabase/client');
         const { updateVaga } = useVagasStore.getState();
         const allVagas = useVagasStore.getState().vagas;
 
-        // Derive old responsible units
-        const oldUnidades = [...new Set(
-          allVagas
-            .filter(v => v.analista_responsavel === editingUser.nome_completo && v.unidade)
-            .map(v => v.unidade as string)
-        )];
+        // Vagas currently owned by this analyst
+        const ownedVagas = allVagas.filter(v => v.analista_responsavel === editingUser.nome_completo && v.unidade);
 
-        // Clear from units that were removed
-        const unidadesToClear = oldUnidades.filter(u => !newUnidadesResponsavel.includes(u));
-        if (unidadesToClear.length > 0) {
+        // Vagas to clear: owned but not in the new responsible units
+        const vagasToClear = ownedVagas.filter(v => !vagaMatchesShortUnits(v.unidade, newUnidadesResponsavel));
+        if (vagasToClear.length > 0) {
           await supabase.from('vagas')
             .update({ analista_responsavel: null })
-            .eq('analista_responsavel', editingUser.nome_completo)
-            .in('unidade', unidadesToClear);
-          allVagas
-            .filter(v => unidadesToClear.includes(v.unidade) && v.analista_responsavel === editingUser.nome_completo)
-            .forEach(v => updateVaga(v.id, { analista_responsavel: null }));
+            .in('id', vagasToClear.map(v => v.id));
+          vagasToClear.forEach(v => updateVaga(v.id, { analista_responsavel: null }));
         }
 
-        // Set for new responsible units
+        // Vagas to set: match new responsible units via prefix
         if (newUnidadesResponsavel.length > 0) {
-          await supabase.from('vagas')
-            .update({ analista_responsavel: editingUser.nome_completo })
-            .in('unidade', newUnidadesResponsavel);
-          allVagas
-            .filter(v => newUnidadesResponsavel.includes(v.unidade))
-            .forEach(v => updateVaga(v.id, { analista_responsavel: editingUser.nome_completo }));
+          const vagasToSet = allVagas.filter(v =>
+            vagaMatchesShortUnits(v.unidade, newUnidadesResponsavel)
+          );
+          if (vagasToSet.length > 0) {
+            await supabase.from('vagas')
+              .update({ analista_responsavel: editingUser.nome_completo })
+              .in('id', vagasToSet.map(v => v.id));
+            vagasToSet.forEach(v => updateVaga(v.id, { analista_responsavel: editingUser.nome_completo }));
+          }
         }
       }
 

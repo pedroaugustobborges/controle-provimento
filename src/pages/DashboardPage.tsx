@@ -81,7 +81,7 @@ import { useTheme } from '@/hooks/useTheme';
 // ─── Module-level constants ──────────────────────────────────────────────────
 
 const UNIT_MAPPING = [
-  { bank: 'HRD', vacancies: ['DOURADOS'], display: 'DOURADOS' },
+  { bank: 'HRD', vacancies: ['DOURADOS', 'CHRD'], display: 'CHRD / DOURADOS' },
   { bank: 'HRC', vacancies: ['HRCAC I', 'HRCAC II'], display: 'HRCAC I / II' },
   { bank: 'CHS', vacancies: ['CHS'], display: 'CHS' },
   { bank: 'HMSA', vacancies: ['HMSA'], display: 'HMSA' },
@@ -104,7 +104,7 @@ const UNIT_GROUPS = [
     label: 'Demais Unidades',
     color: 'text-violet-500',
     dot: 'bg-violet-400',
-    units: ['HRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'DOURADOS', 'TEIA CEN', 'TEIA PIN', 'CHS', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'],
+    units: ['HRD', 'CHRD', 'HRC', 'HRCAC I', 'HRCAC II', 'HMSA', 'TEIA CEN', 'TEIA PIN', 'CHS', 'TEIA MAN', 'TEIA MAN 2', 'TEIA MAN 3'],
   },
 ] as const;
 

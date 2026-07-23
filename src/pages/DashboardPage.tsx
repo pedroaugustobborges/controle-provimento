@@ -55,6 +55,9 @@ import {
   Zap,
   Sun,
   Moon,
+  MessageSquare,
+  Plus,
+  GitBranch,
 } from 'lucide-react';
 import {
   BarChart,
@@ -160,43 +163,22 @@ export default function DashboardPage() {
     isLoadingBancos,
     isInitialLoad,
   } = useVagasStore();
-  const { currentUser, selectedRegion, selectedUnits, setSelectedUnits } = useAdminStore();
+  const { currentUser, selectedRegion, selectedUnits, setSelectedUnits, users, fetchUsers } = useAdminStore();
 
   const [chartMode, setChartMode] = useState<'unidade' | 'regiao'>('unidade');
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
   const [isUnitPickerOpen, setIsUnitPickerOpen] = useState(false);
   const [unitSearch, setUnitSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [activityPage, setActivityPage] = useState(0);
 
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [filterPCD, setFilterPCD] = useState(false);
   const [filterTeia, setFilterTeia] = useState(false);
 
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
-
   useEffect(() => { fetchAll(); }, [fetchAll]);
-
-  useEffect(() => {
-    const fetchActivities = async () => {
-      setIsLoadingActivities(true);
-      try {
-        const { data } = await supabase
-          .from('audit_logs')
-          .select('*')
-          .in('modulo', ['Vagas', 'Convocações'])
-          .order('created_at', { ascending: false })
-          .limit(8);
-        setRecentActivities(data || []);
-      } catch {
-        setRecentActivities([]);
-      } finally {
-        setIsLoadingActivities(false);
-      }
-    };
-    fetchActivities();
-  }, []);
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const clearAllFilters = useCallback(() => {
     setSelectedUnits(['all']);
@@ -222,6 +204,109 @@ export default function DashboardPage() {
     }
     return records;
   }, [selectedUnits]);
+
+  // ── Activity feed built from local vaga data (no extra fetch needed) ────────
+  type ActivityItem = {
+    id: string;
+    type: 'nova_vaga' | 'fluxo' | 'observacao';
+    vaga: typeof allVagas[0];
+    time: string;
+    usuario?: string;
+    avatar_url?: string | null;
+    descricao: string;
+  };
+
+  const formatActivityTime = (dateStr: string): string => {
+    if (!dateStr) return '';
+    // Date-only strings from historico (e.g. "2024-01-15")
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const diffDays = Math.floor((Date.now() - date.getTime()) / 86400000);
+      if (diffDays === 0) return 'hoje';
+      if (diffDays === 1) return 'ontem';
+      if (diffDays < 7) return `há ${diffDays}d`;
+      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
+    return formatRelativeTime(dateStr);
+  };
+
+  const getInitials = (name: string) =>
+    (name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('');
+
+  // Build a name→avatar_url lookup from the users list for historico entries
+  const userAvatarMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (users || []).forEach((u: any) => {
+      if (u.nome_completo && u.avatar_url) map.set(u.nome_completo, u.avatar_url);
+    });
+    return map;
+  }, [users]);
+
+  const recentActivities = useMemo((): ActivityItem[] => {
+    const items: ActivityItem[] = [];
+
+    allVagas.forEach(vaga => {
+      // 1. Nova vaga
+      const createdAt = vaga.created_at || vaga.data_recebimento || vaga.data_criacao;
+      if (createdAt) {
+        items.push({
+          id: `nova-${vaga.id}`,
+          type: 'nova_vaga',
+          vaga,
+          time: createdAt,
+          descricao: `Nova requisição adicionada ao sistema.`,
+        });
+      }
+
+      // 2. Historico entries that mention tratativa or etapa changes
+      (vaga.historico || []).forEach((h: any) => {
+        if (!h?.descricao) return;
+        if (/tratativa|etapa|fluxo/i.test(h.descricao)) {
+          items.push({
+            id: `hist-${vaga.id}-${h.id || h.data}`,
+            type: 'fluxo',
+            vaga,
+            time: h.data || '',
+            usuario: h.usuario,
+            avatar_url: h.usuario ? (userAvatarMap.get(h.usuario) ?? null) : null,
+            descricao: h.descricao,
+          });
+        }
+      });
+
+      // 3. Observacoes internas (stored as JSON array)
+      try {
+        const raw = vaga.observacoes_internas || (vaga as any).observacao;
+        if (raw) {
+          const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          if (Array.isArray(parsed)) {
+            parsed.forEach((obs: any) => {
+              if (obs?.data && obs?.texto) {
+                // Prefer stored avatar_url; fall back to live lookup by name
+                const resolvedAvatar = obs.avatar_url || (obs.usuario ? (userAvatarMap.get(obs.usuario) ?? null) : null);
+                items.push({
+                  id: `obs-${vaga.id}-${obs.id || obs.data}`,
+                  type: 'observacao',
+                  vaga,
+                  time: obs.data,
+                  usuario: obs.usuario,
+                  avatar_url: resolvedAvatar,
+                  descricao: obs.texto,
+                });
+              }
+            });
+          }
+        }
+      } catch { /* invalid JSON — skip */ }
+    });
+
+    return items
+      .filter(a => a.time)
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .slice(0, 50); // keep 50 for pagination
+  }, [allVagas, userAvatarMap]);
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const filteredVagas = useMemo(() => {
     let base = filterDashboardRecords(userScopedVagas);
@@ -1140,65 +1225,183 @@ export default function DashboardPage() {
           </div>
 
           {/* Atividades Recentes */}
-          <div className={`${t.panelClass} flex flex-col`}>
-            <div style={{ height: '3px', background: 'linear-gradient(90deg, #818cf8, #f472b6)', flexShrink: 0 }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '16px 18px 12px', borderBottom: t.phBorder, background: t.phBg }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(129,140,248,0.18)', boxShadow: '0 0 12px rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Activity style={{ width: '15px', height: '15px', color: '#818cf8' }} />
-              </div>
-              <div>
-                <p style={{ fontSize: '13px', fontWeight: 800, color: t.tx1 }}>Atividades Recentes</p>
-                <p style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, marginTop: '1px' }}>Últimas ações registradas no sistema</p>
-              </div>
-            </div>
-            <div style={{ flex: 1 }}>
-              {isLoadingActivities ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 18px', borderBottom: `1px solid ${t.divider}` }}>
-                    <Skeleton className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${isDark ? 'bg-white/10' : ''}`} />
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <Skeleton className={`h-3 rounded ${isDark ? 'bg-white/8' : ''}`} style={{ width: '75%' }} />
-                      <Skeleton className={`h-2.5 rounded ${isDark ? 'bg-white/6' : ''}`} style={{ width: '50%' }} />
-                    </div>
-                  </div>
-                ))
-              ) : recentActivities.length > 0 ? (
-                recentActivities.map((activity, idx) => {
-                  const desc = activity.descricao || activity.description || activity.acao || activity.action || 'Ação registrada';
-                  const user = activity.usuario || activity.user_name || activity.user_email || '';
-                  const time = activity.created_at ? formatRelativeTime(activity.created_at) : '';
-                  const tipo = activity.tipo || activity.type || '';
-                  return (
-                    <div key={activity.id || idx}
-                      style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 18px', borderBottom: `1px solid ${t.divider}`, transition: 'background 0.15s', cursor: 'default' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = t.rowHover)}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, marginTop: '4px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isDark ? 'rgba(129,140,248,0.5)' : 'rgba(99,102,241,0.4)', boxShadow: isDark ? '0 0 6px rgba(129,140,248,0.4)' : 'none' }} />
-                        {idx < recentActivities.length - 1 && <div style={{ width: '1px', minHeight: '16px', flex: 1, background: t.divider, marginTop: '2px' }} />}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: '12px', fontWeight: 600, color: t.tx1, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{desc}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
-                          {tipo && <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', color: isDark ? '#a5b4fc' : '#6366f1', background: isDark ? 'rgba(129,140,248,0.15)' : 'rgba(99,102,241,0.08)', padding: '2px 6px', borderRadius: '5px' }}>{tipo}</span>}
-                          {user && <span style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user}</span>}
-                          {time && <span style={{ fontSize: '10px', fontWeight: 500, color: t.tx4, marginLeft: 'auto', flexShrink: 0 }}>{time}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-                    <Activity style={{ width: '24px', height: '24px', color: t.tx4 }} />
-                  </div>
-                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: t.tx2 }}>Nenhuma atividade registrada</h4>
-                  <p style={{ fontSize: '12px', color: t.tx3, marginTop: '4px', maxWidth: '200px' }}>As ações do sistema aparecerão aqui conforme forem realizadas.</p>
+          <div className={`${t.panelClass} flex flex-col`} style={{ overflow: 'hidden' }}>
+            <div style={{ height: '3px', background: 'linear-gradient(90deg, #818cf8, #f472b6, #34d399)', flexShrink: 0 }} />
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 12px', borderBottom: t.phBorder, background: t.phBg, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(129,140,248,0.18)', boxShadow: '0 0 12px rgba(129,140,248,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Activity style={{ width: '15px', height: '15px', color: '#818cf8' }} />
                 </div>
-              )}
+                <div>
+                  <p style={{ fontSize: '13px', fontWeight: 800, color: t.tx1 }}>Atividades Recentes</p>
+                  <p style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, marginTop: '1px' }}>Novas vagas, fluxo e observações</p>
+                </div>
+              </div>
+              {/* Legend pills */}
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {([
+                  { label: 'Vaga', color: '#10b981' },
+                  { label: 'Fluxo', color: '#818cf8' },
+                  { label: 'Obs.', color: '#f59e0b' },
+                ] as const).map(l => (
+                  <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.45)' : '#94a3b8', letterSpacing: '0.04em' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: l.color, flexShrink: 0 }} />
+                    {l.label}
+                  </span>
+                ))}
+              </div>
             </div>
+
+            {/* Feed */}
+            {(() => {
+              const PAGE_SIZE = 5;
+              const totalPages = Math.ceil(recentActivities.length / PAGE_SIZE);
+              const safePage = Math.min(activityPage, Math.max(0, totalPages - 1));
+              const pageItems = recentActivities.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+              const CFGS = {
+                nova_vaga:  { label: 'Nova Vaga',  dot: '#10b981', iconBg: isDark ? 'rgba(16,185,129,0.2)'   : '#d1fae5', iconColor: isDark ? '#34d399'  : '#059669', badgeBg: isDark ? 'rgba(16,185,129,0.15)'  : '#d1fae5', badgeColor: isDark ? '#34d399'  : '#065f46' },
+                fluxo:      { label: 'Fluxo',      dot: '#818cf8', iconBg: isDark ? 'rgba(129,140,248,0.2)' : '#e0e7ff', iconColor: isDark ? '#818cf8'  : '#4f46e5', badgeBg: isDark ? 'rgba(129,140,248,0.15)' : '#e0e7ff', badgeColor: isDark ? '#a5b4fc' : '#3730a3' },
+                observacao: { label: 'Observação', dot: '#f59e0b', iconBg: isDark ? 'rgba(251,191,36,0.2)'  : '#fef3c7', iconColor: isDark ? '#fbbf24'  : '#d97706', badgeBg: isDark ? 'rgba(251,191,36,0.15)'  : '#fef3c7', badgeColor: isDark ? '#fcd34d' : '#92400e' },
+              } as const;
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  {/* Items list */}
+                  <div style={{ flex: 1 }}>
+                    {isLoadingVagas ? (
+                      Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 18px', borderBottom: `1px solid ${t.divider}` }}>
+                          <Skeleton style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0 }} className={isDark ? 'bg-white/10' : ''} />
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '4px' }}>
+                            <Skeleton className={`h-3 rounded ${isDark ? 'bg-white/8' : ''}`} style={{ width: '65%' }} />
+                            <Skeleton className={`h-2.5 rounded ${isDark ? 'bg-white/6' : ''}`} style={{ width: '85%' }} />
+                            <Skeleton className={`h-2.5 rounded ${isDark ? 'bg-white/5' : ''}`} style={{ width: '40%' }} />
+                          </div>
+                        </div>
+                      ))
+                    ) : pageItems.length > 0 ? (
+                      pageItems.map((activity, idx) => {
+                        const isLast = idx === pageItems.length - 1;
+                        const cfg = CFGS[activity.type];
+                        const timeLabel = formatActivityTime(activity.time);
+                        const vagaRef = activity.vaga;
+
+                        const renderAvatar = () => {
+                          // 1. Real photo from Supabase (stored full URL)
+                          if (activity.avatar_url) {
+                            return (
+                              <img
+                                src={activity.avatar_url}
+                                alt={activity.usuario || ''}
+                                style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${cfg.iconBg}`, flexShrink: 0 }}
+                                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; (e.currentTarget.nextElementSibling as HTMLElement | null)?.style && ((e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'); }}
+                              />
+                            );
+                          }
+                          // 2. System icon (nova_vaga with no user, or unknown)
+                          if (!activity.usuario) {
+                            const Icon = activity.type === 'nova_vaga' ? Plus : activity.type === 'fluxo' ? GitBranch : MessageSquare;
+                            return (
+                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: cfg.iconBg, border: `2px solid ${cfg.badgeBg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Icon style={{ width: 14, height: 14, color: cfg.iconColor }} />
+                              </div>
+                            );
+                          }
+                          // 3. Initials fallback
+                          return (
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: cfg.iconBg, border: `2px solid ${cfg.badgeBg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800, color: cfg.iconColor, flexShrink: 0, letterSpacing: '0.02em' }}>
+                              {getInitials(activity.usuario)}
+                            </div>
+                          );
+                        };
+
+                        return (
+                          <div
+                            key={activity.id}
+                            onClick={() => navigate(`/vagas/${vagaRef.id}`)}
+                            style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '11px 18px', borderBottom: isLast ? 'none' : `1px solid ${t.divider}`, cursor: 'pointer', transition: 'background 0.15s' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = t.rowHover)}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                          >
+                            {/* Avatar + timeline line */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                              {renderAvatar()}
+                              {!isLast && <div style={{ width: '1px', flex: 1, minHeight: '10px', marginTop: '4px', background: `linear-gradient(to bottom, ${cfg.dot}40, ${t.divider})` }} />}
+                            </div>
+
+                            {/* Content */}
+                            <div style={{ flex: 1, minWidth: 0, paddingTop: '2px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                <p style={{ fontSize: '12px', fontWeight: 700, color: t.tx1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{vagaRef.cargo || '—'}</p>
+                                <span style={{ fontSize: '10px', fontWeight: 500, color: t.tx4, flexShrink: 0 }}>{timeLabel}</span>
+                              </div>
+                              {vagaRef.unidade && (
+                                <p style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vagaRef.unidade}</p>
+                              )}
+                              <p style={{ fontSize: '11px', color: t.tx2, marginTop: '5px', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                {activity.type === 'observacao' ? `"${activity.descricao}"` : activity.descricao}
+                              </p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', color: cfg.badgeColor, background: cfg.badgeBg, padding: '2px 7px', borderRadius: '5px' }}>{cfg.label}</span>
+                                {activity.usuario && (
+                                  <span style={{ fontSize: '10px', fontWeight: 500, color: t.tx3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activity.usuario}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                          <Activity style={{ width: '24px', height: '24px', color: t.tx4 }} />
+                        </div>
+                        <h4 style={{ fontSize: '14px', fontWeight: 800, color: t.tx2 }}>Nenhuma atividade registrada</h4>
+                        <p style={{ fontSize: '12px', color: t.tx3, marginTop: '4px', maxWidth: '200px' }}>As ações do sistema aparecerão aqui conforme forem realizadas.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pagination footer */}
+                  {totalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderTop: `1px solid ${t.divider}`, background: t.phBg, flexShrink: 0 }}>
+                      <button
+                        onClick={() => setActivityPage(p => Math.max(0, p - 1))}
+                        disabled={safePage === 0}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: safePage === 0 ? t.tx4 : t.tx2, background: 'none', border: 'none', cursor: safePage === 0 ? 'not-allowed' : 'pointer', padding: '4px 8px', borderRadius: '6px', transition: 'background 0.15s' }}
+                        onMouseEnter={e => { if (safePage !== 0) (e.currentTarget as HTMLElement).style.background = t.rowHover; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                      >
+                        <ChevronDown style={{ width: 13, height: 13, transform: 'rotate(90deg)' }} /> Anterior
+                      </button>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {Array.from({ length: totalPages }).map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setActivityPage(i)}
+                            style={{ width: i === safePage ? '20px' : '6px', height: '6px', borderRadius: '3px', background: i === safePage ? '#818cf8' : (isDark ? 'rgba(255,255,255,0.15)' : '#cbd5e1'), border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }}
+                          />
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => setActivityPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={safePage === totalPages - 1}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: safePage === totalPages - 1 ? t.tx4 : t.tx2, background: 'none', border: 'none', cursor: safePage === totalPages - 1 ? 'not-allowed' : 'pointer', padding: '4px 8px', borderRadius: '6px', transition: 'background 0.15s' }}
+                        onMouseEnter={e => { if (safePage !== totalPages - 1) (e.currentTarget as HTMLElement).style.background = t.rowHover; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                      >
+                        Próximo <ChevronDown style={{ width: 13, height: 13, transform: 'rotate(-90deg)' }} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

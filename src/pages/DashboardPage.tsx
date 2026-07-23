@@ -903,6 +903,138 @@ export default function DashboardPage() {
     }));
   }, [userScopedVagas]);
 
+  const leadTimeData = useMemo(() => {
+    const toDate = (s: string | null | undefined): Date | null => {
+      if (!s) return null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const [y, m, d] = s.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    };
+    const diffDays = (a: Date | null, b: Date | null): number | null => {
+      if (!a || !b) return null;
+      const d = Math.round((a.getTime() - b.getTime()) / 86400000);
+      return d >= 0 ? d : null;
+    };
+
+    // Sum the calendar days a vaga spent with tratativa "Aguardando Unidade".
+    // Historico entries: entering  → "Tratativa definida: Aguardando Unidade"
+    //                    leaving   → "Tratativa definida: <anything else>"
+    const calcWaitingDays = (
+      hist: Array<{ data?: string; descricao?: string }>,
+      fallbackEndDate: Date,
+    ): number => {
+      const sorted = hist
+        .filter((h) => h.data && h.descricao?.startsWith("Tratativa definida:"))
+        .map((h) => ({ date: toDate(h.data!), desc: h.descricao! }))
+        .filter((h) => h.date !== null)
+        .sort((a, b) => a.date!.getTime() - b.date!.getTime()) as Array<{
+        date: Date;
+        desc: string;
+      }>;
+
+      let waiting = 0;
+      let waitStart: Date | null = null;
+
+      for (const { date, desc } of sorted) {
+        const isEntering = desc.includes("Aguardando Unidade");
+        if (isEntering && waitStart === null) {
+          waitStart = date;
+        } else if (!isEntering && waitStart !== null) {
+          waiting += diffDays(date, waitStart) ?? 0;
+          waitStart = null;
+        }
+      }
+      // Still in "Aguardando Unidade" at conclusion time
+      if (waitStart !== null) {
+        waiting += diffDays(fallbackEndDate, waitStart) ?? 0;
+      }
+      return waiting;
+    };
+
+    const now = new Date();
+    const monthKeys: string[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthKeys.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      );
+    }
+
+    const byMonth: Record<string, { provimento: number[]; intake: number[] }> =
+      {};
+    monthKeys.forEach((k) => (byMonth[k] = { provimento: [], intake: [] }));
+
+    const allProvimento: number[] = [];
+    const allIntake: number[] = [];
+
+    userScopedVagas.forEach((v) => {
+      const hist = (v.historico || []) as Array<{
+        data?: string;
+        descricao?: string;
+      }>;
+      const histDates = hist
+        .map((h) => toDate(h.data ?? null))
+        .filter(Boolean) as Date[];
+      if (histDates.length === 0) return;
+
+      const firstEdit = new Date(
+        Math.min(...histDates.map((d) => d.getTime())),
+      );
+      const lastEdit = new Date(Math.max(...histDates.map((d) => d.getTime())));
+
+      // Metric 1: first edit → Concluída, minus any time spent "Aguardando Unidade"
+      if (v.status_processo === "Concluída") {
+        const rawDays = diffDays(lastEdit, firstEdit);
+        if (rawDays !== null) {
+          const waitDays = calcWaitingDays(hist, lastEdit);
+          const netDays = Math.max(0, rawDays - waitDays);
+          allProvimento.push(netDays);
+          const mk = `${lastEdit.getFullYear()}-${String(lastEdit.getMonth() + 1).padStart(2, "0")}`;
+          if (byMonth[mk]) byMonth[mk].provimento.push(netDays);
+        }
+      }
+
+      // Metric 2: created_at → first edit in GDP
+      const createdDate = toDate(
+        v.created_at ?? v.data_recebimento ?? (v as any).data_criacao,
+      );
+      const intake = diffDays(firstEdit, createdDate);
+      if (intake !== null) {
+        allIntake.push(intake);
+        const mk = `${firstEdit.getFullYear()}-${String(firstEdit.getMonth() + 1).padStart(2, "0")}`;
+        if (byMonth[mk]) byMonth[mk].intake.push(intake);
+      }
+    });
+
+    const avg = (arr: number[]) =>
+      arr.length
+        ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
+        : null;
+
+    const monthlyChart = monthKeys.map((mk) => {
+      const [y, mo] = mk.split("-");
+      const label = new Date(Number(y), Number(mo) - 1, 1)
+        .toLocaleDateString("pt-BR", { month: "short", year: "2-digit" })
+        .replace(".", "");
+      return {
+        month: label,
+        provimento: avg(byMonth[mk].provimento),
+        intake: avg(byMonth[mk].intake),
+      };
+    });
+
+    return {
+      avgProvimento: avg(allProvimento),
+      avgIntake: avg(allIntake),
+      countProvimento: allProvimento.length,
+      countIntake: allIntake.length,
+      monthlyChart,
+    };
+  }, [userScopedVagas]);
+
   const motivoVagaData = useMemo(() => {
     const map = new Map<string, number>();
     filteredVagas.forEach((v) => {
@@ -2730,6 +2862,519 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* ── Lead Time — Scorecards ───────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {[
+            {
+              key: "provimento",
+              label: "Lead time do provimento de uma vaga",
+              sublabel:
+                'Primeira edição → "Concluída" (descontado tempo em "Aguardando Unidade")',
+              value: leadTimeData.avgProvimento,
+              count: leadTimeData.countProvimento,
+              countLabel: "vagas concluídas consideradas",
+              color: "#f59e0b",
+              colorLight: "#d97706",
+              gradFrom: "rgba(245,158,11,0.18)",
+              gradTo: "rgba(245,158,11,0)",
+              glowDark: "rgba(245,158,11,0.25)",
+              iconBg: isDark ? "rgba(245,158,11,0.15)" : "#fef3c7",
+              sparkData: leadTimeData.monthlyChart.map((m) => ({
+                v: m.provimento ?? 0,
+              })),
+            },
+            {
+              key: "intake",
+              label: "Lead time do início de trabalho de uma vaga no GDP",
+              sublabel: "Criação da vaga → primeira edição no GDP",
+              value: leadTimeData.avgIntake,
+              count: leadTimeData.countIntake,
+              countLabel: "vagas com histórico consideradas",
+              color: "#818cf8",
+              colorLight: "#6366f1",
+              gradFrom: "rgba(129,140,248,0.18)",
+              gradTo: "rgba(129,140,248,0)",
+              glowDark: "rgba(129,140,248,0.25)",
+              iconBg: isDark ? "rgba(129,140,248,0.15)" : "#e0e7ff",
+              sparkData: leadTimeData.monthlyChart.map((m) => ({
+                v: m.intake ?? 0,
+              })),
+            },
+          ].map((card) => {
+            const accentColor = isDark ? card.color : card.colorLight;
+            const lastThree = card.sparkData
+              .slice(-3)
+              .map((d) => d.v)
+              .filter((v) => v > 0);
+            const trend =
+              lastThree.length >= 2
+                ? lastThree[lastThree.length - 1] - lastThree[0]
+                : null;
+
+            const inner = (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  height: "100%",
+                  minHeight: "180px",
+                }}
+              >
+                {/* Top accent bar */}
+                <div
+                  style={{
+                    height: "3px",
+                    background: `linear-gradient(90deg, ${card.color}, ${card.color}80)`,
+                    flexShrink: 0,
+                    borderRadius: "3px 3px 0 0",
+                  }}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    flex: 1,
+                    gap: "16px",
+                    padding: "20px",
+                  }}
+                >
+                  {/* Left: icon + numbers */}
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      {/* Icon + title */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          marginBottom: "12px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "10px",
+                            background: card.iconBg,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            boxShadow: isDark
+                              ? `0 0 14px ${card.glowDark}`
+                              : "none",
+                          }}
+                        >
+                          <Clock
+                            style={{
+                              width: "15px",
+                              height: "15px",
+                              color: accentColor,
+                            }}
+                          />
+                        </div>
+                        <p
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 800,
+                            color: t.tx2,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {card.label}
+                        </p>
+                      </div>
+
+                      {/* Big value */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "baseline",
+                          gap: "6px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "52px",
+                            fontWeight: 900,
+                            lineHeight: 1,
+                            color: accentColor,
+                            letterSpacing: "-2px",
+                            textShadow: isDark
+                              ? `0 0 30px ${card.glowDark}`
+                              : "none",
+                          }}
+                        >
+                          {card.value !== null ? card.value : "—"}
+                        </span>
+                        {card.value !== null && (
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 700,
+                              color: t.tx3,
+                            }}
+                          >
+                            dias
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Trend pill */}
+                      {trend !== null && (
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            marginTop: "8px",
+                            padding: "3px 9px",
+                            borderRadius: "20px",
+                            background:
+                              trend <= 0
+                                ? isDark
+                                  ? "rgba(52,211,153,0.15)"
+                                  : "#d1fae5"
+                                : isDark
+                                  ? "rgba(248,113,113,0.15)"
+                                  : "#fee2e2",
+                            border: `1px solid ${trend <= 0 ? (isDark ? "rgba(52,211,153,0.3)" : "#6ee7b7") : isDark ? "rgba(248,113,113,0.3)" : "#fca5a5"}`,
+                          }}
+                        >
+                          <TrendingUp
+                            style={{
+                              width: "10px",
+                              height: "10px",
+                              color: trend <= 0 ? "#34d399" : "#f87171",
+                              transform: trend <= 0 ? "scaleY(-1)" : "none",
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 800,
+                              color: trend <= 0 ? "#34d399" : "#f87171",
+                            }}
+                          >
+                            {trend <= 0
+                              ? `↓ ${Math.abs(trend)}d`
+                              : `↑ ${trend}d`}{" "}
+                            últimos 3m
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div style={{ marginTop: "12px" }}>
+                      <p
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 500,
+                          color: t.tx3,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {card.sublabel}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          color: t.tx4,
+                          marginTop: "3px",
+                        }}
+                      >
+                        {card.count} {card.countLabel}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right: mini sparkline */}
+                  <div
+                    style={{
+                      width: "120px",
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height={90}>
+                      <AreaChart
+                        data={card.sparkData}
+                        margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient
+                            id={`spark-${card.key}`}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor={card.color}
+                              stopOpacity={0.4}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor={card.color}
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="v"
+                          stroke={card.color}
+                          strokeWidth={2}
+                          fill={`url(#spark-${card.key})`}
+                          dot={false}
+                          isAnimationActive={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            );
+
+            if (isDark) {
+              return (
+                <div
+                  key={card.key}
+                  className="dash-rgb-card-wrap"
+                  style={{ borderRadius: "20px" }}
+                >
+                  <div
+                    className="dash-rgb-card-inner"
+                    style={{ borderRadius: "20px", padding: 0 }}
+                  >
+                    {inner}
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div
+                key={card.key}
+                style={{
+                  background: "#fff",
+                  borderRadius: "20px",
+                  border: "1px solid rgba(0,0,0,0.07)",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                  overflow: "hidden",
+                }}
+              >
+                {inner}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Lead Time — Charts ────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {[
+            {
+              key: "provimento",
+              title: "Lead time do provimento de uma vaga",
+              subtitle: "Média de dias por mês (vagas concluídas)",
+              dataKey: "provimento" as const,
+              color: "#f59e0b",
+              gradId: "gradProvimento",
+            },
+            {
+              key: "intake",
+              title: "Lead time do início de trabalho no GDP",
+              subtitle: "Média de dias da criação ao primeiro movimento",
+              dataKey: "intake" as const,
+              color: isDark ? "#818cf8" : "#6366f1",
+              gradId: "gradIntake",
+            },
+          ].map((cfg) => (
+            <div key={cfg.key} className={`${t.panelClass} flex flex-col`}>
+              <div
+                style={{
+                  height: "3px",
+                  background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}60)`,
+                  flexShrink: 0,
+                }}
+              />
+
+              {/* Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "14px 18px 12px",
+                  borderBottom: t.phBorder,
+                  background: t.phBg,
+                  flexShrink: 0,
+                }}
+              >
+                <div
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "8px",
+                    background: isDark ? `${cfg.color}22` : `${cfg.color}22`,
+                    boxShadow: isDark ? `0 0 12px ${cfg.color}33` : "none",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Zap
+                    style={{ width: "14px", height: "14px", color: cfg.color }}
+                  />
+                </div>
+                <div>
+                  <p
+                    style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}
+                  >
+                    {cfg.title}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 500,
+                      color: t.tx3,
+                      marginTop: "1px",
+                    }}
+                  >
+                    {cfg.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              {/* Chart */}
+              <div style={{ padding: "16px", flex: 1 }}>
+                {leadTimeData.monthlyChart.every(
+                  (m) => m[cfg.dataKey] === null,
+                ) ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "200px",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <Clock
+                      style={{ width: "32px", height: "32px", color: t.tx4 }}
+                    />
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        color: t.tx3,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Dados insuficientes
+                    </p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart
+                      data={leadTimeData.monthlyChart}
+                      margin={{ top: 8, right: 24, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id={cfg.gradId}
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor={cfg.color}
+                            stopOpacity={isDark ? 0.35 : 0.25}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor={cfg.color}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="4 4"
+                        stroke={t.gridLine}
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          fill: t.axisColor,
+                        }}
+                        interval={0}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          fill: t.axisColor,
+                        }}
+                        tickFormatter={(v) => `${v}d`}
+                      />
+                      <Tooltip
+                        contentStyle={t.tooltip}
+                        itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
+                        formatter={(v: any) =>
+                          v !== null ? [`${v} dias`, "Média"] : ["—", "Média"]
+                        }
+                        labelStyle={{
+                          fontWeight: 800,
+                          marginBottom: "4px",
+                          color: t.tooltip.color,
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey={cfg.dataKey}
+                        name="Média"
+                        stroke={cfg.color}
+                        strokeWidth={2.5}
+                        fill={`url(#${cfg.gradId})`}
+                        dot={{ r: 3, fill: cfg.color, strokeWidth: 0 }}
+                        activeDot={{
+                          r: 6,
+                          fill: cfg.color,
+                          stroke: `${cfg.color}40`,
+                          strokeWidth: 6,
+                        }}
+                        connectNulls={false}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* ── Evolução Mensal — full width ─────────────────────────────── */}

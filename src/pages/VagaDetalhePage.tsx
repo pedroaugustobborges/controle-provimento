@@ -997,7 +997,7 @@ export default function VagaDetalhePage() {
       Number(vaga.numero_vagas || vaga.quantidade) || 1,
       1,
     );
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString();
 
     if (vagaCount <= 1) {
       const draft = fluxoDraft[1] || {};
@@ -1036,7 +1036,7 @@ export default function VagaDetalhePage() {
             {
               id: `h-${Date.now()}`,
               data: today,
-              descricao: histParts.join(" | "),
+              descricao: `Fluxo atualizado: ${histParts.join(" | ")}`,
               usuario: currentUser?.nome_completo || "Sistema",
             },
           ],

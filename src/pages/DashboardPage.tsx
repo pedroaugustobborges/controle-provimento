@@ -291,6 +291,16 @@ export default function DashboardPage() {
     descricao: string;
   };
 
+  // For sorting: date-only strings → end of that local day so they aren't
+  // pushed below same-day ISO timestamps that were created earlier in the day.
+  const parseTimeForSort = (timeStr: string): number => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(timeStr)) {
+      const [y, m, d] = timeStr.split("-").map(Number);
+      return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+    }
+    return new Date(timeStr).getTime();
+  };
+
   const formatActivityTime = (dateStr: string): string => {
     if (!dateStr) return "";
     // Date-only strings from historico (e.g. "2024-01-15")
@@ -396,7 +406,7 @@ export default function DashboardPage() {
 
     return items
       .filter((a) => a.time)
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .sort((a, b) => parseTimeForSort(b.time) - parseTimeForSort(a.time))
       .slice(0, 50); // keep 50 for pagination
   }, [allVagas, userAvatarMap]);
   // ─────────────────────────────────────────────────────────────────────────────
@@ -920,14 +930,20 @@ export default function DashboardPage() {
     };
 
     // Sum the calendar days a vaga spent with tratativa "Aguardando Unidade".
-    // Historico entries: entering  → "Tratativa definida: Aguardando Unidade"
-    //                    leaving   → "Tratativa definida: <anything else>"
+    // Supports both old format "Tratativa definida: ..." and new "Fluxo atualizado: Tratativa: ..."
     const calcWaitingDays = (
       hist: Array<{ data?: string; descricao?: string }>,
       fallbackEndDate: Date,
     ): number => {
       const sorted = hist
-        .filter((h) => h.data && h.descricao?.startsWith("Tratativa definida:"))
+        .filter((h) => {
+          if (!h.data || !h.descricao) return false;
+          return (
+            h.descricao.startsWith("Tratativa definida:") ||
+            (h.descricao.startsWith("Fluxo atualizado:") &&
+              /Tratativa:/i.test(h.descricao))
+          );
+        })
         .map((h) => ({ date: toDate(h.data!), desc: h.descricao! }))
         .filter((h) => h.date !== null)
         .sort((a, b) => a.date!.getTime() - b.date!.getTime()) as Array<{

@@ -986,7 +986,19 @@ export default function VagaDetalhePage() {
     setFluxoDraft((prev) => {
       const curr = prev[slot] || {};
       const next: typeof curr = { ...curr, [field]: value || undefined };
-      if (field === "tratativa") delete next.etapa; // reset etapa when tratativa changes
+      if (field === "tratativa") {
+        delete next.etapa; // reset etapa when tratativa changes
+        // Auto-advance to "Em Andamento" when a tratativa is selected.
+        // Skip if: user has already manually set a status in this session,
+        // or the vaga is locked at Concluída / Cancelada.
+        const userPickedStatus = "status_processo" in curr;
+        const lockedSP =
+          vaga.status_processo === "Concluída" ||
+          vaga.status_processo === "Cancelada";
+        if (value && !userPickedStatus && !lockedSP) {
+          next.status_processo = "Em Andamento";
+        }
+      }
       return { ...prev, [slot]: next };
     });
     setFluxoDirty(true);

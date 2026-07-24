@@ -653,6 +653,23 @@ export default function VagaDetalhePage() {
     setPendingStatus(null);
   };
 
+  // Derives the top-level status_processo of a multi-vaga requisição from its slots.
+  // Rule 1: ALL slots Concluída/Cancelada  → Concluída
+  // Rule 2: ANY slot Em Andamento          → Em Andamento
+  // Otherwise: preserve the current overall status.
+  const deriveOverallStatus = (
+    items: VagaFluxoItem[],
+    currentStatus: StatusProcesso | undefined,
+  ): StatusProcesso => {
+    const statuses = items.map(
+      (i) => (i.status_processo || "Solicitada") as StatusProcesso,
+    );
+    if (statuses.every((s) => s === "Concluída" || s === "Cancelada"))
+      return "Concluída";
+    if (statuses.some((s) => s === "Em Andamento")) return "Em Andamento";
+    return currentStatus || "Solicitada";
+  };
+
   const handleTratativaChange = async (tratativa: string) => {
     const today = new Date().toISOString().split("T")[0];
     const currentSP = vaga.status_processo;
@@ -760,8 +777,10 @@ export default function VagaDetalhePage() {
         : field === "etapa"
           ? "Etapa"
           : "Status";
+    const overallSP = deriveOverallStatus(updated, vaga.status_processo);
     await updateVagaAsync(vaga.id, {
       distribuicao_vagas: updated as any,
+      status_processo: overallSP,
       historico: [
         ...(vaga.historico || []),
         {
@@ -1070,8 +1089,10 @@ export default function VagaDetalhePage() {
         );
         return merged;
       });
+      const overallSP = deriveOverallStatus(updated, vaga.status_processo);
       await updateVagaAsync(vaga.id, {
         distribuicao_vagas: updated as any,
+        status_processo: overallSP,
         historico: [
           ...(vaga.historico || []),
           {

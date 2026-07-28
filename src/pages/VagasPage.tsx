@@ -4,7 +4,6 @@ import { useVagasStore } from "@/store/vagasStore";
 import { useAdminStore } from "@/store/adminStore";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
-import { StatusBadge } from "@/components/StatusBadge";
 import {
   TIPO_VAGA_LABELS,
   STATUS_LABELS,
@@ -77,13 +76,6 @@ const ETAPAS_POR_TRATATIVA_FILTER: Record<string, string[]> = {
 const ALL_ETAPAS_FILTER = [...new Set(Object.values(ETAPAS_POR_TRATATIVA_FILTER).flat())];
 
 // ─── Multi-vaga fluxo helpers (mirrored from VagaDetalhePage) ────────────────
-const SP_CFG: Record<StatusProcesso, { dot: string; text: string; bg: string; border: string }> = {
-  'Solicitada':   { dot: 'bg-slate-400',   text: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200' },
-  'Em Andamento': { dot: 'bg-blue-500',    text: 'text-blue-700',   bg: 'bg-blue-50',    border: 'border-blue-200'  },
-  'Cancelada':    { dot: 'bg-red-500',     text: 'text-red-700',    bg: 'bg-red-50',     border: 'border-red-200'   },
-  'Suspensa':     { dot: 'bg-amber-500',   text: 'text-amber-700',  bg: 'bg-amber-50',   border: 'border-amber-200' },
-  'Concluída':    { dot: 'bg-emerald-500', text: 'text-emerald-700',bg: 'bg-emerald-50', border: 'border-emerald-200'},
-};
 function getVagaFluxoItems(v: Vaga): VagaFluxoItem[] {
   const count = Math.max(Number(v.numero_vagas || v.quantidade) || 1, 1);
   const stored = Array.isArray(v.distribuicao_vagas) ? (v.distribuicao_vagas as VagaFluxoItem[]) : [];
@@ -145,6 +137,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { HelpGuide } from "@/components/HelpGuide";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
+import { StatusProcessoBadge } from "@/components/StatusProcessoBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
@@ -1740,9 +1733,8 @@ export default function VagasPage() {
                         <span className="block leading-tight">Requisitante</span>
                         <span className="block leading-tight">Cargo Requisitante</span>
                       </TableHead>
-                      <TableHead className="min-w-[140px] text-center">
-                        <span className="block leading-tight">Status</span>
-                        <span className="block leading-tight">Tratativa / Etapa</span>
+                      <TableHead className="min-w-[160px]">
+                        Status Processo
                       </TableHead>
                       <TableHead className="min-w-[56px] text-center">
                         Vaga(s)
@@ -1879,24 +1871,12 @@ export default function VagasPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-center py-3 px-4 h-14">
-                            <div className="flex flex-col items-center gap-1">
-                              <StatusBadge status={(v.status_processo || v.status || v.status_geral) as any} />
-                              {(v.tratativa || v.etapa) && (
-                                <div className="flex flex-col items-center gap-0.5 w-full">
-                                  {v.tratativa && (
-                                    <span className="text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={v.tratativa}>
-                                      {v.tratativa}
-                                    </span>
-                                  )}
-                                  {v.etapa && (
-                                    <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={v.etapa}>
-                                      {v.etapa}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
+                          <TableCell className="py-3 px-3 h-14">
+                            <StatusProcessoBadge
+                              status={v.status_processo}
+                              tratativa={v.tratativa}
+                              etapa={v.etapa}
+                            />
                           </TableCell>
                           <TableCell
                             className="text-center py-3 px-2 h-14"
@@ -2104,7 +2084,6 @@ export default function VagasPage() {
                         {/* ── Sub-rows for multi-vaga requisições ── */}
                         {expandedRows.has(v.id) && getVagaFluxoItems(v).map(item => {
                           const iSP = item.status_processo || 'Solicitada';
-                          const cfg = SP_CFG[iSP] ?? SP_CFG['Solicitada'];
                           return (
                             <TableRow
                               key={`${v.id}-slot-${item.slot}`}
@@ -2125,23 +2104,12 @@ export default function VagasPage() {
                               <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
                               <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
                               {/* status + tratativa + etapa */}
-                              <TableCell className="text-center py-2 px-4">
-                                <div className="flex flex-col items-center gap-1">
-                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                                    {iSP}
-                                  </span>
-                                  {item.tratativa && (
-                                    <span className="text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={item.tratativa}>
-                                      {item.tratativa}
-                                    </span>
-                                  )}
-                                  {item.etapa && (
-                                    <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={item.etapa}>
-                                      {item.etapa}
-                                    </span>
-                                  )}
-                                </div>
+                              <TableCell className="py-2 px-3">
+                                <StatusProcessoBadge
+                                  status={iSP}
+                                  tratativa={item.tratativa}
+                                  etapa={item.etapa}
+                                />
                               </TableCell>
                               <TableCell className="py-2 px-2" />
                               <TableCell className="py-2 px-2" />

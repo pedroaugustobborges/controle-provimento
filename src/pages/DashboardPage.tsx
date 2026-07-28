@@ -62,6 +62,7 @@ import {
   MessageSquare,
   Plus,
   GitBranch,
+  Puzzle,
 } from "lucide-react";
 import {
   BarChart,
@@ -99,6 +100,17 @@ const UNIT_MAPPING = [
   { bank: "UPA", vacancies: ["SÃO PEDRO", "SUÁ", "UPA"], display: "VITÓRIA" },
 ];
 
+// Exact unidade names that belong to the Rede TEIA network.
+// Normalized (uppercase, no accents) for reliable matching.
+const TEIA_UNIDADES = new Set([
+  "CLINICA TEIA",
+  "TEIA AP. DE GOIANIA - CLINICA TEIA",
+  "TEIA MANAUS III - CLINICA TEIA CAIC DR AFRANIO SOARES",
+  "TEIA MANAUS II - CLINICA TEIA CAC DR GILSON MOREIRA",
+  "TEIA SENADOR CANEDO - CLINICA TEIA",
+  "TEIA MANAUS I - CLINICA TEIA CAIC DR JOSE CONTENTE",
+  "TEIA ANAPOLIS - CLINICA ESCOLA TEIA",
+].map((n) => normalizeUnitName(n)));
 
 const DONUT_COLORS_DARK = [
   "#818cf8",
@@ -384,13 +396,12 @@ export default function DashboardPage() {
       base = base.filter((v) => (v.data_abertura || "") >= dateFrom);
     if (dateTo) base = base.filter((v) => (v.data_abertura || "") <= dateTo);
     if (filterPCD)
-      base = base.filter((v) => {
-        const p = (v as any).pcd;
-        return p === true || p === "sim" || p === "S" || p === 1 || p === "1";
-      });
+      base = base.filter(
+        (v) => (v as any).tipo_vaga?.toUpperCase().trim() === "PCD",
+      );
     if (filterTeia)
       base = base.filter((v) =>
-        normalizeUnitName(v.unidade || "").includes("teia"),
+        TEIA_UNIDADES.has(normalizeUnitName(v.unidade || "")),
       );
     return getValidVacancyBase(base, "TODOS", "TODOS");
   }, [
@@ -2008,7 +2019,7 @@ export default function DashboardPage() {
                   }),
             }}
           >
-            <Zap style={{ width: "14px", height: "14px" }} /> Rede Teia
+            <Puzzle style={{ width: "14px", height: "14px" }} /> Rede Teia
           </button>
 
           {/* Active filter badge */}

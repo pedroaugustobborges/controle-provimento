@@ -127,7 +127,6 @@ import {
   CheckCircle2,
   ArrowRight,
   Check,
-  TrendingUp,
   Puzzle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -136,7 +135,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { HelpGuide } from "@/components/HelpGuide";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
-import { StatusProcessoBadge } from "@/components/StatusProcessoBadge";
+import {
+  StatusProcessoBadge,
+  STATUS_CONFIG,
+} from "@/components/StatusProcessoBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
@@ -241,6 +243,15 @@ const PCD_REGIOES: Record<string, string[]> = {
     "TEIA PIN",
   ],
 };
+
+// Order in which the status_processo scorecards appear
+const STATUS_PROCESSO_ORDER = [
+  "Solicitada",
+  "Em Andamento",
+  "Concluída",
+  "Suspensa",
+  "Cancelada",
+] as const;
 
 const getUnitScope = (unit?: string | null) => {
   const normalized = normalizeUnitName(unit || "");
@@ -854,14 +865,6 @@ export default function VagasPage() {
     return acc;
   }, [canonicalBase, vagasComBancoSet]);
 
-  const countFilaEdital = counts.fila_edital;
-  const countEmAndamento = counts.em_andamento;
-  const countConcluidas = counts.concluidas;
-  const countVagasInterrompidas = counts.vagas_interrompidas;
-  const countVagasLideranca = counts.vagas_lideranca;
-  const countConvocacao = counts.convocacao;
-  const countAguardandoUnidade = counts.aguardando_unidade;
-  const countDocumentacao = counts.documentacao;
   const countComBanco = useMemo(
     () =>
       canonicalBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length,
@@ -869,6 +872,16 @@ export default function VagasPage() {
   );
   const countVagasNovas = counts.vagas_novas;
   const countSemMovimentacao = counts.sem_movimentacao;
+
+  // Counts per status_processo for the scorecard row
+  const statusProcessoCounts = useMemo(() => {
+    const acc: Record<string, number> = {};
+    for (const v of canonicalBase) {
+      const sp = (v as any).status_processo || "Solicitada";
+      acc[sp] = (acc[sp] ?? 0) + 1;
+    }
+    return acc;
+  }, [canonicalBase]);
 
   const clearFilters = () => {
     setSearch("");
@@ -959,87 +972,113 @@ export default function VagasPage() {
             }
           />
 
-          {/* Card resumo com botões de atalho contextuais */}
-          <div className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2">
-            <div className="flex items-center gap-3 flex-1 rounded-lg">
-              <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-0.5">
-                  {filtroEspecial === "pcd"
-                    ? "Resumo: Vagas PCD"
-                    : filtroEspecial === "teias"
-                      ? "Resumo: Vagas TEIAs"
-                      : "Resumo: Vagas em Andamento"}
-                </h3>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-blue-700">
-                    {countEmAndamento}
-                  </span>
-                  <span className="text-[11px] text-blue-600/80 font-medium">
-                    vagas sendo processadas no momento
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              {/* Botão Voltar ao Controle de Vagas - só aparece em sub-filtros */}
+          {/* Scorecards por status_processo + atalhos de navegação */}
+          <div className="mb-4 space-y-2.5">
+            {/* Header row: label + nav shortcuts */}
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Resumo por Status do Processo
+              </p>
               {filtroEspecial && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-800 font-bold rounded-lg"
-                  title="Voltar ao Controle de Vagas"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate("/vagas");
-                  }}
+                  className="flex items-center gap-1.5 h-7 text-[11px] border-slate-300 text-slate-600 hover:bg-slate-100 font-bold rounded-lg"
+                  onClick={() => navigate("/vagas")}
                 >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline text-xs">
-                    Controle de Vagas
-                  </span>
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Controle de Vagas</span>
                 </Button>
               )}
-              {/* Botão TEIAs - aparece quando NÃO está em teias */}
-              {filtroEspecial !== "teias" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 font-bold rounded-lg"
-                  title="Vagas TEIAs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate("/vagas?filtro=teias");
-                  }}
-                >
-                  <Puzzle className="h-4 w-4" />
-                  <span className="hidden sm:inline text-xs">Vagas TEIAs</span>
-                </Button>
-              )}
-              {/* Botão PCD - aparece quando NÃO está em pcd */}
-              {filtroEspecial !== "pcd" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-800 font-bold rounded-lg"
-                  title="Vagas PCD"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate("/vagas?filtro=pcd");
-                  }}
-                >
-                  <Accessibility className="h-4 w-4" />
-                  <span className="hidden sm:inline text-xs">Vagas PCD</span>
-                </Button>
-              )}
+            </div>
+
+            {/* Five status scorecards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {STATUS_PROCESSO_ORDER.map((status) => {
+                const cfg = STATUS_CONFIG[status];
+                const count = statusProcessoCounts[status] ?? 0;
+                const isActive = filterStatusProcesso === status;
+                const Icon = cfg.Icon;
+                return (
+                  <button
+                    key={status}
+                    onClick={() =>
+                      setFilterStatusProcesso(isActive ? "all" : status)
+                    }
+                    className="group relative text-left w-full rounded-xl overflow-hidden focus-visible:outline-none focus-visible:ring-2"
+                    style={{
+                      background: isActive ? cfg.bg : "#ffffff",
+                      border: `1.5px solid ${isActive ? cfg.border : "#e2e8f0"}`,
+                      boxShadow: isActive
+                        ? `0 0 0 3px ${cfg.shadowColor}, 0 4px 12px ${cfg.shadowColor}`
+                        : "0 1px 4px rgba(0,0,0,0.06)",
+                      transition: "all 0.18s ease",
+                      // @ts-ignore
+                      "--focus-ring-color": cfg.border,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.boxShadow =
+                          "0 6px 20px rgba(0,0,0,0.10)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.borderColor = cfg.border;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.boxShadow =
+                          "0 1px 4px rgba(0,0,0,0.06)";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.borderColor = "#e2e8f0";
+                      }
+                    }}
+                  >
+                    {/* Coloured top stripe */}
+                    <div
+                      className="absolute inset-x-0 top-0 h-[3px]"
+                      style={{ background: cfg.dotHex }}
+                    />
+
+                    <div className="pt-5 pb-4 px-4">
+                      {/* Icon + count */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div
+                          className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-transform duration-200 group-hover:scale-105"
+                          style={{
+                            background: cfg.bg,
+                            color: cfg.text,
+                            border: `1.5px solid ${cfg.border}`,
+                          }}
+                        >
+                          <Icon size={16} />
+                        </div>
+                        <span
+                          className="text-[28px] font-black tabular-nums leading-none"
+                          style={{ color: isActive ? cfg.text : "#0f172a" }}
+                        >
+                          {count}
+                        </span>
+                      </div>
+
+                      {/* Status label */}
+                      <p
+                        className="text-[10px] font-black uppercase tracking-widest leading-tight"
+                        style={{ color: isActive ? cfg.text : "#94a3b8" }}
+                      >
+                        {cfg.label}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">
             <CardContent className="pt-4 pb-3">
-              <div className="flex flex-wrap gap-3 items-end">
+              <div className="flex flex-col gap-3">
+              {/* Row 1 — search + dropdown filters */}
+              <div className="flex flex-wrap gap-3 items-center">
                 <div className="flex-1 min-w-[240px]">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1200,6 +1239,32 @@ export default function VagasPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Row 2 — quick-access toggles, always on their own line */}
+              <div className="flex flex-wrap gap-2 items-center">
+                {filtroEspecial !== "teias" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-[11px] font-bold gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
+                    onClick={() => navigate("/vagas?filtro=teias")}
+                  >
+                    <Puzzle className="h-3.5 w-3.5" />
+                    TEIAs
+                  </Button>
+                )}
+                {filtroEspecial !== "pcd" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-[11px] font-bold gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
+                    onClick={() => navigate("/vagas?filtro=pcd")}
+                  >
+                    <Accessibility className="h-3.5 w-3.5" />
+                    PCD
+                  </Button>
+                )}
 
                 <Button
                   variant={filterVagasNovas ? "default" : "outline"}
@@ -1273,6 +1338,7 @@ export default function VagasPage() {
                     <X className="h-4 w-4 mr-1" /> Limpar Filtros
                   </Button>
                 )}
+              </div>
               </div>
             </CardContent>
           </Card>

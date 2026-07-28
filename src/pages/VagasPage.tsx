@@ -49,6 +49,7 @@ import {
   Download,
   Accessibility,
   ArrowLeft,
+  Sigma,
 } from "lucide-react";
 import { ExportButton } from "@/components/ExportButton";
 // ... keep existing code
@@ -1136,8 +1137,8 @@ export default function VagasPage() {
               )}
             </div>
 
-            {/* Five status scorecards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {/* Six scorecards: five status + Total */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {STATUS_PROCESSO_ORDER.map((status) => {
                 const cfg = STATUS_CONFIG[status];
                 const count = statusProcessoCounts[status] ?? 0;
@@ -1219,6 +1220,66 @@ export default function VagasPage() {
                   </button>
                 );
               })}
+
+              {/* Total de Vagas */}
+              {(() => {
+                const total = canonicalBase.length;
+                const allActive = filterStatusProcesso.length === STATUS_PROCESSO_ORDER.length;
+                return (
+                  <button
+                    onClick={() =>
+                      setFilterStatusProcesso(allActive ? [] : [...STATUS_PROCESSO_ORDER])
+                    }
+                    className="group relative text-left w-full rounded-xl overflow-hidden focus-visible:outline-none focus-visible:ring-2"
+                    style={{
+                      background: allActive ? "#F0F9FF" : "#ffffff",
+                      border: `1.5px solid ${allActive ? "#7DD3FC" : "#e2e8f0"}`,
+                      boxShadow: allActive
+                        ? "0 0 0 3px rgba(125,211,252,0.35), 0 4px 12px rgba(125,211,252,0.35)"
+                        : "0 1px 4px rgba(0,0,0,0.06)",
+                      transition: "all 0.18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!allActive) {
+                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.borderColor = "#7DD3FC";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!allActive) {
+                        e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.borderColor = "#e2e8f0";
+                      }
+                    }}
+                  >
+                    <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: "#0EA5E9" }} />
+                    <div className="pt-5 pb-4 px-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div
+                          className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-transform duration-200 group-hover:scale-105"
+                          style={{ background: "#F0F9FF", color: "#0369A1", border: "1.5px solid #7DD3FC" }}
+                        >
+                          <Sigma size={16} />
+                        </div>
+                        <span
+                          className="text-[28px] font-black tabular-nums leading-none"
+                          style={{ color: allActive ? "#0369A1" : "#0f172a" }}
+                        >
+                          {total}
+                        </span>
+                      </div>
+                      <p
+                        className="text-[10px] font-black uppercase tracking-widest leading-tight"
+                        style={{ color: allActive ? "#0369A1" : "#94a3b8" }}
+                      >
+                        Total de Vagas
+                      </p>
+                    </div>
+                  </button>
+                );
+              })()}
             </div>
           </div>
 

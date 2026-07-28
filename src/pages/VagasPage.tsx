@@ -55,34 +55,73 @@ import { ExportButton } from "@/components/ExportButton";
 
 // ─── Fluxo filter constants ───────────────────────────────────────────────────
 const TRATATIVAS_FILTER = [
-  'Aproveitamento de Banco de Talentos',
-  'Publicação de Edital',
-  'Movimentação Interna',
-  'Vaga de Liderança',
-  'Aguardando Unidade',
+  "Aproveitamento de Banco de Talentos",
+  "Publicação de Edital",
+  "Movimentação Interna",
+  "Vaga de Liderança",
+  "Aguardando Unidade",
 ] as const;
 
 const ETAPAS_POR_TRATATIVA_FILTER: Record<string, string[]> = {
-  'Aproveitamento de Banco de Talentos': ['Convocação', 'Documentação', 'Enviado para Formalização', 'Admissão Efetivada'],
-  'Publicação de Edital': ['Publicar novo edital', 'Em edital', 'Triagem', 'Avaliação Específica', 'Recurso', 'Entrevista', 'Análise Curricular', 'Convocação', 'Documentação', 'Enviado para Formalização', 'Admissão Efetivada', 'Não logrou êxito'],
-  'Movimentação Interna': ['Movimentação direta', 'Processo Seletivo Interno', 'Documentação', 'Edoc'],
-  'Vaga de Liderança': ['Divulgação', 'Triagem', 'Entrevista', 'Documentação', 'Edoc', 'Admissão Efetivada'],
-  'Aguardando Unidade': ['Aguardando Unidade'],
+  "Aproveitamento de Banco de Talentos": [
+    "Convocação",
+    "Documentação",
+    "Enviado para Formalização",
+    "Admissão Efetivada",
+  ],
+  "Publicação de Edital": [
+    "Publicar novo edital",
+    "Em edital",
+    "Triagem",
+    "Avaliação Específica",
+    "Recurso",
+    "Entrevista",
+    "Análise Curricular",
+    "Convocação",
+    "Documentação",
+    "Enviado para Formalização",
+    "Admissão Efetivada",
+    "Não logrou êxito",
+  ],
+  "Movimentação Interna": [
+    "Movimentação direta",
+    "Processo Seletivo Interno",
+    "Documentação",
+    "Edoc",
+  ],
+  "Vaga de Liderança": [
+    "Divulgação",
+    "Triagem",
+    "Entrevista",
+    "Documentação",
+    "Edoc",
+    "Admissão Efetivada",
+  ],
+  "Aguardando Unidade": ["Aguardando Unidade"],
 };
 
 // All unique etapas flattened (for when no tratativa is selected)
-const ALL_ETAPAS_FILTER = [...new Set(Object.values(ETAPAS_POR_TRATATIVA_FILTER).flat())];
+const ALL_ETAPAS_FILTER = [
+  ...new Set(Object.values(ETAPAS_POR_TRATATIVA_FILTER).flat()),
+];
 
 // ─── Multi-vaga fluxo helpers (mirrored from VagaDetalhePage) ────────────────
 function getVagaFluxoItems(v: Vaga): VagaFluxoItem[] {
   const count = Math.max(Number(v.numero_vagas || v.quantidade) || 1, 1);
-  const stored = Array.isArray(v.distribuicao_vagas) ? (v.distribuicao_vagas as VagaFluxoItem[]) : [];
+  const stored = Array.isArray(v.distribuicao_vagas)
+    ? (v.distribuicao_vagas as VagaFluxoItem[])
+    : [];
   return Array.from({ length: count }, (_, i) => {
     const slot = i + 1;
-    const found = stored.find(e => e.slot === slot);
-    const root: Partial<VagaFluxoItem> = slot === 1
-      ? { tratativa: v.tratativa, etapa: v.etapa, status_processo: v.status_processo || 'Solicitada' }
-      : { status_processo: 'Solicitada' };
+    const found = stored.find((e) => e.slot === slot);
+    const root: Partial<VagaFluxoItem> =
+      slot === 1
+        ? {
+            tratativa: v.tratativa,
+            etapa: v.etapa,
+            status_processo: v.status_processo || "Solicitada",
+          }
+        : { status_processo: "Solicitada" };
     return { ...root, ...found, slot } as VagaFluxoItem;
   });
 }
@@ -291,7 +330,91 @@ const pushLookup = <T,>(map: Map<string, T[]>, key: string, value: T) => {
   map.set(key, list);
 };
 
+// ─── Reusable multi-select filter popover ────────────────────────────────────
+function MultiSelectFilter({
+  placeholder,
+  options,
+  selected,
+  onChange,
+  width = "w-[180px]",
+  icon,
+}: {
+  placeholder: string;
+  options: { value: string; label?: string }[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+  width?: string;
+  icon?: JSX.Element;
+}) {
+  const toggle = (value: string) =>
+    onChange(
+      selected.includes(value)
+        ? selected.filter((v) => v !== value)
+        : [...selected, value],
+    );
 
+  const label =
+    selected.length === 0
+      ? placeholder
+      : selected.length === 1
+        ? selected[0]
+        : `${selected.length} selecionados`;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={`${width} bg-white justify-between h-9 text-xs font-normal px-3`}
+        >
+          <span className="flex items-center gap-2 truncate min-w-0">
+            {icon}
+            <span
+              className={`truncate ${selected.length > 0 ? "text-slate-800 font-medium" : "text-slate-400"}`}
+            >
+              {label}
+            </span>
+          </span>
+          {selected.length > 0 ? (
+            <span
+              className="ml-1 shrink-0 flex items-center justify-center h-4 w-4 rounded-full bg-primary text-white text-[9px] font-bold"
+            >
+              {selected.length}
+            </span>
+          ) : (
+            <ChevronDown className="h-3 w-3 text-slate-400 ml-1 shrink-0" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-2 w-[230px]" align="start">
+        {selected.length > 0 && (
+          <button
+            className="w-full text-left text-[11px] text-slate-400 hover:text-slate-600 px-2 py-1 mb-1 rounded flex items-center gap-1"
+            onClick={() => onChange([])}
+          >
+            <X className="h-3 w-3" /> Limpar seleção
+          </button>
+        )}
+        <div className="space-y-0.5 max-h-64 overflow-y-auto">
+          {options.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer text-xs text-slate-700"
+            >
+              <Checkbox
+                checked={selected.includes(opt.value)}
+                onCheckedChange={() => toggle(opt.value)}
+                className="h-3.5 w-3.5 shrink-0"
+              />
+              {opt.label ?? opt.value}
+            </label>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function VagasPage() {
   const {
@@ -324,12 +447,12 @@ export default function VagasPage() {
   const location = useLocation();
   const permissions = usePermissions();
   const [search, setSearch] = useState("");
-  const [filterUnidade, setFilterUnidade] = useState("all");
+  const [filterUnidades, setFilterUnidades] = useState<string[]>([]);
   const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
-  const [filterMes, setFilterMes] = useState("all");
-  const [filterStatusProcesso, setFilterStatusProcesso] = useState("all");
+  const [filterMeses, setFilterMeses] = useState<string[]>([]);
+  const [filterStatusProcesso, setFilterStatusProcesso] = useState<string[]>([]);
 
-  const [filterTratativa, setFilterTratativa] = useState("all");
+  const [filterTratativas, setFilterTratativas] = useState<string[]>([]);
   const [filterEtapa, setFilterEtapa] = useState("all");
   const [filterAnalista, setFilterAnalista] = useState("all");
   const [filterAssistente, setFilterAssistente] = useState("all");
@@ -464,12 +587,18 @@ export default function VagasPage() {
     } else {
       const allowed = currentUser?.unidades_vinculadas || [];
       // Match using prefix so "HUGOL" matches "HUGOL - HOSPITAL ESTADUAL..."
-      base = allUnidades.filter(u => unitIsAllowed(u, allowed) || allowed.some(a => unitIsAllowed(a, [u])));
+      base = allUnidades.filter(
+        (u) =>
+          unitIsAllowed(u, allowed) ||
+          allowed.some((a) => unitIsAllowed(a, [u])),
+      );
     }
 
     if (selectedRegion !== "all") {
-      const regionUnits = (UNIDADES_POR_REGIAO[selectedRegion] || []).map(normalizeUnitName);
-      base = base.filter(u => regionUnits.includes(normalizeUnitName(u)));
+      const regionUnits = (UNIDADES_POR_REGIAO[selectedRegion] || []).map(
+        normalizeUnitName,
+      );
+      base = base.filter((u) => regionUnits.includes(normalizeUnitName(u)));
     }
 
     return base;
@@ -593,7 +722,9 @@ export default function VagasPage() {
     if (!currentUser?.visualiza_todas_unidades) {
       const allowedUnits = currentUser?.unidades_vinculadas || [];
       if (allowedUnits.length > 0) {
-        baseRecords = baseRecords.filter(v => unitIsAllowed(v.unidade, allowedUnits));
+        baseRecords = baseRecords.filter((v) =>
+          unitIsAllowed(v.unidade, allowedUnits),
+        );
       }
     }
 
@@ -630,14 +761,31 @@ export default function VagasPage() {
       });
     }
 
-    // 3. Filtragem interna da tela
-    return getValidVacancyBase(baseRecords, filterUnidade, filterMes);
+    // 3. Filtragem interna da tela — aplica filtro de cargo (sem unit/month)
+    let result = getValidVacancyBase(baseRecords, 'all', 'all');
+
+    // 3a. Multi-select de unidade
+    if (filterUnidades.length > 0) {
+      const normSet = new Set(filterUnidades.map(normalizeUnitName));
+      result = result.filter((v) => normSet.has(normalizeUnitName(v.unidade)));
+    }
+
+    // 3b. Multi-select de mês de abertura
+    if (filterMeses.length > 0) {
+      const monthSet = new Set(filterMeses.map((m) => m.toUpperCase().trim()));
+      result = result.filter((v) => {
+        const month = getMonthNamePtBrUpper(v.data_abertura);
+        return monthSet.has(month);
+      });
+    }
+
+    return result;
   }, [
     vagas,
     selectedRegion,
     globalUnit,
-    filterUnidade,
-    filterMes,
+    filterUnidades,
+    filterMeses,
     filtroEspecial,
     pcdRegiao,
     currentUser?.visualiza_todas_unidades,
@@ -672,12 +820,12 @@ export default function VagasPage() {
         (v.motivo || "").toLowerCase().includes(searchTerm);
 
       const matchStatus =
-        filterStatusProcesso === "all" ||
-        (v.status_processo || "Solicitada") === filterStatusProcesso;
+        filterStatusProcesso.length === 0 ||
+        filterStatusProcesso.includes(v.status_processo || "Solicitada");
       const fluxoItems = getVagaFluxoItems(v);
       const matchTratativa =
-        filterTratativa === "all" ||
-        fluxoItems.some((item) => item.tratativa === filterTratativa);
+        filterTratativas.length === 0 ||
+        fluxoItems.some((item) => filterTratativas.includes(item.tratativa as string));
       const matchEtapa =
         filterEtapa === "all" ||
         fluxoItems.some((item) => item.etapa === filterEtapa);
@@ -743,7 +891,7 @@ export default function VagasPage() {
     canonicalBase,
     search,
     filterStatusProcesso,
-    filterTratativa,
+    filterTratativas,
     filterEtapa,
     filterAnalista,
     filterAssistente,
@@ -758,10 +906,10 @@ export default function VagasPage() {
     setCurrentPage(1);
   }, [
     search,
-    filterUnidade,
-    filterMes,
+    filterUnidades,
+    filterMeses,
     filterStatusProcesso,
-    filterTratativa,
+    filterTratativas,
     filterEtapa,
     filterAnalista,
     filterAssistente,
@@ -866,8 +1014,7 @@ export default function VagasPage() {
   }, [canonicalBase, vagasComBancoSet]);
 
   const countComBanco = useMemo(
-    () =>
-      canonicalBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length,
+    () => canonicalBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length,
     [canonicalBase, vagasComBancoSet],
   );
   const countVagasNovas = counts.vagas_novas;
@@ -885,11 +1032,11 @@ export default function VagasPage() {
 
   const clearFilters = () => {
     setSearch("");
-    setFilterUnidade("all");
+    setFilterUnidades([]);
     setPcdRegiao(null);
-    setFilterMes("all");
-    setFilterStatusProcesso("all");
-    setFilterTratativa("all");
+    setFilterMeses([]);
+    setFilterStatusProcesso([]);
+    setFilterTratativas([]);
     setFilterEtapa("all");
     setFilterAnalista("all");
     setFilterAssistente("all");
@@ -917,10 +1064,10 @@ export default function VagasPage() {
 
   const hasFilters =
     search ||
-    filterUnidade !== "all" ||
-    filterMes !== "all" ||
-    filterStatusProcesso !== "all" ||
-    filterTratativa !== "all" ||
+    filterUnidades.length > 0 ||
+    filterMeses.length > 0 ||
+    filterStatusProcesso.length > 0 ||
+    filterTratativas.length > 0 ||
     filterEtapa !== "all" ||
     filterAnalista !== "all" ||
     filterAssistente !== "all" ||
@@ -976,9 +1123,6 @@ export default function VagasPage() {
           <div className="mb-4 space-y-2.5">
             {/* Header row: label + nav shortcuts */}
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Resumo por Status do Processo
-              </p>
               {filtroEspecial && (
                 <Button
                   variant="outline"
@@ -997,13 +1141,17 @@ export default function VagasPage() {
               {STATUS_PROCESSO_ORDER.map((status) => {
                 const cfg = STATUS_CONFIG[status];
                 const count = statusProcessoCounts[status] ?? 0;
-                const isActive = filterStatusProcesso === status;
+                const isActive = filterStatusProcesso.includes(status);
                 const Icon = cfg.Icon;
                 return (
                   <button
                     key={status}
                     onClick={() =>
-                      setFilterStatusProcesso(isActive ? "all" : status)
+                      setFilterStatusProcesso((prev) =>
+                        prev.includes(status)
+                          ? prev.filter((s) => s !== status)
+                          : [...prev, status],
+                      )
                     }
                     className="group relative text-left w-full rounded-xl overflow-hidden focus-visible:outline-none focus-visible:ring-2"
                     style={{
@@ -1077,149 +1225,144 @@ export default function VagasPage() {
           <Card className="border-slate-200 shadow-sm bg-slate-50/50 rounded-xl">
             <CardContent className="pt-4 pb-3">
               <div className="flex flex-col gap-3">
-              {/* Row 1 — search + dropdown filters */}
-              <div className="flex flex-wrap gap-3 items-center">
-                <div className="flex-1 min-w-[240px]">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar cargo, requisição, unidade, requisitante ou motivo..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-9 bg-white"
-                    />
-                  </div>
-                </div>
-                {filtroEspecial === "pcd" ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-slate-400" />
-                      {Object.keys(PCD_REGIOES).map((regiao) => (
-                        <Button
-                          key={regiao}
-                          variant={pcdRegiao === regiao ? "default" : "outline"}
-                          size="sm"
-                          className="h-8 text-xs font-bold rounded-xl"
-                          onClick={() => {
-                            setPcdRegiao(pcdRegiao === regiao ? null : regiao);
-                            setFilterUnidade("all");
-                          }}
-                        >
-                          {regiao}
-                        </Button>
-                      ))}
-                      {pcdRegiao && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-slate-400"
-                          onClick={() => {
-                            setPcdRegiao(null);
-                            setFilterUnidade("all");
-                          }}
-                        >
-                          <X className="h-3 w-3 mr-1" /> Limpar
-                        </Button>
-                      )}
+                {/* Row 1 — search + dropdown filters */}
+                <div className="flex flex-wrap gap-3 items-center">
+                  <div className="flex-1 min-w-[240px]">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar cargo, requisição, unidade, requisitante ou motivo..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-9 bg-white"
+                      />
                     </div>
-                    {pcdRegiao && pcdUnidadesComVagas[pcdRegiao] && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {pcdUnidadesComVagas[pcdRegiao].map((unit) => (
+                  </div>
+                  {filtroEspecial === "pcd" ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-slate-400" />
+                        {Object.keys(PCD_REGIOES).map((regiao) => (
                           <Button
-                            key={unit}
+                            key={regiao}
                             variant={
-                              filterUnidade === unit ? "default" : "outline"
+                              pcdRegiao === regiao ? "default" : "outline"
                             }
                             size="sm"
-                            className="h-7 text-[11px] font-medium rounded-lg px-3"
-                            onClick={() =>
-                              setFilterUnidade(
-                                filterUnidade === unit ? "all" : unit,
-                              )
-                            }
+                            className="h-8 text-xs font-bold rounded-xl"
+                            onClick={() => {
+                              setPcdRegiao(
+                                pcdRegiao === regiao ? null : regiao,
+                              );
+                              setFilterUnidades([]);
+                            }}
                           >
-                            {unit}
+                            {regiao}
                           </Button>
                         ))}
+                        {pcdRegiao && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-slate-400"
+                            onClick={() => {
+                              setPcdRegiao(null);
+                              setFilterUnidades([]);
+                            }}
+                          >
+                            <X className="h-3 w-3 mr-1" /> Limpar
+                          </Button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <Select
-                    value={filterUnidade}
-                    onValueChange={setFilterUnidade}
-                  >
-                    <SelectTrigger className="w-[180px] bg-white">
-                      <SelectValue placeholder="Unidade" />
+                      {pcdRegiao && pcdUnidadesComVagas[pcdRegiao] && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {pcdUnidadesComVagas[pcdRegiao].map((unit) => (
+                            <Button
+                              key={unit}
+                              variant={
+                                filterUnidades.includes(unit) ? "default" : "outline"
+                              }
+                              size="sm"
+                              className="h-7 text-[11px] font-medium rounded-lg px-3"
+                              onClick={() =>
+                                setFilterUnidades((prev) =>
+                                  prev.includes(unit)
+                                    ? prev.filter((u) => u !== unit)
+                                    : [...prev, unit],
+                                )
+                              }
+                            >
+                              {unit}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <MultiSelectFilter
+                      placeholder="Todas Unidades"
+                      options={unidades.map((u) => ({ value: u }))}
+                      selected={filterUnidades}
+                      onChange={setFilterUnidades}
+                      width="w-[180px]"
+                    />
+                  )}
+                  <MultiSelectFilter
+                    placeholder="Todos os Status"
+                    options={[
+                      "Solicitada",
+                      "Em Andamento",
+                      "Cancelada",
+                      "Suspensa",
+                      "Concluída",
+                    ].map((s) => ({ value: s }))}
+                    selected={filterStatusProcesso}
+                    onChange={setFilterStatusProcesso}
+                    width="w-[160px]"
+                  />
+                  <MultiSelectFilter
+                    placeholder="Todas as Tratativas"
+                    options={TRATATIVAS_FILTER.map((t) => ({ value: t }))}
+                    selected={filterTratativas}
+                    onChange={(next) => {
+                      setFilterTratativas(next);
+                      setFilterEtapa("all");
+                    }}
+                    width="w-[200px]"
+                  />
+                  <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+                    <SelectTrigger
+                      className={`w-[190px] bg-white text-xs h-9 ${filterTratativas.length > 0 ? "" : "opacity-60"}`}
+                    >
+                      <SelectValue placeholder="Etapa" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas Unidades</SelectItem>
-                      {unidades.map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
+                      <SelectItem
+                        value="all"
+                        className="text-xs font-medium text-slate-500"
+                      >
+                        Todas as Etapas
+                      </SelectItem>
+                      {(filterTratativas.length > 0
+                        ? [
+                            ...new Set(
+                              filterTratativas.flatMap(
+                                (t) =>
+                                  ETAPAS_POR_TRATATIVA_FILTER[t] ?? [],
+                              ),
+                            ),
+                          ]
+                        : ALL_ETAPAS_FILTER
+                      ).map((e) => (
+                        <SelectItem key={e} value={e} className="text-xs">
+                          {e}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                )}
-                <Select value={filterStatusProcesso} onValueChange={setFilterStatusProcesso}>
-                  <SelectTrigger className="w-[160px] bg-white text-xs h-9">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs font-medium text-slate-500">Todos os Status</SelectItem>
-                    {(["Solicitada", "Em Andamento", "Cancelada", "Suspensa", "Concluída"] as const).map((s) => (
-                      <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={filterTratativa}
-                  onValueChange={(v) => {
-                    setFilterTratativa(v);
-                    setFilterEtapa("all");
-                  }}
-                >
-                  <SelectTrigger className="w-[200px] bg-white text-xs h-9">
-                    <SelectValue placeholder="Tratativa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs font-medium text-slate-500">Todas as Tratativas</SelectItem>
-                    {TRATATIVAS_FILTER.map((t) => (
-                      <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={filterEtapa}
-                  onValueChange={setFilterEtapa}
-                >
-                  <SelectTrigger className={`w-[190px] bg-white text-xs h-9 ${filterTratativa !== "all" ? "" : "opacity-60"}`}>
-                    <SelectValue placeholder="Etapa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs font-medium text-slate-500">Todas as Etapas</SelectItem>
-                    {(filterTratativa !== "all"
-                      ? ETAPAS_POR_TRATATIVA_FILTER[filterTratativa] ?? []
-                      : ALL_ETAPAS_FILTER
-                    ).map((e) => (
-                      <SelectItem key={e} value={e} className="text-xs">{e}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={filterMes} onValueChange={setFilterMes}>
-                  <SelectTrigger className="w-[160px] bg-white text-xs">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-3 w-3" />
-                      <SelectValue placeholder="Mês Abertura" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Meses</SelectItem>
-                    {[
+                  <MultiSelectFilter
+                    placeholder="Todos os Meses"
+                    options={[
                       "JANEIRO",
                       "FEVEREIRO",
                       "MARÇO",
@@ -1232,113 +1375,112 @@ export default function VagasPage() {
                       "OUTUBRO",
                       "NOVEMBRO",
                       "DEZEMBRO",
-                    ].map((m) => (
-                      <SelectItem key={m} value={m} className="text-xs">
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Row 2 — quick-access toggles, always on their own line */}
-              <div className="flex flex-wrap gap-2 items-center">
-                {filtroEspecial !== "teias" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 text-[11px] font-bold gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
-                    onClick={() => navigate("/vagas?filtro=teias")}
-                  >
-                    <Puzzle className="h-3.5 w-3.5" />
-                    TEIAs
-                  </Button>
-                )}
-                {filtroEspecial !== "pcd" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 text-[11px] font-bold gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
-                    onClick={() => navigate("/vagas?filtro=pcd")}
-                  >
-                    <Accessibility className="h-3.5 w-3.5" />
-                    PCD
-                  </Button>
-                )}
-
-                <Button
-                  variant={filterVagasNovas ? "default" : "outline"}
-                  size="sm"
-                  className={`h-9 text-[11px] font-bold gap-2 ${filterVagasNovas ? "bg-blue-600" : "border-slate-200 text-slate-600 bg-white"}`}
-                  onClick={() => setFilterVagasNovas(!filterVagasNovas)}
-                >
-                  <Sparkles
-                    className={`h-3.5 w-3.5 ${filterVagasNovas ? "text-white" : "text-blue-500"}`}
+                    ].map((m) => ({ value: m }))}
+                    selected={filterMeses}
+                    onChange={setFilterMeses}
+                    width="w-[160px]"
+                    icon={<Calendar className="h-3 w-3 text-slate-400 shrink-0" />}
                   />
-                  Vagas Novas (24h){" "}
-                  {countVagasNovas > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 h-4 px-1 text-[9px] bg-blue-100 text-blue-700 border-none"
-                    >
-                      {countVagasNovas}
-                    </Badge>
-                  )}
-                </Button>
+                </div>
 
-                <Button
-                  variant={filterComBanco ? "default" : "outline"}
-                  size="sm"
-                  className={`h-9 text-[11px] font-bold gap-2 ${filterComBanco ? "bg-emerald-600 hover:bg-emerald-700" : "border-slate-200 text-slate-600 bg-white"}`}
-                  onClick={() => setFilterComBanco(!filterComBanco)}
-                >
-                  <Database
-                    className={`h-3.5 w-3.5 ${filterComBanco ? "text-white" : "text-emerald-500"}`}
-                  />
-                  Com Banco{" "}
-                  {countComBanco > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 h-4 px-1 text-[9px] bg-emerald-100 text-emerald-700 border-none"
+                {/* Row 2 — quick-access toggles, always on their own line */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  {filtroEspecial !== "teias" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 text-[11px] font-bold gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
+                      onClick={() => navigate("/vagas?filtro=teias")}
                     >
-                      {countComBanco}
-                    </Badge>
+                      <Puzzle className="h-3.5 w-3.5" />
+                      TEIAs
+                    </Button>
                   )}
-                </Button>
-
-                <Button
-                  variant={filterSemMovimentacao ? "default" : "outline"}
-                  size="sm"
-                  className={`h-9 text-[11px] font-bold gap-2 ${filterSemMovimentacao ? "bg-orange-600 hover:bg-orange-700" : "border-slate-200 text-slate-600 bg-white"}`}
-                  onClick={() =>
-                    setFilterSemMovimentacao(!filterSemMovimentacao)
-                  }
-                >
-                  <AlertCircle
-                    className={`h-3.5 w-3.5 ${filterSemMovimentacao ? "text-white" : "text-orange-500"}`}
-                  />
-                  Sem Movimentação{" "}
-                  {countSemMovimentacao > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 h-4 px-1 text-[9px] bg-orange-100 text-orange-700 border-none"
+                  {filtroEspecial !== "pcd" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 text-[11px] font-bold gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
+                      onClick={() => navigate("/vagas?filtro=pcd")}
                     >
-                      {countSemMovimentacao}
-                    </Badge>
+                      <Accessibility className="h-3.5 w-3.5" />
+                      PCD
+                    </Button>
                   )}
-                </Button>
 
-                {hasFilters && (
                   <Button
-                    variant="ghost"
+                    variant={filterVagasNovas ? "default" : "outline"}
                     size="sm"
-                    onClick={clearFilters}
-                    className="text-slate-500 hover:text-slate-800"
+                    className={`h-9 text-[11px] font-bold gap-2 ${filterVagasNovas ? "bg-blue-600" : "border-slate-200 text-slate-600 bg-white"}`}
+                    onClick={() => setFilterVagasNovas(!filterVagasNovas)}
                   >
-                    <X className="h-4 w-4 mr-1" /> Limpar Filtros
+                    <Sparkles
+                      className={`h-3.5 w-3.5 ${filterVagasNovas ? "text-white" : "text-blue-500"}`}
+                    />
+                    Vagas Novas (24h){" "}
+                    {countVagasNovas > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-1 h-4 px-1 text-[9px] bg-blue-100 text-blue-700 border-none"
+                      >
+                        {countVagasNovas}
+                      </Badge>
+                    )}
                   </Button>
-                )}
-              </div>
+
+                  <Button
+                    variant={filterComBanco ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 text-[11px] font-bold gap-2 ${filterComBanco ? "bg-emerald-600 hover:bg-emerald-700" : "border-slate-200 text-slate-600 bg-white"}`}
+                    onClick={() => setFilterComBanco(!filterComBanco)}
+                  >
+                    <Database
+                      className={`h-3.5 w-3.5 ${filterComBanco ? "text-white" : "text-emerald-500"}`}
+                    />
+                    Com Banco{" "}
+                    {countComBanco > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-1 h-4 px-1 text-[9px] bg-emerald-100 text-emerald-700 border-none"
+                      >
+                        {countComBanco}
+                      </Badge>
+                    )}
+                  </Button>
+
+                  <Button
+                    variant={filterSemMovimentacao ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 text-[11px] font-bold gap-2 ${filterSemMovimentacao ? "bg-orange-600 hover:bg-orange-700" : "border-slate-200 text-slate-600 bg-white"}`}
+                    onClick={() =>
+                      setFilterSemMovimentacao(!filterSemMovimentacao)
+                    }
+                  >
+                    <AlertCircle
+                      className={`h-3.5 w-3.5 ${filterSemMovimentacao ? "text-white" : "text-orange-500"}`}
+                    />
+                    Sem Movimentação{" "}
+                    {countSemMovimentacao > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-1 h-4 px-1 text-[9px] bg-orange-100 text-orange-700 border-none"
+                      >
+                        {countSemMovimentacao}
+                      </Badge>
+                    )}
+                  </Button>
+
+                  {hasFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="text-slate-500 hover:text-slate-800"
+                    >
+                      <X className="h-4 w-4 mr-1" /> Limpar Filtros
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1380,8 +1522,9 @@ export default function VagasPage() {
                       <TableHead className="min-w-[140px]">Unidade</TableHead>
                       <TableHead className="min-w-[120px]">Seção</TableHead>
                       <TableHead className="min-w-[150px]">
-                        <span className="block leading-tight">Requisitante</span>
-                        <span className="block leading-tight">Cargo Requisitante</span>
+                        <span className="block leading-tight">
+                          Requisitante
+                        </span>
                       </TableHead>
                       <TableHead className="min-w-[160px]">
                         Status Processo
@@ -1424,356 +1567,391 @@ export default function VagasPage() {
 
                       return (
                         <>
-                        <TableRow
-                          key={v.id}
-                          className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
-                          onClick={() => navigate(`/vagas/${v.id}`)}
-                        >
-                          <TableCell className="py-3 px-2 h-14">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-slate-600 text-[11px] font-medium leading-tight">
-                                {v.data_abertura ? formatDate(v.data_abertura) : "-"}
-                              </span>
-                              <span className="text-slate-600 text-[11px] font-medium leading-tight">
-                                {v.data_recebimento ? formatDate(v.data_recebimento) : "—"}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 px-2 h-14">
-                            <div className="flex flex-col gap-0.5">
-                              <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
-                                {v.requisicao || v.numero_requisicao || "-"}
-                              </div>
-                              {v.source_row_index && (
-                                <span className="text-[9px] text-slate-400 ml-1">
-                                  Linha {v.source_row_index}
+                          <TableRow
+                            key={v.id}
+                            className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
+                            onClick={() => navigate(`/vagas/${v.id}`)}
+                          >
+                            <TableCell className="py-3 px-2 h-14">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-slate-600 text-[11px] font-medium leading-tight">
+                                  {v.data_abertura
+                                    ? formatDate(v.data_abertura)
+                                    : "-"}
                                 </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 px-4 h-14">
-                            <div className="flex flex-col gap-0.5">
-                              <div
-                                className="font-semibold text-slate-800 whitespace-normal break-words leading-tight max-w-[200px] flex items-center flex-wrap gap-2"
-                                title={v.cargo}
-                              >
-                                {v.cargo}
-                                {v.origem === "manual" &&
-                                  v.data_criacao &&
-                                  new Date().getTime() -
-                                    new Date(v.data_criacao).getTime() <
-                                    24 * 60 * 60 * 1000 && (
-                                    <Badge
-                                      variant="outline"
-                                      className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase"
-                                    >
-                                      <Sparkles className="h-2 w-2 mr-0.5" />{" "}
-                                      Nova Vaga
-                                    </Badge>
+                                <span className="text-slate-600 text-[11px] font-medium leading-tight">
+                                  {v.data_recebimento
+                                    ? formatDate(v.data_recebimento)
+                                    : "—"}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 px-2 h-14">
+                              <div className="flex flex-col gap-0.5">
+                                <div className="font-mono text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded border border-primary/10 inline-block w-fit">
+                                  {v.requisicao || v.numero_requisicao || "-"}
+                                </div>
+                                {v.source_row_index && (
+                                  <span className="text-[9px] text-slate-400 ml-1">
+                                    Linha {v.source_row_index}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 px-4 h-14">
+                              <div className="flex flex-col gap-0.5">
+                                <div
+                                  className="font-semibold text-slate-800 whitespace-normal break-words leading-tight max-w-[200px] flex items-center flex-wrap gap-2"
+                                  title={v.cargo}
+                                >
+                                  {v.cargo}
+                                  {v.origem === "manual" &&
+                                    v.data_criacao &&
+                                    new Date().getTime() -
+                                      new Date(v.data_criacao).getTime() <
+                                      24 * 60 * 60 * 1000 && (
+                                      <Badge
+                                        variant="outline"
+                                        className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase"
+                                      >
+                                        <Sparkles className="h-2 w-2 mr-0.5" />{" "}
+                                        Nova Vaga
+                                      </Badge>
+                                    )}
+                                </div>
+                                {v.motivo && (
+                                  <span
+                                    className="text-[10px] text-slate-400 leading-tight whitespace-normal break-words max-w-[200px]"
+                                    title={v.motivo}
+                                  >
+                                    {v.motivo}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
+                              <div className="flex flex-col">
+                                <span>{v.unidade}</span>
+                                {v.unidade_trabalho &&
+                                  v.unidade_trabalho !== v.unidade && (
+                                    <span className="text-[9px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
+                                      TRABALHANDO: {v.unidade_trabalho}
+                                    </span>
                                   )}
                               </div>
-                              {v.motivo && (
-                                <span
-                                  className="text-[10px] text-slate-400 leading-tight whitespace-normal break-words max-w-[200px]"
-                                  title={v.motivo}
-                                >
-                                  {v.motivo}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
-                            <div className="flex flex-col">
-                              <span>{v.unidade}</span>
-                              {v.unidade_trabalho &&
-                                v.unidade_trabalho !== v.unidade && (
-                                  <span className="text-[9px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
-                                    TRABALHANDO: {v.unidade_trabalho}
+                            </TableCell>
+                            <TableCell
+                              className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[150px] leading-tight"
+                              title={v.secao}
+                            >
+                              {v.secao || "-"}
+                            </TableCell>
+                            <TableCell
+                              className="py-3 px-4 h-14 max-w-[150px]"
+                              title={v.nome_requisitante}
+                            >
+                              <div className="flex flex-col gap-0.5">
+                                {v.nome_requisitante ? (
+                                  <span className="text-[11px] text-slate-600 font-medium whitespace-normal break-words leading-tight block">
+                                    {v.nome_requisitante}
+                                  </span>
+                                ) : (
+                                  <span className="text-[11px] text-slate-300">
+                                    —
                                   </span>
                                 )}
-                            </div>
-                          </TableCell>
-                          <TableCell
-                            className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[150px] leading-tight"
-                            title={v.secao}
-                          >
-                            {v.secao || "-"}
-                          </TableCell>
-                          <TableCell
-                            className="py-3 px-4 h-14 max-w-[150px]"
-                            title={v.nome_requisitante}
-                          >
-                            <div className="flex flex-col gap-0.5">
-                              {v.nome_requisitante ? (
-                                <span className="text-[11px] text-slate-600 font-medium whitespace-normal break-words leading-tight block">
-                                  {v.nome_requisitante}
-                                </span>
-                              ) : (
-                                <span className="text-[11px] text-slate-300">—</span>
-                              )}
-                              {v.cargo_requisitante && (
-                                <span
-                                  className="text-[10px] text-slate-400 leading-tight whitespace-normal break-words"
-                                  title={v.cargo_requisitante}
-                                >
-                                  {v.cargo_requisitante}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 px-3 h-14">
-                            <StatusProcessoBadge
-                              status={v.status_processo}
-                              tratativa={v.tratativa}
-                              etapa={v.etapa}
-                            />
-                          </TableCell>
-                          <TableCell
-                            className="text-center py-3 px-2 h-14"
-                            onClick={(e) => {
-                              const count = Number(v.numero_vagas || v.quantidade) || 0;
-                              if (count <= 1) return;
-                              e.stopPropagation();
-                              setExpandedRows(prev => {
-                                const next = new Set(prev);
-                                next.has(v.id) ? next.delete(v.id) : next.add(v.id);
-                                return next;
-                              });
-                            }}
-                          >
-                            {(() => {
-                              const count = Number(v.numero_vagas || v.quantidade) || 0;
-                              const isExpanded = expandedRows.has(v.id);
-                              if (count <= 1) {
-                                return <span className="font-bold text-slate-700 text-sm">{count}</span>;
-                              }
-                              return (
-                                <button className="inline-flex items-center gap-1 font-bold text-primary hover:text-primary/80 transition-colors group">
-                                  <span className="text-sm">{count}</span>
-                                  <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
-                                    <ChevronRight className="h-3.5 w-3.5" />
+                                {v.cargo_requisitante && (
+                                  <span
+                                    className="text-[10px] text-slate-400 leading-tight whitespace-normal break-words"
+                                    title={v.cargo_requisitante}
+                                  >
+                                    {v.cargo_requisitante}
                                   </span>
-                                </button>
-                              );
-                            })()}
-                          </TableCell>
-                          <TableCell
-                            className="text-center py-3 px-2 h-14"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {bancoFound ? (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
-                                title="Realizar Convocação"
-                                onClick={() =>
-                                  navigate(
-                                    `/convocacoes?open=true&vagaId=${v.id}`,
-                                  )
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 px-3 h-14">
+                              <StatusProcessoBadge
+                                status={v.status_processo}
+                                tratativa={v.tratativa}
+                                etapa={v.etapa}
+                              />
+                            </TableCell>
+                            <TableCell
+                              className="text-center py-3 px-2 h-14"
+                              onClick={(e) => {
+                                const count =
+                                  Number(v.numero_vagas || v.quantidade) || 0;
+                                if (count <= 1) return;
+                                e.stopPropagation();
+                                setExpandedRows((prev) => {
+                                  const next = new Set(prev);
+                                  next.has(v.id)
+                                    ? next.delete(v.id)
+                                    : next.add(v.id);
+                                  return next;
+                                });
+                              }}
+                            >
+                              {(() => {
+                                const count =
+                                  Number(v.numero_vagas || v.quantidade) || 0;
+                                const isExpanded = expandedRows.has(v.id);
+                                if (count <= 1) {
+                                  return (
+                                    <span className="font-bold text-slate-700 text-sm">
+                                      {count}
+                                    </span>
+                                  );
                                 }
-                              >
-                                <CheckCircle2 className="h-5 w-5" />
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-slate-300 hover:bg-slate-50"
-                                title="Banco não encontrado"
-                                onClick={() =>
-                                  toast.error(
-                                    `Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`,
-                                  )
-                                }
-                              >
-                                <CheckCircle2 className="h-5 w-5 opacity-40" />
-                              </Button>
-                            )}
-                          </TableCell>
-                          <TableCell
-                            className="text-right py-3 px-4 h-14"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
+                                return (
+                                  <button className="inline-flex items-center gap-1 font-bold text-primary hover:text-primary/80 transition-colors group">
+                                    <span className="text-sm">{count}</span>
+                                    <span
+                                      className={`transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                                    >
+                                      <ChevronRight className="h-3.5 w-3.5" />
+                                    </span>
+                                  </button>
+                                );
+                              })()}
+                            </TableCell>
+                            <TableCell
+                              className="text-center py-3 px-2 h-14"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {bancoFound ? (
                                 <Button
                                   variant="ghost"
-                                  className="h-8 w-8 p-0 hover:bg-slate-100"
+                                  size="icon"
+                                  className="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
+                                  title="Realizar Convocação"
+                                  onClick={() =>
+                                    navigate(
+                                      `/convocacoes?open=true&vagaId=${v.id}`,
+                                    )
+                                  }
                                 >
-                                  <MoreVertical className="h-4 w-4 text-slate-500" />
+                                  <CheckCircle2 className="h-5 w-5" />
                                 </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-slate-400">
-                                  Ações
-                                </DropdownMenuLabel>
-
-                                <DropdownMenuItem
-                                  onClick={() => navigate(`/vagas/${v.id}`)}
-                                  className="gap-2"
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-300 hover:bg-slate-50"
+                                  title="Banco não encontrado"
+                                  onClick={() =>
+                                    toast.error(
+                                      `Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`,
+                                    )
+                                  }
                                 >
-                                  <FileText className="h-4 w-4 text-blue-500" />{" "}
-                                  Ver Detalhes
-                                </DropdownMenuItem>
-
-
-                                {permissions.canRequestUpdate() && (
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setVagaForUpdate(v);
-                                      setIsRequestUpdateOpen(true);
-                                    }}
-                                    className="gap-2 text-amber-600"
+                                  <CheckCircle2 className="h-5 w-5 opacity-40" />
+                                </Button>
+                              )}
+                            </TableCell>
+                            <TableCell
+                              className="text-right py-3 px-4 h-14"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 hover:bg-slate-100"
                                   >
-                                    <AlertCircle className="h-4 w-4" />{" "}
-                                    Solicitar Atualização
-                                  </DropdownMenuItem>
-                                )}
-
-                                {canSendToEdital && (
-                                  <DropdownMenuItem
-                                    onClick={async () => {
-                                      const success = await useVagasStore
-                                        .getState()
-                                        .updateVagaAsync(v.id, {
-                                          status: "PUBLICAR EDITAL",
-                                          historico: [
-                                            ...v.historico,
-                                            {
-                                              id: `h-${Date.now()}`,
-                                              data: new Date()
-                                                .toISOString()
-                                                .split("T")[0],
-                                              descricao:
-                                                "Vaga encaminhada para Fila de Editais",
-                                              usuario:
-                                                currentUser?.nome_completo ||
-                                                "Analista",
-                                            },
-                                          ],
-                                        });
-                                      if (success) {
-                                        toast.success(
-                                          "Vaga enviada para Fila de Editais",
-                                        );
-                                      }
-                                    }}
-                                    className="gap-2 text-amber-600"
-                                  >
-                                    <FileText className="h-4 w-4" /> Enviar para
-                                    Fila de Editais
-                                  </DropdownMenuItem>
-                                )}
-
-                                {canCall && (
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      if (bancoFound) {
-                                        navigate(
-                                          `/convocacoes?open=true&vagaId=${v.id}`,
-                                        );
-                                      } else {
-                                        toast.error(
-                                          `Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`,
-                                        );
-                                      }
-                                    }}
-                                    className="gap-2 text-green-600"
-                                  >
-                                    <CheckCircle2 className="h-4 w-4" />{" "}
-                                    Realizar Convocação
-                                  </DropdownMenuItem>
-                                )}
-
-                                {bancoFound && (
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      navigate(
-                                        `/banco-talentos?search=${v.cargo}`,
-                                      )
-                                    }
-                                    className="gap-2 text-primary"
-                                  >
-                                    <Database className="h-4 w-4" /> Ver Banco
-                                    de Talentos
-                                  </DropdownMenuItem>
-                                )}
-
-                                <DropdownMenuItem
-                                  className="gap-2"
-                                  onClick={() => {
-                                    setSelectedVagaForHistory(v);
-                                    setIsHistoryOpen(true);
-                                  }}
+                                    <MoreVertical className="h-4 w-4 text-slate-500" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-56"
                                 >
-                                  <History className="h-4 w-4 text-slate-500" />{" "}
-                                  Histórico Completo
-                                </DropdownMenuItem>
+                                  <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-slate-400">
+                                    Ações
+                                  </DropdownMenuLabel>
 
-                                {permissions.canDeleteRecords() && (
-                                  <>
-                                    <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => navigate(`/vagas/${v.id}`)}
+                                    className="gap-2"
+                                  >
+                                    <FileText className="h-4 w-4 text-blue-500" />{" "}
+                                    Ver Detalhes
+                                  </DropdownMenuItem>
+
+                                  {permissions.canRequestUpdate() && (
                                     <DropdownMenuItem
-                                      className="text-destructive focus:text-destructive gap-2"
                                       onClick={() => {
-                                        setVagaParaExcluir(v.id);
-                                        setIsDeleteDialogOpen(true);
+                                        setVagaForUpdate(v);
+                                        setIsRequestUpdateOpen(true);
+                                      }}
+                                      className="gap-2 text-amber-600"
+                                    >
+                                      <AlertCircle className="h-4 w-4" />{" "}
+                                      Solicitar Atualização
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  {canSendToEdital && (
+                                    <DropdownMenuItem
+                                      onClick={async () => {
+                                        const success = await useVagasStore
+                                          .getState()
+                                          .updateVagaAsync(v.id, {
+                                            status: "PUBLICAR EDITAL",
+                                            historico: [
+                                              ...v.historico,
+                                              {
+                                                id: `h-${Date.now()}`,
+                                                data: new Date()
+                                                  .toISOString()
+                                                  .split("T")[0],
+                                                descricao:
+                                                  "Vaga encaminhada para Fila de Editais",
+                                                usuario:
+                                                  currentUser?.nome_completo ||
+                                                  "Analista",
+                                              },
+                                            ],
+                                          });
+                                        if (success) {
+                                          toast.success(
+                                            "Vaga enviada para Fila de Editais",
+                                          );
+                                        }
+                                      }}
+                                      className="gap-2 text-amber-600"
+                                    >
+                                      <FileText className="h-4 w-4" /> Enviar
+                                      para Fila de Editais
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  {canCall && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        if (bancoFound) {
+                                          navigate(
+                                            `/convocacoes?open=true&vagaId=${v.id}`,
+                                          );
+                                        } else {
+                                          toast.error(
+                                            `Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`,
+                                          );
+                                        }
+                                      }}
+                                      className="gap-2 text-green-600"
+                                    >
+                                      <CheckCircle2 className="h-4 w-4" />{" "}
+                                      Realizar Convocação
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  {bancoFound && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        navigate(
+                                          `/banco-talentos?search=${v.cargo}`,
+                                        )
+                                      }
+                                      className="gap-2 text-primary"
+                                    >
+                                      <Database className="h-4 w-4" /> Ver Banco
+                                      de Talentos
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  <DropdownMenuItem
+                                    className="gap-2"
+                                    onClick={() => {
+                                      setSelectedVagaForHistory(v);
+                                      setIsHistoryOpen(true);
+                                    }}
+                                  >
+                                    <History className="h-4 w-4 text-slate-500" />{" "}
+                                    Histórico Completo
+                                  </DropdownMenuItem>
+
+                                  {permissions.canDeleteRecords() && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive gap-2"
+                                        onClick={() => {
+                                          setVagaParaExcluir(v.id);
+                                          setIsDeleteDialogOpen(true);
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4" /> Excluir
+                                        Requisição
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+
+                          {/* ── Sub-rows for multi-vaga requisições ── */}
+                          {expandedRows.has(v.id) &&
+                            getVagaFluxoItems(v).map((item) => {
+                              const iSP = item.status_processo || "Solicitada";
+                              return (
+                                <TableRow
+                                  key={`${v.id}-slot-${item.slot}`}
+                                  className="cursor-pointer bg-slate-50/70 hover:bg-primary/5 border-b border-dashed border-slate-200 transition-colors"
+                                  onClick={() =>
+                                    navigate(`/vagas/${v.id}?slot=${item.slot}`)
+                                  }
+                                >
+                                  {/* indent: tree line + label spanning first 3 cols */}
+                                  <TableCell
+                                    colSpan={3}
+                                    className="py-2 px-2 pl-8"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-px h-6 bg-slate-300 ml-2 shrink-0" />
+                                      <div className="w-4 h-px bg-slate-300 shrink-0" />
+                                      <span className="text-[11px] font-bold text-primary/80">
+                                        Vaga {item.slot}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="py-2 px-4 text-[11px] text-slate-400">
+                                    —
+                                  </TableCell>
+                                  <TableCell className="py-2 px-4 text-[11px] text-slate-400">
+                                    —
+                                  </TableCell>
+                                  <TableCell className="py-2 px-4 text-[11px] text-slate-400">
+                                    —
+                                  </TableCell>
+                                  {/* status + tratativa + etapa */}
+                                  <TableCell className="py-2 px-3">
+                                    <StatusProcessoBadge
+                                      status={iSP}
+                                      tratativa={item.tratativa}
+                                      etapa={item.etapa}
+                                    />
+                                  </TableCell>
+                                  <TableCell className="py-2 px-2" />
+                                  <TableCell className="py-2 px-2" />
+                                  <TableCell className="py-2 px-4 text-right">
+                                    <button
+                                      className="text-[10px] text-primary font-bold hover:underline flex items-center gap-1 ml-auto"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(
+                                          `/vagas/${v.id}?slot=${item.slot}`,
+                                        );
                                       }}
                                     >
-                                      <Trash2 className="h-4 w-4" /> Excluir
-                                      Requisição
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-
-                        {/* ── Sub-rows for multi-vaga requisições ── */}
-                        {expandedRows.has(v.id) && getVagaFluxoItems(v).map(item => {
-                          const iSP = item.status_processo || 'Solicitada';
-                          return (
-                            <TableRow
-                              key={`${v.id}-slot-${item.slot}`}
-                              className="cursor-pointer bg-slate-50/70 hover:bg-primary/5 border-b border-dashed border-slate-200 transition-colors"
-                              onClick={() => navigate(`/vagas/${v.id}?slot=${item.slot}`)}
-                            >
-                              {/* indent: tree line + label spanning first 3 cols */}
-                              <TableCell colSpan={3} className="py-2 px-2 pl-8">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-px h-6 bg-slate-300 ml-2 shrink-0" />
-                                  <div className="w-4 h-px bg-slate-300 shrink-0" />
-                                  <span className="text-[11px] font-bold text-primary/80">
-                                    Vaga {item.slot}
-                                  </span>
-                                </div>
-                              </TableCell>
-                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
-                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
-                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
-                              {/* status + tratativa + etapa */}
-                              <TableCell className="py-2 px-3">
-                                <StatusProcessoBadge
-                                  status={iSP}
-                                  tratativa={item.tratativa}
-                                  etapa={item.etapa}
-                                />
-                              </TableCell>
-                              <TableCell className="py-2 px-2" />
-                              <TableCell className="py-2 px-2" />
-                              <TableCell className="py-2 px-4 text-right">
-                                <button
-                                  className="text-[10px] text-primary font-bold hover:underline flex items-center gap-1 ml-auto"
-                                  onClick={e => { e.stopPropagation(); navigate(`/vagas/${v.id}?slot=${item.slot}`); }}
-                                >
-                                  Ver <ChevronRight className="h-3 w-3" />
-                                </button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                                      Ver <ChevronRight className="h-3 w-3" />
+                                    </button>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
                         </>
                       );
                     })}

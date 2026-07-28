@@ -34,7 +34,6 @@ import {
   getCategoriaStatus,
   getMonthNamePtBrUpper,
   getValidVacancyBase,
-  checkVacancyParity,
   getEtapaColor,
   getAutoEtapa,
   filterByRegionAndUnit,
@@ -42,7 +41,6 @@ import {
 } from "@/lib/vagaUtils";
 import {
   Calendar,
-  Bug,
   ChevronDown,
   ChevronUp,
   ChevronRight,
@@ -318,7 +316,6 @@ export default function VagasPage() {
     bancos,
     deleteVaga,
     updateVaga,
-    getMatchingDiagnostic,
     fetchVagas,
     fetchBancos,
     isLoadingVagas,
@@ -371,7 +368,6 @@ export default function VagasPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedVagaForHistory, setSelectedVagaForHistory] =
     useState<Vaga | null>(null);
-  const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [vagaParaExcluir, setVagaParaExcluir] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -922,66 +918,6 @@ export default function VagasPage() {
   const countVagasNovas = counts.vagas_novas;
   const countSemMovimentacao = counts.sem_movimentacao;
 
-  // 4. Parity Debug Audit - forensic row-level check
-  const parityAudit = useMemo(() => {
-    const selUnit = filterUnidade === "all" ? "TODOS" : filterUnidade;
-    const selMonth = filterMes === "all" ? "TODOS" : filterMes;
-
-    // Rows actually counted by the card metric (finalCount)
-    const appCount = canonicalBase.length;
-
-    // Rows in table (can have extra UI filters like search, status)
-    const tableCount = filtered.length;
-
-    if (!isDebugOpen) {
-      return {
-        selUnit,
-        selMonth,
-        excelCount: 0,
-        appCount,
-        tableCount,
-        difference: 0,
-        mismatches: [],
-      };
-    }
-
-    // Check every row in the dataset
-    const analyzed = vagas.map((v) => checkVacancyParity(v, selUnit, selMonth));
-
-    // Rows counted by Excel Parity rule
-    const excelCounted = analyzed.filter((r) => r.includedByExcelParity);
-
-    // Identify divergences
-    const canonicalBaseIds = new Set(canonicalBase.map((a) => a.id));
-    const excelCountedIds = new Set(excelCounted.map((e) => e.id));
-
-    const excludedByAppButIncludedByExcel = excelCounted.filter(
-      (e) => !canonicalBaseIds.has(e.id),
-    );
-    const includedByAppButExcludedByExcel = canonicalBase.filter(
-      (a) => !excelCountedIds.has(a.id),
-    );
-
-    return {
-      selUnit,
-      selMonth,
-      excelCount: excelCounted.length,
-      appCount,
-      tableCount,
-      difference: appCount - excelCounted.length,
-      mismatches: [
-        ...excludedByAppButIncludedByExcel.map((r) => ({
-          ...r,
-          mismatchType: "EXCLUDED_BY_APP" as const,
-        })),
-        ...includedByAppButExcludedByExcel.map((r) => {
-          const check = checkVacancyParity(r, selUnit, selMonth);
-          return { ...check, mismatchType: "INCLUDED_BY_APP" as const };
-        }),
-      ],
-    };
-  }, [vagas, canonicalBase, filtered, filterUnidade, filterMes, isDebugOpen]);
-
   const clearFilters = () => {
     setSearch("");
     setFilterUnidade("all");
@@ -1061,29 +997,6 @@ export default function VagasPage() {
             helpContent={<HelpGuide />}
             actions={
               <>
-                {permissions.canViewAudit() && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`text-[11px] h-8 gap-1 font-bold ${isDebugOpen ? "text-primary bg-primary/10" : "text-slate-500 hover:text-primary hover:bg-slate-100"}`}
-                    onClick={() => setIsDebugOpen(!isDebugOpen)}
-                  >
-                    <Bug className="h-3 w-3" /> Audit
-                  </Button>
-                )}
-                {permissions.canViewDiagnostics() && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-[11px] text-slate-500 hover:text-primary hover:bg-slate-100 h-8 gap-1 font-bold"
-                    onClick={() => {
-                      const diag = getMatchingDiagnostic();
-                      toast.info(`${diag.length} vagas sem banco encontradas.`);
-                    }}
-                  >
-                    <Database className="h-3 w-3" /> Diagnóstico
-                  </Button>
-                )}
                 <ExportButton
                   data={prepareVagasForExport(filtered)}
                   filename="vagas_export"
@@ -1093,205 +1006,6 @@ export default function VagasPage() {
               </>
             }
           />
-
-          {isDebugOpen && (
-            <Card className="border-amber-200 bg-amber-50/50 shadow-sm mb-4">
-              <CardHeader className="py-4 px-6 flex flex-row items-center justify-between space-y-0">
-                <div>
-                  <CardTitle className="text-xs font-bold text-amber-800 uppercase flex items-center gap-2">
-                    <Bug className="h-3 w-3" /> Diagnóstico de Paridade Excel
-                    (Audit)
-                  </CardTitle>
-                  <CardDescription className="text-[11px] text-amber-600 font-medium">
-                    Comparação entre dados importados e regras de negócio de
-                    contagem.
-                  </CardDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsDebugOpen(false)}
-                  className="h-6 w-6 p-0 text-amber-700"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </CardHeader>
-              <CardContent className="px-6 pb-4 pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-amber-700 font-bold uppercase">
-                      Escopo Selecionado
-                    </p>
-                    <div className="flex gap-2">
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] bg-white border-amber-200 text-amber-800"
-                      >
-                        Unidade: {parityAudit.selUnit}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] bg-white border-amber-200 text-amber-800"
-                      >
-                        Mês: {parityAudit.selMonth}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-amber-700 font-bold uppercase">
-                      Contagem de Paridade
-                    </p>
-                    <div className="text-[11px] font-mono text-amber-900 leading-tight">
-                      <p>
-                        Excel Parity Count:{" "}
-                        <span className="font-bold">
-                          {parityAudit.excelCount}
-                        </span>
-                      </p>
-                      <p>
-                        App Card Count:{" "}
-                        <span className="font-bold">
-                          {parityAudit.appCount}
-                        </span>
-                      </p>
-                      <p>
-                        Diferença:{" "}
-                        <span
-                          className={`font-bold ${parityAudit.difference !== 0 ? "text-red-600" : "text-green-600"}`}
-                        >
-                          {parityAudit.difference}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-amber-700 font-bold uppercase">
-                      Status de Dados
-                    </p>
-                    <div className="text-[11px] font-mono text-amber-900 leading-tight">
-                      <p>Linhas na Tabela: {parityAudit.tableCount}</p>
-                      <p>Total de Vagas (Card): {parityAudit.appCount}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 border-t border-amber-200 pt-3">
-                  <p className="text-[11px] text-amber-700 font-bold uppercase mb-2">
-                    Relatório de Divergência (Row-level)
-                  </p>
-                  {parityAudit.mismatches.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <Table className="text-[9px]">
-                        <TableHeader>
-                          <TableRow className="h-8 hover:bg-transparent border-amber-200">
-                            <TableHead className="h-8 text-amber-800 font-bold">
-                              Record ID
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold">
-                              Linha
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold">
-                              Unidade
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold">
-                              Data
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold">
-                              Cargo
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold">
-                              Mês Extr.
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold text-center">
-                              Excel?
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold text-center">
-                              App?
-                            </TableHead>
-                            <TableHead className="h-8 text-amber-800 font-bold">
-                              Motivo Divergência
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {parityAudit.mismatches.slice(0, 10).map((m, i) => (
-                            <TableRow
-                              key={i}
-                              className="h-8 hover:bg-amber-100/50 border-amber-100"
-                            >
-                              <TableCell className="h-8 font-mono">
-                                {m.id.substring(0, 8)}...
-                              </TableCell>
-                              <TableCell className="h-8 font-bold">
-                                {m.source_row_index || "—"}
-                              </TableCell>
-                              <TableCell className="h-8">{m.unidade}</TableCell>
-                              <TableCell className="h-8">
-                                {m.data_abertura}
-                              </TableCell>
-                              <TableCell className="h-8 truncate max-w-[120px]">
-                                {m.cargo}
-                              </TableCell>
-                              <TableCell className="h-8 font-bold text-blue-700">
-                                {m.parsedMonth}
-                              </TableCell>
-                              <TableCell className="h-8 text-center">
-                                {m.includedByExcelParity ? (
-                                  <CheckCircle2 className="h-3 w-3 text-green-600 inline" />
-                                ) : (
-                                  <X className="h-3 w-3 text-red-600 inline" />
-                                )}
-                              </TableCell>
-                              <TableCell className="h-8 text-center">
-                                {m.includedByApp ? (
-                                  <CheckCircle2 className="h-3 w-3 text-green-600 inline" />
-                                ) : (
-                                  <X className="h-3 w-3 text-red-600 inline" />
-                                )}
-                              </TableCell>
-                              <TableCell className="h-8 text-red-700 font-medium">
-                                {m.rejectionReason ||
-                                  "Diferença de filtro extra UI"}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      {parityAudit.mismatches.length > 10 && (
-                        <p className="text-[8px] text-amber-600 mt-1 italic">
-                          Mostrando 10 de {parityAudit.mismatches.length}{" "}
-                          divergências.
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-green-700 bg-green-50 p-2 rounded border border-green-100">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <p className="text-[11px] font-bold">
-                        Paridade 100% confirmada entre regra Excel e App para os
-                        filtros atuais.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {parityAudit.appCount !== parityAudit.tableCount && (
-                  <Alert className="bg-amber-100 border-amber-300 py-2 mt-4">
-                    <Info className="h-3 w-3 text-amber-700" />
-                    <AlertTitle className="text-[11px] font-bold text-amber-800 uppercase">
-                      Informação: Filtros de Visualização Ativos
-                    </AlertTitle>
-                    <AlertDescription className="text-[11px] text-amber-700">
-                      A tabela ({parityAudit.tableCount}) exibe menos linhas que
-                      o total calculado ({parityAudit.appCount}) porque filtros
-                      de pesquisa ou status estão aplicados. O Total de Vagas
-                      ignora estes filtros de busca.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Card resumo com botões de atalho contextuais */}
           <div className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2">

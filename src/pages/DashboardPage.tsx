@@ -63,6 +63,7 @@ import {
   Plus,
   GitBranch,
   Puzzle,
+  Accessibility,
 } from "lucide-react";
 import {
   BarChart,
@@ -1986,7 +1987,7 @@ export default function DashboardPage() {
                   }),
             }}
           >
-            <UserCheck style={{ width: "14px", height: "14px" }} /> PCD
+            <Accessibility style={{ width: "14px", height: "14px" }} /> PCD
           </button>
 
           {/* Rede TEIA toggle */}

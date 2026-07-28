@@ -130,6 +130,7 @@ import {
   ArrowRight,
   Check,
   TrendingUp,
+  Puzzle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { VagaHistoryDialog } from "@/components/VagaHistoryDialog";
@@ -1357,7 +1358,7 @@ export default function VagasPage() {
                     navigate("/vagas?filtro=teias");
                   }}
                 >
-                  <Building2 className="h-4 w-4" />
+                  <Puzzle className="h-4 w-4" />
                   <span className="hidden sm:inline text-xs">Vagas TEIAs</span>
                 </Button>
               )}

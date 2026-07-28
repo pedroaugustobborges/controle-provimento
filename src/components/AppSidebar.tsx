@@ -136,7 +136,6 @@ export function AppSidebar() {
         url: "/fila-editais",
         icon: FileText,
         visible: getPermissions("publicacao").canRead,
-        comingSoon: true,
         subMenu: [
           { title: "Fila de Editais", url: "/fila-editais" },
           { title: "Redação do Edital", url: "/fila-analista-edital" },
@@ -147,7 +146,6 @@ export function AppSidebar() {
         url: "/validacao-editais",
         icon: FileCheck,
         visible: getPermissions("validacao").canRead,
-        comingSoon: true,
       },
       {
         title: "Banco de Talentos",

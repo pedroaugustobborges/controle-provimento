@@ -5,7 +5,7 @@ import { useAdminStore } from '@/store/adminStore';
 
 export function useRBAC() {
   const currentUser = useAdminStore((s) => s.currentUser);
-  
+
   const { data: userData, isLoading, error } = useQuery({
     queryKey: ['user_profile', currentUser?.id],
     queryFn: async (): Promise<User | null> => {
@@ -19,17 +19,27 @@ export function useRBAC() {
           .eq('id', user.id)
           .maybeSingle();
 
-        if (error || !profile) return currentUser;
+        if (error || !profile) {
+          // Fallback to the latest store value (not a stale closure)
+          return useAdminStore.getState().currentUser;
+        }
         return profile as User;
       } catch (e) {
-        return currentUser;
+        return useAdminStore.getState().currentUser;
       }
     },
     initialData: currentUser,
     enabled: !!currentUser?.id,
   });
 
-  const userToUse = userData || currentUser;
+  // Prefer whichever object has a populated `perfil` field.
+  // The query can return the minimal pre-populated user (id + email only,
+  // no perfil) from Step 1 of fetchCurrentProfile, while `currentUser` in
+  // the store may already have been updated to the full profile by Step 2.
+  // Using `||` alone would short-circuit on the truthy-but-incomplete object.
+  const userToUse = userData?.perfil
+    ? userData
+    : (currentUser?.perfil ? currentUser : (userData ?? currentUser));
 
   const hasRole = (role: UserProfile | UserProfile[]) => {
     if (!userToUse) return false;
@@ -37,16 +47,18 @@ export function useRBAC() {
     return rolesToCheck.includes(userToUse.perfil as UserProfile);
   };
 
-  const isAdmin = userToUse?.perfil?.toLowerCase() === 'administrador' || userToUse?.perfil?.toLowerCase() === 'admin';
-  const isSupervisao = userToUse?.perfil?.toLowerCase() === 'supervisão';
-  const isManagement = ['gestão', 'gerência', 'coordenação'].includes(userToUse?.perfil?.toLowerCase() || '');
-  const isFullAccessProfile = isAdmin || isManagement || userToUse?.perfil?.toLowerCase() === 'analista administrativo';
+  const perfil = userToUse?.perfil?.toLowerCase() || '';
+
+  const isAdmin = perfil === 'administrador' || perfil === 'admin';
+  const isSupervisao = perfil === 'supervisão';
+  const isManagement = ['gestão', 'gerência', 'coordenação'].includes(perfil);
+  const isFullAccessProfile = isAdmin || isManagement || perfil === 'analista administrativo';
 
   const getPermissions = (module: string): Permissions => {
     if (isFullAccessProfile) {
       return { canRead: true, canCreate: true, canEdit: true, canValidate: true, canDelete: true, canAudit: true };
     }
-    
+
     const perms: Permissions = {
       canRead: false, canCreate: false, canEdit: false,
       canValidate: false, canDelete: false, canAudit: isManagement,
@@ -54,7 +66,6 @@ export function useRBAC() {
 
     if (!userToUse) return perms;
 
-    // Check if user has explicit module access
     if (userToUse.modulos_acesso?.includes(module)) {
       perms.canRead = true;
       const specificPerm = userToUse.permissoes_modulo?.[module];
@@ -64,27 +75,26 @@ export function useRBAC() {
         perms.canValidate = true;
       }
     } else if (!userToUse.modulos_acesso || userToUse.modulos_acesso.length === 0) {
-      // Fallback for legacy users without modulos_acesso defined
       perms.canRead = true;
-      const perfil = userToUse?.perfil;
+      const rawPerfil = userToUse?.perfil;
 
       switch (module) {
         case 'vagas':
-          if (perfil === 'Analista da unidade' || perfil === 'Analista de RH') perms.canEdit = true;
+          if (rawPerfil === 'Analista da unidade' || rawPerfil === 'Analista de RH') perms.canEdit = true;
           break;
         case 'editais':
         case 'publicacao':
-          if (perfil === 'Analista do edital' || perfil === 'Analista de Edital') {
+          if (rawPerfil === 'Analista do edital' || rawPerfil === 'Analista de Edital') {
             perms.canCreate = true;
             perms.canEdit = true;
           }
-          if (perfil === 'Analista administrativo' || perfil === 'Analista Administrativo') perms.canValidate = true;
+          if (rawPerfil === 'Analista administrativo' || rawPerfil === 'Analista Administrativo') perms.canValidate = true;
           break;
         case 'banco':
-          if (perfil === 'Assistente' || perfil === 'Assistente de RH') perms.canEdit = true;
+          if (rawPerfil === 'Assistente' || rawPerfil === 'Assistente de RH') perms.canEdit = true;
           break;
         case 'convocacoes':
-          if (perfil === 'Analista de convocações' || perfil === 'Analista das Convocações') {
+          if (rawPerfil === 'Analista de convocações' || rawPerfil === 'Analista das Convocações') {
             perms.canCreate = true;
             perms.canEdit = true;
           }

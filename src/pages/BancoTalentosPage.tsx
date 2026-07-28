@@ -923,7 +923,7 @@ export default function BancoTalentosPage() {
               label="Exportar Excel"
               className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
             />
-            {permissions.canImport() && (
+            {permissions.canIncludeRecords() && (
               <Button
                 variant="outline"
                 className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"

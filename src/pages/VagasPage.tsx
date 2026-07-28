@@ -280,35 +280,7 @@ const pushLookup = <T,>(map: Map<string, T[]>, key: string, value: T) => {
   map.set(key, list);
 };
 
-// Categorias consideradas "Em Andamento" (vagas em fluxo ativo de processo)
-const EM_ANDAMENTO_CATEGORIES = new Set([
-  "em_andamento",
-  "fila_edital",
-  "convocacao",
-  "convocacoes",
-  "documentacao",
-  "em_admissao",
-  "aguardando_unidade",
-]);
 
-const passesVacancyStatusTab = (category: string, tab: string) => {
-  if (tab === "ativas")
-    return (
-      category !== "concluidas" &&
-      category !== "vagas_interrompidas" &&
-      category !== "suspensa" &&
-      category !== "cancelada"
-    );
-  if (tab === "concluidas")
-    return (
-      category === "concluidas" ||
-      category === "vagas_interrompidas" ||
-      category === "suspensa" ||
-      category === "cancelada"
-    );
-  if (tab === "em_andamento") return EM_ANDAMENTO_CATEGORIES.has(category);
-  return true;
-};
 
 export default function VagasPage() {
   const {
@@ -354,16 +326,6 @@ export default function VagasPage() {
   const [filterVagasNovas, setFilterVagasNovas] = useState(false);
   const [filterComBanco, setFilterComBanco] = useState(false);
   const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(false);
-  const [vacancyStatusTab, setVacancyStatusTab] = useState(
-    searchParams.get("statusTab") || "todas",
-  );
-
-  useEffect(() => {
-    const statusTab = searchParams.get("statusTab");
-    if (statusTab) {
-      setVacancyStatusTab(statusTab);
-    }
-  }, [searchParams]);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedVagaForHistory, setSelectedVagaForHistory] =
@@ -671,15 +633,6 @@ export default function VagasPage() {
     currentUser?.unidades_vinculadas,
   ]);
 
-  const statusScopedBase = useMemo(() => {
-    return canonicalBase.filter((vaga) =>
-      passesVacancyStatusTab(
-        vaga.categoria_status || getCategoriaStatus(vaga),
-        vacancyStatusTab,
-      ),
-    );
-  }, [canonicalBase, vacancyStatusTab]);
-
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {
     const nowTime = new Date().getTime();
@@ -692,7 +645,7 @@ export default function VagasPage() {
     endOfToday.setHours(23, 59, 59, 999);
     const endOfTodayTime = endOfToday.getTime();
 
-    return statusScopedBase.filter((v) => {
+    return canonicalBase.filter((v) => {
       const category = v.categoria_status || getCategoriaStatus(v);
 
       const searchTerm = search.toLowerCase();
@@ -776,7 +729,7 @@ export default function VagasPage() {
       );
     });
   }, [
-    statusScopedBase,
+    canonicalBase,
     search,
     filterStatusProcesso,
     filterTratativa,
@@ -805,7 +758,6 @@ export default function VagasPage() {
     filterVagasNovas,
     filterComBanco,
     filterSemMovimentacao,
-    vacancyStatusTab,
   ]);
 
   const paginatedData = useMemo(() => {
@@ -912,8 +864,8 @@ export default function VagasPage() {
   const countDocumentacao = counts.documentacao;
   const countComBanco = useMemo(
     () =>
-      statusScopedBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length,
-    [statusScopedBase, vagasComBancoSet],
+      canonicalBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length,
+    [canonicalBase, vagasComBancoSet],
   );
   const countVagasNovas = counts.vagas_novas;
   const countSemMovimentacao = counts.sem_movimentacao;
@@ -1009,17 +961,7 @@ export default function VagasPage() {
 
           {/* Card resumo com botões de atalho contextuais */}
           <div className="flex items-center gap-3 bg-blue-50/50 border border-blue-100 p-4 rounded-xl shadow-sm mb-2">
-            <div
-              className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-all"
-              onClick={() => {
-                setVacancyStatusTab("em_andamento");
-                const newParams = new URLSearchParams(searchParams);
-                newParams.set("statusTab", "em_andamento");
-                navigate(`${location.pathname}?${newParams.toString()}`, {
-                  replace: true,
-                });
-              }}
-            >
+            <div className="flex items-center gap-3 flex-1 rounded-lg">
               <div className="bg-blue-600 p-2.5 rounded-lg shadow-md shadow-blue-200">
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
@@ -1334,79 +1276,6 @@ export default function VagasPage() {
               </div>
             </CardContent>
           </Card>
-
-          <div className="mb-4 space-y-2">
-            <Tabs
-              value={vacancyStatusTab}
-              onValueChange={(val) => {
-                setVacancyStatusTab(val);
-                const newParams = new URLSearchParams(searchParams);
-                newParams.set("statusTab", val);
-                navigate(`${location.pathname}?${newParams.toString()}`, {
-                  replace: true,
-                });
-              }}
-              className="w-full"
-            >
-              <TabsList className="bg-slate-100/50 p-1 rounded-xl flex-wrap h-auto">
-                <TabsTrigger
-                  value="todas"
-                  className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm"
-                >
-                  Todas as Vagas ({canonicalBase.length})
-                </TabsTrigger>
-                <TabsTrigger
-                  value="em_andamento"
-                  className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm"
-                >
-                  Em Andamento (
-                  {counts.fila_edital +
-                    counts.em_andamento +
-                    counts.convocacao +
-                    counts.documentacao +
-                    counts.aguardando_unidade +
-                    ((counts as any).em_admissao || 0)}
-                  )
-                </TabsTrigger>
-                <TabsTrigger
-                  value="ativas"
-                  className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm"
-                >
-                  Vagas Ativas (
-                  {counts.fila_edital +
-                    counts.em_andamento +
-                    counts.vagas_lideranca +
-                    counts.convocacao +
-                    counts.aguardando_unidade +
-                    counts.documentacao +
-                    counts.em_admissao +
-                    counts.movimentacao_interna}
-                  )
-                </TabsTrigger>
-                <TabsTrigger
-                  value="concluidas"
-                  className="font-bold rounded-lg px-4 sm:px-6 data-[state=active]:bg-white data-[state=active]:text-green-600 data-[state=active]:shadow-sm transition-all text-slate-500 text-xs sm:text-sm"
-                >
-                  Concluídas/Encerradas (
-                  {counts.concluidas + counts.vagas_interrompidas})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            {vacancyStatusTab === "em_andamento" && (
-              <p className="text-[11px] text-blue-600 flex items-center gap-1.5 px-1">
-                <Info className="h-3 w-3 shrink-0" />
-                Vagas com processo ativo em curso: fila de edital, convocação,
-                documentação ou em admissão.
-              </p>
-            )}
-            {vacancyStatusTab === "ativas" && (
-              <p className="text-[11px] text-slate-500 flex items-center gap-1.5 px-1">
-                <Info className="h-3 w-3 shrink-0" />
-                Todas as vagas abertas e não encerradas, incluindo as em
-                liderança e movimentação interna.
-              </p>
-            )}
-          </div>
 
           <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden">
             <CardContent className="p-0">

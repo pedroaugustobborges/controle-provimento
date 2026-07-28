@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import {
   Search,
-  Plus,
   Filter,
   Calendar,
   Info,
@@ -85,7 +84,6 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { BancoTalentosForm } from "@/components/BancoTalentosForm";
 import { ConvocacaoDialog } from "@/components/ConvocacaoDialog";
 import { Convocacao } from "@/types/vaga";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -151,7 +149,6 @@ export default function BancoTalentosPage() {
   const [convocadosUnidadeFilter, setConvocadosUnidadeFilter] =
     useState("todas");
   const [convocadosCargoFilter, setConvocadosCargoFilter] = useState("todos");
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCadastrarEditalOpen, setIsCadastrarEditalOpen] = useState(false);
   const [novoEditalNumero, setNovoEditalNumero] = useState("");
   const [savingEdital, setSavingEdital] = useState(false);
@@ -925,20 +922,10 @@ export default function BancoTalentosPage() {
             />
             {permissions.canIncludeRecords() && (
               <Button
-                variant="outline"
-                className="gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm h-10 px-4 transition-all rounded-xl font-bold"
+                className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 px-4 transition-all rounded-xl font-bold"
                 onClick={() => setIsCadastrarEditalOpen(true)}
               >
-                <FileText className="h-4 w-4 text-primary" /> Vincular Banco -
-                Reachr
-              </Button>
-            )}
-            {permissions.canIncludeRecords() && (
-              <Button
-                className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 px-4 transition-all rounded-xl font-bold"
-                onClick={() => setIsFormOpen(true)}
-              >
-                <Plus className="h-4 w-4" /> Novo Banco
+                <FileText className="h-4 w-4" /> Vincular Banco - Reachr
               </Button>
             )}
           </>
@@ -962,20 +949,6 @@ export default function BancoTalentosPage() {
           </Button>
         </div>
       )}
-
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              Cadastrar Novo Banco de Talentos
-            </DialogTitle>
-          </DialogHeader>
-          <BancoTalentosForm
-            onSuccess={() => setIsFormOpen(false)}
-            onCancel={() => setIsFormOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
 
       {/* Cadastrar Edital modal */}
       <Dialog

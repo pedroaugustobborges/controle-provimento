@@ -26,6 +26,11 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
+  StatusProcessoBadge,
+  STATUS_CONFIG as PROCESSO_STATUS_CONFIG,
+  getStatusProcessoConfig,
+} from "@/components/StatusProcessoBadge";
+import {
   calcDiasAberto,
   formatDate,
   getValidacaoColor,
@@ -169,46 +174,6 @@ const ETAPAS_POR_TRATATIVA: Record<string, string[]> = {
   "Aguardando Unidade": ["Aguardando Unidade"],
 };
 
-const STATUS_PROCESSO_CONFIG: Record<
-  StatusProcesso,
-  { dot: string; bg: string; text: string; border: string; iconBg: string }
-> = {
-  Solicitada: {
-    dot: "bg-slate-400",
-    bg: "bg-slate-50",
-    text: "text-slate-600",
-    border: "border-slate-200",
-    iconBg: "bg-slate-100",
-  },
-  "Em Andamento": {
-    dot: "bg-blue-500",
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
-    iconBg: "bg-blue-100",
-  },
-  Cancelada: {
-    dot: "bg-red-500",
-    bg: "bg-red-50",
-    text: "text-red-700",
-    border: "border-red-200",
-    iconBg: "bg-red-100",
-  },
-  Suspensa: {
-    dot: "bg-amber-500",
-    bg: "bg-amber-50",
-    text: "text-amber-700",
-    border: "border-amber-200",
-    iconBg: "bg-amber-100",
-  },
-  Concluída: {
-    dot: "bg-emerald-500",
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    border: "border-emerald-200",
-    iconBg: "bg-emerald-100",
-  },
-};
 
 function calcSimilarity(vagaCargo: string, bancoCargo: string): number {
   if (!vagaCargo || !bancoCargo) return 0;
@@ -1186,13 +1151,10 @@ export default function VagaDetalhePage() {
                 {vaga.status_edital}
               </Badge>
             )}
-            <StatusBadge
-              status={
-                (vaga.status_processo ||
-                  vaga.status ||
-                  vaga.status_geral ||
-                  "aberta") as any
-              }
+            <StatusProcessoBadge
+              status={vaga.status_processo}
+              tratativa={vaga.tratativa}
+              etapa={vaga.etapa}
             />
           </div>
           {permissions.canRequestUpdate() && (
@@ -1687,9 +1649,6 @@ export default function VagaDetalhePage() {
                   const activeItem = fluxoItems[safeSlot - 1] ?? fluxoItems[0];
                   const sp: StatusProcesso =
                     activeItem?.status_processo || "Solicitada";
-                  const spCfg =
-                    STATUS_PROCESSO_CONFIG[sp] ??
-                    STATUS_PROCESSO_CONFIG["Solicitada"];
                   const canEditFlow = canEdit || isAssistente;
 
                   // Panels renderer — shared for single and multi
@@ -1718,9 +1677,7 @@ export default function VagaDetalhePage() {
                         ? effectiveEtapa
                         : "";
 
-                    const iCfg =
-                      STATUS_PROCESSO_CONFIG[effectiveSP] ??
-                      STATUS_PROCESSO_CONFIG["Solicitada"];
+                    const iCfg = getStatusProcessoConfig(effectiveSP);
 
                     return (
                       <div className="divide-y divide-slate-100">
@@ -1870,10 +1827,16 @@ export default function VagaDetalhePage() {
                         <div className="p-5 space-y-3">
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-7 h-7 rounded-full ${iCfg.iconBg} border ${iCfg.border} flex items-center justify-center shrink-0`}
+                              style={{
+                                background: iCfg.bg,
+                                border: `1px solid ${iCfg.border}`,
+                              }}
+                              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                             >
-                              <CheckCircle
-                                className={`h-3.5 w-3.5 ${iCfg.text}`}
+                              <iCfg.Icon
+                                size={14}
+                                style={{ color: iCfg.text }}
+                                aria-hidden="true"
                               />
                             </div>
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
@@ -1892,22 +1855,25 @@ export default function VagaDetalhePage() {
                               }
                             >
                               <SelectTrigger
-                                className={`h-9 text-sm font-bold border ${iCfg.border} ${iCfg.bg} ${iCfg.text} max-w-xs`}
+                                style={{
+                                  background: iCfg.bg,
+                                  color: iCfg.text,
+                                  border: `1px solid ${iCfg.border}`,
+                                }}
+                                className="h-9 text-sm font-bold max-w-xs"
                               >
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {(
-                                  Object.keys(
-                                    STATUS_PROCESSO_CONFIG,
-                                  ) as StatusProcesso[]
-                                ).map((s) => {
-                                  const c = STATUS_PROCESSO_CONFIG[s];
+                                {(Object.keys(PROCESSO_STATUS_CONFIG) as StatusProcesso[]).map((s) => {
+                                  const c = PROCESSO_STATUS_CONFIG[s];
                                   return (
                                     <SelectItem key={s} value={s}>
                                       <span className="flex items-center gap-2 font-semibold">
-                                        <span
-                                          className={`w-2 h-2 rounded-full ${c.dot}`}
+                                        <c.Icon
+                                          size={12}
+                                          style={{ color: c.text }}
+                                          aria-hidden="true"
                                         />
                                         {s}
                                       </span>
@@ -1917,14 +1883,7 @@ export default function VagaDetalhePage() {
                               </SelectContent>
                             </Select>
                           ) : (
-                            <span
-                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold border ${iCfg.bg} ${iCfg.text} ${iCfg.border}`}
-                            >
-                              <span
-                                className={`w-2 h-2 rounded-full ${iCfg.dot}`}
-                              />
-                              {effectiveSP}
-                            </span>
+                            <StatusProcessoBadge status={effectiveSP} />
                           )}
                         </div>
                       </div>
@@ -1953,14 +1912,7 @@ export default function VagaDetalhePage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${spCfg.bg} ${spCfg.text} ${spCfg.border}`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${spCfg.dot}`}
-                            />
-                            {sp}
-                          </span>
+                          <StatusProcessoBadge status={sp} />
                           {canEditFlow && (
                             <Button
                               size="sm"
@@ -1985,9 +1937,7 @@ export default function VagaDetalhePage() {
                         <div className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-slate-100 bg-white overflow-x-auto">
                           {fluxoItems.map((item) => {
                             const iSP = item.status_processo || "Solicitada";
-                            const iCfg =
-                              STATUS_PROCESSO_CONFIG[iSP] ??
-                              STATUS_PROCESSO_CONFIG["Solicitada"];
+                            const tabCfg = getStatusProcessoConfig(iSP);
                             const isActive = item.slot === safeSlot;
                             return (
                               <button
@@ -2001,7 +1951,14 @@ export default function VagaDetalhePage() {
                                 )}
                               >
                                 <span
-                                  className={`w-2 h-2 rounded-full ${iCfg.dot}`}
+                                  style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    backgroundColor: tabCfg.dotHex,
+                                    display: 'inline-block',
+                                    flexShrink: 0,
+                                  }}
                                 />
                                 Vaga {item.slot}
                               </button>

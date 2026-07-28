@@ -7,20 +7,31 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 
-interface StatusConfig {
+export interface StatusConfig {
+  /** Background fill hex */
   bg: string;
+  /** Text / icon hex */
   text: string;
+  /** Border hex */
   border: string;
+  /** Vivid dot hex (used for compact indicators) */
+  dotHex: string;
+  /** Hover shadow rgba */
   shadowColor: string;
+  /** Lucide icon for this status */
   Icon: LucideIcon;
+  /** Human-readable label */
   label: string;
 }
 
-const STATUS_CONFIG: Record<StatusProcesso, StatusConfig> = {
+/** Central source-of-truth for every StatusProcesso visual.
+ *  Import this wherever status colours / icons are needed. */
+export const STATUS_CONFIG: Record<StatusProcesso, StatusConfig> = {
   'Em Andamento': {
     bg: '#FEF3C7',
     text: '#B45309',
     border: '#FCD34D',
+    dotHex: '#D97706',
     shadowColor: 'rgba(252, 211, 77, 0.5)',
     Icon: Play,
     label: 'Em Andamento',
@@ -29,6 +40,7 @@ const STATUS_CONFIG: Record<StatusProcesso, StatusConfig> = {
     bg: '#DCFCE7',
     text: '#166534',
     border: '#86EFAC',
+    dotHex: '#16A34A',
     shadowColor: 'rgba(134, 239, 172, 0.5)',
     Icon: Hourglass,
     label: 'Solicitada',
@@ -37,6 +49,7 @@ const STATUS_CONFIG: Record<StatusProcesso, StatusConfig> = {
     bg: '#FEE2E2',
     text: '#B91C1C',
     border: '#FCA5A5',
+    dotHex: '#DC2626',
     shadowColor: 'rgba(252, 165, 165, 0.5)',
     Icon: XCircle,
     label: 'Cancelada',
@@ -45,6 +58,7 @@ const STATUS_CONFIG: Record<StatusProcesso, StatusConfig> = {
     bg: '#DBEAFE',
     text: '#1D4ED8',
     border: '#93C5FD',
+    dotHex: '#2563EB',
     shadowColor: 'rgba(147, 197, 253, 0.5)',
     Icon: PauseCircle,
     label: 'Suspensa',
@@ -53,52 +67,40 @@ const STATUS_CONFIG: Record<StatusProcesso, StatusConfig> = {
     bg: '#EDE9FE',
     text: '#6D28D9',
     border: '#C4B5FD',
+    dotHex: '#7C3AED',
     shadowColor: 'rgba(196, 181, 253, 0.5)',
     Icon: BadgeCheck,
     label: 'Concluída',
   },
 };
 
-interface Props {
-  status?: StatusProcesso | string | null;
-  tratativa?: string | null;
-  etapa?: string | null;
+/** Fallback config for unknown / missing status values. */
+const FALLBACK_CONFIG: StatusConfig = {
+  bg: '#F8FAFC',
+  text: '#64748B',
+  border: '#E2E8F0',
+  dotHex: '#94A3B8',
+  shadowColor: 'rgba(148, 163, 184, 0.4)',
+  Icon: Play,
+  label: 'Sem Status',
+};
+
+/** Returns the config for a given StatusProcesso string (with safe fallback). */
+export function getStatusProcessoConfig(status?: string | null): StatusConfig {
+  if (!status) return FALLBACK_CONFIG;
+  return STATUS_CONFIG[status as StatusProcesso] ?? FALLBACK_CONFIG;
 }
 
-function Badge({
+// ─── Internal pill atom ───────────────────────────────────────────────────────
+
+function PillBadge({
   config,
-  status,
+  label,
 }: {
-  config: StatusConfig | undefined;
-  status: string | null | undefined;
+  config: StatusConfig;
+  label: string;
 }) {
-  if (!config) {
-    return (
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 5,
-          padding: '3px 10px',
-          borderRadius: 9999,
-          fontSize: 13,
-          fontWeight: 600,
-          border: '1px solid #E2E8F0',
-          backgroundColor: '#F8FAFC',
-          color: '#64748B',
-          whiteSpace: 'nowrap',
-          cursor: 'default',
-        }}
-        role="status"
-        aria-label={`Status: ${status || 'Sem status'}`}
-      >
-        {status || 'Sem Status'}
-      </span>
-    );
-  }
-
-  const { bg, text, border, shadowColor, Icon, label } = config;
-
+  const { bg, text, border, shadowColor, Icon } = config;
   return (
     <span
       style={{
@@ -139,33 +141,40 @@ function Badge({
   );
 }
 
+// ─── Public component ─────────────────────────────────────────────────────────
+
+interface Props {
+  /** StatusProcesso value or any string fallback */
+  status?: StatusProcesso | string | null;
+  /** Optional tratativa disclosed on hover */
+  tratativa?: string | null;
+  /** Optional etapa disclosed on hover */
+  etapa?: string | null;
+}
+
 /**
- * Pill badge for StatusProcesso with optional hover card
- * disclosing Tratativa and Etapa details.
- * Shows only the badge at first glance — hover reveals workflow context.
+ * Pill badge for StatusProcesso.
+ * - Shows only the badge at rest — clean, compact.
+ * - On hover reveals a card with Tratativa and Etapa (if provided).
+ * - Fully accessible: role="status", tabIndex, keyboard-focus ring.
+ * - Data-driven via STATUS_CONFIG — add new statuses there only.
  */
 export function StatusProcessoBadge({ status, tratativa, etapa }: Props) {
-  const config = status ? STATUS_CONFIG[status as StatusProcesso] : undefined;
+  const config = getStatusProcessoConfig(status);
+  const label = config.label === 'Sem Status' && status ? status : config.label;
   const hasDetails = !!(tratativa || etapa);
 
   if (!hasDetails) {
-    return <Badge config={config} status={status} />;
+    return <PillBadge config={config} label={label} />;
   }
 
-  const { bg, text, border, Icon, label } = config ?? {
-    bg: '#F8FAFC',
-    text: '#64748B',
-    border: '#E2E8F0',
-    Icon: Play,
-    label: status || 'Sem Status',
-  };
+  const { bg, text, border, Icon } = config;
 
   return (
     <HoverCard openDelay={120} closeDelay={80}>
       <HoverCardTrigger asChild>
-        {/* wrapper needed so asChild can forward refs to the span */}
         <span style={{ display: 'inline-block', cursor: 'default' }}>
-          <Badge config={config} status={status} />
+          <PillBadge config={config} label={label} />
         </span>
       </HoverCardTrigger>
 
@@ -173,10 +182,10 @@ export function StatusProcessoBadge({ status, tratativa, etapa }: Props) {
         side="right"
         align="start"
         sideOffset={8}
-        className="w-52 p-0 overflow-hidden shadow-xl border-0 rounded-xl"
+        className="w-52 p-0 overflow-hidden rounded-xl border-0"
         style={{ boxShadow: `0 8px 30px rgba(0,0,0,0.12), 0 0 0 1px ${border}` }}
       >
-        {/* ── Coloured header matching the status ─────────────────── */}
+        {/* Coloured header matching the status */}
         <div
           style={{ background: bg, borderBottom: `1px solid ${border}` }}
           className="px-3 py-2.5 flex items-center gap-2"
@@ -187,7 +196,7 @@ export function StatusProcessoBadge({ status, tratativa, etapa }: Props) {
           </span>
         </div>
 
-        {/* ── Detail rows ──────────────────────────────────────────── */}
+        {/* Detail rows */}
         <div className="px-3 py-3 space-y-3 bg-white">
           {tratativa && (
             <div>
@@ -196,9 +205,7 @@ export function StatusProcessoBadge({ status, tratativa, etapa }: Props) {
               </p>
               <div className="flex items-start gap-1.5">
                 <Route size={11} className="text-slate-400 mt-0.5 shrink-0" aria-hidden="true" />
-                <p className="text-[12px] font-medium text-slate-700 leading-tight">
-                  {tratativa}
-                </p>
+                <p className="text-[12px] font-medium text-slate-700 leading-tight">{tratativa}</p>
               </div>
             </div>
           )}
@@ -210,9 +217,7 @@ export function StatusProcessoBadge({ status, tratativa, etapa }: Props) {
               </p>
               <div className="flex items-start gap-1.5">
                 <Milestone size={11} className="text-slate-400 mt-0.5 shrink-0" aria-hidden="true" />
-                <p className="text-[12px] font-medium text-slate-700 leading-tight">
-                  {etapa}
-                </p>
+                <p className="text-[12px] font-medium text-slate-700 leading-tight">{etapa}</p>
               </div>
             </div>
           )}

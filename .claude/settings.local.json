@@ -4,7 +4,8 @@
       "Bash(npm --version)",
       "Bash(node_modules/.bin/tsc --noEmit)",
       "Bash(node:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

@@ -1725,18 +1725,24 @@ export default function VagasPage() {
                 <table className="w-full caption-bottom text-sm">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="min-w-[76px]">Abertura</TableHead>
-                      <TableHead className="min-w-[76px]">
-                        Recebimento
+                      <TableHead className="min-w-[80px]">
+                        <span className="block leading-tight">Abertura</span>
+                        <span className="block leading-tight">Recebimento</span>
                       </TableHead>
                       <TableHead className="min-w-[80px]">Requisição</TableHead>
-                      <TableHead className="min-w-[200px]">Cargo</TableHead>
+                      <TableHead className="min-w-[200px]">
+                        <span className="block leading-tight">Cargo</span>
+                        <span className="block leading-tight">Motivo</span>
+                      </TableHead>
                       <TableHead className="min-w-[140px]">Unidade</TableHead>
                       <TableHead className="min-w-[120px]">Seção</TableHead>
-                      <TableHead className="min-w-[140px]">Requisitante</TableHead>
-                      <TableHead className="min-w-[160px]">Motivo</TableHead>
-                      <TableHead className="min-w-[130px] text-center">
-                        Status
+                      <TableHead className="min-w-[150px]">
+                        <span className="block leading-tight">Requisitante</span>
+                        <span className="block leading-tight">Cargo Requisitante</span>
+                      </TableHead>
+                      <TableHead className="min-w-[140px] text-center">
+                        <span className="block leading-tight">Status</span>
+                        <span className="block leading-tight">Tratativa / Etapa</span>
                       </TableHead>
                       <TableHead className="min-w-[56px] text-center">
                         Vaga(s)
@@ -1781,15 +1787,15 @@ export default function VagasPage() {
                           className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
                           onClick={() => navigate(`/vagas/${v.id}`)}
                         >
-                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-2 h-14">
-                            {v.data_abertura
-                              ? formatDate(v.data_abertura)
-                              : "-"}
-                          </TableCell>
-                          <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-2 h-14">
-                            {v.data_recebimento
-                              ? formatDate(v.data_recebimento)
-                              : "-"}
+                          <TableCell className="py-3 px-2 h-14">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-slate-600 text-[11px] font-medium leading-tight">
+                                {v.data_abertura ? formatDate(v.data_abertura) : "-"}
+                              </span>
+                              <span className="text-slate-600 text-[11px] font-medium leading-tight">
+                                {v.data_recebimento ? formatDate(v.data_recebimento) : "—"}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="py-3 px-2 h-14">
                             <div className="flex flex-col gap-0.5">
@@ -1804,7 +1810,7 @@ export default function VagasPage() {
                             </div>
                           </TableCell>
                           <TableCell className="py-3 px-4 h-14">
-                            <div className="flex flex-col">
+                            <div className="flex flex-col gap-0.5">
                               <div
                                 className="font-semibold text-slate-800 whitespace-normal break-words leading-tight max-w-[200px] flex items-center flex-wrap gap-2"
                                 title={v.cargo}
@@ -1824,6 +1830,14 @@ export default function VagasPage() {
                                     </Badge>
                                   )}
                               </div>
+                              {v.motivo && (
+                                <span
+                                  className="text-[10px] text-slate-400 leading-tight whitespace-normal break-words max-w-[200px]"
+                                  title={v.motivo}
+                                >
+                                  {v.motivo}
+                                </span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
@@ -1844,31 +1858,45 @@ export default function VagasPage() {
                             {v.secao || "-"}
                           </TableCell>
                           <TableCell
-                            className="py-3 px-4 h-14 max-w-[140px]"
+                            className="py-3 px-4 h-14 max-w-[150px]"
                             title={v.nome_requisitante}
                           >
-                            {v.nome_requisitante ? (
-                              <span className="text-[11px] text-slate-600 font-medium whitespace-normal break-words leading-tight block">
-                                {v.nome_requisitante}
-                              </span>
-                            ) : (
-                              <span className="text-[11px] text-slate-300">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3 px-4 h-14 max-w-[160px]">
-                            {v.motivo ? (
-                              <span
-                                className="text-[11px] text-slate-600 font-medium whitespace-normal break-words leading-tight block"
-                                title={v.motivo}
-                              >
-                                {v.motivo}
-                              </span>
-                            ) : (
-                              <span className="text-[11px] text-slate-300">—</span>
-                            )}
+                            <div className="flex flex-col gap-0.5">
+                              {v.nome_requisitante ? (
+                                <span className="text-[11px] text-slate-600 font-medium whitespace-normal break-words leading-tight block">
+                                  {v.nome_requisitante}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-slate-300">—</span>
+                              )}
+                              {v.cargo_requisitante && (
+                                <span
+                                  className="text-[10px] text-slate-400 leading-tight whitespace-normal break-words"
+                                  title={v.cargo_requisitante}
+                                >
+                                  {v.cargo_requisitante}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-center py-3 px-4 h-14">
-                            <StatusBadge status={(v.status_processo || v.status || v.status_geral) as any} />
+                            <div className="flex flex-col items-center gap-1">
+                              <StatusBadge status={(v.status_processo || v.status || v.status_geral) as any} />
+                              {(v.tratativa || v.etapa) && (
+                                <div className="flex flex-col items-center gap-0.5 w-full">
+                                  {v.tratativa && (
+                                    <span className="text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={v.tratativa}>
+                                      {v.tratativa}
+                                    </span>
+                                  )}
+                                  {v.etapa && (
+                                    <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={v.etapa}>
+                                      {v.etapa}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell
                             className="text-center py-3 px-2 h-14"
@@ -2083,8 +2111,8 @@ export default function VagasPage() {
                               className="cursor-pointer bg-slate-50/70 hover:bg-primary/5 border-b border-dashed border-slate-200 transition-colors"
                               onClick={() => navigate(`/vagas/${v.id}?slot=${item.slot}`)}
                             >
-                              {/* indent: tree line + label spanning first 4 cols */}
-                              <TableCell colSpan={4} className="py-2 px-2 pl-8">
+                              {/* indent: tree line + label spanning first 3 cols */}
+                              <TableCell colSpan={3} className="py-2 px-2 pl-8">
                                 <div className="flex items-center gap-2">
                                   <div className="w-px h-6 bg-slate-300 ml-2 shrink-0" />
                                   <div className="w-4 h-px bg-slate-300 shrink-0" />
@@ -2096,19 +2124,24 @@ export default function VagasPage() {
                               <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
                               <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
                               <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
-                              <TableCell className="py-2 px-4 text-[11px] text-slate-400">—</TableCell>
-                              {/* motivo col — repurposed to show etapa */}
-                              <TableCell className="py-2 px-4">
-                                {item.etapa
-                                  ? <span className="text-[11px] text-slate-600 font-medium">{item.etapa}</span>
-                                  : <span className="text-[11px] text-slate-300 italic">Etapa não definida</span>}
-                              </TableCell>
-                              {/* status */}
+                              {/* status + tratativa + etapa */}
                               <TableCell className="text-center py-2 px-4">
-                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                                  {iSP}
-                                </span>
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                                    {iSP}
+                                  </span>
+                                  {item.tratativa && (
+                                    <span className="text-[9px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={item.tratativa}>
+                                      {item.tratativa}
+                                    </span>
+                                  )}
+                                  {item.etapa && (
+                                    <span className="text-[9px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded leading-tight max-w-[130px] truncate w-full text-center" title={item.etapa}>
+                                      {item.etapa}
+                                    </span>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell className="py-2 px-2" />
                               <TableCell className="py-2 px-2" />
@@ -2129,7 +2162,7 @@ export default function VagasPage() {
                     {filtered.length === 0 && (
                       <TableRow>
                         <TableCell
-                          colSpan={12}
+                          colSpan={10}
                           className="px-6 py-20 text-center text-muted-foreground font-medium"
                         >
                           Nenhuma vaga encontrada para os filtros aplicados.

@@ -430,7 +430,7 @@ export function normalizeUnitName(name: string): string {
 /**
  * Extracts the short prefix from a full unit name.
  * "HUGOL - HOSPITAL ESTADUAL..." → "HUGOL"
- * "TEIA GOIÂNIA - ..."          → "TEIA GOIÂNIA"
+ * "TEIA AP. DE GOIANIA - CLINICA TEIA" → "TEIA AP. DE GOIANIA"
  * "HUGOL"                       → "HUGOL"
  */
 export function extractUnitPrefix(name: string): string {
@@ -441,16 +441,62 @@ export function extractUnitPrefix(name: string): string {
 }
 
 /**
+ * Maps the short admin names used in UnidadesPicker / unidades_vinculadas
+ * to the actual prefixes found in the vagas.unidade column.
+ *
+ * Problem: the DB stores full descriptive names like
+ *   "TEIA AP. DE GOIANIA - CLINICA TEIA"
+ * whose extracted prefix "TEIA AP. DE GOIANIA" bears no lexical resemblance
+ * to the admin short name "TEIA GOIANIA" — so standard prefix matching fails.
+ *
+ * All keys and values are pre-normalized (uppercase, no accents).
+ */
+const TEIA_ALIAS_MAP: Record<string, string[]> = {
+  // TEIA GOIÂNIA → "CLINICA TEIA" (main Goiânia clinic, no location prefix in DB)
+  'TEIA GOIANIA': ['CLINICA TEIA'],
+  // TEIA APARECIDA → Aparecida de Goiânia
+  'TEIA APARECIDA': ['TEIA AP. DE GOIANIA'],
+  // TEIA CANEDO → Senador Canedo
+  'TEIA CANEDO': ['TEIA SENADOR CANEDO'],
+  // TEIA MAN / MAN 2 / MAN 3 → Manaus I / II / III
+  'TEIA MAN': ['TEIA MANAUS I'],
+  'TEIA MAN 2': ['TEIA MANAUS II'],
+  'TEIA MAN 3': ['TEIA MANAUS III'],
+  // TEIA ANAPOLIS already works via standard prefix match — listed here for clarity
+  'TEIA ANAPOLIS': ['TEIA ANAPOLIS'],
+};
+
+/**
  * Returns true if `vagaUnit` (which may be a full name like
  * "HUGOL - HOSPITAL ESTADUAL...") matches any of the user's allowed units
- * (which are stored as short prefixes like "HUGOL").
+ * (which are stored as short admin names like "HUGOL" or "TEIA CANEDO").
+ *
+ * Matching strategy (in order):
+ * 1. Standard prefix equality / startsWith check.
+ * 2. TEIA alias lookup — maps short admin names to their actual DB prefixes.
  */
 export function unitIsAllowed(vagaUnit: string | undefined | null, allowedUnits: string[]): boolean {
   if (!vagaUnit) return false;
   const vagaPrefix = extractUnitPrefix(vagaUnit);
   return allowedUnits.some(u => {
     const allowed = extractUnitPrefix(u);
-    return vagaPrefix === allowed || vagaPrefix.startsWith(allowed + ' ') || allowed.startsWith(vagaPrefix + ' ');
+
+    // 1. Standard prefix match (handles HUGOL, CRER, TEIA ANAPOLIS, etc.)
+    if (
+      vagaPrefix === allowed ||
+      vagaPrefix.startsWith(allowed + ' ') ||
+      allowed.startsWith(vagaPrefix + ' ')
+    ) {
+      return true;
+    }
+
+    // 2. TEIA alias check — resolve the admin short name to its DB prefix(es)
+    const aliases = TEIA_ALIAS_MAP[allowed];
+    if (aliases) {
+      return aliases.some(alias => vagaPrefix === alias);
+    }
+
+    return false;
   });
 }
 

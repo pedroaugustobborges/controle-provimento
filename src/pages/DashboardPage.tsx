@@ -99,52 +99,6 @@ const UNIT_MAPPING = [
   { bank: "UPA", vacancies: ["SÃO PEDRO", "SUÁ", "UPA"], display: "VITÓRIA" },
 ];
 
-const UNIT_GROUPS = [
-  {
-    key: "go_es",
-    label: "Goiás / Espírito Santo",
-    color: "text-emerald-500",
-    dot: "bg-emerald-400",
-    units: [
-      "CRER",
-      "HUGOL",
-      "HECAD",
-      "HDS",
-      "AGIR",
-      "TEIA GOIÂNIA",
-      "TEIA ANÁPOLIS",
-      "TEIA APARECIDA",
-      "TEIA CANEDO",
-      "HEJ",
-      "POLICLÍNICA",
-      "SUÁ",
-      "SÃO PEDRO",
-      "VITÓRIA",
-    ],
-  },
-  {
-    key: "outras",
-    label: "Demais Unidades",
-    color: "text-violet-500",
-    dot: "bg-violet-400",
-    units: [
-      "HRD",
-      "CHRD",
-      "HRC",
-      "HRCAC I",
-      "HRCAC II",
-      "HMSA",
-      "TEIA CEN",
-      "TEIA PIN",
-      "CHS",
-      "TEIA MAN",
-      "TEIA MAN 2",
-      "TEIA MAN 3",
-    ],
-  },
-] as const;
-
-const ALL_UNITS_FLAT = UNIT_GROUPS.flatMap((g) => g.units);
 
 const DONUT_COLORS_DARK = [
   "#818cf8",
@@ -268,6 +222,19 @@ export default function DashboardPage() {
     currentUser?.visualiza_todas_unidades,
     currentUser?.unidades_vinculadas,
   ]);
+
+  // Derive unique unidade names dynamically from the already-scoped vagas.
+  // This naturally respects RLS since userScopedVagas is already filtered by the
+  // user's unidades_vinculadas. New units appearing in the DB will show up
+  // automatically without any code change.
+  const dynamicUnits = useMemo(() => {
+    const seen = new Set<string>();
+    for (const v of userScopedVagas) {
+      const name = v.unidade?.trim();
+      if (name) seen.add(name);
+    }
+    return Array.from(seen).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [userScopedVagas]);
 
   const filterDashboardRecords = useCallback(
     <T extends { unidade?: string | null }>(records: T[]) => {
@@ -1782,7 +1749,7 @@ export default function DashboardPage() {
                   Todas
                 </button>
                 <button
-                  onClick={() => setSelectedUnits([...ALL_UNITS_FLAT])}
+                  onClick={() => setSelectedUnits([...dynamicUnits])}
                   style={{
                     flex: 1,
                     height: "26px",
@@ -1795,12 +1762,12 @@ export default function DashboardPage() {
                     transition: "all 0.15s",
                     background:
                       !selectedUnits.includes("all") &&
-                      selectedUnits.length === ALL_UNITS_FLAT.length
+                      selectedUnits.length === dynamicUnits.length
                         ? t.popCheckColor
                         : t.inputBg,
                     color:
                       !selectedUnits.includes("all") &&
-                      selectedUnits.length === ALL_UNITS_FLAT.length
+                      selectedUnits.length === dynamicUnits.length
                         ? "#fff"
                         : t.tx3,
                     border: "none",
@@ -1841,176 +1808,100 @@ export default function DashboardPage() {
                   padding: "4px 0",
                 }}
               >
-                {UNIT_GROUPS.map((group) => {
+                {(() => {
                   const filteredUnits = unitSearch.trim()
-                    ? group.units.filter((u) =>
+                    ? dynamicUnits.filter((u) =>
                         u.toLowerCase().includes(unitSearch.toLowerCase()),
                       )
-                    : group.units;
-                  if (filteredUnits.length === 0) return null;
-                  const groupSelected = filteredUnits.every((u) =>
-                    selectedUnits.includes(u),
-                  );
+                    : dynamicUnits;
 
-                  return (
-                    <div key={group.key}>
+                  if (filteredUnits.length === 0) {
+                    return (
                       <div
                         style={{
+                          padding: "32px 16px",
+                          textAlign: "center",
+                          fontSize: "12px",
+                          color: t.tx3,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {dynamicUnits.length === 0
+                          ? "Nenhuma unidade disponível"
+                          : "Nenhuma unidade encontrada"}
+                      </div>
+                    );
+                  }
+
+                  return filteredUnits.map((unit) => {
+                    const isSel =
+                      !selectedUnits.includes("all") &&
+                      selectedUnits.includes(unit);
+                    return (
+                      <button
+                        key={unit}
+                        onClick={() => {
+                          let next: string[];
+                          if (selectedUnits.includes("all")) next = [unit];
+                          else if (selectedUnits.includes(unit)) {
+                            next = selectedUnits.filter((u) => u !== unit);
+                            if (next.length === 0) next = ["all"];
+                          } else next = [...selectedUnits, unit];
+                          setSelectedUnits(next);
+                        }}
+                        style={{
+                          width: "100%",
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "10px 14px 4px",
+                          gap: "10px",
+                          padding: "6px 14px",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          background: isSel ? t.popItemHover : "transparent",
+                          border: "none",
+                          transition: "background 0.15s",
                         }}
                       >
                         <div
                           style={{
+                            width: "16px",
+                            height: "16px",
+                            borderRadius: "5px",
+                            border: isSel
+                              ? `2px solid ${t.popCheckColor}`
+                              : `1.5px solid ${t.divider}`,
+                            background: isSel ? t.popCheckColor : "transparent",
                             display: "flex",
                             alignItems: "center",
-                            gap: "6px",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            transition: "all 0.15s",
                           }}
                         >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${group.dot}`}
-                          />
-                          <span
-                            className={`text-[9px] font-black uppercase tracking-widest ${group.color}`}
-                          >
-                            {group.label}
-                          </span>
+                          {isSel && (
+                            <Check
+                              style={{
+                                width: "10px",
+                                height: "10px",
+                                color: "#fff",
+                              }}
+                            />
+                          )}
                         </div>
-                        <button
-                          onClick={() => {
-                            const allSelected = filteredUnits.every((u) =>
-                              selectedUnits.includes(u),
-                            );
-                            if (allSelected) {
-                              const newUnits = selectedUnits.filter(
-                                (u) => !filteredUnits.includes(u as any),
-                              );
-                              setSelectedUnits(
-                                newUnits.length === 0 ? ["all"] : newUnits,
-                              );
-                            } else {
-                              const base = selectedUnits.includes("all")
-                                ? []
-                                : [...selectedUnits];
-                              setSelectedUnits(
-                                Array.from(
-                                  new Set([...base, ...filteredUnits]),
-                                ),
-                              );
-                            }
-                          }}
+                        <span
                           style={{
-                            fontSize: "9px",
+                            fontSize: "12px",
                             fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            color: groupSelected ? t.tx3 : undefined,
+                            letterSpacing: "0.03em",
+                            color: isSel ? t.popCheckText : t.tx2,
                           }}
-                          className={groupSelected ? "" : group.color}
                         >
-                          {groupSelected ? "Desmarcar" : "Selecionar grupo"}
-                        </button>
-                      </div>
-
-                      {filteredUnits.map((unit) => {
-                        const isSel =
-                          !selectedUnits.includes("all") &&
-                          selectedUnits.includes(unit);
-                        return (
-                          <button
-                            key={unit}
-                            onClick={() => {
-                              let next: string[];
-                              if (selectedUnits.includes("all")) next = [unit];
-                              else if (selectedUnits.includes(unit)) {
-                                next = selectedUnits.filter((u) => u !== unit);
-                                if (next.length === 0) next = ["all"];
-                              } else next = [...selectedUnits, unit];
-                              setSelectedUnits(next);
-                            }}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "10px",
-                              padding: "6px 14px",
-                              textAlign: "left",
-                              cursor: "pointer",
-                              background: isSel
-                                ? t.popItemHover
-                                : "transparent",
-                              border: "none",
-                              transition: "background 0.15s",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "16px",
-                                height: "16px",
-                                borderRadius: "5px",
-                                border: isSel
-                                  ? `2px solid ${t.popCheckColor}`
-                                  : `1.5px solid ${t.divider}`,
-                                background: isSel
-                                  ? t.popCheckColor
-                                  : "transparent",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0,
-                                transition: "all 0.15s",
-                              }}
-                            >
-                              {isSel && (
-                                <Check
-                                  style={{
-                                    width: "10px",
-                                    height: "10px",
-                                    color: "#fff",
-                                  }}
-                                />
-                              )}
-                            </div>
-                            <span
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: 700,
-                                letterSpacing: "0.03em",
-                                color: isSel ? t.popCheckText : t.tx2,
-                              }}
-                            >
-                              {unit}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-                {unitSearch &&
-                  UNIT_GROUPS.every(
-                    (g) =>
-                      g.units.filter((u) =>
-                        u.toLowerCase().includes(unitSearch.toLowerCase()),
-                      ).length === 0,
-                  ) && (
-                    <div
-                      style={{
-                        padding: "32px 16px",
-                        textAlign: "center",
-                        fontSize: "12px",
-                        color: t.tx3,
-                        fontWeight: 500,
-                      }}
-                    >
-                      Nenhuma unidade encontrada
-                    </div>
-                  )}
+                          {unit}
+                        </span>
+                      </button>
+                    );
+                  });
+                })()}
               </div>
 
               {/* Footer */}
@@ -2028,7 +1919,7 @@ export default function DashboardPage() {
                   <span
                     style={{ fontSize: "10px", fontWeight: 700, color: t.tx3 }}
                   >
-                    {selectedUnits.length} de {ALL_UNITS_FLAT.length}{" "}
+                    {selectedUnits.length} de {dynamicUnits.length}{" "}
                     selecionadas
                   </span>
                   <button

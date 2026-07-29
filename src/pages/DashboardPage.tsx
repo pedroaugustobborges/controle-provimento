@@ -500,6 +500,19 @@ export default function DashboardPage() {
         acc.atrasadas++;
       }
     });
+
+    // Convocações: getCategoriaStatus only reads status/status_processo fields,
+    // never etapa. Override the count by checking etapa across all fluxo slots.
+    acc.convocacoes = vagas.filter((v) => {
+      const allEtapas = [
+        v.etapa,
+        ...(Array.isArray(v.distribuicao_vagas)
+          ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
+          : []),
+      ].filter(Boolean);
+      return allEtapas.includes("Convocação");
+    }).length;
+
     return acc;
   }, [vagas]);
 

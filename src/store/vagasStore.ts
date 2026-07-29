@@ -173,6 +173,7 @@ interface VagasState {
   updateAlerta: (id: string, data: Partial<Alerta>) => void;
   addMensagem: (mensagem: any) => Promise<void>;
   marcarMensagemLida: (id: string) => void;
+  marcarNotificacaoLida: (id: string) => void;
   setTemNovasMensagens: (has: boolean) => void;
   deleteImportBatch: (batchId: string) => Promise<void>;
   clearVagas: () => void;
@@ -909,6 +910,15 @@ export const useVagasStore = create<VagasState>()(
           });
         } catch (err) {
           console.error('[marcarMensagemLida] error:', err);
+        }
+      },
+      marcarNotificacaoLida: async (id) => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+          set((s) => ({ notificacoes: s.notificacoes.map((n: any) => n.id === id ? { ...n, lida: true } : n) }));
+        } catch (err) {
+          console.error('[marcarNotificacaoLida] error:', err);
         }
       },
       marcarTodasLidas: async () => {

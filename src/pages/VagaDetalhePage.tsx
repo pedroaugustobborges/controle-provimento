@@ -92,12 +92,19 @@ import {
   ChevronRight,
   MessageSquare,
   Loader2,
+  ThumbsUp,
 } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -219,6 +226,13 @@ function getFluxoItems(vaga: Vaga): VagaFluxoItem[] {
 
 // ─── Observations ────────────────────────────────────────────────────────────
 
+interface ObsLike {
+  user_id: string;
+  user_name: string;
+  avatar_url: string | null;
+  liked_at: string;
+}
+
 interface ObsItem {
   id: string;
   text: string;
@@ -226,6 +240,7 @@ interface ObsItem {
   author_name: string;
   author_avatar: string | null;
   created_at: string; // ISO or '' for legacy
+  likes?: ObsLike[];
 }
 
 function parseObsItems(raw: string | null | undefined): ObsItem[] {
@@ -297,6 +312,92 @@ function ObsAvatar({
   );
 }
 
+function ObsLikeButton({
+  likes,
+  currentUserId,
+  onToggle,
+}: {
+  likes: ObsLike[];
+  currentUserId: string;
+  onToggle: () => void;
+}) {
+  const isLiked = likes.some((l) => l.user_id === currentUserId);
+  const count = likes.length;
+
+  const btn = (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      className={`group flex items-center gap-1 px-2 py-0.5 rounded-full transition-all duration-200 select-none
+        ${isLiked
+          ? "text-blue-500 hover:text-blue-400 hover:bg-blue-50"
+          : "text-slate-400 hover:text-blue-400 hover:bg-blue-50/60 opacity-0 group-hover/obs:opacity-100"
+        }`}
+      aria-label={isLiked ? "Remover curtida" : "Curtir"}
+    >
+      <ThumbsUp
+        className={`h-3.5 w-3.5 transition-all duration-200 ${
+          isLiked
+            ? "fill-blue-500 stroke-blue-500 scale-110"
+            : "fill-transparent stroke-current group-hover:stroke-blue-400"
+        }`}
+      />
+      {count > 0 && (
+        <span className="text-[11px] font-semibold tabular-nums">{count}</span>
+      )}
+    </button>
+  );
+
+  if (count === 0) return btn;
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>{btn}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align="end"
+          className="p-0 border-0 shadow-2xl bg-transparent"
+        >
+          <div className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-3 min-w-[148px] max-w-[220px]">
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-2.5 px-0.5">
+              Curtido por
+            </p>
+            <div className="space-y-1.5">
+              {likes.map((like) => (
+                <div key={like.user_id} className="flex items-center gap-2">
+                  {like.avatar_url ? (
+                    <img
+                      src={like.avatar_url}
+                      alt={like.user_name}
+                      className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-700 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-primary/25 text-primary flex items-center justify-center text-[8px] font-bold ring-1 ring-slate-700 shrink-0">
+                      {like.user_name
+                        .trim()
+                        .split(/\s+/)
+                        .slice(0, 2)
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-[11px] text-slate-200 font-medium truncate leading-tight">
+                    {like.user_name.split(" ")[0]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VagaDetalhePage() {
@@ -322,6 +423,7 @@ export default function VagaDetalhePage() {
     trackEditing,
     stopTrackingEditing,
     editingUsers,
+    createNotificacao,
   } = useVagasStore();
   const { currentUser, addAuditLog, users, fetchUsers } = useAdminStore();
   const permissions = usePermissions();
@@ -951,6 +1053,51 @@ export default function VagaDetalhePage() {
       toast.success("Observação adicionada");
     }
     setIsSavingObs(false);
+  };
+
+  const handleToggleLike = async (obsId: string) => {
+    if (!currentUser) return;
+    const currentRaw = vaga.observacoes_internas || vaga.observacoes || "";
+    const existing = parseObsItems(currentRaw);
+    let targetItem: ObsItem | undefined;
+    let isAdding = false;
+    const updated = existing.map((item) => {
+      if (item.id !== obsId) return item;
+      targetItem = item;
+      const likes = item.likes || [];
+      const alreadyLiked = likes.some((l) => l.user_id === currentUser.id);
+      isAdding = !alreadyLiked;
+      return {
+        ...item,
+        likes: alreadyLiked
+          ? likes.filter((l) => l.user_id !== currentUser.id)
+          : [
+              ...likes,
+              {
+                user_id: currentUser.id,
+                user_name: currentUser.nome_completo,
+                avatar_url: (currentUser as any).avatar_url || null,
+                liked_at: new Date().toISOString(),
+              },
+            ],
+      };
+    });
+    const serialized = JSON.stringify(updated);
+    await updateVagaAsync(vaga.id, {
+      observacao: serialized,
+      observacoes_internas: serialized,
+    } as any);
+    // Notify the obs author (skip self-likes)
+    if (isAdding && targetItem && targetItem.author_id !== currentUser.id) {
+      const snippet = targetItem.text.slice(0, 80) + (targetItem.text.length > 80 ? "…" : "");
+      createNotificacao({
+        usuario_id: targetItem.author_id,
+        titulo: `${currentUser.nome_completo} curtiu sua observação`,
+        mensagem: `"${snippet}" — ${vaga.cargo || "Vaga"} · ${vaga.unidade || ""}`.trim().replace(/·\s*$/, ""),
+        tipo: "curtida",
+        registro_id: vaga.id,
+      });
+    }
   };
 
   const safeNavigate = (action: () => void) => {
@@ -2043,7 +2190,7 @@ export default function VagaDetalhePage() {
                         {obsItems.map((item, idx) => (
                           <div
                             key={item.id}
-                            className={`flex gap-3 p-3 rounded-xl transition-colors ${idx === 0 ? "bg-slate-50/80 border border-slate-100" : "hover:bg-slate-50/60"}`}
+                            className={`group/obs flex gap-3 p-3 rounded-xl transition-colors ${idx === 0 ? "bg-slate-50/80 border border-slate-100" : "hover:bg-slate-50/60"}`}
                           >
                             <ObsAvatar
                               name={item.author_name}
@@ -2061,6 +2208,13 @@ export default function VagaDetalhePage() {
                               <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
                                 {item.text}
                               </p>
+                              <div className="flex justify-end mt-1.5">
+                                <ObsLikeButton
+                                  likes={item.likes || []}
+                                  currentUserId={currentUser?.id || ""}
+                                  onToggle={() => handleToggleLike(item.id)}
+                                />
+                              </div>
                             </div>
                           </div>
                         ))}

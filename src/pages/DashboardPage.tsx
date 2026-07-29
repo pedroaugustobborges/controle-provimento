@@ -5004,11 +5004,27 @@ export default function DashboardPage() {
                         return (
                           <TableRow
                             key={rec.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => { setLeadTimeModal(null); navigate(`/vagas/${rec.id}`); }}
+                            onKeyDown={(e) => { if (e.key === "Enter") { setLeadTimeModal(null); navigate(`/vagas/${rec.id}`); } }}
                             style={{
                               borderBottom: isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.04)",
                               background: idx % 2 === 0
                                 ? (isDark ? "rgba(255,255,255,0.01)" : "transparent")
                                 : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.015)"),
+                              cursor: "pointer",
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = isDark
+                                ? `${accentColor}18`
+                                : `${accentColor}12`;
+                            }}
+                            onMouseLeave={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = idx % 2 === 0
+                                ? (isDark ? "rgba(255,255,255,0.01)" : "transparent")
+                                : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.015)");
                             }}
                           >
                             <TableCell style={{ fontSize: "11px", color: isDark ? "#475569" : "#94a3b8", padding: "10px 14px", fontWeight: 700 }}>
@@ -5045,6 +5061,9 @@ export default function DashboardPage() {
                                 {(rec as any).waitDays > 0 ? `−${(rec as any).waitDays}d` : "—"}
                               </TableCell>
                             )}
+                            <TableCell style={{ padding: "10px 10px 10px 4px", width: "24px" }}>
+                              <ChevronRight style={{ width: "14px", height: "14px", color: isDark ? "#334155" : "#cbd5e1" }} />
+                            </TableCell>
                           </TableRow>
                         );
                       })}

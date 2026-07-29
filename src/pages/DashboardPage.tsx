@@ -1006,6 +1006,14 @@ export default function DashboardPage() {
 
     const allProvimento: number[] = [];
     const allIntake: number[] = [];
+    const recordsProvimento: Array<{
+      id: string; cargo: string; unidade: string;
+      startDate: Date; endDate: Date; netDays: number; rawDays: number; waitDays: number;
+    }> = [];
+    const recordsIntake: Array<{
+      id: string; cargo: string; unidade: string;
+      startDate: Date; endDate: Date; netDays: number;
+    }> = [];
 
     userScopedVagas.forEach((v) => {
       const hist = (v.historico || []) as Array<{
@@ -1029,6 +1037,16 @@ export default function DashboardPage() {
           const waitDays = calcWaitingDays(hist, lastEdit);
           const netDays = Math.max(0, rawDays - waitDays);
           allProvimento.push(netDays);
+          recordsProvimento.push({
+            id: v.id,
+            cargo: (v as any).cargo || "—",
+            unidade: (v as any).unidade || "—",
+            startDate: firstEdit,
+            endDate: lastEdit,
+            netDays,
+            rawDays,
+            waitDays,
+          });
           const mk = `${lastEdit.getFullYear()}-${String(lastEdit.getMonth() + 1).padStart(2, "0")}`;
           if (byMonth[mk]) byMonth[mk].provimento.push(netDays);
         }
@@ -1041,6 +1059,14 @@ export default function DashboardPage() {
       const intake = diffDays(firstEdit, createdDate);
       if (intake !== null) {
         allIntake.push(intake);
+        recordsIntake.push({
+          id: v.id,
+          cargo: (v as any).cargo || "—",
+          unidade: (v as any).unidade || "—",
+          startDate: createdDate!,
+          endDate: firstEdit,
+          netDays: intake,
+        });
         const mk = `${firstEdit.getFullYear()}-${String(firstEdit.getMonth() + 1).padStart(2, "0")}`;
         if (byMonth[mk]) byMonth[mk].intake.push(intake);
       }
@@ -1069,6 +1095,8 @@ export default function DashboardPage() {
       countProvimento: allProvimento.length,
       countIntake: allIntake.length,
       monthlyChart,
+      recordsProvimento,
+      recordsIntake,
     };
   }, [userScopedVagas]);
 
@@ -1078,6 +1106,19 @@ export default function DashboardPage() {
     const h = Math.round((days - d) * 24);
     return { days: d, hours: h };
   };
+
+  const fmtLeadLabel = (days: number) => {
+    const lt = formatLeadTime(days)!;
+    return `${lt.days} ${lt.days === 1 ? "dia" : "dias"} e ${lt.hours} ${lt.hours === 1 ? "hora" : "horas"}`;
+  };
+
+  const fmtDate = (d: Date) =>
+    d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  const [leadTimeModal, setLeadTimeModal] = useState<{
+    type: "provimento" | "intake";
+    page: number;
+  } | null>(null);
 
   const motivoVagaData = useMemo(() => {
     const map = new Map<string, number>();
@@ -3155,7 +3196,11 @@ export default function DashboardPage() {
                 <div
                   key={card.key}
                   className="dash-rgb-card-wrap"
-                  style={{ borderRadius: "20px" }}
+                  style={{ borderRadius: "20px", cursor: "pointer" }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setLeadTimeModal({ type: card.key as "provimento" | "intake", page: 0 })}
+                  onKeyDown={(e) => e.key === "Enter" && setLeadTimeModal({ type: card.key as "provimento" | "intake", page: 0 })}
                 >
                   <div
                     className="dash-rgb-card-inner"
@@ -3169,12 +3214,26 @@ export default function DashboardPage() {
             return (
               <div
                 key={card.key}
+                role="button"
+                tabIndex={0}
+                onClick={() => setLeadTimeModal({ type: card.key as "provimento" | "intake", page: 0 })}
+                onKeyDown={(e) => e.key === "Enter" && setLeadTimeModal({ type: card.key as "provimento" | "intake", page: 0 })}
                 style={{
                   background: "#fff",
                   borderRadius: "20px",
                   border: "1px solid rgba(0,0,0,0.07)",
                   boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
                   overflow: "hidden",
+                  cursor: "pointer",
+                  transition: "box-shadow 0.2s, transform 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 28px ${card.color}30`;
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.06)";
+                  (e.currentTarget as HTMLElement).style.transform = "none";
                 }}
               >
                 {inner}
@@ -4821,6 +4880,217 @@ export default function DashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Lead Time Detail Modal ───────────────────────────────────────── */}
+      {leadTimeModal && (() => {
+        const isProvimento = leadTimeModal.type === "provimento";
+        const records = isProvimento ? leadTimeData.recordsProvimento : leadTimeData.recordsIntake;
+        const accentColor = isProvimento ? "#f59e0b" : (isDark ? "#818cf8" : "#6366f1");
+        const accentGlow = isProvimento ? "rgba(245,158,11,0.25)" : "rgba(129,140,248,0.25)";
+        const accentBg = isProvimento
+          ? (isDark ? "rgba(245,158,11,0.12)" : "#fef3c7")
+          : (isDark ? "rgba(129,140,248,0.12)" : "#e0e7ff");
+        const title = isProvimento
+          ? "Lead Time do Provimento de uma Vaga"
+          : "Lead Time do Início de Trabalho de uma Vaga no GDP";
+        const sublabel = isProvimento
+          ? 'Primeira edição → "Concluída" (descontado tempo em "Aguardando Unidade")'
+          : "Criação da vaga → primeira edição no GDP";
+        const startLabel = isProvimento ? "Início (1ª edição)" : "Criação da vaga";
+        const endLabel = isProvimento ? 'Fim ("Concluída")' : "1ª edição no GDP";
+
+        const PAGE_SIZE = 20;
+        const totalPages = Math.ceil(records.length / PAGE_SIZE);
+        const page = leadTimeModal.page;
+        const pageRecords = records.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+        return (
+          <Dialog open onOpenChange={() => setLeadTimeModal(null)}>
+            <DialogContent
+              style={{
+                maxWidth: "900px",
+                width: "95vw",
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                padding: 0,
+                overflow: "hidden",
+                background: isDark ? "#0f1117" : "#fff",
+                border: isDark ? `1px solid ${accentColor}30` : "1px solid rgba(0,0,0,0.08)",
+                borderRadius: "20px",
+                boxShadow: isDark
+                  ? `0 0 60px ${accentGlow}, 0 24px 64px rgba(0,0,0,0.5)`
+                  : `0 20px 60px rgba(0,0,0,0.12)`,
+              }}
+            >
+              {/* Top accent bar */}
+              <div style={{
+                height: "4px",
+                background: `linear-gradient(90deg, ${accentColor}, ${accentColor}60)`,
+                flexShrink: 0,
+                borderRadius: "20px 20px 0 0",
+              }} />
+
+              {/* Header */}
+              <div style={{ padding: "24px 28px 20px", flexShrink: 0, borderBottom: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+                  <div style={{
+                    width: "38px", height: "38px", borderRadius: "12px",
+                    background: accentBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    boxShadow: isDark ? `0 0 16px ${accentGlow}` : "none",
+                  }}>
+                    <Clock style={{ width: "18px", height: "18px", color: accentColor }} />
+                  </div>
+                  <div>
+                    <DialogTitle style={{ fontSize: "16px", fontWeight: 800, color: isDark ? "#f1f5f9" : "#0f172a", margin: 0 }}>
+                      {title}
+                    </DialogTitle>
+                    <DialogDescription style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b", marginTop: "3px" }}>
+                      {sublabel}
+                    </DialogDescription>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: isDark ? "#94a3b8" : "#64748b" }}>
+                    {records.length} {records.length === 1 ? "vaga considerada" : "vagas consideradas"}
+                  </span>
+                  {records.length > 0 && (
+                    <>
+                      <span style={{ color: isDark ? "#334155" : "#cbd5e1" }}>•</span>
+                      <span style={{ fontSize: "11px", fontWeight: 800, color: accentColor }}>
+                        Média: {fmtLeadLabel(leadTimeData[isProvimento ? "avgProvimento" : "avgIntake"]!)}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Table */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "0 4px" }}>
+                {records.length === 0 ? (
+                  <div style={{ padding: "48px", textAlign: "center", color: isDark ? "#64748b" : "#94a3b8", fontSize: "13px" }}>
+                    Nenhuma vaga encontrada para este cálculo.
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ borderBottom: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)" }}>
+                        {["#", "Cargo", "Unidade", startLabel, endLabel, "Lead Time"].map((h) => (
+                          <TableHead key={h} style={{
+                            fontSize: "10px", fontWeight: 800, textTransform: "uppercase",
+                            letterSpacing: "0.07em", color: isDark ? "#64748b" : "#94a3b8",
+                            background: isDark ? "#0f1117" : "#fafafa",
+                            whiteSpace: "nowrap", padding: "10px 14px",
+                          }}>
+                            {h}
+                          </TableHead>
+                        ))}
+                        {isProvimento && (
+                          <TableHead style={{
+                            fontSize: "10px", fontWeight: 800, textTransform: "uppercase",
+                            letterSpacing: "0.07em", color: isDark ? "#64748b" : "#94a3b8",
+                            background: isDark ? "#0f1117" : "#fafafa",
+                            whiteSpace: "nowrap", padding: "10px 14px",
+                          }}>
+                            Desconto (Ag. Unidade)
+                          </TableHead>
+                        )}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pageRecords.map((rec, idx) => {
+                        const globalIdx = page * PAGE_SIZE + idx + 1;
+                        const lt = formatLeadTime(rec.netDays)!;
+                        return (
+                          <TableRow
+                            key={rec.id}
+                            style={{
+                              borderBottom: isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.04)",
+                              background: idx % 2 === 0
+                                ? (isDark ? "rgba(255,255,255,0.01)" : "transparent")
+                                : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.015)"),
+                            }}
+                          >
+                            <TableCell style={{ fontSize: "11px", color: isDark ? "#475569" : "#94a3b8", padding: "10px 14px", fontWeight: 700 }}>
+                              {globalIdx}
+                            </TableCell>
+                            <TableCell style={{ fontSize: "12px", fontWeight: 700, color: isDark ? "#e2e8f0" : "#1e293b", padding: "10px 14px", maxWidth: "200px" }}>
+                              {rec.cargo}
+                            </TableCell>
+                            <TableCell style={{ padding: "10px 14px" }}>
+                              <span style={{
+                                display: "inline-block", fontSize: "11px", fontWeight: 700,
+                                color: accentColor, background: accentBg,
+                                borderRadius: "6px", padding: "2px 8px", whiteSpace: "nowrap",
+                              }}>
+                                {rec.unidade}
+                              </span>
+                            </TableCell>
+                            <TableCell style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b", padding: "10px 14px", whiteSpace: "nowrap" }}>
+                              {fmtDate(rec.startDate)}
+                            </TableCell>
+                            <TableCell style={{ fontSize: "11px", color: isDark ? "#94a3b8" : "#64748b", padding: "10px 14px", whiteSpace: "nowrap" }}>
+                              {fmtDate(rec.endDate)}
+                            </TableCell>
+                            <TableCell style={{ padding: "10px 14px", whiteSpace: "nowrap" }}>
+                              <span style={{
+                                fontSize: "12px", fontWeight: 800, color: accentColor,
+                                textShadow: isDark ? `0 0 12px ${accentColor}60` : "none",
+                              }}>
+                                {lt.days}d {lt.hours}h
+                              </span>
+                            </TableCell>
+                            {isProvimento && (
+                              <TableCell style={{ fontSize: "11px", color: isDark ? "#64748b" : "#94a3b8", padding: "10px 14px", whiteSpace: "nowrap" }}>
+                                {(rec as any).waitDays > 0 ? `−${(rec as any).waitDays}d` : "—"}
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+
+              {/* Footer: pagination */}
+              {totalPages > 1 && (
+                <div style={{
+                  flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "14px 28px", borderTop: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
+                  background: isDark ? "rgba(255,255,255,0.02)" : "#fafafa",
+                }}>
+                  <span style={{ fontSize: "11px", color: isDark ? "#64748b" : "#94a3b8", fontWeight: 600 }}>
+                    Página {page + 1} de {totalPages} · {records.length} vagas
+                  </span>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    {[
+                      { label: "← Anterior", disabled: page === 0, go: page - 1 },
+                      { label: "Próxima →", disabled: page >= totalPages - 1, go: page + 1 },
+                    ].map((btn) => (
+                      <button
+                        key={btn.label}
+                        disabled={btn.disabled}
+                        onClick={() => setLeadTimeModal((m) => m ? { ...m, page: btn.go } : m)}
+                        style={{
+                          padding: "6px 16px", borderRadius: "10px", fontSize: "11px", fontWeight: 700,
+                          border: `1px solid ${btn.disabled ? (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)") : accentColor + "60"}`,
+                          background: btn.disabled ? "transparent" : accentBg,
+                          color: btn.disabled ? (isDark ? "#334155" : "#cbd5e1") : accentColor,
+                          cursor: btn.disabled ? "not-allowed" : "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </div>
   );
 }

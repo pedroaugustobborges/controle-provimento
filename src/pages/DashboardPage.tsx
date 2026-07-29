@@ -513,6 +513,18 @@ export default function DashboardPage() {
       return allEtapas.includes("Convocação");
     }).length;
 
+    // Movimentação Interna: same issue — override by checking tratativa field
+    // across all fluxo slots instead of relying on the status-based categorization.
+    acc.movimentacao_interna = vagas.filter((v) => {
+      const allTratativas = [
+        v.tratativa,
+        ...(Array.isArray(v.distribuicao_vagas)
+          ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
+          : []),
+      ].filter(Boolean);
+      return allTratativas.includes("Movimentação Interna");
+    }).length;
+
     return acc;
   }, [vagas]);
 

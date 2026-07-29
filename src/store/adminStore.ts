@@ -230,11 +230,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   },
 
   updateUser: async (id, data) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update(data)
-      .eq('id', id);
-    if (error) throw error;
+    const { data: result, error } = await supabase.functions.invoke('admin-user-management', {
+      body: { action: 'update_profile', user_id: id, ...data },
+    });
+    if (error) throw new Error(error.message);
+    if (result?.error) throw new Error(result.error);
     await get().fetchUsers();
   },
 

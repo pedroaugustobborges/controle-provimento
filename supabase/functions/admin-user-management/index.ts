@@ -276,6 +276,69 @@ Deno.serve(async (req) => {
         return jsonOk();
       }
 
+      case "update_profile": {
+        const { user_id, perfil, ...profileFields } = body;
+
+        if (!user_id || typeof user_id !== "string" || !UUID_RE.test(user_id)) {
+          return jsonFail("ID de usuário inválido.");
+        }
+
+        const allowedFields = [
+          "nome_completo", "perfil", "cargo", "visualiza_todas_unidades", "unidades_vinculadas",
+          "pode_incluir_registros", "pode_excluir_requisicoes", "pode_editar_configuracoes",
+          "pode_gerenciar_usuarios", "acesso_portal_unidade", "avatar_url",
+          "modulos_acesso", "permissoes_modulo", "regiao_suporte",
+        ];
+
+        const updateData: Record<string, unknown> = {};
+        if (perfil !== undefined) updateData.perfil = perfil;
+        for (const key of allowedFields) {
+          if (key !== "perfil" && profileFields[key] !== undefined) {
+            updateData[key] = profileFields[key];
+          }
+        }
+
+        const { error: profileError } = await supabaseAdmin
+          .from("profiles")
+          .update(updateData)
+          .eq("id", user_id);
+
+        if (profileError) return jsonFail(profileError.message);
+
+        // Sync user_roles when perfil changes
+        if (perfil !== undefined) {
+          const roleMap: Record<string, string> = {
+            "Administrador": "admin",
+            "Admin": "admin",
+            "Administrador do Sistema": "admin",
+            "Analista de RH": "analista",
+            "Analista Administrativo": "analista",
+            "Analista de Edital": "analista",
+            "Analista das Convocações": "analista",
+            "Assistente de RH": "assistente",
+            "Supervisão": "gestor",
+            "Coordenação": "gestor",
+            "Visualizador": "visualizador",
+          };
+          const newRole = roleMap[perfil] || "analista";
+          await supabaseAdmin.from("user_roles").delete().eq("user_id", user_id);
+          await supabaseAdmin.from("user_roles").upsert(
+            { user_id, role: newRole },
+            { onConflict: "user_id,role" }
+          );
+        }
+
+        // Audit log
+        await supabaseAdmin.from("audit_logs").insert({
+          usuario_id: caller.id,
+          acao: "PROFILE_UPDATED",
+          modulo: "usuarios",
+          registro_afetado: user_id,
+        }).then();
+
+        return jsonOk();
+      }
+
       case "send_welcome_email": {
         const { user_email, user_name, password, site_url } = body;
         const emailContent = {

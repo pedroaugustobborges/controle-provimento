@@ -451,10 +451,18 @@ export default function VagasPage() {
   const [filterUnidades, setFilterUnidades] = useState<string[]>([]);
   const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
   const [filterMeses, setFilterMeses] = useState<string[]>([]);
-  const [filterStatusProcesso, setFilterStatusProcesso] = useState<string[]>([]);
+  const [filterStatusProcesso, setFilterStatusProcesso] = useState<string[]>(() => {
+    const p = new URLSearchParams(window.location.search).get("status");
+    return p ? p.split(",") : [];
+  });
 
-  const [filterTratativas, setFilterTratativas] = useState<string[]>([]);
-  const [filterEtapa, setFilterEtapa] = useState("all");
+  const [filterTratativas, setFilterTratativas] = useState<string[]>(() => {
+    const p = new URLSearchParams(window.location.search).get("tratativa");
+    return p ? [p] : [];
+  });
+  const [filterEtapa, setFilterEtapa] = useState(() => {
+    return new URLSearchParams(window.location.search).get("etapa") ?? "all";
+  });
   const [filterAnalista, setFilterAnalista] = useState("all");
   const [filterAssistente, setFilterAssistente] = useState("all");
   const [filterLideranca, setFilterLideranca] = useState("all");

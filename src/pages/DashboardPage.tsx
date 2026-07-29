@@ -561,6 +561,7 @@ export default function DashboardPage() {
         glowColor: "#0EA5E9",
         iconBg: "rgba(14,165,233,0.18)",
         description: "Base ativa",
+        navigateTo: "/vagas",
       },
       {
         label: "Concluídas",
@@ -569,6 +570,7 @@ export default function DashboardPage() {
         glowColor: "#7C3AED",
         iconBg: "rgba(124,58,237,0.18)",
         description: "Vagas concluídas",
+        navigateTo: "/vagas?status=Conclu%C3%ADda",
       },
       {
         label: "Em Andamento",
@@ -577,6 +579,7 @@ export default function DashboardPage() {
         glowColor: "#D97706",
         iconBg: "rgba(217,119,6,0.18)",
         description: "Processos ativos",
+        navigateTo: "/vagas?status=Em%20Andamento",
       },
       {
         label: "Convocações",
@@ -585,6 +588,7 @@ export default function DashboardPage() {
         glowColor: "#f472b6",
         iconBg: "rgba(244,114,182,0.18)",
         description: "Em convocação",
+        navigateTo: "/vagas?etapa=Convoca%C3%A7%C3%A3o",
       },
       {
         label: "Aguardando",
@@ -593,6 +597,7 @@ export default function DashboardPage() {
         glowColor: "#fbbf24",
         iconBg: "rgba(251,191,36,0.18)",
         description: "Aguardando retorno",
+        navigateTo: "/vagas?tratativa=Aguardando%20Unidade",
       },
       {
         label: "Documentação",
@@ -601,6 +606,7 @@ export default function DashboardPage() {
         glowColor: "#fb923c",
         iconBg: "rgba(251,146,60,0.18)",
         description: "Pendência documental",
+        navigateTo: "/vagas?etapa=Documenta%C3%A7%C3%A3o",
       },
       {
         label: "Fila de Editais",
@@ -609,6 +615,7 @@ export default function DashboardPage() {
         glowColor: "#fde047",
         iconBg: "rgba(253,224,71,0.16)",
         description: "Aguardando publicação",
+        navigateTo: "/vagas?tratativa=Publica%C3%A7%C3%A3o%20de%20Edital",
       },
       {
         label: "Suspensa",
@@ -617,6 +624,7 @@ export default function DashboardPage() {
         glowColor: "#f87171",
         iconBg: "rgba(248,113,113,0.18)",
         description: "Vagas suspensas",
+        navigateTo: "/vagas?status=Suspensa",
       },
       {
         label: "Cancelada",
@@ -625,6 +633,7 @@ export default function DashboardPage() {
         glowColor: "#94a3b8",
         iconBg: "rgba(148,163,184,0.15)",
         description: "Vagas canceladas",
+        navigateTo: "/vagas?status=Cancelada",
       },
       {
         label: "Mov. Interna",
@@ -633,6 +642,7 @@ export default function DashboardPage() {
         glowColor: "#22d3ee",
         iconBg: "rgba(34,211,238,0.18)",
         description: "Movimentações internas",
+        navigateTo: "/vagas?tratativa=Movimenta%C3%A7%C3%A3o%20Interna",
       },
       {
         label: "Em Admissão",
@@ -641,6 +651,7 @@ export default function DashboardPage() {
         glowColor: "#2dd4bf",
         iconBg: "rgba(45,212,191,0.18)",
         description: "Fase final",
+        navigateTo: "/vagas?etapa=Enviado%20para%20Formaliza%C3%A7%C3%A3o",
       },
       {
         label: "Banco Disponível",
@@ -649,6 +660,7 @@ export default function DashboardPage() {
         glowColor: "#a3e635",
         iconBg: "rgba(163,230,53,0.15)",
         description: "Bancos ativos",
+        navigateTo: "/banco-talentos",
       },
     ],
     [totalVagas, counts, totalBancosDisponiveis, totalTarefasPendentes],
@@ -2278,7 +2290,11 @@ export default function DashboardPage() {
                 <div
                   key={stat.label}
                   className="dash-rgb-card-wrap"
-                  style={{ animationDelay: `${i * -0.5}s` }}
+                  style={{ animationDelay: `${i * -0.5}s`, cursor: "pointer" }}
+                  onClick={() => navigate(stat.navigateTo)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && navigate(stat.navigateTo)}
                 >
                   <div className="dash-rgb-card-inner">{cardContent}</div>
                 </div>
@@ -2288,6 +2304,10 @@ export default function DashboardPage() {
             return (
               <div
                 key={stat.label}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(stat.navigateTo)}
+                onKeyDown={(e) => e.key === "Enter" && navigate(stat.navigateTo)}
                 style={{
                   background: "#fff",
                   borderRadius: "16px",
@@ -2295,13 +2315,13 @@ export default function DashboardPage() {
                   boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
                   overflow: "hidden",
                   transition: "transform 0.25s, box-shadow 0.25s",
-                  cursor: "default",
+                  cursor: "pointer",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =
-                    "translateY(-2px)";
+                    "translateY(-3px)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    `0 8px 28px ${stat.glowColor}28`;
+                    `0 10px 32px ${stat.glowColor}35`;
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.transform =

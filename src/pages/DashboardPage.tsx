@@ -105,15 +105,17 @@ const UNIT_MAPPING = [
 
 // Exact unidade names that belong to the Rede TEIA network.
 // Normalized (uppercase, no accents) for reliable matching.
-const TEIA_UNIDADES = new Set([
-  "CLINICA TEIA",
-  "TEIA AP. DE GOIANIA - CLINICA TEIA",
-  "TEIA MANAUS III - CLINICA TEIA CAIC DR AFRANIO SOARES",
-  "TEIA MANAUS II - CLINICA TEIA CAC DR GILSON MOREIRA",
-  "TEIA SENADOR CANEDO - CLINICA TEIA",
-  "TEIA MANAUS I - CLINICA TEIA CAIC DR JOSE CONTENTE",
-  "TEIA ANAPOLIS - CLINICA ESCOLA TEIA",
-].map((n) => normalizeUnitName(n)));
+const TEIA_UNIDADES = new Set(
+  [
+    "CLINICA TEIA",
+    "TEIA AP. DE GOIANIA - CLINICA TEIA",
+    "TEIA MANAUS III - CLINICA TEIA CAIC DR AFRANIO SOARES",
+    "TEIA MANAUS II - CLINICA TEIA CAC DR GILSON MOREIRA",
+    "TEIA SENADOR CANEDO - CLINICA TEIA",
+    "TEIA MANAUS I - CLINICA TEIA CAIC DR JOSE CONTENTE",
+    "TEIA ANAPOLIS - CLINICA ESCOLA TEIA",
+  ].map((n) => normalizeUnitName(n)),
+);
 
 const DONUT_COLORS_DARK = [
   "#818cf8",
@@ -671,7 +673,7 @@ export default function DashboardPage() {
         icon: ShieldCheck,
         glowColor: "#a3e635",
         iconBg: "rgba(163,230,53,0.15)",
-        description: "Bancos ativos",
+        description: "Candidato(a)s no banco",
         navigateTo: "/banco-talentos",
       },
     ],
@@ -1970,8 +1972,7 @@ export default function DashboardPage() {
                   <span
                     style={{ fontSize: "10px", fontWeight: 700, color: t.tx3 }}
                   >
-                    {selectedUnits.length} de {dynamicUnits.length}{" "}
-                    selecionadas
+                    {selectedUnits.length} de {dynamicUnits.length} selecionadas
                   </span>
                   <button
                     onClick={() => setSelectedUnits(["all"])}
@@ -2306,7 +2307,9 @@ export default function DashboardPage() {
                   onClick={() => navigate(stat.navigateTo)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && navigate(stat.navigateTo)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && navigate(stat.navigateTo)
+                  }
                 >
                   <div className="dash-rgb-card-inner">{cardContent}</div>
                 </div>
@@ -2319,7 +2322,9 @@ export default function DashboardPage() {
                 role="button"
                 tabIndex={0}
                 onClick={() => navigate(stat.navigateTo)}
-                onKeyDown={(e) => e.key === "Enter" && navigate(stat.navigateTo)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && navigate(stat.navigateTo)
+                }
                 style={{
                   background: "#fff",
                   borderRadius: "16px",

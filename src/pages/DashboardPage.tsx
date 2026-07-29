@@ -1048,7 +1048,7 @@ export default function DashboardPage() {
 
     const avg = (arr: number[]) =>
       arr.length
-        ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
+        ? arr.reduce((a, b) => a + b, 0) / arr.length
         : null;
 
     const monthlyChart = monthKeys.map((mk) => {
@@ -1071,6 +1071,13 @@ export default function DashboardPage() {
       monthlyChart,
     };
   }, [userScopedVagas]);
+
+  const formatLeadTime = (days: number | null): { days: number; hours: number } | null => {
+    if (days === null) return null;
+    const d = Math.floor(days);
+    const h = Math.round((days - d) * 24);
+    return { days: d, hours: h };
+  };
 
   const motivoVagaData = useMemo(() => {
     const map = new Map<string, number>();
@@ -2976,31 +2983,51 @@ export default function DashboardPage() {
                           gap: "6px",
                         }}
                       >
-                        <span
-                          style={{
-                            fontSize: "52px",
-                            fontWeight: 900,
-                            lineHeight: 1,
-                            color: accentColor,
-                            letterSpacing: "-2px",
-                            textShadow: isDark
-                              ? `0 0 30px ${card.glowDark}`
-                              : "none",
-                          }}
-                        >
-                          {card.value !== null ? card.value : "—"}
-                        </span>
-                        {card.value !== null && (
-                          <span
-                            style={{
-                              fontSize: "14px",
-                              fontWeight: 700,
-                              color: t.tx3,
-                            }}
-                          >
-                            dias
-                          </span>
-                        )}
+                        {(() => {
+                          const lt = formatLeadTime(card.value);
+                          if (!lt) {
+                            return (
+                              <span
+                                style={{
+                                  fontSize: "52px",
+                                  fontWeight: 900,
+                                  lineHeight: 1,
+                                  color: accentColor,
+                                  letterSpacing: "-2px",
+                                  textShadow: isDark ? `0 0 30px ${card.glowDark}` : "none",
+                                }}
+                              >
+                                —
+                              </span>
+                            );
+                          }
+                          return (
+                            <>
+                              <span
+                                style={{
+                                  fontSize: "52px",
+                                  fontWeight: 900,
+                                  lineHeight: 1,
+                                  color: accentColor,
+                                  letterSpacing: "-2px",
+                                  textShadow: isDark ? `0 0 30px ${card.glowDark}` : "none",
+                                }}
+                              >
+                                {lt.days}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: 700,
+                                  color: t.tx3,
+                                }}
+                              >
+                                {lt.days === 1 ? "dia" : "dias"} e {lt.hours}{" "}
+                                {lt.hours === 1 ? "hora" : "horas"}
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Trend pill */}
@@ -3311,14 +3338,17 @@ export default function DashboardPage() {
                           fontWeight: 700,
                           fill: t.axisColor,
                         }}
-                        tickFormatter={(v) => `${v}d`}
+                        tickFormatter={(v) => `${Math.floor(v)}d`}
                       />
                       <Tooltip
                         contentStyle={t.tooltip}
                         itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
-                        formatter={(v: any) =>
-                          v !== null ? [`${v} dias`, "Média"] : ["—", "Média"]
-                        }
+                        formatter={(v: any) => {
+                          if (v === null || v === undefined) return ["—", "Média"];
+                          const d = Math.floor(v);
+                          const h = Math.round((v - d) * 24);
+                          return [`${d} ${d === 1 ? "dia" : "dias"} e ${h} ${h === 1 ? "hora" : "horas"}`, "Média"];
+                        }}
                         labelStyle={{
                           fontWeight: 800,
                           marginBottom: "4px",

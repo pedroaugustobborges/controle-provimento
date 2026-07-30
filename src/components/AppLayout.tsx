@@ -18,7 +18,7 @@ import {
   Briefcase, FileText, ListOrdered, Megaphone, ShieldCheck, Users,
   Upload, LayoutDashboard, Mail, BriefcaseBusiness, Shield, MapPin, CheckCircle2,
   History, MessageSquare, AlertTriangle, Info, CheckCircle, Camera, FileBarChart,
-  KeyRound, Eye, EyeOff, ThumbsUp
+  KeyRound, Eye, EyeOff, ThumbsUp, AtSign
 } from 'lucide-react';
 import { AgieChat } from './chat/AgieChat';
 import { InactivityLogout } from './InactivityLogout';
@@ -83,13 +83,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [cpShowCurrent, setCpShowCurrent] = useState(false);
   const [cpShowNew, setCpShowNew] = useState(false);
   const [cpSaving, setCpSaving] = useState(false);
-  const { alertas, updateAlerta, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime, getVaga, notificacoes, marcarNotificacaoLida } = useVagasStore();
-  // curtidas: notificacoes of tipo='curtida' targeted to the current user
-  const curtidas = (notificacoes as any[]).filter(
-    (n) => n.tipo === 'curtida' && n.usuario_id === currentUser?.id
+  const { alertas, updateAlerta, fetchVagas, fetchBancos, fetchNotificacoes, subscribeRealtime, unsubscribeRealtime, getVaga, notificacoes, marcarNotificacaoLida } = useVagasStore();
+  // personal notifications: curtidas + mencoes targeted to the current user
+  const notifPessoais = (notificacoes as any[]).filter(
+    (n) => (n.tipo === 'curtida' || n.tipo === 'mencao') && n.usuario_id === currentUser?.id
   );
-  const unreadCurtidasCount = curtidas.filter((n) => !n.lida).length;
-  const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length + unreadCurtidasCount;
+  const unreadNotifPessoaisCount = notifPessoais.filter((n) => !n.lida).length;
+  const unreadAlertsCount = alertas.filter(a => a.status === 'nao_lido').length + unreadNotifPessoaisCount;
   const mainRef = useRef<HTMLDivElement>(null);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
 
@@ -97,13 +97,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     fetchCurrentProfile();
     fetchVagas();
     fetchBancos();
+    fetchNotificacoes();
     subscribeRealtime();
     subscribeAdminRealtime();
     return () => {
       unsubscribeRealtime();
       unsubscribeAdminRealtime();
     };
-  }, [fetchCurrentProfile, fetchVagas, fetchBancos, subscribeRealtime, unsubscribeRealtime, subscribeAdminRealtime, unsubscribeAdminRealtime]);
+  }, [fetchCurrentProfile, fetchVagas, fetchBancos, fetchNotificacoes, subscribeRealtime, unsubscribeRealtime, subscribeAdminRealtime, unsubscribeAdminRealtime]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -402,41 +403,53 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </div>
 
                     <div className="max-h-[350px] overflow-y-auto">
-                      {alertas.length === 0 && curtidas.length === 0 ? (
+                      {alertas.length === 0 && notifPessoais.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
                           <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
                           <p className="text-sm">Nenhuma notificação por enquanto.</p>
                         </div>
                       ) : (
                         <div className="divide-y divide-slate-100">
-                          {/* Curtidas (like notifications) */}
-                          {curtidas
+                          {/* Personal notifications: curtidas + menções */}
+                          {notifPessoais
                             .slice()
                             .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                            .map((notif: any) => (
-                            <Link
-                              key={notif.id}
-                              to={notif.registro_id ? `/vagas/${notif.registro_id}` : '#'}
-                              onClick={() => { if (!notif.lida) marcarNotificacaoLida(notif.id); }}
-                              className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors relative ${!notif.lida ? 'bg-blue-50/60' : ''}`}
-                            >
-                              <div className="mt-1 h-8 w-8 rounded-full flex items-center justify-center shrink-0 bg-blue-100 text-blue-600">
-                                <ThumbsUp className="h-4 w-4" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-800 line-clamp-1">{notif.titulo}</p>
-                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{notif.mensagem}</p>
-                                <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
-                                  {notif.created_at
-                                    ? format(parseISO(notif.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })
-                                    : ''}
-                                </p>
-                              </div>
-                              {!notif.lida && (
-                                <div className="absolute top-4 right-4 h-2 w-2 bg-blue-500 rounded-full" />
-                              )}
-                            </Link>
-                          ))}
+                            .map((notif: any) => {
+                              const isMencao = notif.tipo === 'mencao';
+                              return (
+                                <Link
+                                  key={notif.id}
+                                  to={notif.registro_id ? `/vagas/${notif.registro_id}` : '#'}
+                                  onClick={() => { if (!notif.lida) marcarNotificacaoLida(notif.id); }}
+                                  className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors relative ${
+                                    !notif.lida
+                                      ? isMencao ? 'bg-violet-50/60' : 'bg-blue-50/60'
+                                      : ''
+                                  }`}
+                                >
+                                  <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
+                                    isMencao ? 'bg-violet-100 text-violet-600' : 'bg-blue-100 text-blue-600'
+                                  }`}>
+                                    {isMencao
+                                      ? <AtSign className="h-4 w-4" />
+                                      : <ThumbsUp className="h-4 w-4" />
+                                    }
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-slate-800 line-clamp-1">{notif.titulo}</p>
+                                    <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{notif.mensagem}</p>
+                                    <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
+                                      {notif.created_at
+                                        ? format(parseISO(notif.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })
+                                        : ''}
+                                    </p>
+                                  </div>
+                                  {!notif.lida && (
+                                    <div className={`absolute top-4 right-4 h-2 w-2 rounded-full ${isMencao ? 'bg-violet-500' : 'bg-blue-500'}`} />
+                                  )}
+                                </Link>
+                              );
+                            })}
                           {/* System / workflow alerts */}
                           {alertas.map((alerta) => (
                             <Link

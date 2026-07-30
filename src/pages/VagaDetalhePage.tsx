@@ -93,6 +93,7 @@ import {
   MessageSquare,
   Loader2,
   ThumbsUp,
+  AtSign,
 } from "lucide-react";
 import {
   Popover,
@@ -111,7 +112,7 @@ import { ptBR } from "date-fns/locale";
 import { parseLocalDate, formatLocalDate } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useState, useEffect, useMemo, useRef, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, useRef, ChangeEvent, useCallback } from "react";
 import { ConvocacaoDialog } from "@/components/ConvocacaoDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
@@ -398,6 +399,174 @@ function ObsLikeButton({
   );
 }
 
+// ─── Mention helpers ─────────────────────────────────────────────────────────
+
+/** Inline chip for a resolved @mention — shows avatar + full name on hover */
+function ObsMentionChip({
+  token,
+  users,
+}: {
+  token: string;
+  users: any[];
+}) {
+  // token is "@Pedro_Augusto" — match against the slug of the full name
+  const slug = token.slice(1).toLowerCase();
+  const user = users.find(
+    (u: any) =>
+      u.nome_completo?.trim().replace(/\s+/g, "_").toLowerCase() === slug
+  );
+
+  const chip = (
+    <span className="inline-flex items-center gap-0.5 text-primary font-semibold bg-primary/10 rounded px-1 py-0 cursor-default align-baseline">
+      {token}
+    </span>
+  );
+
+  if (!user) return chip;
+
+  const initials = user.nome_completo
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((n: string) => n[0])
+    .join("")
+    .toUpperCase();
+
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>{chip}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align="start"
+          className="p-0 border-0 shadow-2xl bg-transparent"
+        >
+          <div className="bg-slate-900/95 backdrop-blur-sm rounded-xl p-3 flex items-center gap-2.5 min-w-[160px]">
+            {user.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user.nome_completo}
+                className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-700 shrink-0"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-primary/25 text-primary flex items-center justify-center text-xs font-bold ring-2 ring-slate-700 shrink-0">
+                {initials}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-white leading-tight truncate">
+                {user.nome_completo}
+              </p>
+              <p className="text-[10px] text-slate-400 leading-tight truncate">
+                {user.perfil}
+              </p>
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/** Render obs text, replacing @Mention tokens with interactive chips */
+function renderObsText(text: string, users: any[]) {
+  const parts = text.split(/(@\S+)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^@\S/.test(part) ? (
+          <ObsMentionChip key={i} token={part} users={users} />
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+/** Extract user objects that are @mentioned in text.
+ *  Tokens are stored as @Full_Name slugs so two users with the same
+ *  first name resolve to the correct person. */
+function extractMentionedUsers(text: string, users: any[]): any[] {
+  const matches = text.match(/@(\S+)/g);
+  if (!matches) return [];
+  const seen = new Map<string, any>();
+  matches.forEach((m) => {
+    const slug = m.slice(1).toLowerCase(); // e.g. "pedro_augusto"
+    const user = users.find(
+      (u: any) =>
+        u.nome_completo?.trim().replace(/\s+/g, "_").toLowerCase() === slug
+    );
+    if (user && !seen.has(user.id)) seen.set(user.id, user);
+  });
+  return Array.from(seen.values());
+}
+
+/** Floating dropdown for @mention autocomplete */
+function ObsMentionDropdown({
+  users,
+  activeIndex,
+  onSelect,
+}: {
+  users: any[];
+  activeIndex: number;
+  onSelect: (user: any) => void;
+}) {
+  if (users.length === 0) return null;
+  return (
+    <div className="absolute bottom-full left-0 mb-1.5 z-50 w-full max-w-[280px] bg-white rounded-xl shadow-2xl border border-slate-200/80 overflow-hidden">
+      <div className="px-2 py-1.5 border-b border-slate-100 flex items-center gap-1.5">
+        <AtSign className="h-3 w-3 text-primary" />
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          Mencionar
+        </span>
+      </div>
+      <div className="p-1 flex flex-col gap-0.5">
+        {users.map((u, i) => (
+          <button
+            key={u.id}
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault(); // keep textarea focused
+              onSelect(u);
+            }}
+            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-colors w-full ${
+              i === activeIndex
+                ? "bg-primary/10 text-primary"
+                : "hover:bg-slate-50 text-slate-700"
+            }`}
+          >
+            {u.avatar_url ? (
+              <img
+                src={u.avatar_url}
+                alt={u.nome_completo}
+                className="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-slate-200"
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold shrink-0">
+                {(u.nome_completo || "?")
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((n: string) => n[0])
+                  .join("")
+                  .toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold truncate leading-tight">
+                {u.nome_completo}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate leading-tight">
+                {u.perfil}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VagaDetalhePage() {
@@ -434,6 +603,9 @@ export default function VagaDetalhePage() {
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
   const [newObsText, setNewObsText] = useState("");
   const [isSavingObs, setIsSavingObs] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const obsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [activeFluxoSlot, setActiveFluxoSlot] = useState(() => {
     const slot = parseInt(searchParams.get("slot") || "1", 10);
     return isNaN(slot) || slot < 1 ? 1 : slot;
@@ -507,6 +679,60 @@ export default function VagaDetalhePage() {
     });
     return map;
   }, [users]);
+
+  // @mention autocomplete: filter active users by the query token
+  const mentionUsers = useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    return (users || [])
+      .filter(
+        (u: any) =>
+          u.status === "ativo" &&
+          u.nome_completo?.toLowerCase().includes(q)
+      )
+      .slice(0, 6);
+  }, [mentionQuery, users]);
+
+  const handleObsTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const val = e.target.value;
+      setNewObsText(val);
+      const cursor = e.target.selectionStart ?? val.length;
+      const before = val.slice(0, cursor);
+      const match = before.match(/@(\w*)$/);
+      if (match) {
+        setMentionQuery(match[1]);
+        setMentionIndex(0);
+      } else {
+        setMentionQuery(null);
+      }
+    },
+    []
+  );
+
+  const handleSelectMention = useCallback(
+    (user: any) => {
+      const textarea = obsTextareaRef.current;
+      if (!textarea) return;
+      const cursor = textarea.selectionStart ?? newObsText.length;
+      const before = newObsText.slice(0, cursor);
+      const after = newObsText.slice(cursor);
+      // Use full name joined by underscores so two users with the same
+      // first name (@Pedro_Augusto vs @Pedro_Ivo) are unambiguous.
+      const slug = user.nome_completo.trim().replace(/\s+/g, "_");
+      const replaced = before.replace(/@(\w*)$/, `@${slug} `);
+      setNewObsText(replaced + after);
+      setMentionQuery(null);
+      setMentionIndex(0);
+      setTimeout(() => {
+        textarea.focus();
+        const pos = replaced.length;
+        textarea.selectionStart = pos;
+        textarea.selectionEnd = pos;
+      }, 0);
+    },
+    [newObsText]
+  );
 
   useEffect(() => {
     if (vaga) {
@@ -1032,6 +1258,7 @@ export default function VagaDetalhePage() {
   const handleAddObs = async () => {
     if (!newObsText.trim() || !currentUser) return;
     setIsSavingObs(true);
+    setMentionQuery(null);
     const currentRaw = vaga.observacoes_internas || vaga.observacoes || "";
     const existing = parseObsItems(currentRaw);
     const newItem: ObsItem = {
@@ -1051,6 +1278,21 @@ export default function VagaDetalhePage() {
     if (ok) {
       setNewObsText("");
       toast.success("Observação adicionada");
+      // Notify mentioned users
+      const mentioned = extractMentionedUsers(newItem.text, users || []);
+      for (const u of mentioned) {
+        if (u.id !== currentUser.id) {
+          const snippet =
+            newItem.text.slice(0, 80) + (newItem.text.length > 80 ? "…" : "");
+          createNotificacao({
+            usuario_id: u.id,
+            titulo: `${currentUser.nome_completo} mencionou você`,
+            mensagem: `"${snippet}" — ${vaga.cargo || "Vaga"}${vaga.unidade ? " · " + vaga.unidade : ""}`,
+            tipo: "mencao",
+            registro_id: vaga.id,
+          });
+        }
+      }
     }
     setIsSavingObs(false);
   };
@@ -2148,17 +2390,62 @@ export default function VagaDetalhePage() {
                           avatarUrl={(currentUser as any)?.avatar_url || null}
                         />
                         <div className="flex-1 space-y-2">
-                          <Textarea
-                            value={newObsText}
-                            onChange={(e) => setNewObsText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && (e.ctrlKey || e.metaKey))
-                                handleAddObs();
-                            }}
-                            className="min-h-[72px] text-sm resize-none bg-white border-slate-200 focus:border-primary/50 transition-colors"
-                            placeholder="Adicione uma observação interna... (Ctrl+Enter para enviar)"
-                          />
-                          <div className="flex justify-end">
+                          <div className="relative">
+                            <Textarea
+                              ref={obsTextareaRef}
+                              value={newObsText}
+                              onChange={handleObsTextChange}
+                              onKeyDown={(e) => {
+                                // Mention navigation
+                                if (
+                                  mentionQuery !== null &&
+                                  mentionUsers.length > 0
+                                ) {
+                                  if (e.key === "ArrowDown") {
+                                    e.preventDefault();
+                                    setMentionIndex((i) =>
+                                      Math.min(i + 1, mentionUsers.length - 1)
+                                    );
+                                    return;
+                                  }
+                                  if (e.key === "ArrowUp") {
+                                    e.preventDefault();
+                                    setMentionIndex((i) => Math.max(i - 1, 0));
+                                    return;
+                                  }
+                                  if (e.key === "Enter" || e.key === "Tab") {
+                                    e.preventDefault();
+                                    handleSelectMention(
+                                      mentionUsers[mentionIndex]
+                                    );
+                                    return;
+                                  }
+                                  if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    setMentionQuery(null);
+                                    return;
+                                  }
+                                }
+                                if (
+                                  e.key === "Enter" &&
+                                  (e.ctrlKey || e.metaKey)
+                                )
+                                  handleAddObs();
+                              }}
+                              className="min-h-[72px] text-sm resize-none bg-white border-slate-200 focus:border-primary/50 transition-colors"
+                              placeholder="Adicione uma observação... use @ para mencionar alguém (Ctrl+Enter para enviar)"
+                            />
+                            <ObsMentionDropdown
+                              users={mentionUsers}
+                              activeIndex={mentionIndex}
+                              onSelect={handleSelectMention}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                              <AtSign className="h-3 w-3" />
+                              Digite @ para mencionar um colega
+                            </span>
                             <Button
                               size="sm"
                               onClick={handleAddObs}
@@ -2206,7 +2493,7 @@ export default function VagaDetalhePage() {
                                 </span>
                               </div>
                               <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
-                                {item.text}
+                                {renderObsText(item.text, users || [])}
                               </p>
                               <div className="flex justify-end mt-1.5">
                                 <ObsLikeButton

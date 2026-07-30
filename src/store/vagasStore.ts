@@ -1067,7 +1067,11 @@ export const useVagasStore = create<VagasState>()(
                 return;
               }
 
-              set((s) => ({ notificacoes: [newRow, ...s.notificacoes].slice(0, 50) }));
+              set((s) =>
+                s.notificacoes.some((n: any) => n.id === newRow.id)
+                  ? s
+                  : { notificacoes: [newRow, ...s.notificacoes].slice(0, 100) }
+              );
 
               if (newRow.tipo === 'mensagem') {
                 const isFromMe = newRow.remetente_id === myId;

@@ -36,6 +36,7 @@ import {
   getValidacaoColor,
   getEtapaColor,
   getStatusColor,
+  unitIsAllowed,
 } from "@/lib/vagaUtils";
 import {
   TIPO_VAGA_LABELS,
@@ -736,18 +737,23 @@ export default function VagaDetalhePage() {
     return map;
   }, [users]);
 
-  // @mention autocomplete: filter active users by the query token
+  // @mention autocomplete: only users who have access to this vaga
+  // (same rule as VagasPage: visualiza_todas_unidades OR unit is in unidades_vinculadas)
   const mentionUsers = useMemo(() => {
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase();
+    const vagaUnidade = vaga?.unidade;
     return (users || [])
-      .filter(
-        (u: any) =>
-          u.status === "ativo" &&
-          u.nome_completo?.toLowerCase().includes(q)
-      )
+      .filter((u: any) => {
+        if (u.status !== "ativo") return false;
+        if (!u.nome_completo?.toLowerCase().includes(q)) return false;
+        // Admins with full visibility always qualify
+        if (u.visualiza_todas_unidades) return true;
+        // Otherwise check unit access
+        return unitIsAllowed(vagaUnidade, u.unidades_vinculadas || []);
+      })
       .slice(0, 6);
-  }, [mentionQuery, users]);
+  }, [mentionQuery, users, vaga?.unidade]);
 
   const handleObsTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

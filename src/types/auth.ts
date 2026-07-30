@@ -70,6 +70,7 @@ export interface User {
   avatar_url?: string;
   visualiza_todas_unidades: boolean;
   unidades_vinculadas: string[];
+  unidades_responsavel?: string[];
   modulos_acesso?: string[];
   permissoes_modulo?: Record<string, 'read' | 'edit'>;
   pode_incluir_registros: boolean;

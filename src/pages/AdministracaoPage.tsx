@@ -155,20 +155,21 @@ export default function AdministracaoPage() {
   const { vagas } = useVagasStore();
   const permissions = usePermissions();
 
-  // Map of short unit name → registered user currently responsible
-  // Uses vagaMatchesShortUnits (prefix + includes) to handle all unit name formats
+  // Map of short unit name → registered user currently responsible.
+  // Built from profiles.unidades_responsavel (authoritative source) so it works
+  // even when a unit has no vagas yet.
   const unitAnalystMap = useMemo(() => {
-    const userNames = new Set((users || []).map((u: any) => u.nome_completo).filter(Boolean));
     const map = new Map<string, string>(); // shortName → analystName
-    vagas.forEach(v => {
-      if (!v.unidade || !v.analista_responsavel || !userNames.has(v.analista_responsavel)) return;
-      const shortName = resolveShortUnitName(v.unidade);
-      if (shortName && !map.has(shortName)) {
-        map.set(shortName, v.analista_responsavel);
-      }
+    (users || []).forEach((u: any) => {
+      if (!u.nome_completo || !Array.isArray(u.unidades_responsavel)) return;
+      u.unidades_responsavel.forEach((unit: string) => {
+        if (unit && !map.has(unit)) {
+          map.set(unit, u.nome_completo);
+        }
+      });
     });
     return map;
-  }, [vagas, users]);
+  }, [users]);
   
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
@@ -430,13 +431,17 @@ export default function AdministracaoPage() {
   };
 
   const openEditUser = (user: any) => {
-    // Derive which units this user is currently responsible for, normalising full vaga unit names to short names
-    const currentResponsavelUnits = [...new Set(
-      vagas
-        .filter(v => v.analista_responsavel === user.nome_completo && v.unidade)
-        .map(v => resolveShortUnitName(v.unidade as string))
-        .filter(Boolean)
-    )];
+    // Use the authoritative value stored in profiles.unidades_responsavel.
+    // Fall back to deriving from vagas only for legacy data that predates the column.
+    const storedResponsavel = Array.isArray(user.unidades_responsavel) ? user.unidades_responsavel : null;
+    const currentResponsavelUnits = storedResponsavel && storedResponsavel.length > 0
+      ? storedResponsavel
+      : [...new Set(
+          vagas
+            .filter(v => v.analista_responsavel === user.nome_completo && v.unidade)
+            .map(v => resolveShortUnitName(v.unidade as string))
+            .filter(Boolean)
+        )];
     setEditingUser({
       ...user,
       unidades_vinculadas: Array.isArray(user.unidades_vinculadas) ? user.unidades_vinculadas : [],
@@ -479,7 +484,8 @@ export default function AdministracaoPage() {
         modulos_acesso: editingUser.modulos_acesso,
         permissoes_modulo: editingUser.permissoes_modulo,
         regiao_suporte: editingUser.cargo === 'Analista Administrativo' ? editingUser.regiao_suporte : null,
-      });
+        unidades_responsavel: newUnidadesResponsavel,
+      } as any);
 
       // Handle analista_responsavel bulk update for Analista profiles (prefix match for full unit names)
       if (isAnalista) {

@@ -211,6 +211,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         pode_gerenciar_usuarios: profileData.pode_gerenciar_usuarios || false,
         acesso_portal_unidade: profileData.acesso_portal_unidade || false,
         regiao_suporte: profileData.regiao_suporte || null,
+        unidades_responsavel: (profileData as any).unidades_responsavel || [],
       },
     });
 

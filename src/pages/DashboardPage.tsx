@@ -358,29 +358,32 @@ export default function DashboardPage() {
       });
 
       // 3. Observacoes internas (stored as JSON array)
+      // Supports both legacy field names (texto/data/usuario/avatar_url)
+      // and ObsItem field names (text/created_at/author_name/author_avatar)
       try {
         const raw = vaga.observacoes_internas || (vaga as any).observacao;
         if (raw) {
           const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
           if (Array.isArray(parsed)) {
             parsed.forEach((obs: any) => {
-              if (obs?.data && obs?.texto) {
-                // Prefer stored avatar_url; fall back to live lookup by name
-                const resolvedAvatar =
-                  obs.avatar_url ||
-                  (obs.usuario
-                    ? (userAvatarMap.get(obs.usuario) ?? null)
-                    : null);
-                items.push({
-                  id: `obs-${vaga.id}-${obs.id || obs.data}`,
-                  type: "observacao",
-                  vaga,
-                  time: obs.data,
-                  usuario: obs.usuario,
-                  avatar_url: resolvedAvatar,
-                  descricao: obs.texto,
-                });
-              }
+              const texto = obs?.texto || obs?.text;
+              const data = obs?.data || obs?.created_at;
+              const usuario = obs?.usuario || obs?.author_name;
+              if (!texto || !data) return;
+              // Prefer stored avatar; fall back to live lookup by name
+              const resolvedAvatar =
+                obs.avatar_url ||
+                obs.author_avatar ||
+                (usuario ? (userAvatarMap.get(usuario) ?? null) : null);
+              items.push({
+                id: `obs-${vaga.id}-${obs.id || data}`,
+                type: "observacao",
+                vaga,
+                time: data,
+                usuario,
+                avatar_url: resolvedAvatar,
+                descricao: texto,
+              });
             });
           }
         }

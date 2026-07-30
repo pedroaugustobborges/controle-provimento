@@ -83,7 +83,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [cpShowCurrent, setCpShowCurrent] = useState(false);
   const [cpShowNew, setCpShowNew] = useState(false);
   const [cpSaving, setCpSaving] = useState(false);
-  const { alertas, updateAlerta, fetchVagas, fetchBancos, fetchNotificacoes, subscribeRealtime, unsubscribeRealtime, getVaga, notificacoes, marcarNotificacaoLida } = useVagasStore();
+  const { alertas, updateAlerta, fetchVagas, fetchBancos, fetchNotificacoes, subscribeRealtime, unsubscribeRealtime, getVaga, notificacoes, marcarNotificacaoLida, marcarTodasLidas } = useVagasStore();
   // personal notifications: curtidas + mencoes targeted to the current user
   const notifPessoais = (notificacoes as any[]).filter(
     (n) => (n.tipo === 'curtida' || n.tipo === 'mencao') && n.usuario_id === currentUser?.id
@@ -382,113 +382,214 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="p-2 text-muted-foreground hover:text-primary transition-all rounded-lg hover:bg-primary/5 relative">
-                      <Bell className="h-5 w-5" />
+                    <button
+                      className={`relative p-2 rounded-xl transition-all duration-300 outline-none ${
+                        unreadAlertsCount > 0
+                          ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 shadow-sm shadow-amber-100/80'
+                          : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
+                      }`}
+                    >
+                      {/* Expanding halo ring — only when unread */}
                       {unreadAlertsCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-destructive rounded-full border-2 border-white animate-pulse" />
+                        <span
+                          className="absolute inset-0 rounded-xl bg-amber-400/25 pointer-events-none"
+                          style={{ animation: 'bellPing 2.4s ease-out infinite' }}
+                        />
+                      )}
+
+                      {/* Bell icon — rings when unread */}
+                      <Bell
+                        className="h-5 w-5 relative"
+                        style={
+                          unreadAlertsCount > 0
+                            ? { transformOrigin: '50% 8%', animation: 'bellRing 3.2s ease-in-out infinite' }
+                            : undefined
+                        }
+                      />
+
+                      {/* Numeric count badge */}
+                      {unreadAlertsCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white px-1 ring-2 ring-white shadow-md">
+                          {unreadAlertsCount > 9 ? '9+' : unreadAlertsCount}
+                        </span>
                       )}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden bg-white/95 backdrop-blur-sm border-slate-200/60 shadow-xl rounded-xl">
-                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                      <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                        <Bell className="h-4 w-4 text-primary" />
-                        Notificações
-                      </h3>
-                      {unreadAlertsCount > 0 && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none">
-                          {unreadAlertsCount} novas
-                        </Badge>
-                      )}
+
+                  <PopoverContent
+                    align="end"
+                    sideOffset={10}
+                    className="w-[360px] p-0 overflow-hidden bg-white border-slate-200/70 shadow-2xl rounded-2xl"
+                  >
+                    {/* ── Header ── */}
+                    <div className="relative px-4 py-3.5 border-b border-slate-100 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.05] via-transparent to-transparent pointer-events-none" />
+                      <div className="relative flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <Bell className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-slate-800 leading-tight">Notificações</h3>
+                            {unreadAlertsCount > 0 ? (
+                              <p className="text-[10px] font-semibold text-primary leading-tight">
+                                {unreadAlertsCount} não lida{unreadAlertsCount > 1 ? 's' : ''}
+                              </p>
+                            ) : (
+                              <p className="text-[10px] text-slate-400 leading-tight">Tudo em dia</p>
+                            )}
+                          </div>
+                        </div>
+                        {unreadAlertsCount > 0 && (
+                          <button
+                            onClick={() => {
+                              notifPessoais.filter((n: any) => !n.lida).forEach((n: any) => marcarNotificacaoLida(n.id));
+                              alertas.filter(a => a.status === 'nao_lido').forEach(a => updateAlerta(a.id, { status: 'lido' }));
+                            }}
+                            className="shrink-0 text-[10px] font-semibold text-slate-400 hover:text-primary transition-colors px-2.5 py-1.5 rounded-lg hover:bg-primary/5 whitespace-nowrap"
+                          >
+                            Marcar todas como lidas
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="max-h-[350px] overflow-y-auto">
-                      {alertas.length === 0 && notifPessoais.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                          <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                          <p className="text-sm">Nenhuma notificação por enquanto.</p>
+                    {/* ── List ── */}
+                    <div className="max-h-[420px] overflow-y-auto">
+                      {notifPessoais.length === 0 && alertas.length === 0 ? (
+
+                        /* Empty state */
+                        <div className="py-14 flex flex-col items-center gap-4 text-center">
+                          <div className="relative">
+                            <div className="h-16 w-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-sm">
+                              <Bell className="h-7 w-7 text-slate-300" />
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-500">Tudo em dia!</p>
+                            <p className="text-xs text-slate-400 mt-1">Sem novas notificações.</p>
+                          </div>
                         </div>
+
                       ) : (
-                        <div className="divide-y divide-slate-100">
-                          {/* Personal notifications: curtidas + menções */}
+                        <div className="divide-y divide-slate-50">
+
+                          {/* Personal: curtidas + menções */}
                           {notifPessoais
                             .slice()
                             .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                             .map((notif: any) => {
                               const isMencao = notif.tipo === 'mencao';
+                              const isUnread = !notif.lida;
+                              const senderInitial = (notif.remetente_nome || '?')[0].toUpperCase();
                               return (
                                 <Link
                                   key={notif.id}
                                   to={notif.registro_id ? `/vagas/${notif.registro_id}` : '#'}
-                                  onClick={() => { if (!notif.lida) marcarNotificacaoLida(notif.id); }}
-                                  className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors relative ${
-                                    !notif.lida
-                                      ? isMencao ? 'bg-violet-50/60' : 'bg-blue-50/60'
-                                      : ''
+                                  onClick={() => { if (isUnread) marcarNotificacaoLida(notif.id); }}
+                                  className={`relative flex gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 ${
+                                    isUnread ? 'bg-gradient-to-r from-blue-50/50 to-transparent' : ''
                                   }`}
                                 >
-                                  <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                                    isMencao ? 'bg-violet-100 text-violet-600' : 'bg-blue-100 text-blue-600'
-                                  }`}>
-                                    {isMencao
-                                      ? <AtSign className="h-4 w-4" />
-                                      : <ThumbsUp className="h-4 w-4" />
-                                    }
+                                  {/* Unread left accent bar */}
+                                  {isUnread && (
+                                    <span className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${
+                                      isMencao ? 'bg-violet-400' : 'bg-blue-400'
+                                    }`} />
+                                  )}
+
+                                  {/* Sender initial + type badge */}
+                                  <div className="relative shrink-0 mt-0.5">
+                                    <div className={`h-9 w-9 rounded-full flex items-center justify-center text-[13px] font-bold ${
+                                      isMencao ? 'bg-violet-100 text-violet-700' : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                      {senderInitial}
+                                    </div>
+                                    <span className={`absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center ring-2 ring-white ${
+                                      isMencao ? 'bg-violet-500' : 'bg-blue-500'
+                                    }`}>
+                                      {isMencao
+                                        ? <AtSign className="h-2 w-2 text-white" />
+                                        : <ThumbsUp className="h-2 w-2 text-white" />
+                                      }
+                                    </span>
                                   </div>
+
+                                  {/* Text */}
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-slate-800 line-clamp-1">{notif.titulo}</p>
-                                    <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{notif.mensagem}</p>
-                                    <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
+                                    <p className={`text-[12px] leading-snug line-clamp-2 ${isUnread ? 'font-semibold text-slate-800' : 'font-normal text-slate-600'}`}>
+                                      {notif.titulo}
+                                    </p>
+                                    {notif.mensagem && (
+                                      <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5 italic">
+                                        {notif.mensagem}
+                                      </p>
+                                    )}
+                                    <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
                                       {notif.created_at
-                                        ? format(parseISO(notif.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })
+                                        ? format(parseISO(notif.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })
                                         : ''}
                                     </p>
                                   </div>
-                                  {!notif.lida && (
-                                    <div className={`absolute top-4 right-4 h-2 w-2 rounded-full ${isMencao ? 'bg-violet-500' : 'bg-blue-500'}`} />
+
+                                  {/* Unread dot */}
+                                  {isUnread && (
+                                    <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${isMencao ? 'bg-violet-500' : 'bg-blue-500'}`} />
                                   )}
                                 </Link>
                               );
                             })}
+
                           {/* System / workflow alerts */}
-                          {alertas.map((alerta) => (
-                            <Link
-                              key={alerta.id}
-                              to={alerta.link || '#'}
-                              onClick={() => {
-                                if (alerta.status === 'nao_lido') {
-                                  updateAlerta(alerta.id, { status: 'lido' });
-                                }
-                              }}
-                              className={`flex gap-3 p-4 hover:bg-slate-50 transition-colors group relative ${
-                                alerta.status === 'nao_lido' ? 'bg-primary/5' : ''
-                              }`}
-                            >
-                              <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                                alerta.tipo === 'atraso' ? 'bg-amber-100 text-amber-600' :
-                                alerta.tipo === 'critico' ? 'bg-red-100 text-red-600' :
-                                'bg-blue-100 text-blue-600'
-                              }`}>
-                                {alerta.tipo === 'atraso' ? <AlertTriangle className="h-4 w-4" /> :
-                                 alerta.tipo === 'critico' ? <Bell className="h-4 w-4" /> :
-                                 <Info className="h-4 w-4" />}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-800 line-clamp-1">{alerta.titulo}</p>
-                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{alerta.mensagem}</p>
-                                <p className="text-[10px] text-slate-400 mt-1 uppercase font-semibold tracking-wider">
-                                  {format(parseISO(alerta.data_criacao), "dd 'de' MMMM", { locale: ptBR })}
-                                </p>
-                              </div>
-                              {alerta.status === 'nao_lido' && (
-                                <div className="absolute top-4 right-4 h-2 w-2 bg-primary rounded-full" />
-                              )}
-                            </Link>
-                          ))}
+                          {alertas.map((alerta) => {
+                            const isAtraso = alerta.tipo === 'atraso';
+                            const isCritico = alerta.tipo === 'critico';
+                            const isUnread = alerta.status === 'nao_lido';
+                            return (
+                              <Link
+                                key={alerta.id}
+                                to={alerta.link || '#'}
+                                onClick={() => { if (isUnread) updateAlerta(alerta.id, { status: 'lido' }); }}
+                                className={`relative flex gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 ${
+                                  isUnread ? 'bg-gradient-to-r from-primary/[0.04] to-transparent' : ''
+                                }`}
+                              >
+                                {isUnread && (
+                                  <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full bg-primary/50" />
+                                )}
+
+                                <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                                  isAtraso ? 'bg-amber-100 text-amber-600' :
+                                  isCritico ? 'bg-red-100 text-red-600' :
+                                  'bg-primary/10 text-primary'
+                                }`}>
+                                  {isAtraso ? <AlertTriangle className="h-4 w-4" /> :
+                                   isCritico ? <Bell className="h-4 w-4" /> :
+                                   <Info className="h-4 w-4" />}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-[12px] leading-snug line-clamp-2 ${isUnread ? 'font-semibold text-slate-800' : 'font-normal text-slate-600'}`}>
+                                    {alerta.titulo}
+                                  </p>
+                                  {alerta.mensagem && (
+                                    <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{alerta.mensagem}</p>
+                                  )}
+                                  <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
+                                    {format(parseISO(alerta.data_criacao), "dd 'de' MMM", { locale: ptBR })}
+                                  </p>
+                                </div>
+
+                                {isUnread && (
+                                  <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-primary/60" />
+                                )}
+                              </Link>
+                            );
+                          })}
+
                         </div>
                       )}
                     </div>
-
                   </PopoverContent>
                 </Popover>
                 

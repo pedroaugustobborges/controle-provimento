@@ -136,6 +136,25 @@
   }
 }
 
+/* ── Bell notification animations ────────────────────────────────────── */
+
+@keyframes bellRing {
+  0%,  55%, 100% { transform: rotate(0deg); }
+  5%             { transform: rotate(-24deg); }
+  12%            { transform: rotate(22deg); }
+  19%            { transform: rotate(-18deg); }
+  26%            { transform: rotate(14deg); }
+  33%            { transform: rotate(-9deg); }
+  40%            { transform: rotate(5deg); }
+  47%            { transform: rotate(-2deg); }
+}
+
+@keyframes bellPing {
+  0%   { transform: scale(0.9); opacity: 0.6; }
+  80%  { transform: scale(2);   opacity: 0;   }
+  100% { transform: scale(2);   opacity: 0;   }
+}
+
 /* ── Dashboard RGB / Glassmorphism animations ─────────────────────────── */
 
 @keyframes dashRgbBorder {

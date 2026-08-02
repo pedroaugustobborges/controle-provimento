@@ -2441,160 +2441,6 @@ export default function VagaDetalhePage() {
                 })()}
               </div>
 
-              {/* ── Observações Internas ── */}
-              {(() => {
-                const obsItems = parseObsItems(
-                  vaga.observacoes_internas || vaga.observacoes,
-                );
-                return (
-                  <div className="space-y-4">
-                    {/* Header */}
-                    <div className="flex items-center gap-2">
-                      <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
-                        Observações Internas
-                      </label>
-                      {obsItems.length > 0 && (
-                        <span className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
-                          {obsItems.length}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* New observation input */}
-                    {canEdit && (
-                      <div className="flex gap-3">
-                        <ObsAvatar
-                          name={currentUser?.nome_completo || ""}
-                          avatarUrl={(currentUser as any)?.avatar_url || null}
-                        />
-                        <div className="flex-1 space-y-2">
-                          <div className="relative">
-                            <Textarea
-                              ref={obsTextareaRef}
-                              value={newObsText}
-                              onChange={handleObsTextChange}
-                              onKeyDown={(e) => {
-                                // Mention navigation
-                                if (
-                                  mentionQuery !== null &&
-                                  mentionUsers.length > 0
-                                ) {
-                                  if (e.key === "ArrowDown") {
-                                    e.preventDefault();
-                                    setMentionIndex((i) =>
-                                      Math.min(i + 1, mentionUsers.length - 1)
-                                    );
-                                    return;
-                                  }
-                                  if (e.key === "ArrowUp") {
-                                    e.preventDefault();
-                                    setMentionIndex((i) => Math.max(i - 1, 0));
-                                    return;
-                                  }
-                                  if (e.key === "Enter" || e.key === "Tab") {
-                                    e.preventDefault();
-                                    handleSelectMention(
-                                      mentionUsers[mentionIndex]
-                                    );
-                                    return;
-                                  }
-                                  if (e.key === "Escape") {
-                                    e.preventDefault();
-                                    setMentionQuery(null);
-                                    return;
-                                  }
-                                }
-                                if (
-                                  e.key === "Enter" &&
-                                  (e.ctrlKey || e.metaKey)
-                                )
-                                  handleAddObs();
-                              }}
-                              className="min-h-[72px] text-sm resize-none bg-white border-slate-200 focus:border-primary/50 transition-colors"
-                              placeholder="Adicione uma observação... use @ para mencionar alguém (Ctrl+Enter para enviar)"
-                            />
-                            <ObsMentionDropdown
-                              users={mentionUsers}
-                              activeIndex={mentionIndex}
-                              onSelect={handleSelectMention}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                              <AtSign className="h-3 w-3" />
-                              Digite @ para mencionar um colega
-                            </span>
-                            <Button
-                              size="sm"
-                              onClick={handleAddObs}
-                              disabled={!newObsText.trim() || isSavingObs}
-                              className="h-7 px-3 text-xs gap-1.5"
-                            >
-                              {isSavingObs ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Send className="h-3 w-3" />
-                              )}
-                              Publicar
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Feed */}
-                    {obsItems.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-8 gap-2 text-slate-400">
-                        <MessageSquare className="h-7 w-7 opacity-25" />
-                        <p className="text-xs">
-                          Nenhuma observação registrada.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1 pt-1">
-                        {obsItems.map((item, idx) => (
-                          <div
-                            key={item.id}
-                            className={`group/obs relative flex gap-3 p-3 rounded-xl transition-colors ${idx === 0 ? "bg-slate-50/80 border border-slate-100" : "hover:bg-slate-50/60"}`}
-                          >
-                            <ObsAvatar
-                              name={item.author_name}
-                              avatarUrl={item.author_avatar}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-semibold text-slate-800 leading-none">
-                                  {item.author_name}
-                                </span>
-                                <span className="text-[10px] text-slate-400 leading-none">
-                                  {obsRelativeTime(item.created_at)}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
-                                {renderObsText(item.text, users || [])}
-                              </p>
-                              <div className="flex justify-end mt-1.5">
-                                <ObsLikeButton
-                                  likes={item.likes || []}
-                                  currentUserId={currentUser?.id || ""}
-                                  onToggle={() => handleToggleLike(item.id)}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Admin delete — appears on hover */}
-                            {isAdmin && (
-                              <ObsDeleteButton
-                                onConfirm={() => handleDeleteObs(item.id)}
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
 
               <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-x-8 gap-y-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
                 <div className="flex items-center gap-1.5">
@@ -2705,6 +2551,165 @@ export default function VagaDetalhePage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* ── Observações Internas (persistente em todas as abas) ── */}
+      {(() => {
+        const obsItems = parseObsItems(
+          vaga.observacoes_internas || vaga.observacoes,
+        );
+        return (
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex items-center gap-2">
+                  <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
+                    Observações Internas
+                  </label>
+                  {obsItems.length > 0 && (
+                    <span className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                      {obsItems.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* New observation input */}
+                {canEdit && (
+                  <div className="flex gap-3">
+                    <ObsAvatar
+                      name={currentUser?.nome_completo || ""}
+                      avatarUrl={(currentUser as any)?.avatar_url || null}
+                    />
+                    <div className="flex-1 space-y-2">
+                      <div className="relative">
+                        <Textarea
+                          ref={obsTextareaRef}
+                          value={newObsText}
+                          onChange={handleObsTextChange}
+                          onKeyDown={(e) => {
+                            // Mention navigation
+                            if (
+                              mentionQuery !== null &&
+                              mentionUsers.length > 0
+                            ) {
+                              if (e.key === "ArrowDown") {
+                                e.preventDefault();
+                                setMentionIndex((i) =>
+                                  Math.min(i + 1, mentionUsers.length - 1)
+                                );
+                                return;
+                              }
+                              if (e.key === "ArrowUp") {
+                                e.preventDefault();
+                                setMentionIndex((i) => Math.max(i - 1, 0));
+                                return;
+                              }
+                              if (e.key === "Enter" || e.key === "Tab") {
+                                e.preventDefault();
+                                handleSelectMention(
+                                  mentionUsers[mentionIndex]
+                                );
+                                return;
+                              }
+                              if (e.key === "Escape") {
+                                e.preventDefault();
+                                setMentionQuery(null);
+                                return;
+                              }
+                            }
+                            if (
+                              e.key === "Enter" &&
+                              (e.ctrlKey || e.metaKey)
+                            )
+                              handleAddObs();
+                          }}
+                          className="min-h-[72px] text-sm resize-none bg-white border-slate-200 focus:border-primary/50 transition-colors"
+                          placeholder="Adicione uma observação... use @ para mencionar alguém (Ctrl+Enter para enviar)"
+                        />
+                        <ObsMentionDropdown
+                          users={mentionUsers}
+                          activeIndex={mentionIndex}
+                          onSelect={handleSelectMention}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                          <AtSign className="h-3 w-3" />
+                          Digite @ para mencionar um colega
+                        </span>
+                        <Button
+                          size="sm"
+                          onClick={handleAddObs}
+                          disabled={!newObsText.trim() || isSavingObs}
+                          className="h-7 px-3 text-xs gap-1.5"
+                        >
+                          {isSavingObs ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Send className="h-3 w-3" />
+                          )}
+                          Publicar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Feed */}
+                {obsItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 gap-2 text-slate-400">
+                    <MessageSquare className="h-7 w-7 opacity-25" />
+                    <p className="text-xs">
+                      Nenhuma observação registrada.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1 pt-1">
+                    {obsItems.map((item, idx) => (
+                      <div
+                        key={item.id}
+                        className={`group/obs relative flex gap-3 p-3 rounded-xl transition-colors ${idx === 0 ? "bg-slate-50/80 border border-slate-100" : "hover:bg-slate-50/60"}`}
+                      >
+                        <ObsAvatar
+                          name={item.author_name}
+                          avatarUrl={item.author_avatar}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-semibold text-slate-800 leading-none">
+                              {item.author_name}
+                            </span>
+                            <span className="text-[10px] text-slate-400 leading-none">
+                              {obsRelativeTime(item.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                            {renderObsText(item.text, users || [])}
+                          </p>
+                          <div className="flex justify-end mt-1.5">
+                            <ObsLikeButton
+                              likes={item.likes || []}
+                              currentUserId={currentUser?.id || ""}
+                              onToggle={() => handleToggleLike(item.id)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Admin delete — appears on hover */}
+                        {isAdmin && (
+                          <ObsDeleteButton
+                            onConfirm={() => handleDeleteObs(item.id)}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       <ConvocacaoDialog
         open={isConvocacaoDialogOpen}

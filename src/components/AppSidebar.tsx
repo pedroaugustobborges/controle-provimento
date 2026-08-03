@@ -139,13 +139,8 @@ export function AppSidebar() {
         subMenu: [
           { title: "Fila de Editais", url: "/fila-editais" },
           { title: "Redação do Edital", url: "/fila-analista-edital" },
+          { title: "Validação de Edital", url: "/validacao-editais" },
         ],
-      },
-      {
-        title: "Validação de Edital",
-        url: "/validacao-editais",
-        icon: FileCheck,
-        visible: getPermissions("validacao").canRead,
       },
       {
         title: "Banco de Talentos",

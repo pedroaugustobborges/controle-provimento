@@ -83,12 +83,9 @@ import {
   Send,
   Search,
   AlertTriangle,
-  ArrowRightCircle,
   ExternalLink,
   Edit,
   Copy,
-  ArrowLeftRight,
-  Crown,
   Target,
   ChevronRight,
   MessageSquare,
@@ -1681,106 +1678,6 @@ export default function VagaDetalhePage() {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-          <h3 className="font-bold text-slate-800">Tratativas</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Aproveitamento do Banco de Talentos */}
-          <Button
-            onClick={async () => {
-              setActiveTab("banco");
-              if (vaga.tratativa !== "Aproveitamento de Banco de Talentos") {
-                await handleTratativaChange(
-                  "Aproveitamento de Banco de Talentos",
-                );
-              }
-            }}
-            className="h-auto py-4 px-6 justify-between border-2 border-primary/10 hover:border-primary/30 hover:bg-primary/5 bg-white text-primary group transition-all"
-            variant="outline"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-primary/10 p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
-                <Users className="h-6 w-6" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-base">
-                  Aproveitamento do Banco de Talentos
-                </p>
-                <p className="text-xs text-slate-500 font-medium">
-                  Ver candidatos com perfil similar a esta vaga
-                </p>
-              </div>
-            </div>
-            <ArrowRightCircle className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-          </Button>
-
-          {/* Publicação de Edital — em breve */}
-          <button
-            disabled
-            className="h-auto py-4 px-6 flex items-center justify-between border-2 border-rose-100 bg-white rounded-md text-rose-400 opacity-60 cursor-not-allowed transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-rose-50 p-2 rounded-lg">
-                <Send className="h-6 w-6 text-rose-400" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-base">Publicação de Edital</p>
-                <p className="text-xs text-slate-400 font-medium">
-                  Encaminhar para fila de novos editais/publicações
-                </p>
-              </div>
-            </div>
-            <span className="text-[9px] font-black uppercase tracking-wider bg-rose-100 text-rose-500 px-2 py-0.5 rounded-full shrink-0">
-              Em breve
-            </span>
-          </button>
-
-          {/* Movimentação Interna — em breve */}
-          <button
-            disabled
-            className="h-auto py-4 px-6 flex items-center justify-between border-2 border-purple-100 bg-white rounded-md text-purple-400 opacity-60 cursor-not-allowed transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-purple-50 p-2 rounded-lg">
-                <ArrowLeftRight className="h-6 w-6 text-purple-400" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-base">Movimentação Interna</p>
-                <p className="text-xs text-slate-400 font-medium">
-                  Transferência entre unidades da rede
-                </p>
-              </div>
-            </div>
-            <span className="text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-500 px-2 py-0.5 rounded-full shrink-0">
-              Em breve
-            </span>
-          </button>
-
-          {/* Vaga de Liderança — em breve */}
-          <button
-            disabled
-            className="h-auto py-4 px-6 flex items-center justify-between border-2 border-amber-100 bg-white rounded-md text-amber-400 opacity-60 cursor-not-allowed transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-amber-50 p-2 rounded-lg">
-                <Crown className="h-6 w-6 text-amber-400" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-base">Vaga de Liderança</p>
-                <p className="text-xs text-slate-400 font-medium">
-                  Processo seletivo para cargos de gestão
-                </p>
-              </div>
-            </div>
-            <span className="text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-500 px-2 py-0.5 rounded-full shrink-0">
-              Em breve
-            </span>
-          </button>
-        </div>
       </div>
 
       <Tabs

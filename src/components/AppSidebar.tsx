@@ -1,20 +1,21 @@
 import {
   LayoutDashboard,
-  Briefcase,
-  Users,
+  ClipboardList,
+  BookUser,
   CheckCircle,
-  TrendingUp,
+  CalendarClock,
   Settings,
   HelpCircle,
   Calendar,
   FileSpreadsheet,
+  Upload,
   Bell,
   ChevronDown,
   FileText,
   FileCheck,
   Check,
   Search,
-  ShieldCheck,
+  Target,
   LogOut,
   Circle,
   Building2,
@@ -123,7 +124,7 @@ export function AppSidebar() {
       {
         title: "Controle de Vagas",
         url: "/vagas",
-        icon: Briefcase,
+        icon: ClipboardList,
         visible: getPermissions("vagas").canRead,
         subMenu: [
           { title: "Todas as Vagas", url: "/vagas" },
@@ -145,7 +146,7 @@ export function AppSidebar() {
       {
         title: "Banco de Talentos",
         url: "/banco-talentos",
-        icon: Users,
+        icon: BookUser,
         visible: getPermissions("banco").canRead,
         subMenu: [
           { title: "Cadastro Reserva", url: "/banco-talentos?tab=list" },
@@ -228,7 +229,7 @@ export function AppSidebar() {
         {
           title: "Monitoramento de Prazos",
           url: "/monitoramento",
-          icon: TrendingUp,
+          icon: CalendarClock,
           visible: getPermissions("monitoramento").canRead,
         },
         {
@@ -240,7 +241,7 @@ export function AppSidebar() {
         {
           title: "Importações",
           url: "/importacoes",
-          icon: FileSpreadsheet,
+          icon: Upload,
           visible: getPermissions("importacoes").canRead,
         },
         {
@@ -252,7 +253,7 @@ export function AppSidebar() {
         {
           title: "Gestão Estratégica",
           url: "/portal-rh",
-          icon: ShieldCheck,
+          icon: Target,
           visible: isAdminAnalyst || isManagement || hasFullAccess,
         },
         {

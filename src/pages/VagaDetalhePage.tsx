@@ -181,6 +181,28 @@ const ETAPAS_POR_TRATATIVA: Record<string, string[]> = {
   "Aguardando Unidade": ["Aguardando Unidade"],
 };
 
+const TRATATIVAS_TEIA = [
+  "Aguardando Unidade",
+  "Em Processo Seletivo",
+  "Vaga de Liderança",
+] as const;
+
+const ETAPAS_TEIA = [
+  "Aguardando Unidade",
+  "Divulgação",
+  "Triagem",
+  "Entrevista",
+  "Documentação",
+  "Enviado para Formalização",
+  "Admissão Efetivada",
+];
+
+const ETAPAS_POR_TRATATIVA_TEIA: Record<string, string[]> = {
+  "Aguardando Unidade": ETAPAS_TEIA,
+  "Em Processo Seletivo": ETAPAS_TEIA,
+  "Vaga de Liderança": ETAPAS_TEIA,
+};
+
 
 function calcSimilarity(vagaCargo: string, bancoCargo: string): number {
   if (!vagaCargo || !bancoCargo) return 0;
@@ -2010,6 +2032,14 @@ export default function VagaDetalhePage() {
                   const canEditFlow = canEdit || isAssistente;
 
                   // Panels renderer — shared for single and multi
+                  const isTeia =
+                    vaga.is_teia ||
+                    (vaga.unidade || "").toUpperCase().includes("TEIA");
+                  const activeTratativas = isTeia ? TRATATIVAS_TEIA : TRATATIVAS;
+                  const activeEtapaMap = isTeia
+                    ? ETAPAS_POR_TRATATIVA_TEIA
+                    : ETAPAS_POR_TRATATIVA;
+
                   const renderPanels = (item: VagaFluxoItem) => {
                     // Merge persisted data with local draft
                     const draft = fluxoDraft[item.slot] || {};
@@ -2024,7 +2054,7 @@ export default function VagaDetalhePage() {
                       "Solicitada") as StatusProcesso;
 
                     const availableEtapas = effectiveTratativa
-                      ? ETAPAS_POR_TRATATIVA[effectiveTratativa] || []
+                      ? activeEtapaMap[effectiveTratativa] || []
                       : [];
                     const etapaLocked = !effectiveTratativa;
 
@@ -2074,7 +2104,7 @@ export default function VagaDetalhePage() {
                                       Selecionar tratativa...
                                     </span>
                                   </SelectItem>
-                                  {TRATATIVAS.map((t) => (
+                                  {activeTratativas.map((t) => (
                                     <SelectItem key={t} value={t}>
                                       {t}
                                     </SelectItem>

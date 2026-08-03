@@ -1797,23 +1797,15 @@ export default function VagaDetalhePage() {
           </TabsTrigger>
           <TabsTrigger
             value="edital"
-            disabled
-            className="font-bold px-6 opacity-50 cursor-not-allowed flex-col gap-0"
+            className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6"
           >
             Edital e Fila
-            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full leading-tight">
-              Em breve
-            </span>
           </TabsTrigger>
           <TabsTrigger
             value="acompanhamento"
-            disabled
-            className="font-bold px-6 opacity-50 cursor-not-allowed flex-col gap-0"
+            className="data-[state=active]:bg-white data-[state=active]:text-primary font-bold px-6"
           >
             Acompanhamento
-            <span className="text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-full leading-tight">
-              Em breve
-            </span>
           </TabsTrigger>
           <TabsTrigger
             value="banco"

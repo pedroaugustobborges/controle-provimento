@@ -1845,6 +1845,7 @@ export default function VagaDetalhePage() {
                 </div>
               </div>
 
+              {(vaga.is_teia || (vaga.unidade || '').toUpperCase().includes('TEIA')) && (
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -1958,6 +1959,7 @@ export default function VagaDetalhePage() {
                   </div>
                 </div>
               </div>
+              )}
 
               <div className="space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b">

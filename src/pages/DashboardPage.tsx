@@ -1018,7 +1018,7 @@ export default function DashboardPage() {
       startDate: Date; endDate: Date; netDays: number;
     }> = [];
 
-    userScopedVagas.forEach((v) => {
+    filteredVagas.forEach((v) => {
       const hist = (v.historico || []) as Array<{
         data?: string;
         descricao?: string;
@@ -1101,7 +1101,7 @@ export default function DashboardPage() {
       recordsProvimento,
       recordsIntake,
     };
-  }, [userScopedVagas]);
+  }, [filteredVagas]);
 
   // ─── Lead Time grouped by unit (for the column bar charts) ──────────────────
   const leadTimeByUnit = useMemo(() => {

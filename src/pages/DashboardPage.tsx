@@ -1103,6 +1103,42 @@ export default function DashboardPage() {
     };
   }, [userScopedVagas]);
 
+  // ─── Lead Time grouped by unit (for the column bar charts) ──────────────────
+  const leadTimeByUnit = useMemo(() => {
+    const shortName = (u: string) =>
+      u.includes(" - ") ? u.substring(0, u.indexOf(" - ")).trim() : u.trim();
+
+    const provMap = new Map<string, number[]>();
+    leadTimeData.recordsProvimento.forEach((r) => {
+      const key = shortName(r.unidade);
+      const arr = provMap.get(key) || [];
+      arr.push(r.netDays);
+      provMap.set(key, arr);
+    });
+
+    const intakeMap = new Map<string, number[]>();
+    leadTimeData.recordsIntake.forEach((r) => {
+      const key = shortName(r.unidade);
+      const arr = intakeMap.get(key) || [];
+      arr.push(r.netDays);
+      intakeMap.set(key, arr);
+    });
+
+    const avg = (arr: number[]) =>
+      arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+
+    const allUnits = new Set([...provMap.keys(), ...intakeMap.keys()]);
+    return Array.from(allUnits)
+      .map((unit) => ({
+        unit,
+        provimento: avg(provMap.get(unit) || []),
+        intake: avg(intakeMap.get(unit) || []),
+        countProvimento: (provMap.get(unit) || []).length,
+        countIntake: (intakeMap.get(unit) || []).length,
+      }))
+      .sort((a, b) => a.unit.localeCompare(b.unit));
+  }, [leadTimeData]);
+
   const formatLeadTime = (days: number | null): { days: number; hours: number } | null => {
     if (days === null) return null;
     const d = Math.floor(days);
@@ -3245,200 +3281,213 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* ── Lead Time — Charts ────────────────────────────────────────── */}
+        {/* ── Lead Time — Column Bar Charts grouped by Unidade ─────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {[
-            {
-              key: "provimento",
-              title: "Lead time do provimento de uma vaga",
-              subtitle: "Média de dias por mês (vagas concluídas)",
-              dataKey: "provimento" as const,
-              color: "#f59e0b",
-              gradId: "gradProvimento",
-            },
-            {
-              key: "intake",
-              title: "Lead time do início de trabalho no GDP",
-              subtitle: "Média de dias da criação ao primeiro movimento",
-              dataKey: "intake" as const,
-              color: isDark ? "#818cf8" : "#6366f1",
-              gradId: "gradIntake",
-            },
-          ].map((cfg) => (
-            <div key={cfg.key} className={`${t.panelClass} flex flex-col`}>
-              <div
-                style={{
-                  height: "3px",
-                  background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}60)`,
-                  flexShrink: 0,
-                }}
-              />
-
-              {/* Header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "14px 18px 12px",
-                  borderBottom: t.phBorder,
-                  background: t.phBg,
-                  flexShrink: 0,
-                }}
-              >
+          {(
+            [
+              {
+                key: "provimento",
+                title: "Lead time do provimento de uma vaga",
+                subtitle: "Média de dias por unidade (vagas concluídas)",
+                dataKey: "provimento" as const,
+                countKey: "countProvimento" as const,
+                color: "#f59e0b",
+                colorLight: isDark ? "#fcd34d" : "#fbbf24",
+                gradId: "gradBarProv",
+              },
+              {
+                key: "intake",
+                title: "Lead time do início de trabalho no GDP",
+                subtitle: "Média de dias da criação ao primeiro movimento",
+                dataKey: "intake" as const,
+                countKey: "countIntake" as const,
+                color: isDark ? "#818cf8" : "#6366f1",
+                colorLight: isDark ? "#a5b4fc" : "#818cf8",
+                gradId: "gradBarIntake",
+              },
+            ] as const
+          ).map((cfg) => {
+            const chartData = leadTimeByUnit
+              .filter((d) => d[cfg.dataKey] !== null)
+              .sort((a, b) => (b[cfg.dataKey] ?? 0) - (a[cfg.dataKey] ?? 0));
+            const minW = Math.max(400, chartData.length * 64);
+            return (
+              <div key={cfg.key} className={`${t.panelClass} flex flex-col`}>
+                {/* colour stripe */}
                 <div
                   style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "8px",
-                    background: isDark ? `${cfg.color}22` : `${cfg.color}22`,
-                    boxShadow: isDark ? `0 0 12px ${cfg.color}33` : "none",
+                    height: "3px",
+                    background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}50)`,
+                    flexShrink: 0,
+                  }}
+                />
+
+                {/* Header */}
+                <div
+                  style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: "10px",
+                    padding: "14px 18px 12px",
+                    borderBottom: t.phBorder,
+                    background: t.phBg,
                     flexShrink: 0,
                   }}
                 >
-                  <Zap
-                    style={{ width: "14px", height: "14px", color: cfg.color }}
-                  />
-                </div>
-                <div>
-                  <p
-                    style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}
-                  >
-                    {cfg.title}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 500,
-                      color: t.tx3,
-                      marginTop: "1px",
-                    }}
-                  >
-                    {cfg.subtitle}
-                  </p>
-                </div>
-              </div>
-
-              {/* Chart */}
-              <div style={{ padding: "16px", flex: 1 }}>
-                {leadTimeData.monthlyChart.every(
-                  (m) => m[cfg.dataKey] === null,
-                ) ? (
                   <div
                     style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "8px",
+                      background: `${cfg.color}22`,
+                      boxShadow: isDark ? `0 0 12px ${cfg.color}33` : "none",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      height: "200px",
-                      flexDirection: "column",
-                      gap: "8px",
+                      flexShrink: 0,
                     }}
                   >
-                    <Clock
-                      style={{ width: "32px", height: "32px", color: t.tx4 }}
+                    <Zap
+                      style={{ width: "14px", height: "14px", color: cfg.color }}
                     />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}>
+                      {cfg.title}
+                    </p>
                     <p
                       style={{
-                        fontSize: "12px",
+                        fontSize: "10px",
+                        fontWeight: 500,
                         color: t.tx3,
-                        fontWeight: 600,
+                        marginTop: "1px",
                       }}
                     >
-                      Dados insuficientes
+                      {cfg.subtitle}
                     </p>
                   </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <AreaChart
-                      data={leadTimeData.monthlyChart}
-                      margin={{ top: 8, right: 24, left: -20, bottom: 0 }}
+                </div>
+
+                {/* Chart */}
+                <div style={{ padding: "16px 12px 8px", flex: 1 }}>
+                  {chartData.length === 0 ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "240px",
+                        flexDirection: "column",
+                        gap: "8px",
+                      }}
                     >
-                      <defs>
-                        <linearGradient
-                          id={cfg.gradId}
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor={cfg.color}
-                            stopOpacity={isDark ? 0.35 : 0.25}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor={cfg.color}
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        strokeDasharray="4 4"
-                        stroke={t.gridLine}
-                        vertical={false}
+                      <Clock
+                        style={{ width: "32px", height: "32px", color: t.tx4 }}
                       />
-                      <XAxis
-                        dataKey="month"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          fill: t.axisColor,
-                        }}
-                        interval={0}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          fill: t.axisColor,
-                        }}
-                        tickFormatter={(v) => `${Math.floor(v)}d`}
-                      />
-                      <Tooltip
-                        contentStyle={t.tooltip}
-                        itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
-                        formatter={(v: any) => {
-                          if (v === null || v === undefined) return ["—", "Média"];
-                          const d = Math.floor(v);
-                          const h = Math.round((v - d) * 24);
-                          return [`${d} ${d === 1 ? "dia" : "dias"} e ${h} ${h === 1 ? "hora" : "horas"}`, "Média"];
-                        }}
-                        labelStyle={{
-                          fontWeight: 800,
-                          marginBottom: "4px",
-                          color: t.tooltip.color,
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey={cfg.dataKey}
-                        name="Média"
-                        stroke={cfg.color}
-                        strokeWidth={2.5}
-                        fill={`url(#${cfg.gradId})`}
-                        dot={{ r: 3, fill: cfg.color, strokeWidth: 0 }}
-                        activeDot={{
-                          r: 6,
-                          fill: cfg.color,
-                          stroke: `${cfg.color}40`,
-                          strokeWidth: 6,
-                        }}
-                        connectNulls={false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
+                      <p style={{ fontSize: "12px", color: t.tx3, fontWeight: 600 }}>
+                        Dados insuficientes
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: "auto" }}>
+                      <div style={{ minWidth: `${minW}px`, height: "280px" }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={chartData}
+                            margin={{ top: 22, right: 8, left: -18, bottom: 56 }}
+                            barCategoryGap="28%"
+                          >
+                            <defs>
+                              <linearGradient
+                                id={cfg.gradId}
+                                x1="0" y1="0" x2="0" y2="1"
+                              >
+                                <stop
+                                  offset="0%"
+                                  stopColor={cfg.colorLight}
+                                  stopOpacity={1}
+                                />
+                                <stop
+                                  offset="100%"
+                                  stopColor={cfg.color}
+                                  stopOpacity={0.9}
+                                />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                              strokeDasharray="4 4"
+                              stroke={t.gridLine}
+                              vertical={false}
+                            />
+                            <XAxis
+                              dataKey="unit"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{
+                                fontSize: 9,
+                                fontWeight: 700,
+                                fill: t.axisColor,
+                              }}
+                              interval={0}
+                              angle={-38}
+                              textAnchor="end"
+                              height={62}
+                            />
+                            <YAxis
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 9, fontWeight: 700, fill: t.axisColor }}
+                              tickFormatter={(v) => `${v}d`}
+                            />
+                            <Tooltip
+                              cursor={{
+                                fill: isDark
+                                  ? "rgba(255,255,255,0.04)"
+                                  : "rgba(0,0,0,0.03)",
+                                radius: 6,
+                              }}
+                              contentStyle={t.tooltip}
+                              itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
+                              formatter={(v: number, _name, props) => {
+                                const count = props.payload?.[cfg.countKey] ?? 0;
+                                return [
+                                  `${v} ${v === 1 ? "dia" : "dias"} · ${count} ${count === 1 ? "vaga" : "vagas"}`,
+                                  "Média",
+                                ];
+                              }}
+                              labelStyle={{
+                                fontWeight: 800,
+                                marginBottom: "4px",
+                                color: t.tooltip.color,
+                              }}
+                            />
+                            <Bar
+                              dataKey={cfg.dataKey}
+                              name="Média (dias)"
+                              fill={`url(#${cfg.gradId})`}
+                              radius={[5, 5, 0, 0]}
+                              maxBarSize={44}
+                            >
+                              <LabelList
+                                dataKey={cfg.dataKey}
+                                position="top"
+                                style={{
+                                  fill: cfg.color,
+                                  fontSize: "9px",
+                                  fontWeight: 800,
+                                }}
+                                formatter={(v: number) => `${v}d`}
+                              />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* ── Evolução Mensal — full width ─────────────────────────────── */}

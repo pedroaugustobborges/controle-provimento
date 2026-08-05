@@ -37,6 +37,7 @@ import {
   getEtapaColor,
   getStatusColor,
   unitIsAllowed,
+  normalizeUnitName,
 } from "@/lib/vagaUtils";
 import {
   TIPO_VAGA_LABELS,
@@ -755,6 +756,23 @@ export default function VagaDetalhePage() {
     });
     return map;
   }, [users]);
+
+  // Dynamically resolves analyst from unidades_responsavel when analista_responsavel is null
+  const resolvedAnalista = useMemo(() => {
+    if (vaga?.analista_responsavel) return vaga.analista_responsavel;
+    if (!vaga?.unidade) return null;
+    const analysts = (users || []).filter(
+      (u: any) => Array.isArray(u.unidades_responsavel) && u.unidades_responsavel.length > 0,
+    );
+    let match = analysts.find((u: any) => unitIsAllowed(vaga.unidade, u.unidades_responsavel));
+    if (!match) {
+      const normUnidade = normalizeUnitName(vaga.unidade);
+      match = analysts.find((u: any) =>
+        u.unidades_responsavel.some((s: string) => normUnidade.includes(normalizeUnitName(s))),
+      );
+    }
+    return match?.nome_completo ?? null;
+  }, [vaga?.analista_responsavel, vaga?.unidade, users]);
 
   // @mention autocomplete: only users who have access to this vaga
   // (same rule as VagasPage: visualiza_todas_unidades OR unit is in unidades_vinculadas)
@@ -1784,27 +1802,27 @@ export default function VagaDetalhePage() {
                   <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5">
                     <User className="h-3 w-3" /> Analista Resp.
                   </label>
-                  {vaga.analista_responsavel ? (
+                  {resolvedAnalista ? (
                     <div className="flex items-center gap-2">
                       {(() => {
-                        const avatarUrl = userAvatarMap.get(vaga.analista_responsavel);
-                        const initials = vaga.analista_responsavel
+                        const avatarUrl = userAvatarMap.get(resolvedAnalista);
+                        const initials = resolvedAnalista
                           .split(' ').filter(Boolean).slice(0, 2)
                           .map((n: string) => n[0].toUpperCase()).join('');
                         return avatarUrl ? (
                           <img
                             src={avatarUrl}
-                            alt={vaga.analista_responsavel}
+                            alt={resolvedAnalista}
                             className="w-7 h-7 rounded-full object-cover ring-2 ring-indigo-100 shrink-0"
                             onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                           />
                         ) : (
-                          <div className="w-7 h-7 rounded-full bg-indigo-100 ring-2 ring-indigo-100 flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-black text-indigo-600">{initials}</span>
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 ring-2 ring-violet-200 flex items-center justify-center shrink-0">
+                            <span className="text-[10px] font-black text-white">{initials}</span>
                           </div>
                         );
                       })()}
-                      <span className="text-sm font-semibold text-slate-700">{vaga.analista_responsavel}</span>
+                      <span className="text-sm font-semibold text-slate-700">{resolvedAnalista}</span>
                     </div>
                   ) : (
                     <p className="text-sm text-slate-400 italic">Não atribuído</p>

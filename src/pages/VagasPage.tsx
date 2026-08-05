@@ -650,6 +650,34 @@ export default function VagasPage() {
     return map;
   }, [users]);
 
+  /**
+   * Dynamically resolves analyst for every unique unidade in vagas.
+   * Uses profiles.unidades_responsavel as the source of truth, so new
+   * vacancies inserted by the cronjob are automatically covered.
+   */
+  const unitToAnalistaMap = useMemo(() => {
+    const map = new Map<string, string>(); // unidade → nome_completo
+    const analysts = (users || []).filter(
+      (u: any) => Array.isArray(u.unidades_responsavel) && u.unidades_responsavel.length > 0,
+    );
+    if (!analysts.length) return map;
+
+    const unidades = [...new Set(vagas.map((v) => v.unidade).filter(Boolean))] as string[];
+    for (const unidade of unidades) {
+      // 1. Standard prefix + TEIA alias match (handles most units)
+      let match = analysts.find((u: any) => unitIsAllowed(unidade, u.unidades_responsavel));
+      // 2. Fallback: normalised includes check (handles HRD→CHRD, JATAÍ→HEJ, etc.)
+      if (!match) {
+        const normUnidade = normalizeUnitName(unidade);
+        match = analysts.find((u: any) =>
+          u.unidades_responsavel.some((s: string) => normUnidade.includes(normalizeUnitName(s))),
+        );
+      }
+      if (match) map.set(unidade, match.nome_completo);
+    }
+    return map;
+  }, [users, vagas]);
+
   const vagasComBancoMap = useMemo(() => {
     if (!bancos.length || !vagas.length)
       return new Map<string, BancoTalentos>();
@@ -1777,18 +1805,23 @@ export default function VagasPage() {
                               />
                             </TableCell>
                             <TableCell className="py-3 px-3 h-14">
-                              {v.analista_responsavel ? (() => {
-                                const avatarUrl = userAvatarMap.get(v.analista_responsavel);
-                                const firstName = v.analista_responsavel.split(" ")[0];
-                                const initials = v.analista_responsavel
+                              {(() => {
+                                const analista =
+                                  unitToAnalistaMap.get(v.unidade || "") ||
+                                  v.analista_responsavel ||
+                                  null;
+                                if (!analista) return <span className="text-[11px] text-slate-300 italic">—</span>;
+                                const avatarUrl = userAvatarMap.get(analista);
+                                const firstName = analista.split(" ")[0];
+                                const initials = analista
                                   .split(" ").filter(Boolean).slice(0, 2)
                                   .map((n: string) => n[0].toUpperCase()).join("");
                                 return (
-                                  <div className="flex items-center gap-2 group/analyst" title={v.analista_responsavel}>
+                                  <div className="flex items-center gap-2" title={analista}>
                                     {avatarUrl ? (
                                       <img
                                         src={avatarUrl}
-                                        alt={v.analista_responsavel}
+                                        alt={analista}
                                         className="w-7 h-7 rounded-full object-cover ring-2 ring-violet-200 shrink-0 shadow-sm"
                                         onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                                       />
@@ -1802,9 +1835,7 @@ export default function VagasPage() {
                                     </span>
                                   </div>
                                 );
-                              })() : (
-                                <span className="text-[11px] text-slate-300 italic">—</span>
-                              )}
+                              })()}
                             </TableCell>
                             <TableCell
                               className="text-center py-3 px-2 h-14"

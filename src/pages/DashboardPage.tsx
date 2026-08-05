@@ -1055,10 +1055,16 @@ export default function DashboardPage() {
         }
       }
 
-      // Metric 2: created_at → first edit in GDP
-      const createdDate = toDate(
+      // Metric 2: created_at → first edit in GDP.
+      // Two fallback rules to guarantee count parity with provimento:
+      // 1. No creation date at all → use firstEdit (0 days).
+      // 2. Creation date is AFTER firstEdit (imported/synced rows whose created_at
+      //    reflects the DB insert time, not the real work start) → cap at firstEdit (0 days).
+      const rawCreatedDate = toDate(
         v.created_at ?? v.data_recebimento ?? (v as any).data_criacao,
       );
+      const createdDate =
+        !rawCreatedDate || rawCreatedDate > firstEdit ? firstEdit : rawCreatedDate;
       const intake = diffDays(firstEdit, createdDate);
       if (intake !== null) {
         allIntake.push(intake);

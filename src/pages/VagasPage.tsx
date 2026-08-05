@@ -1588,8 +1588,10 @@ export default function VagasPage() {
                         <span className="block leading-tight">Cargo</span>
                         <span className="block leading-tight">Motivo</span>
                       </TableHead>
-                      <TableHead className="min-w-[140px]">Unidade</TableHead>
-                      <TableHead className="min-w-[120px]">Seção</TableHead>
+                      <TableHead className="min-w-[130px]">
+                        <span className="block leading-tight">Unidade</span>
+                        <span className="block leading-tight">Seção</span>
+                      </TableHead>
                       <TableHead className="min-w-[150px]">
                         <span className="block leading-tight">
                           Requisitante
@@ -1698,22 +1700,35 @@ export default function VagasPage() {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[180px] leading-tight">
-                              <div className="flex flex-col">
-                                <span>{v.unidade}</span>
+                            <TableCell className="py-3 px-4 h-14 max-w-[150px]">
+                              <div className="flex flex-col gap-0.5">
+                                <span
+                                  className="font-semibold text-slate-800 text-[11px] whitespace-normal break-words leading-tight"
+                                  title={v.unidade}
+                                >
+                                  {v.unidade
+                                    ? v.unidade.includes(" - ")
+                                      ? v.unidade.substring(0, v.unidade.indexOf(" - "))
+                                      : v.unidade
+                                    : "-"}
+                                </span>
                                 {v.unidade_trabalho &&
                                   v.unidade_trabalho !== v.unidade && (
-                                    <span className="text-[9px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit mt-0.5">
+                                    <span className="text-[9px] text-blue-600 font-bold bg-blue-50 px-1 rounded border border-blue-100 w-fit">
                                       TRABALHANDO: {v.unidade_trabalho}
                                     </span>
                                   )}
+                                {v.secao && (
+                                  <span
+                                    className="text-[10px] text-slate-400 leading-tight whitespace-normal break-words"
+                                    title={v.secao}
+                                  >
+                                    {v.secao.includes(" - ")
+                                      ? v.secao.substring(0, v.secao.lastIndexOf(" - "))
+                                      : v.secao}
+                                  </span>
+                                )}
                               </div>
-                            </TableCell>
-                            <TableCell
-                              className="text-slate-600 text-[11px] font-medium py-3 px-4 h-14 whitespace-normal break-words max-w-[150px] leading-tight"
-                              title={v.secao}
-                            >
-                              {v.secao || "-"}
                             </TableCell>
                             <TableCell
                               className="py-3 px-4 h-14 max-w-[150px]"
@@ -1985,9 +2000,6 @@ export default function VagasPage() {
                                         Vaga {item.slot}
                                       </span>
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="py-2 px-4 text-[11px] text-slate-400">
-                                    —
                                   </TableCell>
                                   <TableCell className="py-2 px-4 text-[11px] text-slate-400">
                                     —

@@ -1352,16 +1352,24 @@ export default function DashboardPage() {
     page: number;
   } | null>(null);
 
-  const motivoVagaData = useMemo(() => {
+  const STATUS_PROCESSO_COLORS: Record<string, string> = {
+    "Solicitada":   isDark ? "#60a5fa" : "#3b82f6",
+    "Em Andamento": isDark ? "#fbbf24" : "#f59e0b",
+    "Concluída":    isDark ? "#34d399" : "#10b981",
+    "Suspensa":     isDark ? "#fb923c" : "#f97316",
+    "Cancelada":    isDark ? "#f87171" : "#ef4444",
+  };
+
+  const statusProcessoData = useMemo(() => {
+    const ORDER = ["Solicitada", "Em Andamento", "Concluída", "Suspensa", "Cancelada"];
     const map = new Map<string, number>();
     filteredVagas.forEach((v) => {
-      const key =
-        ((v as any).motivo as string | undefined)?.trim() || "Não informado";
+      const key = ((v as any).status_processo as string | undefined)?.trim() || "Solicitada";
       map.set(key, (map.get(key) || 0) + 1);
     });
-    return Array.from(map.entries())
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    return ORDER
+      .filter((s) => map.has(s))
+      .map((name) => ({ name, value: map.get(name)! }));
   }, [filteredVagas]);
 
   // ─── Theme-sensitive style values ─────────────────────────────────────────
@@ -2907,208 +2915,101 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Motivo da Vaga — donut */}
+          {/* Status do Processo — donut */}
           <div className={`${t.panelClass} flex flex-col`}>
-            <div
-              style={{
-                height: "3px",
-                background: "linear-gradient(90deg, #a78bfa, #f472b6)",
-                flexShrink: 0,
-              }}
-            />
-            <div
-              style={{
-                padding: "16px 18px 12px",
-                borderBottom: t.phBorder,
-                background: t.phBg,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "2px",
-                }}
-              >
+            <div style={{ height: "3px", background: "linear-gradient(90deg, #34d399, #60a5fa, #f87171)", flexShrink: 0 }} />
+            <div style={{ padding: "16px 18px 12px", borderBottom: t.phBorder, background: t.phBg }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
                 <div
                   style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "8px",
-                    background: "rgba(167,139,250,0.18)",
-                    boxShadow: "0 0 12px rgba(167,139,250,0.25)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    width: "28px", height: "28px", borderRadius: "8px",
+                    background: isDark ? "rgba(52,211,153,0.18)" : "rgba(16,185,129,0.12)",
+                    boxShadow: isDark ? "0 0 12px rgba(52,211,153,0.25)" : "none",
+                    display: "flex", alignItems: "center", justifyContent: "center",
                   }}
                 >
-                  <Briefcase
-                    style={{ width: "15px", height: "15px", color: "#a78bfa" }}
-                  />
+                  <Activity style={{ width: "15px", height: "15px", color: isDark ? "#34d399" : "#10b981" }} />
                 </div>
-                <span
-                  style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}
-                >
-                  Motivo da Vaga
+                <span style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}>
+                  Status do Processo
                 </span>
               </div>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 500,
-                  color: t.tx3,
-                  marginLeft: "36px",
-                }}
-              >
-                Distribuição por motivo no filtro ativo
+              <p style={{ fontSize: "10px", fontWeight: 500, color: t.tx3, marginLeft: "36px" }}>
+                Distribuição por status no filtro ativo
               </p>
             </div>
-            <div
-              style={{
-                padding: "16px",
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {motivoVagaData.length === 0 ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "240px",
-                    gap: "8px",
-                  }}
-                >
-                  <Briefcase
-                    style={{ width: "32px", height: "32px", color: t.tx4 }}
-                  />
-                  <p
-                    style={{ fontSize: "12px", color: t.tx3, fontWeight: 500 }}
-                  >
-                    Nenhum dado disponível
-                  </p>
+            <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              {statusProcessoData.length === 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "240px", gap: "8px" }}>
+                  <Activity style={{ width: "32px", height: "32px", color: t.tx4 }} />
+                  <p style={{ fontSize: "12px", color: t.tx3, fontWeight: 500 }}>Nenhum dado disponível</p>
                 </div>
               ) : (
                 <>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={motivoVagaData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={82}
-                        paddingAngle={3}
-                        dataKey="value"
-                      >
-                        {motivoVagaData.map((_, idx) => (
-                          <Cell
-                            key={`cd-${idx}`}
-                            fill={t.donutColors[idx % t.donutColors.length]}
-                            style={
-                              isDark
-                                ? {
-                                    filter: `drop-shadow(0 0 6px ${t.donutColors[idx % t.donutColors.length]}80)`,
-                                  }
-                                : undefined
-                            }
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={t.tooltip}
-                        itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
-                        formatter={(v, n) => [`${v} vagas`, n]}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "6px",
-                      marginTop: "8px",
-                    }}
-                  >
-                    {motivoVagaData.slice(0, 5).map((item, idx) => {
-                      const pct =
-                        totalVagas > 0
-                          ? Math.round((item.value / totalVagas) * 100)
-                          : 0;
-                      const color = t.donutColors[idx % t.donutColors.length];
-                      return (
-                        <div
-                          key={item.name}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
+                  {/* Donut with centered total label */}
+                  <div style={{ position: "relative", width: "100%", height: "200px" }}>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={statusProcessoData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={58}
+                          outerRadius={84}
+                          paddingAngle={3}
+                          dataKey="value"
+                          strokeWidth={0}
                         >
-                          <span
-                            style={{
-                              width: "10px",
-                              height: "10px",
-                              borderRadius: "50%",
-                              flexShrink: 0,
-                              background: color,
-                              boxShadow: isDark ? `0 0 6px ${color}80` : "none",
-                            }}
-                          />
-                          <span
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 600,
-                              color: t.tx2,
-                              flex: 1,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
+                          {statusProcessoData.map((item) => {
+                            const color = STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
+                            return (
+                              <Cell
+                                key={item.name}
+                                fill={color}
+                                style={isDark ? { filter: `drop-shadow(0 0 6px ${color}80)` } : undefined}
+                              />
+                            );
+                          })}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={t.tooltip}
+                          itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
+                          formatter={(v, n) => [`${v} vagas`, n]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Centered total */}
+                    <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center", pointerEvents: "none" }}>
+                      <p style={{ fontSize: "20px", fontWeight: 900, color: t.tx1, lineHeight: 1 }}>
+                        {statusProcessoData.reduce((s, d) => s + d.value, 0)}
+                      </p>
+                      <p style={{ fontSize: "9px", fontWeight: 700, color: t.tx3, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "2px" }}>
+                        vagas
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Legend rows */}
+                  <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "7px", marginTop: "12px" }}>
+                    {statusProcessoData.map((item) => {
+                      const total = statusProcessoData.reduce((s, d) => s + d.value, 0);
+                      const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
+                      const color = STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
+                      return (
+                        <div key={item.name} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: color, boxShadow: isDark ? `0 0 6px ${color}80` : "none" }} />
+                          <span style={{ fontSize: "11px", fontWeight: 600, color: t.tx2, flex: 1 }}>
                             {item.name}
                           </span>
-                          <span
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 900,
-                              color: t.tx2,
-                            }}
-                          >
-                            {pct}%
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 700,
-                              color: t.tx3,
-                            }}
-                          >
-                            ({item.value})
-                          </span>
+                          {/* mini progress bar */}
+                          <div style={{ width: "60px", height: "4px", borderRadius: "99px", background: isDark ? "rgba(255,255,255,0.08)" : "#e2e8f0", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: "99px" }} />
+                          </div>
+                          <span style={{ fontSize: "10px", fontWeight: 900, color: t.tx2, minWidth: "28px", textAlign: "right" }}>{pct}%</span>
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: t.tx3 }}>({item.value})</span>
                         </div>
                       );
                     })}
-                    {motivoVagaData.length > 5 && (
-                      <p
-                        style={{
-                          fontSize: "9px",
-                          color: t.tx3,
-                          fontWeight: 500,
-                          textAlign: "center",
-                          paddingTop: "4px",
-                        }}
-                      >
-                        +{motivoVagaData.length - 5} outros motivos
-                      </p>
-                    )}
                   </div>
                 </>
               )}

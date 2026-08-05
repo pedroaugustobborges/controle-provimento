@@ -429,21 +429,25 @@ export default function VagasPage() {
     isInitialLoad,
   } = useVagasStore();
 
-  useEffect(() => {
-    fetchVagas();
-    fetchBancos();
-  }, [fetchVagas, fetchBancos]);
-  const [searchParams] = useSearchParams();
-  const currentTab = searchParams.get("tab") || "list";
-  const rawFiltroEspecial = searchParams.get("filtro");
-  const filtroEspecial =
-    rawFiltroEspecial === "teia" ? "teias" : rawFiltroEspecial; // 'teias' | 'pcd' | null
   const {
     currentUser,
     addAuditLog,
     selectedRegion,
     selectedUnit: globalUnit,
+    users,
+    fetchUsers,
   } = useAdminStore();
+
+  useEffect(() => {
+    fetchVagas();
+    fetchBancos();
+    fetchUsers();
+  }, [fetchVagas, fetchBancos, fetchUsers]);
+  const [searchParams] = useSearchParams();
+  const currentTab = searchParams.get("tab") || "list";
+  const rawFiltroEspecial = searchParams.get("filtro");
+  const filtroEspecial =
+    rawFiltroEspecial === "teia" ? "teias" : rawFiltroEspecial; // 'teias' | 'pcd' | null
   const navigate = useNavigate();
   const location = useLocation();
   const permissions = usePermissions();
@@ -637,6 +641,14 @@ export default function VagasPage() {
         .sort(),
     [vagas],
   );
+
+  const userAvatarMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (users || []).forEach((u: any) => {
+      if (u.nome_completo && u.avatar_url) map.set(u.nome_completo, u.avatar_url);
+    });
+    return map;
+  }, [users]);
 
   const vagasComBancoMap = useMemo(() => {
     if (!bancos.length || !vagas.length)
@@ -1600,6 +1612,9 @@ export default function VagasPage() {
                       <TableHead className="min-w-[160px]">
                         Status Processo
                       </TableHead>
+                      <TableHead className="min-w-[110px]">
+                        Analista Resp.
+                      </TableHead>
                       <TableHead className="min-w-[56px] text-center">
                         Vaga(s)
                       </TableHead>
@@ -1760,6 +1775,36 @@ export default function VagasPage() {
                                 tratativa={v.tratativa}
                                 etapa={v.etapa}
                               />
+                            </TableCell>
+                            <TableCell className="py-3 px-3 h-14">
+                              {v.analista_responsavel ? (() => {
+                                const avatarUrl = userAvatarMap.get(v.analista_responsavel);
+                                const firstName = v.analista_responsavel.split(" ")[0];
+                                const initials = v.analista_responsavel
+                                  .split(" ").filter(Boolean).slice(0, 2)
+                                  .map((n: string) => n[0].toUpperCase()).join("");
+                                return (
+                                  <div className="flex items-center gap-2 group/analyst" title={v.analista_responsavel}>
+                                    {avatarUrl ? (
+                                      <img
+                                        src={avatarUrl}
+                                        alt={v.analista_responsavel}
+                                        className="w-7 h-7 rounded-full object-cover ring-2 ring-violet-200 shrink-0 shadow-sm"
+                                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                      />
+                                    ) : (
+                                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 ring-2 ring-violet-200 flex items-center justify-center shrink-0 shadow-sm">
+                                        <span className="text-[10px] font-black text-white">{initials}</span>
+                                      </div>
+                                    )}
+                                    <span className="text-[11px] font-semibold text-slate-700 leading-tight">
+                                      {firstName}
+                                    </span>
+                                  </div>
+                                );
+                              })() : (
+                                <span className="text-[11px] text-slate-300 italic">—</span>
+                              )}
                             </TableCell>
                             <TableCell
                               className="text-center py-3 px-2 h-14"
@@ -2015,6 +2060,7 @@ export default function VagasPage() {
                                       etapa={item.etapa}
                                     />
                                   </TableCell>
+                                  <TableCell className="py-2 px-3" />
                                   <TableCell className="py-2 px-2" />
                                   <TableCell className="py-2 px-2" />
                                   <TableCell className="py-2 px-4 text-right">

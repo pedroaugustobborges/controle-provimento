@@ -496,10 +496,10 @@ export default function LoginPage() {
               </h1>
             </div>
 
-            <p className="text-[hsl(210,30%,72%)] text-base font-medium tracking-wide mb-2">
+            <p className="text-[hsl(210,30%,72%)] text-xl font-medium tracking-wide mb-2">
               Gestão de Provimento
             </p>
-            <p className="text-[hsl(210,20%,55%)] text-xs mb-12">
+            <p className="text-[hsl(210,20%,55%)] text-xm mb-8">
               Plataforma de gestão de vagas e controle de provimento
             </p>
 

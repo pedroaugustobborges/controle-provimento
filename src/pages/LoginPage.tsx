@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogIn, Mail, Lock, Eye, EyeOff, X, Building2 } from "lucide-react";
+import { LogIn, Mail, Lock, Eye, EyeOff, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import logoWhite from "@/assets/logo-agir-white.png";
 
@@ -245,193 +245,11 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-// ─── Unit Login Modal ───
-function UnidadeLoginModal({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
-  const { signIn } = useAuth();
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [phase, setPhase] = useState<"form" | "loading" | "error">("form");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  useEffect(() => {
-    if (open) {
-      setPhase("form");
-      setErrorMsg("");
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast.error("Preencha e-mail e senha.");
-      return;
-    }
-    setPhase("loading");
-    try {
-      await new Promise((r) => setTimeout(r, 1200));
-      await signIn(email, password);
-      navigate("/portal-unidade", { replace: true });
-    } catch (err: any) {
-      const msg = err.message?.includes("Invalid login")
-        ? "E-mail ou senha incorretos."
-        : err.message || "Erro ao fazer login.";
-      setErrorMsg(msg);
-      setPhase("error");
-      setTimeout(() => setPhase("form"), 3000);
-    }
-  };
-
-  if (!open) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={onClose}
-      />
-      <div
-        className="relative w-full max-w-[440px] animate-[modalIn_0.5s_cubic-bezier(0.34,1.56,0.64,1)]"
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-emerald-500/20 via-transparent to-emerald-900/15 blur-sm" />
-        <div className="relative rounded-2xl bg-[#0d1a30]/90 backdrop-blur-2xl border border-white/[0.12] shadow-2xl shadow-black/50 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-700 to-teal-700 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <img src={logoWhite} alt="AGIR" className="h-6 brightness-110" />
-              <div className="h-3.5 w-px bg-white/20" />
-              <span className="text-white/80 text-[11px] font-semibold tracking-wider uppercase">
-                Acesso da Unidade
-              </span>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white/40 hover:text-white/80 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="p-8">
-            {phase === "loading" ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center shadow-lg animate-pulse">
-                  <img
-                    src={logoWhite}
-                    alt=""
-                    className="h-8 w-8 object-contain brightness-110"
-                  />
-                </div>
-                <p className="text-sm text-[hsl(210,20%,50%)] mt-5 font-medium">
-                  Autenticando...
-                </p>
-              </div>
-            ) : phase === "error" ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                  <X className="h-7 w-7 text-red-400" />
-                </div>
-                <p className="text-sm text-red-400 mt-4 font-medium text-center">
-                  {errorMsg}
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="mb-7">
-                  <h2 className="text-lg font-bold text-white">
-                    Acesso da Unidade
-                  </h2>
-                  <p className="text-sm text-[hsl(210,20%,48%)] mt-0.5">
-                    Portal exclusivo para RHs de unidade
-                  </p>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-[hsl(210,20%,48%)] uppercase tracking-[0.15em]">
-                      E-mail
-                    </Label>
-                    <div className="relative group">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,38%)] group-focus-within:text-emerald-400 transition-colors" />
-                      <input
-                        type="email"
-                        placeholder="rh.unidade@agir.org.br"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full h-11 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,32%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all"
-                        autoComplete="email"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-[hsl(210,20%,48%)] uppercase tracking-[0.15em]">
-                      Senha
-                    </Label>
-                    <div className="relative group">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,38%)] group-focus-within:text-emerald-400 transition-colors" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full h-11 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,32%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all"
-                        autoComplete="current-password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,38%)] hover:text-white/60 transition-colors"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full h-11 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] mt-1"
-                  >
-                    <LogIn className="h-4 w-4" /> Entrar como Unidade
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Login Page ───
 export default function LoginPage() {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
-  const [showUnidadeLogin, setShowUnidadeLogin] = useState(false);
 
   useEffect(() => {
     import("@/store/logoutStore").then(({ useLogoutStore }) => {
@@ -508,21 +326,13 @@ export default function LoginPage() {
               Plataforma de gestão de vagas e controle de provimento
             </p>
 
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => setShowLogin(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] hover:from-[hsl(200,70%,44%)] hover:to-[hsl(215,65%,38%)] shadow-lg shadow-[hsl(200,70%,25%)]/30 transition-all active:scale-[0.98]"
-              >
-                <LogIn className="h-4 w-4" /> Entrar no sistema
-              </button>
-              <button
-                onClick={() => setShowUnidadeLogin(true)}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.05] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]"
-              >
-                <Building2 className="h-4 w-4" /> Acesso Unidade
-              </button>
-            </div>
+            {/* Action button */}
+            <button
+              onClick={() => setShowLogin(true)}
+              className="flex items-center justify-center gap-2 px-10 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] hover:from-[hsl(200,70%,44%)] hover:to-[hsl(215,65%,38%)] shadow-lg shadow-[hsl(200,70%,25%)]/30 transition-all active:scale-[0.98] mx-auto"
+            >
+              <LogIn className="h-4 w-4" /> Entrar
+            </button>
           </div>
         </main>
 
@@ -537,10 +347,6 @@ export default function LoginPage() {
 
       {/* Modals */}
       <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
-      <UnidadeLoginModal
-        open={showUnidadeLogin}
-        onClose={() => setShowUnidadeLogin(false)}
-      />
 
       <style>{`
         @keyframes scanline {

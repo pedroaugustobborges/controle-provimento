@@ -313,8 +313,18 @@ export default function LoginPage() {
         <main className="flex-1 flex items-center justify-center px-6 pb-16">
           <div className="w-full max-w-[520px] text-center">
             {/* GDP logotype */}
-            <div className="mb-3">
-              <h1 className="text-[72px] lg:text-[88px] font-black tracking-tighter text-white leading-none select-none">
+            <div className="mb-3 relative flex items-center justify-center overflow-visible">
+              {/* Ambient halo behind letters */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  width: '380px',
+                  height: '140px',
+                  background: 'radial-gradient(ellipse at 50% 60%, rgba(60,140,255,0.22) 0%, rgba(50,110,255,0.10) 45%, transparent 70%)',
+                  filter: 'blur(32px)',
+                }}
+              />
+              <h1 className="gdp-text text-[72px] lg:text-[88px] font-black tracking-tighter leading-none select-none relative px-6 py-2">
                 GDP
               </h1>
             </div>
@@ -364,6 +374,49 @@ export default function LoginPage() {
           60% { opacity: 1; transform: scale(1.02) translateY(-4px); filter: blur(0px); }
           80% { transform: scale(0.99) translateY(1px); }
           100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* ── Premium GDP typography ── */
+        .gdp-text {
+          /* Subtle glass gradient: soft white → cool blue-gray, like brushed metal under diffused light */
+          background: linear-gradient(
+            175deg,
+            #eaf4ff    0%,
+            #daeeff   18%,
+            #c8e2ff   38%,
+            #b0ccf0   58%,
+            #bdd5f5   78%,
+            #d4e8ff  100%
+          );
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+
+          /* Restrained glow: soft edge luminance + gentle halo + depth */
+          filter:
+            drop-shadow(0 0  4px rgba(130,195,255,0.50))
+            drop-shadow(0 0 14px rgba(90,160,255,0.25))
+            drop-shadow(0 0 36px rgba(60,130,255,0.10))
+            drop-shadow(0 2px  5px rgba(0,10,40,0.50));
+
+          animation: gdpBreath 6s ease-in-out infinite;
+        }
+
+        @keyframes gdpBreath {
+          0%, 100% {
+            filter:
+              drop-shadow(0 0  4px rgba(130,195,255,0.50))
+              drop-shadow(0 0 14px rgba(90,160,255,0.25))
+              drop-shadow(0 0 36px rgba(60,130,255,0.10))
+              drop-shadow(0 2px  5px rgba(0,10,40,0.50));
+          }
+          50% {
+            filter:
+              drop-shadow(0 0  6px rgba(150,210,255,0.65))
+              drop-shadow(0 0 20px rgba(110,180,255,0.32))
+              drop-shadow(0 0 52px rgba(80,155,255,0.15))
+              drop-shadow(0 2px  5px rgba(0,10,40,0.50));
+          }
         }
       `}</style>
     </div>

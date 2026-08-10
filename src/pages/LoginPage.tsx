@@ -478,11 +478,16 @@ export default function LoginPage() {
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top nav */}
-        <header className="flex items-center px-8 lg:px-14 py-6">
+        <header className="flex items-center justify-between px-8 lg:px-14 py-6">
           <img
             src={logoWhite}
             alt="AGIR"
             className="h-7 brightness-110 drop-shadow-lg"
+          />
+          <img
+            src="/logo_branca_sem_slogan.png"
+            alt=""
+            className="h-10 opacity-80 drop-shadow-lg"
           />
         </header>
 
@@ -522,11 +527,11 @@ export default function LoginPage() {
         </main>
 
         {/* Footer */}
-        <footer className="px-8 lg:px-14 py-5 flex items-center justify-between text-[11px] text-[hsl(210,20%,52%)]">
+        <footer className="px-8 lg:px-14 py-5 flex flex-col items-center justify-center text-center text-[13px] text-[hsl(210,80%,52%)] gap-1">
+          <span>Powered by Daher.lab</span>
           <span>
-            AGIR © {new Date().getFullYear()} · Todos os direitos reservados
+            ©{new Date().getFullYear()} · Todos os direitos reservados
           </span>
-          <span className="hidden sm:block">GDP · Gestão de Provimento</span>
         </footer>
       </div>
 

@@ -4,7 +4,6 @@ import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { usePermissions } from '@/hooks/usePermissions';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,11 +11,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase';
-import { 
-  Settings, Users, Building2, Clock, ShieldCheck, Bell, Database, Lock, Plus, Trash2, Edit2,
-  Search, MoreVertical, UserPlus, History, Mail, Save, Play, Download, CheckCircle, AlertCircle,
-  HardDrive, Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send, Eye, EyeOff,
-  MessageSquare, Camera, Upload, User as UserIcon, Calendar, AlertTriangle
+import {
+  Settings, Users, ShieldCheck, Plus, Trash2, Edit2,
+  Search, MoreVertical, UserPlus, Mail, Save, CheckCircle, AlertCircle,
+  Info, Shield, Check, X, KeyRound, RefreshCw, Ban, UserCheck, Send, Eye, EyeOff,
+  Camera, Upload, User as UserIcon, AlertTriangle
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { PageSkeleton } from '@/components/PageSkeleton';
@@ -55,7 +54,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PERFIS_ACESSO, CARGOS_HIERARQUICOS } from '@/types/auth';
 import { generateTempPassword, getAdminPasswordErrorMessage, validateAdminPassword } from '@/lib/adminPasswordUtils';
-import { SistemaTab } from '@/components/admin/SistemaTab';
 import { UnidadesPicker, ALL_UNIDADES, UNIDADES_GRUPOS } from '@/components/UnidadesPicker';
 
 // Legacy alias entries not covered by UNIT_ALIAS_MAP (e.g. old profiles that stored "DOURADOS")
@@ -141,16 +139,13 @@ const DEFAULT_PERMISSIONS_BY_PROFILE: Record<string, { modulos: string[], perms:
 
 export default function AdministracaoPage() {
   const [activeTab, setActiveTab] = useState('usuarios');
-  const { 
-    users, auditLogs, supportConfigs, backups, feedbacks, loading,
-    addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword, 
-    sendWelcomeEmail, fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchSupportConfigs,
-    addSupportConfig, updateSupportConfig, deleteSupportConfig, updateFeedbackStatus, generateBackup,
-    feriados, fetchFeriados, addFeriado, updateFeriado, deleteFeriado
+  const {
+    users, loading,
+    addUser, updateUser, deleteUser, updateUserStatus, resetUserPassword,
+    sendWelcomeEmail, fetchUsers,
   } = useAdminStore();
 
   const { vagas } = useVagasStore();
-  const permissions = usePermissions();
 
   // Map of short unit name → registered user currently responsible.
   // Built from profiles.unidades_responsavel (authoritative source) so it works
@@ -187,13 +182,6 @@ export default function AdministracaoPage() {
   const [manualPassword, setManualPassword] = useState('');
   const [generatedPassword, setGeneratedPassword] = useState('');
 
-  // Support config state
-  const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);
-  const [editingSupportConfig, setEditingSupportConfig] = useState<any>(null);
-  const [supportForm, setSupportForm] = useState({
-    regiao: '', responsavel: '', email: '', teams_user: '', mensagem: '', status: 'ativo' as 'ativo' | 'inativo', unidades: [] as string[]
-  });
-  const resetSupportForm = () => setSupportForm({ regiao: '', responsavel: '', email: '', teams_user: '', mensagem: '', status: 'ativo' as 'ativo' | 'inativo', unidades: [] });
 
   const [newUser, setNewUser] = useState({
     nome_completo: '',
@@ -220,66 +208,7 @@ export default function AdministracaoPage() {
 
   useEffect(() => {
     fetchUsers();
-    fetchAuditLogs();
-    fetchFeedbacks();
-    fetchFeriados();
-  }, [fetchUsers, fetchAuditLogs, fetchFeedbacks, fetchFeriados]);
-
-  // Holiday management state
-  const [isHolidayDialogOpen, setIsHolidayDialogOpen] = useState(false);
-  const [editingHoliday, setEditingHoliday] = useState<any>(null);
-  const [holidayForm, setHolidayForm] = useState({
-    nome: '',
-    data: '',
-    tipo: 'municipal' as 'municipal' | 'estadual',
-    cidade: '',
-    estado: 'GO'
-  });
-
-  const resetHolidayForm = () => setHolidayForm({
-    nome: '',
-    data: '',
-    tipo: 'municipal',
-    cidade: '',
-    estado: 'GO'
-  });
-
-  const handleSaveHoliday = async () => {
-    if (!holidayForm.nome || !holidayForm.data || !holidayForm.estado) {
-      toast.error('Preencha nome, data e estado.');
-      return;
-    }
-    setSaving(true);
-    try {
-      if (editingHoliday) {
-        await updateFeriado(editingHoliday.id, holidayForm);
-        toast.success('Feriado atualizado!');
-      } else {
-        await addFeriado(holidayForm);
-        toast.success('Feriado cadastrado!');
-      }
-      setIsHolidayDialogOpen(false);
-      resetHolidayForm();
-      setEditingHoliday(null);
-    } catch (err: any) {
-      toast.error(`Erro: ${err.message}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const openEditHoliday = (feriado: any) => {
-    setEditingHoliday(feriado);
-    setHolidayForm({
-      nome: feriado.nome,
-      data: feriado.data,
-      tipo: feriado.tipo,
-      cidade: feriado.cidade || '',
-      estado: feriado.estado
-    });
-    setIsHolidayDialogOpen(true);
-  };
-
+  }, [fetchUsers]);
   // Auto-generate temp password when mode changes
   useEffect(() => {
     if (newUser.passwordMode === 'temp') {
@@ -675,42 +604,10 @@ export default function AdministracaoPage() {
           <TabsTrigger value="usuarios" className="gap-2 font-bold px-4 py-2">
             <Users className="h-4 w-4" /> Usuários
           </TabsTrigger>
-          <TabsTrigger value="permissoes" className="gap-2 font-bold px-4 py-2">
-            <Shield className="h-4 w-4" /> Unidades e Permissões
-          </TabsTrigger>
-          <TabsTrigger value="suporte" className="gap-2 font-bold px-4 py-2">
-            <Bell className="h-4 w-4" /> Suporte
-          </TabsTrigger>
-          {permissions.canViewAudit() && (
-            <TabsTrigger value="auditoria" className="gap-2 font-bold px-4 py-2">
-              <History className="h-4 w-4" /> Auditoria
-            </TabsTrigger>
-          )}
-          <TabsTrigger value="feriados" className="gap-2 font-bold px-4 py-2">
-            <Calendar className="h-4 w-4" /> Feriados Locais
-          </TabsTrigger>
-          <TabsTrigger value="backup" className="gap-2 font-bold px-4 py-2">
-            <HardDrive className="h-4 w-4" /> Backup
-          </TabsTrigger>
-          {permissions.canViewDiagnostics() && (
-            <TabsTrigger value="conferencia" className="gap-2 font-bold px-4 py-2">
-              <Database className="h-4 w-4" /> Conferência de Status
-            </TabsTrigger>
-          )}
           <TabsTrigger value="parametros" className="gap-2 font-bold px-4 py-2">
             <Settings className="h-4 w-4" /> Configurações Gerais
           </TabsTrigger>
-          <TabsTrigger value="feedbacks" className="gap-2 font-bold px-4 py-2">
-            <MessageSquare className="h-4 w-4" /> Feedbacks
-          </TabsTrigger>
-          <TabsTrigger value="sistema" className="gap-2 font-bold px-4 py-2">
-            <Settings className="h-4 w-4" /> Sistema
-          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="sistema">
-          <SistemaTab />
-        </TabsContent>
 
         {/* USUÁRIOS */}
         <TabsContent value="usuarios">
@@ -838,367 +735,6 @@ export default function AdministracaoPage() {
           </Card>
         </TabsContent>
 
-        {/* UNIDADES E PERMISSÕES */}
-        <TabsContent value="permissoes">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-lg font-bold">Gerenciar Unidades e Permissões</CardTitle>
-              <CardDescription>Defina a quais unidades cada usuário tem acesso e o que ele pode fazer em cada uma.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                   <TableRow>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Unidades com Acesso</TableHead>
-                    <TableHead>Ações Permitidas</TableHead>
-                    <TableHead className="text-right">Ajuste</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-700">{user.nome_completo}</span>
-                          <Badge variant="outline" className="w-fit text-[9px] h-4 mt-1">{user.perfil}</Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {user.visualiza_todas_unidades ? (
-                          <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Todas as Unidades</Badge>
-                        ) : (
-                          <div className="flex flex-wrap gap-1 max-w-[400px]">
-                            {user.unidades_vinculadas.length > 0 ?
-                              user.unidades_vinculadas.map(u => (
-                                <Badge key={u} variant="secondary" className="text-[11px] bg-slate-100">{getUnitDisplayName(u)}</Badge>
-                              )) :
-                              <span className="text-[11px] text-slate-400 italic">Nenhuma unidade vinculada</span>
-                            }
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-center gap-2">
-                          {user.pode_incluir_registros && <Badge className="bg-green-50 text-green-700 border-green-100 text-[9px]">Incluir</Badge>}
-                          {user.pode_excluir_requisicoes && <Badge className="bg-red-50 text-red-700 border-red-100 text-[9px]">Excluir</Badge>}
-                          {user.pode_editar_configuracoes && <Badge className="bg-amber-50 text-amber-700 border-amber-100 text-[9px]">Config</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="gap-2 text-primary font-bold"><Settings className="h-3.5 w-3.5" /> Ajustar</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* SUPORTE */}
-        <TabsContent value="suporte">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="border-b">
-              <CardTitle className="text-lg font-bold">Suporte Técnico</CardTitle>
-              <CardDescription>Analistas administrativos responsáveis por cada região. Para alterar, edite o cadastro do usuário na aba "Usuários" e defina o cargo como "Analista Administrativo" com a região de suporte.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              {(() => {
-                const analistas = users.filter(u => u.cargo === 'Analista Administrativo' && u.regiao_suporte && u.status === 'ativo');
-                const regiaoLabels: Record<string, string> = {
-                  go_es: 'Goiás e Espírito Santo',
-                  demais: 'Demais Unidades',
-                };
-                const regiaoUnidades: Record<string, string[]> = {
-                  go_es: UNIDADES_GRUPOS[0]?.units || [],
-                  demais: UNIDADES_GRUPOS[1]?.units || [],
-                };
-
-                if (analistas.length === 0) {
-                  return (
-                    <div className="p-8 text-center text-slate-400">
-                      <Bell className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                      <p className="font-medium">Nenhum analista administrativo com região de suporte definida.</p>
-                      <p className="text-sm mt-1">Vá à aba "Usuários", edite um usuário com cargo "Analista Administrativo" e defina a região de suporte.</p>
-                    </div>
-                  );
-                }
-
-                const regioes = ['go_es', 'demais'];
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {regioes.map(regiao => {
-                      const responsaveis = analistas.filter(a => a.regiao_suporte === regiao);
-                      return (
-                        <div key={regiao} className="border rounded-xl p-5 bg-slate-50/50">
-                          <h3 className="font-bold text-sm text-primary mb-1">{regiaoLabels[regiao]}</h3>
-                          <p className="text-[10px] text-slate-400 mb-4">{(regiaoUnidades[regiao] || []).join(', ')}</p>
-                          {responsaveis.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic">Nenhum responsável definido</p>
-                          ) : (
-                            <div className="space-y-3">
-                              {responsaveis.map(resp => (
-                                <div key={resp.id} className="bg-white rounded-lg p-3 border shadow-sm">
-                                  <p className="font-bold text-sm text-slate-700">{resp.nome_completo}</p>
-                                  <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
-                                    <Mail className="h-3 w-3" /> {resp.email}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* AUDITORIA */}
-        <TabsContent value="auditoria">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="border-b">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="text-lg font-bold">Histórico / Auditoria</CardTitle>
-                  <CardDescription>Rastreabilidade completa de todas as ações executadas no sistema.</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Filtrar por usuário ou e-mail..." className="pl-9 h-9 w-[250px]" />
-                  </div>
-                  <Button variant="outline" size="sm" className="h-9 gap-2"><Download className="h-4 w-4" /> Exportar</Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[500px]">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10">
-                    <TableRow>
-                      <TableHead>Data / Hora</TableHead>
-                      <TableHead >Usuário</TableHead>
-                      <TableHead >Ação / Módulo</TableHead>
-                      <TableHead >Registro</TableHead>
-                      <TableHead >Alteração (De → Para)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {auditLogs.map((log) => (
-                      <TableRow key={log.id} className="text-xs">
-                        <TableCell className="font-mono text-slate-500">
-                          {log.created_at ? new Date(log.created_at).toLocaleDateString('pt-BR') : log.data} <br/> 
-                          {log.created_at ? new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : log.hora}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-700">{log.usuario_nome}</span>
-                            <span className="text-[11px] text-slate-400">{log.perfil}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-primary">{log.acao}</span>
-                            <span className="text-[11px] text-slate-400 uppercase font-bold">{log.modulo}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium text-slate-600">{log.registro_afetado}</TableCell>
-                        <TableCell>
-                          {log.valor_anterior || log.valor_novo ? (
-                            <div className="flex items-center gap-2">
-                              <span className="line-through text-slate-400">{log.valor_anterior || '-'}</span>
-                              <MoreVertical className="h-3 w-3 rotate-90 text-slate-300" />
-                              <span className="text-green-600 font-bold">{log.valor_novo || '-'}</span>
-                            </div>
-                          ) : (
-                            <span className="text-slate-300 italic">N/A</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* CONFERÊNCIA DE STATUS */}
-        <TabsContent value="conferencia">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="border-b bg-blue-50/30">
-              <div className="flex items-center gap-2.5">
-                <Database className="h-5 w-5 text-blue-600" />
-                <div>
-                  <CardTitle className="text-lg font-bold text-slate-800">Conferência de Status (Dados Reais)</CardTitle>
-                  <CardDescription className="text-xs font-medium text-slate-400">Validação objetiva de como cada registro original está sendo classificado.</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 overflow-auto max-h-[600px]">
-              <Table>
-                <TableHeader className="sticky top-0 z-10">
-                  <TableRow>
-                    <TableHead>Status Original Importado</TableHead>
-                    <TableHead className="text-center">Quantidade</TableHead>
-                    <TableHead>Grupo/Card de Destino</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="divide-y divide-slate-50 font-medium">
-                  {useMemo(() => {
-                    const distribution = new Map<string, { count: number, group: string }>();
-                    
-                    vagas.forEach(v => {
-                      const groupKey = getCategoriaStatus(v);
-                      
-                      const groupLabelMap: Record<string, string> = {
-                        fila_edital: 'Fila de Editais',
-                        em_andamento: 'Em Andamento',
-                        concluidas: 'Concluídas',
-                        vagas_interrompidas: 'Vagas Interrompidas',
-                        vagas_lideranca: 'Vagas de Liderança',
-                        convocacao: 'Convocações',
-                        aguardando_unidade: 'Aguardando Unidade'
-                      };
-                      const groupLabel = groupLabelMap[groupKey] || groupKey;
-                      
-                      const current = distribution.get(status) || { count: 0, group: groupLabel };
-                      current.count++;
-                      distribution.set(status, current);
-                    });
-                    
-                    return Array.from(distribution.entries())
-                      .sort((a, b) => b[1].count - a[1].count)
-                      .map(([status, data]) => (
-                        <TableRow key={status} className="hover:bg-slate-50/50 transition-colors h-14">
-                          <TableCell className="text-slate-700 font-bold">{status.toUpperCase().replace('_', ' ')}</TableCell>
-                          <TableCell className="text-center">
-                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold text-xs">
-                              {data.count}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className={`h-2 w-2 rounded-full ${
-                                data.group.includes('Fila') ? 'bg-amber-400' : 
-                                data.group.includes('Concluídas') ? 'bg-green-500' : 
-                                data.group.includes('Interrompidas') ? 'bg-red-500' : 
-                                data.group.includes('Liderança') ? 'bg-rose-500' :
-                                data.group.includes('Aguardando') ? 'bg-yellow-500' :
-                                'bg-blue-400'
-                              }`}></div>
-                              <span className="text-slate-500 font-bold uppercase text-[11px] tracking-tight">{data.group}</span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ));
-                  }, [vagas])}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* BACKUP */}
-        <TabsContent value="backup">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 space-y-6">
-              <Card className="border-slate-200 shadow-sm overflow-hidden">
-                <div className="bg-primary/5 p-4 border-b border-primary/10">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-lg"><HardDrive className="h-5 w-5 text-primary" /></div>
-                    <div>
-                      <h3 className="font-bold text-slate-800">Status do Backup</h3>
-                      <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Automático (30 em 30 min)</p>
-                    </div>
-                  </div>
-                </div>
-                <CardContent className="pt-6 space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-xs font-medium text-slate-500">Último Backup</span>
-                    <span className="text-xs font-bold text-slate-800">{backups[0]?.data_hora || '-'}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-xs font-medium text-slate-500">Próximo Backup</span>
-                    <span className="text-xs font-bold text-blue-600">Em 12 minutos</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                    <span className="text-xs font-medium text-slate-500">Registros Copiados</span>
-                    <span className="text-xs font-bold text-slate-800">{backups[0]?.quantidade_registros || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-xs font-medium text-slate-500">Status Sistema</span>
-                    <Badge className="bg-green-100 text-green-700 font-bold text-[9px]">Protegido</Badge>
-                  </div>
-                </CardContent>
-                <CardFooter className="bg-slate-50/50 pt-4">
-                  <Button onClick={() => {
-                    generateBackup();
-                    toast.success('Backup manual iniciado!');
-                  }} className="w-full gap-2 bg-primary">
-                    <Play className="h-4 w-4" /> Gerar backup agora
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              <Card className="border-slate-200 shadow-sm bg-amber-50/30 border-amber-100">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold flex items-center gap-2 text-amber-700">
-                    <Info className="h-4 w-4" /> Política de Retenção
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-amber-800/70 leading-relaxed">
-                    Os backups são realizados a cada 30 minutos e armazenados em servidor redundante. Mantemos os últimos 30 dias de histórico para restauração imediata.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="md:col-span-2">
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="border-b">
-                  <CardTitle className="text-lg font-bold">Histórico de Backups</CardTitle>
-                  <CardDescription>Lista dos últimos snapshots realizados pelo sistema.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                       <TableRow>
-                        <TableHead>Data / Hora</TableHead>
-                        <TableHead>Registros</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {backups.map((b) => (
-                        <TableRow key={b.id}>
-                          <TableCell className="font-mono text-xs">{b.data_hora}</TableCell>
-                          <TableCell className="font-bold text-slate-600 text-xs">{b.quantidade_registros}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center justify-center gap-1.5 text-green-600 font-bold text-[11px]">
-                              <CheckCircle className="h-3 w-3" /> Sucesso
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" className="h-8 gap-2 text-blue-600 font-bold"><Download className="h-3.5 w-3.5" /> Baixar</Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-
         {/* PARÂMETROS GERAIS */}
         <TabsContent value="parametros">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1262,176 +798,6 @@ export default function AdministracaoPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* FEEDBACKS */}
-        <TabsContent value="feedbacks">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0">
-              <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Feedback dos Usuários</CardTitle>
-                <CardDescription>Sugestões, problemas e oportunidades reportadas via Assistente Agie.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
-                    <TableRow>
-                      <TableHead className="w-[150px]">Data</TableHead>
-                      <TableHead className="w-[200px]">Usuário</TableHead>
-                      <TableHead className="w-[120px] text-center">Tipo</TableHead>
-                      <TableHead>Mensagem</TableHead>
-                      <TableHead className="w-[120px] text-center">Status</TableHead>
-                      <TableHead className="w-[100px] text-right">Ação</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {feedbacks && feedbacks.length > 0 ? (
-                      feedbacks.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                          <TableCell className="text-xs font-medium text-slate-500">
-                            {new Date(item.created_at).toLocaleString('pt-BR')}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-700 text-sm">{item.user_name}</span>
-                              <span className="text-[10px] text-slate-400 font-medium">{item.user_email}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className={cn(
-                              "text-[10px] font-bold uppercase",
-                              item.tipo === 'sugestao' ? "bg-blue-100 text-blue-700" :
-                              item.tipo === 'problema' ? "bg-red-100 text-red-700" :
-                              "bg-amber-100 text-amber-700"
-                            )}>
-                              {item.tipo === 'sugestao' ? 'Sugestão' :
-                               item.tipo === 'problema' ? 'Problema' : 'Melhoria'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-md">
-                            <p className="text-xs text-slate-600 leading-relaxed truncate hover:whitespace-normal transition-all cursor-help" title={item.mensagem}>
-                              {item.mensagem}
-                            </p>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className={cn(
-                              "text-[10px] font-bold uppercase",
-                              item.status === 'pendente' ? "bg-slate-100 text-slate-500" :
-                              item.status === 'lido' ? "bg-green-100 text-green-700" :
-                              "bg-primary/10 text-primary"
-                            )}>
-                              {item.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreVertical className="h-4 w-4 text-slate-400" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Alterar Status</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'lido')}>
-                                  <Check className="mr-2 h-4 w-4 text-green-600" /> Marcar como lido
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'respondido')}>
-                                  <Send className="mr-2 h-4 w-4 text-primary" /> Marcar como respondido
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateFeedbackStatus(item.id, 'pendente')}>
-                                  <Clock className="mr-2 h-4 w-4 text-slate-500" /> Marcar como pendente
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-32 text-center text-slate-400 italic">
-                          Nenhum feedback recebido até o momento.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* FERIADOS LOCAIS */}
-        <TabsContent value="feriados">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b space-y-0 bg-slate-50/50">
-              <div>
-                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Gerenciamento de Feriados Locais
-                </CardTitle>
-                <CardDescription>Cadastre feriados municipais e estaduais para validação do cronograma de editais.</CardDescription>
-              </div>
-              <Button onClick={() => { resetHolidayForm(); setEditingHoliday(null); setIsHolidayDialogOpen(true); }} className="bg-primary gap-2">
-                <Plus className="h-4 w-4" /> Novo Feriado
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[600px]">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Feriado</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Localização</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {feriados && feriados.length > 0 ? (
-                      feriados.map((f) => (
-                        <TableRow key={f.id} className="hover:bg-slate-50/50 transition-colors">
-                          <TableCell className="font-mono text-sm font-bold text-primary">
-                            {new Date(f.data + 'T00:00:00').toLocaleDateString('pt-BR')}
-                          </TableCell>
-                          <TableCell className="font-bold text-slate-700">{f.nome}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={cn(
-                              "text-[10px] uppercase font-bold",
-                              f.tipo === 'municipal' ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"
-                            )}>
-                              {f.tipo}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-slate-500">
-                            {f.tipo === 'municipal' ? `${f.cidade} / ${f.estado}` : f.estado}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => openEditHoliday(f)} className="h-8 w-8">
-                                <Edit2 className="h-4 w-4 text-slate-400" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => deleteFeriado(f.id)} className="h-8 w-8 hover:text-red-600">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-32 text-center text-slate-400 italic">
-                          Nenhum feriado local cadastrado.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 
@@ -2224,80 +1590,6 @@ export default function AdministracaoPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {/* DIALOG: GERENCIAR FERIADO */}
-      <Dialog open={isHolidayDialogOpen} onOpenChange={setIsHolidayDialogOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              {editingHoliday ? 'Editar Feriado' : 'Novo Feriado Local'}
-            </DialogTitle>
-            <DialogDescription>
-              Cadastre a data e localização para bloqueio no cronograma.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase text-muted-foreground">Nome do Feriado</Label>
-              <Input 
-                placeholder="Ex: Aniversário de Goiânia" 
-                value={holidayForm.nome} 
-                onChange={(e) => setHolidayForm({...holidayForm, nome: e.target.value})} 
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground">Data</Label>
-                <Input 
-                  type="date" 
-                  value={holidayForm.data} 
-                  onChange={(e) => setHolidayForm({...holidayForm, data: e.target.value})} 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground">Tipo</Label>
-                <Select value={holidayForm.tipo} onValueChange={(v: any) => setHolidayForm({...holidayForm, tipo: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="municipal">Municipal</SelectItem>
-                    <SelectItem value="estadual">Estadual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground">Estado</Label>
-                <Select value={holidayForm.estado} onValueChange={(v) => setHolidayForm({...holidayForm, estado: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GO">Goiás (GO)</SelectItem>
-                    <SelectItem value="ES">Espírito Santo (ES)</SelectItem>
-                    <SelectItem value="AM">Amazonas (AM)</SelectItem>
-                    <SelectItem value="MS">Mato Grosso do Sul (MS)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {holidayForm.tipo === 'municipal' && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Cidade</Label>
-                  <Input 
-                    placeholder="Ex: Goiânia" 
-                    value={holidayForm.cidade} 
-                    onChange={(e) => setHolidayForm({...holidayForm, cidade: e.target.value})} 
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsHolidayDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveHoliday} disabled={saving} className="bg-primary">
-              {saving ? 'Salvando...' : 'Salvar Feriado'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

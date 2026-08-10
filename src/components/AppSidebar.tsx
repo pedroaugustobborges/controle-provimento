@@ -3,12 +3,9 @@ import {
   ClipboardList,
   BookUser,
   CheckCircle,
-  CalendarClock,
   Settings,
   HelpCircle,
   Calendar,
-  FileSpreadsheet,
-  Upload,
   Bell,
   ChevronDown,
   FileText,
@@ -226,24 +223,6 @@ export function AppSidebar() {
   const secondaryItems = useMemo(
     () =>
       [
-        {
-          title: "Monitoramento de Prazos",
-          url: "/monitoramento",
-          icon: CalendarClock,
-          visible: getPermissions("monitoramento").canRead,
-        },
-        {
-          title: "Relatórios",
-          url: "/relatorios",
-          icon: FileSpreadsheet,
-          visible: isManagement || hasFullAccess,
-        },
-        {
-          title: "Importações",
-          url: "/importacoes",
-          icon: Upload,
-          visible: getPermissions("importacoes").canRead,
-        },
         {
           title: "Administração",
           url: "/gestor",

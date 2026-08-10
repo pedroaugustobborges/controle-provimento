@@ -22,14 +22,11 @@ const ConvocacoesPage = lazy(() => import("@/pages/ConvocacoesPage"));
 const ConvocacoesDashboardPage = lazy(() => import("@/pages/ConvocacoesDashboardPage"));
 const FilaEditaisPage = lazy(() => import("@/pages/FilaEditaisPage"));
 const BancoTalentosPage = lazy(() => import("@/pages/BancoTalentosPage"));
-const ImportacoesPage = lazy(() => import("@/pages/ImportacoesPage"));
 const ValidacaoEditaisPage = lazy(() => import("@/pages/ValidacaoEditaisPage"));
 const AdministracaoPage = lazy(() => import("@/pages/AdministracaoPage"));
 const AlertasTarefasPage = lazy(() => import("@/pages/AlertasTarefasPage"));
-const MonitoramentoAdminPage = lazy(() => import("@/pages/MonitoramentoAdminPage"));
 const FilaAnalistaEditalPage = lazy(() => import("@/pages/FilaAnalistaEditalPage"));
 const MensagensPage = lazy(() => import("@/pages/MensagensPage"));
-const RelatoriosPage = lazy(() => import("@/pages/RelatoriosPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
@@ -170,13 +167,10 @@ const App = () => (
               <Route path="/convocacoes" element={<ConvocacoesPage />} />
               <Route path="/convocacoes/dashboard" element={<ConvocacoesDashboardPage />} />
               
-              <Route path="/importacoes" element={<ImportacoesPage />} />
               <Route path="/validacao-editais" element={<ValidacaoEditaisPage />} />
               <Route path="/gestor" element={<AdministracaoPage />} />
               <Route path="/alertas-tarefas" element={<AlertasTarefasPage />} />
-              <Route path="/monitoramento" element={<MonitoramentoAdminPage />} />
               <Route path="/mensagens" element={<MensagensPage />} />
-              <Route path="/relatorios" element={<RelatoriosPage />} />
               <Route path="/editais" element={<EditaisPage />} />
             </Route>
 

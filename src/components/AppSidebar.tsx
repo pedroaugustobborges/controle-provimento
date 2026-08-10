@@ -558,7 +558,7 @@ export function AppSidebar() {
                 <span className="text-sm font-bold text-white truncate leading-tight">
                   {currentUser?.nome_completo || "Usuário"}
                 </span>
-                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight">
+                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight text-center">
                   {currentUser?.perfil || "Acesso Restrito"}
                 </span>
               </div>

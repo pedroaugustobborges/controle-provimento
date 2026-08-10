@@ -4,7 +4,6 @@ import {
   BookUser,
   CheckCircle,
   Settings,
-  HelpCircle,
   Calendar,
   Bell,
   ChevronDown,
@@ -18,7 +17,6 @@ import {
   Building2,
   ExternalLink,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 import logoAgir from "@/assets/logo-agir.png";
 
@@ -59,7 +57,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { UNIDADES_POR_REGIAO } from "@/lib/vagaUtils";
 import { cn } from "@/lib/utils";
 import { useMemo, useState, useCallback, useEffect } from "react";
-import type { Tables } from "@/integrations/supabase/types";
 import { LogoutConfirmDialog } from "@/components/LogoutConfirmDialog";
 
 export function AppSidebar() {
@@ -87,24 +84,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const [showSupport, setShowSupport] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [supportAnalysts, setSupportAnalysts] = useState<Tables<"profiles">[]>(
-    [],
-  );
-
-  useEffect(() => {
-    if (showSupport) {
-      supabase
-        .from("profiles")
-        .select("*")
-        .eq("status", "ativo")
-        .not("regiao_suporte", "is", null)
-        .then(({ data }) => {
-          setSupportAnalysts(data || []);
-        });
-    }
-  }, [showSupport]);
 
   const handleLogout = useCallback(() => {
     setShowLogoutConfirm(true);
@@ -573,15 +553,6 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-white/10 py-6 px-4">
         {!collapsed && (
           <div className="flex flex-col gap-4">
-            <button
-              onClick={() => setShowSupport(true)}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition-all group border border-white/10"
-            >
-              <HelpCircle className="h-5 w-5 group-hover:scale-110 transition-transform text-slate-400 group-hover:text-white" />
-              <span className="text-sm font-bold tracking-tight">
-                Suporte Técnico
-              </span>
-            </button>
             <div className="p-4 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
               <div className="flex flex-col overflow-hidden mb-3">
                 <span className="text-sm font-bold text-white truncate leading-tight">
@@ -592,12 +563,9 @@ export function AppSidebar() {
                 </span>
               </div>
               <div className="flex gap-2">
-                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-lg bg-white/5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all border border-white/5">
-                  Acessar Perfil
-                </button>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-red-500/10 text-xs font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
+                  className="flex items-center justify-center gap-1.5 flex-1 py-2.5 rounded-lg bg-red-500/10 text-xs font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all border border-red-500/10"
                   title="Sair do sistema"
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -608,92 +576,6 @@ export function AppSidebar() {
           </div>
         )}
       </SidebarFooter>
-
-      {/* Modal de Suporte */}
-      <Dialog open={showSupport} onOpenChange={setShowSupport}>
-        <DialogContent className="max-w-md bg-[#0A192F] border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <HelpCircle className="w-6 h-6 text-white" />
-              Suporte Técnico
-            </DialogTitle>
-            <DialogDescription className="text-white/60">
-              Entre em contato com o responsável pela sua região.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {[
-              { key: "go_es", label: "Goiás e Espírito Santo" },
-              { key: "demais", label: "Demais Unidades" },
-            ].map((regiao) => {
-              const analysts = supportAnalysts.filter(
-                (a) => a.regiao_suporte === regiao.key,
-              );
-              return (
-                <div key={regiao.key} className="space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-                    {regiao.label}
-                  </span>
-                  {analysts.length === 0 ? (
-                    <p className="text-xs text-white/40 italic">
-                      Nenhum responsável cadastrado
-                    </p>
-                  ) : (
-                    analysts.map((analyst) => (
-                      <div
-                        key={analyst.id}
-                        className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold text-white overflow-hidden">
-                            {analyst.avatar_url ? (
-                              <img
-                                src={analyst.avatar_url}
-                                alt={analyst.nome_completo}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              analyst.nome_completo?.charAt(0) || "?"
-                            )}
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-white leading-tight">
-                              {analyst.nome_completo}
-                            </h4>
-                            <p className="text-xs text-white/50">
-                              {analyst.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 pt-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs"
-                          >
-                            Teams
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs"
-                            onClick={() =>
-                              window.open(`mailto:${analyst.email}`, "_blank")
-                            }
-                          >
-                            E-mail
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <LogoutConfirmDialog
         open={showLogoutConfirm}

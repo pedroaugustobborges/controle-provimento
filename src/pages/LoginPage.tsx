@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { LogIn, Mail, Lock, Eye, EyeOff, X, UserPlus, ChevronRight, Building2, Briefcase, User, MessageSquare, Users, MapPin } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, X, Building2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import logoWhite from '@/assets/logo-agir-white.png';
 
@@ -23,13 +23,9 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
   useEffect(() => {
     if (!open) return;
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return () => { document.body.style.overflow = previousOverflow; };
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,10 +33,9 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     if (!email || !password) { toast.error('Preencha e-mail e senha.'); return; }
     setPhase('loading');
     try {
-      await new Promise(r => setTimeout(r, 1500)); // branded delay
+      await new Promise(r => setTimeout(r, 1500));
       const result = await signIn(email, password);
 
-      // Verifica modo de manutenção
       const { data: maint } = await supabase
         .from('system_maintenance')
         .select('is_active,message')
@@ -49,7 +44,6 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
         .maybeSingle();
 
       if (maint?.is_active) {
-        // Checa se é admin
         const userId = result.user?.id;
         let isAdmin = false;
         if (userId) {
@@ -75,7 +69,6 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
         }
       }
 
-      // Record login audit (fire-and-forget — must not block navigation)
       if (result.user?.id) {
         const uid = result.user.id;
         supabase.from('audit_logs').insert({
@@ -105,187 +98,101 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/30 animate-[fadeIn_0.3s_ease-out]"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
         onMouseDown={(e) => e.preventDefault()}
-        onClick={(e) => e.preventDefault()}
+        onClick={onClose}
       />
-
-      {/* Modal */}
       <div
-        className="relative w-full max-w-[572px] animate-[modalIn_0.6s_cubic-bezier(0.34,1.56,0.64,1)]"
+        className="relative w-full max-w-[440px] animate-[modalIn_0.5s_cubic-bezier(0.34,1.56,0.64,1)]"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
-        <div className="relative rounded-2xl bg-white/[0.08] backdrop-blur-sm border border-white/[0.15] shadow-2xl shadow-black/40 overflow-hidden">
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/25 via-transparent to-[hsl(220,60%,30%)]/15 blur-sm" />
+        <div className="relative rounded-2xl bg-[#0d1a30]/90 backdrop-blur-2xl border border-white/[0.12] shadow-2xl shadow-black/50 overflow-hidden">
           {/* Top bar */}
-          <div className="bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] px-6 py-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <img src={logoWhite} alt="AGIR" className="h-7 brightness-110" />
-              <div className="h-4 w-px bg-white/20" />
-              <span className="text-white/90 text-xs font-semibold tracking-wide">Controle de Provimento</span>
+              <img src={logoWhite} alt="AGIR" className="h-6 brightness-110" />
+              <div className="h-3.5 w-px bg-white/20" />
+              <span className="text-white/80 text-[11px] font-semibold tracking-wider uppercase">GDP · Gestão de Provimento</span>
             </div>
-            <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-white/40 hover:text-white/80 transition-colors">
               <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="p-8 py-12">
+          <div className="p-8">
             {phase === 'loading' ? (
-              <div className="flex flex-col items-center justify-center py-20 animate-[fadeIn_0.3s_ease-out]">
+              <div className="flex flex-col items-center justify-center py-16 animate-[fadeIn_0.3s_ease-out]">
                 <div className="relative">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30 animate-pulse">
-                    <img src={logoWhite} alt="" className="h-9 w-9 object-contain brightness-110" />
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,25%)]/40 animate-pulse">
+                    <img src={logoWhite} alt="" className="h-8 w-8 object-contain brightness-110" />
                   </div>
-                  <div className="absolute -inset-2 rounded-3xl border-2 border-[hsl(200,70%,50%)]/20 animate-[ping_1.5s_ease-in-out_infinite]" />
+                  <div className="absolute -inset-2 rounded-3xl border-2 border-[hsl(200,70%,50%)]/15 animate-[ping_1.5s_ease-in-out_infinite]" />
                 </div>
-                <p className="text-sm text-[hsl(210,20%,55%)] mt-6 font-medium">Autenticando...</p>
+                <p className="text-sm text-[hsl(210,20%,50%)] mt-5 font-medium">Autenticando...</p>
               </div>
             ) : phase === 'error' ? (
               <div className="flex flex-col items-center justify-center py-12 animate-[fadeIn_0.3s_ease-out]">
-                <div className="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                  <X className="h-8 w-8 text-red-400" />
+                <div className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <X className="h-7 w-7 text-red-400" />
                 </div>
-                <p className="text-sm text-red-400 mt-4 font-medium">{errorMsg}</p>
-                <p className="text-xs text-[hsl(210,15%,40%)] mt-1">Tente novamente em instantes...</p>
+                <p className="text-sm text-red-400 mt-4 font-medium text-center">{errorMsg}</p>
+                <p className="text-xs text-[hsl(210,15%,38%)] mt-1">Tente novamente em instantes...</p>
               </div>
             ) : (
               <>
-                <div className="space-y-1 mb-6">
+                <div className="mb-7">
                   <h2 className="text-lg font-bold text-white">Acessar o painel</h2>
-                  <p className="text-sm text-[hsl(210,20%,50%)]">Entre com as suas credenciais</p>
+                  <p className="text-sm text-[hsl(210,20%,48%)] mt-0.5">Entre com suas credenciais institucionais</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">E-mail</Label>
+                    <Label className="text-[10px] font-bold text-[hsl(210,20%,48%)] uppercase tracking-[0.15em]">E-mail</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
-                      <input type="email" placeholder="seu.email@agir.org.br" value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="email" />
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,38%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
+                      <input
+                        type="email"
+                        placeholder="seu.email@agir.org.br"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full h-11 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,32%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all"
+                        autoComplete="email"
+                      />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">Senha</Label>
+                    <Label className="text-[10px] font-bold text-[hsl(210,20%,48%)] uppercase tracking-[0.15em]">Senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
-                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                        className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all" autoComplete="current-password" />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,40%)] hover:text-white/70 transition-colors">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,38%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full h-11 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,32%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,38%)] hover:text-white/60 transition-colors"
+                      >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
-                  <button type="submit"
-                    className="w-full h-12 rounded-xl bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,30%)]/30 active:scale-[0.98] mt-2">
+                  <button
+                    type="submit"
+                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] hover:from-[hsl(200,70%,44%)] hover:to-[hsl(215,65%,38%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,25%)]/30 active:scale-[0.98] mt-1"
+                  >
                     <LogIn className="h-4 w-4" /> Entrar
                   </button>
-                  <p className="text-center text-[11px] text-[hsl(210,20%,45%)] mt-3">
-                    Esqueceu sua senha? Entre em contato com a administração do sistema.
+                  <p className="text-center text-[11px] text-[hsl(210,20%,38%)] pt-1">
+                    Esqueceu sua senha? Contate a administração do sistema.
                   </p>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Access Request Modal ───
-function AccessRequestModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({ nome: '', email: '', setor: '', cargo: '', chefia: '', motivo: '' });
-  const [sent, setSent] = useState(false);
-
-  useEffect(() => { if (open) { setSent(false); setForm({ nome: '', email: '', setor: '', cargo: '', chefia: '', motivo: '' }); } }, [open]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.nome || !form.email || !form.setor || !form.cargo) {
-      toast.error('Preencha os campos obrigatórios.');
-      return;
-    }
-    setSent(true);
-    toast.success('Solicitação enviada com sucesso!');
-  };
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-[fadeIn_0.3s_ease-out]" />
-      <div className="relative w-full max-w-[480px] animate-[modalIn_0.4s_cubic-bezier(0.16,1,0.3,1)]" onClick={(e) => e.stopPropagation()}>
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[hsl(200,60%,45%)]/30 via-transparent to-[hsl(220,60%,30%)]/20 blur-sm" />
-        <div className="relative rounded-2xl bg-[#0d1a30]/90 backdrop-blur-2xl border border-white/[0.1] shadow-2xl shadow-black/50 overflow-hidden">
-          <div className="bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <UserPlus className="h-4 w-4 text-white/80" />
-              <span className="text-white/90 text-sm font-semibold">Solicitar Acesso</span>
-            </div>
-            <button onClick={onClose} className="text-white/50 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
-          </div>
-
-          <div className="p-7 max-h-[70vh] overflow-y-auto">
-            {sent ? (
-              <div className="flex flex-col items-center py-10 animate-[fadeIn_0.3s_ease-out]">
-                <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
-                  <Mail className="h-8 w-8 text-emerald-400" />
-                </div>
-                <h3 className="text-lg font-bold text-white">Solicitação enviada!</h3>
-                <p className="text-sm text-[hsl(210,20%,50%)] mt-2 text-center max-w-xs">
-                  Sua solicitação será analisada pela equipe de administração. Você receberá um e-mail quando o acesso for liberado.
-                </p>
-                <button onClick={onClose} className="mt-6 px-6 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-white/70 text-sm hover:bg-white/[0.1] transition-colors">
-                  Fechar
-                </button>
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-[hsl(210,20%,50%)] mb-5">Preencha as informações abaixo para solicitar acesso ao sistema.</p>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {[
-                    { key: 'nome', label: 'Nome completo', icon: User, placeholder: 'Seu nome completo', required: true },
-                    { key: 'email', label: 'E-mail institucional', icon: Mail, placeholder: 'seu.email@agir.org.br', required: true, type: 'email' },
-                    { key: 'setor', label: 'Setor / Unidade', icon: Building2, placeholder: 'Ex: HUGOL, CRER, RH...', required: true },
-                    { key: 'cargo', label: 'Cargo', icon: Briefcase, placeholder: 'Seu cargo atual', required: true },
-                    { key: 'chefia', label: 'Chefia imediata', icon: Users, placeholder: 'Nome da chefia imediata' },
-                  ].map((field) => (
-                    <div key={field.key} className="space-y-1.5">
-                      <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">
-                        {field.label} {field.required && <span className="text-[hsl(200,70%,50%)]">*</span>}
-                      </Label>
-                      <div className="relative group">
-                        <field.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
-                        <input
-                          type={field.type || 'text'}
-                          placeholder={field.placeholder}
-                          value={(form as any)[field.key]}
-                          onChange={(e) => setForm(f => ({ ...f, [field.key]: e.target.value }))}
-                          className="w-full h-11 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">Motivo da solicitação</Label>
-                    <div className="relative group">
-                      <MessageSquare className="absolute left-3.5 top-3 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-[hsl(200,70%,55%)] transition-colors" />
-                      <textarea
-                        placeholder="Descreva brevemente por que precisa de acesso..."
-                        value={form.motivo}
-                        onChange={(e) => setForm(f => ({ ...f, motivo: e.target.value }))}
-                        rows={3}
-                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-[hsl(200,70%,45%)]/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-[hsl(200,70%,45%)]/20 transition-all resize-none"
-                      />
-                    </div>
-                  </div>
-                  <button type="submit"
-                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[hsl(200,70%,30%)]/30 active:scale-[0.98]">
-                    <UserPlus className="h-4 w-4" /> Enviar solicitação
-                  </button>
                 </form>
               </>
             )}
@@ -324,7 +231,6 @@ function UnidadeLoginModal({ open, onClose }: { open: boolean; onClose: () => vo
     try {
       await new Promise(r => setTimeout(r, 1200));
       await signIn(email, password);
-      // Navigate to unit portal instead of main app
       navigate('/portal-unidade', { replace: true });
     } catch (err: any) {
       const msg = err.message?.includes('Invalid login')
@@ -339,61 +245,94 @@ function UnidadeLoginModal({ open, onClose }: { open: boolean; onClose: () => vo
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-      <div className="absolute inset-0 bg-black/30 animate-[fadeIn_0.3s_ease-out]" onMouseDown={(e) => e.preventDefault()} onClick={(e) => e.preventDefault()} />
-      <div className="relative w-full max-w-[480px] animate-[modalIn_0.6s_cubic-bezier(0.34,1.56,0.64,1)]" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-emerald-500/20 via-transparent to-emerald-900/20 blur-sm" />
-        <div className="relative rounded-2xl bg-white/[0.08] backdrop-blur-sm border border-white/[0.15] shadow-2xl shadow-black/40 overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onClose}
+      />
+      <div
+        className="relative w-full max-w-[440px] animate-[modalIn_0.5s_cubic-bezier(0.34,1.56,0.64,1)]"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-emerald-500/20 via-transparent to-emerald-900/15 blur-sm" />
+        <div className="relative rounded-2xl bg-[#0d1a30]/90 backdrop-blur-2xl border border-white/[0.12] shadow-2xl shadow-black/50 overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-700 to-teal-700 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <img src={logoWhite} alt="AGIR" className="h-7 brightness-110" />
-              <div className="h-4 w-px bg-white/20" />
-              <span className="text-white/90 text-xs font-semibold tracking-wide">Acesso da Unidade</span>
+              <img src={logoWhite} alt="AGIR" className="h-6 brightness-110" />
+              <div className="h-3.5 w-px bg-white/20" />
+              <span className="text-white/80 text-[11px] font-semibold tracking-wider uppercase">Acesso da Unidade</span>
             </div>
-            <button onClick={onClose} className="text-white/50 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
+            <button onClick={onClose} className="text-white/40 hover:text-white/80 transition-colors">
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <div className="p-8 py-10">
+          <div className="p-8">
             {phase === 'loading' ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center shadow-lg animate-pulse">
                   <img src={logoWhite} alt="" className="h-8 w-8 object-contain brightness-110" />
                 </div>
-                <p className="text-sm text-[hsl(210,20%,55%)] mt-5 font-medium">Autenticando...</p>
+                <p className="text-sm text-[hsl(210,20%,50%)] mt-5 font-medium">Autenticando...</p>
               </div>
             ) : phase === 'error' ? (
-              <div className="flex flex-col items-center justify-center py-10">
+              <div className="flex flex-col items-center justify-center py-12">
                 <div className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                   <X className="h-7 w-7 text-red-400" />
                 </div>
-                <p className="text-sm text-red-400 mt-4 font-medium">{errorMsg}</p>
+                <p className="text-sm text-red-400 mt-4 font-medium text-center">{errorMsg}</p>
               </div>
             ) : (
               <>
-                <div className="space-y-1 mb-6">
+                <div className="mb-7">
                   <h2 className="text-lg font-bold text-white">Acesso da Unidade</h2>
-                  <p className="text-sm text-[hsl(210,20%,50%)]">Portal exclusivo para RHs de unidade</p>
+                  <p className="text-sm text-[hsl(210,20%,48%)] mt-0.5">Portal exclusivo para RHs de unidade</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">E-mail</Label>
+                    <Label className="text-[10px] font-bold text-[hsl(210,20%,48%)] uppercase tracking-[0.15em]">E-mail</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-emerald-400 transition-colors" />
-                      <input type="email" placeholder="rh.unidade@agir.org.br" value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="w-full h-12 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all" autoComplete="email" />
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,38%)] group-focus-within:text-emerald-400 transition-colors" />
+                      <input
+                        type="email"
+                        placeholder="rh.unidade@agir.org.br"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full h-11 pl-11 pr-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,32%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                        autoComplete="email"
+                      />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.15em]">Senha</Label>
+                    <Label className="text-[10px] font-bold text-[hsl(210,20%,48%)] uppercase tracking-[0.15em]">Senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,40%)] group-focus-within:text-emerald-400 transition-colors" />
-                      <input type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)}
-                        className="w-full h-12 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,35%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all" autoComplete="current-password" />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,40%)] hover:text-white/70 transition-colors">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(210,20%,38%)] group-focus-within:text-emerald-400 transition-colors" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full h-11 pl-11 pr-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-[hsl(210,15%,32%)] focus:outline-none focus:border-emerald-500/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[hsl(210,20%,38%)] hover:text-white/60 transition-colors"
+                      >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
-                  <button type="submit" className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] mt-2">
+                  <button
+                    type="submit"
+                    className="w-full h-11 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] mt-1"
+                  >
                     <LogIn className="h-4 w-4" /> Entrar como Unidade
                   </button>
                 </form>
@@ -406,209 +345,13 @@ function UnidadeLoginModal({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
-// ─── Units Carousel Data ───
-const slidesData = [
-  {
-    state: 'Goiás',
-    subtitle: 'Unidades Hospitalares',
-    color: 'hsl(200,70%,40%)',
-    sections: [
-      {
-        title: 'Unidades Hospitalares',
-        units: [
-          { name: 'CRER', desc: 'Centro Estadual de Reabilitação e Readaptação Dr. Henrique Santillo — Goiânia' },
-          { name: 'HDS', desc: 'Hospital Estadual de Dermatologia Sanitária Colônia Santa Marta — Goiânia' },
-          { name: 'HUGOL', desc: 'Hospital Estadual de Urgências Gov. Otávio Lage de Siqueira — Goiânia' },
-          { name: 'HECAD', desc: 'Hospital Estadual da Criança e do Adolescente — Goiânia' },
-          { name: 'Policlínica', desc: 'Policlínica Estadual Brasil Bruno de Bastos Neto — Cidade de Goiás' },
-          { name: 'HEJ', desc: 'Hospital Estadual de Jataí Dr. Serafim de Carvalho — Jataí' },
-        ],
-      },
-    ],
-  },
-  {
-    state: 'Goiás',
-    subtitle: 'Rede Teia Agir',
-    color: 'hsl(200,70%,40%)',
-    sections: [
-      {
-        title: 'Rede Teia Agir',
-        units: [
-          { name: 'Teia Goiânia', desc: 'Clínica Teia — Unidade Goiânia' },
-          { name: 'Teia Aparecida', desc: 'Clínica Teia — Unidade Aparecida de Goiânia' },
-          { name: 'Teia Canedo', desc: 'Clínica Teia — Unidade Senador Canedo' },
-          { name: 'Teia Anápolis', desc: 'Clínica-Escola do Autista — Anápolis' },
-        ],
-      },
-    ],
-  },
-  {
-    state: 'Amazonas',
-    color: 'hsl(150,60%,35%)',
-    sections: [
-      {
-        title: 'Unidades Hospitalares',
-        units: [
-          { name: 'CHS', desc: 'Complexo Hospitalar Sul — Hospital e Pronto-Socorro 28 de Agosto e Instituto da Mulher Dona Lindu — Manaus' },
-        ],
-      },
-      {
-        title: 'Rede Teia Agir',
-        units: [
-          { name: 'Caic TEA Dr. José Contente', desc: 'Clínica Teia — Manaus' },
-          { name: 'Caic TEA Dr. Gilson Moreira', desc: 'Clínica Teia — Manaus' },
-          { name: 'Caic TEA Dr. Afrânio Soares', desc: 'Clínica Teia — Manaus' },
-        ],
-      },
-    ],
-  },
-  {
-    state: 'São Paulo',
-    color: 'hsl(0,65%,45%)',
-    sections: [
-      {
-        title: 'Unidades Hospitalares',
-        units: [
-          { name: 'HMSA', desc: 'Hospital e Maternidade Municipal Santa Ana — Santana de Parnaíba' },
-        ],
-      },
-      {
-        title: 'Rede Teia Agir',
-        units: [
-          { name: 'Caism Philippe Pinel', desc: 'Clínica Teia — São Paulo' },
-          { name: 'Centro TEA Paulista', desc: 'Clínica Teia — São Paulo' },
-        ],
-      },
-    ],
-  },
-  {
-    state: 'Mato Grosso do Sul',
-    color: 'hsl(45,70%,40%)',
-    sections: [
-      {
-        title: 'Unidades Hospitalares',
-        units: [
-          { name: 'HRD — Unidade I', desc: 'Hospital Regional de Dourados Olga Castoldi Parizotto — Matriz' },
-          { name: 'HRD — Unidade II', desc: 'Hospital Regional de Cirurgias da Grande Dourados' },
-          { name: 'HRD — Unidade III', desc: 'Centro de Especialidades e Diagnóstico' },
-        ],
-      },
-    ],
-  },
-  {
-    state: 'Mato Grosso',
-    color: 'hsl(30,65%,42%)',
-    sections: [
-      {
-        title: 'Unidades Hospitalares',
-        units: [
-          { name: 'HRAF', desc: 'Hospital Regional de Cáceres Dr. Antônio Fontes' },
-        ],
-      },
-    ],
-  },
-  {
-    state: 'Espírito Santo',
-    color: 'hsl(160,50%,40%)',
-    sections: [
-      {
-        title: 'Prontos Atendimentos',
-        units: [
-          { name: 'P.A. Praia do Suá', desc: 'Pronto Atendimento — Vitória' },
-          { name: 'P.A. São Pedro', desc: 'Pronto Atendimento — Vitória' },
-        ],
-      },
-    ],
-  },
-];
-
-// ─── Units Carousel Component (inline, no outer card) ───
-function UnitsCarouselInline() {
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((c) => (c + 1) % slidesData.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const slide = slidesData[current];
-  const totalUnits = slide.sections.reduce((sum, s) => sum + s.units.length, 0);
-
-  return (
-    <div className="flex flex-col h-full">
-      {/* Slide content */}
-      <div className="flex-1 overflow-hidden flex flex-col" key={current}>
-        <div className="flex items-center justify-center gap-2 mb-2 animate-[fadeIn_0.4s_ease-out]">
-          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slide.color }} />
-          <span className="text-sm font-bold text-white">{slide.state}</span>
-          {(slide as any).subtitle && (
-            <span className="text-[10px] text-white/50 font-medium">— {(slide as any).subtitle}</span>
-          )}
-          <div className="flex-1 h-px bg-white/[0.06]" />
-          <span className="text-[10px] text-[hsl(210,20%,40%)] font-medium">{totalUnits} {totalUnits === 1 ? 'unidade' : 'unidades'}</span>
-        </div>
-
-        <div className={`flex-1 flex flex-col items-center ${totalUnits <= 4 ? 'justify-center' : 'justify-start'}`}>
-          <div className={`w-full ${totalUnits > 5 ? 'space-y-1.5' : 'space-y-3'} animate-[fadeIn_0.5s_ease-out]`}>
-            {slide.sections.map((section) => (
-              <div key={section.title} className="text-center">
-                <span className={`${totalUnits > 5 ? 'text-[8px] mb-1' : 'text-[9px] mb-1.5'} font-bold text-[hsl(210,20%,50%)] uppercase tracking-[0.12em] block`}>
-                  {section.title}
-                </span>
-                <div className={totalUnits > 5 ? 'space-y-0.5' : 'space-y-1'}>
-                  {section.units.map((u, i) => (
-                    <div
-                      key={u.name}
-                      className={`group px-2.5 ${totalUnits > 5 ? 'py-1' : 'py-1.5'} rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-200 cursor-default text-center`}
-                      style={{ animationDelay: `${i * 50}ms` }}
-                    >
-                      <div className={`${totalUnits > 5 ? 'text-[10px]' : 'text-[11px]'} font-semibold text-white/80 group-hover:text-white transition-colors`}>{u.name}</div>
-                      <div className={`${totalUnits > 5 ? 'text-[8px]' : 'text-[9px]'} text-[hsl(210,20%,40%)] group-hover:text-[hsl(210,20%,50%)] transition-colors leading-snug`}>{u.desc}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Dots */}
-      <div className="flex items-center justify-between pt-3 mt-auto">
-        <div className="flex items-center gap-1.5">
-          {slidesData.map((s, i) => (
-            <button
-              key={`${s.state}-${i}`}
-              onClick={() => setCurrent(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === current
-                  ? 'w-5 bg-[hsl(200,70%,50%)]'
-                  : 'w-2 bg-white/[0.15] hover:bg-white/[0.3]'
-              }`}
-              title={(s as any).subtitle ? `${s.state} — ${(s as any).subtitle}` : s.state}
-            />
-          ))}
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] text-emerald-400/80 font-medium">Sistema de Controle de Provimento</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Landing Page ───
+// ─── Main Login Page ───
 export default function LoginPage() {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
-  const [showAccess, setShowAccess] = useState(false);
   const [showUnidadeLogin, setShowUnidadeLogin] = useState(false);
 
-  // Clear logout overlay flag when arriving at login
   useEffect(() => {
     import('@/store/logoutStore').then(({ useLogoutStore }) => {
       useLogoutStore.getState().setIsLoggingOut(false);
@@ -621,13 +364,6 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, loading, navigate]);
 
-  const highlights = [
-    { value: '20+', label: 'Unidades geridas' },
-    { value: '6', label: 'Estados' },
-    { value: '20+', label: 'Anos de atuação' },
-    { value: '10k+', label: 'Colaboradores' },
-  ];
-
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0a1628]">
       {/* Background */}
@@ -636,121 +372,94 @@ export default function LoginPage() {
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[hsl(200,80%,30%)] opacity-[0.08] blur-[150px] animate-pulse" />
         <div className="absolute bottom-[-15%] right-[10%] w-[500px] h-[500px] rounded-full bg-[hsl(220,70%,25%)] opacity-[0.1] blur-[130px] animate-pulse" style={{ animationDelay: '2s' }} />
         <div className="absolute top-[40%] right-[-5%] w-[300px] h-[300px] rounded-full bg-[hsl(190,80%,35%)] opacity-[0.06] blur-[100px] animate-pulse" style={{ animationDelay: '4s' }} />
-        <div className="absolute inset-0 opacity-[0.03]" style={{
+        <div className="absolute inset-0 opacity-[0.025]" style={{
           backgroundImage: 'linear-gradient(rgba(100,200,255,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(100,200,255,.12) 1px, transparent 1px)',
           backgroundSize: '60px 60px'
         }} />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-[hsl(200,80%,50%)]/20 to-transparent" style={{ animation: 'scanline 8s linear infinite' }} />
+          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-[hsl(200,80%,50%)]/15 to-transparent" style={{ animation: 'scanline 8s linear infinite' }} />
         </div>
       </div>
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top nav */}
-        <header className="flex items-center justify-between px-6 lg:px-12 py-5">
+        <header className="flex items-center justify-between px-8 lg:px-14 py-6">
           <div className="flex items-center gap-3">
-            <img src={logoWhite} alt="AGIR" className="h-8 brightness-110 drop-shadow-lg" />
+            <img src={logoWhite} alt="AGIR" className="h-7 brightness-110 drop-shadow-lg" />
+            <div className="h-4 w-px bg-white/[0.12]" />
+            <span className="text-white/30 text-[11px] font-medium tracking-wide hidden sm:block">Sistema interno</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setShowAccess(true)}
-              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white/60 hover:text-white/90 border border-white/[0.06] hover:border-white/[0.12] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-              <UserPlus className="h-3.5 w-3.5" /> Solicitar acesso
-            </button>
-            <button onClick={() => setShowUnidadeLogin(true)}
-              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setShowUnidadeLogin(true)}
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-emerald-300/80 border border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/[0.05] hover:bg-emerald-500/[0.10] transition-all"
+            >
               <Building2 className="h-3.5 w-3.5" /> Acesso Unidade
             </button>
-            <button onClick={() => setShowLogin(true)}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/20 transition-all active:scale-[0.97]">
+            <button
+              onClick={() => setShowLogin(true)}
+              className="flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] hover:from-[hsl(200,70%,44%)] hover:to-[hsl(215,65%,38%)] shadow-lg shadow-[hsl(200,70%,25%)]/20 transition-all active:scale-[0.97]"
+            >
               <LogIn className="h-3.5 w-3.5" /> Entrar
             </button>
           </div>
         </header>
 
-        {/* Main area — unified card */}
-        <main className="flex-1 flex items-center px-6 lg:px-12 pb-12">
-          <div className="w-full max-w-[1100px] mx-auto">
-            {/* Unified glassmorphism card */}
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[hsl(200,70%,40%)]/15 to-[hsl(220,60%,30%)]/10 blur-2xl pointer-events-none" />
-              <div className="relative rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/[0.1] shadow-2xl shadow-black/30 overflow-hidden">
-                <div className="flex flex-col lg:flex-row">
-                  {/* Left column — info + CTAs */}
-                  <div className="flex-[45] p-8 lg:p-10 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-white/[0.06]">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[hsl(200,60%,55%)] text-[10px] font-semibold uppercase tracking-[0.2em] w-fit mb-5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Sistema ativo
-                    </div>
-
-                    <h1 className="text-2xl lg:text-3xl font-bold text-white leading-[1.15] mb-3">
-                      Controle de{' '}
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(190,80%,55%)] to-[hsl(210,80%,60%)]">
-                        Provimento
-                      </span>
-                    </h1>
-
-                    <p className="text-[hsl(210,20%,52%)] text-sm leading-relaxed mb-5">
-                      Referência nacional na gestão de unidades de saúde, a AGIR atua com rigor técnico e eficiência em hospitais, clínicas e policlínicas em 6 estados.
-                    </p>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-4 gap-3 mb-6">
-                      {highlights.map((h) => (
-                        <div key={h.label} className="flex flex-col items-center text-center">
-                          <div className="text-lg lg:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">{h.value}</div>
-                          <div className="text-[9px] uppercase tracking-[0.12em] text-[hsl(210,20%,42%)] font-medium mt-0.5 leading-tight">{h.label}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* CTA buttons */}
-                    <div className="flex flex-col gap-2">
-                      <button onClick={() => setShowLogin(true)}
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white whitespace-nowrap bg-gradient-to-r from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] hover:from-[hsl(200,70%,45%)] hover:to-[hsl(215,65%,40%)] shadow-lg shadow-[hsl(200,70%,30%)]/30 transition-all active:scale-[0.98]">
-                        <LogIn className="h-4 w-4" /> Login Provimento
-                        <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                      </button>
-                      <button onClick={() => setShowUnidadeLogin(true)}
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-300 whitespace-nowrap border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.06] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]">
-                        <Building2 className="h-4 w-4" /> Login Unidade
-                      </button>
-                      <button onClick={() => setShowAccess(true)}
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white/70 whitespace-nowrap border border-white/[0.1] hover:border-white/[0.18] bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-                        <UserPlus className="h-4 w-4" /> Solicitar acesso
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Right column — carousel */}
-                  <div className="flex-[55] p-6 lg:p-8 h-[420px]">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[hsl(200,70%,40%)] to-[hsl(215,65%,35%)] flex items-center justify-center shadow-lg shadow-[hsl(200,70%,30%)]/30">
-                        <MapPin className="h-3.5 w-3.5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs font-bold text-white">Presença Nacional</h3>
-                        <p className="text-[9px] text-[hsl(210,20%,45%)] uppercase tracking-[0.15em]">Unidades geridas pela AGIR</p>
-                      </div>
-                    </div>
-                    <UnitsCarouselInline />
-                  </div>
-                </div>
+        {/* Main area */}
+        <main className="flex-1 flex items-center justify-center px-6 pb-16">
+          <div className="w-full max-w-[520px] text-center">
+            {/* Brand mark */}
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <div className="h-px flex-1 max-w-[60px] bg-gradient-to-r from-transparent to-white/[0.08]" />
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.07]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-semibold text-[hsl(210,20%,45%)] uppercase tracking-[0.2em]">Sistema ativo</span>
               </div>
+              <div className="h-px flex-1 max-w-[60px] bg-gradient-to-l from-transparent to-white/[0.08]" />
+            </div>
+
+            {/* GDP logotype */}
+            <div className="mb-3">
+              <h1 className="text-[72px] lg:text-[88px] font-black tracking-tighter text-white leading-none select-none">
+                GDP
+              </h1>
+            </div>
+
+            <p className="text-[hsl(210,20%,48%)] text-base font-medium tracking-wide mb-2">
+              Gestão de Provimento
+            </p>
+            <p className="text-[hsl(210,15%,32%)] text-xs mb-12">
+              Plataforma interna de gestão de vagas e controle de provimento
+            </p>
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={() => setShowLogin(true)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] hover:from-[hsl(200,70%,44%)] hover:to-[hsl(215,65%,38%)] shadow-lg shadow-[hsl(200,70%,25%)]/30 transition-all active:scale-[0.98]"
+              >
+                <LogIn className="h-4 w-4" /> Entrar no sistema
+              </button>
+              <button
+                onClick={() => setShowUnidadeLogin(true)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/50 bg-emerald-500/[0.05] hover:bg-emerald-500/[0.12] transition-all active:scale-[0.98]"
+              >
+                <Building2 className="h-4 w-4" /> Acesso Unidade
+              </button>
             </div>
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="px-6 lg:px-12 py-4 flex items-center justify-between text-[10px] text-[hsl(210,15%,30%)]">
+        <footer className="px-8 lg:px-14 py-5 flex items-center justify-between text-[10px] text-[hsl(210,15%,26%)]">
           <span>AGIR © {new Date().getFullYear()} · Todos os direitos reservados</span>
-          <span className="hidden sm:block">Gestão de saúde com excelência</span>
+          <span className="hidden sm:block">GDP · Gestão de Provimento</span>
         </footer>
       </div>
 
       {/* Modals */}
       <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
-      <AccessRequestModal open={showAccess} onClose={() => setShowAccess(false)} />
       <UnidadeLoginModal open={showUnidadeLogin} onClose={() => setShowUnidadeLogin(false)} />
 
       <style>{`
@@ -765,10 +474,10 @@ export default function LoginPage() {
           to { opacity: 1; }
         }
         @keyframes modalIn {
-          0% { opacity: 0; transform: scale(0.8) translateY(40px) rotateX(8deg); filter: blur(4px); }
-          50% { opacity: 0.8; transform: scale(1.03) translateY(-5px) rotateX(0deg); filter: blur(0px); }
-          75% { transform: scale(0.98) translateY(2px); }
-          100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
+          0% { opacity: 0; transform: scale(0.85) translateY(30px); filter: blur(4px); }
+          60% { opacity: 1; transform: scale(1.02) translateY(-4px); filter: blur(0px); }
+          80% { transform: scale(0.99) translateY(1px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
         }
       `}</style>
     </div>

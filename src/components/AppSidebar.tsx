@@ -256,22 +256,35 @@ export function AppSidebar() {
     >
       <SidebarHeader className="border-b border-white/10 py-6 px-4">
         <div className="flex items-center gap-3 transition-all duration-300">
-          {/* ── Agir logo — brand mark ──────────────────────────────────── */}
-          <div className="relative group shrink-0">
-            <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200" />
-            <img
-              src={logoAgir}
-              alt="AGIR"
-              className="relative h-11 w-11 rounded-lg object-contain bg-white/5 p-1 shadow-inner"
-            />
-          </div>
-
-          {!collapsed && (
+          {collapsed ? (
+            /* ── Collapsed: GDP stacked vertically ─────────────────────── */
+            <div className="flex flex-col items-center w-full animate-in fade-in duration-300">
+              {'GDP'.split('').map((letter, i) => (
+                <span
+                  key={i}
+                  className="text-[15px] font-black text-white leading-tight tracking-tight select-none"
+                >
+                  {letter}
+                </span>
+              ))}
+              <span className="mt-1 rounded-full w-1 h-1 bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
+            </div>
+          ) : (
             <>
-              {/* ── Brand-hierarchy divider ─────────────────────────────── */}
+              {/* ── Agir logo — brand mark ──────────────────────────────── */}
+              <div className="relative group shrink-0">
+                <div className="absolute -inset-1 bg-white/20 rounded-lg blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200" />
+                <img
+                  src={logoAgir}
+                  alt="AGIR"
+                  className="relative h-11 w-11 rounded-lg object-contain bg-white/5 p-1 shadow-inner"
+                />
+              </div>
+
+              {/* ── Brand-hierarchy divider ──────────────────────────────── */}
               <div className="shrink-0 self-stretch w-px bg-gradient-to-b from-transparent via-white/20 to-transparent mx-2 my-1" />
 
-              {/* ── Product lockup ──────────────────────────────────────── */}
+              {/* ── Product lockup ───────────────────────────────────────── */}
               <div className="flex flex-col justify-center overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500">
                 {/* Acronym + accent dot */}
                 <div className="flex items-end gap-1 mb-0.5">
@@ -282,7 +295,7 @@ export function AppSidebar() {
                   <span className="shrink-0 rounded-full w-1.5 h-1.5 mb-[3px] bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8),_0_0_14px_rgba(34,211,238,0.4)]" />
                 </div>
 
-                {/* Subtitle — Modern Title Case, muted sky tone */}
+                {/* Subtitle */}
                 <span className="whitespace-nowrap text-[11px] font-medium text-sky-200/60 tracking-wide mt-0.5">
                   Gestão de Provimento
                 </span>

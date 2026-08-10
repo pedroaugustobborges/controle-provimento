@@ -451,7 +451,14 @@ export function extractUnitPrefix(name: string): string {
  *
  * All keys and values are pre-normalized (uppercase, no accents).
  */
-const TEIA_ALIAS_MAP: Record<string, string[]> = {
+/**
+ * Maps normalized short admin names (as stored in unidades_vinculadas / UnidadesPicker)
+ * to the actual prefixes found in the vagas.unidade column.
+ *
+ * Keys are pre-normalized (uppercase, no accents).
+ * Values are the real prefixes extracted from vagas.unidade (everything before " - ").
+ */
+export const UNIT_ALIAS_MAP: Record<string, string[]> = {
   // TEIA GOIÂNIA → "CLINICA TEIA" (main Goiânia clinic, no location prefix in DB)
   'TEIA GOIANIA': ['CLINICA TEIA'],
   // TEIA APARECIDA → Aparecida de Goiânia
@@ -464,7 +471,29 @@ const TEIA_ALIAS_MAP: Record<string, string[]> = {
   'TEIA MAN 3': ['TEIA MANAUS III'],
   // TEIA ANAPOLIS already works via standard prefix match — listed here for clarity
   'TEIA ANAPOLIS': ['TEIA ANAPOLIS'],
+  // HRD → CHRD (COMPLEXO HOSPITALAR REGIONAL DE DOURADOS)
+  'HRD': ['CHRD'],
+  // JATAÍ → HEJ (HOSPITAL ESTADUAL DE JATAI)
+  'JATAI': ['HEJ'],
 };
+
+/**
+ * Returns the display name for a short admin unit name.
+ * Uses the first alias from UNIT_ALIAS_MAP (which is the real prefix in the vagas table).
+ * Falls back to the original name if no alias exists.
+ *
+ * Examples:
+ *   "HRD"         → "CHRD"
+ *   "JATAÍ"       → "HEJ"
+ *   "TEIA GOIÂNIA"→ "CLINICA TEIA"
+ *   "HUGOL"       → "HUGOL"  (no alias needed — already the DB prefix)
+ */
+export function getUnitDisplayName(shortName: string): string {
+  if (!shortName) return shortName;
+  const norm = removeAccents(shortName.toUpperCase().trim().replace(/\s+/g, ' '));
+  const aliases = UNIT_ALIAS_MAP[norm];
+  return aliases?.[0] ?? shortName;
+}
 
 /**
  * Returns true if `vagaUnit` (which may be a full name like
@@ -473,7 +502,7 @@ const TEIA_ALIAS_MAP: Record<string, string[]> = {
  *
  * Matching strategy (in order):
  * 1. Standard prefix equality / startsWith check.
- * 2. TEIA alias lookup — maps short admin names to their actual DB prefixes.
+ * 2. UNIT_ALIAS_MAP lookup — maps short admin names (HRD, TEIA CANEDO…) to their actual DB prefixes.
  */
 export function unitIsAllowed(vagaUnit: string | undefined | null, allowedUnits: string[]): boolean {
   if (!vagaUnit) return false;
@@ -490,8 +519,8 @@ export function unitIsAllowed(vagaUnit: string | undefined | null, allowedUnits:
       return true;
     }
 
-    // 2. TEIA alias check — resolve the admin short name to its DB prefix(es)
-    const aliases = TEIA_ALIAS_MAP[allowed];
+    // 2. Alias check — resolve the admin short name to its DB prefix(es)
+    const aliases = UNIT_ALIAS_MAP[allowed];
     if (aliases) {
       return aliases.some(alias => vagaPrefix === alias);
     }

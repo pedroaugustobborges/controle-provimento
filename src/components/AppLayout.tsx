@@ -28,6 +28,7 @@ import { AccessHistoryPopoverContent } from './AccessHistoryPopoverContent';
 import { Input } from '@/components/ui/input';
 import { useAdminStore } from '@/store/adminStore';
 import { useVagasStore } from '@/store/vagasStore';
+import { getUnitDisplayName } from '@/lib/vagaUtils';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 // ... keep existing code
@@ -763,7 +764,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     ) : currentUser?.unidades_vinculadas && currentUser.unidades_vinculadas.length > 0 ? (
                       currentUser.unidades_vinculadas.map((unidade, idx) => (
                         <Badge key={idx} variant="outline" className="bg-white text-muted-foreground border-border font-medium">
-                          {unidade}
+                          {getUnitDisplayName(unidade)}
                         </Badge>
                       ))
                     ) : (

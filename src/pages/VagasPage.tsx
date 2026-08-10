@@ -2340,10 +2340,8 @@ function AcompanhamentoEditalList() {
       .sort();
 
     if (!currentUser?.visualiza_todas_unidades) {
-      const userUnidades = (currentUser?.unidades_vinculadas || []).map((u) =>
-        normalizeUnitName(u),
-      );
-      units = units.filter((u) => userUnidades.includes(u));
+      const allowedUnits = currentUser?.unidades_vinculadas || [];
+      units = units.filter((u) => unitIsAllowed(u, allowedUnits));
     }
 
     return units;
@@ -2361,10 +2359,8 @@ function AcompanhamentoEditalList() {
       if (!isAcompanhamento) return false;
 
       if (!currentUser?.visualiza_todas_unidades) {
-        const userUnidades = (currentUser?.unidades_vinculadas || []).map((u) =>
-          normalizeUnitName(u),
-        );
-        if (!userUnidades.includes(normalizeUnitName(v.unidade))) {
+        const allowedUnits = currentUser?.unidades_vinculadas || [];
+        if (!unitIsAllowed(v.unidade, allowedUnits)) {
           return false;
         }
       }

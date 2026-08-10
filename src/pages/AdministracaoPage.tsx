@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EQUIPE_POR_UNIDADE, RESPONSAVEL_LIDERANCA } from '@/data/equipe';
-import { getCategoriaStatus, unitIsAllowed, normalizeUnitName } from '@/lib/vagaUtils';
+import { getCategoriaStatus, unitIsAllowed, normalizeUnitName, getUnitDisplayName, UNIT_ALIAS_MAP } from '@/lib/vagaUtils';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -58,19 +58,15 @@ import { generateTempPassword, getAdminPasswordErrorMessage, validateAdminPasswo
 import { SistemaTab } from '@/components/admin/SistemaTab';
 import { UnidadesPicker, ALL_UNIDADES, UNIDADES_GRUPOS } from '@/components/UnidadesPicker';
 
-// Explicit aliases for units whose full name in `vagas.unidade` does not start
-// with the short name used in profiles/UnidadesPicker.
-const UNIT_ALIASES: Record<string, string[]> = {
-  'HRD': ['CHRD'],          // "CHRD - COMPLEXO HOSPITALAR REGIONAL DE DOURADOS"
-  'DOURADOS': ['CHRD'],     // legacy profiles that still store "DOURADOS"
-  'JATAÍ': ['HEJ'],         // "HEJ - HOSPITAL ESTADUAL DE JATAI DR. SERAFIM DE CARVALHO"
-  'JATAI': ['HEJ'],         // accent-stripped variant
+// Legacy alias entries not covered by UNIT_ALIAS_MAP (e.g. old profiles that stored "DOURADOS")
+const LEGACY_ALIASES: Record<string, string[]> = {
+  'DOURADOS': ['CHRD'],
 };
 
 /**
  * Checks whether a full vaga unit name belongs to a short unit name.
- * 1. Tries exact prefix match via unitIsAllowed.
- * 2. Tries known aliases (e.g. HRD → CHRD).
+ * 1. Tries exact prefix match via unitIsAllowed (covers UNIT_ALIAS_MAP entries like HRD→CHRD).
+ * 2. Tries legacy aliases for old stored values.
  * 3. Falls back to an `includes` check for remaining edge cases.
  */
 const vagaMatchesShortUnits = (vagaUnidade: string | null | undefined, shortNames: string[]): boolean => {
@@ -80,8 +76,11 @@ const vagaMatchesShortUnits = (vagaUnidade: string | null | undefined, shortName
   return shortNames.some(s => {
     const normShort = normalizeUnitName(s);
     if (normFull.includes(normShort)) return true;
-    // Check aliases: if s has known prefixes that appear in the full name
-    const prefixes = UNIT_ALIASES[s.toUpperCase()] || [];
+    // Check UNIT_ALIAS_MAP and legacy aliases
+    const prefixes = [
+      ...(UNIT_ALIAS_MAP[normShort] || []),
+      ...(LEGACY_ALIASES[normShort] || []),
+    ];
     return prefixes.some(p => normFull.startsWith(normalizeUnitName(p)));
   });
 };
@@ -872,10 +871,10 @@ export default function AdministracaoPage() {
                           <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[11px]">Todas as Unidades</Badge>
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-[400px]">
-                            {user.unidades_vinculadas.length > 0 ? 
+                            {user.unidades_vinculadas.length > 0 ?
                               user.unidades_vinculadas.map(u => (
-                                <Badge key={u} variant="secondary" className="text-[11px] bg-slate-100">{u}</Badge>
-                              )) : 
+                                <Badge key={u} variant="secondary" className="text-[11px] bg-slate-100">{getUnitDisplayName(u)}</Badge>
+                              )) :
                               <span className="text-[11px] text-slate-400 italic">Nenhuma unidade vinculada</span>
                             }
                           </div>

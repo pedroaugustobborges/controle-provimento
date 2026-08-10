@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getUnitDisplayName } from '@/lib/vagaUtils';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,7 @@ export function UnidadesPicker({ value, onChange }: UnidadesPickerProps) {
             <div className="flex flex-wrap gap-1.5">
               {grupo.units.map(unit => {
                 const selected = value.includes(unit);
+                const displayName = getUnitDisplayName(unit);
                 return (
                   <button
                     key={unit}
@@ -182,7 +184,7 @@ export function UnidadesPicker({ value, onChange }: UnidadesPickerProps) {
                     )}
                   >
                     {selected && <Check className="h-3 w-3 shrink-0" />}
-                    {unit}
+                    {displayName}
                   </button>
                 );
               })}
@@ -198,7 +200,7 @@ export function UnidadesPicker({ value, onChange }: UnidadesPickerProps) {
           <div className="flex flex-wrap gap-1">
             {value.slice(0, 8).map(u => (
               <span key={u} className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                {u}
+                {getUnitDisplayName(u)}
                 <button type="button" onClick={() => toggle(u)} className="hover:text-red-500 transition-colors">
                   <X className="h-2.5 w-2.5" />
                 </button>

@@ -159,9 +159,6 @@ import {
   Building2,
   Filter,
   ListFilter,
-  MoreVertical,
-  Trash2,
-  History,
   AlertCircle,
   Database,
   CheckCircle2,
@@ -185,8 +182,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -1649,9 +1644,6 @@ export default function VagasPage() {
                       <TableHead className="min-w-[56px] text-center">
                         Banco
                       </TableHead>
-                      <TableHead className="text-right min-w-[60px]">
-                        Ações
-                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1909,146 +1901,6 @@ export default function VagasPage() {
                                   <CheckCircle2 className="h-5 w-5 opacity-40" />
                                 </Button>
                               )}
-                            </TableCell>
-                            <TableCell
-                              className="text-right py-3 px-4 h-14"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    className="h-8 w-8 p-0 hover:bg-slate-100"
-                                  >
-                                    <MoreVertical className="h-4 w-4 text-slate-500" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                  className="w-56"
-                                >
-                                  <DropdownMenuLabel className="text-[10px] uppercase font-semibold text-slate-400">
-                                    Ações
-                                  </DropdownMenuLabel>
-
-                                  <DropdownMenuItem
-                                    onClick={() => navigate(`/vagas/${v.id}`)}
-                                    className="gap-2"
-                                  >
-                                    <FileText className="h-4 w-4 text-blue-500" />{" "}
-                                    Ver Detalhes
-                                  </DropdownMenuItem>
-
-                                  {permissions.canRequestUpdate() && (
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setVagaForUpdate(v);
-                                        setIsRequestUpdateOpen(true);
-                                      }}
-                                      className="gap-2 text-amber-600"
-                                    >
-                                      <AlertCircle className="h-4 w-4" />{" "}
-                                      Solicitar Atualização
-                                    </DropdownMenuItem>
-                                  )}
-
-                                  {canSendToEdital && (
-                                    <DropdownMenuItem
-                                      onClick={async () => {
-                                        const success = await useVagasStore
-                                          .getState()
-                                          .updateVagaAsync(v.id, {
-                                            status: "PUBLICAR EDITAL",
-                                            historico: [
-                                              ...v.historico,
-                                              {
-                                                id: `h-${Date.now()}`,
-                                                data: new Date()
-                                                  .toISOString()
-                                                  .split("T")[0],
-                                                descricao:
-                                                  "Vaga encaminhada para Fila de Editais",
-                                                usuario:
-                                                  currentUser?.nome_completo ||
-                                                  "Analista",
-                                              },
-                                            ],
-                                          });
-                                        if (success) {
-                                          toast.success(
-                                            "Vaga enviada para Fila de Editais",
-                                          );
-                                        }
-                                      }}
-                                      className="gap-2 text-amber-600"
-                                    >
-                                      <FileText className="h-4 w-4" /> Enviar
-                                      para Fila de Editais
-                                    </DropdownMenuItem>
-                                  )}
-
-                                  {canCall && (
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        if (bancoFound) {
-                                          navigate(
-                                            `/convocacoes?open=true&vagaId=${v.id}`,
-                                          );
-                                        } else {
-                                          toast.error(
-                                            `Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`,
-                                          );
-                                        }
-                                      }}
-                                      className="gap-2 text-green-600"
-                                    >
-                                      <CheckCircle2 className="h-4 w-4" />{" "}
-                                      Realizar Convocação
-                                    </DropdownMenuItem>
-                                  )}
-
-                                  {bancoFound && (
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        navigate(
-                                          `/banco-talentos?search=${v.cargo}`,
-                                        )
-                                      }
-                                      className="gap-2 text-primary"
-                                    >
-                                      <Database className="h-4 w-4" /> Ver Banco
-                                      de Talentos
-                                    </DropdownMenuItem>
-                                  )}
-
-                                  <DropdownMenuItem
-                                    className="gap-2"
-                                    onClick={() => {
-                                      setSelectedVagaForHistory(v);
-                                      setIsHistoryOpen(true);
-                                    }}
-                                  >
-                                    <History className="h-4 w-4 text-slate-500" />{" "}
-                                    Histórico Completo
-                                  </DropdownMenuItem>
-
-                                  {permissions.canDeleteRecords() && (
-                                    <>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive gap-2"
-                                        onClick={() => {
-                                          setVagaParaExcluir(v.id);
-                                          setIsDeleteDialogOpen(true);
-                                        }}
-                                      >
-                                        <Trash2 className="h-4 w-4" /> Excluir
-                                        Requisição
-                                      </DropdownMenuItem>
-                                    </>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
                             </TableCell>
                           </TableRow>
 

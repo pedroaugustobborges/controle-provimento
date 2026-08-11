@@ -1174,7 +1174,7 @@ export default function DashboardPage() {
           date: toDate(h.data!),
           label: parseTratativa(h.descricao!)!,
         }))
-        .filter((e) => e.date !== null) as Array<{ date: Date; label: string }>;
+        .filter((e) => e.date !== null && e.label !== "Não definida" && e.label !== "Não definido") as Array<{ date: Date; label: string }>;
 
       if (events.length === 0) return;
       events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -1248,7 +1248,7 @@ export default function DashboardPage() {
           date: toDate(h.data!),
           label: parseEtapa(h.descricao!)!,
         }))
-        .filter((e) => e.date !== null) as Array<{ date: Date; label: string }>;
+        .filter((e) => e.date !== null && e.label !== "Não definida" && e.label !== "Não definido") as Array<{ date: Date; label: string }>;
 
       if (events.length === 0) return;
       events.sort((a, b) => a.date.getTime() - b.date.getTime());

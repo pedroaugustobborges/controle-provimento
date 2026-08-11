@@ -3444,8 +3444,8 @@ export default function DashboardPage() {
                             }}
                           >
                             {trend <= 0
-                              ? `↓ ${Math.abs(trend)}d`
-                              : `↑ ${trend}d`}{" "}
+                              ? `↓ ${Math.abs(trend).toFixed(2)}d`
+                              : `↑ ${trend.toFixed(2)}d`}{" "}
                             últimos 3m
                           </span>
                         </div>

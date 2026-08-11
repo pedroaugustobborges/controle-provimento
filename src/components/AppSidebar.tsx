@@ -14,7 +14,6 @@ import {
   Target,
   LogOut,
   Circle,
-  Building2,
   ExternalLink,
 } from "lucide-react";
 
@@ -214,12 +213,6 @@ export function AppSidebar() {
           url: "/portal-rh",
           icon: Target,
           visible: isAdminAnalyst || isManagement || hasFullAccess,
-        },
-        {
-          title: "Portal da Unidade",
-          url: "/portal-unidade",
-          icon: Building2,
-          visible: true,
         },
       ].filter((item) => item.visible),
     [getPermissions, isManagement, hasFullAccess, isAdminAnalyst],

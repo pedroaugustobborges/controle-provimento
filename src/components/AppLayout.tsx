@@ -18,7 +18,6 @@ import {
   Search,
   Home,
   ChevronRight,
-  Sparkles,
   User,
   Settings,
   LogOut,
@@ -479,7 +478,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   }`}
                 >
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <Sparkles className="h-3.5 w-3.5 text-warning" />
                     <span className="text-sm font-semibold text-foreground">
                       {getGreeting()},{" "}
                       <span className="text-primary">{userName}</span>

@@ -68,6 +68,8 @@ import {
   GitBranch,
   Puzzle,
   Accessibility,
+  ClipboardList,
+  BookUser,
 } from "lucide-react";
 import {
   BarChart,
@@ -203,7 +205,9 @@ export default function DashboardPage() {
   } = useAdminStore();
 
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
-  const [unitChartSource, setUnitChartSource] = useState<"vagas" | "banco">("vagas");
+  const [unitChartSource, setUnitChartSource] = useState<"vagas" | "banco">(
+    "vagas",
+  );
   const [isUnitPickerOpen, setIsUnitPickerOpen] = useState(false);
   const [unitSearch, setUnitSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -770,7 +774,8 @@ export default function DashboardPage() {
     [strategicScopeByUnit],
   );
 
-  const chartData = unitChartSource === "vagas" ? vagasChartData : bancoChartData;
+  const chartData =
+    unitChartSource === "vagas" ? vagasChartData : bancoChartData;
 
   const vacancyAlerts = useMemo(() => {
     const STALE = 10;
@@ -1316,23 +1321,32 @@ export default function DashboardPage() {
   } | null>(null);
 
   const STATUS_PROCESSO_COLORS: Record<string, string> = {
-    "Solicitada":   isDark ? "#60a5fa" : "#3b82f6",
+    Solicitada: isDark ? "#60a5fa" : "#3b82f6",
     "Em Andamento": isDark ? "#fbbf24" : "#f59e0b",
-    "Concluída":    isDark ? "#34d399" : "#10b981",
-    "Suspensa":     isDark ? "#fb923c" : "#f97316",
-    "Cancelada":    isDark ? "#f87171" : "#ef4444",
+    Concluída: isDark ? "#34d399" : "#10b981",
+    Suspensa: isDark ? "#fb923c" : "#f97316",
+    Cancelada: isDark ? "#f87171" : "#ef4444",
   };
 
   const statusProcessoData = useMemo(() => {
-    const ORDER = ["Solicitada", "Em Andamento", "Concluída", "Suspensa", "Cancelada"];
+    const ORDER = [
+      "Solicitada",
+      "Em Andamento",
+      "Concluída",
+      "Suspensa",
+      "Cancelada",
+    ];
     const map = new Map<string, number>();
     filteredVagas.forEach((v) => {
-      const key = ((v as any).status_processo as string | undefined)?.trim() || "Solicitada";
+      const key =
+        ((v as any).status_processo as string | undefined)?.trim() ||
+        "Solicitada";
       map.set(key, (map.get(key) || 0) + 1);
     });
-    return ORDER
-      .filter((s) => map.has(s))
-      .map((name) => ({ name, value: map.get(name)! }));
+    return ORDER.filter((s) => map.has(s)).map((name) => ({
+      name,
+      value: map.get(name)!,
+    }));
   }, [filteredVagas]);
 
   // ─── Theme-sensitive style values ─────────────────────────────────────────
@@ -2619,9 +2633,10 @@ export default function DashboardPage() {
             <div
               style={{
                 height: "3px",
-                background: unitChartSource === "vagas"
-                  ? "linear-gradient(90deg, #818cf8, #22d3ee)"
-                  : "linear-gradient(90deg, #34d399, #06b6d4)",
+                background:
+                  unitChartSource === "vagas"
+                    ? "linear-gradient(90deg, #818cf8, #22d3ee)"
+                    : "linear-gradient(90deg, #34d399, #06b6d4)",
                 flexShrink: 0,
                 transition: "background 0.3s",
               }}
@@ -2650,12 +2665,14 @@ export default function DashboardPage() {
                       width: "28px",
                       height: "28px",
                       borderRadius: "8px",
-                      background: unitChartSource === "vagas"
-                        ? "rgba(129,140,248,0.18)"
-                        : "rgba(52,211,153,0.15)",
-                      boxShadow: unitChartSource === "vagas"
-                        ? "0 0 12px rgba(129,140,248,0.25)"
-                        : "0 0 12px rgba(52,211,153,0.2)",
+                      background:
+                        unitChartSource === "vagas"
+                          ? "rgba(129,140,248,0.18)"
+                          : "rgba(52,211,153,0.15)",
+                      boxShadow:
+                        unitChartSource === "vagas"
+                          ? "0 0 12px rgba(129,140,248,0.25)"
+                          : "0 0 12px rgba(52,211,153,0.2)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -2666,7 +2683,8 @@ export default function DashboardPage() {
                       style={{
                         width: "15px",
                         height: "15px",
-                        color: unitChartSource === "vagas" ? "#818cf8" : "#34d399",
+                        color:
+                          unitChartSource === "vagas" ? "#818cf8" : "#34d399",
                         transition: "color 0.3s",
                       }}
                     />
@@ -2686,8 +2704,8 @@ export default function DashboardPage() {
                   }}
                 >
                   {unitChartSource === "vagas"
-                    ? "Requisições de vagas por hospital"
-                    : "Candidatos no banco por hospital"}
+                    ? "Requisições de vagas por unidade hospitalar"
+                    : "Candidatos no banco por região"}
                 </p>
               </div>
 
@@ -2695,7 +2713,9 @@ export default function DashboardPage() {
               <div
                 style={{
                   display: "flex",
-                  background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                  background: isDark
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(0,0,0,0.04)",
                   borderRadius: "999px",
                   padding: "3px",
                   border: `1px solid ${t.divider}`,
@@ -2704,8 +2724,24 @@ export default function DashboardPage() {
               >
                 {(
                   [
-                    { key: "vagas",  label: "Vagas",  Icon: Briefcase, accent: "#818cf8", activeBg: isDark ? "rgba(129,140,248,0.28)" : "rgba(99,102,241,0.12)" },
-                    { key: "banco",  label: "Banco",  Icon: Users,     accent: "#34d399", activeBg: isDark ? "rgba(52,211,153,0.22)"  : "rgba(16,185,129,0.10)" },
+                    {
+                      key: "vagas",
+                      label: "Vagas",
+                      Icon: ClipboardList,
+                      accent: "#818cf8",
+                      activeBg: isDark
+                        ? "rgba(129,140,248,0.28)"
+                        : "rgba(99,102,241,0.12)",
+                    },
+                    {
+                      key: "banco",
+                      label: "Banco",
+                      Icon: BookUser,
+                      accent: "#34d399",
+                      activeBg: isDark
+                        ? "rgba(52,211,153,0.22)"
+                        : "rgba(16,185,129,0.10)",
+                    },
                   ] as const
                 ).map(({ key, label, Icon, accent, activeBg }) => {
                   const active = unitChartSource === key;
@@ -2828,7 +2864,9 @@ export default function DashboardPage() {
                         itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
                         formatter={(value) => [
                           `${value} ${unitChartSource === "vagas" ? "vagas" : "candidatos"}`,
-                          unitChartSource === "vagas" ? "Vagas" : "Banco de Talentos",
+                          unitChartSource === "vagas"
+                            ? "Vagas"
+                            : "Banco de Talentos",
                         ]}
                       />
                       {unitChartSource === "vagas" ? (
@@ -2899,37 +2937,109 @@ export default function DashboardPage() {
 
           {/* Status do Processo — donut */}
           <div className={`${t.panelClass} flex flex-col`}>
-            <div style={{ height: "3px", background: "linear-gradient(90deg, #34d399, #60a5fa, #f87171)", flexShrink: 0 }} />
-            <div style={{ padding: "16px 18px 12px", borderBottom: t.phBorder, background: t.phBg }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+            <div
+              style={{
+                height: "3px",
+                background: "linear-gradient(90deg, #34d399, #60a5fa, #f87171)",
+                flexShrink: 0,
+              }}
+            />
+            <div
+              style={{
+                padding: "16px 18px 12px",
+                borderBottom: t.phBorder,
+                background: t.phBg,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "2px",
+                }}
+              >
                 <div
                   style={{
-                    width: "28px", height: "28px", borderRadius: "8px",
-                    background: isDark ? "rgba(52,211,153,0.18)" : "rgba(16,185,129,0.12)",
-                    boxShadow: isDark ? "0 0 12px rgba(52,211,153,0.25)" : "none",
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "8px",
+                    background: isDark
+                      ? "rgba(52,211,153,0.18)"
+                      : "rgba(16,185,129,0.12)",
+                    boxShadow: isDark
+                      ? "0 0 12px rgba(52,211,153,0.25)"
+                      : "none",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  <Activity style={{ width: "15px", height: "15px", color: isDark ? "#34d399" : "#10b981" }} />
+                  <Activity
+                    style={{
+                      width: "15px",
+                      height: "15px",
+                      color: isDark ? "#34d399" : "#10b981",
+                    }}
+                  />
                 </div>
-                <span style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}>
+                <span
+                  style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}
+                >
                   Status do Processo
                 </span>
               </div>
-              <p style={{ fontSize: "10px", fontWeight: 500, color: t.tx3, marginLeft: "36px" }}>
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 500,
+                  color: t.tx3,
+                  marginLeft: "36px",
+                }}
+              >
                 Distribuição por status no filtro ativo
               </p>
             </div>
-            <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div
+              style={{
+                padding: "16px",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               {statusProcessoData.length === 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "240px", gap: "8px" }}>
-                  <Activity style={{ width: "32px", height: "32px", color: t.tx4 }} />
-                  <p style={{ fontSize: "12px", color: t.tx3, fontWeight: 500 }}>Nenhum dado disponível</p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "240px",
+                    gap: "8px",
+                  }}
+                >
+                  <Activity
+                    style={{ width: "32px", height: "32px", color: t.tx4 }}
+                  />
+                  <p
+                    style={{ fontSize: "12px", color: t.tx3, fontWeight: 500 }}
+                  >
+                    Nenhum dado disponível
+                  </p>
                 </div>
               ) : (
                 <>
                   {/* Donut with centered total label */}
-                  <div style={{ position: "relative", width: "100%", height: "200px" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      height: "200px",
+                    }}
+                  >
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
                         <Pie
@@ -2943,52 +3053,159 @@ export default function DashboardPage() {
                           strokeWidth={0}
                         >
                           {statusProcessoData.map((item) => {
-                            const color = STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
+                            const color =
+                              STATUS_PROCESSO_COLORS[item.name] ??
+                              t.donutColors[0];
                             return (
                               <Cell
                                 key={item.name}
                                 fill={color}
-                                style={isDark ? { filter: `drop-shadow(0 0 6px ${color}80)` } : undefined}
+                                style={
+                                  isDark
+                                    ? {
+                                        filter: `drop-shadow(0 0 6px ${color}80)`,
+                                      }
+                                    : undefined
+                                }
                               />
                             );
                           })}
                         </Pie>
                         <Tooltip
                           contentStyle={t.tooltip}
-                          itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
+                          itemStyle={{
+                            padding: "2px 0",
+                            color: t.tooltip.color,
+                          }}
                           formatter={(v, n) => [`${v} vagas`, n]}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                     {/* Centered total */}
-                    <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center", pointerEvents: "none" }}>
-                      <p style={{ fontSize: "20px", fontWeight: 900, color: t.tx1, lineHeight: 1 }}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        textAlign: "center",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: "20px",
+                          fontWeight: 900,
+                          color: t.tx1,
+                          lineHeight: 1,
+                        }}
+                      >
                         {statusProcessoData.reduce((s, d) => s + d.value, 0)}
                       </p>
-                      <p style={{ fontSize: "9px", fontWeight: 700, color: t.tx3, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "2px" }}>
+                      <p
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: 700,
+                          color: t.tx3,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          marginTop: "2px",
+                        }}
+                      >
                         vagas
                       </p>
                     </div>
                   </div>
 
                   {/* Legend rows */}
-                  <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "7px", marginTop: "12px" }}>
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "7px",
+                      marginTop: "12px",
+                    }}
+                  >
                     {statusProcessoData.map((item) => {
-                      const total = statusProcessoData.reduce((s, d) => s + d.value, 0);
-                      const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
-                      const color = STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
+                      const total = statusProcessoData.reduce(
+                        (s, d) => s + d.value,
+                        0,
+                      );
+                      const pct =
+                        total > 0 ? Math.round((item.value / total) * 100) : 0;
+                      const color =
+                        STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
                       return (
-                        <div key={item.name} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: color, boxShadow: isDark ? `0 0 6px ${color}80` : "none" }} />
-                          <span style={{ fontSize: "11px", fontWeight: 600, color: t.tx2, flex: 1 }}>
+                        <div
+                          key={item.name}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "10px",
+                              height: "10px",
+                              borderRadius: "50%",
+                              flexShrink: 0,
+                              background: color,
+                              boxShadow: isDark ? `0 0 6px ${color}80` : "none",
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              color: t.tx2,
+                              flex: 1,
+                            }}
+                          >
                             {item.name}
                           </span>
                           {/* mini progress bar */}
-                          <div style={{ width: "60px", height: "4px", borderRadius: "99px", background: isDark ? "rgba(255,255,255,0.08)" : "#e2e8f0", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: "99px" }} />
+                          <div
+                            style={{
+                              width: "60px",
+                              height: "4px",
+                              borderRadius: "99px",
+                              background: isDark
+                                ? "rgba(255,255,255,0.08)"
+                                : "#e2e8f0",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: "100%",
+                                width: `${pct}%`,
+                                background: color,
+                                borderRadius: "99px",
+                              }}
+                            />
                           </div>
-                          <span style={{ fontSize: "10px", fontWeight: 900, color: t.tx2, minWidth: "28px", textAlign: "right" }}>{pct}%</span>
-                          <span style={{ fontSize: "10px", fontWeight: 700, color: t.tx3 }}>({item.value})</span>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 900,
+                              color: t.tx2,
+                              minWidth: "28px",
+                              textAlign: "right",
+                            }}
+                          >
+                            {pct}%
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: t.tx3,
+                            }}
+                          >
+                            ({item.value})
+                          </span>
                         </div>
                       );
                     })}

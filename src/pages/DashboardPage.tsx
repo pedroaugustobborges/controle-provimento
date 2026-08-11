@@ -332,7 +332,7 @@ export default function DashboardPage() {
   const recentActivities = useMemo((): ActivityItem[] => {
     const items: ActivityItem[] = [];
 
-    allVagas.forEach((vaga) => {
+    userScopedVagas.forEach((vaga) => {
       // 1. Nova vaga
       const createdAt =
         vaga.created_at || vaga.data_recebimento || vaga.data_criacao;
@@ -403,7 +403,7 @@ export default function DashboardPage() {
       .filter((a) => a.time)
       .sort((a, b) => parseTimeForSort(b.time) - parseTimeForSort(a.time))
       .slice(0, 50); // keep 50 for pagination
-  }, [allVagas, userAvatarMap]);
+  }, [userScopedVagas, userAvatarMap]);
   // ─────────────────────────────────────────────────────────────────────────────
 
   const filteredVagas = useMemo(() => {

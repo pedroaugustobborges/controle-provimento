@@ -1177,7 +1177,13 @@ export default function DashboardPage() {
           date: toDate(h.data!),
           label: parseTratativa(h.descricao!)!,
         }))
-        .filter((e) => e.date !== null && e.label !== "Não definida" && e.label !== "Não definido") as Array<{ date: Date; label: string }>;
+        .filter(
+          (e) =>
+            e.date !== null &&
+            e.label !== "Não definida" &&
+            e.label !== "Não definido" &&
+            e.label !== "Em Processo Seletivo",
+        ) as Array<{ date: Date; label: string }>;
 
       if (events.length === 0) return;
       events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -1251,7 +1257,12 @@ export default function DashboardPage() {
           date: toDate(h.data!),
           label: parseEtapa(h.descricao!)!,
         }))
-        .filter((e) => e.date !== null && e.label !== "Não definida" && e.label !== "Não definido") as Array<{ date: Date; label: string }>;
+        .filter(
+          (e) =>
+            e.date !== null &&
+            e.label !== "Não definida" &&
+            e.label !== "Não definido",
+        ) as Array<{ date: Date; label: string }>;
 
       if (events.length === 0) return;
       events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -4376,7 +4387,9 @@ export default function DashboardPage() {
                         borderRadius: "50%",
                         flexShrink: 0,
                         background: "#fbbf24",
-                        boxShadow: isDark ? "0 0 8px rgba(251,191,36,0.6)" : "none",
+                        boxShadow: isDark
+                          ? "0 0 8px rgba(251,191,36,0.6)"
+                          : "none",
                       }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -4432,7 +4445,9 @@ export default function DashboardPage() {
                           fontWeight: 900,
                           padding: "2px 8px",
                           borderRadius: "6px",
-                          background: isDark ? "rgba(251,191,36,0.15)" : "rgba(251,191,36,0.12)",
+                          background: isDark
+                            ? "rgba(251,191,36,0.15)"
+                            : "rgba(251,191,36,0.12)",
                           color: isDark ? "#fcd34d" : "#b45309",
                           border: "1px solid rgba(251,191,36,0.28)",
                         }}
@@ -4504,7 +4519,10 @@ export default function DashboardPage() {
               }}
             >
               <button
-                onClick={() => { setStaleModalPage(1); setIsStaleModalOpen(true); }}
+                onClick={() => {
+                  setStaleModalPage(1);
+                  setIsStaleModalOpen(true);
+                }}
                 style={{
                   width: "100%",
                   display: "flex",
@@ -5296,123 +5314,131 @@ export default function DashboardPage() {
                     </TableRow>
                   ))
                 ) : vacancyAlerts.length > 0 ? (
-                  vacancyAlerts.slice((staleModalPage - 1) * STALE_PAGE_SIZE, staleModalPage * STALE_PAGE_SIZE).map((vaga) => (
-                    <TableRow
-                      key={vaga.id}
-                      onClick={() => { setIsStaleModalOpen(false); navigate(`/vagas/${vaga.id}`); }}
-                      style={{
-                        borderBottom: `1px solid ${t.tblBorder}`,
-                        transition: "background 0.15s",
-                        cursor: "pointer",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = t.rowHover)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
-                    >
-                      <TableCell
-                        style={{
-                          padding: "14px 20px",
-                          textAlign: "center",
-                          fontFamily: "monospace",
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          color: t.tx3,
+                  vacancyAlerts
+                    .slice(
+                      (staleModalPage - 1) * STALE_PAGE_SIZE,
+                      staleModalPage * STALE_PAGE_SIZE,
+                    )
+                    .map((vaga) => (
+                      <TableRow
+                        key={vaga.id}
+                        onClick={() => {
+                          setIsStaleModalOpen(false);
+                          navigate(`/vagas/${vaga.id}`);
                         }}
+                        style={{
+                          borderBottom: `1px solid ${t.tblBorder}`,
+                          transition: "background 0.15s",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = t.rowHover)
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
                       >
-                        #{vaga.displayId}
-                      </TableCell>
-                      <TableCell style={{ padding: "14px 20px" }}>
-                        <div
+                        <TableCell
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
+                            padding: "14px 20px",
+                            textAlign: "center",
+                            fontFamily: "monospace",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            color: t.tx3,
                           }}
                         >
-                          <Building2
+                          #{vaga.displayId}
+                        </TableCell>
+                        <TableCell style={{ padding: "14px 20px" }}>
+                          <div
                             style={{
-                              width: "12px",
-                              height: "12px",
-                              color: t.tx4,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
                             }}
-                          />
+                          >
+                            <Building2
+                              style={{
+                                width: "12px",
+                                height: "12px",
+                                color: t.tx4,
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                color: t.tx2,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.04em",
+                              }}
+                            >
+                              {normalizeUnitName(vaga.unidade)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell style={{ padding: "14px 20px" }}>
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              color: t.tx1,
+                            }}
+                          >
+                            {vaga.cargo || "Não informado"}
+                          </span>
+                        </TableCell>
+                        <TableCell
+                          style={{ padding: "14px 20px", textAlign: "center" }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              padding: "3px 10px",
+                              borderRadius: "8px",
+                              background: isDark
+                                ? "rgba(255,255,255,0.06)"
+                                : "#f1f5f9",
+                              border: `1px solid ${t.divider}`,
+                              color: t.tx2,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.06em",
+                            }}
+                          >
+                            {vaga.status || "Sem status"}
+                          </span>
+                        </TableCell>
+                        <TableCell
+                          style={{ padding: "14px 20px", textAlign: "center" }}
+                        >
                           <span
                             style={{
                               fontSize: "11px",
-                              fontWeight: 700,
-                              color: t.tx2,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.04em",
+                              fontWeight: 900,
+                              padding: "4px 10px",
+                              borderRadius: "8px",
+                              background:
+                                vaga.daysOpen > 20
+                                  ? "rgba(248,113,113,0.15)"
+                                  : "rgba(251,191,36,0.15)",
+                              color:
+                                vaga.daysOpen > 20
+                                  ? isDark
+                                    ? "#fca5a5"
+                                    : "#dc2626"
+                                  : isDark
+                                    ? "#fcd34d"
+                                    : "#b45309",
+                              border: `1px solid ${vaga.daysOpen > 20 ? "rgba(248,113,113,0.28)" : "rgba(251,191,36,0.28)"}`,
                             }}
                           >
-                            {normalizeUnitName(vaga.unidade)}
+                            {vaga.daysOpen} dias
                           </span>
-                        </div>
-                      </TableCell>
-                      <TableCell style={{ padding: "14px 20px" }}>
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            color: t.tx1,
-                          }}
-                        >
-                          {vaga.cargo || "Não informado"}
-                        </span>
-                      </TableCell>
-                      <TableCell
-                        style={{ padding: "14px 20px", textAlign: "center" }}
-                      >
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            padding: "3px 10px",
-                            borderRadius: "8px",
-                            background: isDark
-                              ? "rgba(255,255,255,0.06)"
-                              : "#f1f5f9",
-                            border: `1px solid ${t.divider}`,
-                            color: t.tx2,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                          }}
-                        >
-                          {vaga.status || "Sem status"}
-                        </span>
-                      </TableCell>
-                      <TableCell
-                        style={{ padding: "14px 20px", textAlign: "center" }}
-                      >
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: 900,
-                            padding: "4px 10px",
-                            borderRadius: "8px",
-                            background:
-                              vaga.daysOpen > 20
-                                ? "rgba(248,113,113,0.15)"
-                                : "rgba(251,191,36,0.15)",
-                            color:
-                              vaga.daysOpen > 20
-                                ? isDark
-                                  ? "#fca5a5"
-                                  : "#dc2626"
-                                : isDark
-                                  ? "#fcd34d"
-                                  : "#b45309",
-                            border: `1px solid ${vaga.daysOpen > 20 ? "rgba(248,113,113,0.28)" : "rgba(251,191,36,0.28)"}`,
-                          }}
-                        >
-                          {vaga.daysOpen} dias
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                      </TableRow>
+                    ))
                 ) : (
                   <TableRow>
                     <TableCell
@@ -5484,26 +5510,42 @@ export default function DashboardPage() {
           >
             {/* Pagination controls */}
             {vacancyAlerts.length > STALE_PAGE_SIZE ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <button
                   onClick={() => setStaleModalPage((p) => Math.max(1, p - 1))}
                   disabled={staleModalPage === 1}
                   style={{
-                    width: "32px", height: "32px", borderRadius: "8px",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
                     background: staleModalPage === 1 ? "transparent" : t.btnBg,
                     border: t.btnBorder,
                     color: staleModalPage === 1 ? t.tx4 : t.btnColor,
                     cursor: staleModalPage === 1 ? "not-allowed" : "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     transition: "all 0.15s",
                     opacity: staleModalPage === 1 ? 0.4 : 1,
                   }}
                 >
-                  <ChevronRight style={{ width: "14px", height: "14px", transform: "rotate(180deg)" }} />
+                  <ChevronRight
+                    style={{
+                      width: "14px",
+                      height: "14px",
+                      transform: "rotate(180deg)",
+                    }}
+                  />
                 </button>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  {Array.from({ length: Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE) }).map((_, idx) => {
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {Array.from({
+                    length: Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE),
+                  }).map((_, idx) => {
                     const pg = idx + 1;
                     const active = pg === staleModalPage;
                     return (
@@ -5511,16 +5553,22 @@ export default function DashboardPage() {
                         key={pg}
                         onClick={() => setStaleModalPage(pg)}
                         style={{
-                          minWidth: "28px", height: "28px", borderRadius: "7px",
+                          minWidth: "28px",
+                          height: "28px",
+                          borderRadius: "7px",
                           padding: "0 6px",
                           background: active
-                            ? isDark ? "rgba(251,191,36,0.25)" : "rgba(180,83,9,0.12)"
+                            ? isDark
+                              ? "rgba(251,191,36,0.25)"
+                              : "rgba(180,83,9,0.12)"
                             : "transparent",
                           border: active
                             ? "1px solid rgba(251,191,36,0.4)"
                             : t.btnBorder,
                           color: active
-                            ? isDark ? "#fcd34d" : "#b45309"
+                            ? isDark
+                              ? "#fcd34d"
+                              : "#b45309"
                             : t.tx3,
                           fontSize: "11px",
                           fontWeight: active ? 900 : 600,
@@ -5535,29 +5583,72 @@ export default function DashboardPage() {
                 </div>
 
                 <button
-                  onClick={() => setStaleModalPage((p) => Math.min(Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE), p + 1))}
-                  disabled={staleModalPage === Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE)}
+                  onClick={() =>
+                    setStaleModalPage((p) =>
+                      Math.min(
+                        Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE),
+                        p + 1,
+                      ),
+                    )
+                  }
+                  disabled={
+                    staleModalPage ===
+                    Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE)
+                  }
                   style={{
-                    width: "32px", height: "32px", borderRadius: "8px",
-                    background: staleModalPage === Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE) ? "transparent" : t.btnBg,
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    background:
+                      staleModalPage ===
+                      Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE)
+                        ? "transparent"
+                        : t.btnBg,
                     border: t.btnBorder,
-                    color: staleModalPage === Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE) ? t.tx4 : t.btnColor,
-                    cursor: staleModalPage === Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE) ? "not-allowed" : "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color:
+                      staleModalPage ===
+                      Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE)
+                        ? t.tx4
+                        : t.btnColor,
+                    cursor:
+                      staleModalPage ===
+                      Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE)
+                        ? "not-allowed"
+                        : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     transition: "all 0.15s",
-                    opacity: staleModalPage === Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE) ? 0.4 : 1,
+                    opacity:
+                      staleModalPage ===
+                      Math.ceil(vacancyAlerts.length / STALE_PAGE_SIZE)
+                        ? 0.4
+                        : 1,
                   }}
                 >
                   <ChevronRight style={{ width: "14px", height: "14px" }} />
                 </button>
 
-                <span style={{ fontSize: "11px", fontWeight: 600, color: t.tx3, marginLeft: "4px" }}>
-                  {(staleModalPage - 1) * STALE_PAGE_SIZE + 1}–{Math.min(staleModalPage * STALE_PAGE_SIZE, vacancyAlerts.length)} de {vacancyAlerts.length}
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: t.tx3,
+                    marginLeft: "4px",
+                  }}
+                >
+                  {(staleModalPage - 1) * STALE_PAGE_SIZE + 1}–
+                  {Math.min(
+                    staleModalPage * STALE_PAGE_SIZE,
+                    vacancyAlerts.length,
+                  )}{" "}
+                  de {vacancyAlerts.length}
                 </span>
               </div>
             ) : (
               <span style={{ fontSize: "11px", fontWeight: 600, color: t.tx3 }}>
-                {vacancyAlerts.length} {vacancyAlerts.length === 1 ? "vaga" : "vagas"}
+                {vacancyAlerts.length}{" "}
+                {vacancyAlerts.length === 1 ? "vaga" : "vagas"}
               </span>
             )}
 

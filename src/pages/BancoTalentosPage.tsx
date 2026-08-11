@@ -34,6 +34,7 @@ import {
   ClipboardList,
   CheckCircle,
   ArrowLeft,
+  Puzzle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
@@ -151,6 +152,8 @@ export default function BancoTalentosPage() {
   const [convocadosCargoFilter, setConvocadosCargoFilter] = useState("todos");
   const [isCadastrarEditalOpen, setIsCadastrarEditalOpen] = useState(false);
   const [novoEditalNumero, setNovoEditalNumero] = useState("");
+  const [novoNumeroEdital, setNovoNumeroEdital] = useState("");
+  const [isTeia, setIsTeia] = useState(false);
   const [savingEdital, setSavingEdital] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
@@ -342,7 +345,14 @@ export default function BancoTalentosPage() {
 
   const handleCadastrarEdital = async () => {
     if (!novoEditalNumero.trim()) {
-      toast.error("Informe o número do edital.");
+      toast.error("Informe o número do processo seletivo.");
+      return;
+    }
+    const editalPattern = /^\d{3}\/\d{4}$/;
+    if (!isTeia && !editalPattern.test(novoNumeroEdital.trim())) {
+      toast.error(
+        "Informe o número do edital no formato ###/#### (ex: 055/2026).",
+      );
       return;
     }
     setSavingEdital(true);
@@ -353,8 +363,9 @@ export default function BancoTalentosPage() {
       } = await supabase.auth.getUser();
       const { error } = await supabase.from("importacoes").insert({
         tipo: "banco",
-        numero_edital: novoEditalNumero.trim(),
+        numero_edital: isTeia ? null : novoNumeroEdital.trim(),
         arquivo: novoEditalNumero.trim(),
+        is_teia: isTeia,
         status: "aguardando_processamento",
         usuario_id: authUser?.id || "",
         quantidade_processada: 0,
@@ -365,14 +376,16 @@ export default function BancoTalentosPage() {
       });
       if (error) throw error;
       toast.success(
-        "Edital cadastrado! Os candidatos estarão disponíveis amanhã.",
+        "Processo seletivo cadastrado! Os candidatos estarão disponíveis amanhã.",
       );
       setNovoEditalNumero("");
+      setNovoNumeroEdital("");
+      setIsTeia(false);
       setIsCadastrarEditalOpen(false);
       const { fetchImportHistory } = useVagasStore.getState();
       await fetchImportHistory();
     } catch (err: any) {
-      toast.error(`Erro ao cadastrar edital: ${err.message}`);
+      toast.error(`Erro ao cadastrar: ${err.message}`);
     } finally {
       setSavingEdital(false);
     }
@@ -925,7 +938,7 @@ export default function BancoTalentosPage() {
                 className="gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 px-4 transition-all rounded-xl font-bold"
                 onClick={() => setIsCadastrarEditalOpen(true)}
               >
-                <FileText className="h-4 w-4" /> Vincular Banco - Reachr
+                <FileText className="h-4 w-4" /> Importar Bancos da Reachr
               </Button>
             )}
           </>
@@ -955,56 +968,173 @@ export default function BancoTalentosPage() {
         open={isCadastrarEditalOpen}
         onOpenChange={(open) => {
           setIsCadastrarEditalOpen(open);
-          if (!open) setNovoEditalNumero("");
+          if (!open) {
+            setNovoEditalNumero("");
+            setNovoNumeroEdital("");
+            setIsTeia(false);
+          }
         }}
       >
         <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" /> Vincular o Banco
+          <DialogHeader className="pb-1">
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" /> Importar Banco de
+              Talentos
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-1">
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Cadastre o código da vaga gerado na Reachr já finalizado para
-              importação automática dos candidato(a)s. Digite o número com
-              atenção que{" "}
-              <span className="font-bold text-slate-800">
-                amanhã os candidatos estarão aqui.
-              </span>
+
+          <div className="space-y-5 pt-1">
+            {/* Description */}
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Informe o{" "}
+              <span className="font-semibold text-slate-700">
+                Nº do Processo Seletivo
+              </span>{" "}
+              gerado na Reachr. Se o processo pertence à{" "}
+              <span className="font-semibold text-slate-700">Rede Teia</span>,
+              ative o botão abaixo e o campo Nº do Edital não será obrigatório.
             </p>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Código da Vaga
-              </label>
-              <Input
-                placeholder="Ex: 30102"
-                value={novoEditalNumero}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "").slice(0, 5);
-                  setNovoEditalNumero(val);
+
+            {/* TEIA toggle card */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsTeia((v) => !v);
+                if (!isTeia) setNovoNumeroEdital("");
+              }}
+              className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all duration-200 text-left select-none"
+              style={
+                isTeia
+                  ? {
+                      background: "rgba(16,185,129,0.07)",
+                      border: "1.5px solid rgba(16,185,129,0.40)",
+                    }
+                  : {
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                    }
+              }
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 shrink-0"
+                  style={
+                    isTeia
+                      ? {
+                          background: "rgba(16,185,129,0.15)",
+                          color: "#059669",
+                        }
+                      : { background: "#f1f5f9", color: "#94a3b8" }
+                  }
+                >
+                  <Puzzle className="h-4 w-4" />
+                </div>
+                <div>
+                  <p
+                    className="text-sm font-semibold leading-none"
+                    style={{ color: isTeia ? "#059669" : "#475569" }}
+                  >
+                    Rede Teia
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {isTeia
+                      ? "Edital não necessário para este processo"
+                      : "Clique para marcar como Rede Teia"}
+                  </p>
+                </div>
+              </div>
+              {/* Toggle pill */}
+              <div
+                className="relative w-10 h-5 rounded-full transition-all duration-200 shrink-0"
+                style={{
+                  background: isTeia ? "#10b981" : "#cbd5e1",
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleCadastrarEdital();
-                }}
-                className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30"
-                inputMode="numeric"
-                maxLength={5}
-                autoFocus
-              />
-              {novoEditalNumero.length > 0 && novoEditalNumero.length < 5 && (
-                <p className="text-xs text-amber-500 font-medium">
-                  O código deve ter exatamente 5 números ({novoEditalNumero.length}/5).
-                </p>
+              >
+                <div
+                  className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+                  style={{ left: isTeia ? "calc(100% - 18px)" : "2px" }}
+                />
+              </div>
+            </button>
+
+            {/* Fields */}
+            <div
+              className={cn(
+                "grid gap-4",
+                !isTeia ? "grid-cols-2" : "grid-cols-1",
+              )}
+            >
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Nº do Processo Seletivo{" "}
+                  <span className="text-red-400">*</span>
+                </label>
+                <Input
+                  placeholder="ex:30102"
+                  value={novoEditalNumero}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 5);
+                    setNovoEditalNumero(val);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCadastrarEdital();
+                  }}
+                  className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30 font-mono text-center tracking-widest text-sm"
+                  inputMode="numeric"
+                  maxLength={5}
+                  autoFocus
+                />
+                {novoEditalNumero.length > 0 && novoEditalNumero.length < 5 && (
+                  <p className="text-xs text-amber-500">
+                    {novoEditalNumero.length}/5 dígitos
+                  </p>
+                )}
+              </div>
+
+              {!isTeia && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Nº do Edital <span className="text-red-400">*</span>
+                  </label>
+                  <Input
+                    placeholder="ex:055/2026"
+                    value={novoNumeroEdital}
+                    onChange={(e) => {
+                      const digits = e.target.value
+                        .replace(/[^\d]/g, "")
+                        .slice(0, 7);
+                      const formatted =
+                        digits.length <= 3
+                          ? digits
+                          : digits.slice(0, 3) + "/" + digits.slice(3);
+                      setNovoNumeroEdital(formatted);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCadastrarEdital();
+                    }}
+                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30 font-mono text-center tracking-widest text-sm"
+                    maxLength={8}
+                  />
+                  {novoNumeroEdital.length > 0 &&
+                    !/^\d{3}\/\d{4}$/.test(novoNumeroEdital) && (
+                      <p className="text-xs text-amber-500">
+                        Formato: 055/2026
+                      </p>
+                    )}
+                </div>
               )}
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-1">
               <Button
                 variant="outline"
                 className="rounded-xl"
                 onClick={() => {
                   setIsCadastrarEditalOpen(false);
                   setNovoEditalNumero("");
+                  setNovoNumeroEdital("");
+                  setIsTeia(false);
                 }}
               >
                 Cancelar
@@ -1012,7 +1142,11 @@ export default function BancoTalentosPage() {
               <Button
                 className="rounded-xl gap-2 bg-primary hover:bg-primary/90 text-white"
                 onClick={handleCadastrarEdital}
-                disabled={savingEdital || novoEditalNumero.length !== 5}
+                disabled={
+                  savingEdital ||
+                  novoEditalNumero.length !== 5 ||
+                  (!isTeia && !/^\d{3}\/\d{4}$/.test(novoNumeroEdital))
+                }
               >
                 {savingEdital ? "Cadastrando..." : "Cadastrar"}
               </Button>

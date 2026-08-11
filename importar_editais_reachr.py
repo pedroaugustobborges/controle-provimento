@@ -436,13 +436,18 @@ def _pad_cpf(raw: str) -> Optional[str]:
 def process_excel(
     supabase: Client,
     excel_path: str,
+    arquivo: str,
     numero_edital: str,
+    is_teia: bool,
     card_info: dict,
     importacao_id: str,
 ) -> int:
     """
     Parse the downloaded Excel file, calculate rankings, and bulk-insert
     rows into banco_candidatos.
+    - arquivo       → numero_processo_seletivo  (5-digit Reachr code)
+    - numero_edital → numero_edital             (###/#### formatted edital)
+    - is_teia       → is_teia                   (boolean flag)
     Returns the number of rows inserted.
     """
     today_iso        = datetime.date.today().strftime("%Y-%m-%d")
@@ -483,24 +488,27 @@ def process_excel(
         status_atual = str(row.get("Status Atual") or "").strip() or None
 
         rows.append({
-            "nome":             nome,
-            "cpf":              cpf,
-            "data_nascimento":  nascimento,
-            "email":            str(row.get("E-Mail") or "").strip() or None,
-            "telefone":         str(row.get("Celular") or "").strip() or None,
-            "unidade":          unidade,
-            "cargo":            cargo_vaga,
-            "nota_avaliacao":   str(nota_av)  if nota_av  is not None else None,
-            "nota_entrevista":  str(nota_ent) if nota_ent is not None else None,
-            "observacao":       status_atual,
-            "numero_edital":    numero_edital,
-            "data_publicacao":  data_publicacao,
-            "data_importacao":  today_iso,
-            "import_batch_id":  importacao_id,
-            "status":           "CADASTRO RESERVA",
-            "status_calculado": "CADASTRO RESERVA",
-            "status_original":  "CADASTRO RESERVA",
-            "origem":           "reachr",
+            "nome":                    nome,
+            "cpf":                     cpf,
+            "data_nascimento":         nascimento,
+            "email":                   str(row.get("E-Mail") or "").strip() or None,
+            "telefone":                str(row.get("Celular") or "").strip() or None,
+            "unidade":                 unidade,
+            "cargo":                   cargo_vaga,
+            "nota_avaliacao":          str(nota_av)  if nota_av  is not None else None,
+            "nota_entrevista":         str(nota_ent) if nota_ent is not None else None,
+            "observacao":              status_atual,
+            "numero_processo_seletivo": arquivo,
+            "numero_edital":           numero_edital or None,
+            "is_teia":                 is_teia,
+            "media_final":             round(avg_score, 4),
+            "data_publicacao":         data_publicacao,
+            "data_importacao":         today_iso,
+            "import_batch_id":         importacao_id,
+            "status":                  "CADASTRO RESERVA",
+            "status_calculado":        "CADASTRO RESERVA",
+            "status_original":         "CADASTRO RESERVA",
+            "origem":                  "reachr",
             # ── temporary sort keys (removed before insert) ──────────────────
             "__avg":  avg_score,
             # Oldest birthdate = highest priority on tie; missing dates rank last.
@@ -530,7 +538,7 @@ def process_excel(
         total_inserted += len(batch)
         logger.info("  Inserted rows %d – %d", i + 1, total_inserted)
 
-    logger.info("Total rows inserted for edital %s: %d", numero_edital, total_inserted)
+    logger.info("Total rows inserted for proc. seletivo %s: %d", arquivo, total_inserted)
     return total_inserted
 
 # ============================================================================
@@ -556,7 +564,7 @@ def run() -> None:
         logger.info("No editais with status 'aguardando_processamento'. Nothing to do.")
         return
 
-    codes = [e.get("numero_edital", "(empty)") for e in editais]
+    codes = [e.get("arquivo", "(empty)") for e in editais]
     logger.info("Found %d pending edital(s): %s", len(editais), codes)
 
     driver = setup_driver()
@@ -566,24 +574,29 @@ def run() -> None:
         login(driver)
 
         for edital_row in editais:
+            arquivo       = (edital_row.get("arquivo")       or "").strip()
             numero_edital = (edital_row.get("numero_edital") or "").strip()
+            is_teia       = bool(edital_row.get("is_teia", False))
             importacao_id = edital_row["id"]
 
-            if not numero_edital:
-                logger.warning("Row %s has empty numero_edital — skipping.", importacao_id)
+            if not arquivo:
+                logger.warning("Row %s has empty arquivo — skipping.", importacao_id)
                 continue
 
             logger.info("───────────────────────────────────────────────────")
-            logger.info("Processing edital: %s  (importacao id: %s)", numero_edital, importacao_id)
+            logger.info(
+                "Processing proc. seletivo: %s | edital: %s  (importacao id: %s)",
+                arquivo, numero_edital, importacao_id,
+            )
 
             try:
                 # ── 1. Go to dashboard & filter ──────────────────────────────
                 navigate_to_dashboard(driver)
-                apply_filter(driver, numero_edital)
+                apply_filter(driver, arquivo)
 
                 # ── 2. Verify the card shows the expected code ────────────────
-                if not verify_code(driver, numero_edital):
-                    logger.warning("Edital %s not found in Reachr.", numero_edital)
+                if not verify_code(driver, arquivo):
+                    logger.warning("Código %s not found in Reachr.", arquivo)
                     update_importacao_status(
                         supabase, importacao_id, "Edital não encontrado na Reachr"
                     )
@@ -600,7 +613,7 @@ def run() -> None:
 
                 # ── 6. Parse Excel & insert into banco_candidatos ─────────────
                 n = process_excel(
-                    supabase, excel_path, numero_edital, card_info, importacao_id
+                    supabase, excel_path, arquivo, numero_edital, is_teia, card_info, importacao_id
                 )
 
                 # ── 7. Delete temporary file ──────────────────────────────────
@@ -616,25 +629,25 @@ def run() -> None:
                     importacao_id,
                     "Candidato(a)s importados para o banco de talentos",
                 )
-                logger.info("Edital %s processed successfully (%d candidates).", numero_edital, n)
+                logger.info("Proc. seletivo %s processed successfully (%d candidates).", arquivo, n)
 
             except TimeoutException as exc:
-                logger.error("Timeout on edital %s: %s", numero_edital, exc)
+                logger.error("Timeout on proc. seletivo %s: %s", arquivo, exc)
                 update_importacao_status(
                     supabase, importacao_id, "Erro: timeout ao processar edital"
                 )
             except WebDriverException as exc:
-                logger.error("WebDriver error on edital %s: %s", numero_edital, exc)
+                logger.error("WebDriver error on proc. seletivo %s: %s", arquivo, exc)
                 update_importacao_status(
                     supabase, importacao_id, "Erro: falha no navegador"
                 )
             except RuntimeError as exc:
-                logger.error("Runtime error on edital %s: %s", numero_edital, exc)
+                logger.error("Runtime error on proc. seletivo %s: %s", arquivo, exc)
                 update_importacao_status(
                     supabase, importacao_id, f"Erro: {str(exc)[:200]}"
                 )
             except Exception as exc:
-                logger.error("Unexpected error on edital %s: %s", numero_edital, exc, exc_info=True)
+                logger.error("Unexpected error on proc. seletivo %s: %s", arquivo, exc, exc_info=True)
                 update_importacao_status(
                     supabase, importacao_id, f"Erro inesperado: {str(exc)[:200]}"
                 )

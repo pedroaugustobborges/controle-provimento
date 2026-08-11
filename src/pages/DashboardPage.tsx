@@ -34,6 +34,7 @@ import {
   filterByRegionAndUnit,
   getRegionForUnit,
   normStatus,
+  extractUnitPrefix,
 } from "@/lib/vagaUtils";
 import {
   Briefcase,
@@ -201,8 +202,8 @@ export default function DashboardPage() {
     fetchUsers,
   } = useAdminStore();
 
-  const [chartMode, setChartMode] = useState<"unidade" | "regiao">("unidade");
   const [isStaleModalOpen, setIsStaleModalOpen] = useState(false);
+  const [unitChartSource, setUnitChartSource] = useState<"vagas" | "banco">("vagas");
   const [isUnitPickerOpen, setIsUnitPickerOpen] = useState(false);
   const [unitSearch, setUnitSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -684,21 +685,6 @@ export default function DashboardPage() {
     [totalVagas, counts, totalBancosDisponiveis, totalTarefasPendentes],
   );
 
-  // Derive bar label from secao: take the segment after the last ' - '.
-  // e.g. "SEHIG - SERVICO DE HIGIENIZACAO - HUGOL" → "HUGOL"
-  // Falls back to the unit name when secao is absent.
-  const secaoBarLabel = (
-    secao: string | undefined,
-    fallback: string,
-  ): string => {
-    if (secao && secao.trim()) {
-      const parts = secao.split(" - ");
-      const last = parts[parts.length - 1].trim();
-      if (last) return last;
-    }
-    return resolveCanonicalName(fallback) || fallback;
-  };
-
   const strategicScopeByUnit = useMemo(() => {
     const unitMap = new Map<string, any>();
     const getEntry = (label: string, unitName: string) => {
@@ -726,7 +712,7 @@ export default function DashboardPage() {
       "suspensa",
     ];
     vagas.forEach((vaga) => {
-      const label = secaoBarLabel(vaga.secao, vaga.unidade);
+      const label = extractUnitPrefix(vaga.unidade || "");
       const entry = getEntry(label, vaga.unidade);
       if (entry) {
         entry.vagas++;
@@ -747,7 +733,7 @@ export default function DashboardPage() {
       }
     });
     filteredBancos.forEach((banco) => {
-      const label = secaoBarLabel((banco as any).secao, banco.unidade);
+      const label = extractUnitPrefix(banco.unidade || "");
       const entry = getEntry(label, banco.unidade);
       if (entry) {
         entry.bancos++;
@@ -768,46 +754,23 @@ export default function DashboardPage() {
       .sort((a, b) => b.total - a.total);
   }, [vagas, filteredBancos]);
 
-  const chartData = useMemo(() => {
-    if (chartMode === "regiao") {
-      const regionMap = new Map<string, any>();
-      if (selectedRegion === "all") {
-        ["Goiânia", "Vitória", "Demais Unidades"].forEach((reg) =>
-          regionMap.set(reg, {
-            name: reg,
-            total: 0,
-            ativos: 0,
-            vagas: 0,
-            bancos: 0,
-            bancosCR: 0,
-            pendencias: 0,
-          }),
-        );
-      }
-      strategicScopeByUnit.forEach((entry) => {
-        const current = regionMap.get(entry.region) || {
-          name: entry.region,
-          total: 0,
-          ativos: 0,
-          vagas: 0,
-          bancos: 0,
-          bancosCR: 0,
-          pendencias: 0,
-        };
-        current.total += entry.total;
-        current.ativos += entry.ativos;
-        current.vagas += entry.vagas;
-        current.bancos += entry.bancos;
-        current.bancosCR += entry.bancosCR;
-        current.pendencias += entry.pendencias;
-        regionMap.set(entry.region, current);
-      });
-      return Array.from(regionMap.values())
-        .filter((i) => i.total > 0 || i.pendencias > 0)
-        .sort((a, b) => b.total - a.total);
-    }
-    return strategicScopeByUnit;
-  }, [chartMode, strategicScopeByUnit, selectedRegion]);
+  const vagasChartData = useMemo(
+    () =>
+      strategicScopeByUnit
+        .filter((e) => e.vagas > 0)
+        .sort((a, b) => b.vagas - a.vagas),
+    [strategicScopeByUnit],
+  );
+
+  const bancoChartData = useMemo(
+    () =>
+      strategicScopeByUnit
+        .filter((e) => e.bancos > 0)
+        .sort((a, b) => b.bancosDisponiveis - a.bancosDisponiveis),
+    [strategicScopeByUnit],
+  );
+
+  const chartData = unitChartSource === "vagas" ? vagasChartData : bancoChartData;
 
   const vacancyAlerts = useMemo(() => {
     const STALE = 10;
@@ -2656,8 +2619,11 @@ export default function DashboardPage() {
             <div
               style={{
                 height: "3px",
-                background: "linear-gradient(90deg, #818cf8, #22d3ee)",
+                background: unitChartSource === "vagas"
+                  ? "linear-gradient(90deg, #818cf8, #22d3ee)"
+                  : "linear-gradient(90deg, #34d399, #06b6d4)",
                 flexShrink: 0,
+                transition: "background 0.3s",
               }}
             />
             <div
@@ -2684,25 +2650,31 @@ export default function DashboardPage() {
                       width: "28px",
                       height: "28px",
                       borderRadius: "8px",
-                      background: "rgba(129,140,248,0.18)",
-                      boxShadow: "0 0 12px rgba(129,140,248,0.25)",
+                      background: unitChartSource === "vagas"
+                        ? "rgba(129,140,248,0.18)"
+                        : "rgba(52,211,153,0.15)",
+                      boxShadow: unitChartSource === "vagas"
+                        ? "0 0 12px rgba(129,140,248,0.25)"
+                        : "0 0 12px rgba(52,211,153,0.2)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      transition: "all 0.3s",
                     }}
                   >
                     <Building2
                       style={{
                         width: "15px",
                         height: "15px",
-                        color: "#818cf8",
+                        color: unitChartSource === "vagas" ? "#818cf8" : "#34d399",
+                        transition: "color 0.3s",
                       }}
                     />
                   </div>
                   <span
                     style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}
                   >
-                    Visão por {chartMode === "regiao" ? "Região" : "Unidade"}
+                    Visão por Unidade
                   </span>
                 </div>
                 <p
@@ -2713,49 +2685,57 @@ export default function DashboardPage() {
                     marginLeft: "36px",
                   }}
                 >
-                  Vagas e bancos consolidados
+                  {unitChartSource === "vagas"
+                    ? "Requisições de vagas por hospital"
+                    : "Candidatos no banco por hospital"}
                 </p>
               </div>
+
+              {/* ── Source toggler ── */}
               <div
                 style={{
                   display: "flex",
-                  borderRadius: "8px",
-                  overflow: "hidden",
+                  background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                  borderRadius: "999px",
+                  padding: "3px",
                   border: `1px solid ${t.divider}`,
+                  gap: "2px",
                 }}
               >
-                {(["unidade", "regiao"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setChartMode(mode)}
-                    style={{
-                      padding: "6px 12px",
-                      fontSize: "9px",
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      cursor: "pointer",
-                      transition: "all 0.15s",
-                      background:
-                        chartMode === mode
-                          ? isDark
-                            ? "rgba(129,140,248,0.4)"
-                            : "rgba(99,102,241,0.12)"
-                          : "transparent",
-                      color:
-                        chartMode === mode
-                          ? isDark
-                            ? "#c4b5fd"
-                            : "#6366f1"
-                          : t.tx3,
-                      border: "none",
-                      borderLeft:
-                        mode === "regiao" ? `1px solid ${t.divider}` : "none",
-                    }}
-                  >
-                    {mode === "unidade" ? "Unidade" : "Região"}
-                  </button>
-                ))}
+                {(
+                  [
+                    { key: "vagas",  label: "Vagas",  Icon: Briefcase, accent: "#818cf8", activeBg: isDark ? "rgba(129,140,248,0.28)" : "rgba(99,102,241,0.12)" },
+                    { key: "banco",  label: "Banco",  Icon: Users,     accent: "#34d399", activeBg: isDark ? "rgba(52,211,153,0.22)"  : "rgba(16,185,129,0.10)" },
+                  ] as const
+                ).map(({ key, label, Icon, accent, activeBg }) => {
+                  const active = unitChartSource === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setUnitChartSource(key)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        padding: "5px 13px",
+                        borderRadius: "999px",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        fontSize: "10px",
+                        fontWeight: 800,
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        background: active ? activeBg : "transparent",
+                        color: active ? accent : t.tx3,
+                        boxShadow: active ? `0 0 10px ${accent}35` : "none",
+                      }}
+                    >
+                      <Icon style={{ width: "11px", height: "11px" }} />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div style={{ padding: "16px", flex: 1, position: "relative" }}>
@@ -2846,68 +2826,70 @@ export default function DashboardPage() {
                         }}
                         contentStyle={t.tooltip}
                         itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
-                        formatter={(value, name) => [
-                          `${value} registros`,
-                          name === "vagas" ? "Vagas" : "Banco (CR)",
+                        formatter={(value) => [
+                          `${value} ${unitChartSource === "vagas" ? "vagas" : "candidatos"}`,
+                          unitChartSource === "vagas" ? "Vagas" : "Banco de Talentos",
                         ]}
                       />
-                      <Legend
-                        verticalAlign="top"
-                        align="right"
-                        iconType="circle"
-                        iconSize={7}
-                        wrapperStyle={{
-                          paddingBottom: "12px",
-                          fontSize: "9px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                          color: t.legendColor,
-                        }}
-                      />
-                      <Bar
-                        dataKey="vagas"
-                        name="Vagas"
-                        radius={[0, 4, 4, 0]}
-                        barSize={10}
-                      >
-                        {chartData.map((_, idx) => (
-                          <Cell
-                            key={`cv-${idx}`}
-                            fill={idx < 3 ? t.barPrimary : t.barPrimaryLight}
-                          />
-                        ))}
-                        <LabelList
+                      {unitChartSource === "vagas" ? (
+                        <Bar
+                          key="bar-vagas"
                           dataKey="vagas"
-                          position="right"
-                          style={{
-                            fill: t.axisColor,
-                            fontSize: "9px",
-                            fontWeight: "bold",
-                          }}
-                          offset={6}
-                          formatter={(v: number) => (v > 0 ? v : "")}
-                        />
-                      </Bar>
-                      <Bar
-                        dataKey="bancosDisponiveis"
-                        name="Banco (CR)"
-                        fill={t.barSecondary}
-                        radius={[0, 4, 4, 0]}
-                        barSize={10}
-                      >
-                        <LabelList
+                          name="Vagas"
+                          radius={[0, 4, 4, 0]}
+                          barSize={12}
+                        >
+                          {chartData.map((_, idx) => (
+                            <Cell
+                              key={`cv-${idx}`}
+                              fill={idx < 3 ? t.barPrimary : t.barPrimaryLight}
+                            />
+                          ))}
+                          <LabelList
+                            dataKey="vagas"
+                            position="right"
+                            style={{
+                              fill: t.axisColor,
+                              fontSize: "9px",
+                              fontWeight: "bold",
+                            }}
+                            offset={6}
+                            formatter={(v: number) => (v > 0 ? v : "")}
+                          />
+                        </Bar>
+                      ) : (
+                        <Bar
+                          key="bar-banco"
                           dataKey="bancosDisponiveis"
-                          position="right"
-                          style={{
-                            fill: t.barSecondary,
-                            fontSize: "9px",
-                            fontWeight: "bold",
-                          }}
-                          offset={6}
-                          formatter={(v: number) => (v > 0 ? v : "")}
-                        />
-                      </Bar>
+                          name="Banco de Talentos"
+                          radius={[0, 4, 4, 0]}
+                          barSize={12}
+                        >
+                          {chartData.map((_, idx) => (
+                            <Cell
+                              key={`cb-${idx}`}
+                              fill={
+                                idx < 3
+                                  ? t.barSecondary
+                                  : isDark
+                                    ? "rgba(52,211,153,0.45)"
+                                    : "rgba(16,185,129,0.45)"
+                              }
+                            />
+                          ))}
+                          <LabelList
+                            dataKey="bancosDisponiveis"
+                            position="right"
+                            style={{
+                              fill: t.barSecondary,
+                              fontSize: "9px",
+                              fontWeight: "bold",
+                            }}
+                            offset={6}
+                            formatter={(v: number) => (v > 0 ? v : "")}
+                          />
+                        </Bar>
+                      )}
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

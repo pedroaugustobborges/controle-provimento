@@ -112,7 +112,14 @@ import { ptBR } from "date-fns/locale";
 import { parseLocalDate, formatLocalDate } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useState, useEffect, useMemo, useRef, ChangeEvent, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  ChangeEvent,
+  useCallback,
+} from "react";
 import { ConvocacaoDialog } from "@/components/ConvocacaoDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
@@ -203,7 +210,6 @@ const ETAPAS_POR_TRATATIVA_TEIA: Record<string, string[]> = {
   "Em Processo Seletivo": ETAPAS_TEIA,
   "Vaga de Liderança": ETAPAS_TEIA,
 };
-
 
 function calcSimilarity(vagaCargo: string, bancoCargo: string): number {
   if (!vagaCargo || !bancoCargo) return 0;
@@ -354,9 +360,10 @@ function ObsLikeButton({
         onToggle();
       }}
       className={`group flex items-center gap-1 px-2 py-0.5 rounded-full transition-all duration-200 select-none
-        ${isLiked
-          ? "text-blue-500 hover:text-blue-400 hover:bg-blue-50"
-          : "text-slate-400 hover:text-blue-400 hover:bg-blue-50/60 opacity-0 group-hover/obs:opacity-100"
+        ${
+          isLiked
+            ? "text-blue-500 hover:text-blue-400 hover:bg-blue-50"
+            : "text-slate-400 hover:text-blue-400 hover:bg-blue-50/60 opacity-0 group-hover/obs:opacity-100"
         }`}
       aria-label={isLiked ? "Remover curtida" : "Curtir"}
     >
@@ -479,18 +486,12 @@ function ObsDeleteButton({ onConfirm }: { onConfirm: () => void }) {
 // ─── Mention helpers ─────────────────────────────────────────────────────────
 
 /** Inline chip for a resolved @mention — shows avatar + full name on hover */
-function ObsMentionChip({
-  token,
-  users,
-}: {
-  token: string;
-  users: any[];
-}) {
+function ObsMentionChip({ token, users }: { token: string; users: any[] }) {
   // token is "@Pedro_Augusto" — match against the slug of the full name
   const slug = token.slice(1).toLowerCase();
   const user = users.find(
     (u: any) =>
-      u.nome_completo?.trim().replace(/\s+/g, "_").toLowerCase() === slug
+      u.nome_completo?.trim().replace(/\s+/g, "_").toLowerCase() === slug,
   );
 
   const chip = (
@@ -555,7 +556,7 @@ function renderObsText(text: string, users: any[]) {
           <ObsMentionChip key={i} token={part} users={users} />
         ) : (
           <span key={i}>{part}</span>
-        )
+        ),
       )}
     </>
   );
@@ -572,7 +573,7 @@ function extractMentionedUsers(text: string, users: any[]): any[] {
     const slug = m.slice(1).toLowerCase(); // e.g. "pedro_augusto"
     const user = users.find(
       (u: any) =>
-        u.nome_completo?.trim().replace(/\s+/g, "_").toLowerCase() === slug
+        u.nome_completo?.trim().replace(/\s+/g, "_").toLowerCase() === slug,
     );
     if (user && !seen.has(user.id)) seen.set(user.id, user);
   });
@@ -696,6 +697,7 @@ export default function VagaDetalhePage() {
   const [fluxoDirty, setFluxoDirty] = useState(false);
   const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
+  const [showEtapaRequiredAlert, setShowEtapaRequiredAlert] = useState(false);
 
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
@@ -747,12 +749,15 @@ export default function VagaDetalhePage() {
     "admissao_efetivada",
   ].includes(vaga?.status || vaga?.status_geral || "");
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const userAvatarMap = useMemo(() => {
     const map = new Map<string, string>();
     (users || []).forEach((u: any) => {
-      if (u.nome_completo && u.avatar_url) map.set(u.nome_completo, u.avatar_url);
+      if (u.nome_completo && u.avatar_url)
+        map.set(u.nome_completo, u.avatar_url);
     });
     return map;
   }, [users]);
@@ -762,13 +767,19 @@ export default function VagaDetalhePage() {
     if (vaga?.analista_responsavel) return vaga.analista_responsavel;
     if (!vaga?.unidade) return null;
     const analysts = (users || []).filter(
-      (u: any) => Array.isArray(u.unidades_responsavel) && u.unidades_responsavel.length > 0,
+      (u: any) =>
+        Array.isArray(u.unidades_responsavel) &&
+        u.unidades_responsavel.length > 0,
     );
-    let match = analysts.find((u: any) => unitIsAllowed(vaga.unidade, u.unidades_responsavel));
+    let match = analysts.find((u: any) =>
+      unitIsAllowed(vaga.unidade, u.unidades_responsavel),
+    );
     if (!match) {
       const normUnidade = normalizeUnitName(vaga.unidade);
       match = analysts.find((u: any) =>
-        u.unidades_responsavel.some((s: string) => normUnidade.includes(normalizeUnitName(s))),
+        u.unidades_responsavel.some((s: string) =>
+          normUnidade.includes(normalizeUnitName(s)),
+        ),
       );
     }
     return match?.nome_completo ?? null;
@@ -806,7 +817,7 @@ export default function VagaDetalhePage() {
         setMentionQuery(null);
       }
     },
-    []
+    [],
   );
 
   const handleSelectMention = useCallback(
@@ -830,7 +841,7 @@ export default function VagaDetalhePage() {
         textarea.selectionEnd = pos;
       }, 0);
     },
-    [newObsText]
+    [newObsText],
   );
 
   useEffect(() => {
@@ -1430,11 +1441,15 @@ export default function VagaDetalhePage() {
     } as any);
     // Notify the obs author (skip self-likes)
     if (isAdding && targetItem && targetItem.author_id !== currentUser.id) {
-      const snippet = targetItem.text.slice(0, 80) + (targetItem.text.length > 80 ? "…" : "");
+      const snippet =
+        targetItem.text.slice(0, 80) + (targetItem.text.length > 80 ? "…" : "");
       createNotificacao({
         usuario_id: targetItem.author_id,
         titulo: `${currentUser.nome_completo} curtiu sua observação`,
-        mensagem: `"${snippet}" — ${vaga.cargo || "Vaga"} · ${vaga.unidade || ""}`.trim().replace(/·\s*$/, ""),
+        mensagem:
+          `"${snippet}" — ${vaga.cargo || "Vaga"} · ${vaga.unidade || ""}`
+            .trim()
+            .replace(/·\s*$/, ""),
         tipo: "curtida",
         registro_id: vaga.id,
       });
@@ -1454,8 +1469,7 @@ export default function VagaDetalhePage() {
   };
 
   const isAdmin =
-    currentUser?.perfil === "Administrador" ||
-    currentUser?.perfil === "Admin";
+    currentUser?.perfil === "Administrador" || currentUser?.perfil === "Admin";
 
   const safeNavigate = (action: () => void) => {
     if (fluxoDirty) {
@@ -1498,6 +1512,34 @@ export default function VagaDetalhePage() {
       1,
     );
     const today = new Date().toISOString();
+
+    // Validate: if tratativa is set, etapa must also be set and valid
+    const fluxoItemsForValidation = getFluxoItems(vaga);
+    const isTeia =
+      vaga.is_teia || (vaga.unidade || "").toUpperCase().includes("TEIA");
+    const activeEtapaMapForValidation = isTeia
+      ? ETAPAS_POR_TRATATIVA_TEIA
+      : ETAPAS_POR_TRATATIVA;
+    const slotsToValidate =
+      vagaCount <= 1 ? [1] : fluxoItemsForValidation.map((i) => i.slot);
+    for (const slot of slotsToValidate) {
+      const draft = fluxoDraft[slot] || {};
+      const item = fluxoItemsForValidation.find((i) => i.slot === slot);
+      const effectiveTratativa =
+        "tratativa" in draft ? draft.tratativa || "" : item?.tratativa || "";
+      const effectiveEtapa =
+        "etapa" in draft ? draft.etapa || "" : item?.etapa || "";
+      const availableEtapas = effectiveTratativa
+        ? activeEtapaMapForValidation[effectiveTratativa] || []
+        : [];
+      if (
+        effectiveTratativa &&
+        (!effectiveEtapa || !availableEtapas.includes(effectiveEtapa))
+      ) {
+        setShowEtapaRequiredAlert(true);
+        return;
+      }
+    }
 
     if (vagaCount <= 1) {
       const draft = fluxoDraft[1] || {};
@@ -1795,25 +1837,38 @@ export default function VagaDetalhePage() {
                       {(() => {
                         const avatarUrl = userAvatarMap.get(resolvedAnalista);
                         const initials = resolvedAnalista
-                          .split(' ').filter(Boolean).slice(0, 2)
-                          .map((n: string) => n[0].toUpperCase()).join('');
+                          .split(" ")
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((n: string) => n[0].toUpperCase())
+                          .join("");
                         return avatarUrl ? (
                           <img
                             src={avatarUrl}
                             alt={resolvedAnalista}
                             className="w-7 h-7 rounded-full object-cover ring-2 ring-indigo-100 shrink-0"
-                            onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            onError={(e) => {
+                              (
+                                e.currentTarget as HTMLImageElement
+                              ).style.display = "none";
+                            }}
                           />
                         ) : (
                           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 ring-2 ring-violet-200 flex items-center justify-center shrink-0">
-                            <span className="text-[10px] font-black text-white">{initials}</span>
+                            <span className="text-[10px] font-black text-white">
+                              {initials}
+                            </span>
                           </div>
                         );
                       })()}
-                      <span className="text-sm font-semibold text-slate-700">{resolvedAnalista}</span>
+                      <span className="text-sm font-semibold text-slate-700">
+                        {resolvedAnalista}
+                      </span>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-400 italic">Não atribuído</p>
+                    <p className="text-sm text-slate-400 italic">
+                      Não atribuído
+                    </p>
                   )}
                 </div>
                 {vaga.assistentes && vaga.assistentes.length > 0 && (
@@ -1873,120 +1928,121 @@ export default function VagaDetalhePage() {
                 </div>
               </div>
 
-              {(vaga.is_teia || (vaga.unidade || '').toUpperCase().includes('TEIA')) && (
-              <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Indicadores do Processo
-                  </h4>
-                  {canEdit && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        isEditingIndicators
-                          ? handleSaveIndicators()
-                          : setIsEditingIndicators(true)
-                      }
-                      className="h-7 px-2 text-[11px] font-bold uppercase tracking-wider"
-                    >
-                      {isEditingIndicators
-                        ? "Salvar Indicadores"
-                        : "Editar Indicadores"}
-                    </Button>
-                  )}
+              {(vaga.is_teia ||
+                (vaga.unidade || "").toUpperCase().includes("TEIA")) && (
+                <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Indicadores do Processo
+                    </h4>
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          isEditingIndicators
+                            ? handleSaveIndicators()
+                            : setIsEditingIndicators(true)
+                        }
+                        className="h-7 px-2 text-[11px] font-bold uppercase tracking-wider"
+                      >
+                        {isEditingIndicators
+                          ? "Salvar Indicadores"
+                          : "Editar Indicadores"}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
+                        Inscritos
+                      </label>
+                      {isEditingIndicators ? (
+                        <Input
+                          type="number"
+                          value={indicators.total_inscritos}
+                          onChange={(e) =>
+                            setIndicators({
+                              ...indicators,
+                              total_inscritos: +e.target.value,
+                            })
+                          }
+                          className="h-8 bg-white"
+                        />
+                      ) : (
+                        <p className="text-xl font-bold text-slate-800">
+                          {vaga.total_inscritos || 0}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
+                        Triagem
+                      </label>
+                      {isEditingIndicators ? (
+                        <Input
+                          type="number"
+                          value={indicators.aprovados_triagem}
+                          onChange={(e) =>
+                            setIndicators({
+                              ...indicators,
+                              aprovados_triagem: +e.target.value,
+                            })
+                          }
+                          className="h-8 bg-white"
+                        />
+                      ) : (
+                        <p className="text-xl font-bold text-slate-800">
+                          {vaga.aprovados_triagem || 0}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
+                        Em Entrevista
+                      </label>
+                      {isEditingIndicators ? (
+                        <Input
+                          type="number"
+                          value={indicators.convocados_entrevista}
+                          onChange={(e) =>
+                            setIndicators({
+                              ...indicators,
+                              convocados_entrevista: +e.target.value,
+                            })
+                          }
+                          className="h-8 bg-white"
+                        />
+                      ) : (
+                        <p className="text-xl font-bold text-slate-800">
+                          {vaga.convocados_entrevista || 0}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
+                        Aprovados
+                      </label>
+                      {isEditingIndicators ? (
+                        <Input
+                          type="number"
+                          value={indicators.aprovados_finais}
+                          onChange={(e) =>
+                            setIndicators({
+                              ...indicators,
+                              aprovados_finais: +e.target.value,
+                            })
+                          }
+                          className="h-8 bg-white"
+                        />
+                      ) : (
+                        <p className="text-xl font-bold text-green-600">
+                          {vaga.aprovados_finais || 0}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
-                      Inscritos
-                    </label>
-                    {isEditingIndicators ? (
-                      <Input
-                        type="number"
-                        value={indicators.total_inscritos}
-                        onChange={(e) =>
-                          setIndicators({
-                            ...indicators,
-                            total_inscritos: +e.target.value,
-                          })
-                        }
-                        className="h-8 bg-white"
-                      />
-                    ) : (
-                      <p className="text-xl font-bold text-slate-800">
-                        {vaga.total_inscritos || 0}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
-                      Triagem
-                    </label>
-                    {isEditingIndicators ? (
-                      <Input
-                        type="number"
-                        value={indicators.aprovados_triagem}
-                        onChange={(e) =>
-                          setIndicators({
-                            ...indicators,
-                            aprovados_triagem: +e.target.value,
-                          })
-                        }
-                        className="h-8 bg-white"
-                      />
-                    ) : (
-                      <p className="text-xl font-bold text-slate-800">
-                        {vaga.aprovados_triagem || 0}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
-                      Em Entrevista
-                    </label>
-                    {isEditingIndicators ? (
-                      <Input
-                        type="number"
-                        value={indicators.convocados_entrevista}
-                        onChange={(e) =>
-                          setIndicators({
-                            ...indicators,
-                            convocados_entrevista: +e.target.value,
-                          })
-                        }
-                        className="h-8 bg-white"
-                      />
-                    ) : (
-                      <p className="text-xl font-bold text-slate-800">
-                        {vaga.convocados_entrevista || 0}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
-                      Aprovados
-                    </label>
-                    {isEditingIndicators ? (
-                      <Input
-                        type="number"
-                        value={indicators.aprovados_finais}
-                        onChange={(e) =>
-                          setIndicators({
-                            ...indicators,
-                            aprovados_finais: +e.target.value,
-                          })
-                        }
-                        className="h-8 bg-white"
-                      />
-                    ) : (
-                      <p className="text-xl font-bold text-green-600">
-                        {vaga.aprovados_finais || 0}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
               )}
 
               <div className="space-y-5">
@@ -2041,7 +2097,9 @@ export default function VagaDetalhePage() {
                   const isTeia =
                     vaga.is_teia ||
                     (vaga.unidade || "").toUpperCase().includes("TEIA");
-                  const activeTratativas = isTeia ? TRATATIVAS_TEIA : TRATATIVAS;
+                  const activeTratativas = isTeia
+                    ? TRATATIVAS_TEIA
+                    : TRATATIVAS;
                   const activeEtapaMap = isTeia
                     ? ETAPAS_POR_TRATATIVA_TEIA
                     : ETAPAS_POR_TRATATIVA;
@@ -2259,7 +2317,11 @@ export default function VagaDetalhePage() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {(Object.keys(PROCESSO_STATUS_CONFIG) as StatusProcesso[]).map((s) => {
+                                {(
+                                  Object.keys(
+                                    PROCESSO_STATUS_CONFIG,
+                                  ) as StatusProcesso[]
+                                ).map((s) => {
                                   const c = PROCESSO_STATUS_CONFIG[s];
                                   return (
                                     <SelectItem key={s} value={s}>
@@ -2348,9 +2410,9 @@ export default function VagaDetalhePage() {
                                   style={{
                                     width: 8,
                                     height: 8,
-                                    borderRadius: '50%',
+                                    borderRadius: "50%",
                                     backgroundColor: tabCfg.dotHex,
-                                    display: 'inline-block',
+                                    display: "inline-block",
                                     flexShrink: 0,
                                   }}
                                 />
@@ -2367,7 +2429,6 @@ export default function VagaDetalhePage() {
                   );
                 })()}
               </div>
-
 
               <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-x-8 gap-y-2 text-[11px] text-slate-400 font-bold uppercase tracking-wider">
                 <div className="flex items-center gap-1.5">
@@ -2514,7 +2575,7 @@ export default function VagaDetalhePage() {
                               if (e.key === "ArrowDown") {
                                 e.preventDefault();
                                 setMentionIndex((i) =>
-                                  Math.min(i + 1, mentionUsers.length - 1)
+                                  Math.min(i + 1, mentionUsers.length - 1),
                                 );
                                 return;
                               }
@@ -2525,9 +2586,7 @@ export default function VagaDetalhePage() {
                               }
                               if (e.key === "Enter" || e.key === "Tab") {
                                 e.preventDefault();
-                                handleSelectMention(
-                                  mentionUsers[mentionIndex]
-                                );
+                                handleSelectMention(mentionUsers[mentionIndex]);
                                 return;
                               }
                               if (e.key === "Escape") {
@@ -2536,10 +2595,7 @@ export default function VagaDetalhePage() {
                                 return;
                               }
                             }
-                            if (
-                              e.key === "Enter" &&
-                              (e.ctrlKey || e.metaKey)
-                            )
+                            if (e.key === "Enter" && (e.ctrlKey || e.metaKey))
                               handleAddObs();
                           }}
                           className="min-h-[72px] text-sm resize-none bg-white border-slate-200 focus:border-primary/50 transition-colors"
@@ -2578,9 +2634,7 @@ export default function VagaDetalhePage() {
                 {obsItems.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 gap-2 text-slate-400">
                     <MessageSquare className="h-7 w-7 opacity-25" />
-                    <p className="text-xs">
-                      Nenhuma observação registrada.
-                    </p>
+                    <p className="text-xs">Nenhuma observação registrada.</p>
                   </div>
                 ) : (
                   <div className="space-y-1 pt-1">
@@ -2834,6 +2888,44 @@ export default function VagaDetalhePage() {
               className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Sair sem Salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Etapa obrigatória ───────────────────────────────────────── */}
+      <AlertDialog
+        open={showEtapaRequiredAlert}
+        onOpenChange={setShowEtapaRequiredAlert}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-5 w-5" />
+              Etapa obrigatória
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-slate-600 space-y-2 text-sm">
+                <p>
+                  Não é possível salvar uma alteração de{" "}
+                  <strong className="text-slate-700">Fluxo do Processo</strong>{" "}
+                  sem especificar uma etapa.
+                </p>
+                <p className="text-slate-500">
+                  Você selecionou a{" "}
+                  <strong className="text-slate-700">Tratativa</strong>, mas não
+                  escolheu a <strong className="text-slate-700">Etapa</strong>{" "}
+                  correspondente. Selecione a etapa antes de salvar.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => setShowEtapaRequiredAlert(false)}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              Entendido, vou escolher a Etapa
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

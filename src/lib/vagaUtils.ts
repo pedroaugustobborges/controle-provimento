@@ -475,6 +475,11 @@ export const UNIT_ALIAS_MAP: Record<string, string[]> = {
   'HRD': ['CHRD'],
   // JATAÍ → HEJ (HOSPITAL ESTADUAL DE JATAI)
   'JATAI': ['HEJ'],
+  // Vitória/ES units — DB prefix differs from admin short name
+  'SUA': ['UPA PRAIA DO SUA'],
+  'SAO PEDRO': ['UPA SAO PEDRO'],
+  // POLICLÍNICA → DB stores a "POL GOIAS" prefix
+  'POLICLINICA': ['POL GOIAS'],
 };
 
 /**

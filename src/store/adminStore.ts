@@ -171,6 +171,20 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         } else {
           (profile as any).nome_completo = profile.nome_completo.trim();
         }
+        // Merge unidades_responsavel into unidades_vinculadas so that all
+        // visibility filters (which only check unidades_vinculadas) automatically
+        // cover the units the analyst is responsible for.
+        if (!(profile as any).visualiza_todas_unidades) {
+          const vinculadas: string[] = Array.isArray((profile as any).unidades_vinculadas)
+            ? (profile as any).unidades_vinculadas
+            : [];
+          const responsavel: string[] = Array.isArray((profile as any).unidades_responsavel)
+            ? (profile as any).unidades_responsavel
+            : [];
+          if (responsavel.length > 0) {
+            (profile as any).unidades_vinculadas = [...new Set([...vinculadas, ...responsavel])];
+          }
+        }
         set({ currentUser: profile as User });
       } else {
         // No profile row yet — build a minimal currentUser from auth metadata
@@ -428,6 +442,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             const row = newRow as any;
             set((s) => {
               const exists = s.users.some((u) => u.id === row.id);
+              const rawVinculadas: string[] = row.unidades_vinculadas || [];
+              const rawResponsavel: string[] = row.unidades_responsavel || [];
+              const mergedVinculadas = (!row.visualiza_todas_unidades && rawResponsavel.length > 0)
+                ? [...new Set([...rawVinculadas, ...rawResponsavel])]
+                : rawVinculadas;
               const mapped: User = {
                 id: row.id,
                 nome_completo: row.nome_completo || '',
@@ -436,7 +455,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
                 cargo: row.cargo || '',
                 status: row.status || 'ativo',
                 visualiza_todas_unidades: row.visualiza_todas_unidades || false,
-                unidades_vinculadas: row.unidades_vinculadas || [],
+                unidades_vinculadas: mergedVinculadas,
+                unidades_responsavel: rawResponsavel,
                 pode_incluir_registros: row.pode_incluir_registros || false,
                 pode_excluir_requisicoes: row.pode_excluir_requisicoes || false,
                 pode_editar_configuracoes: row.pode_editar_configuracoes || false,

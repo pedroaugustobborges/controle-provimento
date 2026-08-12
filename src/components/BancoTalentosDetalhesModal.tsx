@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import {
   Users,
   Building,
-  Briefcase,
+  BookUser,
   FileText,
   Calendar,
   ClipboardList,
@@ -141,15 +141,8 @@ function ScoreRing({ value, max = 100 }: { value: number | null; max?: number })
 
 // ── Rank badge colours ────────────────────────────────────────────────────────
 
-function getRankStyle(rank: number | string) {
-  const n = Number(rank);
-  if (n === 1)
-    return { gradient: "from-amber-400 to-yellow-500", text: "text-white" };
-  if (n === 2)
-    return { gradient: "from-slate-400 to-slate-500", text: "text-white" };
-  if (n === 3)
-    return { gradient: "from-orange-400 to-amber-600", text: "text-white" };
-  return { gradient: "from-slate-200 to-slate-300", text: "text-slate-700" };
+function getRankStyle(_rank: number | string) {
+  return { gradient: "from-slate-400 to-slate-500", text: "text-white" };
 }
 
 // ── Candidate card ────────────────────────────────────────────────────────────
@@ -168,12 +161,6 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
   const hasObs     = !!obs && obs !== "nan" && obs.trim() !== "";
   const rank       = getRankStyle(c.classificacao);
 
-  const initials = (c.nome || "?")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w: string) => w[0].toUpperCase())
-    .join("");
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
@@ -192,11 +179,8 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
           </span>
         </div>
 
-        {/* Avatar + name */}
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <div className="h-9 w-9 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-[11px] font-black text-primary shrink-0 select-none">
-            {initials}
-          </div>
+        {/* Name */}
+        <div className="flex-1 min-w-0">
           <div className="min-w-0">
             <p className="text-sm font-bold text-slate-800 leading-tight truncate">
               {c.nome || "Não identificado"}
@@ -483,7 +467,7 @@ export function BancoTalentosDetalhesModal({
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Briefcase className="h-6 w-6 text-primary" />
+                <BookUser className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-900 leading-tight">

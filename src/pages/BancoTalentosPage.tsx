@@ -49,7 +49,7 @@ import {
   normalizeUnitName,
 } from "@/lib/vagaUtils";
 import { calculateBancoStatus, calculateStats } from "@/lib/bancoTalentosUtils";
-import { useState, useMemo, useEffect, useRef, useLayoutEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from "react";
 
 const getRegiaoFromUnit = (unidade: string): string | undefined => {
   const normalized = normalizeUnitName(unidade);
@@ -77,13 +77,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { ConvocacaoDialog } from "@/components/ConvocacaoDialog";
 import { Convocacao } from "@/types/vaga";
@@ -155,6 +148,7 @@ export default function BancoTalentosPage() {
   const [novoNumeroEdital, setNovoNumeroEdital] = useState("");
   const [isTeia, setIsTeia] = useState(false);
   const [savingEdital, setSavingEdital] = useState(false);
+  const [prorrogandoModal, setProrrogandoModal] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
   const [selectedBanco, setSelectedBanco] = useState<BancoTalentos | null>(
@@ -1177,333 +1171,334 @@ export default function BancoTalentosPage() {
         initialData={convocacaoInitialData}
       />
 
-      <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
-          <SheetHeader className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <SheetTitle className="text-xl font-bold">
-                  {selectedBanco?.cargo || "Detalhes do Banco"}
-                </SheetTitle>
-                <SheetDescription>
-                  Banco total:{" "}
-                  <span className="font-bold text-primary">
-                    {selectedBanco?.quantidade_banco || "Não informado"}
-                  </span>
-                </SheetDescription>
-              </div>
-            </div>
-            {selectedBanco && (
-              <div className="flex gap-2 mt-2">
-                {getStatusBadge(selectedBanco.status)}
-                {selectedBanco.is_prorrogado && (
-                  <Badge
-                    variant="outline"
-                    className="bg-blue-50 text-blue-700 border-blue-200"
-                  >
-                    Prorrogado
-                  </Badge>
-                )}
-              </div>
-            )}
-          </SheetHeader>
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+          {selectedBanco && (() => {
+            // ── helpers ────────────────────────────────────────────────────
+            const parseDataPublicacao = (raw: string | undefined): Date | null => {
+              if (!raw) return null;
+              // strip optional "Data Pub.: " or "Data: " prefix
+              const clean = raw.replace(/^data\s*(pub\.?)?\s*:\s*/i, "").trim();
+              // try dd/mm/yyyy
+              const brMatch = clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+              if (brMatch) return new Date(+brMatch[3], +brMatch[2] - 1, +brMatch[1]);
+              // try yyyy-mm-dd
+              const isoMatch = clean.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+              if (isoMatch) return new Date(+isoMatch[1], +isoMatch[2] - 1, +isoMatch[3]);
+              return null;
+            };
 
-          {selectedBanco && (
-            <div className="space-y-6">
-              {/* Candidatos */}
-              <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <User className="h-3 w-3" /> Candidatos Classificados (
-                    {selectedGroupCandidates.length})
+            const fmtDate = (d: Date | null): string => {
+              if (!d) return "—";
+              return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+            };
+
+            const addMonths = (d: Date, m: number): Date => {
+              const r = new Date(d);
+              r.setMonth(r.getMonth() + m);
+              return r;
+            };
+
+            const pubDate    = parseDataPublicacao((selectedBanco as any).data_publicacao);
+            const val6m      = pubDate ? addMonths(pubDate, 6)  : null;
+            const val12m     = pubDate ? addMonths(pubDate, 12) : null;
+            const isProrrogado = !!(selectedBanco.is_prorrogado || selectedBanco.nova_data_validade);
+            const isTeiaBanco  = !!(selectedBanco as any).is_teia;
+
+            const handleModalProrrogar = async () => {
+              if (!val12m || !currentUser) return;
+              setProrrogandoModal(true);
+              try {
+                const { supabase } = await import("@/integrations/supabase/client");
+                const novaValidade = `${val12m.getFullYear()}-${String(val12m.getMonth() + 1).padStart(2, "0")}-${String(val12m.getDate()).padStart(2, "0")}`;
+                const ids = selectedGroupCandidates.map((c) => c.id);
+                const { error } = await supabase
+                  .from("banco_candidatos")
+                  .update({ is_prorrogado: true, nova_data_validade: novaValidade })
+                  .in("id", ids);
+                if (error) throw error;
+                toast.success("Validade prorrogada com sucesso!");
+                await fetchBancos();
+              } catch (e: any) {
+                toast.error(`Erro ao prorrogar: ${e.message}`);
+              } finally {
+                setProrrogandoModal(false);
+              }
+            };
+
+            // ── label helper ───────────────────────────────────────────────
+            const Field = ({ label, value, accent }: { label: string; value: React.ReactNode; accent?: string }) => (
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+                <p className={cn("text-sm font-semibold", accent ?? "text-slate-800")}>{value}</p>
+              </div>
+            );
+
+            return (
+              <>
+                {/* ── Header ─────────────────────────────────────────────── */}
+                <div className="px-6 pt-6 pb-4 border-b border-slate-100 shrink-0">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Briefcase className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-900 leading-tight">
+                          {selectedBanco.cargo}
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
+                          <Building className="h-3.5 w-3.5" />
+                          {selectedBanco.unidade}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                      {getStatusBadge(selectedBanco.status)}
+                      {isProrrogado && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1">
+                          <Calendar className="h-3 w-3" /> Prorrogado
+                        </Badge>
+                      )}
+                      {isTeiaBanco && (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1">
+                          <Puzzle className="h-3 w-3" /> Rede Teia
+                        </Badge>
+                      )}
+                      <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 font-bold">
+                        {selectedGroupCandidates.length} candidato{selectedGroupCandidates.length !== 1 ? "s" : ""}
+                      </Badge>
+                    </div>
                   </div>
-                </h3>
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {selectedGroupCandidates.map((c, idx) => (
-                    <div
-                      key={c.id}
-                      className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-primary shadow-sm">
-                            {c.classificacao}°
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-800">
-                              {c.nome || "Não identificado"}
+                </div>
+
+                {/* ── Body: two-column layout ─────────────────────────────── */}
+                <div className="flex flex-1 min-h-0 overflow-hidden">
+
+                  {/* Left: group info (fixed) */}
+                  <div className="w-72 shrink-0 border-r border-slate-100 overflow-y-auto p-5 space-y-5">
+
+                    {/* Edital e Processo */}
+                    <section>
+                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <FileText className="h-3 w-3" /> Edital e Processo
+                      </h3>
+                      <div className="space-y-3">
+                        <Field
+                          label="Nº do Edital"
+                          value={
+                            isTeiaBanco
+                              ? <span className="flex items-center gap-1.5 text-emerald-600"><Puzzle className="h-3.5 w-3.5" /> Rede Teia</span>
+                              : (selectedBanco.numero_edital || "—")
+                          }
+                          accent={isTeiaBanco ? "" : undefined}
+                        />
+                        <Field
+                          label="Nº do Processo Seletivo"
+                          value={selectedBanco.numero_processo_seletivo || selectedBanco.numero_processo || "—"}
+                        />
+                      </div>
+                    </section>
+
+                    <Separator />
+
+                    {/* Datas */}
+                    <section>
+                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <Calendar className="h-3 w-3" /> Datas Importantes
+                      </h3>
+                      <div className="space-y-3">
+                        <Field label="Publicação" value={fmtDate(pubDate)} />
+
+                        {/* Validade + prorrogar */}
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {isProrrogado ? "Validade Prorrogada" : "Validade Original"}
+                          </p>
+                          {isProrrogado ? (
+                            <p className="text-sm font-semibold text-blue-600">
+                              {selectedBanco.nova_data_validade
+                                ? fmtDate(parseDataPublicacao(selectedBanco.nova_data_validade) ?? new Date(selectedBanco.nova_data_validade))
+                                : fmtDate(val12m)}
                             </p>
-                            <p className="text-[11px] text-slate-400 font-medium uppercase">
-                              Candidato
-                            </p>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold text-slate-800">{fmtDate(val6m)}</p>
+                              {val12m && canProrrogate && (
+                                <button
+                                  onClick={handleModalProrrogar}
+                                  disabled={prorrogandoModal}
+                                  className="text-[10px] font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 px-2 py-0.5 rounded-full transition-all disabled:opacity-50 whitespace-nowrap"
+                                >
+                                  {prorrogandoModal ? "..." : "Prorrogar"}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {selectedBanco.data_convocacao && (
+                          <Field
+                            label="Data Convocação"
+                            value={formatDate(selectedBanco.data_convocacao)}
+                            accent="text-green-600"
+                          />
+                        )}
+                      </div>
+                    </section>
+
+                    {/* Convocação details */}
+                    {(selectedBanco.data_convocacao || selectedBanco.status === "CONVOCADO") && (
+                      <>
+                        <Separator />
+                        <section>
+                          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                            <ClipboardList className="h-3 w-3" /> Convocação
+                          </h3>
+                          <div className="space-y-3">
+                            {selectedBanco.unidade_convocacao && (
+                              <Field label="Unidade de Convocação" value={selectedBanco.unidade_convocacao} />
+                            )}
+                            {selectedBanco.numero_chamada && (
+                              <Field label="Nº da Chamada" value={selectedBanco.numero_chamada} />
+                            )}
+                            {selectedBanco.numero_vaga_aproveitamento && (
+                              <Field label="Vaga Aproveitamento" value={selectedBanco.numero_vaga_aproveitamento} />
+                            )}
                           </div>
-                        </div>
-                        {getStatusBadge(c.status)}
-                      </div>
-
-                      {/* Dados de Contato */}
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 border-t border-slate-200/50">
-                        <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-                            Telefone
-                          </p>
-                          <p className="text-[11px] font-semibold text-slate-700">
-                            {(c as any).telefone || "—"}
-                          </p>
-                        </div>
-                        <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-                            CPF
-                          </p>
-                          <p className="text-[11px] font-semibold text-slate-700">
-                            {(c as any).cpf || "—"}
-                          </p>
-                        </div>
-                        <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-                            E-mail
-                          </p>
-                          <p className="text-[11px] font-semibold text-slate-700">
-                            {(c as any).email || "—"}
-                          </p>
-                        </div>
-                        <div className="space-y-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-                            Observação
-                          </p>
-                          <p className="text-[11px] font-semibold text-slate-700">
-                            {(c as any).observacao &&
-                            (c as any).observacao !== "nan"
-                              ? (c as any).observacao
-                              : "—"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Convocar button */}
-                      <div className="pt-2 border-t border-slate-200/50">
-                        <Button
-                          size="sm"
-                          className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-bold shadow-sm shadow-primary/20"
-                          onClick={() => {
-                            setConvocacaoInitialData({
-                              nome_candidato: c.nome || "",
-                              classificacao: Number(c.classificacao) || 1,
-                              cargo: selectedBanco!.cargo,
-                              unidade: selectedBanco!.unidade,
-                              secao: selectedBanco!.secao || "",
-                              edital_relacionado:
-                                selectedBanco!.numero_edital || "",
-                              banco_id: c.id,
-                              requisicao:
-                                c.numero_processo_seletivo ||
-                                c.numero_chamada ||
-                                "",
-                            });
-                            setIsConvocacaoOpen(true);
-                          }}
-                        >
-                          <Clock className="h-3.5 w-3.5" />
-                          Convocar
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {selectedGroupCandidates.length === 0 && (
-                    <p className="text-sm text-slate-400 italic text-center py-4">
-                      Nenhum candidato listado.
-                    </p>
-                  )}
-                </div>
-              </section>
-
-              <Separator />
-
-              {/* Identificação do Grupo */}
-              <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Building className="h-3 w-3" /> Unidade e Cargo
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                      Unidade
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {selectedBanco?.unidade}
-                    </p>
+                        </section>
+                      </>
+                    )}
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                      Cargo
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {selectedBanco?.cargo}
-                    </p>
-                  </div>
-                </div>
-              </section>
 
-              <Separator />
-
-              {/* Edital */}
-              <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <FileText className="h-3 w-3" /> Edital e Processo
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                      Número Edital
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {selectedBanco.numero_edital}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                      Número Processo
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {selectedBanco.numero_processo || "Não informado"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                      Classificação
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {selectedBanco.classificacao || "Não informado"}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <Separator />
-
-              {/* Datas */}
-              <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Calendar className="h-3 w-3" /> Datas Importantes
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                      Publicação
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {formatDate(selectedBanco.data_abertura_edital)}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                      Validade Original
-                    </p>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {formatDate(selectedBanco.data_validade)}
-                    </p>
-                  </div>
-                  {selectedBanco.nova_data_validade && (
-                    <div className="space-y-1">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                        Validade Prorrogada
-                      </p>
-                      <p className="text-sm font-semibold text-blue-600 font-bold">
-                        {formatDate(selectedBanco.nova_data_validade)}
-                      </p>
-                    </div>
-                  )}
-                  {selectedBanco.data_convocacao && (
-                    <div className="space-y-1">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                        Data Convocação
-                      </p>
-                      <p className="text-sm font-semibold text-green-600 font-bold">
-                        {formatDate(selectedBanco.data_convocacao)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              <Separator />
-
-              {/* Convocação */}
-              {(selectedBanco.data_convocacao ||
-                selectedBanco.status === "CONVOCADO") && (
-                <>
-                  <section>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <ClipboardList className="h-3 w-3" /> Detalhes da
-                      Convocação
+                  {/* Right: candidates list (scrollable) */}
+                  <div className="flex-1 overflow-y-auto p-5">
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+                      <Users className="h-3 w-3" /> Candidatos Classificados
+                      <span className="ml-1 bg-slate-100 text-slate-500 rounded-full px-2 py-0.5 text-[9px] font-bold">
+                        {selectedGroupCandidates.length}
+                      </span>
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {selectedBanco.unidade_convocacao && (
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                            Unidade de Convocação
-                          </p>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {selectedBanco.unidade_convocacao}
-                          </p>
-                        </div>
-                      )}
-                      {selectedBanco.numero_chamada && (
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                            Número da Chamada
-                          </p>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {selectedBanco.numero_chamada}
-                          </p>
-                        </div>
-                      )}
-                      {selectedBanco.numero_processo_seletivo && (
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                            Proc. Seletivo
-                          </p>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {selectedBanco.numero_processo_seletivo}
-                          </p>
-                        </div>
-                      )}
-                      {selectedBanco.numero_vaga_aproveitamento && (
-                        <div className="space-y-1">
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">
-                            Vaga Aproveitamento
-                          </p>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {selectedBanco.numero_vaga_aproveitamento}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </section>
-                  <Separator />
-                </>
-              )}
 
-              {/* Observações */}
-              {selectedBanco.observacoes && (
-                <section>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <Info className="h-3 w-3" /> Observações
-                  </h3>
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <p className="text-sm text-slate-600 leading-relaxed italic">
-                      "{selectedBanco.observacoes}"
-                    </p>
+                    {selectedGroupCandidates.length === 0 && (
+                      <div className="flex flex-col items-center justify-center h-32 text-slate-400 gap-2">
+                        <Users className="h-8 w-8 opacity-30" />
+                        <p className="text-sm italic">Nenhum candidato listado.</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      {selectedGroupCandidates.map((c) => {
+                        const notaAv  = parseFloat((c as any).nota_avaliacao)  || null;
+                        const notaEnt = parseFloat((c as any).nota_entrevista) || null;
+                        const mediaFinal = parseFloat((c as any).media_final)  || null;
+                        const obs = (c as any).observacao;
+                        const hasObs = obs && obs !== "nan" && obs.trim() !== "";
+
+                        return (
+                          <div
+                            key={c.id}
+                            className="rounded-2xl border border-slate-100 bg-slate-50/60 overflow-hidden"
+                          >
+                            {/* Candidate header */}
+                            <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-black text-primary shrink-0">
+                                  {c.classificacao}°
+                                </div>
+                                <div>
+                                  <p className="text-sm font-bold text-slate-800 leading-tight">
+                                    {c.nome || "Não identificado"}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">
+                                    {(c as any).cpf
+                                      ? `CPF: ${(c as any).cpf}`
+                                      : "CPF não informado"}
+                                  </p>
+                                </div>
+                              </div>
+                              {getStatusBadge(c.status)}
+                            </div>
+
+                            {/* Scores row */}
+                            <div className="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100">
+                              {[
+                                { label: "Nota Avaliação", val: notaAv },
+                                { label: "Nota Entrevista", val: notaEnt },
+                                { label: "Média Final", val: mediaFinal, highlight: true },
+                              ].map(({ label, val, highlight }) => (
+                                <div key={label} className={cn("flex flex-col items-center py-2.5 px-3", highlight && "bg-primary/4")}>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
+                                  <p className={cn(
+                                    "text-base font-black tabular-nums",
+                                    highlight ? "text-primary" : "text-slate-700",
+                                    val === null && "text-slate-300"
+                                  )}>
+                                    {val !== null ? val.toFixed(2) : "—"}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Contact + obs */}
+                            <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2">
+                              <div className="space-y-0.5">
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Telefone</p>
+                                <p className="text-[11px] font-semibold text-slate-700">{(c as any).telefone || "—"}</p>
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nascimento</p>
+                                <p className="text-[11px] font-semibold text-slate-700">
+                                  {(c as any).data_nascimento
+                                    ? fmtDate(parseDataPublicacao((c as any).data_nascimento))
+                                    : "—"}
+                                </p>
+                              </div>
+                              <div className="col-span-2 space-y-0.5">
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">E-mail</p>
+                                <p className="text-[11px] font-semibold text-slate-700 truncate">{(c as any).email || "—"}</p>
+                              </div>
+                              {hasObs && (
+                                <div className="col-span-2 space-y-0.5">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Observação</p>
+                                  <p className="text-[11px] font-semibold text-slate-600 italic">{obs}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Convocar */}
+                            <div className="px-4 pb-3">
+                              <Button
+                                size="sm"
+                                className="w-full gap-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-sm shadow-primary/20"
+                                onClick={() => {
+                                  setConvocacaoInitialData({
+                                    nome_candidato: c.nome || "",
+                                    classificacao: Number(c.classificacao) || 1,
+                                    cargo: selectedBanco!.cargo,
+                                    unidade: selectedBanco!.unidade,
+                                    secao: selectedBanco!.secao || "",
+                                    edital_relacionado: selectedBanco!.numero_edital || "",
+                                    banco_id: c.id,
+                                    requisicao: c.numero_processo_seletivo || c.numero_chamada || "",
+                                  });
+                                  setIsConvocacaoOpen(true);
+                                }}
+                              >
+                                <Clock className="h-3.5 w-3.5" /> Convocar
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </section>
-              )}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* Dynamic status computation based on business logic */}
       {useMemo(() => {

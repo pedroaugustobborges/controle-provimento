@@ -78,6 +78,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ConvocacaoDialog } from "@/components/ConvocacaoDialog";
 import { Convocacao } from "@/types/vaga";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1325,13 +1331,32 @@ export default function BancoTalentosPage() {
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-semibold text-slate-800">{fmtDate(val6m)}</p>
                               {val12m && canProrrogate && (
-                                <button
-                                  onClick={handleModalProrrogar}
-                                  disabled={prorrogandoModal}
-                                  className="text-[10px] font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 px-2 py-0.5 rounded-full transition-all disabled:opacity-50 whitespace-nowrap"
-                                >
-                                  {prorrogandoModal ? "..." : "Prorrogar"}
-                                </button>
+                                <TooltipProvider delayDuration={300}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={handleModalProrrogar}
+                                        disabled={prorrogandoModal}
+                                        className="text-[10px] font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 px-2 py-0.5 rounded-full transition-all disabled:opacity-50 whitespace-nowrap"
+                                      >
+                                        {prorrogandoModal ? "..." : "Prorrogar"}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="right"
+                                      className="max-w-[220px] text-center space-y-1 p-3"
+                                    >
+                                      <p className="font-bold text-xs">⚠️ Prorrogar validade</p>
+                                      <p className="text-xs text-slate-300 leading-relaxed">
+                                        Estende a validade deste banco de{" "}
+                                        <span className="font-semibold text-white">{fmtDate(val6m)}</span>{" "}
+                                        para{" "}
+                                        <span className="font-semibold text-white">{fmtDate(val12m)}</span>{" "}
+                                        (+ 6 meses). Esta ação não pode ser desfeita.
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               )}
                             </div>
                           )}

@@ -384,6 +384,7 @@ export default function BancoTalentosPage() {
       setIsCadastrarEditalOpen(false);
       const { fetchImportHistory } = useVagasStore.getState();
       await fetchImportHistory();
+      handleTabChange("history");
     } catch (err: any) {
       toast.error(`Erro ao cadastrar: ${err.message}`);
     } finally {

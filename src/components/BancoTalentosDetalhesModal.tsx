@@ -29,6 +29,8 @@ import {
   CalendarDays,
   UserCheck,
   ArrowRight,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -326,6 +328,92 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
   );
 }
 
+// ── Candidate row (list view) ─────────────────────────────────────────────────
+
+function CandidateRow({ candidate: c, banco, onConvocar }: CandidateCardProps) {
+  const notaAv     = parseFloat((c as any).nota_avaliacao)  || null;
+  const notaEnt    = parseFloat((c as any).nota_entrevista) || null;
+  const mediaFinal = parseFloat((c as any).media_final)    || null;
+
+  const scoreColor =
+    mediaFinal === null
+      ? "text-slate-400"
+      : mediaFinal >= 70
+      ? "text-emerald-600"
+      : mediaFinal >= 50
+      ? "text-amber-600"
+      : "text-red-500";
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-slate-200 hover:border-primary/30 hover:shadow-sm hover:shadow-primary/5 transition-all duration-150 group">
+
+      {/* Rank */}
+      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center shrink-0 shadow-sm">
+        <span className="text-[11px] font-black text-white">{c.classificacao}°</span>
+      </div>
+
+      {/* Name + CPF */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-slate-800 leading-tight truncate">
+          {c.nome || "Não identificado"}
+        </p>
+        <p className="text-[10px] text-slate-400 font-medium">
+          {(c as any).cpf ? `CPF: ${(c as any).cpf}` : "CPF não informado"}
+        </p>
+      </div>
+
+      {/* Status */}
+      <div className="shrink-0 hidden sm:block">
+        <StatusChip status={c.status} />
+      </div>
+
+      {/* Scores */}
+      <div className="flex items-center gap-4 shrink-0">
+        <div className="text-center hidden md:block">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Avaliação</p>
+          <p className={cn("text-sm font-black tabular-nums", notaAv === null ? "text-slate-300" : "text-slate-700")}>
+            {notaAv !== null ? notaAv.toFixed(2) : "—"}
+          </p>
+        </div>
+        <div className="text-center hidden md:block">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Entrevista</p>
+          <p className={cn("text-sm font-black tabular-nums", notaEnt === null ? "text-slate-300" : "text-slate-700")}>
+            {notaEnt !== null ? notaEnt.toFixed(2) : "—"}
+          </p>
+        </div>
+        {/* Média Final — always visible */}
+        <div className="text-center">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Média</p>
+          <p className={cn("text-base font-black tabular-nums", scoreColor)}>
+            {mediaFinal !== null ? mediaFinal.toFixed(2) : "—"}
+          </p>
+        </div>
+      </div>
+
+      {/* Convocar */}
+      <Button
+        size="sm"
+        className="shrink-0 gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold rounded-lg shadow-sm shadow-primary/20 transition-all duration-200 opacity-0 group-hover:opacity-100 hover:shadow-md hover:shadow-primary/25"
+        onClick={() =>
+          onConvocar({
+            nome_candidato: c.nome || "",
+            classificacao: Number(c.classificacao) || 1,
+            cargo: banco.cargo,
+            unidade: banco.unidade,
+            secao: banco.secao || "",
+            edital_relacionado: banco.numero_edital || "",
+            banco_id: c.id,
+            requisicao: c.numero_processo_seletivo || c.numero_chamada || "",
+          })
+        }
+      >
+        <UserCheck className="h-3.5 w-3.5" />
+        Convocar
+      </Button>
+    </div>
+  );
+}
+
 // ── Info bar field ────────────────────────────────────────────────────────────
 
 function InfoField({
@@ -375,6 +463,14 @@ export function BancoTalentosDetalhesModal({
   // Local optimistic state so the label flips immediately on success
   const [localProrrogado, setLocalProrrogado] = useState(false);
   const [localNovaValidade, setLocalNovaValidade] = useState<string | null>(null);
+  // View mode persisted across sessions
+  const [viewMode, setViewMode] = useState<"cards" | "list">(() => {
+    return (localStorage.getItem("banco-detalhes-view") as "cards" | "list") || "cards";
+  });
+  const handleViewMode = (mode: "cards" | "list") => {
+    setViewMode(mode);
+    localStorage.setItem("banco-detalhes-view", mode);
+  };
 
   if (!banco) return null;
 
@@ -605,15 +701,42 @@ export function BancoTalentosDetalhesModal({
           </div>
         )}
 
-        {/* ── Candidates list (full-width) ──────────────────── */}
+        {/* ── Candidates area (full-width) ─────────────────── */}
         <div className="flex-1 overflow-y-auto p-5 bg-slate-50/80">
+
+          {/* Section header + view toggle */}
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
               <Users className="h-3 w-3" /> Candidatos Classificados
             </h3>
-            <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-[10px] font-bold">
-              {candidates.length}
-            </span>
+
+            {/* Segmented toggle */}
+            <div className="flex items-center bg-slate-200/70 rounded-lg p-0.5 gap-0.5">
+              <button
+                onClick={() => handleViewMode("cards")}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all duration-200",
+                  viewMode === "cards"
+                    ? "bg-white text-primary shadow-sm shadow-black/5"
+                    : "text-slate-500 hover:text-slate-700"
+                )}
+              >
+                <LayoutGrid className="h-3 w-3" />
+                Cards
+              </button>
+              <button
+                onClick={() => handleViewMode("list")}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all duration-200",
+                  viewMode === "list"
+                    ? "bg-white text-primary shadow-sm shadow-black/5"
+                    : "text-slate-500 hover:text-slate-700"
+                )}
+              >
+                <List className="h-3 w-3" />
+                Lista
+              </button>
+            </div>
           </div>
 
           {candidates.length === 0 ? (
@@ -623,10 +746,21 @@ export function BancoTalentosDetalhesModal({
               </div>
               <p className="text-sm italic">Nenhum candidato listado.</p>
             </div>
-          ) : (
+          ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {candidates.map((c) => (
                 <CandidateCard
+                  key={c.id}
+                  candidate={c}
+                  banco={banco}
+                  onConvocar={onConvocar}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {candidates.map((c) => (
+                <CandidateRow
                   key={c.id}
                   candidate={c}
                   banco={banco}

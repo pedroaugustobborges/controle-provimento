@@ -28,6 +28,7 @@ import {
   ChevronRight,
   CalendarDays,
   UserCheck,
+  ArrowRight,
 } from "lucide-react";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -428,13 +429,18 @@ export function BancoTalentosDetalhesModal({
   onConvocar,
 }: BancoTalentosDetalhesModalProps) {
   const [prorrogando, setProrrogando] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  // Local optimistic state so the label flips immediately on success
+  const [localProrrogado, setLocalProrrogado] = useState(false);
+  const [localNovaValidade, setLocalNovaValidade] = useState<string | null>(null);
 
   if (!banco) return null;
 
   const pubDate      = parseDate((banco as any).data_publicacao);
   const val6m        = pubDate ? addMonths(pubDate, 6)  : null;
   const val12m       = pubDate ? addMonths(pubDate, 12) : null;
-  const isProrrogado = !!(banco.is_prorrogado || banco.nova_data_validade);
+  const isProrrogado = localProrrogado || !!(banco.is_prorrogado || banco.nova_data_validade);
+  const novaValidadeStr = localNovaValidade ?? banco.nova_data_validade ?? null;
   const isTeia       = !!(banco as any).is_teia;
 
   const handleProrrogar = async () => {
@@ -449,6 +455,10 @@ export function BancoTalentosDetalhesModal({
         .update({ is_prorrogado: true, nova_data_validade: novaValidade })
         .in("id", ids);
       if (error) throw error;
+      // Flip label immediately without waiting for re-fetch
+      setLocalProrrogado(true);
+      setLocalNovaValidade(novaValidade);
+      setShowConfirm(false);
       toast.success("Validade prorrogada com sucesso!");
       await fetchBancos();
     } catch (e: any) {
@@ -548,32 +558,92 @@ export function BancoTalentosDetalhesModal({
 
                 {/* Validade + Prorrogar */}
                 <div className="space-y-1.5">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest transition-all">
                     {isProrrogado ? "Validade Prorrogada" : "Validade Original"}
                   </p>
                   {isProrrogado ? (
                     <p className="text-sm font-semibold text-blue-400">
-                      {banco.nova_data_validade
+                      {novaValidadeStr
                         ? fmtDate(
-                            parseDate(banco.nova_data_validade) ??
-                              new Date(banco.nova_data_validade)
+                            parseDate(novaValidadeStr) ??
+                              new Date(novaValidadeStr)
                           )
                         : fmtDate(val12m)}
                     </p>
                   ) : (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-slate-100">
-                        {fmtDate(val6m)}
-                      </p>
-                      {val12m && canProrrogate && (
-                        <ProrrogarButton
-                          val6m={val6m}
-                          val12m={val12m}
-                          isLoading={prorrogando}
-                          onClick={handleProrrogar}
-                        />
+                    <>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-slate-100">
+                          {fmtDate(val6m)}
+                        </p>
+                        {val12m && canProrrogate && !showConfirm && (
+                          <ProrrogarButton
+                            val6m={val6m}
+                            val12m={val12m}
+                            isLoading={prorrogando}
+                            onClick={() => setShowConfirm(true)}
+                          />
+                        )}
+                      </div>
+
+                      {/* ── Confirmation panel ── */}
+                      {showConfirm && (
+                        <div className="mt-3 rounded-xl overflow-hidden border border-amber-500/30 shadow-lg shadow-black/30">
+                          {/* Header */}
+                          <div className="flex items-center gap-2 bg-amber-500/20 px-3 py-2 border-b border-amber-500/20">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                            <p className="text-[11px] font-bold text-amber-300 uppercase tracking-wide">
+                              Confirmar Prorrogação
+                            </p>
+                          </div>
+                          {/* Body */}
+                          <div className="bg-slate-800/60 px-3 py-3 space-y-2.5">
+                            <p className="text-[10px] text-slate-400 leading-relaxed">
+                              A validade será estendida em{" "}
+                              <span className="font-bold text-slate-200">+6 meses</span>:
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-bold text-slate-300 bg-slate-700 px-2 py-1 rounded-lg tabular-nums">
+                                {fmtDate(val6m)}
+                              </span>
+                              <ArrowRight className="h-3 w-3 text-amber-400 shrink-0" />
+                              <span className="text-[11px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-1 rounded-lg tabular-nums">
+                                {fmtDate(val12m)}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 italic">
+                              Esta ação não pode ser desfeita.
+                            </p>
+                            <div className="flex gap-2 pt-0.5">
+                              <button
+                                onClick={() => setShowConfirm(false)}
+                                disabled={prorrogando}
+                                className="flex-1 text-[11px] font-semibold text-slate-400 hover:text-slate-200 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 transition-all disabled:opacity-50"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleProrrogar}
+                                disabled={prorrogando}
+                                className="flex-1 text-[11px] font-bold text-amber-900 bg-amber-400 hover:bg-amber-300 py-1.5 rounded-lg transition-all disabled:opacity-60 flex items-center justify-center gap-1"
+                              >
+                                {prorrogando ? (
+                                  <>
+                                    <Clock className="h-3 w-3 animate-spin" />
+                                    Salvando…
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Confirmar
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
 

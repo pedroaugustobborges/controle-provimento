@@ -326,82 +326,24 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
   );
 }
 
-// ── Sidebar field ─────────────────────────────────────────────────────────────
+// ── Info bar field ────────────────────────────────────────────────────────────
 
-function SideField({
+function InfoField({
   label,
   value,
+  className,
 }: {
   label: string;
   value: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="space-y-1">
-      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+    <div className={cn("space-y-1", className)}>
+      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
         {label}
       </p>
       <div className="text-sm font-semibold text-slate-100">{value}</div>
     </div>
-  );
-}
-
-// ── Prorrogar button + rich tooltip ──────────────────────────────────────────
-
-function ProrrogarButton({
-  val6m,
-  val12m,
-  isLoading,
-  onClick,
-}: {
-  val6m: Date | null;
-  val12m: Date | null;
-  isLoading: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <TooltipProvider delayDuration={150}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={isLoading}
-            onClick={onClick}
-            className="h-6 gap-1 text-[10px] font-bold border-amber-500/50 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-400 bg-amber-500/5 transition-all disabled:opacity-60 px-2"
-          >
-            <Clock className="h-2.5 w-2.5" />
-            {isLoading ? "Prorrogando…" : "Prorrogar"}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="p-0 w-64 overflow-hidden rounded-xl border-0 shadow-2xl">
-          {/* Tooltip header */}
-          <div className="flex items-center gap-2 bg-amber-500 px-3 py-2">
-            <AlertTriangle className="h-4 w-4 text-white shrink-0" />
-            <p className="text-xs font-bold text-white">Prorrogar Validade</p>
-          </div>
-          {/* Tooltip body */}
-          <div className="bg-amber-50 px-3 py-2.5 space-y-2">
-            <div className="flex items-center justify-between gap-2 text-[11px]">
-              <span className="text-amber-700 font-medium">De</span>
-              <span className="font-bold text-amber-900 bg-amber-200/60 px-1.5 py-0.5 rounded-md">
-                {fmtDate(val6m)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-2 text-[11px]">
-              <span className="text-amber-700 font-medium">Para</span>
-              <span className="font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md">
-                {fmtDate(val12m)}
-              </span>
-            </div>
-            <p className="text-[10px] text-amber-700 leading-relaxed border-t border-amber-200 pt-2">
-              Estende a validade em{" "}
-              <strong className="text-amber-900">+6 meses</strong>. Esta ação{" "}
-              <strong className="text-amber-900">não pode ser desfeita</strong>.
-            </p>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 }
 
@@ -472,7 +414,7 @@ export function BancoTalentosDetalhesModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-0 shadow-2xl">
 
-        {/* ── Header ──────────────────────────────────────── */}
+        {/* ── Title header ─────────────────────────────────── */}
         <div className="px-6 pt-5 pb-4 border-b border-slate-100 shrink-0 bg-white">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -489,7 +431,6 @@ export function BancoTalentosDetalhesModal({
                 </p>
               </div>
             </div>
-
             <div className="flex flex-wrap items-center gap-2 shrink-0 pt-0.5">
               <StatusChip status={banco.status} />
               {isProrrogado && (
@@ -511,219 +452,189 @@ export function BancoTalentosDetalhesModal({
           </div>
         </div>
 
-        {/* ── Body ────────────────────────────────────────── */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* ── Info bar ─────────────────────────────────────── */}
+        <div className="px-6 py-3.5 border-b border-slate-800 bg-slate-900 shrink-0">
+          <div className="flex items-start gap-0 divide-x divide-slate-700/60">
 
-          {/* ── Left sidebar (dark) ──────────────────────── */}
-          <div className="w-64 shrink-0 bg-slate-900 overflow-y-auto p-5 space-y-5">
+            {/* Nº do Edital */}
+            <InfoField
+              className="pr-5"
+              label="Nº do Edital"
+              value={
+                isTeia ? (
+                  <span className="flex items-center gap-1.5 text-emerald-400 text-sm font-semibold">
+                    <Puzzle className="h-3.5 w-3.5" /> Rede Teia
+                  </span>
+                ) : (
+                  banco.numero_edital || "—"
+                )
+              }
+            />
 
-            {/* Edital e Processo */}
-            <section>
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <FileText className="h-3 w-3" /> Edital e Processo
-              </h3>
-              <div className="space-y-3">
-                <SideField
-                  label="Nº do Edital"
-                  value={
-                    isTeia ? (
-                      <span className="flex items-center gap-1.5 text-emerald-400">
-                        <Puzzle className="h-3.5 w-3.5" /> Rede Teia
-                      </span>
-                    ) : (
-                      banco.numero_edital || "—"
-                    )
-                  }
-                />
-                <SideField
-                  label="Nº do Processo Seletivo"
-                  value={
-                    banco.numero_processo_seletivo ||
-                    banco.numero_processo ||
-                    "—"
-                  }
-                />
-              </div>
-            </section>
+            {/* Proc. Seletivo */}
+            <InfoField
+              className="px-5"
+              label="Proc. Seletivo"
+              value={banco.numero_processo_seletivo || banco.numero_processo || "—"}
+            />
 
-            <div className="border-t border-slate-800" />
+            {/* Publicação */}
+            <InfoField
+              className="px-5"
+              label="Publicação"
+              value={fmtDate(pubDate)}
+            />
 
-            {/* Datas Importantes */}
-            <section>
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <Calendar className="h-3 w-3" /> Datas Importantes
-              </h3>
-              <div className="space-y-3">
-                <SideField label="Publicação" value={fmtDate(pubDate)} />
-
-                {/* Validade + Prorrogar */}
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest transition-all">
-                    {isProrrogado ? "Validade Prorrogada" : "Validade Original"}
-                  </p>
-                  {isProrrogado ? (
-                    <p className="text-sm font-semibold text-blue-400">
-                      {novaValidadeStr
-                        ? fmtDate(
-                            parseDate(novaValidadeStr) ??
-                              new Date(novaValidadeStr)
-                          )
-                        : fmtDate(val12m)}
-                    </p>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-slate-100">
-                          {fmtDate(val6m)}
-                        </p>
-                        {val12m && canProrrogate && !showConfirm && (
-                          <ProrrogarButton
-                            val6m={val6m}
-                            val12m={val12m}
-                            isLoading={prorrogando}
-                            onClick={() => setShowConfirm(true)}
-                          />
-                        )}
-                      </div>
-
-                      {/* ── Confirmation panel ── */}
-                      {showConfirm && (
-                        <div className="mt-3 rounded-xl overflow-hidden border border-amber-500/30 shadow-lg shadow-black/30">
-                          {/* Header */}
-                          <div className="flex items-center gap-2 bg-amber-500/20 px-3 py-2 border-b border-amber-500/20">
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                            <p className="text-[11px] font-bold text-amber-300 uppercase tracking-wide">
-                              Confirmar Prorrogação
-                            </p>
-                          </div>
-                          {/* Body */}
-                          <div className="bg-slate-800/60 px-3 py-3 space-y-2.5">
-                            <p className="text-[10px] text-slate-400 leading-relaxed">
-                              A validade será estendida em{" "}
-                              <span className="font-bold text-slate-200">+6 meses</span>:
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-bold text-slate-300 bg-slate-700 px-2 py-1 rounded-lg tabular-nums">
-                                {fmtDate(val6m)}
-                              </span>
-                              <ArrowRight className="h-3 w-3 text-amber-400 shrink-0" />
-                              <span className="text-[11px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-1 rounded-lg tabular-nums">
-                                {fmtDate(val12m)}
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-500 italic">
-                              Esta ação não pode ser desfeita.
-                            </p>
-                            <div className="flex gap-2 pt-0.5">
-                              <button
-                                onClick={() => setShowConfirm(false)}
-                                disabled={prorrogando}
-                                className="flex-1 text-[11px] font-semibold text-slate-400 hover:text-slate-200 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 transition-all disabled:opacity-50"
-                              >
-                                Cancelar
-                              </button>
-                              <button
-                                onClick={handleProrrogar}
-                                disabled={prorrogando}
-                                className="flex-1 text-[11px] font-bold text-amber-900 bg-amber-400 hover:bg-amber-300 py-1.5 rounded-lg transition-all disabled:opacity-60 flex items-center justify-center gap-1"
-                              >
-                                {prorrogando ? (
-                                  <>
-                                    <Clock className="h-3 w-3 animate-spin" />
-                                    Salvando…
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    Confirmar
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </>
+            {/* Validade + Prorrogar */}
+            <div className="pl-5 space-y-1 flex-1">
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                {isProrrogado ? "Validade Prorrogada" : "Validade Original"}
+              </p>
+              {isProrrogado ? (
+                <p className="text-sm font-semibold text-blue-400">
+                  {novaValidadeStr
+                    ? fmtDate(parseDate(novaValidadeStr) ?? new Date(novaValidadeStr))
+                    : fmtDate(val12m)}
+                </p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-100">{fmtDate(val6m)}</p>
+                  {val12m && canProrrogate && !showConfirm && (
+                    <button
+                      onClick={() => setShowConfirm(true)}
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 hover:border-amber-400/60 px-2 py-0.5 rounded-full transition-all"
+                    >
+                      <Clock className="h-2.5 w-2.5" />
+                      Prorrogar
+                    </button>
                   )}
                 </div>
+              )}
+            </div>
 
-                {banco.data_convocacao && (
-                  <SideField
-                    label="Data Convocação"
-                    value={
-                      <span className="text-green-400">
-                        {fmtDate(parseDate(banco.data_convocacao))}
-                      </span>
-                    }
-                  />
-                )}
-              </div>
-            </section>
+            {/* Data Convocação (conditional) */}
+            {banco.data_convocacao && (
+              <InfoField
+                className="pl-5"
+                label="Data Convocação"
+                value={
+                  <span className="text-green-400">
+                    {fmtDate(parseDate(banco.data_convocacao))}
+                  </span>
+                }
+              />
+            )}
 
-            {/* Convocação details (conditional) */}
-            {(banco.data_convocacao || banco.status === "CONVOCADO") && (
-              <>
-                <div className="border-t border-slate-800" />
-                <section>
-                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <ClipboardList className="h-3 w-3" /> Convocação
-                  </h3>
-                  <div className="space-y-3">
-                    {banco.unidade_convocacao && (
-                      <SideField
-                        label="Unidade de Convocação"
-                        value={banco.unidade_convocacao}
-                      />
-                    )}
-                    {banco.numero_chamada && (
-                      <SideField
-                        label="Nº da Chamada"
-                        value={banco.numero_chamada}
-                      />
-                    )}
-                    {banco.numero_vaga_aproveitamento && (
-                      <SideField
-                        label="Vaga Aproveitamento"
-                        value={banco.numero_vaga_aproveitamento}
-                      />
-                    )}
-                  </div>
-                </section>
-              </>
+            {/* Convocação extra fields */}
+            {banco.unidade_convocacao && (
+              <InfoField
+                className="pl-5"
+                label="Unidade Convocação"
+                value={banco.unidade_convocacao}
+              />
+            )}
+            {banco.numero_chamada && (
+              <InfoField
+                className="pl-5"
+                label="Nº da Chamada"
+                value={banco.numero_chamada}
+              />
             )}
           </div>
+        </div>
 
-          {/* ── Right: candidates list ───────────────────── */}
-          <div className="flex-1 overflow-y-auto p-5 bg-slate-50/80">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Users className="h-3 w-3" /> Candidatos Classificados
-              </h3>
-              <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-[10px] font-bold">
-                {candidates.length}
+        {/* ── Confirmation banner ───────────────────────────── */}
+        {showConfirm && (
+          <div className="px-6 py-3 bg-amber-50 border-b border-amber-200 shrink-0 flex items-center gap-4 flex-wrap">
+            {/* Label */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="h-7 w-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+              </div>
+              <p className="text-xs font-bold text-amber-800">
+                Confirmar Prorrogação
+              </p>
+            </div>
+
+            <div className="h-5 border-l border-amber-300 shrink-0" />
+
+            {/* Date arrow */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[11px] font-bold text-amber-900 bg-amber-200/70 px-2.5 py-1 rounded-lg tabular-nums">
+                {fmtDate(val6m)}
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 text-amber-400" />
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg tabular-nums">
+                {fmtDate(val12m)}
               </span>
             </div>
 
-            {candidates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-slate-400 gap-3">
-                <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center">
-                  <Users className="h-8 w-8 opacity-30" />
-                </div>
-                <p className="text-sm italic">Nenhum candidato listado.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {candidates.map((c) => (
-                  <CandidateCard
-                    key={c.id}
-                    candidate={c}
-                    banco={banco}
-                    onConvocar={onConvocar}
-                  />
-                ))}
-              </div>
-            )}
+            <p className="text-[10px] text-amber-600 italic hidden sm:block">
+              +6 meses · esta ação não pode ser desfeita
+            </p>
+
+            <div className="flex-1" />
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowConfirm(false)}
+                disabled={prorrogando}
+                className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 px-3.5 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-100 transition-all disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleProrrogar}
+                disabled={prorrogando}
+                className="text-[11px] font-bold text-white bg-amber-500 hover:bg-amber-600 px-3.5 py-1.5 rounded-lg transition-all disabled:opacity-60 flex items-center gap-1.5 shadow-sm shadow-amber-500/30"
+              >
+                {prorrogando ? (
+                  <>
+                    <Clock className="h-3 w-3 animate-spin" />
+                    Salvando…
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    Confirmar
+                  </>
+                )}
+              </button>
+            </div>
           </div>
+        )}
+
+        {/* ── Candidates list (full-width) ──────────────────── */}
+        <div className="flex-1 overflow-y-auto p-5 bg-slate-50/80">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <Users className="h-3 w-3" /> Candidatos Classificados
+            </h3>
+            <span className="bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-[10px] font-bold">
+              {candidates.length}
+            </span>
+          </div>
+
+          {candidates.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-slate-400 gap-3">
+              <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <Users className="h-8 w-8 opacity-30" />
+              </div>
+              <p className="text-sm italic">Nenhum candidato listado.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {candidates.map((c) => (
+                <CandidateCard
+                  key={c.id}
+                  candidate={c}
+                  banco={banco}
+                  onConvocar={onConvocar}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

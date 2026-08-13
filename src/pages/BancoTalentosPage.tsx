@@ -35,6 +35,7 @@ import {
   CheckCircle,
   ArrowLeft,
   Puzzle,
+  Eye,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
@@ -128,16 +129,19 @@ export default function BancoTalentosPage() {
     fetchBancos,
     fetchImportHistory,
   } = useVagasStore();
-
-  useEffect(() => {
-    fetchBancos();
-    fetchImportHistory();
-  }, [fetchBancos, fetchImportHistory]);
   const {
     currentUser,
     selectedRegion,
     selectedUnit: globalUnit,
+    users,
+    fetchUsers,
   } = useAdminStore();
+
+  useEffect(() => {
+    fetchBancos();
+    fetchImportHistory();
+    fetchUsers();
+  }, [fetchBancos, fetchImportHistory, fetchUsers]);
   const permissions = usePermissions();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -848,6 +852,24 @@ export default function BancoTalentosPage() {
     );
   }, [importHistory]);
 
+  // "IMPORTADO POR" helpers
+  const batchUserMap = useMemo(() => {
+    const map = new Map<string, { nome: string; userId: string }>();
+    importHistory.forEach((h) => {
+      if (h.id && h.usuario) map.set(h.id, { nome: h.usuario, userId: h.usuario_id || "" });
+    });
+    return map;
+  }, [importHistory]);
+
+  // Map nome_completo → avatar_url (same strategy as VagasPage "Analista Resp.")
+  const userAvatarMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (users || []).forEach((u: any) => {
+      if (u.nome_completo && u.avatar_url) map.set(u.nome_completo, u.avatar_url);
+    });
+    return map;
+  }, [users]);
+
   const getStatusBadge = (status: string) => {
     const s = (status || "").toUpperCase();
     switch (s) {
@@ -1397,100 +1419,110 @@ export default function BancoTalentosPage() {
               >
                 <table className="w-full caption-bottom text-sm">
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="whitespace-nowrap">
-                        Edital
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Proc. Seletivo
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap">Cargo</TableHead>
-                      <TableHead className="whitespace-nowrap">
-                        Unidade
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap text-center">
-                        Região
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap text-center">
-                        Status
-                      </TableHead>
-                      <TableHead className="whitespace-nowrap text-center">
-                        Qtd.
-                      </TableHead>
-                      <TableHead className="text-right whitespace-nowrap">
-                        Ações
-                      </TableHead>
+                    <TableRow className="border-b border-slate-200">
+                      <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Edital</TableHead>
+                      <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Proc. Seletivo</TableHead>
+                      <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Cargo</TableHead>
+                      <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Unidade</TableHead>
+                      <TableHead className="whitespace-nowrap text-center text-[11px] font-bold text-slate-500 uppercase tracking-wide">Status</TableHead>
+                      <TableHead className="whitespace-nowrap text-center text-[11px] font-bold text-slate-500 uppercase tracking-wide">Qtd.</TableHead>
+                      <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Importado por</TableHead>
+                      <TableHead className="text-right whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedGroups.map((group) => (
+                    {paginatedGroups.map((group) => {
+                      const batchId = group.candidatos[0]?.import_batch_id;
+                      const importer = batchId ? batchUserMap.get(batchId) : undefined;
+                      const avatarUrl = importer?.nome ? userAvatarMap.get(importer.nome) : undefined;
+                      const firstName = importer?.nome?.split(" ")[0] ?? "";
+                      const initials = importer?.nome
+                        ? importer.nome.split(" ").filter(Boolean).slice(0, 2).map((n: string) => n[0].toUpperCase()).join("")
+                        : "?";
+
+                      return (
                       <TableRow
                         key={group.id}
-                        className="hover:bg-slate-50/50 transition-colors"
+                        className="hover:bg-slate-50/60 transition-colors border-b border-slate-100 last:border-0"
                       >
-                        <TableCell className="font-bold text-primary text-xs">
-                          {group.edital}
+                        {/* Edital */}
+                        <TableCell className="py-3">
+                          <span className="text-[12px] font-bold text-primary">
+                            {group.edital || "—"}
+                          </span>
                         </TableCell>
-                        <TableCell className="text-xs font-semibold text-slate-600 italic">
-                          {group.processoSeletivo || "—"}
+
+                        {/* Proc. Seletivo */}
+                        <TableCell className="py-3">
+                          <span className="text-[12px] font-semibold text-slate-600">
+                            {group.processoSeletivo || "—"}
+                          </span>
                         </TableCell>
-                        <TableCell>
-                          <div className="font-semibold text-slate-800">
+
+                        {/* Cargo */}
+                        <TableCell className="py-3">
+                          <p className="text-[12px] font-semibold text-slate-700 leading-tight">
                             {group.cargo}
-                          </div>
-                          <div className="text-[11px] text-slate-400 font-medium uppercase tracking-tighter">
-                            {group.candidatos[0]?.secao || "—"}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-slate-600 font-medium">
-                          {group.unidade}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {group.regiao ? (
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[10px] font-bold",
-                                group.regiao === "GO_ES"
-                                  ? "bg-amber-50 text-amber-700 border-amber-200"
-                                  : "bg-slate-50 text-slate-600 border-slate-200",
-                              )}
-                            >
-                              {group.regiao === "GO_ES" ? "GO/ES" : "OUTRAS"}
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-300">—</span>
+                          </p>
+                          {group.candidatos[0]?.secao && (
+                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide mt-0.5">
+                              {group.candidatos[0].secao}
+                            </p>
                           )}
                         </TableCell>
-                        <TableCell className="text-center">
+
+                        {/* Unidade */}
+                        <TableCell className="py-3">
+                          <span className="text-[12px] font-semibold text-slate-700">
+                            {group.unidade}
+                          </span>
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell className="text-center py-3">
                           {getStatusBadge(group.status)}
                         </TableCell>
-                        <TableCell className="text-center">
-                          <Badge
-                            variant="outline"
-                            className="font-bold bg-slate-50 text-[10px]"
-                          >
+
+                        {/* Qtd. */}
+                        <TableCell className="text-center py-3">
+                          <span className="inline-flex items-center justify-center h-6 min-w-[28px] px-2 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold tabular-nums">
                             {group.qtdBanco || group.candidatos.length}
-                          </Badge>
+                          </span>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="font-bold text-xs text-primary hover:bg-primary/5 h-8"
-                              onClick={() => {
-                                setSelectedBanco(group.candidatos[0]);
-                                setIsDetailsOpen(true);
-                              }}
-                            >
-                              Detalhes ({group.candidatos.length})
-                            </Button>
+
+                        {/* Importado por */}
+                        <TableCell className="py-3">
+                          {importer ? (
+                            <div className="flex items-center gap-2" title={importer.nome}>
+                              {avatarUrl ? (
+                                <img
+                                  src={avatarUrl}
+                                  alt={importer.nome}
+                                  className="w-7 h-7 rounded-full object-cover ring-2 ring-violet-200 shrink-0 shadow-sm"
+                                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 ring-2 ring-violet-200 flex items-center justify-center shrink-0 shadow-sm">
+                                  <span className="text-[10px] font-black text-white">{initials}</span>
+                                </div>
+                              )}
+                              <span className="text-[11px] font-semibold text-slate-700 leading-tight">
+                                {firstName}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-slate-300 italic">—</span>
+                          )}
+                        </TableCell>
+
+                        {/* Ações */}
+                        <TableCell className="py-3">
+                          <div className="flex items-center justify-end gap-1">
                             {permissions.canRequestUpdate() && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="font-bold text-xs text-amber-600 hover:bg-amber-50 h-8"
+                                className="font-bold text-[11px] text-amber-600 hover:bg-amber-50 hover:text-amber-700 h-8 px-2.5"
                                 onClick={() => {
                                   setBancoForUpdate(group.candidatos[0]);
                                   setIsRequestUpdateOpen(true);
@@ -1499,23 +1531,53 @@ export default function BancoTalentosPage() {
                                 Solicitar Atualização
                               </Button>
                             )}
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-primary/60 hover:text-primary hover:bg-primary/8 rounded-lg"
+                                    onClick={() => {
+                                      setSelectedBanco(group.candidatos[0]);
+                                      setIsDetailsOpen(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left" className="text-xs">
+                                  Ver detalhes
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             {permissions.canDeleteRecords() && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => {
-                                  setBancoParaExcluir(group.id);
-                                  setIsDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                      onClick={() => {
+                                        setBancoParaExcluir(group.id);
+                                        setIsDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="text-xs">
+                                    Excluir banco
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                     {filteredGroups.length === 0 && (
                       <TableRow>
                         <TableCell

@@ -793,10 +793,14 @@ export default function VagasPage() {
         (v.nome_requisitante || "").toLowerCase().includes(searchTerm) ||
         (v.motivo || "").toLowerCase().includes(searchTerm);
 
+      const fluxoItems = getVagaFluxoItems(v);
+      // Use the same status the table displays (slot 0 overrides v.status_processo
+      // when distribuicao_vagas has a stored entry for slot 1).
+      const displayedStatus =
+        fluxoItems[0]?.status_processo ?? v.status_processo ?? "Solicitada";
       const matchStatus =
         filterStatusProcesso.length === 0 ||
-        filterStatusProcesso.includes(v.status_processo || "Solicitada");
-      const fluxoItems = getVagaFluxoItems(v);
+        filterStatusProcesso.includes(displayedStatus);
       const matchTratativa =
         filterTratativas.length === 0 ||
         fluxoItems.some((item) => filterTratativas.includes(item.tratativa as string));

@@ -684,6 +684,9 @@ export default function VagaDetalhePage() {
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
   const obsTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const justificativaTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [justificativaMentionQuery, setJustificativaMentionQuery] = useState<string | null>(null);
+  const [justificativaMentionIndex, setJustificativaMentionIndex] = useState(0);
   const [activeFluxoSlot, setActiveFluxoSlot] = useState(() => {
     const slot = parseInt(searchParams.get("slot") || "1", 10);
     return isNaN(slot) || slot < 1 ? 1 : slot;
@@ -801,13 +804,25 @@ export default function VagaDetalhePage() {
       .filter((u: any) => {
         if (u.status !== "ativo") return false;
         if (!u.nome_completo?.toLowerCase().includes(q)) return false;
-        // Admins with full visibility always qualify
         if (u.visualiza_todas_unidades) return true;
-        // Otherwise check unit access
         return unitIsAllowed(vagaUnidade, u.unidades_vinculadas || []);
       })
       .slice(0, 6);
   }, [mentionQuery, users, vaga?.unidade]);
+
+  const justificativaMentionUsers = useMemo(() => {
+    if (justificativaMentionQuery === null) return [];
+    const q = justificativaMentionQuery.toLowerCase();
+    const vagaUnidade = vaga?.unidade;
+    return (users || [])
+      .filter((u: any) => {
+        if (u.status !== "ativo") return false;
+        if (!u.nome_completo?.toLowerCase().includes(q)) return false;
+        if (u.visualiza_todas_unidades) return true;
+        return unitIsAllowed(vagaUnidade, u.unidades_vinculadas || []);
+      })
+      .slice(0, 6);
+  }, [justificativaMentionQuery, users, vaga?.unidade]);
 
   const handleObsTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -848,6 +863,45 @@ export default function VagaDetalhePage() {
       }, 0);
     },
     [newObsText],
+  );
+
+  const handleJustificativaTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const val = e.target.value;
+      setJustificativaText(val);
+      const cursor = e.target.selectionStart ?? val.length;
+      const before = val.slice(0, cursor);
+      const match = before.match(/@(\w*)$/);
+      if (match) {
+        setJustificativaMentionQuery(match[1]);
+        setJustificativaMentionIndex(0);
+      } else {
+        setJustificativaMentionQuery(null);
+      }
+    },
+    [],
+  );
+
+  const handleJustificativaSelectMention = useCallback(
+    (user: any) => {
+      const textarea = justificativaTextareaRef.current;
+      if (!textarea) return;
+      const cursor = textarea.selectionStart ?? justificativaText.length;
+      const before = justificativaText.slice(0, cursor);
+      const after = justificativaText.slice(cursor);
+      const slug = user.nome_completo.trim().replace(/\s+/g, "_");
+      const replaced = before.replace(/@(\w*)$/, `@${slug} `);
+      setJustificativaText(replaced + after);
+      setJustificativaMentionQuery(null);
+      setJustificativaMentionIndex(0);
+      setTimeout(() => {
+        textarea.focus();
+        const pos = replaced.length;
+        textarea.selectionStart = pos;
+        textarea.selectionEnd = pos;
+      }, 0);
+    },
+    [justificativaText],
   );
 
   useEffect(() => {
@@ -1499,7 +1553,7 @@ export default function VagaDetalhePage() {
       observacoes_internas: serialized,
     } as any);
 
-    handleFluxoDraftChange(
+    await handleFluxoSlotChange(
       justificativaDialog.slot,
       "status_processo",
       justificativaDialog.status,
@@ -1508,7 +1562,8 @@ export default function VagaDetalhePage() {
     setIsSavingJustificativa(false);
     setJustificativaDialog(null);
     setJustificativaText("");
-    toast.success("Justificativa registrada nas observações internas");
+    setJustificativaMentionQuery(null);
+    toast.success("Status atualizado e justificativa registrada");
   };
 
   const isAdmin =
@@ -2882,6 +2937,7 @@ export default function VagaDetalhePage() {
           if (!open) {
             setJustificativaDialog(null);
             setJustificativaText("");
+            setJustificativaMentionQuery(null);
           }
         }}
       >
@@ -2955,17 +3011,49 @@ export default function VagaDetalhePage() {
                         <MessageSquare size={11} />
                         Motivo da {isCancelada ? "Cancelamento" : "Suspensão"}
                       </label>
-                      <Textarea
-                        autoFocus
-                        value={justificativaText}
-                        onChange={(e) => setJustificativaText(e.target.value)}
-                        placeholder={
-                          isCancelada
-                            ? "Descreva o motivo pelo qual esta vaga está sendo cancelada..."
-                            : "Descreva o motivo pelo qual este processo está sendo suspenso..."
-                        }
-                        className="min-h-[110px] resize-none text-sm bg-slate-50 border-slate-200 focus:border-primary/50 transition-colors leading-relaxed"
-                      />
+                      <div className="relative">
+                        <Textarea
+                          ref={justificativaTextareaRef}
+                          autoFocus
+                          value={justificativaText}
+                          onChange={handleJustificativaTextChange}
+                          onKeyDown={(e) => {
+                            if (justificativaMentionQuery !== null && justificativaMentionUsers.length > 0) {
+                              if (e.key === "ArrowDown") {
+                                e.preventDefault();
+                                setJustificativaMentionIndex((i) => Math.min(i + 1, justificativaMentionUsers.length - 1));
+                                return;
+                              }
+                              if (e.key === "ArrowUp") {
+                                e.preventDefault();
+                                setJustificativaMentionIndex((i) => Math.max(i - 1, 0));
+                                return;
+                              }
+                              if (e.key === "Enter" || e.key === "Tab") {
+                                e.preventDefault();
+                                handleJustificativaSelectMention(justificativaMentionUsers[justificativaMentionIndex]);
+                                return;
+                              }
+                              if (e.key === "Escape") {
+                                e.preventDefault();
+                                setJustificativaMentionQuery(null);
+                                return;
+                              }
+                            }
+                          }}
+                          placeholder={
+                            isCancelada
+                              ? "Descreva o motivo pelo qual esta vaga está sendo cancelada..."
+                              : "Descreva o motivo pelo qual este processo está sendo suspenso..."
+                          }
+                          className="min-h-[110px] resize-none text-sm bg-slate-50 border-slate-200 focus:border-primary/50 transition-colors leading-relaxed"
+                        />
+                        <ObsMentionDropdown
+                          users={justificativaMentionUsers}
+                          activeIndex={justificativaMentionIndex}
+                          onSelect={handleJustificativaSelectMention}
+                        />
+                      </div>
                       {/* Character counter + hint */}
                       <div className="flex items-center justify-between">
                         <p className="text-[10px] text-slate-400">
@@ -3016,6 +3104,7 @@ export default function VagaDetalhePage() {
                       onClick={() => {
                         setJustificativaDialog(null);
                         setJustificativaText("");
+                        setJustificativaMentionQuery(null);
                       }}
                     >
                       Cancelar

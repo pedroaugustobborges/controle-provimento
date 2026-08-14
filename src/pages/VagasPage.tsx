@@ -778,15 +778,6 @@ export default function VagasPage() {
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)
   const filtered = useMemo(() => {
     const nowTime = new Date().getTime();
-    const startOfYesterday = new Date(nowTime);
-    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-    startOfYesterday.setHours(0, 0, 0, 0);
-    const startOfYesterdayTime = startOfYesterday.getTime();
-
-    const endOfToday = new Date(nowTime);
-    endOfToday.setHours(23, 59, 59, 999);
-    const endOfTodayTime = endOfToday.getTime();
-
     return canonicalBase.filter((v) => {
       const category = v.categoria_status || getCategoriaStatus(v);
 
@@ -825,25 +816,7 @@ export default function VagasPage() {
 
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
-      const isManualNew =
-        v.origem === "manual" &&
-        creationDate &&
-        nowTime - creationTime < 86400000;
-
-      let isByRecebimento = false;
-      if (v.data_recebimento) {
-        const receivedTime = new Date(v.data_recebimento).getTime();
-        isByRecebimento =
-          receivedTime >= startOfYesterdayTime &&
-          receivedTime <= endOfTodayTime;
-      }
-
-      const isImportedFallback =
-        v.origem !== "manual" &&
-        creationDate &&
-        nowTime - creationTime < 86400000 &&
-        (!v.status || v.status.trim() === "");
-      const isNew = isManualNew || isByRecebimento || isImportedFallback;
+      const isNew = creationTime > 0 && nowTime - creationTime <= 86400000;
       const matchVagasNovas = !filterVagasNovas || isNew;
 
       const matchComBanco = !filterComBanco || vagasComBancoSet.has(v.id);
@@ -927,40 +900,14 @@ export default function VagasPage() {
     };
 
     const nowTime = new Date().getTime();
-    const startOfYesterday = new Date(nowTime);
-    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-    startOfYesterday.setHours(0, 0, 0, 0);
-    const startOfYesterdayTime = startOfYesterday.getTime();
-
-    const endOfToday = new Date(nowTime);
-    endOfToday.setHours(23, 59, 59, 999);
-    const endOfTodayTime = endOfToday.getTime();
 
     canonicalBase.forEach((v) => {
       const cat = v.categoria_status || getCategoriaStatus(v);
 
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
-      const isManualNew =
-        v.origem === "manual" &&
-        creationDate &&
-        nowTime - creationTime < 86400000;
 
-      let isByRecebimento = false;
-      if (v.data_recebimento) {
-        const receivedTime = new Date(v.data_recebimento).getTime();
-        isByRecebimento =
-          receivedTime >= startOfYesterdayTime &&
-          receivedTime <= endOfTodayTime;
-      }
-
-      const isImportedFallback =
-        v.origem !== "manual" &&
-        creationDate &&
-        nowTime - creationTime < 86400000 &&
-        (!v.status || v.status.trim() === "");
-
-      if (isManualNew || isByRecebimento || isImportedFallback) {
+      if (creationTime > 0 && nowTime - creationTime <= 86400000) {
         acc.vagas_novas++;
       }
 
@@ -1550,11 +1497,10 @@ export default function VagasPage() {
                                   title={v.cargo}
                                 >
                                   {v.cargo}
-                                  {v.origem === "manual" &&
-                                    v.data_criacao &&
-                                    new Date().getTime() -
-                                      new Date(v.data_criacao).getTime() <
-                                      24 * 60 * 60 * 1000 && (
+                                  {(() => {
+                                    const cd = v.created_at || v.data_criacao;
+                                    return cd && new Date().getTime() - new Date(cd).getTime() <= 86400000;
+                                  })() && (
                                       <Badge
                                         variant="outline"
                                         className="h-4 text-[8px] px-1 bg-blue-50 text-blue-600 border-blue-200 animate-pulse font-bold uppercase"

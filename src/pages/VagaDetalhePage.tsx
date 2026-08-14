@@ -702,6 +702,12 @@ export default function VagaDetalhePage() {
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
   const [isRequestUpdateOpen, setIsRequestUpdateOpen] = useState(false);
+  const [justificativaDialog, setJustificativaDialog] = useState<{
+    slot: number;
+    status: "Cancelada" | "Suspensa";
+  } | null>(null);
+  const [justificativaText, setJustificativaText] = useState("");
+  const [isSavingJustificativa, setIsSavingJustificativa] = useState(false);
   const [activeTab, setActiveTab] = useState("dados");
 
   const [indicators, setIndicators] = useState({
@@ -1466,6 +1472,43 @@ export default function VagaDetalhePage() {
       observacoes_internas: serialized,
     } as any);
     if (ok) toast.success("Observação excluída");
+  };
+
+  const handleConfirmarJustificativa = async () => {
+    if (!justificativaDialog || !justificativaText.trim() || !currentUser)
+      return;
+    setIsSavingJustificativa(true);
+
+    const prefix =
+      justificativaDialog.status === "Cancelada"
+        ? "[CANCELAMENTO]"
+        : "[SUSPENSÃO]";
+    const currentRaw = vaga.observacoes_internas || vaga.observacoes || "";
+    const existing = parseObsItems(currentRaw);
+    const newItem: ObsItem = {
+      id: crypto.randomUUID(),
+      text: `${prefix} ${justificativaText.trim()}`,
+      author_id: currentUser.id,
+      author_name: currentUser.nome_completo,
+      author_avatar: (currentUser as any).avatar_url || null,
+      created_at: new Date().toISOString(),
+    };
+    const serialized = JSON.stringify([newItem, ...existing]);
+    await updateVagaAsync(vaga.id, {
+      observacao: serialized,
+      observacoes_internas: serialized,
+    } as any);
+
+    handleFluxoDraftChange(
+      justificativaDialog.slot,
+      "status_processo",
+      justificativaDialog.status,
+    );
+
+    setIsSavingJustificativa(false);
+    setJustificativaDialog(null);
+    setJustificativaText("");
+    toast.success("Justificativa registrada nas observações internas");
   };
 
   const isAdmin =
@@ -2298,13 +2341,21 @@ export default function VagaDetalhePage() {
                           {canEditFlow ? (
                             <Select
                               value={effectiveSP}
-                              onValueChange={(v) =>
-                                handleFluxoDraftChange(
-                                  item.slot,
-                                  "status_processo",
-                                  v,
-                                )
-                              }
+                              onValueChange={(v) => {
+                                if (v === "Cancelada" || v === "Suspensa") {
+                                  setJustificativaDialog({
+                                    slot: item.slot,
+                                    status: v,
+                                  });
+                                  setJustificativaText("");
+                                } else {
+                                  handleFluxoDraftChange(
+                                    item.slot,
+                                    "status_processo",
+                                    v,
+                                  );
+                                }
+                              }}
                             >
                               <SelectTrigger
                                 style={{
@@ -2823,6 +2874,174 @@ export default function VagaDetalhePage() {
         type="vaga"
         onConfirm={handleRequestUpdate}
       />
+
+      {/* ── Justificativa de Cancelamento / Suspensão ── */}
+      <Dialog
+        open={!!justificativaDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setJustificativaDialog(null);
+            setJustificativaText("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden gap-0">
+          {justificativaDialog &&
+            (() => {
+              const isCancelada = justificativaDialog.status === "Cancelada";
+              const cfg = PROCESSO_STATUS_CONFIG[justificativaDialog.status];
+              const Icon = cfg.Icon;
+              const minChars = 10;
+              const charCount = justificativaText.trim().length;
+              const isValid = charCount >= minChars;
+
+              return (
+                <>
+                  {/* Coloured header */}
+                  <div
+                    className="px-6 pt-6 pb-5"
+                    style={{
+                      background: cfg.bg,
+                      borderBottom: `1.5px solid ${cfg.border}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                        style={{
+                          background: "white",
+                          border: `1.5px solid ${cfg.border}`,
+                        }}
+                      >
+                        <Icon size={18} style={{ color: cfg.text }} />
+                      </div>
+                      <div>
+                        <h2
+                          className="text-base font-black leading-tight"
+                          style={{ color: cfg.text }}
+                        >
+                          {isCancelada
+                            ? "Cancelar processo"
+                            : "Suspender processo"}
+                        </h2>
+                        <p
+                          className="text-[12px] font-medium mt-0.5"
+                          style={{ color: cfg.text, opacity: 0.7 }}
+                        >
+                          Uma justificativa é obrigatória para continuar
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Context chip */}
+                    <div
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold"
+                      style={{
+                        background: "rgba(255,255,255,0.6)",
+                        color: cfg.text,
+                        border: `1px solid ${cfg.border}`,
+                      }}
+                    >
+                      <Building2 size={11} />
+                      {vaga.cargo} ·{" "}
+                      {vaga.unidade?.split(" - ")[0] || vaga.unidade}
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div className="px-6 py-5 space-y-4 bg-white">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <MessageSquare size={11} />
+                        Motivo da {isCancelada ? "Cancelamento" : "Suspensão"}
+                      </label>
+                      <Textarea
+                        autoFocus
+                        value={justificativaText}
+                        onChange={(e) => setJustificativaText(e.target.value)}
+                        placeholder={
+                          isCancelada
+                            ? "Descreva o motivo pelo qual esta vaga está sendo cancelada..."
+                            : "Descreva o motivo pelo qual este processo está sendo suspenso..."
+                        }
+                        className="min-h-[110px] resize-none text-sm bg-slate-50 border-slate-200 focus:border-primary/50 transition-colors leading-relaxed"
+                      />
+                      {/* Character counter + hint */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] text-slate-400">
+                          Mínimo de {minChars} caracteres
+                        </p>
+                        <span
+                          className={`text-[10px] font-bold tabular-nums transition-colors ${
+                            isValid
+                              ? "text-emerald-600"
+                              : charCount > 0
+                                ? "text-amber-500"
+                                : "text-slate-300"
+                          }`}
+                        >
+                          {charCount} / {minChars}+
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Info box */}
+                    <div
+                      className="flex items-start gap-2.5 p-3 rounded-lg text-[12px] leading-relaxed"
+                      style={{
+                        background: cfg.bg,
+                        border: `1px solid ${cfg.border}`,
+                        color: cfg.text,
+                        opacity: 0.9,
+                      }}
+                    >
+                      <Info size={13} className="shrink-0 mt-0.5" />
+                      <span>
+                        Esta justificativa será registrada nas{" "}
+                        <strong>Observações Internas</strong> com o prefixo{" "}
+                        <strong>
+                          [{isCancelada ? "CANCELAMENTO" : "SUSPENSÃO"}]
+                        </strong>
+                        .
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 px-4 text-slate-500 hover:text-slate-700 font-semibold"
+                      onClick={() => {
+                        setJustificativaDialog(null);
+                        setJustificativaText("");
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={!isValid || isSavingJustificativa}
+                      onClick={handleConfirmarJustificativa}
+                      className="h-9 px-5 gap-2 font-bold shadow-sm transition-all"
+                      style={
+                        isValid ? { background: cfg.text, color: "white" } : {}
+                      }
+                    >
+                      {isSavingJustificativa ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Save className="h-3.5 w-3.5" />
+                      )}
+                      Confirmar e Registrar
+                    </Button>
+                  </div>
+                </>
+              );
+            })()}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Unsaved Fluxo Changes Alert ── */}
       <AlertDialog

@@ -1575,11 +1575,16 @@ export default function VagasPage() {
                               </div>
                             </TableCell>
                             <TableCell className="py-3 px-3 h-14">
-                              <StatusProcessoBadge
-                                status={v.status_processo}
-                                tratativa={v.tratativa}
-                                etapa={v.etapa}
-                              />
+                              {(() => {
+                                const slot0 = getVagaFluxoItems(v)[0];
+                                return (
+                                  <StatusProcessoBadge
+                                    status={slot0?.status_processo ?? v.status_processo}
+                                    tratativa={slot0?.tratativa ?? v.tratativa}
+                                    etapa={slot0?.etapa ?? v.etapa}
+                                  />
+                                );
+                              })()}
                             </TableCell>
                             <TableCell className="py-3 px-3 h-14">
                               {(() => {

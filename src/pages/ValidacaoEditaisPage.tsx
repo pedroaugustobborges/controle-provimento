@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { formatDate, normalizeUnitName, unitIsAllowed } from '@/lib/vagaUtils';
 import { PageHeader } from '@/components/PageHeader';
-import { HelpGuide } from '@/components/HelpGuide';
 import { PageSkeleton } from '@/components/PageSkeleton';
 
 import { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
@@ -247,9 +246,8 @@ export default function ValidacaoEditaisPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
+      <PageHeader
         title="Validação de Edital"
-        helpContent={<HelpGuide />}
         icon={<FileCheck className="h-8 w-8 text-primary" />}
       />
 

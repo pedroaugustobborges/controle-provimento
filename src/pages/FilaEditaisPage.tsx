@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from 're
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronDown, ChevronRight, Unlink, Link2, MapPin as MapPinIcon } from 'lucide-react';
-import { HelpGuide } from '@/components/HelpGuide';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
@@ -413,7 +412,6 @@ export default function FilaEditaisPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-800">Fila de Editais</h1>
           <p className="text-slate-500 mt-1">Vagas aguardando redação e publicação de novo edital.</p>
-          <div className="mt-2"><HelpGuide /></div>
         </div>
         {permissions.canImport() && (
           <div className="flex gap-2">

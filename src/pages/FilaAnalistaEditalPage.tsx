@@ -62,7 +62,6 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PageHeader } from "@/components/PageHeader";
-import { HelpGuide } from "@/components/HelpGuide";
 import { StatusEdital, Vaga, UNIDADES_GOIANIA } from "@/types/vaga";
 import {
   formatDate,
@@ -959,7 +958,7 @@ export default function FilaAnalistaEditalPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Redação do Edital" helpContent={<HelpGuide />} />
+      <PageHeader title="Redação do Edital" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-blue-50 border-blue-100 shadow-sm">
           <CardContent className="pt-6">

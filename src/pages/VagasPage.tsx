@@ -167,7 +167,6 @@ import {
 import { toast } from "sonner";
 import { VagaHistoryDialog } from "@/components/VagaHistoryDialog";
 import { PageHeader } from "@/components/PageHeader";
-import { HelpGuide } from "@/components/HelpGuide";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
 import {
@@ -1021,7 +1020,6 @@ export default function VagasPage() {
         <>
           <PageHeader
             title="Controle de Vagas"
-            helpContent={<HelpGuide />}
             actions={
               <>
                 <ExportButton
@@ -2045,7 +2043,6 @@ function AcompanhamentoEditalList() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <PageHeader
           title="Acompanhamento do Edital"
-          helpContent={<HelpGuide activeTab="acompanhamento" />}
         />
 
         <div className="flex flex-wrap items-center gap-3">

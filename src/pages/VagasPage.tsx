@@ -8,7 +8,6 @@ import {
   TIPO_VAGA_LABELS,
   STATUS_LABELS,
   STATUS_FILTER_OPTIONS,
-  STATUS_FILTER_OPTIONS_TEIA,
   StatusGeral,
   TipoVaga,
   STATUS_EDITAL_COLORS,
@@ -47,8 +46,6 @@ import {
   Info,
   Sparkles,
   Download,
-  Accessibility,
-  ArrowLeft,
   Sigma,
 } from "lucide-react";
 import { ExportButton } from "@/components/ExportButton";
@@ -164,6 +161,7 @@ import {
   CheckCircle2,
   ArrowRight,
   Check,
+  Accessibility,
   Puzzle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -248,36 +246,6 @@ const BANCO_UNIT_GROUPS = [
   ["POLICLINICA", ["POLICLÍNICA", "POLICLINICA"]],
 ] as const;
 
-const PCD_REGIOES: Record<string, string[]> = {
-  "Goiás e Vitória (ES)": [
-    "CRER",
-    "HUGOL",
-    "HECAD",
-    "HDS",
-    "AGIR",
-    "POLICLÍNICA",
-    "JATAÍ",
-    "TEIA APARECIDA",
-    "TEIA GOIÂNIA",
-    "TEIA CANEDO",
-    "SÃO PEDRO",
-    "SUÁ",
-  ],
-  "Demais Unidades": [
-    "HRD",
-    "HMSA",
-    "CHS",
-    "HRC",
-    "HRCAC I",
-    "HRCAC II",
-    "DOURADOS",
-    "TEIA MAN",
-    "TEIA MAN 2",
-    "TEIA MAN 3",
-    "TEIA CEN",
-    "TEIA PIN",
-  ],
-};
 
 // Order in which the status_processo scorecards appear
 const STATUS_PROCESSO_ORDER = [
@@ -440,15 +408,11 @@ export default function VagasPage() {
   }, [fetchVagas, fetchBancos, fetchUsers]);
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "list";
-  const rawFiltroEspecial = searchParams.get("filtro");
-  const filtroEspecial =
-    rawFiltroEspecial === "teia" ? "teias" : rawFiltroEspecial; // 'teias' | 'pcd' | null
   const navigate = useNavigate();
   const location = useLocation();
   const permissions = usePermissions();
   const [search, setSearch] = useState("");
   const [filterUnidades, setFilterUnidades] = useState<string[]>([]);
-  const [pcdRegiao, setPcdRegiao] = useState<string | null>(null);
   const [filterMeses, setFilterMeses] = useState<string[]>([]);
   const [filterStatusProcesso, setFilterStatusProcesso] = useState<string[]>(() => {
     const p = new URLSearchParams(window.location.search).get("status");
@@ -468,6 +432,8 @@ export default function VagasPage() {
   const [filterVagasNovas, setFilterVagasNovas] = useState(false);
   const [filterComBanco, setFilterComBanco] = useState(false);
   const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(false);
+  const [filterTeia, setFilterTeia] = useState(false);
+  const [filterPcd, setFilterPcd] = useState(false);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedVagaForHistory, setSelectedVagaForHistory] =
@@ -613,14 +579,8 @@ export default function VagasPage() {
   }, [currentUser, allUnidades, selectedRegion]);
 
   const unidades = useMemo(() => {
-    let base = allUnidades.filter((u) => visibleUnidades.includes(u));
-    if (filtroEspecial === "teias") {
-      base = base.filter((u) => u.toUpperCase().includes("TEIA"));
-    } else if (!filtroEspecial) {
-      base = base.filter((u) => !u.toUpperCase().includes("TEIA"));
-    }
-    return base.sort();
-  }, [allUnidades, visibleUnidades, filtroEspecial]);
+    return allUnidades.filter((u) => visibleUnidades.includes(u)).sort();
+  }, [allUnidades, visibleUnidades]);
 
   const analistas = useMemo(
     () =>
@@ -772,37 +732,16 @@ export default function VagasPage() {
       }
     }
 
-    // 2. Filtragem especial (TEIAs ou PCD)
-    if (filtroEspecial === "teias") {
+    // 2. Filtro TEIAs / PCD
+    if (filterTeia) {
       baseRecords = baseRecords.filter(
-        (v) =>
-          v.is_teia === true ||
-          (v.unidade || "").toUpperCase().includes("TEIA"),
+        (v) => v.is_teia === true || (v.unidade || "").toUpperCase().includes("TEIA"),
       );
-    } else if (filtroEspecial === "pcd") {
+    }
+    if (filterPcd) {
       baseRecords = baseRecords.filter(
-        (v) =>
-          v.is_pcd === true || (v.cargo || "").toUpperCase().includes("PCD"),
+        (v) => v.is_pcd === true || (v.cargo || "").toUpperCase().includes("PCD"),
       );
-      // Filter by PCD region if selected
-      if (pcdRegiao && PCD_REGIOES[pcdRegiao]) {
-        const regionUnits = PCD_REGIOES[pcdRegiao].map((u) =>
-          normalizeUnitName(u),
-        );
-        baseRecords = baseRecords.filter((v) =>
-          regionUnits.includes(normalizeUnitName(v.unidade)),
-        );
-      }
-    } else {
-      // Visão padrão: excluir TEIAs e PCDs
-      baseRecords = baseRecords.filter((v) => {
-        const isTeia =
-          v.is_teia === true ||
-          (v.unidade || "").toUpperCase().includes("TEIA");
-        const isPcd =
-          v.is_pcd === true || (v.cargo || "").toUpperCase().includes("PCD");
-        return !isTeia && !isPcd;
-      });
     }
 
     // 3. Filtragem interna da tela — aplica filtro de cargo (sem unit/month)
@@ -830,8 +769,8 @@ export default function VagasPage() {
     globalUnit,
     filterUnidades,
     filterMeses,
-    filtroEspecial,
-    pcdRegiao,
+    filterTeia,
+    filterPcd,
     currentUser?.visualiza_todas_unidades,
     currentUser?.unidades_vinculadas,
   ]);
@@ -1077,7 +1016,6 @@ export default function VagasPage() {
   const clearFilters = () => {
     setSearch("");
     setFilterUnidades([]);
-    setPcdRegiao(null);
     setFilterMeses([]);
     setFilterStatusProcesso([]);
     setFilterTratativas([]);
@@ -1088,23 +1026,9 @@ export default function VagasPage() {
     setFilterVagasNovas(false);
     setFilterComBanco(false);
     setFilterSemMovimentacao(false);
+    setFilterTeia(false);
+    setFilterPcd(false);
   };
-
-  const pcdUnidadesComVagas = useMemo(() => {
-    if (filtroEspecial !== "pcd") return {};
-    const result: Record<string, string[]> = {};
-    for (const [regiao, units] of Object.entries(PCD_REGIOES)) {
-      const unitsWithVagas = units.filter((unit) =>
-        canonicalBase.some(
-          (v) => normalizeUnitName(v.unidade) === normalizeUnitName(unit),
-        ),
-      );
-      if (unitsWithVagas.length > 0) {
-        result[regiao] = unitsWithVagas;
-      }
-    }
-    return result;
-  }, [filtroEspecial, canonicalBase]);
 
   const hasFilters =
     search ||
@@ -1118,7 +1042,9 @@ export default function VagasPage() {
     filterLideranca !== "all" ||
     filterVagasNovas ||
     filterComBanco ||
-    filterSemMovimentacao;
+    filterSemMovimentacao ||
+    filterTeia ||
+    filterPcd;
 
   const prepareVagasForExport = (data: Vaga[]) => {
     return data.map((v) => ({
@@ -1143,13 +1069,7 @@ export default function VagasPage() {
       ) : (
         <>
           <PageHeader
-            title={
-              filtroEspecial === "teias"
-                ? "Unidades TEIAs"
-                : filtroEspecial === "pcd"
-                  ? "Vagas PCD"
-                  : "Controle de Vagas"
-            }
+            title="Controle de Vagas"
             helpContent={<HelpGuide />}
             actions={
               <>
@@ -1165,21 +1085,6 @@ export default function VagasPage() {
 
           {/* Scorecards por status_processo + atalhos de navegação */}
           <div className="mb-4 space-y-2.5">
-            {/* Header row: label + nav shortcuts */}
-            <div className="flex items-center justify-between">
-              {filtroEspecial && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 h-7 text-[11px] border-slate-300 text-slate-600 hover:bg-slate-100 font-bold rounded-lg"
-                  onClick={() => navigate("/vagas")}
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Controle de Vagas</span>
-                </Button>
-              )}
-            </div>
-
             {/* Six scorecards: five status + Total */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {STATUS_PROCESSO_ORDER.map((status) => {
@@ -1342,75 +1247,13 @@ export default function VagasPage() {
                       />
                     </div>
                   </div>
-                  {filtroEspecial === "pcd" ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-slate-400" />
-                        {Object.keys(PCD_REGIOES).map((regiao) => (
-                          <Button
-                            key={regiao}
-                            variant={
-                              pcdRegiao === regiao ? "default" : "outline"
-                            }
-                            size="sm"
-                            className="h-8 text-xs font-bold rounded-xl"
-                            onClick={() => {
-                              setPcdRegiao(
-                                pcdRegiao === regiao ? null : regiao,
-                              );
-                              setFilterUnidades([]);
-                            }}
-                          >
-                            {regiao}
-                          </Button>
-                        ))}
-                        {pcdRegiao && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 text-xs text-slate-400"
-                            onClick={() => {
-                              setPcdRegiao(null);
-                              setFilterUnidades([]);
-                            }}
-                          >
-                            <X className="h-3 w-3 mr-1" /> Limpar
-                          </Button>
-                        )}
-                      </div>
-                      {pcdRegiao && pcdUnidadesComVagas[pcdRegiao] && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {pcdUnidadesComVagas[pcdRegiao].map((unit) => (
-                            <Button
-                              key={unit}
-                              variant={
-                                filterUnidades.includes(unit) ? "default" : "outline"
-                              }
-                              size="sm"
-                              className="h-7 text-[11px] font-medium rounded-lg px-3"
-                              onClick={() =>
-                                setFilterUnidades((prev) =>
-                                  prev.includes(unit)
-                                    ? prev.filter((u) => u !== unit)
-                                    : [...prev, unit],
-                                )
-                              }
-                            >
-                              {unit}
-                            </Button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <MultiSelectFilter
-                      placeholder="Todas Unidades"
-                      options={unidades.map((u) => ({ value: u }))}
-                      selected={filterUnidades}
-                      onChange={setFilterUnidades}
-                      width="w-[180px]"
-                    />
-                  )}
+                  <MultiSelectFilter
+                    placeholder="Todas Unidades"
+                    options={unidades.map((u) => ({ value: u }))}
+                    selected={filterUnidades}
+                    onChange={setFilterUnidades}
+                    width="w-[180px]"
+                  />
                   <MultiSelectFilter
                     placeholder="Todos os Status"
                     options={[
@@ -1489,29 +1332,24 @@ export default function VagasPage() {
 
                 {/* Row 2 — quick-access toggles, always on their own line */}
                 <div className="flex flex-wrap gap-2 items-center">
-                  {filtroEspecial !== "teias" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 text-[11px] font-bold gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
-                      onClick={() => navigate("/vagas?filtro=teias")}
-                    >
-                      <Puzzle className="h-3.5 w-3.5" />
-                      TEIAs
-                    </Button>
-                  )}
-                  {filtroEspecial !== "pcd" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 text-[11px] font-bold gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
-                      onClick={() => navigate("/vagas?filtro=pcd")}
-                    >
-                      <Accessibility className="h-3.5 w-3.5" />
-                      PCD
-                    </Button>
-                  )}
-
+                  <Button
+                    variant={filterTeia ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 text-[11px] font-bold gap-2 ${filterTeia ? "bg-emerald-600 hover:bg-emerald-700" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"}`}
+                    onClick={() => setFilterTeia(!filterTeia)}
+                  >
+                    <Puzzle className={`h-3.5 w-3.5 ${filterTeia ? "text-white" : ""}`} />
+                    TEIAs
+                  </Button>
+                  <Button
+                    variant={filterPcd ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 text-[11px] font-bold gap-2 ${filterPcd ? "bg-blue-600 hover:bg-blue-700" : "border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"}`}
+                    onClick={() => setFilterPcd(!filterPcd)}
+                  >
+                    <Accessibility className={`h-3.5 w-3.5 ${filterPcd ? "text-white" : ""}`} />
+                    PCD
+                  </Button>
                   <Button
                     variant={filterVagasNovas ? "default" : "outline"}
                     size="sm"

@@ -102,11 +102,6 @@ export function AppSidebar() {
         url: "/vagas",
         icon: ClipboardList,
         visible: getPermissions("vagas").canRead,
-        subMenu: [
-          { title: "Todas as Vagas", url: "/vagas" },
-          { title: "Unidades TEIAs", url: "/vagas?filtro=teias" },
-          { title: "Vagas PCD", url: "/vagas?filtro=pcd" },
-        ],
       },
       {
         title: "Publicação de Edital",
@@ -171,7 +166,6 @@ export function AppSidebar() {
       }
 
       // For base URLs without query params: only match exactly or as parent directory
-      // Do NOT match when current URL has query params (e.g. /vagas should not be active when on /vagas?filtro=teias)
       return currentUrl === url || currentUrl.startsWith(url + "/");
     },
     [location],

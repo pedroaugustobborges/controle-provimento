@@ -474,9 +474,10 @@ export function BancoTalentosDetalhesModal({
 
   if (!banco) return null;
 
-  const pubDate      = parseDate((banco as any).data_publicacao);
-  const val6m        = pubDate ? addMonths(pubDate, 6)  : null;
-  const val12m       = pubDate ? addMonths(pubDate, 12) : null;
+  const pubDate        = parseDate((banco as any).data_publicacao);
+  const resultadoDate  = parseDate((banco as any).data_resultado);
+  const val6m          = resultadoDate ? addMonths(resultadoDate, 6)  : null;
+  const val12m         = resultadoDate ? addMonths(resultadoDate, 12) : null;
   const isProrrogado = localProrrogado || !!(banco.is_prorrogado || banco.nova_data_validade);
   const novaValidadeStr = localNovaValidade ?? banco.nova_data_validade ?? null;
   const isTeia       = !!(banco as any).is_teia;
@@ -579,6 +580,13 @@ export function BancoTalentosDetalhesModal({
               className="px-5"
               label="Publicação"
               value={fmtDate(pubDate)}
+            />
+
+            {/* Resultado */}
+            <InfoField
+              className="px-5"
+              label="Resultado"
+              value={fmtDate(resultadoDate)}
             />
 
             {/* Validade + Prorrogar */}

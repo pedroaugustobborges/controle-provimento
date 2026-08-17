@@ -254,6 +254,81 @@ _EXPORT_BTN_XPATH = (
     "/html/body/div/div[2]/div/nz-modal-container/div/div/div[2]"
     "/app-importar-exportar-candidatos/div[2]/div/div[2]/div[1]/button/span"
 )
+_EXPORT_MODAL_CLOSE_XPATH = (
+    "/html/body/div/div[2]/div/nz-modal-container/div/div/button/span"
+)
+_EDITAR_VAGA_BTN_XPATH = (
+    "/html/body/app-root/app-common-layout/div/div/div/app-vaga/div/div[1]"
+    "/app-vaga-header/div[2]/div[2]/div[2]/button[1]"
+)
+_ETAPAS_PROCESSO_XPATH = (
+    "/html/body/app-root/app-common-layout/div/div/div/app-vg-adicionar/div/div[2]"
+    "/div[2]/div[1]/nz-steps/div/nz-step[18]/div/div[3]/div[1]"
+)
+# Uses XPath div[last()] to always target the final card regardless of total card count
+_RESULTADO_DATE_XPATH = (
+    "/html/body/app-root/app-common-layout/div/div/div/app-vg-adicionar/div/div[2]"
+    "/div[2]/div[2]/app-vg-cronograma/div[2]/div[2]/div[2]/div[last()]/div[1]/div[1]/div[2]/span"
+)
+
+def get_data_resultado(driver: webdriver.Firefox) -> Optional[str]:
+    """
+    Called right after export_excel() confirmed the download.
+    Flow:
+      1. Close the export modal.
+      2. Click 'Editar vaga'.
+      3. Wait 8 s for the edit form to load.
+      4. Click 'Etapas do Processo Seletivo'.
+      5. Read the date from the LAST cronograma card (div[last()]).
+      6. Parse "Adicionado em DD/MM/YYYY" → "YYYY-MM-DD".
+
+    Fully resilient: any failure returns None without interrupting the caller.
+    """
+    try:
+        logger.info("[data_resultado] Closing export modal…")
+        wait_and_click(driver, _EXPORT_MODAL_CLOSE_XPATH, timeout=SHORT_TIMEOUT)
+    except Exception as exc:
+        logger.warning("[data_resultado] Could not close export modal: %s", exc)
+        return None
+
+    try:
+        logger.info("[data_resultado] Clicking 'Editar vaga'…")
+        wait_and_click(driver, _EDITAR_VAGA_BTN_XPATH, timeout=SHORT_TIMEOUT)
+    except Exception as exc:
+        logger.warning("[data_resultado] Could not click 'Editar vaga': %s", exc)
+        return None
+
+    logger.info("[data_resultado] Waiting 8 s for edit form to load…")
+    time.sleep(8)
+
+    try:
+        logger.info("[data_resultado] Clicking 'Etapas do Processo Seletivo'…")
+        wait_and_click(driver, _ETAPAS_PROCESSO_XPATH, timeout=SHORT_TIMEOUT)
+    except Exception as exc:
+        logger.warning("[data_resultado] Could not click 'Etapas do Processo Seletivo': %s", exc)
+        return None
+
+    try:
+        time.sleep(5)
+        logger.info("[data_resultado] Reading date from last cronograma card…")
+        raw = safe_get_text(driver, _RESULTADO_DATE_XPATH, timeout=SHORT_TIMEOUT)
+        if not raw:
+            logger.warning("[data_resultado] Last card date span returned empty text.")
+            return None
+
+        # "Adicionado em 22/05/2026" → extract DD/MM/YYYY
+        match = re.search(r"(\d{2}/\d{2}/\d{4})", raw)
+        if not match:
+            logger.warning("[data_resultado] No DD/MM/YYYY pattern found in: '%s'", raw)
+            return None
+
+        parsed = _parse_date(match.group(1))
+        logger.info("[data_resultado] Extracted: %s  (raw: '%s')", parsed, raw)
+        return parsed
+
+    except Exception as exc:
+        logger.warning("[data_resultado] Unexpected error reading date: %s", exc)
+        return None
 
 
 def login(driver: webdriver.Firefox) -> None:
@@ -441,6 +516,7 @@ def process_excel(
     is_teia: bool,
     card_info: dict,
     importacao_id: str,
+    data_resultado: Optional[str] = None,
 ) -> int:
     """
     Parse the downloaded Excel file, calculate rankings, and bulk-insert
@@ -503,6 +579,7 @@ def process_excel(
             "is_teia":                 is_teia,
             "media_final":             round(avg_score, 4),
             "data_publicacao":         data_publicacao,
+            "data_resultado":          data_resultado,
             "data_importacao":         today_iso,
             "import_batch_id":         importacao_id,
             "status":                  "CADASTRO RESERVA",
@@ -611,9 +688,16 @@ def run() -> None:
                 # ── 5. Export Excel & wait for download ───────────────────────
                 excel_path = export_excel(driver)
 
+                # ── 5b. Navigate to cronograma and extract data_resultado ──────
+                #        Close the modal → Editar vaga → Etapas → last card date.
+                #        Returns None (and logs a warning) if any step fails.
+                data_resultado = get_data_resultado(driver)
+                logger.info("data_resultado for proc. seletivo %s: %s", arquivo, data_resultado)
+
                 # ── 6. Parse Excel & insert into banco_candidatos ─────────────
                 n = process_excel(
-                    supabase, excel_path, arquivo, numero_edital, is_teia, card_info, importacao_id
+                    supabase, excel_path, arquivo, numero_edital, is_teia,
+                    card_info, importacao_id, data_resultado,
                 )
 
                 # ── 7. Delete temporary file ──────────────────────────────────

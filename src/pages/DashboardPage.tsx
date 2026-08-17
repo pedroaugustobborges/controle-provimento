@@ -219,7 +219,7 @@ export default function DashboardPage() {
   const [dateTo, setDateTo] = useState("");
   const [filterPCD, setFilterPCD] = useState(false);
   const [filterTeia, setFilterTeia] = useState(false);
-  const [chartRange, setChartRange] = useState<'7D' | '1M' | '3M' | '6M' | '1A' | '3A' | '5A'>('1A');
+  const [chartRange, setChartRange] = useState<'7D' | '1M' | '3M' | '6M' | '1A' | '3A' | '5A'>('7D');
 
   useEffect(() => {
     fetchAll();

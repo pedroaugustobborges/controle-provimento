@@ -219,6 +219,7 @@ export default function DashboardPage() {
   const [dateTo, setDateTo] = useState("");
   const [filterPCD, setFilterPCD] = useState(false);
   const [filterTeia, setFilterTeia] = useState(false);
+  const [chartRange, setChartRange] = useState<'7D' | '1M' | '3M' | '6M' | '1A' | '3A' | '5A'>('1A');
 
   useEffect(() => {
     fetchAll();
@@ -860,53 +861,110 @@ export default function DashboardPage() {
     return count;
   }, [selectedUnits, dateFrom, dateTo, filterPCD, filterTeia]);
 
-  const monthlyData = useMemo(() => {
+  const evolutionData = useMemo(() => {
     const now = new Date();
-    const months: {
-      month: string;
-      key: string;
-      abertas: number;
-      concluidas: number;
-    }[] = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      months.push({
-        month: d.toLocaleDateString("pt-BR", {
-          month: "short",
-          year: "2-digit",
-        }),
-        key,
-        abertas: 0,
-        concluidas: 0,
+    now.setHours(23, 59, 59, 999);
+    const toDayStr = (s: string | null | undefined): string | null =>
+      s ? s.slice(0, 10) : null;
+
+    // ── 7 days: one point per day ──────────────────────────────────────────
+    if (chartRange === '7D') {
+      const buckets = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() - (6 - i));
+        return {
+          key: d.toISOString().slice(0, 10),
+          month: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
+          abertas: 0,
+          concluidas: 0,
+        };
       });
-    }
-    userScopedVagas.forEach((v) => {
-      if (v.data_abertura) {
-        const e = months.find(
-          (m) => m.key === (v.data_abertura as string).slice(0, 7),
-        );
-        if (e) e.abertas++;
-      }
-      if (getCategoriaStatus(v) === "concluidas") {
-        const lastHist =
-          v.historico && v.historico.length > 0
-            ? v.historico[v.historico.length - 1]?.data
-            : undefined;
-        const dc =
-          lastHist || (v as any).updated_at || (v as any).data_homologacao;
-        if (dc) {
-          const e = months.find((m) => m.key === (dc as string).slice(0, 7));
-          if (e) e.concluidas++;
+      userScopedVagas.forEach((v) => {
+        const ab = toDayStr(v.data_abertura);
+        const ba = ab ? buckets.find((b) => b.key === ab) : undefined;
+        if (ba) ba.abertas++;
+        if (getCategoriaStatus(v) === 'concluidas') {
+          const lastHist = v.historico?.length ? v.historico[v.historico.length - 1]?.data : undefined;
+          const dc = toDayStr(lastHist ?? (v as any).updated_at);
+          const bc = dc ? buckets.find((b) => b.key === dc) : undefined;
+          if (bc) bc.concluidas++;
         }
+      });
+      return buckets.map(({ month, abertas, concluidas }) => ({ month, abertas, concluidas }));
+    }
+
+    // ── Weekly buckets (1M = 4 weeks, 3M = 13 weeks) ──────────────────────
+    if (chartRange === '1M' || chartRange === '3M') {
+      const weeks = chartRange === '1M' ? 4 : 13;
+      const buckets = Array.from({ length: weeks }, (_, i) => {
+        const end = new Date(now);
+        end.setDate(end.getDate() - (weeks - 1 - i) * 7);
+        const start = new Date(end);
+        start.setDate(start.getDate() - 6);
+        return {
+          start: start.toISOString().slice(0, 10),
+          end: end.toISOString().slice(0, 10),
+          month: start.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          abertas: 0,
+          concluidas: 0,
+        };
+      });
+      userScopedVagas.forEach((v) => {
+        const ab = toDayStr(v.data_abertura);
+        if (ab) {
+          const ba = buckets.find((b) => ab >= b.start && ab <= b.end);
+          if (ba) ba.abertas++;
+        }
+        if (getCategoriaStatus(v) === 'concluidas') {
+          const lastHist = v.historico?.length ? v.historico[v.historico.length - 1]?.data : undefined;
+          const dc = toDayStr(lastHist ?? (v as any).updated_at);
+          if (dc) {
+            const bc = buckets.find((b) => dc >= b.start && dc <= b.end);
+            if (bc) bc.concluidas++;
+          }
+        }
+      });
+      return buckets.map(({ month, abertas, concluidas }) => ({ month, abertas, concluidas }));
+    }
+
+    // ── Monthly buckets (6M, 1A, 3A, 5A) ─────────────────────────────────
+    const monthCount =
+      chartRange === '6M' ? 6 :
+      chartRange === '1A' ? 12 :
+      chartRange === '3A' ? 36 : 60;
+
+    const buckets = Array.from({ length: monthCount }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (monthCount - 1 - i), 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      let label: string;
+      if (monthCount <= 12) {
+        label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      } else {
+        // For dense ranges: show Jan label only to avoid crowding
+        label = d.getMonth() === 0
+          ? String(d.getFullYear())
+          : monthCount <= 36 && d.getMonth() % 3 === 0
+            ? d.toLocaleDateString('pt-BR', { month: 'short' })
+            : '';
+      }
+      return { key, month: label, abertas: 0, concluidas: 0 };
+    });
+
+    userScopedVagas.forEach((v) => {
+      const abKey = v.data_abertura ? (v.data_abertura as string).slice(0, 7) : null;
+      const ba = abKey ? buckets.find((b) => b.key === abKey) : undefined;
+      if (ba) ba.abertas++;
+      if (getCategoriaStatus(v) === 'concluidas') {
+        const lastHist = v.historico?.length ? v.historico[v.historico.length - 1]?.data : undefined;
+        const dc = lastHist ?? (v as any).updated_at ?? (v as any).data_homologacao;
+        const dcKey = dc ? (dc as string).slice(0, 7) : null;
+        const bc = dcKey ? buckets.find((b) => b.key === dcKey) : undefined;
+        if (bc) bc.concluidas++;
       }
     });
-    return months.map(({ month, abertas, concluidas }) => ({
-      month,
-      abertas,
-      concluidas,
-    }));
-  }, [userScopedVagas]);
+
+    return buckets.map(({ month, abertas, concluidas }) => ({ month, abertas, concluidas }));
+  }, [userScopedVagas, chartRange]);
 
   const toDate = (s: string | null | undefined): Date | null => {
     if (!s) return null;
@@ -4096,7 +4154,27 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* ── Evolução Mensal — full width ─────────────────────────────── */}
+        {/* ── Evolução — full width ────────────────────────────────────── */}
+        {(() => {
+          const RANGES: { label: string; value: typeof chartRange }[] = [
+            { label: '7D', value: '7D' },
+            { label: '1M', value: '1M' },
+            { label: '3M', value: '3M' },
+            { label: '6M', value: '6M' },
+            { label: '1A', value: '1A' },
+            { label: '3A', value: '3A' },
+            { label: '5A', value: '5A' },
+          ];
+          const rangeSubtitle: Record<typeof chartRange, string> = {
+            '7D': 'últimos 7 dias',
+            '1M': 'último mês',
+            '3M': 'últimos 3 meses',
+            '6M': 'últimos 6 meses',
+            '1A': 'último ano',
+            '3A': 'últimos 3 anos',
+            '5A': 'últimos 5 anos',
+          };
+          return (
         <div className={`${t.panelClass} flex flex-col`}>
           <div
             style={{
@@ -4107,52 +4185,79 @@ export default function DashboardPage() {
           />
           <div
             style={{
-              padding: "16px 18px 12px",
+              padding: "14px 18px 12px",
               borderBottom: t.phBorder,
               background: t.phBg,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              flexWrap: "wrap",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                marginBottom: "2px",
-              }}
-            >
-              <div
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "8px",
-                  background: "rgba(96,165,250,0.18)",
-                  boxShadow: "0 0 12px rgba(96,165,250,0.22)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <TrendingUp
-                  style={{ width: "15px", height: "15px", color: "#60a5fa" }}
-                />
+            {/* Left: icon + title + subtitle */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                <div
+                  style={{
+                    width: "28px", height: "28px", borderRadius: "8px",
+                    background: "rgba(96,165,250,0.18)",
+                    boxShadow: "0 0 12px rgba(96,165,250,0.22)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <TrendingUp style={{ width: "15px", height: "15px", color: "#60a5fa" }} />
+                </div>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}>
+                  Evolução de Vagas
+                </span>
               </div>
-              <span style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}>
-                Evolução Mensal
-              </span>
+              <p style={{ fontSize: "10px", fontWeight: 500, color: t.tx3, marginLeft: "36px" }}>
+                Abertas vs. concluídas · {rangeSubtitle[chartRange]}
+              </p>
             </div>
-            <p
-              style={{
-                fontSize: "10px",
-                fontWeight: 500,
-                color: t.tx3,
-                marginLeft: "36px",
-              }}
-            >
-              Vagas abertas vs. concluídas (12 meses)
-            </p>
+
+            {/* Right: range pill buttons */}
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              {RANGES.map((r) => {
+                const isActive = chartRange === r.value;
+                return (
+                  <button
+                    key={r.value}
+                    onClick={() => setChartRange(r.value)}
+                    style={{
+                      height: "26px",
+                      minWidth: "34px",
+                      padding: "0 9px",
+                      borderRadius: "9999px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      background: isActive
+                        ? "linear-gradient(135deg, #60a5fa, #34d399)"
+                        : "transparent",
+                      color: isActive ? "#fff" : t.tx3,
+                      boxShadow: isActive ? "0 2px 8px rgba(96,165,250,0.45)" : "none",
+                      letterSpacing: "0.02em",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = t.tx1;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = t.tx3;
+                    }}
+                  >
+                    {r.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <div style={{ padding: "16px", flex: 1 }}>
-            {monthlyData.every((m) => m.abertas === 0 && m.concluidas === 0) ? (
+            {evolutionData.every((m) => m.abertas === 0 && m.concluidas === 0) ? (
               <div
                 style={{
                   display: "flex",
@@ -4167,13 +4272,13 @@ export default function DashboardPage() {
                   style={{ width: "32px", height: "32px", color: t.tx4 }}
                 />
                 <p style={{ fontSize: "12px", color: t.tx3, fontWeight: 500 }}>
-                  Sem dados de abertura registrados
+                  Sem dados para o período selecionado
                 </p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart
-                  data={monthlyData}
+                  data={evolutionData}
                   margin={{ top: 8, right: 24, left: -20, bottom: 0 }}
                 >
                   <defs>
@@ -4281,6 +4386,8 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+          );
+        })()}
 
         {/* ── Bottom row ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

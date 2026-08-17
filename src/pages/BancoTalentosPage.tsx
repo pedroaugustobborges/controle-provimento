@@ -2173,6 +2173,7 @@ export default function BancoTalentosPage() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Edital</TableHead>
+                  <TableHead>Proc. Seletivo</TableHead>
                   <TableHead>Cadastrado Por</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                 </TableRow>
@@ -2186,7 +2187,10 @@ export default function BancoTalentosPage() {
                         : "-"}
                     </TableCell>
                     <TableCell className="text-xs font-semibold">
-                      {h.numero_edital || h.arquivo || "-"}
+                      {h.numero_edital || "-"}
+                    </TableCell>
+                    <TableCell className="text-xs font-semibold">
+                      {h.arquivo || "-"}
                     </TableCell>
                     <TableCell className="text-xs text-slate-500">
                       {h.usuario}

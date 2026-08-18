@@ -147,6 +147,7 @@ export default function BancoTalentosPage() {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "list");
   const vagaIdContext = searchParams.get("vagaId");
+  const openProcessoParam = searchParams.get("openProcesso");
   const [unidadeFilter, setUnidadeFilter] = useState("todas");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [convocadosSearch, setConvocadosSearch] = useState("");
@@ -165,6 +166,26 @@ export default function BancoTalentosPage() {
     null,
   );
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [autoShowProrrogar, setAutoShowProrrogar] = useState(false);
+
+  // Auto-open modal when navigated from a validity notification
+  useEffect(() => {
+    if (!openProcessoParam || bancos.length === 0) return;
+    const match = bancos.find(
+      (b) => b.numero_processo_seletivo === openProcessoParam,
+    );
+    if (match) {
+      setSelectedBanco(match);
+      setAutoShowProrrogar(true);
+      setIsDetailsOpen(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("openProcesso");
+        return next;
+      });
+    }
+  }, [openProcessoParam, bancos]);
+
   // Dual synchronized scrollbars
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -1201,12 +1222,16 @@ export default function BancoTalentosPage() {
 
       <BancoTalentosDetalhesModal
         open={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
+        onOpenChange={(v) => {
+          setIsDetailsOpen(v);
+          if (!v) setAutoShowProrrogar(false);
+        }}
         banco={selectedBanco}
         candidates={selectedGroupCandidates}
         canProrrogate={canProrrogate}
         currentUser={currentUser}
         fetchBancos={fetchBancos}
+        autoShowProrrogar={autoShowProrrogar}
         onConvocar={(data) => {
           setConvocacaoInitialData(data);
           setIsConvocacaoOpen(true);

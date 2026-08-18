@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 
 import logoAgir from "@/assets/logo-agir-white.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,7 @@ import {
   EyeOff,
   ThumbsUp,
   AtSign,
+  Clock,
 } from "lucide-react";
 import { AgieChat } from "./chat/AgieChat";
 import { InactivityLogout } from "./InactivityLogout";
@@ -79,7 +80,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 function getGreeting(): string {
@@ -167,6 +168,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     notificacoes,
     marcarNotificacaoLida,
     marcarTodasLidas,
+    bancos,
   } = useVagasStore();
   // personal notifications: curtidas + mencoes targeted to the current user
   const notifPessoais = (notificacoes as any[]).filter(
@@ -175,9 +177,43 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       n.usuario_id === currentUser?.id,
   );
   const unreadNotifPessoaisCount = notifPessoais.filter((n) => !n.lida).length;
+  // Compute validity deadline alerts from bancos (val6m = data_resultado + 6 months)
+  const validadeAlerts = useMemo(() => {
+    const now = new Date();
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const seen = new Set<string>();
+    const result: Array<{ numero_processo_seletivo: string; cargo: string; val6m: Date }> = [];
+
+    for (const banco of bancos as any[]) {
+      const ps = banco.numero_processo_seletivo;
+      if (!ps || seen.has(ps)) continue;
+      seen.add(ps);
+
+      if (banco.is_prorrogado) continue;
+
+      const dataResultado = banco.data_resultado;
+      if (!dataResultado) continue;
+
+      let resultadoDate: Date;
+      try {
+        resultadoDate = parseISO(dataResultado);
+        if (isNaN(resultadoDate.getTime())) continue;
+      } catch {
+        continue;
+      }
+
+      const val6m = addMonths(resultadoDate, 6);
+      if (val6m >= now && val6m <= in30Days) {
+        result.push({ numero_processo_seletivo: ps, cargo: banco.cargo || "", val6m });
+      }
+    }
+    return result;
+  }, [bancos]);
+
   const unreadAlertsCount =
     alertas.filter((a) => a.status === "nao_lido").length +
-    unreadNotifPessoaisCount;
+    unreadNotifPessoaisCount +
+    validadeAlerts.length;
   const mainRef = useRef<HTMLDivElement>(null);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
 
@@ -613,7 +649,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
                     {/* ── List ── */}
                     <div className="max-h-[420px] overflow-y-auto">
-                      {notifPessoais.length === 0 && alertas.length === 0 ? (
+                      {notifPessoais.length === 0 && alertas.length === 0 && validadeAlerts.length === 0 ? (
                         /* Empty state */
                         <div className="py-14 flex flex-col items-center gap-4 text-center">
                           <div className="relative">
@@ -732,6 +768,35 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                 </Link>
                               );
                             })}
+
+                          {/* Validity deadline alerts */}
+                          {validadeAlerts.map((va) => (
+                            <button
+                              key={`validade-${va.numero_processo_seletivo}`}
+                              onClick={() =>
+                                navigate(
+                                  `/banco-talentos?openProcesso=${encodeURIComponent(va.numero_processo_seletivo)}`,
+                                )
+                              }
+                              className="relative flex gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 bg-gradient-to-r from-amber-50/50 to-transparent w-full text-left"
+                            >
+                              <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full bg-amber-400" />
+                              <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-amber-100 text-amber-600">
+                                <Clock className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[12px] leading-snug font-semibold text-slate-800">
+                                  Prazo próximo — {va.numero_processo_seletivo}
+                                </p>
+                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                                  Validade original vence em{" "}
+                                  {format(va.val6m, "dd/MM/yyyy")}. Pode ser
+                                  prorrogado por mais 6 meses.
+                                </p>
+                              </div>
+                              <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-amber-500" />
+                            </button>
+                          ))}
 
                           {/* System / workflow alerts */}
                           {alertas.map((alerta) => {

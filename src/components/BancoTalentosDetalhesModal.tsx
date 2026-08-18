@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BancoTalentos, Convocacao } from "@/types/vaga";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -446,6 +446,7 @@ export interface BancoTalentosDetalhesModalProps {
   currentUser: any;
   fetchBancos: () => Promise<void>;
   onConvocar: (data: Partial<Convocacao>) => void;
+  autoShowProrrogar?: boolean;
 }
 
 export function BancoTalentosDetalhesModal({
@@ -457,9 +458,17 @@ export function BancoTalentosDetalhesModal({
   currentUser,
   fetchBancos,
   onConvocar,
+  autoShowProrrogar,
 }: BancoTalentosDetalhesModalProps) {
   const [prorrogando, setProrrogando] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Auto-open the prorrogar confirmation when navigated from a notification
+  useEffect(() => {
+    if (open && autoShowProrrogar && canProrrogate) {
+      setShowConfirm(true);
+    }
+  }, [open, autoShowProrrogar, canProrrogate]);
   // Local optimistic state so the label flips immediately on success
   const [localProrrogado, setLocalProrrogado] = useState(false);
   const [localNovaValidade, setLocalNovaValidade] = useState<string | null>(null);

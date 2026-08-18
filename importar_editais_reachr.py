@@ -371,7 +371,7 @@ def export_excel(driver: webdriver.Firefox) -> str:
     }
 
     logger.info("Clicking 'Exportar Candidatos' icon…")
-    time.sleep(5.5)
+    time.sleep(8.5)
     wait_and_click(driver, _EXPORT_ICON_XPATH)
 
     logger.info("Waiting for export modal…")

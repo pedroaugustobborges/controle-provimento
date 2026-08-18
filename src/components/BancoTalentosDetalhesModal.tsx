@@ -463,6 +463,10 @@ export function BancoTalentosDetalhesModal({
   // Local optimistic state so the label flips immediately on success
   const [localProrrogado, setLocalProrrogado] = useState(false);
   const [localNovaValidade, setLocalNovaValidade] = useState<string | null>(null);
+  // Inline editing for data_resultado (admin only)
+  const [editingResultado, setEditingResultado] = useState(false);
+  const [localResultado, setLocalResultado] = useState<string | null>(null);
+  const [savingResultado, setSavingResultado] = useState(false);
   // View mode persisted across sessions
   const [viewMode, setViewMode] = useState<"cards" | "list">(() => {
     return (localStorage.getItem("banco-detalhes-view") as "cards" | "list") || "cards";
@@ -474,8 +478,43 @@ export function BancoTalentosDetalhesModal({
 
   if (!banco) return null;
 
+  const isAdmin = ["admin", "administrador"].some(r =>
+    (currentUser?.perfil || "").toLowerCase().includes(r)
+  );
+
+  const handleSaveResultado = async (raw: string) => {
+    const trimmed = raw.trim();
+    // Accept DD/MM/YYYY or YYYY-MM-DD; convert to ISO for storage
+    let iso: string | null = null;
+    const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (brMatch) iso = `${brMatch[3]}-${brMatch[2].padStart(2,"0")}-${brMatch[1].padStart(2,"0")}`;
+    else if (isoMatch) iso = trimmed;
+    else if (trimmed === "") iso = null;
+    else { toast.error("Data inválida. Use DD/MM/AAAA."); return; }
+
+    setSavingResultado(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const ids = candidates.map((c: any) => c.id);
+      const { error } = await supabase
+        .from("banco_candidatos")
+        .update({ data_resultado: iso })
+        .in("id", ids);
+      if (error) throw error;
+      setLocalResultado(iso);
+      setEditingResultado(false);
+      toast.success("Data de resultado atualizada.");
+      await fetchBancos();
+    } catch (e: any) {
+      toast.error("Erro ao salvar: " + e.message);
+    } finally {
+      setSavingResultado(false);
+    }
+  };
+
   const pubDate        = parseDate((banco as any).data_publicacao);
-  const resultadoDate  = parseDate((banco as any).data_resultado);
+  const resultadoDate  = parseDate(localResultado ?? (banco as any).data_resultado);
   const val6m          = resultadoDate ? addMonths(resultadoDate, 6)  : null;
   const val12m         = resultadoDate ? addMonths(resultadoDate, 12) : null;
   const isProrrogado = localProrrogado || !!(banco.is_prorrogado || banco.nova_data_validade);
@@ -582,12 +621,35 @@ export function BancoTalentosDetalhesModal({
               value={fmtDate(pubDate)}
             />
 
-            {/* Resultado */}
-            <InfoField
-              className="px-5"
-              label="Resultado"
-              value={fmtDate(resultadoDate)}
-            />
+            {/* Resultado — inline editable for admins */}
+            <div className="px-5 space-y-1 flex-1">
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                Resultado
+              </p>
+              {isAdmin && editingResultado ? (
+                <input
+                  autoFocus
+                  type="text"
+                  defaultValue={resultadoDate ? fmtDate(resultadoDate) : ""}
+                  placeholder="DD/MM/AAAA"
+                  disabled={savingResultado}
+                  onBlur={(e) => handleSaveResultado(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveResultado((e.target as HTMLInputElement).value);
+                    if (e.key === "Escape") setEditingResultado(false);
+                  }}
+                  className="w-28 text-sm font-semibold bg-transparent border-b border-blue-400 text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-300"
+                />
+              ) : (
+                <p
+                  className={`text-sm font-semibold text-slate-100 ${isAdmin ? "cursor-pointer hover:text-blue-300 transition-colors" : ""}`}
+                  onClick={() => isAdmin && setEditingResultado(true)}
+                  title={isAdmin ? "Clique para editar" : undefined}
+                >
+                  {fmtDate(resultadoDate)}
+                </p>
+              )}
+            </div>
 
             {/* Validade + Prorrogar */}
             <div className="pl-5 space-y-1 flex-1">

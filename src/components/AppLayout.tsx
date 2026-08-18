@@ -796,10 +796,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-[12px] leading-snug font-semibold text-slate-800">
-                                  Prazo próximo — {va.numero_processo_seletivo}
+                                  A validade do processo{" "}
+                                  {va.numero_processo_seletivo} está próxima.
                                 </p>
                                 <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
-                                  Validade do processo seletivo vence em{" "}
+                                  O processo seletivo vence em{" "}
                                   {format(va.val6m, "dd/MM/yyyy")}. Gostaria de
                                   prorrogar prorrogar por mais 6 meses?
                                 </p>

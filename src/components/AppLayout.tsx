@@ -182,7 +182,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const now = new Date();
     const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const seen = new Set<string>();
-    const result: Array<{ numero_processo_seletivo: string; cargo: string; val6m: Date }> = [];
+    const result: Array<{
+      numero_processo_seletivo: string;
+      cargo: string;
+      val6m: Date;
+    }> = [];
 
     for (const banco of bancos as any[]) {
       const ps = banco.numero_processo_seletivo;
@@ -204,7 +208,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       const val6m = addMonths(resultadoDate, 6);
       if (val6m >= now && val6m <= in30Days) {
-        result.push({ numero_processo_seletivo: ps, cargo: banco.cargo || "", val6m });
+        result.push({
+          numero_processo_seletivo: ps,
+          cargo: banco.cargo || "",
+          val6m,
+        });
       }
     }
     return result;
@@ -649,7 +657,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
                     {/* ── List ── */}
                     <div className="max-h-[420px] overflow-y-auto">
-                      {notifPessoais.length === 0 && alertas.length === 0 && validadeAlerts.length === 0 ? (
+                      {notifPessoais.length === 0 &&
+                      alertas.length === 0 &&
+                      validadeAlerts.length === 0 ? (
                         /* Empty state */
                         <div className="py-14 flex flex-col items-center gap-4 text-center">
                           <div className="relative">
@@ -789,9 +799,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                   Prazo próximo — {va.numero_processo_seletivo}
                                 </p>
                                 <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
-                                  Validade original vence em{" "}
-                                  {format(va.val6m, "dd/MM/yyyy")}. Pode ser
-                                  prorrogado por mais 6 meses.
+                                  Validade do processo seletivo vence em{" "}
+                                  {format(va.val6m, "dd/MM/yyyy")}. Gostaria de
+                                  prorrogar prorrogar por mais 6 meses?
                                 </p>
                               </div>
                               <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-amber-500" />

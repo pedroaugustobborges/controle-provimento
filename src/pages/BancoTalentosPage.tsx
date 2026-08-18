@@ -2200,37 +2200,37 @@ export default function BancoTalentosPage() {
                         const s = (h.status || "").toLowerCase();
                         if (s === "aguardando_processamento")
                           return (
-                            <Badge
-                              variant="outline"
-                              className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[11px]"
-                            >
+                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[11px]">
                               Aguardando
                             </Badge>
                           );
                         if (s === "em_processamento")
                           return (
-                            <Badge
-                              variant="outline"
-                              className="bg-blue-50 text-blue-700 border-blue-200 text-[11px]"
-                            >
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[11px]">
                               Processando
                             </Badge>
                           );
-                        if (s === "erro")
+                        if (s.startsWith("candidato") || s === "concluído")
                           return (
-                            <Badge
-                              variant="outline"
-                              className="bg-red-50 text-red-700 border-red-200 text-[11px]"
-                            >
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">
+                              Concluído
+                            </Badge>
+                          );
+                        if (s === "edital não encontrado na reachr")
+                          return (
+                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[11px]">
+                              Não encontrado
+                            </Badge>
+                          );
+                        if (s.startsWith("erro"))
+                          return (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[11px]">
                               Erro
                             </Badge>
                           );
                         return (
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 text-green-700 border-green-200 text-[11px]"
-                          >
-                            Concluído
+                          <Badge variant="outline" className="bg-slate-100 text-slate-500 border-slate-200 text-[11px]">
+                            {h.status}
                           </Badge>
                         );
                       })()}

@@ -71,6 +71,25 @@ const getRegiaoFromUnit = (unidade: string): string | undefined => {
 };
 import { useSearchParams, useNavigate } from "react-router-dom";
 
+// ── Date helpers for validade column ────────────────────────────────────────
+function parseDateVal(raw: string | null | undefined): Date | null {
+  if (!raw) return null;
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+  const br = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return new Date(+br[3], +br[2] - 1, +br[1]);
+  return null;
+}
+function addMonthsVal(d: Date, m: number): Date {
+  const r = new Date(d);
+  r.setMonth(r.getMonth() + m);
+  return r;
+}
+function fmtDtVal(d: Date | null): string {
+  if (!d) return "—";
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
 import {
   Dialog,
   DialogContent,
@@ -1445,6 +1464,7 @@ export default function BancoTalentosPage() {
                 <table className="w-full caption-bottom text-sm">
                   <TableHeader>
                     <TableRow className="border-b border-slate-200">
+                      <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Validade</TableHead>
                       <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Edital</TableHead>
                       <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Proc. Seletivo</TableHead>
                       <TableHead className="whitespace-nowrap text-[11px] font-bold text-slate-500 uppercase tracking-wide">Cargo</TableHead>
@@ -1470,6 +1490,51 @@ export default function BancoTalentosPage() {
                         key={group.id}
                         className="hover:bg-slate-50/60 transition-colors border-b border-slate-100 last:border-0"
                       >
+                        {/* Validade */}
+                        {(() => {
+                          const dataRes = (group.candidatos[0] as any)?.data_resultado;
+                          const resultadoDate = parseDateVal(dataRes);
+                          const val6m = resultadoDate ? addMonthsVal(resultadoDate, 6) : null;
+                          const novaValidade = group.isProrrogado
+                            ? parseDateVal(group.candidatos[0]?.nova_data_validade)
+                            : null;
+                          const now = new Date();
+                          const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+                          const isNearing = !group.isProrrogado && val6m !== null && val6m >= now && val6m <= in30;
+                          const isOverdue = !group.isProrrogado && val6m !== null && val6m < now;
+                          const urgent = isNearing || isOverdue;
+                          return (
+                            <TableCell className="py-3">
+                              <div className="flex items-center gap-2">
+                                {urgent && (
+                                  <TooltipProvider delayDuration={0}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <AlertTriangle
+                                          className={`h-3.5 w-3.5 shrink-0 ${isOverdue ? "text-red-500" : "text-amber-500"}`}
+                                        />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right" className="text-xs max-w-[200px]">
+                                        Processo seletivo próximo do vencimento
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                                <div className="flex flex-col gap-0.5">
+                                  <span className={`text-[11px] font-semibold tabular-nums leading-tight ${isOverdue ? "text-red-500" : isNearing ? "text-amber-600" : "text-slate-600"}`}>
+                                    {fmtDtVal(val6m)}
+                                  </span>
+                                  {novaValidade && (
+                                    <span className="text-[11px] tabular-nums leading-tight text-blue-500 font-semibold">
+                                      {fmtDtVal(novaValidade)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                          );
+                        })()}
+
                         {/* Edital */}
                         <TableCell className="py-3">
                           <span className="text-[12px] font-bold text-primary">
@@ -1606,7 +1671,7 @@ export default function BancoTalentosPage() {
                     {filteredGroups.length === 0 && (
                       <TableRow>
                         <TableCell
-                          colSpan={8}
+                          colSpan={9}
                           className="h-40 text-center text-slate-400 font-medium italic"
                         >
                           Nenhum banco de talentos encontrado para os filtros

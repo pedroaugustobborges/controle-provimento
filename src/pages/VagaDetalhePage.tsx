@@ -1626,7 +1626,11 @@ export default function VagaDetalhePage() {
       const effectiveTratativa =
         "tratativa" in draft ? draft.tratativa || "" : item?.tratativa || "";
       const effectiveEtapa =
-        "etapa" in draft ? draft.etapa || "" : item?.etapa || "";
+        "etapa" in draft
+          ? draft.etapa || ""
+          : "tratativa" in draft
+            ? "" // tratativa changed → etapa was reset, don't fall back to stale saved value
+            : item?.etapa || "";
       const availableEtapas = effectiveTratativa
         ? activeEtapaMapForValidation[effectiveTratativa] || []
         : [];

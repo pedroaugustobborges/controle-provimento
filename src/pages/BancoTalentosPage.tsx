@@ -491,7 +491,8 @@ export default function BancoTalentosPage() {
       const matchSearch =
         normalizeCargo(b.cargo).includes(normalizedSearch) ||
         normalizeCargo(b.unidade).includes(normalizedSearch) ||
-        normalizeCargo(b.numero_edital).includes(normalizedSearch);
+        normalizeCargo(b.numero_edital).includes(normalizedSearch) ||
+        normalizeCargo(b.numero_processo_seletivo || "").includes(normalizedSearch);
 
       const matchUnidade =
         unidadeFilter === "todas" || b.unidade === unidadeFilter;
@@ -710,7 +711,8 @@ export default function BancoTalentosPage() {
       const matchSearch =
         normalizeCargo(group.cargo).includes(normalizedSearch) ||
         normalizeCargo(group.unidade).includes(normalizedSearch) ||
-        normalizeCargo(group.edital).includes(normalizedSearch);
+        normalizeCargo(group.edital).includes(normalizedSearch) ||
+        normalizeCargo(group.processoSeletivo || "").includes(normalizedSearch);
 
       const matchUnidade =
         unidadeFilter === "todas" || group.unidade === unidadeFilter;
@@ -1430,7 +1432,7 @@ export default function BancoTalentosPage() {
                 <div className="relative flex-1 max-w-md">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="Buscar por cargo, unidade ou edital..."
+                    placeholder="Buscar por cargo, unidade, edital ou processo seletivo..."
                     className="pl-9 bg-white"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}

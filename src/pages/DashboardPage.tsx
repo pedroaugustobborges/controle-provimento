@@ -432,6 +432,16 @@ export default function DashboardPage() {
 
   const userScopedBancos = useMemo(() => {
     if (currentUser?.visualiza_todas_unidades) return bancos;
+    const bancounidades = currentUser?.unidades_banco_talentos;
+    if (Array.isArray(bancounidades) && bancounidades.length > 0) {
+      return bancos.filter((b) =>
+        bancounidades.some(
+          (u) =>
+            normalizeUnitName(u) ===
+            normalizeUnitName((b as any).unidade || ""),
+        ),
+      );
+    }
     const allowed = currentUser?.unidades_vinculadas || [];
     if (allowed.length === 0) return bancos;
     return bancos.filter((b) => unitIsAllowed((b as any).unidade, allowed));
@@ -439,6 +449,7 @@ export default function DashboardPage() {
     bancos,
     currentUser?.visualiza_todas_unidades,
     currentUser?.unidades_vinculadas,
+    currentUser?.unidades_banco_talentos,
   ]);
 
   const filteredBancos = useMemo(

@@ -465,12 +465,21 @@ export default function BancoTalentosPage() {
       globalUnit,
     );
     return baseRecords.filter((b) => {
-      // Unit access restriction
-      if (
-        !currentUser?.visualiza_todas_unidades &&
-        !currentUser?.unidades_vinculadas.includes(b.unidade)
-      ) {
-        return false;
+      // Unit access restriction (banco de talentos-specific, then general)
+      if (!currentUser?.visualiza_todas_unidades) {
+        const bancounidades = currentUser?.unidades_banco_talentos;
+        if (Array.isArray(bancounidades) && bancounidades.length > 0) {
+          if (
+            !bancounidades.some(
+              (u) =>
+                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+            )
+          ) {
+            return false;
+          }
+        } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {
+          return false;
+        }
       }
 
       // Exclude convocados from the main list
@@ -511,12 +520,21 @@ export default function BancoTalentosPage() {
     return bancos.filter((b) => {
       if (b.status !== "CONVOCADO") return false;
 
-      // Unit access restriction
-      if (
-        !currentUser?.visualiza_todas_unidades &&
-        !currentUser?.unidades_vinculadas.includes(b.unidade)
-      ) {
-        return false;
+      // Unit access restriction (banco de talentos-specific, then general)
+      if (!currentUser?.visualiza_todas_unidades) {
+        const bancounidades = currentUser?.unidades_banco_talentos;
+        if (Array.isArray(bancounidades) && bancounidades.length > 0) {
+          if (
+            !bancounidades.some(
+              (u) =>
+                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+            )
+          ) {
+            return false;
+          }
+        } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {
+          return false;
+        }
       }
 
       const normalizedSearch = normalizeCargo(convocadosSearch);
@@ -606,12 +624,21 @@ export default function BancoTalentosPage() {
       globalUnit,
     );
     baseRecords.forEach((b) => {
-      // Restricted access check
-      if (
-        !currentUser?.visualiza_todas_unidades &&
-        !currentUser?.unidades_vinculadas.includes(b.unidade)
-      ) {
-        return;
+      // Restricted access check (banco de talentos-specific, then general)
+      if (!currentUser?.visualiza_todas_unidades) {
+        const bancounidades = currentUser?.unidades_banco_talentos;
+        if (Array.isArray(bancounidades) && bancounidades.length > 0) {
+          if (
+            !bancounidades.some(
+              (u) =>
+                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+            )
+          ) {
+            return;
+          }
+        } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {
+          return;
+        }
       }
 
       const calculation = calculateBancoStatus(b);
@@ -754,11 +781,20 @@ export default function BancoTalentosPage() {
   const vencidosFiltered = useMemo(() => {
     return bancos.filter((b) => {
       if (b.status !== "VENCIDO") return false;
-      if (
-        !currentUser?.visualiza_todas_unidades &&
-        !currentUser?.unidades_vinculadas.includes(b.unidade)
-      ) {
-        return false;
+      if (!currentUser?.visualiza_todas_unidades) {
+        const bancounidades = currentUser?.unidades_banco_talentos;
+        if (Array.isArray(bancounidades) && bancounidades.length > 0) {
+          if (
+            !bancounidades.some(
+              (u) =>
+                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+            )
+          ) {
+            return false;
+          }
+        } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {
+          return false;
+        }
       }
       if (!vencidosSearch) return true;
       const normalizedSearch = normalizeCargo(vencidosSearch);

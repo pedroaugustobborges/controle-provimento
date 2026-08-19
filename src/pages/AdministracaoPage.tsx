@@ -155,6 +155,14 @@ const resolveShortUnitName = (vagaUnidade: string): string => {
   );
 };
 
+const BANCO_TALENTOS_UNIDADES = [
+  "Goiânia - GO",
+  "Cidade de Goiás - GO",
+  "Jataí - GO",
+  "Cáceres - MT",
+  "Vitória - ES",
+];
+
 const MODULOS_SISTEMA = [
   { id: "vagas", label: "Vagas (Painel Principal)" },
   { id: "publicacao", label: "Publicação de Edital" },
@@ -431,6 +439,7 @@ export default function AdministracaoPage() {
     sendWelcomeEmail: true,
     regiao_suporte: null as string | null,
     unidades_responsavel: [] as string[],
+    unidades_banco_talentos: [] as string[],
   });
 
   useEffect(() => {
@@ -472,6 +481,7 @@ export default function AdministracaoPage() {
       sendWelcomeEmail: true,
       regiao_suporte: null as string | null,
       unidades_responsavel: [] as string[],
+      unidades_banco_talentos: [] as string[],
     });
   };
 
@@ -650,6 +660,9 @@ export default function AdministracaoPage() {
       permissoes_modulo: user.permissoes_modulo || {},
       visualiza_todas_unidades: !!user.visualiza_todas_unidades,
       unidades_responsavel: currentResponsavelUnits,
+      unidades_banco_talentos: Array.isArray(user.unidades_banco_talentos)
+        ? user.unidades_banco_talentos
+        : [],
     });
     setIsEditUserOpen(true);
   };
@@ -694,6 +707,7 @@ export default function AdministracaoPage() {
             ? editingUser.regiao_suporte
             : null,
         unidades_responsavel: newUnidadesResponsavel,
+        unidades_banco_talentos: editingUser.unidades_banco_talentos || [],
       } as any);
 
       // Handle analista_responsavel bulk update for Analista profiles (prefix match for full unit names)
@@ -1867,6 +1881,62 @@ export default function AdministracaoPage() {
               </div>
             )}
 
+            {/* Banco de Talentos */}
+            <div className="space-y-4 border-t pt-4">
+              <div>
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-teal-500" />
+                  Banco de Talentos
+                </h4>
+                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                  Selecione as unidades do banco de candidatos que este usuário
+                  poderá visualizar.
+                </p>
+              </div>
+              <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5">
+                {BANCO_TALENTOS_UNIDADES.map((unit) => {
+                  const isSelected =
+                    newUser.unidades_banco_talentos.includes(unit);
+                  const toggle = () => {
+                    setNewUser((p) => ({
+                      ...p,
+                      unidades_banco_talentos: isSelected
+                        ? p.unidades_banco_talentos.filter((u) => u !== unit)
+                        : [...p.unidades_banco_talentos, unit],
+                    }));
+                  };
+                  return (
+                    <div
+                      key={unit}
+                      onClick={toggle}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-teal-50 border-teal-300"
+                          : "bg-white border-slate-200 hover:border-teal-200 hover:bg-teal-50/30"
+                      }`}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={toggle}
+                        className="shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span className="text-[12px] font-semibold text-slate-700">
+                        {unit}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {newUser.unidades_banco_talentos.length === 0 && (
+                <p className="text-[11px] text-amber-600 font-medium flex items-center gap-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Nenhuma unidade selecionada — o usuário não terá acesso ao
+                  banco de candidatos.
+                </p>
+              )}
+            </div>
+
             {/* Permissões específicas (Legacy Flags) */}
             <div className="space-y-3 border-t pt-4">
               <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
@@ -2328,6 +2398,68 @@ export default function AdministracaoPage() {
                       )}
                     </div>
                   )}
+
+                  {/* Banco de Talentos */}
+                  <div className="space-y-4 border-t pt-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-teal-500" />
+                        Banco de Talentos
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        Selecione as unidades do banco de candidatos que este
+                        usuário poderá visualizar.
+                      </p>
+                    </div>
+                    <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5">
+                      {BANCO_TALENTOS_UNIDADES.map((unit) => {
+                        const isSelected = (
+                          editingUser.unidades_banco_talentos || []
+                        ).includes(unit);
+                        const toggle = () => {
+                          setEditingUser((p: any) => ({
+                            ...p,
+                            unidades_banco_talentos: isSelected
+                              ? (p.unidades_banco_talentos || []).filter(
+                                  (u: string) => u !== unit,
+                                )
+                              : [...(p.unidades_banco_talentos || []), unit],
+                          }));
+                        };
+                        return (
+                          <div
+                            key={unit}
+                            onClick={toggle}
+                            className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-teal-50 border-teal-300"
+                                : "bg-white border-slate-200 hover:border-teal-200 hover:bg-teal-50/30"
+                            }`}
+                          >
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={toggle}
+                              className="shrink-0"
+                              onClick={(e: React.MouseEvent) =>
+                                e.stopPropagation()
+                              }
+                            />
+                            <span className="text-[12px] font-semibold text-slate-700">
+                              {unit}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {(editingUser.unidades_banco_talentos || []).length ===
+                      0 && (
+                      <p className="text-[11px] text-amber-600 font-medium flex items-center gap-1.5">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Nenhuma unidade selecionada — o usuário não terá acesso
+                        ao banco de candidatos.
+                      </p>
+                    )}
+                  </div>
 
                   {/* Acesso a Módulos */}
                   <div className="space-y-4 border-t pt-4">

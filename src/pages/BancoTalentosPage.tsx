@@ -469,12 +469,14 @@ export default function BancoTalentosPage() {
       if (!currentUser?.visualiza_todas_unidades) {
         const bancounidades = currentUser?.unidades_banco_talentos;
         if (Array.isArray(bancounidades) && bancounidades.length > 0) {
-          if (
-            !bancounidades.some(
-              (u) =>
-                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
-            )
-          ) {
+          const matchesTeia =
+            bancounidades.includes("Rede TEIA") && !!(b as any).is_teia;
+          const matchesCity = bancounidades.some(
+            (u) =>
+              u !== "Rede TEIA" &&
+              normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+          );
+          if (!matchesTeia && !matchesCity) {
             return false;
           }
         } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {
@@ -524,12 +526,14 @@ export default function BancoTalentosPage() {
       if (!currentUser?.visualiza_todas_unidades) {
         const bancounidades = currentUser?.unidades_banco_talentos;
         if (Array.isArray(bancounidades) && bancounidades.length > 0) {
-          if (
-            !bancounidades.some(
-              (u) =>
-                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
-            )
-          ) {
+          const matchesTeia =
+            bancounidades.includes("Rede TEIA") && !!(b as any).is_teia;
+          const matchesCity = bancounidades.some(
+            (u) =>
+              u !== "Rede TEIA" &&
+              normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+          );
+          if (!matchesTeia && !matchesCity) {
             return false;
           }
         } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {
@@ -628,12 +632,14 @@ export default function BancoTalentosPage() {
       if (!currentUser?.visualiza_todas_unidades) {
         const bancounidades = currentUser?.unidades_banco_talentos;
         if (Array.isArray(bancounidades) && bancounidades.length > 0) {
-          if (
-            !bancounidades.some(
-              (u) =>
-                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
-            )
-          ) {
+          const matchesTeia =
+            bancounidades.includes("Rede TEIA") && !!(b as any).is_teia;
+          const matchesCity = bancounidades.some(
+            (u) =>
+              u !== "Rede TEIA" &&
+              normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+          );
+          if (!matchesTeia && !matchesCity) {
             return;
           }
         } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {
@@ -784,12 +790,14 @@ export default function BancoTalentosPage() {
       if (!currentUser?.visualiza_todas_unidades) {
         const bancounidades = currentUser?.unidades_banco_talentos;
         if (Array.isArray(bancounidades) && bancounidades.length > 0) {
-          if (
-            !bancounidades.some(
-              (u) =>
-                normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
-            )
-          ) {
+          const matchesTeia =
+            bancounidades.includes("Rede TEIA") && !!(b as any).is_teia;
+          const matchesCity = bancounidades.some(
+            (u) =>
+              u !== "Rede TEIA" &&
+              normalizeUnitName(u) === normalizeUnitName(b.unidade || ""),
+          );
+          if (!matchesTeia && !matchesCity) {
             return false;
           }
         } else if (!currentUser?.unidades_vinculadas.includes(b.unidade)) {

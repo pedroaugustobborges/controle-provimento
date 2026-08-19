@@ -434,13 +434,17 @@ export default function DashboardPage() {
     if (currentUser?.visualiza_todas_unidades) return bancos;
     const bancounidades = currentUser?.unidades_banco_talentos;
     if (Array.isArray(bancounidades) && bancounidades.length > 0) {
-      return bancos.filter((b) =>
-        bancounidades.some(
+      return bancos.filter((b) => {
+        const matchesTeia =
+          bancounidades.includes("Rede TEIA") && !!(b as any).is_teia;
+        const matchesCity = bancounidades.some(
           (u) =>
+            u !== "Rede TEIA" &&
             normalizeUnitName(u) ===
-            normalizeUnitName((b as any).unidade || ""),
-        ),
-      );
+              normalizeUnitName((b as any).unidade || ""),
+        );
+        return matchesTeia || matchesCity;
+      });
     }
     const allowed = currentUser?.unidades_vinculadas || [];
     if (allowed.length === 0) return bancos;

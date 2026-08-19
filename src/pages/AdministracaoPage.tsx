@@ -1645,73 +1645,6 @@ export default function AdministracaoPage() {
               )}
             </div>
 
-            {/* Unidades Vinculadas */}
-            <div className="space-y-4 border-t pt-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
-                  Unidades Vinculadas
-                </h4>
-                {newUser.visualiza_todas_unidades && (
-                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
-                    Acesso total
-                  </Badge>
-                )}
-              </div>
-
-              {/* Toggle: acesso total */}
-              <div
-                className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-colors cursor-pointer ${newUser.visualiza_todas_unidades ? "bg-emerald-50/60 border-emerald-200" : "bg-slate-50 border-slate-200"}`}
-                onClick={() =>
-                  setNewUser((p) => ({
-                    ...p,
-                    visualiza_todas_unidades: !p.visualiza_todas_unidades,
-                    unidades_vinculadas: !p.visualiza_todas_unidades
-                      ? []
-                      : p.unidades_vinculadas,
-                  }))
-                }
-              >
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold cursor-pointer">
-                    Visualizar todas as unidades
-                  </Label>
-                  <p className="text-[11px] text-muted-foreground">
-                    O usuário terá acesso irrestrito a todos os registros.
-                  </p>
-                </div>
-                <Switch
-                  checked={newUser.visualiza_todas_unidades}
-                  onCheckedChange={(v) =>
-                    setNewUser((p) => ({
-                      ...p,
-                      visualiza_todas_unidades: v,
-                      unidades_vinculadas: v ? [] : p.unidades_vinculadas,
-                    }))
-                  }
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-
-              {/* Unit picker — only when not full access */}
-              {!newUser.visualiza_todas_unidades && (
-                <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
-                  <UnidadesPicker
-                    value={newUser.unidades_vinculadas}
-                    onChange={(units) =>
-                      setNewUser((p) => ({ ...p, unidades_vinculadas: units }))
-                    }
-                  />
-                  {newUser.unidades_vinculadas.length === 0 && (
-                    <p className="text-[11px] text-amber-600 font-medium mt-3 flex items-center gap-1.5">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      Nenhuma unidade selecionada — o usuário não verá nenhum
-                      dado.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* Acesso a Módulos */}
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between">
@@ -1781,6 +1714,73 @@ export default function AdministracaoPage() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Unidades Vinculadas */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
+                  Unidades Vinculadas
+                </h4>
+                {newUser.visualiza_todas_unidades && (
+                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
+                    Acesso total
+                  </Badge>
+                )}
+              </div>
+
+              {/* Toggle: acesso total */}
+              <div
+                className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-colors cursor-pointer ${newUser.visualiza_todas_unidades ? "bg-emerald-50/60 border-emerald-200" : "bg-slate-50 border-slate-200"}`}
+                onClick={() =>
+                  setNewUser((p) => ({
+                    ...p,
+                    visualiza_todas_unidades: !p.visualiza_todas_unidades,
+                    unidades_vinculadas: !p.visualiza_todas_unidades
+                      ? []
+                      : p.unidades_vinculadas,
+                  }))
+                }
+              >
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-bold cursor-pointer">
+                    Visualizar todas as unidades
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    O usuário terá acesso irrestrito a todos os registros.
+                  </p>
+                </div>
+                <Switch
+                  checked={newUser.visualiza_todas_unidades}
+                  onCheckedChange={(v) =>
+                    setNewUser((p) => ({
+                      ...p,
+                      visualiza_todas_unidades: v,
+                      unidades_vinculadas: v ? [] : p.unidades_vinculadas,
+                    }))
+                  }
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+
+              {/* Unit picker — only when not full access */}
+              {!newUser.visualiza_todas_unidades && (
+                <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
+                  <UnidadesPicker
+                    value={newUser.unidades_vinculadas}
+                    onChange={(units) =>
+                      setNewUser((p) => ({ ...p, unidades_vinculadas: units }))
+                    }
+                  />
+                  {newUser.unidades_vinculadas.length === 0 && (
+                    <p className="text-[11px] text-amber-600 font-medium mt-3 flex items-center gap-1.5">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      Nenhuma unidade selecionada — o usuário não verá nenhum
+                      dado.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Responsabilidade pelo Provimento — only for Analista profiles */}
@@ -1881,61 +1881,63 @@ export default function AdministracaoPage() {
               </div>
             )}
 
-            {/* Banco de Talentos */}
-            <div className="space-y-4 border-t pt-4">
-              <div>
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-teal-500" />
-                  Banco de Talentos
-                </h4>
-                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                  Selecione as unidades do banco de candidatos que este usuário
-                  poderá visualizar.
-                </p>
+            {/* Banco de Talentos — only when "banco" module is enabled */}
+            {newUser.modulos_acesso?.includes("banco") && (
+              <div className="space-y-4 border-t pt-4">
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-teal-500" />
+                    Banco de Talentos
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    Selecione as unidades do banco de candidatos que este usuário
+                    poderá visualizar.
+                  </p>
+                </div>
+                <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5">
+                  {BANCO_TALENTOS_UNIDADES.map((unit) => {
+                    const isSelected =
+                      newUser.unidades_banco_talentos.includes(unit);
+                    const toggle = () => {
+                      setNewUser((p) => ({
+                        ...p,
+                        unidades_banco_talentos: isSelected
+                          ? p.unidades_banco_talentos.filter((u) => u !== unit)
+                          : [...p.unidades_banco_talentos, unit],
+                      }));
+                    };
+                    return (
+                      <div
+                        key={unit}
+                        onClick={toggle}
+                        className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-teal-50 border-teal-300"
+                            : "bg-white border-slate-200 hover:border-teal-200 hover:bg-teal-50/30"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={toggle}
+                          className="shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span className="text-[12px] font-semibold text-slate-700">
+                          {unit}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {newUser.unidades_banco_talentos.length === 0 && (
+                  <p className="text-[11px] text-amber-600 font-medium flex items-center gap-1.5">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Nenhuma unidade selecionada — o usuário não terá acesso ao
+                    banco de candidatos.
+                  </p>
+                )}
               </div>
-              <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5">
-                {BANCO_TALENTOS_UNIDADES.map((unit) => {
-                  const isSelected =
-                    newUser.unidades_banco_talentos.includes(unit);
-                  const toggle = () => {
-                    setNewUser((p) => ({
-                      ...p,
-                      unidades_banco_talentos: isSelected
-                        ? p.unidades_banco_talentos.filter((u) => u !== unit)
-                        : [...p.unidades_banco_talentos, unit],
-                    }));
-                  };
-                  return (
-                    <div
-                      key={unit}
-                      onClick={toggle}
-                      className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-teal-50 border-teal-300"
-                          : "bg-white border-slate-200 hover:border-teal-200 hover:bg-teal-50/30"
-                      }`}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={toggle}
-                        className="shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <span className="text-[12px] font-semibold text-slate-700">
-                        {unit}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              {newUser.unidades_banco_talentos.length === 0 && (
-                <p className="text-[11px] text-amber-600 font-medium flex items-center gap-1.5">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  Nenhuma unidade selecionada — o usuário não terá acesso ao
-                  banco de candidatos.
-                </p>
-              )}
-            </div>
+            )}
 
             {/* Permissões específicas (Legacy Flags) */}
             <div className="space-y-3 border-t pt-4">
@@ -2229,6 +2231,84 @@ export default function AdministracaoPage() {
                 </div>
               ) : (
                 <>
+                  {/* Acesso a Módulos */}
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
+                        Módulos e Menus de Acesso
+                      </h4>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200"
+                      >
+                        Personalizado por Perfil
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                      {MODULOS_SISTEMA.map((modulo) => {
+                        const isChecked = editingUser.modulos_acesso?.includes(
+                          modulo.id,
+                        );
+                        const canEdit =
+                          editingUser.permissoes_modulo?.[modulo.id] === "edit";
+
+                        return (
+                          <div
+                            key={modulo.id}
+                            className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                id={`edit-mod-${modulo.id}`}
+                                checked={isChecked}
+                                onCheckedChange={() =>
+                                  toggleModule(modulo.id, true)
+                                }
+                              />
+                              <Label
+                                htmlFor={`edit-mod-${modulo.id}`}
+                                className="text-sm font-bold text-slate-700 cursor-pointer"
+                              >
+                                {modulo.label}
+                              </Label>
+                            </div>
+
+                            {isChecked && (
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-[10px] font-bold cursor-pointer transition-all border-2",
+                                    canEdit
+                                      ? "bg-green-50 text-green-700 border-green-200 shadow-sm"
+                                      : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm",
+                                  )}
+                                  onClick={() =>
+                                    togglePermission(modulo.id, true)
+                                  }
+                                >
+                                  {canEdit ? (
+                                    <>
+                                      <CheckCircle className="h-2.5 w-2.5 mr-1" />{" "}
+                                      Edição Completa
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye className="h-2.5 w-2.5 mr-1" />{" "}
+                                      Somente Leitura
+                                    </>
+                                  )}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Unidades Vinculadas */}
                   <div className="space-y-4 border-t pt-4">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
@@ -2399,144 +2479,69 @@ export default function AdministracaoPage() {
                     </div>
                   )}
 
-                  {/* Banco de Talentos */}
-                  <div className="space-y-4 border-t pt-4">
-                    <div>
-                      <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-teal-500" />
-                        Banco de Talentos
-                      </h4>
-                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                        Selecione as unidades do banco de candidatos que este
-                        usuário poderá visualizar.
-                      </p>
-                    </div>
-                    <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5">
-                      {BANCO_TALENTOS_UNIDADES.map((unit) => {
-                        const isSelected = (
-                          editingUser.unidades_banco_talentos || []
-                        ).includes(unit);
-                        const toggle = () => {
-                          setEditingUser((p: any) => ({
-                            ...p,
-                            unidades_banco_talentos: isSelected
-                              ? (p.unidades_banco_talentos || []).filter(
-                                  (u: string) => u !== unit,
-                                )
-                              : [...(p.unidades_banco_talentos || []), unit],
-                          }));
-                        };
-                        return (
-                          <div
-                            key={unit}
-                            onClick={toggle}
-                            className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-teal-50 border-teal-300"
-                                : "bg-white border-slate-200 hover:border-teal-200 hover:bg-teal-50/30"
-                            }`}
-                          >
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={toggle}
-                              className="shrink-0"
-                              onClick={(e: React.MouseEvent) =>
-                                e.stopPropagation()
-                              }
-                            />
-                            <span className="text-[12px] font-semibold text-slate-700">
-                              {unit}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {(editingUser.unidades_banco_talentos || []).length ===
-                      0 && (
-                      <p className="text-[11px] text-amber-600 font-medium flex items-center gap-1.5">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        Nenhuma unidade selecionada — o usuário não terá acesso
-                        ao banco de candidatos.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Acesso a Módulos */}
-                  <div className="space-y-4 border-t pt-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
-                        Módulos e Menus de Acesso
-                      </h4>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] bg-slate-50 text-slate-500 font-bold border-slate-200"
-                      >
-                        Personalizado por Perfil
-                      </Badge>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                      {MODULOS_SISTEMA.map((modulo) => {
-                        const isChecked = editingUser.modulos_acesso?.includes(
-                          modulo.id,
-                        );
-                        const canEdit =
-                          editingUser.permissoes_modulo?.[modulo.id] === "edit";
-
-                        return (
-                          <div
-                            key={modulo.id}
-                            className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
+                  {/* Banco de Talentos — only when "banco" module is enabled */}
+                  {editingUser.modulos_acesso?.includes("banco") && (
+                    <div className="space-y-4 border-t pt-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-teal-500" />
+                          Banco de Talentos
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                          Selecione as unidades do banco de candidatos que este
+                          usuário poderá visualizar.
+                        </p>
+                      </div>
+                      <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5">
+                        {BANCO_TALENTOS_UNIDADES.map((unit) => {
+                          const isSelected = (
+                            editingUser.unidades_banco_talentos || []
+                          ).includes(unit);
+                          const toggle = () => {
+                            setEditingUser((p: any) => ({
+                              ...p,
+                              unidades_banco_talentos: isSelected
+                                ? (p.unidades_banco_talentos || []).filter(
+                                    (u: string) => u !== unit,
+                                  )
+                                : [...(p.unidades_banco_talentos || []), unit],
+                            }));
+                          };
+                          return (
+                            <div
+                              key={unit}
+                              onClick={toggle}
+                              className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-teal-50 border-teal-300"
+                                  : "bg-white border-slate-200 hover:border-teal-200 hover:bg-teal-50/30"
+                              }`}
+                            >
                               <Checkbox
-                                id={`edit-mod-${modulo.id}`}
-                                checked={isChecked}
-                                onCheckedChange={() =>
-                                  toggleModule(modulo.id, true)
+                                checked={isSelected}
+                                onCheckedChange={toggle}
+                                className="shrink-0"
+                                onClick={(e: React.MouseEvent) =>
+                                  e.stopPropagation()
                                 }
                               />
-                              <Label
-                                htmlFor={`edit-mod-${modulo.id}`}
-                                className="text-sm font-bold text-slate-700 cursor-pointer"
-                              >
-                                {modulo.label}
-                              </Label>
+                              <span className="text-[12px] font-semibold text-slate-700">
+                                {unit}
+                              </span>
                             </div>
-
-                            {isChecked && (
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "text-[10px] font-bold cursor-pointer transition-all border-2",
-                                    canEdit
-                                      ? "bg-green-50 text-green-700 border-green-200 shadow-sm"
-                                      : "bg-blue-50 text-blue-700 border-blue-200 shadow-sm",
-                                  )}
-                                  onClick={() =>
-                                    togglePermission(modulo.id, true)
-                                  }
-                                >
-                                  {canEdit ? (
-                                    <>
-                                      <CheckCircle className="h-2.5 w-2.5 mr-1" />{" "}
-                                      Edição Completa
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Eye className="h-2.5 w-2.5 mr-1" />{" "}
-                                      Somente Leitura
-                                    </>
-                                  )}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+                      {(editingUser.unidades_banco_talentos || []).length ===
+                        0 && (
+                        <p className="text-[11px] text-amber-600 font-medium flex items-center gap-1.5">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Nenhuma unidade selecionada — o usuário não terá
+                          acesso ao banco de candidatos.
+                        </p>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   <div className="space-y-3 border-t pt-4">
                     <h4 className="text-xs font-bold text-primary uppercase tracking-wider">

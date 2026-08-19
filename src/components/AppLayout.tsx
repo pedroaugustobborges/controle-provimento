@@ -188,7 +188,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       val6m: Date;
     }> = [];
 
+    const bancounidades = currentUser?.unidades_banco_talentos;
+    const hasBancoFilter =
+      !currentUser?.visualiza_todas_unidades &&
+      Array.isArray(bancounidades) &&
+      bancounidades.length > 0;
+
     for (const banco of bancos as any[]) {
+      // Apply the same banco de talentos unit access restriction used in BancoTalentosPage
+      if (hasBancoFilter) {
+        const matchesTeia = bancounidades!.includes("Rede TEIA") && !!banco.is_teia;
+        const matchesCity = bancounidades!.some(
+          (u: string) =>
+            u !== "Rede TEIA" &&
+            (banco.unidade || "").toLowerCase() === u.toLowerCase(),
+        );
+        if (!matchesTeia && !matchesCity) continue;
+      }
+
       const ps = banco.numero_processo_seletivo;
       if (!ps || seen.has(ps)) continue;
       seen.add(ps);
@@ -216,7 +233,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       }
     }
     return result;
-  }, [bancos]);
+  }, [bancos, currentUser]);
 
   const unreadAlertsCount =
     alertas.filter((a) => a.status === "nao_lido").length +

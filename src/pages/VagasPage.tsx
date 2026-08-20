@@ -1795,14 +1795,14 @@ export default function VagasPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8 text-slate-300 hover:bg-slate-50"
-                                  title="Banco não encontrado"
+                                  title="Nenhum candidato encontrado no Banco de Talentos"
                                   onClick={() =>
                                     toast.error(
-                                      `Banco não encontrado para a vaga ${v.cargo}, unidade ${v.unidade}`,
+                                      `Nenhum candidato encontrado no Banco de Talentos para ${v.cargo}, unidade ${v.unidade}`,
                                     )
                                   }
                                 >
-                                  <CheckCircle2 className="h-5 w-5 opacity-40" />
+                                  <Radar className="h-4 w-4 opacity-30" />
                                 </Button>
                               )}
                             </TableCell>

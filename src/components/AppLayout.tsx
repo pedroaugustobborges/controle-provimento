@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useTheme } from "@/hooks/useTheme";
 
 import logoAgir from "@/assets/logo-agir-white.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,9 +138,16 @@ const routeContextMap: Record<
 };
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { isDark } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const pathnames = location.pathname.split("/").filter((x) => x);
+
+  // Sync dark mode class to body — covers the header and all Radix portals
+  useEffect(() => {
+    if (isDark) document.body.classList.add("gdp-dark");
+    else document.body.classList.remove("gdp-dark");
+  }, [isDark]);
   const {
     currentUser,
     fetchCurrentProfile,
@@ -520,14 +528,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="shrink-0 z-20 sticky top-0 bg-background transition-all duration-300">
+          <header
+            className="shrink-0 z-20 sticky top-0 transition-all duration-300"
+            style={{
+              background: isDark
+                ? "rgba(7,9,29,0.92)"
+                : "hsl(var(--background))",
+              backdropFilter: isDark ? "blur(20px)" : undefined,
+              WebkitBackdropFilter: isDark ? "blur(20px)" : undefined,
+              borderBottom: isDark ? "1px solid rgba(255,255,255,0.08)" : undefined,
+            }}
+          >
             {/* Top bar */}
             <div
               className={`flex items-center justify-between px-6 border-b transition-all duration-300 ${
-                isCompact
-                  ? "h-12 bg-background shadow-sm border-border/40"
-                  : "h-16 bg-gradient-to-r from-background via-background to-primary/[0.03] border-border/60"
+                isCompact ? "h-12 shadow-sm" : "h-16"
               }`}
+              style={{
+                background: isDark
+                  ? "transparent"
+                  : isCompact
+                    ? "hsl(var(--background))"
+                    : undefined,
+                borderBottomColor: isDark ? "rgba(255,255,255,0.07)" : undefined,
+              }}
             >
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all rounded-lg border border-border/50" />
@@ -624,7 +648,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <PopoverContent
                     align="end"
                     sideOffset={10}
-                    className="w-[360px] p-0 overflow-hidden bg-white border-slate-200/70 shadow-2xl rounded-2xl"
+                    className="w-[360px] p-0 overflow-hidden shadow-2xl rounded-2xl"
+                    style={{
+                      background: isDark ? "rgba(11,16,34,0.97)" : "#ffffff",
+                      borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(148,163,184,0.70)",
+                      backdropFilter: isDark ? "blur(24px)" : undefined,
+                    }}
                   >
                     {/* ── Header ── */}
                     <div className="relative px-4 py-3.5 border-b border-slate-100 overflow-hidden">
@@ -925,11 +954,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Breadcrumb bar */}
             {pathnames.length > 0 && (
               <div
-                className={`flex items-center px-6 border-b border-border/30 transition-all duration-300 ${
+                className={`flex items-center px-6 transition-all duration-300 ${
                   isCompact
                     ? "h-0 opacity-0 overflow-hidden border-0"
-                    : "h-10 opacity-100 bg-background"
+                    : "h-10 opacity-100"
                 }`}
+                style={{
+                  background: isDark ? "rgba(7,9,29,0.85)" : "hsl(var(--background))",
+                  borderBottom: isDark
+                    ? "1px solid rgba(255,255,255,0.06)"
+                    : "1px solid hsl(var(--border) / 0.30)",
+                }}
               >
                 <Breadcrumb>
                   <BreadcrumbList className="gap-1">

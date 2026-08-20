@@ -3481,6 +3481,59 @@ function ValidacaoTab({ vagaId }: { vagaId: string; validacao?: any }) {
   );
 }
 
+function getBancoUnidadeFilter(vaga: any): (b: any) => boolean {
+  const vagaUnidadeUpper = (vaga.unidade || "").trim().toUpperCase();
+  const isTeia =
+    vaga.is_teia || vagaUnidadeUpper.includes("TEIA");
+
+  // Rule 8: TEIA units — filter by is_teia flag on banco_candidatos
+  if (isTeia) {
+    return (b: any) => !!(b as any).is_teia;
+  }
+
+  const sw = (prefix: string) =>
+    vagaUnidadeUpper.startsWith(prefix.toUpperCase());
+
+  // Rule 5: Jataí - GO (must be checked before plain AGIR)
+  if (sw("HEJ") || sw("AGIR RIO VERDE")) {
+    return (b: any) => ((b as any).unidade || "") === "Jataí - GO";
+  }
+
+  // Rule 1: Goiânia - GO
+  if (
+    sw("HUGOL") ||
+    sw("HECAD") ||
+    sw("CRER") ||
+    sw("AGIR") ||
+    sw("HDS")
+  ) {
+    return (b: any) => ((b as any).unidade || "") === "Goiânia - GO";
+  }
+
+  // Rule 2: Dourados - MS
+  if (sw("CHRD")) {
+    return (b: any) => ((b as any).unidade || "") === "Dourados - MS";
+  }
+
+  // Rule 3: Manaus - AM
+  if (sw("CHS")) {
+    return (b: any) => ((b as any).unidade || "") === "Manaus - AM";
+  }
+
+  // Rule 4: Cáceres - MT
+  if (sw("HRC")) {
+    return (b: any) => ((b as any).unidade || "") === "Cáceres - MT";
+  }
+
+  // Rule 6 & 7: Cidade de Goiás - GO
+  if (sw("POL GOIAS") || sw("UPA SAO PEDRO") || sw("UPA PRAIA DO SUA")) {
+    return (b: any) => ((b as any).unidade || "") === "Cidade de Goiás - GO";
+  }
+
+  // No specific rule → show all
+  return () => true;
+}
+
 function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
   const { bancos } = useVagasStore();
   const [search, setSearch] = useState("");
@@ -3488,8 +3541,15 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
   const [convocacaoInitial, setConvocacaoInitial] = useState<any>(null);
   const [isConvocacaoOpen, setIsConvocacaoOpen] = useState(false);
 
+  const bancoFilter = useMemo(() => getBancoUnidadeFilter(vaga), [vaga.unidade, vaga.is_teia]);
+
+  const filteredBancos = useMemo(
+    () => bancos.filter(bancoFilter),
+    [bancos, bancoFilter],
+  );
+
   const withScores = useMemo(() => {
-    return bancos
+    return filteredBancos
       .map((b) => ({
         ...b,
         _score: calcSimilarity(vaga.cargo, (b as any).cargo || ""),
@@ -3503,7 +3563,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
         );
       })
       .slice(0, 150);
-  }, [bancos, vaga.cargo]);
+  }, [filteredBancos, vaga.cargo]);
 
   const hasMatches = withScores.length > 0;
 
@@ -3511,7 +3571,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
     const s = search.trim().toLowerCase();
     if (!hasMatches || showFullBanco) {
       // Full banco search mode
-      const pool = bancos.map((b) => ({ ...b, _score: 0 as number }));
+      const pool = filteredBancos.map((b) => ({ ...b, _score: 0 as number }));
       const sorted = pool.sort(
         (a, b) =>
           (Number((a as any).classificacao) || 9999) -
@@ -3535,7 +3595,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
         ((b as any).cargo || "").toLowerCase().includes(s) ||
         ((b as any).unidade || "").toLowerCase().includes(s),
     );
-  }, [hasMatches, showFullBanco, withScores, bancos, search]);
+  }, [hasMatches, showFullBanco, withScores, filteredBancos, search]);
 
   const handleConvocar = (candidato: any) => {
     setConvocacaoInitial({

@@ -161,6 +161,7 @@ const BANCO_TALENTOS_UNIDADES = [
   "Jataí - GO",
   "Cáceres - MT",
   "Vitória - ES",
+  "Manaus - AM",
   "Rede TEIA",
 ];
 

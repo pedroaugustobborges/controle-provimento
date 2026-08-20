@@ -1784,7 +1784,6 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="dash-neon-dot" />
               <p
                 style={{
                   fontSize: "10px",

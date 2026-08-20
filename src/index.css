@@ -172,6 +172,17 @@
   50%       { opacity: 1;   box-shadow: 0 0 14px currentColor, 0 0 28px currentColor; }
 }
 
+.dash-neon-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #818cf8;
+  color: #818cf8;
+  flex-shrink: 0;
+  animation: dashNeonPulse 2s ease-in-out infinite;
+}
+
 @keyframes dashNumberPop {
   from { opacity: 0; transform: scale(0.7) translateY(6px); }
   to   { opacity: 1; transform: scale(1)   translateY(0); }
@@ -220,15 +231,6 @@
   padding: 12px 16px;
 }
 
-.dash-neon-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10b981;
-  color: #10b981;
-  animation: dashNeonPulse 2s ease-in-out infinite;
-}
 
 .dash-stat-number {
   animation: dashNumberPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;

@@ -558,28 +558,41 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
                 {/* Greeting — hidden when compact */}
                 <div
-                  className={`hidden md:flex flex-col transition-all duration-300 overflow-hidden ${
+                  className={`hidden md:flex flex-col gap-0.5 transition-all duration-300 overflow-hidden ${
                     isCompact ? "opacity-0 max-w-0" : "opacity-100 max-w-xs"
                   }`}
                 >
+                  {/* Greeting + name */}
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-foreground">
-                      {getGreeting()},{" "}
-                      <span className="text-primary">{userName}</span>
+                    <span style={{ fontSize: "14px", fontWeight: 500, color: isDark ? "rgba(255,255,255,0.50)" : "#64748b" }}>
+                      {getGreeting()},
                     </span>
+                    <span style={{ fontSize: "14px", fontWeight: 900, letterSpacing: "-0.02em", background: "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                      {userName}
+                    </span>
+                    <span className="dash-neon-dot" />
                   </div>
-                  <span className="text-[10px] text-muted-foreground font-medium tracking-wide whitespace-nowrap">
-                    {currentUser?.cargo || "Sistema AGIR"} ·{" "}
-                    {currentUser?.perfil || "Usuário"}
+                  {/* Role / unit sub-line */}
+                  <span style={{ fontSize: "9.5px", fontWeight: 600, color: isDark ? "rgba(255,255,255,0.28)" : "#94a3b8", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+                    {currentUser?.cargo || "Sistema AGIR"} · {currentUser?.perfil || "Usuário"}
                   </span>
                 </div>
 
                 {/* Route context icon — shown when compact */}
                 {isCompact && routeCtx && (
                   <div
-                    className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all duration-300 ${routeCtx.bgLight} ${routeCtx.color}`}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "6px",
+                      padding: "4px 10px",
+                      borderRadius: "8px",
+                      background: isDark ? "rgba(129,140,248,0.12)" : undefined,
+                      border: isDark ? "1px solid rgba(129,140,248,0.22)" : undefined,
+                      color: isDark ? "#818cf8" : undefined,
+                      fontSize: "11px", fontWeight: 700,
+                    }}
+                    className={isDark ? "" : `${routeCtx.bgLight} ${routeCtx.color} border`}
                   >
-                    <routeCtx.icon className="h-3.5 w-3.5" />
+                    <routeCtx.icon style={{ width: "14px", height: "14px" }} />
                     <span>{getBreadcrumbLabel(activeRoute)}</span>
                   </div>
                 )}
@@ -590,8 +603,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 {currentUser?.perfil === "Administrador" && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold bg-primary/5 text-primary px-3 py-1.5 rounded-full border border-primary/20 transition-all duration-300 hover:bg-primary/10">
-                        <Users className="h-3.5 w-3.5" />
+                      <button
+                        style={{
+                          display: "flex", alignItems: "center", gap: "6px",
+                          padding: "5px 13px 5px 10px",
+                          borderRadius: "999px",
+                          background: isDark ? "rgba(16,185,129,0.10)" : "rgba(16,185,129,0.07)",
+                          border: `1px solid ${isDark ? "rgba(16,185,129,0.28)" : "rgba(16,185,129,0.22)"}`,
+                          color: "#10b981",
+                          fontSize: "10px", fontWeight: 700,
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          letterSpacing: "0.04em",
+                          boxShadow: isDark ? "0 0 14px rgba(16,185,129,0.12)" : "none",
+                        }}
+                      >
+                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", flexShrink: 0, animation: "bellPing 2.4s ease-out infinite" }} />
+                        <Users style={{ width: "12px", height: "12px" }} />
                         <span>{onlineUsers.length} online</span>
                       </button>
                     </PopoverTrigger>
@@ -607,17 +635,31 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
-                      className={`relative p-2 rounded-xl transition-all duration-300 outline-none ${
-                        unreadAlertsCount > 0
-                          ? "text-amber-600 bg-amber-50 hover:bg-amber-100 shadow-sm shadow-amber-100/80"
-                          : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                      }`}
+                      style={{
+                        position: "relative",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        width: "38px", height: "38px",
+                        borderRadius: "12px",
+                        background: unreadAlertsCount > 0
+                          ? isDark ? "rgba(245,158,11,0.14)" : "rgba(245,158,11,0.08)"
+                          : isDark ? "rgba(255,255,255,0.07)" : "rgba(148,163,184,0.10)",
+                        border: `1px solid ${unreadAlertsCount > 0
+                          ? isDark ? "rgba(245,158,11,0.35)" : "rgba(245,158,11,0.25)"
+                          : isDark ? "rgba(255,255,255,0.11)" : "rgba(148,163,184,0.22)"}`,
+                        color: unreadAlertsCount > 0 ? "#f59e0b" : isDark ? "rgba(255,255,255,0.55)" : "#64748b",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        flexShrink: 0,
+                        boxShadow: unreadAlertsCount > 0 && isDark ? "0 0 16px rgba(245,158,11,0.18)" : "none",
+                        outline: "none",
+                      }}
                     >
                       {/* Expanding halo ring — only when unread */}
                       {unreadAlertsCount > 0 && (
                         <span
-                          className="absolute inset-0 rounded-xl bg-amber-400/25 pointer-events-none"
+                          className="absolute inset-0 rounded-xl pointer-events-none"
                           style={{
+                            background: "rgba(245,158,11,0.18)",
                             animation: "bellPing 2.4s ease-out infinite",
                           }}
                         />
@@ -625,20 +667,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
                       {/* Bell icon — rings when unread */}
                       <Bell
-                        className="h-5 w-5 relative"
-                        style={
-                          unreadAlertsCount > 0
-                            ? {
-                                transformOrigin: "50% 8%",
-                                animation: "bellRing 3.2s ease-in-out infinite",
-                              }
-                            : undefined
-                        }
+                        style={{
+                          width: "16px", height: "16px", position: "relative",
+                          ...(unreadAlertsCount > 0 ? { transformOrigin: "50% 8%", animation: "bellRing 3.2s ease-in-out infinite" } : {}),
+                        }}
                       />
 
                       {/* Numeric count badge */}
                       {unreadAlertsCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white px-1 ring-2 ring-white shadow-md">
+                        <span
+                          style={{
+                            position: "absolute", top: "-6px", right: "-6px",
+                            minWidth: "18px", height: "18px",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            borderRadius: "999px",
+                            background: "#ef4444",
+                            fontSize: "9px", fontWeight: 800, color: "#fff",
+                            padding: "0 4px",
+                            boxShadow: `0 0 0 2px ${isDark ? "rgba(7,9,29,0.9)" : "#fff"}`,
+                          }}
+                        >
                           {unreadAlertsCount > 9 ? "9+" : unreadAlertsCount}
                         </span>
                       )}
@@ -656,24 +704,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     }}
                   >
                     {/* ── Header ── */}
-                    <div className="relative px-4 py-3.5 border-b border-slate-100 overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.05] via-transparent to-transparent pointer-events-none" />
+                    <div
+                      className="relative px-4 py-3.5 overflow-hidden"
+                      style={{ borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#f1f5f9"}` }}
+                    >
+                      <div className="absolute inset-0 pointer-events-none" style={{ background: isDark ? "rgba(129,140,248,0.04)" : "rgba(99,102,241,0.03)" }} />
                       <div className="relative flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <Bell className="h-3.5 w-3.5 text-primary" />
+                          <div style={{ width: 32, height: 32, borderRadius: 12, background: isDark ? "rgba(129,140,248,0.18)" : "rgba(99,102,241,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <Bell style={{ width: 14, height: 14, color: "#818cf8" }} />
                           </div>
                           <div>
-                            <h3 className="text-sm font-bold text-slate-800 leading-tight">
+                            <h3 style={{ fontSize: 14, fontWeight: 700, color: isDark ? "rgba(255,255,255,0.92)" : "#1e293b", lineHeight: 1.2 }}>
                               Notificações
                             </h3>
                             {unreadAlertsCount > 0 ? (
-                              <p className="text-[10px] font-semibold text-primary leading-tight">
-                                {unreadAlertsCount} não lida
-                                {unreadAlertsCount > 1 ? "s" : ""}
+                              <p style={{ fontSize: 10, fontWeight: 600, color: "#818cf8", lineHeight: 1.2 }}>
+                                {unreadAlertsCount} não lida{unreadAlertsCount > 1 ? "s" : ""}
                               </p>
                             ) : (
-                              <p className="text-[10px] text-slate-400 leading-tight">
+                              <p style={{ fontSize: 10, color: isDark ? "rgba(255,255,255,0.35)" : "#94a3b8", lineHeight: 1.2 }}>
                                 Tudo em dia
                               </p>
                             )}
@@ -684,16 +734,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             onClick={() => {
                               notifPessoais
                                 .filter((n: any) => !n.lida)
-                                .forEach((n: any) =>
-                                  marcarNotificacaoLida(n.id),
-                                );
+                                .forEach((n: any) => marcarNotificacaoLida(n.id));
                               alertas
                                 .filter((a) => a.status === "nao_lido")
-                                .forEach((a) =>
-                                  updateAlerta(a.id, { status: "lido" }),
-                                );
+                                .forEach((a) => updateAlerta(a.id, { status: "lido" }));
                             }}
-                            className="shrink-0 text-[10px] font-semibold text-slate-400 hover:text-primary transition-colors px-2.5 py-1.5 rounded-lg hover:bg-primary/5 whitespace-nowrap"
+                            style={{ flexShrink: 0, fontSize: 10, fontWeight: 600, color: isDark ? "rgba(255,255,255,0.40)" : "#94a3b8", padding: "5px 10px", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", whiteSpace: "nowrap", transition: "color 0.2s" }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#818cf8"; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = isDark ? "rgba(255,255,255,0.40)" : "#94a3b8"; }}
                           >
                             Marcar todas como lidas
                           </button>
@@ -703,124 +751,90 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
                     {/* ── List ── */}
                     <div className="max-h-[420px] overflow-y-auto">
-                      {notifPessoais.length === 0 &&
-                      alertas.length === 0 &&
-                      validadeAlerts.length === 0 ? (
+                      {notifPessoais.length === 0 && alertas.length === 0 && validadeAlerts.length === 0 ? (
                         /* Empty state */
-                        <div className="py-14 flex flex-col items-center gap-4 text-center">
-                          <div className="relative">
-                            <div className="h-16 w-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-sm">
-                              <Bell className="h-7 w-7 text-slate-300" />
-                            </div>
+                        <div style={{ padding: "56px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, textAlign: "center" }}>
+                          <div style={{ width: 64, height: 64, borderRadius: 16, background: isDark ? "rgba(255,255,255,0.06)" : "#f8fafc", border: `1px solid ${isDark ? "rgba(255,255,255,0.09)" : "#f1f5f9"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Bell style={{ width: 28, height: 28, color: isDark ? "rgba(255,255,255,0.20)" : "#cbd5e1" }} />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-slate-500">
-                              Tudo em dia!
-                            </p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              Sem novas notificações.
-                            </p>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: isDark ? "rgba(255,255,255,0.50)" : "#64748b" }}>Tudo em dia!</p>
+                            <p style={{ fontSize: 12, color: isDark ? "rgba(255,255,255,0.30)" : "#94a3b8", marginTop: 4 }}>Sem novas notificações.</p>
                           </div>
                         </div>
                       ) : (
-                        <div className="divide-y divide-slate-50">
+                        <div>
                           {/* Personal: curtidas + menções */}
                           {notifPessoais
                             .slice()
-                            .sort(
-                              (a: any, b: any) =>
-                                new Date(b.created_at).getTime() -
-                                new Date(a.created_at).getTime(),
-                            )
+                            .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                             .map((notif: any) => {
                               const isMencao = notif.tipo === "mencao";
                               const isUnread = !notif.lida;
-                              const senderInitial = (notif.remetente_nome ||
-                                "?")[0].toUpperCase();
+                              const senderInitial = (notif.remetente_nome || "?")[0].toUpperCase();
+                              const accentColor = isMencao ? "#8b5cf6" : "#3b82f6";
+                              const bgUnread = isDark
+                                ? isMencao ? "rgba(139,92,246,0.08)" : "rgba(59,130,246,0.08)"
+                                : isMencao ? "rgba(139,92,246,0.04)" : "rgba(59,130,246,0.04)";
                               return (
                                 <Link
                                   key={notif.id}
-                                  to={
-                                    notif.registro_id
-                                      ? `/vagas/${notif.registro_id}`
-                                      : "#"
-                                  }
-                                  onClick={() => {
-                                    if (isUnread)
-                                      marcarNotificacaoLida(notif.id);
+                                  to={notif.registro_id ? `/vagas/${notif.registro_id}` : "#"}
+                                  onClick={() => { if (isUnread) marcarNotificacaoLida(notif.id); }}
+                                  style={{
+                                    position: "relative", display: "flex", gap: 12,
+                                    padding: "14px 16px",
+                                    borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#f8fafc"}`,
+                                    background: isUnread ? bgUnread : "transparent",
+                                    transition: "background 0.15s",
+                                    textDecoration: "none",
                                   }}
-                                  className={`relative flex gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 ${
-                                    isUnread
-                                      ? "bg-gradient-to-r from-blue-50/50 to-transparent"
-                                      : ""
-                                  }`}
+                                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.04)" : "#f8fafc"; }}
+                                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isUnread ? bgUnread : "transparent"; }}
                                 >
-                                  {/* Unread left accent bar */}
                                   {isUnread && (
-                                    <span
-                                      className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${
-                                        isMencao
-                                          ? "bg-violet-400"
-                                          : "bg-blue-400"
-                                      }`}
-                                    />
+                                    <span style={{ position: "absolute", left: 0, top: 12, bottom: 12, width: 3, borderRadius: "0 2px 2px 0", background: accentColor }} />
                                   )}
-
-                                  {/* Sender initial + type badge */}
-                                  <div className="relative shrink-0 mt-0.5">
-                                    <div
-                                      className={`h-9 w-9 rounded-full flex items-center justify-center text-[13px] font-bold ${
-                                        isMencao
-                                          ? "bg-violet-100 text-violet-700"
-                                          : "bg-blue-100 text-blue-700"
-                                      }`}
-                                    >
+                                  {/* Avatar */}
+                                  <div style={{ position: "relative", flexShrink: 0, marginTop: 2 }}>
+                                    <div style={{
+                                      width: 36, height: 36, borderRadius: "50%",
+                                      display: "flex", alignItems: "center", justifyContent: "center",
+                                      fontSize: 13, fontWeight: 700,
+                                      background: isDark
+                                        ? isMencao ? "rgba(139,92,246,0.20)" : "rgba(59,130,246,0.20)"
+                                        : isMencao ? "#ede9fe" : "#dbeafe",
+                                      color: isMencao ? "#7c3aed" : "#2563eb",
+                                    }}>
                                       {senderInitial}
                                     </div>
-                                    <span
-                                      className={`absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center ring-2 ring-white ${
-                                        isMencao
-                                          ? "bg-violet-500"
-                                          : "bg-blue-500"
-                                      }`}
-                                    >
-                                      {isMencao ? (
-                                        <AtSign className="h-2 w-2 text-white" />
-                                      ) : (
-                                        <ThumbsUp className="h-2 w-2 text-white" />
-                                      )}
+                                    <span style={{
+                                      position: "absolute", bottom: -2, right: -2,
+                                      width: 16, height: 16, borderRadius: "50%",
+                                      display: "flex", alignItems: "center", justifyContent: "center",
+                                      background: accentColor,
+                                      boxShadow: `0 0 0 2px ${isDark ? "rgba(11,16,34,0.97)" : "#fff"}`,
+                                    }}>
+                                      {isMencao
+                                        ? <AtSign style={{ width: 8, height: 8, color: "#fff" }} />
+                                        : <ThumbsUp style={{ width: 8, height: 8, color: "#fff" }} />}
                                     </span>
                                   </div>
-
                                   {/* Text */}
-                                  <div className="flex-1 min-w-0">
-                                    <p
-                                      className={`text-[12px] leading-snug line-clamp-2 ${isUnread ? "font-semibold text-slate-800" : "font-normal text-slate-600"}`}
-                                    >
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ fontSize: 12, lineHeight: 1.4, fontWeight: isUnread ? 600 : 400, color: isDark ? (isUnread ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.60)") : (isUnread ? "#1e293b" : "#475569"), display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                                       {notif.titulo}
                                     </p>
                                     {notif.mensagem && (
-                                      <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5 italic">
+                                      <p style={{ fontSize: 11, color: isDark ? "rgba(255,255,255,0.35)" : "#94a3b8", marginTop: 2, fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {notif.mensagem}
                                       </p>
                                     )}
-                                    <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
-                                      {notif.created_at
-                                        ? format(
-                                            parseISO(notif.created_at),
-                                            "dd 'de' MMM 'às' HH:mm",
-                                            { locale: ptBR },
-                                          )
-                                        : ""}
+                                    <p style={{ fontSize: 10, color: isDark ? "rgba(255,255,255,0.30)" : "#94a3b8", marginTop: 6, fontWeight: 500 }}>
+                                      {notif.created_at ? format(parseISO(notif.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR }) : ""}
                                     </p>
                                   </div>
-
-                                  {/* Unread dot */}
-                                  {isUnread && (
-                                    <span
-                                      className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${isMencao ? "bg-violet-500" : "bg-blue-500"}`}
-                                    />
-                                  )}
+                                  {isUnread && <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, marginTop: 6, background: accentColor }} />}
                                 </Link>
                               );
                             })}
@@ -829,29 +843,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                           {validadeAlerts.map((va) => (
                             <button
                               key={`validade-${va.numero_processo_seletivo}`}
-                              onClick={() =>
-                                navigate(
-                                  `/banco-talentos?openProcesso=${encodeURIComponent(va.numero_processo_seletivo)}`,
-                                )
-                              }
-                              className="relative flex gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 bg-gradient-to-r from-amber-50/50 to-transparent w-full text-left"
+                              onClick={() => navigate(`/banco-talentos?openProcesso=${encodeURIComponent(va.numero_processo_seletivo)}`)}
+                              style={{
+                                position: "relative", display: "flex", gap: 12,
+                                padding: "14px 16px", width: "100%", textAlign: "left",
+                                borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#f8fafc"}`,
+                                background: isDark ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.04)",
+                                border: "none", cursor: "pointer", transition: "background 0.15s",
+                              }}
+                              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.04)" : "#f8fafc"; }}
+                              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.04)"; }}
                             >
-                              <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full bg-amber-400" />
-                              <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-amber-100 text-amber-600">
-                                <Clock className="h-4 w-4" />
+                              <span style={{ position: "absolute", left: 0, top: 12, bottom: 12, width: 3, borderRadius: "0 2px 2px 0", background: "#f59e0b" }} />
+                              <div style={{ width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, background: isDark ? "rgba(245,158,11,0.18)" : "#fef3c7", color: "#d97706" }}>
+                                <Clock style={{ width: 16, height: 16 }} />
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[12px] leading-snug font-semibold text-slate-800">
-                                  A validade do processo{" "}
-                                  {va.numero_processo_seletivo} está próxima.
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 12, lineHeight: 1.4, fontWeight: 600, color: isDark ? "rgba(255,255,255,0.92)" : "#1e293b" }}>
+                                  A validade do processo {va.numero_processo_seletivo} está próxima.
                                 </p>
-                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
-                                  O processo seletivo vence em{" "}
-                                  {format(va.val6m, "dd/MM/yyyy")}. Gostaria de
-                                  prorrogar prorrogar por mais 6 meses?
+                                <p style={{ fontSize: 11, color: isDark ? "rgba(255,255,255,0.45)" : "#64748b", marginTop: 2, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                                  O processo seletivo vence em {format(va.val6m, "dd/MM/yyyy")}. Gostaria de prorrogar por mais 6 meses?
                                 </p>
                               </div>
-                              <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-amber-500" />
+                              <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, marginTop: 6, background: "#f59e0b" }} />
                             </button>
                           ))}
 
@@ -860,65 +875,49 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             const isAtraso = alerta.tipo === "atraso";
                             const isCritico = alerta.tipo === "critico";
                             const isUnread = alerta.status === "nao_lido";
+                            const iconColor = isAtraso ? "#d97706" : isCritico ? "#dc2626" : "#818cf8";
+                            const iconBg = isDark
+                              ? isAtraso ? "rgba(245,158,11,0.18)" : isCritico ? "rgba(220,38,38,0.18)" : "rgba(129,140,248,0.18)"
+                              : isAtraso ? "#fef3c7" : isCritico ? "#fee2e2" : "#ede9fe";
+                            const rowBg = isUnread
+                              ? isDark ? "rgba(129,140,248,0.06)" : "rgba(99,102,241,0.03)"
+                              : "transparent";
                             return (
                               <Link
                                 key={alerta.id}
                                 to={alerta.link || "#"}
-                                onClick={() => {
-                                  if (isUnread)
-                                    updateAlerta(alerta.id, { status: "lido" });
+                                onClick={() => { if (isUnread) updateAlerta(alerta.id, { status: "lido" }); }}
+                                style={{
+                                  position: "relative", display: "flex", gap: 12,
+                                  padding: "14px 16px",
+                                  borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#f8fafc"}`,
+                                  background: rowBg,
+                                  transition: "background 0.15s",
+                                  textDecoration: "none",
                                 }}
-                                className={`relative flex gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 ${
-                                  isUnread
-                                    ? "bg-gradient-to-r from-primary/[0.04] to-transparent"
-                                    : ""
-                                }`}
+                                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.04)" : "#f8fafc"; }}
+                                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = rowBg; }}
                               >
                                 {isUnread && (
-                                  <span className="absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full bg-primary/50" />
+                                  <span style={{ position: "absolute", left: 0, top: 12, bottom: 12, width: 3, borderRadius: "0 2px 2px 0", background: iconColor }} />
                                 )}
-
-                                <div
-                                  className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                                    isAtraso
-                                      ? "bg-amber-100 text-amber-600"
-                                      : isCritico
-                                        ? "bg-red-100 text-red-600"
-                                        : "bg-primary/10 text-primary"
-                                  }`}
-                                >
-                                  {isAtraso ? (
-                                    <AlertTriangle className="h-4 w-4" />
-                                  ) : isCritico ? (
-                                    <Bell className="h-4 w-4" />
-                                  ) : (
-                                    <Info className="h-4 w-4" />
-                                  )}
+                                <div style={{ width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, background: iconBg, color: iconColor }}>
+                                  {isAtraso ? <AlertTriangle style={{ width: 16, height: 16 }} /> : isCritico ? <Bell style={{ width: 16, height: 16 }} /> : <Info style={{ width: 16, height: 16 }} />}
                                 </div>
-
-                                <div className="flex-1 min-w-0">
-                                  <p
-                                    className={`text-[12px] leading-snug line-clamp-2 ${isUnread ? "font-semibold text-slate-800" : "font-normal text-slate-600"}`}
-                                  >
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ fontSize: 12, lineHeight: 1.4, fontWeight: isUnread ? 600 : 400, color: isDark ? (isUnread ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.60)") : (isUnread ? "#1e293b" : "#475569"), display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                                     {alerta.titulo}
                                   </p>
                                   {alerta.mensagem && (
-                                    <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                                    <p style={{ fontSize: 11, color: isDark ? "rgba(255,255,255,0.35)" : "#94a3b8", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                       {alerta.mensagem}
                                     </p>
                                   )}
-                                  <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
-                                    {format(
-                                      parseISO(alerta.data_criacao),
-                                      "dd 'de' MMM",
-                                      { locale: ptBR },
-                                    )}
+                                  <p style={{ fontSize: 10, color: isDark ? "rgba(255,255,255,0.30)" : "#94a3b8", marginTop: 6, fontWeight: 500 }}>
+                                    {format(parseISO(alerta.data_criacao), "dd 'de' MMM", { locale: ptBR })}
                                   </p>
                                 </div>
-
-                                {isUnread && (
-                                  <span className="w-2 h-2 rounded-full shrink-0 mt-1.5 bg-primary/60" />
-                                )}
+                                {isUnread && <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, marginTop: 6, background: iconColor }} />}
                               </Link>
                             );
                           })}
@@ -928,13 +927,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </PopoverContent>
                 </Popover>
 
-                <div className="h-8 w-px bg-border/50 mx-1" />
+                <div
+                  style={{
+                    width: "1px", height: "28px", flexShrink: 0, margin: "0 4px",
+                    background: isDark ? "rgba(255,255,255,0.10)" : "rgba(148,163,184,0.30)",
+                  }}
+                />
 
                 <button
                   onClick={() => setShowProfile(true)}
-                  className={`rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#1e3a5f] transition-all duration-300 hover:ring-primary ${
-                    isCompact ? "h-8 w-8" : "h-10 w-10"
-                  }`}
+                  style={{
+                    borderRadius: "50%", overflow: "hidden",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: isCompact ? "32px" : "38px",
+                    height: isCompact ? "32px" : "38px",
+                    outline: "none",
+                    boxShadow: isDark
+                      ? "0 0 0 2px rgba(129,140,248,0.45), 0 0 12px rgba(129,140,248,0.20)"
+                      : "0 0 0 2px rgba(99,102,241,0.35)",
+                    transition: "all 0.25s",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
                 >
                   {currentUser?.avatar_url ? (
                     <img

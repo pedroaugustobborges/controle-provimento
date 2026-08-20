@@ -1781,7 +1781,7 @@ export default function VagasPage() {
                                     size="icon"
                                     className="relative h-8 w-8 rounded-full text-teal-500 hover:text-teal-600 hover:bg-teal-50/80 transition-all duration-300 hover:scale-110 active:scale-95"
                                     title={`${possibleCount} candidato${possibleCount !== 1 ? "s" : ""} com perfil similar no Banco de Talentos`}
-                                    onClick={() => navigate(`/vagas/${v.id}`)}
+                                    onClick={() => navigate(`/vagas/${v.id}?tab=banco`)}
                                   >
                                     <Radar className="h-4 w-4" />
                                   </Button>

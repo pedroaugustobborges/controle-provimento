@@ -162,7 +162,7 @@ const BANCO_TALENTOS_UNIDADES = [
   "Cáceres - MT",
   "Vitória - ES",
   "Manaus - AM",
-  "Dourados - MS"
+  "Dourados - MS",
   "Rede TEIA",
 ];
 
@@ -1893,8 +1893,8 @@ export default function AdministracaoPage() {
                     Banco de Talentos
                   </h4>
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                    Selecione as unidades do banco de candidatos que este usuário
-                    poderá visualizar.
+                    Selecione as unidades do banco de candidatos que este
+                    usuário poderá visualizar.
                   </p>
                 </div>
                 <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-3 space-y-1.5">

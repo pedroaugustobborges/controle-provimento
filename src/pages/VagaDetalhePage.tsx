@@ -720,7 +720,7 @@ export default function VagaDetalhePage() {
   } | null>(null);
   const [justificativaText, setJustificativaText] = useState("");
   const [isSavingJustificativa, setIsSavingJustificativa] = useState(false);
-  const [activeTab, setActiveTab] = useState("dados");
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "dados");
 
   const [indicators, setIndicators] = useState({
     total_inscritos: 0,

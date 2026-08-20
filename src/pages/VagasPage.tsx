@@ -48,6 +48,7 @@ import {
   Sparkles,
   Download,
   Sigma,
+  Radar,
 } from "lucide-react";
 import { ExportButton } from "@/components/ExportButton";
 // ... keep existing code
@@ -293,6 +294,26 @@ const pushLookup = <T,>(map: Map<string, T[]>, key: string, value: T) => {
   list.push(value);
   map.set(key, list);
 };
+
+// ─── Cargo similarity (mirrors VagaDetalhePage) ──────────────────────────────
+function calcSimilarity(vagaCargo: string, bancoCargo: string): number {
+  if (!vagaCargo || !bancoCargo) return 0;
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const tokensVaga = norm(vagaCargo)
+    .split(" ")
+    .filter((t) => t.length >= 3);
+  const normBanco = norm(bancoCargo);
+  if (!tokensVaga.length) return 0;
+  const matches = tokensVaga.filter((t) => normBanco.includes(t));
+  return matches.length / tokensVaga.length;
+}
 
 // ─── Reusable multi-select filter popover ────────────────────────────────────
 function MultiSelectFilter({
@@ -721,6 +742,51 @@ export default function VagasPage() {
     () => new Set(vagasComBancoMap.keys()),
     [vagasComBancoMap],
   );
+
+  // Candidate count per vaga using the unidade-scoped bank rules
+  const vagasPossibleCandidatesMap = useMemo(() => {
+    if (!bancos.length || !vagas.length) return new Map<string, number>();
+
+    const byCity = (city: string) => bancos.filter((b) => (b.unidade || "") === city);
+    const pools = {
+      goiania:     byCity("Goiânia - GO"),
+      dourados:    byCity("Dourados - MS"),
+      manaus:      byCity("Manaus - AM"),
+      caceres:     byCity("Cáceres - MT"),
+      jatai:       byCity("Jataí - GO"),
+      cidadeGoias: byCity("Cidade de Goiás - GO"),
+      teia:        bancos.filter((b) => !!(b as any).is_teia),
+      all:         bancos,
+    };
+
+    const result = new Map<string, number>();
+
+    vagas.forEach((vaga) => {
+      const u = (vaga.unidade || "").trim().toUpperCase();
+      const isTeia = vaga.is_teia || u.includes("TEIA");
+
+      let pool: BancoTalentos[];
+      if (isTeia)                                                pool = pools.teia;
+      else if (u.startsWith("HEJ") || u.startsWith("AGIR RIO VERDE")) pool = pools.jatai;
+      else if (u.startsWith("HUGOL") || u.startsWith("HECAD") ||
+               u.startsWith("CRER")  || u.startsWith("AGIR")  ||
+               u.startsWith("HDS"))                             pool = pools.goiania;
+      else if (u.startsWith("CHRD"))                            pool = pools.dourados;
+      else if (u.startsWith("CHS"))                             pool = pools.manaus;
+      else if (u.startsWith("HRC"))                             pool = pools.caceres;
+      else if (u.startsWith("POL GOIAS") ||
+               u.startsWith("UPA SAO PEDRO") ||
+               u.startsWith("UPA PRAIA DO SUA"))                pool = pools.cidadeGoias;
+      else                                                       pool = pools.all;
+
+      const count = pool.filter(
+        (b) => calcSimilarity(vaga.cargo, (b as any).cargo || "") > 0,
+      ).length;
+      if (count > 0) result.set(vaga.id, count);
+    });
+
+    return result;
+  }, [vagas, bancos]);
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
@@ -1461,6 +1527,7 @@ export default function VagasPage() {
                       const categoria =
                         v.categoria_status || getCategoriaStatus(v);
                       const bancoFound = vagasComBancoMap.get(v.id);
+                      const possibleCount = vagasPossibleCandidatesMap.get(v.id) ?? 0;
                       const isConsultaOnly = [
                         "concluidas",
                         "cancelada",
@@ -1700,6 +1767,29 @@ export default function VagasPage() {
                                 >
                                   <CheckCircle2 className="h-5 w-5" />
                                 </Button>
+                              ) : possibleCount > 0 ? (
+                                <div className="relative inline-flex items-center justify-center group">
+                                  {/* Sonar ring — slow expand, border-only so it looks like a wavefront */}
+                                  <span
+                                    className="absolute inline-flex h-9 w-9 rounded-full border border-teal-400/40 animate-ping"
+                                    style={{ animationDuration: "2.4s" }}
+                                  />
+                                  {/* Inner static glow */}
+                                  <span className="absolute inline-flex h-6 w-6 rounded-full bg-teal-400/10" />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="relative h-8 w-8 rounded-full text-teal-500 hover:text-teal-600 hover:bg-teal-50/80 transition-all duration-300 hover:scale-110 active:scale-95"
+                                    title={`${possibleCount} candidato${possibleCount !== 1 ? "s" : ""} com perfil similar no Banco de Talentos`}
+                                    onClick={() => navigate(`/vagas/${v.id}`)}
+                                  >
+                                    <Radar className="h-4 w-4" />
+                                  </Button>
+                                  {/* Count badge */}
+                                  <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-teal-500 px-1 text-[9px] font-black text-white shadow-sm ring-1 ring-white">
+                                    {possibleCount > 99 ? "99+" : possibleCount}
+                                  </span>
+                                </div>
                               ) : (
                                 <Button
                                   variant="ghost"

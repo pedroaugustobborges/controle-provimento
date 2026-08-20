@@ -3695,6 +3695,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
               <TableHeader className="sticky top-0 bg-slate-50 z-10">
                 <TableRow>
                   <TableHead className="w-16 text-center">Sim.</TableHead>
+                  <TableHead>Proc. Seletivo</TableHead>
                   <TableHead>Candidato</TableHead>
                   <TableHead>Cargo (Banco)</TableHead>
                   <TableHead className="text-center w-16">Class.</TableHead>
@@ -3724,6 +3725,11 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
                         >
                           {scoreLabel}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-xs font-mono text-slate-600 whitespace-nowrap">
+                          {(b as any).numero_processo_seletivo || "—"}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <div>

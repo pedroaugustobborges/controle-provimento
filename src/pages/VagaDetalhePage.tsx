@@ -1631,18 +1631,27 @@ export default function VagaDetalhePage() {
       vagaCount <= 1 ? [1] : fluxoItemsForValidation.map((i) => i.slot);
     for (const slot of slotsToValidate) {
       const draft = fluxoDraft[slot] || {};
+      // Skip slots the user hasn't touched in this session — don't block
+      // saving other slots because of pre-existing incomplete data elsewhere.
+      if (Object.keys(draft).length === 0) continue;
+
       const item = fluxoItemsForValidation.find((i) => i.slot === slot);
       const effectiveTratativa =
         "tratativa" in draft ? draft.tratativa || "" : item?.tratativa || "";
+      const availableEtapas = effectiveTratativa
+        ? activeEtapaMapForValidation[effectiveTratativa] || []
+        : [];
+      // When the user changed tratativa but didn't re-pick etapa, fall back
+      // to the saved etapa if it is still valid for the new tratativa.
+      // This keeps the validation consistent with what the UI already shows.
       const effectiveEtapa =
         "etapa" in draft
           ? draft.etapa || ""
           : "tratativa" in draft
-            ? "" // tratativa changed → etapa was reset, don't fall back to stale saved value
+            ? availableEtapas.includes(item?.etapa || "")
+              ? item?.etapa || ""
+              : ""
             : item?.etapa || "";
-      const availableEtapas = effectiveTratativa
-        ? activeEtapaMapForValidation[effectiveTratativa] || []
-        : [];
       if (
         effectiveTratativa &&
         (!effectiveEtapa || !availableEtapas.includes(effectiveEtapa))

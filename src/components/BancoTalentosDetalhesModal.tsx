@@ -315,8 +315,7 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
               secao: banco.secao || "",
               edital_relacionado: banco.numero_edital || "",
               banco_id: c.id,
-              requisicao:
-                c.numero_processo_seletivo || c.numero_chamada || "",
+              requisicao: "",
             })
           }
         >
@@ -404,7 +403,7 @@ function CandidateRow({ candidate: c, banco, onConvocar }: CandidateCardProps) {
             secao: banco.secao || "",
             edital_relacionado: banco.numero_edital || "",
             banco_id: c.id,
-            requisicao: c.numero_processo_seletivo || c.numero_chamada || "",
+            requisicao: "",
           })
         }
       >

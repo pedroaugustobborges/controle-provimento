@@ -1,6 +1,7 @@
 import { useVagasStore } from "@/store/vagasStore";
 import { useAdminStore } from "@/store/adminStore";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useTheme } from "@/hooks/useTheme";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -139,7 +140,15 @@ import {
 } from "@/components/ui/pagination";
 
 export default function BancoTalentosPage() {
+  const { isDark } = useTheme();
   const navigate = useNavigate();
+
+  // Sync dark mode to body so Radix portals (Select, Popover, Dialog) inherit CSS vars
+  useEffect(() => {
+    if (isDark) document.body.classList.add("gdp-dark");
+    else document.body.classList.remove("gdp-dark");
+    return () => document.body.classList.remove("gdp-dark");
+  }, [isDark]);
   const {
     bancos,
     importHistory,
@@ -1031,9 +1040,13 @@ export default function BancoTalentosPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div
+      className={`space-y-6${isDark ? " gdp-dark" : ""}`}
+      style={isDark ? { background: "linear-gradient(150deg, #07091d 0%, #0d1630 50%, #080c1e 100%)", minHeight: "100%", padding: "1px 0" } : undefined}
+    >
       <PageHeader
         title="Banco de Talentos"
+        darkMode={isDark}
         actions={
           <>
             <ExportButton
@@ -1316,83 +1329,39 @@ export default function BancoTalentosPage() {
           const stats = calculateStats(bancos);
           return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-purple-500">
-                <CardContent className="pt-6 px-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-purple-100 p-2.5 rounded-lg shrink-0">
-                      <Users className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">
-                        Convocados
-                      </p>
-                      <div className="flex flex-col">
-                        <p className="text-2xl font-bold text-slate-900 leading-none">
-                          {stats["Total Convocados"]}
+              {[
+                { accent: "#a855f7", icon: <Users className="h-5 w-5" style={{ color: isDark ? "#c084fc" : "#9333ea" }} />, iconBg: isDark ? "rgba(168,85,247,0.15)" : "#f3e8ff", label: "Convocados", value: stats["Total Convocados"] },
+                { accent: "#ef4444", icon: <AlertTriangle className="h-5 w-5" style={{ color: isDark ? "#f87171" : "#dc2626" }} />, iconBg: isDark ? "rgba(239,68,68,0.15)" : "#fee2e2", label: "Vencidos", value: stats["Total Vencidos"] },
+                { accent: "#22c55e", icon: <CheckCircle2 className="h-5 w-5" style={{ color: isDark ? "#4ade80" : "#16a34a" }} />, iconBg: isDark ? "rgba(34,197,94,0.15)" : "#dcfce7", label: "Total Vigentes", value: stats["Total Cadastro Reserva"] + stats["Total Prorrogados"] },
+                { accent: "#94a3b8", icon: <Calendar className="h-5 w-5" style={{ color: isDark ? "#cbd5e1" : "#475569" }} />, iconBg: isDark ? "rgba(148,163,184,0.15)" : "#f1f5f9", label: "Banco Total", value: bancos.length },
+              ].map(({ accent, icon, iconBg, label, value }) => (
+                <div
+                  key={label}
+                  style={{
+                    background: isDark ? "rgba(11,16,34,0.82)" : "#ffffff",
+                    border: `1px solid ${isDark ? "rgba(255,255,255,0.09)" : "#e2e8f0"}`,
+                    borderLeft: `4px solid ${accent}`,
+                    borderRadius: "12px",
+                    boxShadow: isDark ? "0 2px 12px rgba(0,0,0,0.30)" : "0 1px 4px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <div className="pt-6 px-4 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg shrink-0" style={{ background: iconBg }}>
+                        {icon}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold uppercase tracking-wider truncate" style={{ color: isDark ? "rgba(255,255,255,0.40)" : "#94a3b8" }}>
+                          {label}
+                        </p>
+                        <p className="text-2xl font-bold leading-none" style={{ color: isDark ? "rgba(255,255,255,0.93)" : "#0f172a" }}>
+                          {value}
                         </p>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-red-500">
-                <CardContent className="pt-6 px-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-red-100 p-2.5 rounded-lg shrink-0">
-                      <AlertTriangle className="h-5 w-5 text-red-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">
-                        Vencidos
-                      </p>
-                      <div className="flex flex-col">
-                        <p className="text-2xl font-bold text-slate-900 leading-none">
-                          {stats["Total Vencidos"]}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-green-500">
-                <CardContent className="pt-6 px-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-100 p-2.5 rounded-lg shrink-0">
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">
-                        Total Vigentes
-                      </p>
-                      <div className="flex flex-col">
-                        <p className="text-2xl font-bold text-slate-900 leading-none">
-                          {stats["Total Cadastro Reserva"] +
-                            stats["Total Prorrogados"]}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-slate-400">
-                <CardContent className="pt-6 px-4 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-slate-100 p-2.5 rounded-lg shrink-0">
-                      <Calendar className="h-5 w-5 text-slate-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">
-                        Banco Total
-                      </p>
-                      <div className="flex flex-col">
-                        <p className="text-2xl font-bold text-slate-900 leading-none">
-                          {bancos.length}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              ))}
             </div>
           );
         })()}
@@ -1735,10 +1704,10 @@ export default function BancoTalentosPage() {
                 className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
                 style={{
                   height: "20px",
-                  background: "#e8edf4",
-                  borderTop: "1px solid #dde3ec",
+                  background: isDark ? "rgba(255,255,255,0.04)" : "#e8edf4",
+                  borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "#dde3ec"}`,
                   scrollbarWidth: "thin",
-                  scrollbarColor: "#94a3b8 #e8edf4",
+                  scrollbarColor: isDark ? "rgba(255,255,255,0.20) rgba(255,255,255,0.04)" : "#94a3b8 #e8edf4",
                 }}
               >
                 <div style={{ width: tableScrollWidth, height: "1px" }} />
@@ -2007,10 +1976,10 @@ export default function BancoTalentosPage() {
                 className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
                 style={{
                   height: "20px",
-                  background: "#e8edf4",
-                  borderTop: "1px solid #dde3ec",
+                  background: isDark ? "rgba(255,255,255,0.04)" : "#e8edf4",
+                  borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "#dde3ec"}`,
                   scrollbarWidth: "thin",
-                  scrollbarColor: "#94a3b8 #e8edf4",
+                  scrollbarColor: isDark ? "rgba(255,255,255,0.20) rgba(255,255,255,0.04)" : "#94a3b8 #e8edf4",
                 }}
               >
                 <div style={{ width: convocadosScrollWidth, height: "1px" }} />
@@ -2226,10 +2195,10 @@ export default function BancoTalentosPage() {
                 className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
                 style={{
                   height: "20px",
-                  background: "#e8edf4",
-                  borderTop: "1px solid #dde3ec",
+                  background: isDark ? "rgba(255,255,255,0.04)" : "#e8edf4",
+                  borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "#dde3ec"}`,
                   scrollbarWidth: "thin",
-                  scrollbarColor: "#94a3b8 #e8edf4",
+                  scrollbarColor: isDark ? "rgba(255,255,255,0.20) rgba(255,255,255,0.04)" : "#94a3b8 #e8edf4",
                 }}
               >
                 <div style={{ width: vencidosScrollWidth, height: "1px" }} />

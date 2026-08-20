@@ -1,4 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useTheme } from "@/hooks/useTheme";
 import { ConvocacaoDetalhesModal } from "@/components/ConvocacaoDetalhesModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useVagasStore } from "@/store/vagasStore";
@@ -648,8 +649,16 @@ function ObsMentionDropdown({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VagaDetalhePage() {
+  const { isDark } = useTheme();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  // Sync dark mode to body so Radix portals (Select, Popover, Dialog) inherit CSS vars
+  useEffect(() => {
+    if (isDark) document.body.classList.add("gdp-dark");
+    else document.body.classList.remove("gdp-dark");
+    return () => document.body.classList.remove("gdp-dark");
+  }, [isDark]);
   const [searchParams] = useSearchParams();
   const {
     getVaga,
@@ -1724,8 +1733,16 @@ export default function VagaDetalhePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+    <div
+      className={`space-y-6${isDark ? " gdp-dark" : ""}`}
+      style={isDark ? { background: "linear-gradient(150deg, #07091d 0%, #0d1630 50%, #080c1e 100%)", minHeight: "100%", padding: "1px 0" } : undefined}
+    >
+      <div
+        className="flex flex-col md:flex-row md:items-center gap-4 justify-between p-4 rounded-xl border shadow-sm"
+        style={isDark
+          ? { background: "rgba(11,16,34,0.85)", borderColor: "rgba(255,255,255,0.09)" }
+          : { background: "#ffffff", borderColor: "#e2e8f0" }}
+      >
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"

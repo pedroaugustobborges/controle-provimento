@@ -4,6 +4,7 @@ import { useVagasStore } from "@/store/vagasStore";
 import { useAdminStore } from "@/store/adminStore";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useTheme } from "@/hooks/useTheme";
 import {
   TIPO_VAGA_LABELS,
   STATUS_LABELS,
@@ -380,6 +381,15 @@ function MultiSelectFilter({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VagasPage() {
+  const { isDark } = useTheme();
+
+  // Sync dark mode to body so Radix portals (Select, Popover, Dialog) inherit CSS vars
+  useEffect(() => {
+    if (isDark) document.body.classList.add("gdp-dark");
+    else document.body.classList.remove("gdp-dark");
+    return () => document.body.classList.remove("gdp-dark");
+  }, [isDark]);
+
   const {
     vagas,
     bancos,
@@ -1011,7 +1021,10 @@ export default function VagasPage() {
 
   return (
     // ... keep existing code
-    <div className="space-y-4">
+    <div
+      className={`space-y-4${isDark ? " gdp-dark" : ""}`}
+      style={isDark ? { background: "linear-gradient(150deg, #07091d 0%, #0d1630 50%, #080c1e 100%)", minHeight: "100%", padding: "1px 0" } : undefined}
+    >
       {isInitialLoad ? (
         <PageSkeleton />
       ) : currentTab === "acompanhamento" ? (
@@ -1020,6 +1033,7 @@ export default function VagasPage() {
         <>
           <PageHeader
             title="Controle de Vagas"
+            darkMode={isDark}
             actions={
               <>
                 <ExportButton
@@ -1040,6 +1054,12 @@ export default function VagasPage() {
               {(() => {
                 const total = canonicalBase.length;
                 const allActive = filterStatusProcesso.length === STATUS_PROCESSO_ORDER.length;
+                const cardBg = isDark
+                  ? (allActive ? "rgba(14,165,233,0.15)" : "rgba(11,16,34,0.82)")
+                  : (allActive ? "#F0F9FF" : "#ffffff");
+                const cardBorder = isDark
+                  ? (allActive ? "rgba(125,211,252,0.45)" : "rgba(255,255,255,0.10)")
+                  : (allActive ? "#7DD3FC" : "#e2e8f0");
                 return (
                   <button
                     onClick={() =>
@@ -1047,25 +1067,25 @@ export default function VagasPage() {
                     }
                     className="group relative text-left w-full rounded-xl overflow-hidden focus-visible:outline-none focus-visible:ring-2"
                     style={{
-                      background: allActive ? "#F0F9FF" : "#ffffff",
-                      border: `1.5px solid ${allActive ? "#7DD3FC" : "#e2e8f0"}`,
+                      background: cardBg,
+                      border: `1.5px solid ${cardBorder}`,
                       boxShadow: allActive
-                        ? "0 0 0 3px rgba(125,211,252,0.35), 0 4px 12px rgba(125,211,252,0.35)"
-                        : "0 1px 4px rgba(0,0,0,0.06)",
+                        ? "0 0 0 3px rgba(125,211,252,0.25), 0 4px 12px rgba(125,211,252,0.20)"
+                        : isDark ? "0 1px 4px rgba(0,0,0,0.30)" : "0 1px 4px rgba(0,0,0,0.06)",
                       transition: "all 0.18s ease",
                     }}
                     onMouseEnter={(e) => {
                       if (!allActive) {
-                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)";
+                        e.currentTarget.style.boxShadow = isDark ? "0 6px 20px rgba(0,0,0,0.40)" : "0 6px 20px rgba(0,0,0,0.10)";
                         e.currentTarget.style.transform = "translateY(-2px)";
                         e.currentTarget.style.borderColor = "#7DD3FC";
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!allActive) {
-                        e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
+                        e.currentTarget.style.boxShadow = isDark ? "0 1px 4px rgba(0,0,0,0.30)" : "0 1px 4px rgba(0,0,0,0.06)";
                         e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.borderColor = "#e2e8f0";
+                        e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.10)" : "#e2e8f0";
                       }
                     }}
                   >
@@ -1074,20 +1094,22 @@ export default function VagasPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div
                           className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-transform duration-200 group-hover:scale-105"
-                          style={{ background: "#F0F9FF", color: "#0369A1", border: "1.5px solid #7DD3FC" }}
+                          style={isDark
+                            ? { background: "rgba(14,165,233,0.15)", color: "#7DD3FC", border: "1.5px solid rgba(125,211,252,0.30)" }
+                            : { background: "#F0F9FF", color: "#0369A1", border: "1.5px solid #7DD3FC" }}
                         >
                           <Sigma size={16} />
                         </div>
                         <span
                           className="text-[28px] font-black tabular-nums leading-none"
-                          style={{ color: allActive ? "#0369A1" : "#0f172a" }}
+                          style={{ color: allActive ? (isDark ? "#7DD3FC" : "#0369A1") : (isDark ? "rgba(255,255,255,0.90)" : "#0f172a") }}
                         >
                           {total}
                         </span>
                       </div>
                       <p
                         className="text-[10px] font-black uppercase tracking-widest leading-tight"
-                        style={{ color: allActive ? "#0369A1" : "#94a3b8" }}
+                        style={{ color: allActive ? (isDark ? "#7DD3FC" : "#0369A1") : (isDark ? "rgba(255,255,255,0.38)" : "#94a3b8") }}
                       >
                         Total de Vagas
                       </p>
@@ -1101,6 +1123,8 @@ export default function VagasPage() {
                 const count = statusProcessoCounts[status] ?? 0;
                 const isActive = filterStatusProcesso.includes(status);
                 const Icon = cfg.Icon;
+                const darkCardBg = isActive ? `${cfg.bg}22` : "rgba(11,16,34,0.82)";
+                const darkCardBorder = isActive ? `${cfg.border}88` : "rgba(255,255,255,0.10)";
                 return (
                   <button
                     key={status}
@@ -1113,29 +1137,27 @@ export default function VagasPage() {
                     }
                     className="group relative text-left w-full rounded-xl overflow-hidden focus-visible:outline-none focus-visible:ring-2"
                     style={{
-                      background: isActive ? cfg.bg : "#ffffff",
-                      border: `1.5px solid ${isActive ? cfg.border : "#e2e8f0"}`,
+                      background: isDark ? darkCardBg : (isActive ? cfg.bg : "#ffffff"),
+                      border: `1.5px solid ${isDark ? darkCardBorder : (isActive ? cfg.border : "#e2e8f0")}`,
                       boxShadow: isActive
                         ? `0 0 0 3px ${cfg.shadowColor}, 0 4px 12px ${cfg.shadowColor}`
-                        : "0 1px 4px rgba(0,0,0,0.06)",
+                        : isDark ? "0 1px 4px rgba(0,0,0,0.30)" : "0 1px 4px rgba(0,0,0,0.06)",
                       transition: "all 0.18s ease",
                       // @ts-ignore
                       "--focus-ring-color": cfg.border,
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.boxShadow =
-                          "0 6px 20px rgba(0,0,0,0.10)";
+                        e.currentTarget.style.boxShadow = isDark ? "0 6px 20px rgba(0,0,0,0.40)" : "0 6px 20px rgba(0,0,0,0.10)";
                         e.currentTarget.style.transform = "translateY(-2px)";
                         e.currentTarget.style.borderColor = cfg.border;
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.boxShadow =
-                          "0 1px 4px rgba(0,0,0,0.06)";
+                        e.currentTarget.style.boxShadow = isDark ? "0 1px 4px rgba(0,0,0,0.30)" : "0 1px 4px rgba(0,0,0,0.06)";
                         e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.borderColor = "#e2e8f0";
+                        e.currentTarget.style.borderColor = isDark ? "rgba(255,255,255,0.10)" : "#e2e8f0";
                       }
                     }}
                   >
@@ -1151,16 +1173,16 @@ export default function VagasPage() {
                         <div
                           className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-transform duration-200 group-hover:scale-105"
                           style={{
-                            background: cfg.bg,
+                            background: isDark ? `${cfg.bg}22` : cfg.bg,
                             color: cfg.text,
-                            border: `1.5px solid ${cfg.border}`,
+                            border: `1.5px solid ${isDark ? `${cfg.border}66` : cfg.border}`,
                           }}
                         >
                           <Icon size={16} />
                         </div>
                         <span
                           className="text-[28px] font-black tabular-nums leading-none"
-                          style={{ color: isActive ? cfg.text : "#0f172a" }}
+                          style={{ color: isActive ? cfg.text : (isDark ? "rgba(255,255,255,0.90)" : "#0f172a") }}
                         >
                           {count}
                         </span>
@@ -1169,7 +1191,7 @@ export default function VagasPage() {
                       {/* Status label */}
                       <p
                         className="text-[10px] font-black uppercase tracking-widest leading-tight"
-                        style={{ color: isActive ? cfg.text : "#94a3b8" }}
+                        style={{ color: isActive ? cfg.text : (isDark ? "rgba(255,255,255,0.38)" : "#94a3b8") }}
                       >
                         {cfg.label}
                       </p>
@@ -1777,10 +1799,10 @@ export default function VagasPage() {
                 className="table-scroll-bottom overflow-x-scroll overflow-y-hidden"
                 style={{
                   height: "20px",
-                  background: "#e8edf4",
-                  borderTop: "1px solid #dde3ec",
+                  background: isDark ? "rgba(255,255,255,0.04)" : "#e8edf4",
+                  borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "#dde3ec"}`,
                   scrollbarWidth: "thin",
-                  scrollbarColor: "#94a3b8 #e8edf4",
+                  scrollbarColor: isDark ? "rgba(255,255,255,0.20) rgba(255,255,255,0.04)" : "#94a3b8 #e8edf4",
                 }}
               >
                 <div style={{ width: tableScrollWidth, height: "1px" }} />

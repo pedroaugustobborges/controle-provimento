@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTheme } from "@/hooks/useTheme";
 import { BancoTalentos, Convocacao } from "@/types/vaga";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -460,6 +461,7 @@ export function BancoTalentosDetalhesModal({
   onConvocar,
   autoShowProrrogar,
 }: BancoTalentosDetalhesModalProps) {
+  const { isDark } = useTheme();
   const [prorrogando, setProrrogando] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -557,10 +559,18 @@ export function BancoTalentosDetalhesModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-0 shadow-2xl">
+      <DialogContent
+        className={`max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-0 shadow-2xl${isDark ? " gdp-dark" : ""}`}
+        style={isDark ? { background: "rgba(11,16,34,0.97)", border: "1px solid rgba(255,255,255,0.09)" } : undefined}
+      >
 
         {/* ── Title header ─────────────────────────────────── */}
-        <div className="px-6 pt-5 pb-4 border-b border-slate-100 shrink-0 bg-white">
+        <div
+          className="px-6 pt-5 pb-4 border-b shrink-0"
+          style={isDark
+            ? { background: "rgba(11,16,34,0.97)", borderColor: "rgba(255,255,255,0.09)" }
+            : { background: "#ffffff", borderColor: "#f1f5f9" }}
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -781,7 +791,10 @@ export function BancoTalentosDetalhesModal({
         )}
 
         {/* ── Candidates area (full-width) ─────────────────── */}
-        <div className="flex-1 overflow-y-auto p-5 bg-slate-50/80">
+        <div
+          className="flex-1 overflow-y-auto p-5"
+          style={isDark ? { background: "rgba(7,9,29,0.88)" } : { background: "rgba(248,250,252,0.8)" }}
+        >
 
           {/* Section header + view toggle */}
           <div className="flex items-center justify-between mb-4">
@@ -790,27 +803,34 @@ export function BancoTalentosDetalhesModal({
             </h3>
 
             {/* Segmented toggle */}
-            <div className="flex items-center bg-slate-200/70 rounded-lg p-0.5 gap-0.5">
+            <div
+              className="flex items-center rounded-lg p-0.5 gap-0.5"
+              style={isDark ? { background: "rgba(255,255,255,0.07)" } : { background: "rgba(148,163,184,0.3)" }}
+            >
               <button
                 onClick={() => handleViewMode("cards")}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all duration-200",
-                  viewMode === "cards"
-                    ? "bg-white text-primary shadow-sm shadow-black/5"
-                    : "text-slate-500 hover:text-slate-700"
-                )}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all duration-200"
+                style={viewMode === "cards"
+                  ? isDark
+                    ? { background: "rgba(129,140,248,0.18)", color: "#818cf8" }
+                    : { background: "#ffffff", color: "hsl(215 45% 25%)" }
+                  : isDark
+                    ? { color: "rgba(148,163,184,0.7)" }
+                    : { color: "#64748b" }}
               >
                 <LayoutGrid className="h-3 w-3" />
                 Cards
               </button>
               <button
                 onClick={() => handleViewMode("list")}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all duration-200",
-                  viewMode === "list"
-                    ? "bg-white text-primary shadow-sm shadow-black/5"
-                    : "text-slate-500 hover:text-slate-700"
-                )}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all duration-200"
+                style={viewMode === "list"
+                  ? isDark
+                    ? { background: "rgba(129,140,248,0.18)", color: "#818cf8" }
+                    : { background: "#ffffff", color: "hsl(215 45% 25%)" }
+                  : isDark
+                    ? { color: "rgba(148,163,184,0.7)" }
+                    : { color: "#64748b" }}
               >
                 <List className="h-3 w-3" />
                 Lista
@@ -820,7 +840,10 @@ export function BancoTalentosDetalhesModal({
 
           {candidates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-slate-400 gap-3">
-              <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+              <div
+                className="h-16 w-16 rounded-2xl flex items-center justify-center"
+                style={isDark ? { background: "rgba(255,255,255,0.06)" } : { background: "#f1f5f9" }}
+              >
                 <Users className="h-8 w-8 opacity-30" />
               </div>
               <p className="text-sm italic">Nenhum candidato listado.</p>

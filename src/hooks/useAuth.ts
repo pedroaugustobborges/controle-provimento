@@ -20,17 +20,33 @@ export function useAuth() {
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         // Only update after initial session has been resolved
         // to avoid race condition where onAuthStateChange fires
         // with null before getSession restores the session
-        if (initialSessionResolved) {
-          setAuthState({
-            user: session?.user ?? null,
-            session,
-            loading: false,
+        if (!initialSessionResolved) return;
+
+        if (event === 'SIGNED_OUT') {
+          // Verify the session is truly gone before clearing state.
+          // Supabase can emit SIGNED_OUT spuriously during token refresh
+          // failures caused by brief network interruptions — calling
+          // getSession() here acts as a safeguard: if a valid session is
+          // still present we keep the user logged in.
+          supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+            if (!currentSession) {
+              setAuthState({ user: null, session: null, loading: false });
+            }
+            // If a session is still present, the SIGNED_OUT event was
+            // spurious — do nothing.
           });
+          return;
         }
+
+        setAuthState({
+          user: session?.user ?? null,
+          session,
+          loading: false,
+        });
       }
     );
 

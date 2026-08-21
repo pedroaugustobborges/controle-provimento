@@ -50,7 +50,7 @@ import {
   Clock,
 } from "lucide-react";
 import { AgieChat } from "./chat/AgieChat";
-import { InactivityLogout } from "./InactivityLogout";
+// InactivityLogout removido — logout por inatividade desabilitado a pedido do time
 import { UserSessionTracker } from "./UserSessionTracker";
 import { UpdateBanner } from "./UpdateBanner";
 import { AccessHistoryPopoverContent } from "./AccessHistoryPopoverContent";
@@ -1032,7 +1032,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="animate-in fade-in duration-200">{children}</div>
           </main>
           {/* <AgieChat /> */}
-          <InactivityLogout />
         </div>
       </div>
 

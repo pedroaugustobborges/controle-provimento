@@ -296,18 +296,7 @@ export default function LoginPage() {
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top nav */}
-        <header className="flex items-center justify-between px-8 lg:px-14 py-6">
-          <img
-            src={logoWhite}
-            alt="AGIR"
-            className="h-7 brightness-110 drop-shadow-lg"
-          />
-          <img
-            src="/logo_branca_sem_slogan.png"
-            alt=""
-            className="h-10 opacity-80 drop-shadow-lg"
-          />
-        </header>
+        <header className="px-8 lg:px-14 py-6" />
 
         {/* Main area */}
         <main className="flex-1 flex items-center justify-center px-6 pb-16">
@@ -347,11 +336,34 @@ export default function LoginPage() {
         </main>
 
         {/* Footer */}
-        <footer className="px-8 lg:px-14 py-5 flex flex-col items-center justify-center text-center text-[13px] text-[hsl(210,80%,52%)] gap-1">
-          <span>Powered by Daher.lab</span>
-          <span>
-            ©{new Date().getFullYear()} · Todos os direitos reservados
-          </span>
+        <footer className="px-8 lg:px-14 py-6 flex items-center justify-center">
+          <div className="flex items-center gap-6">
+            {/* AGIR */}
+            <img
+              src={logoWhite}
+              alt="AGIR"
+              className="h-10 object-contain opacity-40"
+            />
+
+            <div className="w-px h-6 bg-white/10 shrink-0" />
+
+            {/* Daher.lab — center, slightly more prominent */}
+            <img
+              src="/logo_daherlab.png"
+              alt="Daher.lab"
+              className="h-10 object-contain opacity-50"
+              style={{ filter: "brightness(0) invert(1)" }}
+            />
+
+            <div className="w-px h-6 bg-white/10 shrink-0" />
+
+            {/* Transformação Digital */}
+            <img
+              src="/logo_transformacao_digital.png"
+              alt="Transformação Digital"
+              className="h-10 object-contain opacity-40"
+            />
+          </div>
         </footer>
       </div>
 

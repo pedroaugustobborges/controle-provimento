@@ -336,7 +336,7 @@ export default function LoginPage() {
         </main>
 
         {/* Footer */}
-        <footer className="px-8 lg:px-14 py-6 flex items-center justify-center">
+        <footer className="py-6 w-full flex items-center justify-center">
           <div className="flex items-center gap-6">
             {/* AGIR */}
             <img

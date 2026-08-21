@@ -299,70 +299,73 @@ export default function LoginPage() {
         <header className="px-8 lg:px-14 py-6" />
 
         {/* Main area */}
-        <main className="flex-1 flex items-center justify-center px-6 pb-16">
-          <div className="w-full max-w-[520px] text-center">
+        <main className="flex-1 flex items-center justify-center pb-16">
+          <div className="w-full max-w-[680px] text-center px-6">
             {/* GDP logotype */}
-            <div className="mb-3 relative flex items-center justify-center overflow-visible">
+            <div className="mb-4 relative flex items-center justify-center overflow-visible">
               {/* Ambient halo behind letters */}
               <div
                 className="absolute pointer-events-none"
                 style={{
-                  width: '380px',
-                  height: '140px',
-                  background: 'radial-gradient(ellipse at 50% 60%, rgba(60,140,255,0.22) 0%, rgba(50,110,255,0.10) 45%, transparent 70%)',
-                  filter: 'blur(32px)',
+                  width: "520px",
+                  height: "180px",
+                  background:
+                    "radial-gradient(ellipse at 50% 60%, rgba(60,140,255,0.22) 0%, rgba(50,110,255,0.10) 45%, transparent 70%)",
+                  filter: "blur(32px)",
                 }}
               />
-              <h1 className="gdp-text text-[72px] lg:text-[88px] font-black tracking-tighter leading-none select-none relative px-6 py-2">
+              <h1 className="gdp-text text-[96px] lg:text-[120px] font-black tracking-tighter leading-none select-none relative px-6 py-2">
                 GDP
               </h1>
             </div>
 
-            <p className="text-[hsl(210,30%,72%)] text-xl font-medium tracking-wide mb-2">
+            <p className="text-[hsl(210,30%,72%)] text-2xl font-medium tracking-wide mb-3">
               Gestão de Provimento
             </p>
-            <p className="text-[hsl(210,20%,55%)] text-xm mb-8">
+            <p className="text-[hsl(210,20%,55%)] text-base mb-10">
               Plataforma de gestão de vagas e controle de provimento
             </p>
 
             {/* Action button */}
             <button
               onClick={() => setShowLogin(true)}
-              className="flex items-center justify-center gap-2 px-10 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] hover:from-[hsl(200,70%,44%)] hover:to-[hsl(215,65%,38%)] shadow-lg shadow-[hsl(200,70%,25%)]/30 transition-all active:scale-[0.98] mx-auto"
+              className="flex items-center justify-center gap-2 px-12 py-3.5 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-[hsl(200,70%,38%)] to-[hsl(215,65%,32%)] hover:from-[hsl(200,70%,44%)] hover:to-[hsl(215,65%,38%)] shadow-lg shadow-[hsl(200,70%,25%)]/30 transition-all active:scale-[0.98] mx-auto"
             >
-              <LogIn className="h-4 w-4" /> Entrar
+              <LogIn className="h-5 w-5" /> Entrar
             </button>
           </div>
         </main>
 
         {/* Footer */}
         <footer className="py-6 w-full flex items-center justify-center">
-          <div className="flex items-center gap-6">
-            {/* AGIR */}
-            <img
-              src={logoWhite}
-              alt="AGIR"
-              className="h-10 object-contain opacity-40"
-            />
+          <div className="flex items-center w-full max-w-[640px] px-6">
+            {/* Left side — grows to fill half, AGIR pushed to the right */}
+            <div className="flex-1 flex items-center justify-end gap-4">
+              <img
+                src={logoWhite}
+                alt="AGIR"
+                className="h-9 object-contain opacity-40 mr-6"
+              />
+              <div className="w-px h-6 bg-white/10 shrink-0" />
+            </div>
 
-            <div className="w-px h-6 bg-white/10 shrink-0" />
-
-            {/* Daher.lab — center, slightly more prominent */}
+            {/* Center anchor — daher.lab is exactly at the container midpoint */}
             <img
               src="/logo_daherlab.png"
               alt="Daher.lab"
-              className="h-10 object-contain opacity-50"
+              className="h-10 object-contain opacity-50 mx-5 shrink-0"
               style={{ filter: "brightness(0) invert(1)" }}
             />
 
-            <div className="w-px h-6 bg-white/10 shrink-0" />
-
-            {/* Transformação Digital */}
-            <img
-              src="/logo_transformacao_digital.png"
-              alt="Transformação Digital"
-              className="h-10 object-contain opacity-40"
-            />
+            {/* Right side — grows to fill half, TD pushed to the left */}
+            <div className="flex-1 flex items-center justify-start gap-4">
+              <div className="w-px h-6 bg-white/10 shrink-0" />
+              <img
+                src="/logo_transformacao_digital.png"
+                alt="Transformação Digital"
+                className="h-9 object-contain opacity-40 ml-6"
+              />
+            </div>
           </div>
         </footer>
       </div>

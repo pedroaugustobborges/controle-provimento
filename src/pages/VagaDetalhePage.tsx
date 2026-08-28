@@ -3652,8 +3652,14 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
           !s ||
           g.psNumero.toLowerCase().includes(s) ||
           g.cargo.toLowerCase().includes(s)
-      );
-  }, [groups, desvinculadoPS, search]);
+      )
+      .sort((a, b) => {
+        const aConf = confirmedPS.has(a.key) ? 1 : 0;
+        const bConf = confirmedPS.has(b.key) ? 1 : 0;
+        if (bConf !== aConf) return bConf - aConf;
+        return b.score - a.score;
+      });
+  }, [groups, desvinculadoPS, confirmedPS, search]);
 
   const openModal = (g: PSGroup) => {
     setModalBanco(g.bancoRep);

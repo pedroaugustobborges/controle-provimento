@@ -3534,9 +3534,14 @@ function getBancoUnidadeFilter(vaga: any): (b: any) => boolean {
     return (b: any) => ((b as any).unidade || "") === "Cáceres - MT";
   }
 
-  // Rule 6 & 7: Cidade de Goiás - GO
-  if (sw("POL GOIAS") || sw("UPA SAO PEDRO") || sw("UPA PRAIA DO SUA")) {
+  // Rule 6: Cidade de Goiás - GO
+  if (sw("POL GOIAS")) {
     return (b: any) => ((b as any).unidade || "") === "Cidade de Goiás - GO";
+  }
+
+  // Rule 7: Vitória - ES
+  if (sw("UPA SAO PEDRO") || sw("UPA PRAIA DO SUA")) {
+    return (b: any) => ((b as any).unidade || "") === "Vitória - ES";
   }
 
   // No specific rule → show all

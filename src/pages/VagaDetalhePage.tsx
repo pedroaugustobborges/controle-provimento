@@ -58,7 +58,9 @@ import {
   EtapaVaga,
   StatusProcesso,
   VagaFluxoItem,
+  BancoTalentos,
 } from "@/types/vaga";
+import { BancoTalentosDetalhesModal } from "@/components/BancoTalentosDetalhesModal";
 import {
   ArrowLeft,
   Clock,
@@ -3548,82 +3550,134 @@ function getBancoUnidadeFilter(vaga: any): (b: any) => boolean {
   return () => true;
 }
 
+type PSGroup = {
+  key: string;
+  psNumero: string;
+  cargo: string;
+  bancoRep: BancoTalentos;
+  candidates: any[];
+  score: number;
+};
+
+type BancoActionDialog = {
+  type: "confirmar" | "desvincular";
+  psKey: string;
+  psNumero: string;
+  cargo: string;
+};
+
 function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
-  const { bancos } = useVagasStore();
+  const { bancos, fetchBancos } = useVagasStore();
+  const { currentUser } = useAdminStore();
   const [search, setSearch] = useState("");
-  const [showFullBanco, setShowFullBanco] = useState(false);
-  const [convocacaoInitial, setConvocacaoInitial] = useState<any>(null);
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalBanco, setModalBanco] = useState<BancoTalentos | null>(null);
+  const [modalCandidates, setModalCandidates] = useState<any[]>([]);
+
+  // Convocação state (opened from modal)
   const [isConvocacaoOpen, setIsConvocacaoOpen] = useState(false);
+  const [convocacaoInitial, setConvocacaoInitial] = useState<any>(null);
 
-  const bancoFilter = useMemo(() => getBancoUnidadeFilter(vaga), [vaga.unidade, vaga.is_teia]);
+  // Action dialog state
+  const [actionDialog, setActionDialog] = useState<BancoActionDialog | null>(null);
 
-  const filteredBancos = useMemo(
-    () => bancos.filter(bancoFilter),
-    [bancos, bancoFilter],
+  // Persistent link/unlink states (localStorage, keyed by vaga.id)
+  const storageKey = `vaga-banco-links-${vaga.id}`;
+  const readStorage = (): { confirmed: string[]; desvinculados: string[] } => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); }
+    catch { return { confirmed: [], desvinculados: [] }; }
+  };
+
+  const [confirmedPS, setConfirmedPS] = useState<Set<string>>(
+    () => new Set(readStorage().confirmed || [])
+  );
+  const [desvinculadoPS, setDesvinculadoPS] = useState<Set<string>>(
+    () => new Set(readStorage().desvinculados || [])
   );
 
-  const withScores = useMemo(() => {
-    return filteredBancos
-      .map((b) => ({
-        ...b,
-        _score: calcSimilarity(vaga.cargo, (b as any).cargo || ""),
-      }))
-      .filter((b) => b._score > 0)
-      .sort((a, b) => {
-        if (Math.abs(b._score - a._score) > 0.01) return b._score - a._score;
-        return (
-          (Number((a as any).classificacao) || 9999) -
-          (Number((b as any).classificacao) || 9999)
-        );
-      })
-      .slice(0, 150);
+  const persist = (confirmed: Set<string>, desvinculados: Set<string>) => {
+    localStorage.setItem(storageKey, JSON.stringify({
+      confirmed: [...confirmed],
+      desvinculados: [...desvinculados],
+    }));
+  };
+
+  // Unidade filter
+  const bancoFilter = useMemo(() => getBancoUnidadeFilter(vaga), [vaga.unidade, vaga.is_teia]);
+  const filteredBancos = useMemo(() => bancos.filter(bancoFilter), [bancos, bancoFilter]);
+
+  // Group by processo seletivo
+  const groups = useMemo<PSGroup[]>(() => {
+    const map = new Map<string, PSGroup>();
+
+    for (const b of filteredBancos) {
+      const bAny = b as any;
+      const cargoNorm = bAny.cargo_normalizado || bAny.cargo || "";
+      const psKey = bAny.numero_processo_seletivo
+        ? `PS-${bAny.numero_processo_seletivo}`
+        : `${bAny.numero_edital || "sem-edital"}-${b.unidade}-${cargoNorm}`;
+
+      if (!map.has(psKey)) {
+        map.set(psKey, {
+          key: psKey,
+          psNumero: bAny.numero_processo_seletivo || bAny.numero_processo || bAny.numero_edital || "—",
+          cargo: bAny.cargo || "—",
+          bancoRep: b,
+          candidates: [],
+          score: 0,
+        });
+      }
+
+      const g = map.get(psKey)!;
+      g.candidates.push(b);
+      const s = calcSimilarity(vaga.cargo, bAny.cargo || "");
+      if (s > g.score) g.score = s;
+    }
+
+    return [...map.values()]
+      .filter((g) => g.score > 0)
+      .sort((a, b) => b.score - a.score);
   }, [filteredBancos, vaga.cargo]);
 
-  const hasMatches = withScores.length > 0;
+  const hasGroups = groups.length > 0;
 
-  const filtered = useMemo(() => {
+  const displayGroups = useMemo(() => {
     const s = search.trim().toLowerCase();
-    if (!hasMatches || showFullBanco) {
-      // Full banco search mode
-      const pool = filteredBancos.map((b) => ({ ...b, _score: 0 as number }));
-      const sorted = pool.sort(
-        (a, b) =>
-          (Number((a as any).classificacao) || 9999) -
-          (Number((b as any).classificacao) || 9999),
+    return groups
+      .filter((g) => !desvinculadoPS.has(g.key))
+      .filter(
+        (g) =>
+          !s ||
+          g.psNumero.toLowerCase().includes(s) ||
+          g.cargo.toLowerCase().includes(s)
       );
-      if (!s) return sorted.slice(0, 150);
-      return sorted
-        .filter(
-          (b) =>
-            ((b as any).nome || "").toLowerCase().includes(s) ||
-            ((b as any).cargo || "").toLowerCase().includes(s) ||
-            ((b as any).unidade || "").toLowerCase().includes(s),
-        )
-        .slice(0, 150);
-    }
-    // Similarity mode
-    if (!s) return withScores;
-    return withScores.filter(
-      (b) =>
-        ((b as any).nome || "").toLowerCase().includes(s) ||
-        ((b as any).cargo || "").toLowerCase().includes(s) ||
-        ((b as any).unidade || "").toLowerCase().includes(s),
-    );
-  }, [hasMatches, showFullBanco, withScores, filteredBancos, search]);
+  }, [groups, desvinculadoPS, search]);
 
-  const handleConvocar = (candidato: any) => {
-    setConvocacaoInitial({
-      nome_candidato: candidato.nome || "",
-      vaga_id: vaga.id,
-      cargo: vaga.cargo,
-      unidade: vaga.unidade,
-      secao: vaga.secao || "",
-      requisicao: vaga.requisicao || vaga.numero_requisicao || "",
-      edital_relacionado: candidato.numero_edital || "",
-      banco_relacionado: candidato.id,
-      classificacao: Number(candidato.classificacao) || 1,
-    });
-    setIsConvocacaoOpen(true);
+  const openModal = (g: PSGroup) => {
+    setModalBanco(g.bancoRep);
+    setModalCandidates(g.candidates);
+    setModalOpen(true);
+  };
+
+  const handleConfirmar = (psKey: string) => {
+    const next = new Set(confirmedPS).add(psKey);
+    setConfirmedPS(next);
+    persist(next, desvinculadoPS);
+    setActionDialog(null);
+    toast.success("Processo seletivo confirmado como compatível com esta vaga.");
+  };
+
+  const handleDesvincular = (psKey: string) => {
+    const nextConfirmed = new Set(confirmedPS);
+    nextConfirmed.delete(psKey);
+    const nextDesvinculado = new Set(desvinculadoPS).add(psKey);
+    setConfirmedPS(nextConfirmed);
+    setDesvinculadoPS(nextDesvinculado);
+    persist(nextConfirmed, nextDesvinculado);
+    setActionDialog(null);
+    toast.success("Processo seletivo removido da lista.");
   };
 
   return (
@@ -3632,28 +3686,18 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h3 className="text-sm font-bold text-slate-700">
-            {showFullBanco
-              ? "Banco de Talentos — Busca Manual"
-              : "Candidatos com Perfil Similar"}
+            Banco de Talentos — Processos Seletivos Compatíveis
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            {showFullBanco ? (
-              "Exibindo todos os candidatos. Use a busca para filtrar."
-            ) : (
-              <>
-                Ordenados por similaridade com{" "}
-                <span className="font-semibold text-slate-700">
-                  "{vaga.cargo}"
-                </span>
-              </>
-            )}
+            Agrupados por processo seletivo, ordenados por similaridade com{" "}
+            <span className="font-semibold text-slate-700">"{vaga.cargo}"</span>
           </p>
         </div>
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <Input
             className="pl-8 h-8 text-sm bg-white border-slate-200"
-            placeholder="Buscar nome, cargo, unidade..."
+            placeholder="Buscar processo, cargo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -3662,159 +3706,240 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
 
       {/* Count */}
       <p className="text-xs text-slate-500">
-        <span className="font-bold text-slate-700">{filtered.length}</span>{" "}
-        candidato(s) encontrado(s)
+        <span className="font-bold text-slate-700">{displayGroups.length}</span>{" "}
+        processo(s) seletivo(s) encontrado(s)
       </p>
 
-      {!hasMatches && !showFullBanco ? (
+      {!hasGroups ? (
         <Card className="border-amber-100 bg-amber-50 shadow-sm">
-          <CardContent className="py-10 text-center space-y-4">
+          <CardContent className="py-10 text-center space-y-3">
             <div className="bg-amber-100 p-4 rounded-full w-fit mx-auto">
               <Users className="h-10 w-10 text-amber-400" />
             </div>
             <div>
               <p className="text-amber-800 font-semibold">
-                Nenhum candidato com perfil similar encontrado para{" "}
+                Nenhum processo seletivo com perfil similar encontrado para{" "}
                 <span className="font-bold">"{vaga.cargo}"</span>.
               </p>
               <p className="text-xs text-amber-600 mt-1">
-                Não foi encontrada correspondência automática com os cargos do
-                banco de talentos.
+                Não foi encontrada correspondência automática com os cargos do banco de talentos.
               </p>
             </div>
-            <Button
-              onClick={() => setShowFullBanco(true)}
-              className="gap-2 bg-primary mx-auto"
-            >
-              <Search className="h-4 w-4" />
-              Buscar manualmente no Banco de Talentos
-            </Button>
           </CardContent>
         </Card>
-      ) : filtered.length === 0 ? (
+      ) : displayGroups.length === 0 ? (
         <Card className="border-slate-200 shadow-sm">
           <CardContent className="py-10 text-center">
             <p className="text-slate-500 font-medium">
               Nenhum resultado{search.trim() ? ` para "${search}"` : ""}.
             </p>
-            <p className="text-xs text-slate-400 mt-1">
-              Tente outros termos de busca.
-            </p>
+            <p className="text-xs text-slate-400 mt-1">Tente outros termos de busca.</p>
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
-            <Table>
-              <TableHeader className="sticky top-0 bg-slate-50 z-10">
-                <TableRow>
-                  <TableHead className="w-16 text-center">Sim.</TableHead>
-                  <TableHead>Proc. Seletivo</TableHead>
-                  <TableHead>Candidato</TableHead>
-                  <TableHead>Cargo (Banco)</TableHead>
-                  <TableHead className="text-center w-16">Class.</TableHead>
-                  <TableHead>Unidade</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-right w-24">Ação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((b) => {
-                  const score = (b as any)._score as number;
-                  const scoreLabel = `${Math.round(score * 100)}%`;
-                  const scoreStyle =
-                    score >= 0.8
-                      ? "bg-green-100 text-green-700"
-                      : score >= 0.5
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-slate-100 text-slate-600";
-                  return (
-                    <TableRow
-                      key={(b as any).id}
-                      className="hover:bg-slate-50 transition-colors"
-                    >
-                      <TableCell className="text-center">
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-black ${scoreStyle}`}
-                        >
-                          {scoreLabel}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-xs font-mono text-slate-600 whitespace-nowrap">
-                          {(b as any).numero_processo_seletivo || "—"}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold text-sm text-slate-800">
-                            {(b as any).nome || "—"}
-                          </p>
-                          {(b as any).cpf && (
-                            <p className="text-[10px] text-slate-400 font-mono">
-                              {(b as any).cpf}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <p
-                          className="text-xs text-slate-600 max-w-[220px] truncate"
-                          title={(b as any).cargo}
-                        >
-                          {(b as any).cargo}
-                        </p>
-                        {(b as any).numero_edital && (
-                          <p className="text-[10px] text-slate-400">
-                            {(b as any).numero_edital}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center font-bold text-slate-700">
-                        {(b as any).classificacao
-                          ? `${(b as any).classificacao}º`
-                          : "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {(b as any).unidade || "—"}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {(() => {
-                          const st = String(
-                            (b as any).status_calculado ||
-                              (b as any).status ||
-                              "",
-                          );
-                          const isConvocado =
-                            st.toLowerCase().includes("convocado") ||
-                            st === "Convocado(a)";
-                          return (
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] font-bold ${isConvocado ? "bg-emerald-50 text-emerald-700 border-emerald-200" : ""}`}
-                            >
-                              {isConvocado ? "Convocado(a)" : st}
-                            </Badge>
-                          );
-                        })()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs font-bold gap-1.5 bg-primary"
-                          onClick={() => handleConvocar(b)}
-                        >
-                          <Send className="h-3 w-3" />
-                          Convocar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
+        <div className="space-y-2">
+          {displayGroups.map((g) => {
+            const isConfirmed = confirmedPS.has(g.key);
+            const score = g.score;
+            const scoreLabel = `${Math.round(score * 100)}%`;
+            const scoreStyle =
+              score >= 0.8
+                ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                : score >= 0.5
+                  ? "bg-amber-100 text-amber-700 border-amber-200"
+                  : "bg-slate-100 text-slate-600 border-slate-200";
+
+            return (
+              <div
+                key={g.key}
+                onClick={() => openModal(g)}
+                className={cn(
+                  "group relative flex items-center gap-3 px-4 py-3.5 rounded-xl border bg-white shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer select-none",
+                  isConfirmed
+                    ? "border-l-[3px] border-l-emerald-500 border-slate-200 bg-emerald-50/40"
+                    : "border-slate-200 hover:border-primary/30 hover:bg-slate-50/60"
+                )}
+              >
+                {/* Similarity badge */}
+                <span
+                  className={cn(
+                    "shrink-0 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-black border tabular-nums w-12",
+                    scoreStyle
+                  )}
+                >
+                  {scoreLabel}
+                </span>
+
+                {/* PS number */}
+                <div className="shrink-0 w-28">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+                    Proc. Seletivo
+                  </p>
+                  <p className="text-xs font-mono font-bold text-slate-700 truncate">
+                    {g.psNumero}
+                  </p>
+                </div>
+
+                <div className="h-7 w-px bg-slate-150 shrink-0" />
+
+                {/* Cargo */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+                    Cargo
+                  </p>
+                  <p className="text-sm font-semibold text-slate-800 truncate">
+                    {g.cargo}
+                  </p>
+                </div>
+
+                {/* Candidate count */}
+                <div className="shrink-0 text-center hidden sm:block">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+                    Candidatos
+                  </p>
+                  <p className="text-sm font-black text-slate-700 tabular-nums">
+                    {g.candidates.length}
+                  </p>
+                </div>
+
+                {/* View hint */}
+                <div className="shrink-0 flex items-center gap-1 text-slate-300 group-hover:text-primary/60 transition-colors">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="hidden lg:inline text-xs font-medium">Ver</span>
+                </div>
+
+                {/* Action column — stop propagation so clicks don't open modal */}
+                <div
+                  className="shrink-0 flex items-center gap-2 pl-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {isConfirmed ? (
+                    <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      <span className="text-xs font-bold hidden sm:inline">Compatível</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Button
+                        size="sm"
+                        className="h-7 text-xs font-bold gap-1 bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20"
+                        onClick={() =>
+                          setActionDialog({
+                            type: "confirmar",
+                            psKey: g.key,
+                            psNumero: g.psNumero,
+                            cargo: g.cargo,
+                          })
+                        }
+                      >
+                        <CheckCircle2 className="h-3 w-3" />
+                        Confirmar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs font-bold gap-1 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 hover:text-red-700"
+                        onClick={() =>
+                          setActionDialog({
+                            type: "desvincular",
+                            psKey: g.key,
+                            psNumero: g.psNumero,
+                            cargo: g.cargo,
+                          })
+                        }
+                      >
+                        <XCircle className="h-3 w-3" />
+                        Desvincular
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Action confirmation dialog ───────────────────────── */}
+      <AlertDialog
+        open={!!actionDialog}
+        onOpenChange={(open) => { if (!open) setActionDialog(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {actionDialog?.type === "confirmar"
+                ? "Confirmar compatibilidade"
+                : "Confirmar remoção"}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-sm text-slate-600 leading-relaxed">
+                {actionDialog?.type === "confirmar" ? (
+                  <p>
+                    Você confirma que os candidatos do processo seletivo{" "}
+                    <strong className="text-slate-800">
+                      {actionDialog.psNumero} — {actionDialog.cargo}
+                    </strong>{" "}
+                    são compatíveis com esta vaga{" "}
+                    <strong className="text-slate-800">{vaga.cargo}</strong>?
+                  </p>
+                ) : (
+                  <p>
+                    Você confirma que os candidatos do processo seletivo{" "}
+                    <strong className="text-slate-800">{actionDialog?.psNumero}</strong>{" "}
+                    não são compatíveis com a vaga{" "}
+                    <strong className="text-slate-800">{vaga.cargo}</strong>?
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={
+                actionDialog?.type === "confirmar"
+                  ? "bg-primary hover:bg-primary/90"
+                  : "bg-red-600 hover:bg-red-700 text-white"
+              }
+              onClick={() => {
+                if (!actionDialog) return;
+                if (actionDialog.type === "confirmar") {
+                  handleConfirmar(actionDialog.psKey);
+                } else {
+                  handleDesvincular(actionDialog.psKey);
+                }
+              }}
+            >
+              Sim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── BancoTalentos detail modal ───────────────────────── */}
+      {modalBanco && (
+        <BancoTalentosDetalhesModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          banco={modalBanco}
+          candidates={modalCandidates}
+          canProrrogate={false}
+          currentUser={currentUser}
+          fetchBancos={() => fetchBancos()}
+          onConvocar={(data) => {
+            setConvocacaoInitial({
+              ...data,
+              vaga_id: vaga.id,
+              cargo: vaga.cargo,
+              unidade: vaga.unidade,
+              secao: vaga.secao || "",
+              requisicao: vaga.requisicao || vaga.numero_requisicao || "",
+            });
+            setModalOpen(false);
+            setIsConvocacaoOpen(true);
+          }}
+        />
       )}
 
       {isConvocacaoOpen && (

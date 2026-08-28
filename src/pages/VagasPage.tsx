@@ -788,6 +788,24 @@ export default function VagasPage() {
     return result;
   }, [vagas, bancos]);
 
+  // Vagas that have at least one PS confirmed as "Compatível" in localStorage
+  const vagasWithConfirmedPS = useMemo(() => {
+    const set = new Set<string>();
+    vagas.forEach((v) => {
+      try {
+        const raw = localStorage.getItem(`vaga-banco-links-${v.id}`);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.confirmed) && data.confirmed.length > 0) {
+          set.add(v.id);
+        }
+      } catch {
+        // ignore corrupt entries
+      }
+    });
+    return set;
+  }, [vagas]);
+
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
     // 1. Filtragem por Região e Unidade Global (Sidebar)
@@ -1528,6 +1546,7 @@ export default function VagasPage() {
                         v.categoria_status || getCategoriaStatus(v);
                       const bancoFound = vagasComBancoMap.get(v.id);
                       const possibleCount = vagasPossibleCandidatesMap.get(v.id) ?? 0;
+                      const hasConfirmedPS = vagasWithConfirmedPS.has(v.id);
                       const isConsultaOnly = [
                         "concluidas",
                         "cancelada",
@@ -1754,6 +1773,7 @@ export default function VagasPage() {
                               onClick={(e) => e.stopPropagation()}
                             >
                               {bancoFound ? (
+                                /* ── State 1: convocação already done ── */
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -1767,7 +1787,27 @@ export default function VagasPage() {
                                 >
                                   <CheckCircle2 className="h-5 w-5" />
                                 </Button>
+                              ) : hasConfirmedPS ? (
+                                /* ── State 2: PS confirmed compatible — solid green radar ── */
+                                <div className="relative inline-flex items-center justify-center group">
+                                  {/* Soft static glow ring — no animation */}
+                                  <span className="absolute inline-flex h-8 w-8 rounded-full bg-emerald-500/15" />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="relative h-8 w-8 rounded-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-200 hover:scale-110 active:scale-95"
+                                    title="Candidatos compatíveis confirmados — clique para ver"
+                                    onClick={() => navigate(`/vagas/${v.id}?tab=banco`)}
+                                  >
+                                    <Radar className="h-4 w-4 drop-shadow-sm" />
+                                  </Button>
+                                  {/* Solid green badge */}
+                                  <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-black text-white shadow-sm ring-1 ring-white">
+                                    ✓
+                                  </span>
+                                </div>
                               ) : possibleCount > 0 ? (
+                                /* ── State 3: possible candidates detected — pulsing radar ── */
                                 <div className="relative inline-flex items-center justify-center group">
                                   {/* Sonar ring — slow expand, border-only so it looks like a wavefront */}
                                   <span
@@ -1791,6 +1831,7 @@ export default function VagasPage() {
                                   </span>
                                 </div>
                               ) : (
+                                /* ── State 4: no candidates found ── */
                                 <Button
                                   variant="ghost"
                                   size="icon"

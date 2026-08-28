@@ -2795,22 +2795,22 @@ export default function BancoTalentosPage() {
                       {linkedVagas.map((v) => (
                         <div
                           key={v.id}
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50/70"
+                          className="flex items-start gap-3 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50/70"
                         >
-                          <div className="h-8 w-8 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0">
+                          <div className="h-8 w-8 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
                             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 leading-snug truncate">
+                            <p className="text-sm font-semibold text-slate-800 leading-snug">
                               {v.cargo}
                             </p>
-                            <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed break-words">
                               {v.unidade}
                             </p>
                           </div>
                           <button
                             onClick={() => handleUnlinkPS(psKey, v)}
-                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 bg-white px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap"
+                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 bg-white px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap mt-0.5"
                           >
                             <Link2Off className="h-3 w-3" />
                             Desvincular
@@ -2838,25 +2838,25 @@ export default function BancoTalentosPage() {
                         setVincularVaga(v);
                         setVincularStep("confirm");
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:border-primary/40 hover:bg-primary/[0.03] hover:shadow-sm transition-all text-left group"
+                      className="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:border-primary/40 hover:bg-primary/[0.03] hover:shadow-sm transition-all text-left group"
                     >
-                      <div className="h-8 w-8 rounded-xl bg-slate-100 group-hover:bg-primary/10 border border-slate-200 group-hover:border-primary/20 flex items-center justify-center shrink-0 transition-all">
+                      <div className="h-8 w-8 rounded-xl bg-slate-100 group-hover:bg-primary/10 border border-slate-200 group-hover:border-primary/20 flex items-center justify-center shrink-0 mt-0.5 transition-all">
                         <Stethoscope className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 leading-snug truncate">
+                        <p className="text-sm font-semibold text-slate-800 leading-snug">
                           {v.cargo}
                         </p>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          <span className="truncate">{v.unidade}</span>
-                          {(v.requisicao || (v as any).numero_requisicao) && (
-                            <span className="ml-1.5 font-mono text-slate-400">
-                              · {v.requisicao || (v as any).numero_requisicao}
-                            </span>
-                          )}
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed break-words">
+                          {v.unidade}
                         </p>
+                        {(v.requisicao || (v as any).numero_requisicao) && (
+                          <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+                            {v.requisicao || (v as any).numero_requisicao}
+                          </p>
+                        )}
                       </div>
-                      <ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-primary rotate-180 transition-colors shrink-0 ml-1" />
+                      <ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-primary rotate-180 transition-colors shrink-0 ml-1 mt-1" />
                     </button>
                   ))}
 
@@ -2891,7 +2891,7 @@ export default function BancoTalentosPage() {
                   <p className="text-sm font-bold text-slate-800 leading-snug">
                     {vincularVaga.cargo}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed break-words">
                     {vincularVaga.unidade}
                   </p>
                   {(vincularVaga.requisicao || (vincularVaga as any).numero_requisicao) && (

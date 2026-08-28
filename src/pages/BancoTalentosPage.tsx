@@ -37,6 +37,9 @@ import {
   ArrowLeft,
   Puzzle,
   Eye,
+  Link2,
+  Link2Off,
+  ChevronLeft,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
@@ -107,7 +110,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ConvocacaoDialog } from "@/components/ConvocacaoDialog";
 import { BancoTalentosDetalhesModal } from "@/components/BancoTalentosDetalhesModal";
-import { Convocacao } from "@/types/vaga";
+import { Convocacao, Vaga } from "@/types/vaga";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -139,6 +142,36 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+// ── Type for a grouped banco row ──────────────────────────────────────────────
+type BancoGroup = {
+  id: string;
+  edital: string;
+  processoSeletivo: string;
+  unidade: string;
+  regiao?: string;
+  cargo: string;
+  cargoNormalizado: string;
+  status: string;
+  validade: string;
+  isProrrogado: boolean;
+  qtdBanco: number;
+  candidatos: BancoTalentos[];
+};
+
+// ── localStorage helpers (pure, no React deps) ────────────────────────────────
+function getVagaLinks(vagaId: string): { confirmed: string[]; desvinculados: string[] } {
+  try { return JSON.parse(localStorage.getItem(`vaga-banco-links-${vagaId}`) || "{}"); }
+  catch { return { confirmed: [], desvinculados: [] }; }
+}
+function writeVagaLinks(vagaId: string, data: { confirmed: string[]; desvinculados: string[] }) {
+  localStorage.setItem(`vaga-banco-links-${vagaId}`, JSON.stringify(data));
+}
+function getPSStorageKey(grupo: BancoGroup): string {
+  const rep = grupo.candidatos[0] as any;
+  if (rep?.numero_processo_seletivo) return `PS-${rep.numero_processo_seletivo}`;
+  return `${rep?.numero_edital || grupo.edital || "sem-edital"}-${grupo.unidade}-${grupo.cargoNormalizado}`;
+}
+
 export default function BancoTalentosPage() {
   const { isDark } = useTheme();
   const navigate = useNavigate();
@@ -151,6 +184,7 @@ export default function BancoTalentosPage() {
   }, [isDark]);
   const {
     bancos,
+    vagas,
     importHistory,
     importedFiles,
     deleteBanco,
@@ -379,6 +413,66 @@ export default function BancoTalentosPage() {
   const [convocacaoInitialData, setConvocacaoInitialData] = useState<
     Partial<Convocacao> | undefined
   >(undefined);
+
+  // ── Vincular PS a Vaga ─────────────────────────────────────────────────────
+  const [vincularGroup, setVincularGroup] = useState<BancoGroup | null>(null);
+  const [vincularStep, setVincularStep] = useState<"select" | "confirm">("select");
+  const [vincularVaga, setVincularVaga] = useState<Vaga | null>(null);
+  const [vagaSearch, setVagaSearch] = useState("");
+  // Bump this to force re-computation of linked vagas after writes
+  const [linksVersion, setLinksVersion] = useState(0);
+
+  const handleLinkPS = (psKey: string, vaga: Vaga) => {
+    const links = getVagaLinks(vaga.id);
+    const confirmed = new Set(links.confirmed || []);
+    const desvinculados = new Set(links.desvinculados || []);
+    confirmed.add(psKey);
+    desvinculados.delete(psKey);
+    writeVagaLinks(vaga.id, { confirmed: [...confirmed], desvinculados: [...desvinculados] });
+    setLinksVersion((v) => v + 1);
+    setVincularGroup(null);
+    setVincularVaga(null);
+    setVagaSearch("");
+    toast.success(`Processo seletivo vinculado à vaga "${vaga.cargo}" com sucesso.`);
+  };
+
+  const handleUnlinkPS = (psKey: string, vaga: Vaga) => {
+    const links = getVagaLinks(vaga.id);
+    const confirmed = new Set(links.confirmed || []);
+    const desvinculados = new Set(links.desvinculados || []);
+    confirmed.delete(psKey);
+    desvinculados.add(psKey);
+    writeVagaLinks(vaga.id, { confirmed: [...confirmed], desvinculados: [...desvinculados] });
+    setLinksVersion((v) => v + 1);
+    toast.success(`Vínculo com a vaga "${vaga.cargo}" removido.`);
+  };
+
+  // Map psKey → array of vagas that have it confirmed
+  const linkedVagasByPS = useMemo(() => {
+    const map = new Map<string, Vaga[]>();
+    for (const v of vagas) {
+      const links = getVagaLinks(v.id);
+      for (const psKey of links.confirmed || []) {
+        if (!map.has(psKey)) map.set(psKey, []);
+        map.get(psKey)!.push(v);
+      }
+    }
+    return map;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vagas, linksVersion]);
+
+  const filteredVagasForVincular = useMemo(() => {
+    if (!vincularGroup) return [];
+    const s = vagaSearch.trim().toLowerCase();
+    return vagas
+      .filter((v) =>
+        !s ||
+        v.cargo.toLowerCase().includes(s) ||
+        v.unidade.toLowerCase().includes(s) ||
+        (v.requisicao || (v as any).numero_requisicao || "").toLowerCase().includes(s)
+      )
+      .slice(0, 60);
+  }, [vagas, vagaSearch, vincularGroup]);
 
   const handleDelete = () => {
     if (bancoParaExcluir) {
@@ -1623,6 +1717,57 @@ export default function BancoTalentosPage() {
                         {/* Ações */}
                         <TableCell className="py-3">
                           <div className="flex items-center justify-end gap-1">
+                            {/* Linked vagas indicator + vincular button */}
+                            {(() => {
+                              const psKey = getPSStorageKey(group);
+                              const linked = linkedVagasByPS.get(psKey) || [];
+                              return (
+                                <>
+                                  {linked.length > 0 && (
+                                    <TooltipProvider delayDuration={0}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-2 py-1 cursor-default">
+                                            <CheckCircle2 className="h-3 w-3 shrink-0" />
+                                            <span className="text-[10px] font-bold tabular-nums">
+                                              {linked.length}
+                                            </span>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left" className="text-xs max-w-[200px] space-y-1">
+                                          <p className="font-bold text-slate-700">Vinculado a:</p>
+                                          {linked.map((v) => (
+                                            <p key={v.id} className="truncate">{v.cargo} · {v.unidade}</p>
+                                          ))}
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                  <TooltipProvider delayDuration={200}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-primary/60 hover:text-primary hover:bg-primary/8 rounded-lg"
+                                          onClick={() => {
+                                            setVincularGroup(group);
+                                            setVincularStep("select");
+                                            setVincularVaga(null);
+                                            setVagaSearch("");
+                                          }}
+                                        >
+                                          <Link2 className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="left" className="text-xs">
+                                        Vincular a uma vaga
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </>
+                              );
+                            })()}
                             {permissions.canRequestUpdate() && (
                               <Button
                                 variant="ghost"
@@ -2553,6 +2698,203 @@ export default function BancoTalentosPage() {
           </TabsContent>
         )}
       </Tabs>
+
+      {/* ── Vincular PS a Vaga dialog ──────────────────────────────────── */}
+      <Dialog
+        open={!!vincularGroup}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVincularGroup(null);
+            setVincularStep("select");
+            setVincularVaga(null);
+            setVagaSearch("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden rounded-2xl">
+          {/* Header */}
+          <div className="px-5 pt-5 pb-4 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Link2 className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base font-bold text-slate-800 leading-tight">
+                  {vincularStep === "select"
+                    ? "Vincular a uma Vaga"
+                    : "Confirmar Vínculo"}
+                </h2>
+                {vincularGroup && (
+                  <p className="text-xs text-slate-500 mt-0.5 truncate">
+                    <span className="font-mono font-bold text-slate-600">
+                      {vincularGroup.processoSeletivo || vincularGroup.edital}
+                    </span>
+                    {" — "}
+                    {vincularGroup.cargo}
+                  </p>
+                )}
+              </div>
+              {vincularStep === "confirm" && (
+                <button
+                  onClick={() => { setVincularStep("select"); setVincularVaga(null); }}
+                  className="shrink-0 flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Voltar
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Step 1 — Select vaga */}
+          {vincularStep === "select" && vincularGroup && (() => {
+            const psKey = getPSStorageKey(vincularGroup);
+            const linkedVagas = linkedVagasByPS.get(psKey) || [];
+            return (
+              <div className="flex flex-col max-h-[60vh]">
+                {/* Search */}
+                <div className="px-5 pt-4 pb-3 border-b border-slate-100">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      autoFocus
+                      className="w-full pl-9 pr-3 h-9 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 bg-white placeholder:text-slate-400"
+                      placeholder="Buscar por cargo, unidade ou requisição..."
+                      value={vagaSearch}
+                      onChange={(e) => setVagaSearch(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Vaga list */}
+                <div className="overflow-y-auto flex-1 px-3 py-3 space-y-1.5">
+                  {/* Already linked */}
+                  {linkedVagas.length > 0 && (
+                    <>
+                      <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest px-1 mb-1">
+                        Já vinculadas
+                      </p>
+                      {linkedVagas.map((v) => (
+                        <div
+                          key={v.id}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60"
+                        >
+                          <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 truncate">{v.cargo}</p>
+                            <p className="text-[10px] text-slate-500 truncate">{v.unidade}</p>
+                          </div>
+                          <button
+                            onClick={() => handleUnlinkPS(psKey, v)}
+                            className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 px-2 py-1 rounded-lg transition-all"
+                          >
+                            <Link2Off className="h-3 w-3" />
+                            Desvincular
+                          </button>
+                        </div>
+                      ))}
+                      <div className="border-t border-slate-100 my-2" />
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1 mb-1">
+                        Outras vagas
+                      </p>
+                    </>
+                  )}
+
+                  {/* Unlinked vagas */}
+                  {filteredVagasForVincular
+                    .filter((v) => !linkedVagas.some((lv) => lv.id === v.id))
+                    .map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          setVincularVaga(v);
+                          setVincularStep("confirm");
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:border-primary/40 hover:bg-primary/[0.03] hover:shadow-sm transition-all text-left group"
+                      >
+                        <div className="h-7 w-7 rounded-lg bg-slate-100 group-hover:bg-primary/10 flex items-center justify-center shrink-0 transition-colors">
+                          <Briefcase className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-colors" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{v.cargo}</p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {v.unidade}
+                            {(v.requisicao || (v as any).numero_requisicao) && (
+                              <span className="ml-1 font-mono text-slate-400">
+                                · {v.requisicao || (v as any).numero_requisicao}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <ChevronLeft className="h-3.5 w-3.5 text-slate-300 group-hover:text-primary rotate-180 transition-colors shrink-0" />
+                      </button>
+                    ))}
+
+                  {filteredVagasForVincular.filter((v) => !linkedVagas.some((lv) => lv.id === v.id)).length === 0 &&
+                    linkedVagas.length === 0 && (
+                      <div className="py-8 text-center">
+                        <p className="text-sm text-slate-400 font-medium">
+                          {vagaSearch ? `Nenhuma vaga encontrada para "${vagaSearch}".` : "Nenhuma vaga disponível."}
+                        </p>
+                      </div>
+                    )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Step 2 — Confirm */}
+          {vincularStep === "confirm" && vincularGroup && vincularVaga && (
+            <div className="px-5 py-5 space-y-5">
+              {/* Vaga preview card */}
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/[0.04]">
+                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Briefcase className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-800 truncate">{vincularVaga.cargo}</p>
+                  <p className="text-[10px] text-slate-500 truncate">{vincularVaga.unidade}</p>
+                </div>
+              </div>
+
+              {/* Confirmation text */}
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Você confirma que os candidatos do processo seletivo{" "}
+                <strong className="text-slate-800">
+                  {vincularGroup.processoSeletivo || vincularGroup.edital} — {vincularGroup.cargo}
+                </strong>{" "}
+                são compatíveis com esta vaga{" "}
+                <strong className="text-slate-800">{vincularVaga.cargo}</strong>?
+              </p>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => {
+                    setVincularGroup(null);
+                    setVincularStep("select");
+                    setVincularVaga(null);
+                    setVagaSearch("");
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="rounded-xl gap-2 bg-primary hover:bg-primary/90 text-white shadow-sm shadow-primary/20"
+                  onClick={() => handleLinkPS(getPSStorageKey(vincularGroup), vincularVaga)}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Sim, vincular
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={isDeleteDialogOpen}

@@ -1006,13 +1006,14 @@ export default function VagasPage() {
     const nowTime = new Date().getTime();
 
     canonicalBase.forEach((v) => {
+      const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
       const cat = v.categoria_status || getCategoriaStatus(v);
 
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
 
       if (creationTime > 0 && nowTime - creationTime <= 86400000) {
-        acc.vagas_novas++;
+        acc.vagas_novas += qty;
       }
 
       // Sem Movimentação logic
@@ -1024,23 +1025,23 @@ export default function VagasPage() {
         (!v.historico || v.historico.length === 0) &&
         creationTime > nowTime - 30 * 86400000
       ) {
-        acc.sem_movimentacao++;
+        acc.sem_movimentacao += qty;
       }
 
       // Correção do mapeamento de categorias para os cards
       if (cat === "suspensa" || cat === "cancelada") {
-        acc.vagas_interrompidas++;
+        acc.vagas_interrompidas += qty;
       } else if (cat === "convocacoes" || cat === "convocacao") {
-        acc.convocacao++;
+        acc.convocacao += qty;
       } else if (acc[cat as keyof typeof acc] !== undefined) {
-        (acc as any)[cat]++;
+        (acc as any)[cat] += qty;
       } else {
-        acc.em_andamento++;
+        acc.em_andamento += qty;
       }
 
       // Verificação via set pré-computado
       if (vagasComBancoSet.has(v.id)) {
-        acc.com_banco_valido++;
+        acc.com_banco_valido += qty;
       }
     });
 
@@ -1048,18 +1049,21 @@ export default function VagasPage() {
   }, [canonicalBase, vagasComBancoSet]);
 
   const countComBanco = useMemo(
-    () => canonicalBase.filter((vaga) => vagasComBancoSet.has(vaga.id)).length,
+    () => canonicalBase
+      .filter((vaga) => vagasComBancoSet.has(vaga.id))
+      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
     [canonicalBase, vagasComBancoSet],
   );
   const countVagasNovas = counts.vagas_novas;
   const countSemMovimentacao = counts.sem_movimentacao;
 
-  // Counts per status_processo for the scorecard row
+  // Counts per status_processo for the scorecard row — sums numero_vagas per row
   const statusProcessoCounts = useMemo(() => {
     const acc: Record<string, number> = {};
     for (const v of canonicalBase) {
       const sp = (v as any).status_processo || "Solicitada";
-      acc[sp] = (acc[sp] ?? 0) + 1;
+      const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
+      acc[sp] = (acc[sp] ?? 0) + qty;
     }
     return acc;
   }, [canonicalBase]);
@@ -1143,7 +1147,7 @@ export default function VagasPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {/* Total de Vagas */}
               {(() => {
-                const total = canonicalBase.length;
+                const total = canonicalBase.reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
                 const allActive = filterStatusProcesso.length === STATUS_PROCESSO_ORDER.length;
                 const cardBg = isDark
                   ? (allActive ? "rgba(14,165,233,0.15)" : "rgba(11,16,34,0.82)")

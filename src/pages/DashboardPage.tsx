@@ -488,7 +488,10 @@ export default function DashboardPage() {
     [filteredConvocacoes],
   );
 
-  const totalVagas = useMemo(() => vagas.length, [vagas]);
+  const totalVagas = useMemo(
+    () => vagas.reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
+    [vagas],
+  );
 
   const counts = useMemo(() => {
     const acc = {
@@ -514,9 +517,10 @@ export default function DashboardPage() {
       "suspensa",
     ];
     vagas.forEach((v) => {
+      const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
       const cat = getCategoriaStatus(v);
-      if (acc.hasOwnProperty(cat)) acc[cat as keyof typeof acc]++;
-      else acc.sem_classificacao++;
+      if (acc.hasOwnProperty(cat)) acc[cat as keyof typeof acc] += qty;
+      else acc.sem_classificacao += qty;
       const lastHist =
         v.historico && v.historico.length > 0
           ? v.historico[v.historico.length - 1]
@@ -526,33 +530,37 @@ export default function DashboardPage() {
         !statusConcluidos.includes(normStatus(v.status || "")) &&
         calcDiasAberto(baseDate) > 10
       ) {
-        acc.atrasadas++;
+        acc.atrasadas += qty;
       }
     });
 
     // Convocações: getCategoriaStatus only reads status/status_processo fields,
     // never etapa. Override the count by checking etapa across all fluxo slots.
-    acc.convocacoes = vagas.filter((v) => {
-      const allEtapas = [
-        v.etapa,
-        ...(Array.isArray(v.distribuicao_vagas)
-          ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
-          : []),
-      ].filter(Boolean);
-      return allEtapas.includes("Convocação");
-    }).length;
+    acc.convocacoes = vagas
+      .filter((v) => {
+        const allEtapas = [
+          v.etapa,
+          ...(Array.isArray(v.distribuicao_vagas)
+            ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
+            : []),
+        ].filter(Boolean);
+        return allEtapas.includes("Convocação");
+      })
+      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
 
     // Movimentação Interna: same issue — override by checking tratativa field
     // across all fluxo slots instead of relying on the status-based categorization.
-    acc.movimentacao_interna = vagas.filter((v) => {
-      const allTratativas = [
-        v.tratativa,
-        ...(Array.isArray(v.distribuicao_vagas)
-          ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
-          : []),
-      ].filter(Boolean);
-      return allTratativas.includes("Movimentação Interna");
-    }).length;
+    acc.movimentacao_interna = vagas
+      .filter((v) => {
+        const allTratativas = [
+          v.tratativa,
+          ...(Array.isArray(v.distribuicao_vagas)
+            ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
+            : []),
+        ].filter(Boolean);
+        return allTratativas.includes("Movimentação Interna");
+      })
+      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
 
     return acc;
   }, [vagas]);

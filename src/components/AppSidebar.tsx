@@ -104,6 +104,12 @@ export function AppSidebar() {
         visible: getPermissions("vagas").canRead,
       },
       {
+        title: "Banco de Talentos",
+        url: "/banco-talentos",
+        icon: BookUser,
+        visible: getPermissions("banco").canRead,
+      },
+      {
         title: "Publicação de Edital",
         url: "/fila-editais",
         icon: FileText,
@@ -112,17 +118,6 @@ export function AppSidebar() {
           { title: "Fila de Editais", url: "/fila-editais" },
           { title: "Redação do Edital", url: "/fila-analista-edital" },
           { title: "Validação de Edital", url: "/validacao-editais" },
-        ],
-      },
-      {
-        title: "Banco de Talentos",
-        url: "/banco-talentos",
-        icon: BookUser,
-        visible: getPermissions("banco").canRead,
-        subMenu: [
-          { title: "Cadastro Reserva", url: "/banco-talentos?tab=list" },
-          { title: "Histórico Conv.", url: "/banco-talentos?tab=convocados" },
-          { title: "Bancos Vencidos", url: "/banco-talentos?tab=vencidos" },
         ],
       },
       {

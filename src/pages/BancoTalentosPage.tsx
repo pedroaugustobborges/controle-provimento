@@ -55,6 +55,7 @@ import {
   normalizeUnitName,
 } from "@/lib/vagaUtils";
 import { getVagaFilterForBanco } from "@/lib/bancoVagaMapping";
+import { useVagaBancoLinks } from "@/hooks/useVagaBancoLinks";
 import { calculateBancoStatus, calculateStats } from "@/lib/bancoTalentosUtils";
 import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from "react";
 
@@ -160,14 +161,6 @@ type BancoGroup = {
   candidatos: BancoTalentos[];
 };
 
-// ── localStorage helpers (pure, no React deps) ────────────────────────────────
-function getVagaLinks(vagaId: string): { confirmed: string[]; desvinculados: string[] } {
-  try { return JSON.parse(localStorage.getItem(`vaga-banco-links-${vagaId}`) || "{}"); }
-  catch { return { confirmed: [], desvinculados: [] }; }
-}
-function writeVagaLinks(vagaId: string, data: { confirmed: string[]; desvinculados: string[] }) {
-  localStorage.setItem(`vaga-banco-links-${vagaId}`, JSON.stringify(data));
-}
 function getPSStorageKey(grupo: BancoGroup): string {
   const rep = grupo.candidatos[0] as any;
   if (rep?.numero_processo_seletivo) return `PS-${rep.numero_processo_seletivo}`;
@@ -421,47 +414,44 @@ export default function BancoTalentosPage() {
   const [vincularStep, setVincularStep] = useState<"select" | "confirm">("select");
   const [vincularVaga, setVincularVaga] = useState<Vaga | null>(null);
   const [vagaSearch, setVagaSearch] = useState("");
-  // Bump this to force re-computation of linked vagas after writes
-  const [linksVersion, setLinksVersion] = useState(0);
 
-  const handleLinkPS = (psKey: string, vaga: Vaga) => {
-    const links = getVagaLinks(vaga.id);
-    const confirmed = new Set(links.confirmed || []);
-    const desvinculados = new Set(links.desvinculados || []);
-    confirmed.add(psKey);
-    desvinculados.delete(psKey);
-    writeVagaLinks(vaga.id, { confirmed: [...confirmed], desvinculados: [...desvinculados] });
-    setLinksVersion((v) => v + 1);
-    setVincularGroup(null);
-    setVincularVaga(null);
-    setVagaSearch("");
-    toast.success(`Processo seletivo vinculado à vaga "${vaga.cargo}" com sucesso.`);
+  // Supabase-backed links
+  const { linksMap, upsertLink } = useVagaBancoLinks();
+
+  const handleLinkPS = async (psKey: string, vaga: Vaga) => {
+    try {
+      await upsertLink(vaga.id, psKey, 'confirmed', currentUser?.id);
+      setVincularGroup(null);
+      setVincularVaga(null);
+      setVagaSearch("");
+      toast.success(`Processo seletivo vinculado à vaga "${vaga.cargo}" com sucesso.`);
+    } catch {
+      toast.error("Erro ao salvar vínculo. Tente novamente.");
+    }
   };
 
-  const handleUnlinkPS = (psKey: string, vaga: Vaga) => {
-    const links = getVagaLinks(vaga.id);
-    const confirmed = new Set(links.confirmed || []);
-    const desvinculados = new Set(links.desvinculados || []);
-    confirmed.delete(psKey);
-    desvinculados.add(psKey);
-    writeVagaLinks(vaga.id, { confirmed: [...confirmed], desvinculados: [...desvinculados] });
-    setLinksVersion((v) => v + 1);
-    toast.success(`Vínculo com a vaga "${vaga.cargo}" removido.`);
+  const handleUnlinkPS = async (psKey: string, vaga: Vaga) => {
+    try {
+      await upsertLink(vaga.id, psKey, 'desvinculado', currentUser?.id);
+      toast.success(`Vínculo com a vaga "${vaga.cargo}" removido.`);
+    } catch {
+      toast.error("Erro ao remover vínculo. Tente novamente.");
+    }
   };
 
-  // Map psKey → array of vagas that have it confirmed
+  // Map psKey → array of vagas that have it confirmed (derived from DB-backed linksMap)
   const linkedVagasByPS = useMemo(() => {
     const map = new Map<string, Vaga[]>();
     for (const v of vagas) {
-      const links = getVagaLinks(v.id);
-      for (const psKey of links.confirmed || []) {
+      const entry = linksMap.get(v.id);
+      if (!entry) continue;
+      for (const psKey of entry.confirmed) {
         if (!map.has(psKey)) map.set(psKey, []);
         map.get(psKey)!.push(v);
       }
     }
     return map;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vagas, linksVersion]);
+  }, [vagas, linksMap]);
 
   const filteredVagasForVincular = useMemo(() => {
     if (!vincularGroup) return [];

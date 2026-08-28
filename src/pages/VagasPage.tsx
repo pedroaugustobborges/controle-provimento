@@ -5,6 +5,7 @@ import { useAdminStore } from "@/store/adminStore";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTheme } from "@/hooks/useTheme";
+import { useVagaBancoLinks } from "@/hooks/useVagaBancoLinks";
 import {
   TIPO_VAGA_LABELS,
   STATUS_LABELS,
@@ -436,6 +437,9 @@ export default function VagasPage() {
     fetchBancos();
     fetchUsers();
   }, [fetchVagas, fetchBancos, fetchUsers]);
+
+  const { linksMap: vagaBancoLinksMap } = useVagaBancoLinks();
+
   const [searchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "list";
   const navigate = useNavigate();
@@ -792,29 +796,22 @@ export default function VagasPage() {
   const vagasWithConfirmedPS = useMemo(() => {
     const map = new Map<string, number>();
     vagas.forEach((v) => {
-      try {
-        const raw = localStorage.getItem(`vaga-banco-links-${v.id}`);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        const confirmedKeys: string[] = data.confirmed || [];
-        if (confirmedKeys.length === 0) return;
-        const keySet = new Set(confirmedKeys);
-        let count = 0;
-        bancos.forEach((b) => {
-          const bAny = b as any;
-          const cargoNorm = bAny.cargo_normalizado || normalizeCargo(bAny.cargo || "");
-          const bKey = bAny.numero_processo_seletivo
-            ? `PS-${bAny.numero_processo_seletivo}`
-            : `${bAny.numero_edital || "sem-edital"}-${b.unidade}-${cargoNorm}`;
-          if (keySet.has(bKey)) count++;
-        });
-        if (count > 0) map.set(v.id, count);
-      } catch {
-        // ignore corrupt entries
-      }
+      const entry = vagaBancoLinksMap.get(v.id);
+      if (!entry || entry.confirmed.size === 0) return;
+      const keySet = entry.confirmed;
+      let count = 0;
+      bancos.forEach((b) => {
+        const bAny = b as any;
+        const cargoNorm = bAny.cargo_normalizado || normalizeCargo(bAny.cargo || "");
+        const bKey = bAny.numero_processo_seletivo
+          ? `PS-${bAny.numero_processo_seletivo}`
+          : `${bAny.numero_edital || "sem-edital"}-${b.unidade}-${cargoNorm}`;
+        if (keySet.has(bKey)) count++;
+      });
+      if (count > 0) map.set(v.id, count);
     });
     return map;
-  }, [vagas, bancos]);
+  }, [vagas, bancos, vagaBancoLinksMap]);
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {

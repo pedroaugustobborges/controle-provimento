@@ -41,6 +41,7 @@ import {
   normalizeUnitName,
 } from "@/lib/vagaUtils";
 import { getBancoFilterForVaga } from "@/lib/bancoVagaMapping";
+import { useVagaBancoLinks } from "@/hooks/useVagaBancoLinks";
 import {
   TIPO_VAGA_LABELS,
   STATUS_VAGA_LABELS,
@@ -3527,26 +3528,11 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
   // Action dialog state
   const [actionDialog, setActionDialog] = useState<BancoActionDialog | null>(null);
 
-  // Persistent link/unlink states (localStorage, keyed by vaga.id)
-  const storageKey = `vaga-banco-links-${vaga.id}`;
-  const readStorage = (): { confirmed: string[]; desvinculados: string[] } => {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); }
-    catch { return { confirmed: [], desvinculados: [] }; }
-  };
-
-  const [confirmedPS, setConfirmedPS] = useState<Set<string>>(
-    () => new Set(readStorage().confirmed || [])
-  );
-  const [desvinculadoPS, setDesvinculadoPS] = useState<Set<string>>(
-    () => new Set(readStorage().desvinculados || [])
-  );
-
-  const persist = (confirmed: Set<string>, desvinculados: Set<string>) => {
-    localStorage.setItem(storageKey, JSON.stringify({
-      confirmed: [...confirmed],
-      desvinculados: [...desvinculados],
-    }));
-  };
+  // Persistent link/unlink states — backed by Supabase vaga_banco_links table
+  const { linksMap, upsertLink } = useVagaBancoLinks();
+  const vagaLinks = linksMap.get(vaga.id) ?? { confirmed: new Set<string>(), desvinculado: new Set<string>() };
+  const confirmedPS: Set<string> = vagaLinks.confirmed;
+  const desvinculadoPS: Set<string> = vagaLinks.desvinculado;
 
   // Unidade filter
   const bancoFilter = useMemo(() => getBancoFilterForVaga(vaga), [vaga.unidade, vaga.is_teia]);
@@ -3603,7 +3589,8 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
         if (bConf !== aConf) return bConf - aConf;
         return b.score - a.score;
       });
-  }, [groups, desvinculadoPS, confirmedPS, search]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups, linksMap, search]);
 
   const openModal = (g: PSGroup) => {
     setModalBanco(g.bancoRep);
@@ -3611,23 +3598,24 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
     setModalOpen(true);
   };
 
-  const handleConfirmar = (psKey: string) => {
-    const next = new Set(confirmedPS).add(psKey);
-    setConfirmedPS(next);
-    persist(next, desvinculadoPS);
-    setActionDialog(null);
-    toast.success("Processo seletivo confirmado como compatível com esta vaga.");
+  const handleConfirmar = async (psKey: string) => {
+    try {
+      await upsertLink(vaga.id, psKey, 'confirmed');
+      setActionDialog(null);
+      toast.success("Processo seletivo confirmado como compatível com esta vaga.");
+    } catch {
+      toast.error("Erro ao salvar vínculo. Tente novamente.");
+    }
   };
 
-  const handleDesvincular = (psKey: string) => {
-    const nextConfirmed = new Set(confirmedPS);
-    nextConfirmed.delete(psKey);
-    const nextDesvinculado = new Set(desvinculadoPS).add(psKey);
-    setConfirmedPS(nextConfirmed);
-    setDesvinculadoPS(nextDesvinculado);
-    persist(nextConfirmed, nextDesvinculado);
-    setActionDialog(null);
-    toast.success("Processo seletivo removido da lista.");
+  const handleDesvincular = async (psKey: string) => {
+    try {
+      await upsertLink(vaga.id, psKey, 'desvinculado');
+      setActionDialog(null);
+      toast.success("Processo seletivo removido da lista.");
+    } catch {
+      toast.error("Erro ao remover vínculo. Tente novamente.");
+    }
   };
 
   return (

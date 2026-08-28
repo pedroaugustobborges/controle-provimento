@@ -53,6 +53,7 @@ import {
   UNIDADES_POR_REGIAO,
   normalizeUnitName,
 } from "@/lib/vagaUtils";
+import { getVagaFilterForBanco } from "@/lib/bancoVagaMapping";
 import { calculateBancoStatus, calculateStats } from "@/lib/bancoTalentosUtils";
 import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from "react";
 
@@ -463,8 +464,12 @@ export default function BancoTalentosPage() {
 
   const filteredVagasForVincular = useMemo(() => {
     if (!vincularGroup) return [];
+    const rep = vincularGroup.candidatos[0] as any;
+    const isTeia = !!rep?.is_teia || vincularGroup.unidade.toUpperCase().includes("TEIA");
+    const cityFilter = getVagaFilterForBanco(vincularGroup.unidade, isTeia);
     const s = vagaSearch.trim().toLowerCase();
     return vagas
+      .filter(cityFilter)
       .filter((v) =>
         !s ||
         v.cargo.toLowerCase().includes(s) ||

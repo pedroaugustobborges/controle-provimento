@@ -40,6 +40,7 @@ import {
   unitIsAllowed,
   normalizeUnitName,
 } from "@/lib/vagaUtils";
+import { getBancoFilterForVaga } from "@/lib/bancoVagaMapping";
 import {
   TIPO_VAGA_LABELS,
   STATUS_VAGA_LABELS,
@@ -3492,63 +3493,6 @@ function ValidacaoTab({ vagaId }: { vagaId: string; validacao?: any }) {
   );
 }
 
-function getBancoUnidadeFilter(vaga: any): (b: any) => boolean {
-  const vagaUnidadeUpper = (vaga.unidade || "").trim().toUpperCase();
-  const isTeia =
-    vaga.is_teia || vagaUnidadeUpper.includes("TEIA");
-
-  // Rule 8: TEIA units — filter by is_teia flag on banco_candidatos
-  if (isTeia) {
-    return (b: any) => !!(b as any).is_teia;
-  }
-
-  const sw = (prefix: string) =>
-    vagaUnidadeUpper.startsWith(prefix.toUpperCase());
-
-  // Rule 5: Jataí - GO (must be checked before plain AGIR)
-  if (sw("HEJ") || sw("AGIR RIO VERDE")) {
-    return (b: any) => ((b as any).unidade || "") === "Jataí - GO";
-  }
-
-  // Rule 1: Goiânia - GO
-  if (
-    sw("HUGOL") ||
-    sw("HECAD") ||
-    sw("CRER") ||
-    sw("AGIR") ||
-    sw("HDS")
-  ) {
-    return (b: any) => ((b as any).unidade || "") === "Goiânia - GO";
-  }
-
-  // Rule 2: Dourados - MS
-  if (sw("CHRD")) {
-    return (b: any) => ((b as any).unidade || "") === "Dourados - MS";
-  }
-
-  // Rule 3: Manaus - AM
-  if (sw("CHS")) {
-    return (b: any) => ((b as any).unidade || "") === "Manaus - AM";
-  }
-
-  // Rule 4: Cáceres - MT
-  if (sw("HRC")) {
-    return (b: any) => ((b as any).unidade || "") === "Cáceres - MT";
-  }
-
-  // Rule 6: Cidade de Goiás - GO
-  if (sw("POL GOIAS")) {
-    return (b: any) => ((b as any).unidade || "") === "Cidade de Goiás - GO";
-  }
-
-  // Rule 7: Vitória - ES
-  if (sw("UPA SAO PEDRO") || sw("UPA PRAIA DO SUA")) {
-    return (b: any) => ((b as any).unidade || "") === "Vitória - ES";
-  }
-
-  // No specific rule → show all
-  return () => true;
-}
 
 type PSGroup = {
   key: string;
@@ -3605,7 +3549,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
   };
 
   // Unidade filter
-  const bancoFilter = useMemo(() => getBancoUnidadeFilter(vaga), [vaga.unidade, vaga.is_teia]);
+  const bancoFilter = useMemo(() => getBancoFilterForVaga(vaga), [vaga.unidade, vaga.is_teia]);
   const filteredBancos = useMemo(() => bancos.filter(bancoFilter), [bancos, bancoFilter]);
 
   // Group by processo seletivo

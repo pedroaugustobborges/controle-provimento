@@ -788,23 +788,33 @@ export default function VagasPage() {
     return result;
   }, [vagas, bancos]);
 
-  // Vagas that have at least one PS confirmed as "Compatível" in localStorage
+  // Vagas with confirmed PS: maps vagaId → candidate count from confirmed PS groups only
   const vagasWithConfirmedPS = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, number>();
     vagas.forEach((v) => {
       try {
         const raw = localStorage.getItem(`vaga-banco-links-${v.id}`);
         if (!raw) return;
         const data = JSON.parse(raw);
-        if (Array.isArray(data.confirmed) && data.confirmed.length > 0) {
-          set.add(v.id);
-        }
+        const confirmedKeys: string[] = data.confirmed || [];
+        if (confirmedKeys.length === 0) return;
+        const keySet = new Set(confirmedKeys);
+        let count = 0;
+        bancos.forEach((b) => {
+          const bAny = b as any;
+          const cargoNorm = bAny.cargo_normalizado || normalizeCargo(bAny.cargo || "");
+          const bKey = bAny.numero_processo_seletivo
+            ? `PS-${bAny.numero_processo_seletivo}`
+            : `${bAny.numero_edital || "sem-edital"}-${b.unidade}-${cargoNorm}`;
+          if (keySet.has(bKey)) count++;
+        });
+        if (count > 0) map.set(v.id, count);
       } catch {
         // ignore corrupt entries
       }
     });
-    return set;
-  }, [vagas]);
+    return map;
+  }, [vagas, bancos]);
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
@@ -1546,7 +1556,8 @@ export default function VagasPage() {
                         v.categoria_status || getCategoriaStatus(v);
                       const bancoFound = vagasComBancoMap.get(v.id);
                       const possibleCount = vagasPossibleCandidatesMap.get(v.id) ?? 0;
-                      const hasConfirmedPS = vagasWithConfirmedPS.has(v.id);
+                      const confirmedCount = vagasWithConfirmedPS.get(v.id) ?? 0;
+                      const hasConfirmedPS = confirmedCount > 0;
                       const isConsultaOnly = [
                         "concluidas",
                         "cancelada",
@@ -1796,7 +1807,7 @@ export default function VagasPage() {
                                     variant="ghost"
                                     size="icon"
                                     className="relative h-8 w-8 rounded-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-200 hover:scale-110 active:scale-95"
-                                    title="Candidatos compatíveis confirmados — clique para ver"
+                                    title={`${confirmedCount} candidato${confirmedCount !== 1 ? "s" : ""} compatível${confirmedCount !== 1 ? "eis" : ""} confirmado${confirmedCount !== 1 ? "s" : ""}. Clique para ver.`}
                                     onClick={() => navigate(`/vagas/${v.id}?tab=banco`)}
                                   >
                                     <Radar className="h-4 w-4 drop-shadow-sm" />

@@ -742,13 +742,14 @@ export default function DashboardPage() {
       "suspensa",
     ];
     vagas.forEach((vaga) => {
+      const qty = Math.max(Number((vaga as any).numero_vagas || (vaga as any).quantidade) || 1, 1);
       const label = extractUnitPrefix(vaga.unidade || "");
       const entry = getEntry(label, vaga.unidade);
       if (entry) {
-        entry.vagas++;
+        entry.vagas += qty;
         const cat = getCategoriaStatus(vaga);
         if (cat !== "concluidas" && cat !== "suspensa" && cat !== "cancelada")
-          entry.vagasAbertas++;
+          entry.vagasAbertas += qty;
         const lastHist =
           vaga.historico && vaga.historico.length > 0
             ? vaga.historico[vaga.historico.length - 1]
@@ -759,7 +760,7 @@ export default function DashboardPage() {
           !statusConcluidos.includes(normStatus(vaga.status || "")) &&
           calcDiasAberto(baseDate) > 10
         )
-          entry.pendencias++;
+          entry.pendencias += qty;
       }
     });
     filteredBancos.forEach((banco) => {
@@ -903,14 +904,15 @@ export default function DashboardPage() {
         };
       });
       userScopedVagas.forEach((v) => {
+        const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
         const ab = toDayStr(v.data_abertura);
         const ba = ab ? buckets.find((b) => b.key === ab) : undefined;
-        if (ba) ba.abertas++;
+        if (ba) ba.abertas += qty;
         if (getCategoriaStatus(v) === 'concluidas') {
           const lastHist = v.historico?.length ? v.historico[v.historico.length - 1]?.data : undefined;
           const dc = toDayStr(lastHist ?? (v as any).updated_at);
           const bc = dc ? buckets.find((b) => b.key === dc) : undefined;
-          if (bc) bc.concluidas++;
+          if (bc) bc.concluidas += qty;
         }
       });
       return buckets.map(({ month, abertas, concluidas }) => ({ month, abertas, concluidas }));
@@ -933,17 +935,18 @@ export default function DashboardPage() {
         };
       });
       userScopedVagas.forEach((v) => {
+        const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
         const ab = toDayStr(v.data_abertura);
         if (ab) {
           const ba = buckets.find((b) => ab >= b.start && ab <= b.end);
-          if (ba) ba.abertas++;
+          if (ba) ba.abertas += qty;
         }
         if (getCategoriaStatus(v) === 'concluidas') {
           const lastHist = v.historico?.length ? v.historico[v.historico.length - 1]?.data : undefined;
           const dc = toDayStr(lastHist ?? (v as any).updated_at);
           if (dc) {
             const bc = buckets.find((b) => dc >= b.start && dc <= b.end);
-            if (bc) bc.concluidas++;
+            if (bc) bc.concluidas += qty;
           }
         }
       });
@@ -974,15 +977,16 @@ export default function DashboardPage() {
     });
 
     userScopedVagas.forEach((v) => {
+      const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
       const abKey = v.data_abertura ? (v.data_abertura as string).slice(0, 7) : null;
       const ba = abKey ? buckets.find((b) => b.key === abKey) : undefined;
-      if (ba) ba.abertas++;
+      if (ba) ba.abertas += qty;
       if (getCategoriaStatus(v) === 'concluidas') {
         const lastHist = v.historico?.length ? v.historico[v.historico.length - 1]?.data : undefined;
         const dc = lastHist ?? (v as any).updated_at ?? (v as any).data_homologacao;
         const dcKey = dc ? (dc as string).slice(0, 7) : null;
         const bc = dcKey ? buckets.find((b) => b.key === dcKey) : undefined;
-        if (bc) bc.concluidas++;
+        if (bc) bc.concluidas += qty;
       }
     });
 
@@ -1436,7 +1440,8 @@ export default function DashboardPage() {
       const key =
         ((v as any).status_processo as string | undefined)?.trim() ||
         "Solicitada";
-      map.set(key, (map.get(key) || 0) + 1);
+      const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
+      map.set(key, (map.get(key) || 0) + qty);
     });
     return ORDER.filter((s) => map.has(s)).map((name) => ({
       name,

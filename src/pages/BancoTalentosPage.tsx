@@ -40,6 +40,7 @@ import {
   Link2,
   Link2Off,
   ChevronLeft,
+  Stethoscope,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
@@ -2716,33 +2717,39 @@ export default function BancoTalentosPage() {
           }
         }}
       >
-        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden rounded-2xl">
-          {/* Header */}
-          <div className="px-5 pt-5 pb-4 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Link2 className="h-5 w-5 text-primary" />
+        <DialogContent className="max-w-[520px] w-full p-0 gap-0 overflow-hidden rounded-2xl shadow-2xl border-0 flex flex-col max-h-[88vh]">
+
+          {/* ── Header ───────────────────────────────────────────────── */}
+          <div className="shrink-0 px-6 pt-6 pb-5 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-white">
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 shadow-sm shadow-primary/10">
+                <Stethoscope className="h-5 w-5 text-primary" />
               </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-base font-bold text-slate-800 leading-tight">
-                  {vincularStep === "select"
-                    ? "Vincular a uma Vaga"
-                    : "Confirmar Vínculo"}
+
+              {/* Title + subtitle */}
+              <div className="flex-1 min-w-0 pt-0.5">
+                <h2 className="text-base font-bold text-slate-800 leading-snug">
+                  {vincularStep === "select" ? "Vincular a uma Vaga" : "Confirmar Vínculo"}
                 </h2>
                 {vincularGroup && (
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">
-                    <span className="font-mono font-bold text-slate-600">
-                      {vincularGroup.processoSeletivo || vincularGroup.edital}
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1">
+                    <span className="inline-block rounded-md bg-slate-100 border border-slate-200 text-slate-600 font-mono text-[11px] font-bold px-1.5 py-0.5 leading-none">
+                      {vincularGroup.processoSeletivo || vincularGroup.edital || "—"}
                     </span>
-                    {" — "}
-                    {vincularGroup.cargo}
-                  </p>
+                    <span className="text-slate-300 text-xs">·</span>
+                    <span className="text-xs text-slate-500 font-medium leading-none truncate max-w-[260px]">
+                      {vincularGroup.cargo}
+                    </span>
+                  </div>
                 )}
               </div>
+
+              {/* Back button (step 2 only) */}
               {vincularStep === "confirm" && (
                 <button
                   onClick={() => { setVincularStep("select"); setVincularVaga(null); }}
-                  className="shrink-0 flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+                  className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-slate-700 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 rounded-lg px-2.5 py-1.5 transition-all"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   Voltar
@@ -2751,19 +2758,24 @@ export default function BancoTalentosPage() {
             </div>
           </div>
 
-          {/* Step 1 — Select vaga */}
+          {/* ── Step 1 — Select vaga ─────────────────────────────────── */}
           {vincularStep === "select" && vincularGroup && (() => {
             const psKey = getPSStorageKey(vincularGroup);
             const linkedVagas = linkedVagasByPS.get(psKey) || [];
+            const unlinkedVagas = filteredVagasForVincular.filter(
+              (v) => !linkedVagas.some((lv) => lv.id === v.id)
+            );
+
             return (
-              <div className="flex flex-col max-h-[60vh]">
-                {/* Search */}
-                <div className="px-5 pt-4 pb-3 border-b border-slate-100">
+              <div className="flex flex-col flex-1 min-h-0">
+
+                {/* Search bar */}
+                <div className="shrink-0 px-6 py-4 border-b border-slate-100 bg-white">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <input
                       autoFocus
-                      className="w-full pl-9 pr-3 h-9 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 bg-white placeholder:text-slate-400"
+                      className="w-full pl-10 pr-4 h-10 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/50 placeholder:text-slate-400 transition-all"
                       placeholder="Buscar por cargo, unidade ou requisição..."
                       value={vagaSearch}
                       onChange={(e) => setVagaSearch(e.target.value)}
@@ -2771,114 +2783,149 @@ export default function BancoTalentosPage() {
                   </div>
                 </div>
 
-                {/* Vaga list */}
-                <div className="overflow-y-auto flex-1 px-3 py-3 space-y-1.5">
-                  {/* Already linked */}
+                {/* Scrollable list */}
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 min-h-0">
+
+                  {/* Already linked section */}
                   {linkedVagas.length > 0 && (
-                    <>
-                      <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest px-1 mb-1">
+                    <div className="space-y-2 mb-1">
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest px-1">
                         Já vinculadas
                       </p>
                       {linkedVagas.map((v) => (
                         <div
                           key={v.id}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60"
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50/70"
                         >
-                          <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                          <div className="h-8 w-8 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0">
                             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 truncate">{v.cargo}</p>
-                            <p className="text-[10px] text-slate-500 truncate">{v.unidade}</p>
+                            <p className="text-sm font-semibold text-slate-800 leading-snug truncate">
+                              {v.cargo}
+                            </p>
+                            <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                              {v.unidade}
+                            </p>
                           </div>
                           <button
                             onClick={() => handleUnlinkPS(psKey, v)}
-                            className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 px-2 py-1 rounded-lg transition-all"
+                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 hover:bg-red-50 bg-white px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap"
                           >
                             <Link2Off className="h-3 w-3" />
                             Desvincular
                           </button>
                         </div>
                       ))}
-                      <div className="border-t border-slate-100 my-2" />
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1 mb-1">
-                        Outras vagas
-                      </p>
-                    </>
+
+                      {unlinkedVagas.length > 0 && (
+                        <div className="flex items-center gap-3 pt-1 pb-0.5">
+                          <div className="flex-1 h-px bg-slate-100" />
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap px-1">
+                            Outras vagas
+                          </p>
+                          <div className="flex-1 h-px bg-slate-100" />
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Unlinked vagas */}
-                  {filteredVagasForVincular
-                    .filter((v) => !linkedVagas.some((lv) => lv.id === v.id))
-                    .map((v) => (
-                      <button
-                        key={v.id}
-                        onClick={() => {
-                          setVincularVaga(v);
-                          setVincularStep("confirm");
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:border-primary/40 hover:bg-primary/[0.03] hover:shadow-sm transition-all text-left group"
-                      >
-                        <div className="h-7 w-7 rounded-lg bg-slate-100 group-hover:bg-primary/10 flex items-center justify-center shrink-0 transition-colors">
-                          <Briefcase className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-colors" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-800 truncate">{v.cargo}</p>
-                          <p className="text-[10px] text-slate-500 truncate">
-                            {v.unidade}
-                            {(v.requisicao || (v as any).numero_requisicao) && (
-                              <span className="ml-1 font-mono text-slate-400">
-                                · {v.requisicao || (v as any).numero_requisicao}
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        <ChevronLeft className="h-3.5 w-3.5 text-slate-300 group-hover:text-primary rotate-180 transition-colors shrink-0" />
-                      </button>
-                    ))}
-
-                  {filteredVagasForVincular.filter((v) => !linkedVagas.some((lv) => lv.id === v.id)).length === 0 &&
-                    linkedVagas.length === 0 && (
-                      <div className="py-8 text-center">
-                        <p className="text-sm text-slate-400 font-medium">
-                          {vagaSearch ? `Nenhuma vaga encontrada para "${vagaSearch}".` : "Nenhuma vaga disponível."}
+                  {unlinkedVagas.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => {
+                        setVincularVaga(v);
+                        setVincularStep("confirm");
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:border-primary/40 hover:bg-primary/[0.03] hover:shadow-sm transition-all text-left group"
+                    >
+                      <div className="h-8 w-8 rounded-xl bg-slate-100 group-hover:bg-primary/10 border border-slate-200 group-hover:border-primary/20 flex items-center justify-center shrink-0 transition-all">
+                        <Stethoscope className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-colors" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 leading-snug truncate">
+                          {v.cargo}
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          <span className="truncate">{v.unidade}</span>
+                          {(v.requisicao || (v as any).numero_requisicao) && (
+                            <span className="ml-1.5 font-mono text-slate-400">
+                              · {v.requisicao || (v as any).numero_requisicao}
+                            </span>
+                          )}
                         </p>
                       </div>
-                    )}
+                      <ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-primary rotate-180 transition-colors shrink-0 ml-1" />
+                    </button>
+                  ))}
+
+                  {/* Empty state */}
+                  {unlinkedVagas.length === 0 && linkedVagas.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-14 gap-3">
+                      <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center">
+                        <Stethoscope className="h-7 w-7 text-slate-300" />
+                      </div>
+                      <p className="text-sm text-slate-400 font-medium text-center">
+                        {vagaSearch
+                          ? `Nenhuma vaga encontrada para "${vagaSearch}".`
+                          : "Nenhuma vaga disponível para esta unidade."}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })()}
 
-          {/* Step 2 — Confirm */}
+          {/* ── Step 2 — Confirm ─────────────────────────────────────── */}
           {vincularStep === "confirm" && vincularGroup && vincularVaga && (
-            <div className="px-5 py-5 space-y-5">
-              {/* Vaga preview card */}
-              <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/[0.04]">
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Briefcase className="h-4 w-4 text-primary" />
+            <div className="flex-1 flex flex-col px-6 py-6 gap-5">
+
+              {/* Selected vaga card */}
+              <div className="flex items-start gap-4 p-4 rounded-2xl border border-primary/20 bg-primary/[0.04]">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0">
+                  <Stethoscope className="h-5 w-5 text-primary" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-800 truncate">{vincularVaga.cargo}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{vincularVaga.unidade}</p>
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <p className="text-sm font-bold text-slate-800 leading-snug">
+                    {vincularVaga.cargo}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    {vincularVaga.unidade}
+                  </p>
+                  {(vincularVaga.requisicao || (vincularVaga as any).numero_requisicao) && (
+                    <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+                      Req. {vincularVaga.requisicao || (vincularVaga as any).numero_requisicao}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Confirmation text */}
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Você confirma que os candidatos do processo seletivo{" "}
-                <strong className="text-slate-800">
-                  {vincularGroup.processoSeletivo || vincularGroup.edital} — {vincularGroup.cargo}
-                </strong>{" "}
-                são compatíveis com esta vaga{" "}
-                <strong className="text-slate-800">{vincularVaga.cargo}</strong>?
-              </p>
+              {/* Confirmation question */}
+              <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-3.5">
+                <p className="text-sm text-slate-700 leading-relaxed">
+                  Você confirma que os candidatos do processo seletivo{" "}
+                  <strong className="text-slate-900 font-bold">
+                    {vincularGroup.processoSeletivo || vincularGroup.edital}
+                    {" "}—{" "}
+                    {vincularGroup.cargo}
+                  </strong>{" "}
+                  são compatíveis com esta vaga{" "}
+                  <strong className="text-slate-900 font-bold">
+                    {vincularVaga.cargo}
+                  </strong>?
+                </p>
+              </div>
+
+              {/* Spacer */}
+              <div className="flex-1" />
 
               {/* Actions */}
-              <div className="flex items-center justify-end gap-2 pt-1">
+              <div className="flex items-center justify-end gap-3">
                 <Button
                   variant="outline"
-                  className="rounded-xl"
+                  className="rounded-xl px-5 border-slate-200 text-slate-600 hover:bg-slate-50"
                   onClick={() => {
                     setVincularGroup(null);
                     setVincularStep("select");
@@ -2889,7 +2936,7 @@ export default function BancoTalentosPage() {
                   Cancelar
                 </Button>
                 <Button
-                  className="rounded-xl gap-2 bg-primary hover:bg-primary/90 text-white shadow-sm shadow-primary/20"
+                  className="rounded-xl px-5 gap-2 bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/25 transition-all"
                   onClick={() => handleLinkPS(getPSStorageKey(vincularGroup), vincularVaga)}
                 >
                   <CheckCircle2 className="h-4 w-4" />

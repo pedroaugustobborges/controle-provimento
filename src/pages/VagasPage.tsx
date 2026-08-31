@@ -894,10 +894,11 @@ export default function VagasPage() {
         (v.motivo || "").toLowerCase().includes(searchTerm);
 
       const fluxoItems = getVagaFluxoItems(v);
-      // Use the same status the table displays (slot 0 overrides v.status_processo
-      // when distribuicao_vagas has a stored entry for slot 1).
+      // Always use the top-level v.status_processo (the correctly derived overall
+      // status) for filtering. For multi-vaga items individual slot statuses live
+      // in distribuicao_vagas and may differ from the mother row status.
       const displayedStatus =
-        fluxoItems[0]?.status_processo ?? v.status_processo ?? "Solicitada";
+        v.status_processo ?? fluxoItems[0]?.status_processo ?? "Solicitada";
       const matchStatus =
         filterStatusProcesso.length === 0 ||
         filterStatusProcesso.includes(displayedStatus);
@@ -1701,7 +1702,7 @@ export default function VagasPage() {
                                 const slot0 = getVagaFluxoItems(v)[0];
                                 return (
                                   <StatusProcessoBadge
-                                    status={slot0?.status_processo ?? v.status_processo}
+                                    status={v.status_processo ?? slot0?.status_processo}
                                     tratativa={slot0?.tratativa ?? v.tratativa}
                                     etapa={slot0?.etapa ?? v.etapa}
                                   />

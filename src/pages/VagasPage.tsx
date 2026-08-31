@@ -783,14 +783,27 @@ export default function VagasPage() {
                u.startsWith("UPA PRAIA DO SUA"))                pool = pools.cidadeGoias;
       else                                                       pool = pools.all;
 
-      const count = pool.filter(
-        (b) => calcSimilarity(vaga.cargo, (b as any).cargo || "") > 0,
-      ).length;
+      // Exclude bancos that the user explicitly unlinked (desvinculado) for this vaga.
+      // Uses the same ps_key formula as vagasWithConfirmedPS so both maps stay in sync.
+      const desvinculadoKeys = vagaBancoLinksMap.get(vaga.id)?.desvinculado ?? new Set<string>();
+
+      const count = pool.filter((b) => {
+        if (calcSimilarity(vaga.cargo, (b as any).cargo || "") <= 0) return false;
+        if (desvinculadoKeys.size > 0) {
+          const bAny = b as any;
+          const cargoNorm = bAny.cargo_normalizado || normalizeCargo(bAny.cargo || "");
+          const bKey = bAny.numero_processo_seletivo
+            ? `PS-${bAny.numero_processo_seletivo}`
+            : `${bAny.numero_edital || "sem-edital"}-${b.unidade}-${cargoNorm}`;
+          if (desvinculadoKeys.has(bKey)) return false;
+        }
+        return true;
+      }).length;
       if (count > 0) result.set(vaga.id, count);
     });
 
     return result;
-  }, [vagas, bancos]);
+  }, [vagas, bancos, vagaBancoLinksMap]);
 
   // Vagas with confirmed PS: maps vagaId → candidate count from confirmed PS groups only
   const vagasWithConfirmedPS = useMemo(() => {

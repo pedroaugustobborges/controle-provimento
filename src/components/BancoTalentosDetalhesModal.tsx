@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { BancoTalentos, Convocacao } from "@/types/vaga";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -531,6 +531,14 @@ export function BancoTalentosDetalhesModal({
   const novaValidadeStr = localNovaValidade ?? banco.nova_data_validade ?? null;
   const isTeia       = !!(banco as any).is_teia;
 
+  const sortedCandidates = useMemo(
+    () =>
+      [...candidates].sort(
+        (a, b) => Number(a.classificacao) - Number(b.classificacao),
+      ),
+    [candidates],
+  );
+
   const handleProrrogar = async () => {
     if (!val12m || !currentUser) return;
     setProrrogando(true);
@@ -849,7 +857,7 @@ export function BancoTalentosDetalhesModal({
             </div>
           ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {candidates.map((c) => (
+              {sortedCandidates.map((c) => (
                 <CandidateCard
                   key={c.id}
                   candidate={c}
@@ -860,7 +868,7 @@ export function BancoTalentosDetalhesModal({
             </div>
           ) : (
             <div className="space-y-1.5">
-              {candidates.map((c) => (
+              {sortedCandidates.map((c) => (
                 <CandidateRow
                   key={c.id}
                   candidate={c}

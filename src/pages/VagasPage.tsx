@@ -742,11 +742,6 @@ export default function VagasPage() {
     return matched;
   }, [vagas, bancos]);
 
-  const vagasComBancoSet = useMemo(
-    () => new Set(vagasComBancoMap.keys()),
-    [vagasComBancoMap],
-  );
-
   // Candidate count per vaga using the unidade-scoped bank rules
   const vagasPossibleCandidatesMap = useMemo(() => {
     if (!bancos.length || !vagas.length) return new Map<string, number>();
@@ -825,6 +820,11 @@ export default function VagasPage() {
     });
     return map;
   }, [vagas, bancos, vagaBancoLinksMap]);
+
+  const vagasComBancoSet = useMemo(
+    () => new Set(vagasWithConfirmedPS.keys()),
+    [vagasWithConfirmedPS],
+  );
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {

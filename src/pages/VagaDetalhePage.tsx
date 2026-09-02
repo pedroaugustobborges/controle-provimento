@@ -197,6 +197,7 @@ const ETAPAS_POR_TRATATIVA: Record<string, string[]> = {
 const TRATATIVAS_TEIA = [
   "Aguardando Unidade",
   "Em Processo Seletivo",
+  "Movimentação Interna",
   "Vaga de Liderança",
 ] as const;
 
@@ -213,6 +214,12 @@ const ETAPAS_TEIA = [
 const ETAPAS_POR_TRATATIVA_TEIA: Record<string, string[]> = {
   "Aguardando Unidade": ETAPAS_TEIA,
   "Em Processo Seletivo": ETAPAS_TEIA,
+  "Movimentação Interna": [
+    "Movimentação direta",
+    "Processo Seletivo Interno",
+    "Documentação",
+    "Edoc",
+  ],
   "Vaga de Liderança": ETAPAS_TEIA,
 };
 

@@ -13,6 +13,27 @@ status = 'aguardando_processamento', then for each one:
   7. Deletes the temporary Excel file.
   8. Updates `importacoes.status` to reflect the result.
 
+Resilience features
+────────────────────
+  • wait_and_click / wait_and_type now wait for Reachr's Angular
+    "loading-overlay" to disappear before interacting with an element,
+    retry a few times on ElementClickIntercepted / stale-element races,
+    and fall back to a JavaScript click if the native click is blocked.
+    This is what was crashing the run with:
+      "Element <span class="ml-2"> is not clickable ... loading-overlay
+       obscures it"
+  • Each edital is retried (MAX_EDITAL_ATTEMPTS, default 2) before being
+    marked as failed, and the browser session is health-checked and
+    automatically restarted (with re-login) if it has died.
+  • Duplicate 'arquivo' codes returned in the same batch (e.g. the same
+    row queued twice) are scraped/exported only once; duplicates simply
+    copy the first result instead of re-exporting and double-inserting
+    candidates into banco_candidatos.
+  • Fixed the publication-date parser: it only stripped a "Data:" prefix,
+    so real cards showing "Data Pub.: 12/08/2026" fell through to the
+    raw-text fallback and stored an unparsable string instead of an ISO
+    date. It now strips any "Data ... :" prefix.
+
 Environment variables required
 ───────────────────────────────
   SUPABASE_URL          – your project URL, e.g. https://xxxx.supabase.co
@@ -23,6 +44,8 @@ Environment variables required
                           default: /usr/local/bin/geckodriver
   DOWNLOAD_DIR          – (optional) directory for temporary downloads
                           default: /tmp/reachr_downloads
+  MAX_EDITAL_ATTEMPTS   – (optional) retries per edital before giving up
+                          default: 2
 """
 
 import os
@@ -41,7 +64,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
     NoSuchElementException,
+    StaleElementReferenceException,
     TimeoutException,
     WebDriverException,
 )
@@ -53,8 +79,8 @@ from selenium.common.exceptions import (
 SUPABASE_URL         = os.environ.get("SUPABASE_URL", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
-LOGIN_EMAIL    = os.environ.get("REACHR_EMAIL",    "luanna.sousa@agirsaude.org.br")
-LOGIN_PASSWORD = os.environ.get("REACHR_PASSWORD", "reachr@2025")
+LOGIN_EMAIL    = os.environ.get("REACHR_EMAIL", "")
+LOGIN_PASSWORD = os.environ.get("REACHR_PASSWORD", "")
 
 BASE_URL         = "https://www.reachr.com.br/empresas/#/dashboard"
 GECKODRIVER_PATH = os.environ.get("GECKODRIVER_PATH", "/usr/local/bin/geckodriver")
@@ -62,6 +88,10 @@ DOWNLOAD_DIR     = os.environ.get("DOWNLOAD_DIR",     "/tmp/reachr_downloads")
 
 DEFAULT_TIMEOUT = 30
 SHORT_TIMEOUT   = 12
+
+# How many total attempts (1 + retries) to give a single edital before
+# giving up and recording a permanent error status for it.
+MAX_EDITAL_ATTEMPTS = int(os.environ.get("MAX_EDITAL_ATTEMPTS", "2"))
 
 # ============================================================================
 # LOGGING
@@ -81,6 +111,31 @@ logger = logging.getLogger(__name__)
 # SELENIUM HELPERS  (all sleep values are original + 2 s)
 # ============================================================================
 
+# Reachr's Angular dashboard shows a full-screen "loading-overlay" div for a
+# second or two after almost every navigation / filter / search action. If a
+# click is attempted while this overlay is still in the DOM, Selenium raises
+# ElementClickInterceptedException even though the target element itself
+# passed the "clickable" check moments earlier. Every interaction below
+# waits for this overlay to clear first.
+_LOADING_OVERLAY_XPATH = "//div[contains(@class,'loading-overlay')]"
+
+
+def wait_for_overlay_gone(driver: webdriver.Firefox, timeout: int = DEFAULT_TIMEOUT) -> None:
+    """
+    Wait until Reachr's 'loading-overlay' element is gone (absent or
+    invisible). Returns immediately if the overlay never appears — this
+    does not add latency to the common case.
+    """
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.invisibility_of_element_located((By.XPATH, _LOADING_OVERLAY_XPATH))
+        )
+    except TimeoutException:
+        logger.warning(
+            "Loading overlay still visible after %ss — proceeding anyway.", timeout
+        )
+
+
 def wait_and_find(driver: webdriver.Firefox, xpath: str, timeout: int = DEFAULT_TIMEOUT):
     """Wait until an element is present in the DOM and return it."""
     return WebDriverWait(driver, timeout).until(
@@ -88,35 +143,87 @@ def wait_and_find(driver: webdriver.Firefox, xpath: str, timeout: int = DEFAULT_
     )
 
 
-def wait_and_click(driver: webdriver.Firefox, xpath: str, timeout: int = DEFAULT_TIMEOUT):
-    """Wait until clickable, scroll into view, click."""
-    element = WebDriverWait(driver, timeout).until(
-        EC.element_to_be_clickable((By.XPATH, xpath))
-    )
-    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
-    time.sleep(2.5)    # original 0.5 + 2
-    element.click()
-    time.sleep(3.5)    # original 1.5 + 2
-    return element
+def wait_and_click(driver: webdriver.Firefox, xpath: str, timeout: int = DEFAULT_TIMEOUT,
+                    retries: int = 3):
+    """
+    Wait until clickable, scroll into view, click.
+
+    Resilient against the loading-overlay race: waits for the overlay to
+    clear before each attempt, falls back to a JS click if the native click
+    is intercepted, and retries the whole wait→click cycle a few times for
+    slower page loads (this is what previously crashed the run with
+    "... loading-overlay ng-star-inserted obscures it").
+    """
+    last_error = None
+    for attempt in range(1, retries + 1):
+        try:
+            wait_for_overlay_gone(driver, timeout=timeout)
+            element = WebDriverWait(driver, timeout).until(
+                EC.element_to_be_clickable((By.XPATH, xpath))
+            )
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
+            time.sleep(2.5)    # original 0.5 + 2
+
+            try:
+                element.click()
+            except (ElementClickInterceptedException, ElementNotInteractableException):
+                logger.warning(
+                    "Native click intercepted for %s (attempt %d/%d) — "
+                    "waiting for overlay and retrying with a JS click.",
+                    xpath, attempt, retries,
+                )
+                wait_for_overlay_gone(driver, timeout=SHORT_TIMEOUT)
+                driver.execute_script("arguments[0].click();", element)
+
+            time.sleep(3.5)    # original 1.5 + 2
+            return element
+
+        except (ElementClickInterceptedException, StaleElementReferenceException,
+                 TimeoutException) as exc:
+            last_error = exc
+            logger.warning(
+                "wait_and_click failed for %s (attempt %d/%d): %s",
+                xpath, attempt, retries, exc,
+            )
+            if attempt < retries:
+                time.sleep(2 * attempt)   # small backoff before retrying
+
+    raise last_error
 
 
 def wait_and_type(driver: webdriver.Firefox, xpath: str, text: str,
-                  timeout: int = DEFAULT_TIMEOUT):
-    """Wait until visible, clear, type."""
-    element = WebDriverWait(driver, timeout).until(
-        EC.visibility_of_element_located((By.XPATH, xpath))
-    )
-    element.clear()
-    time.sleep(2.3)    # original 0.3 + 2
-    element.send_keys(text)
-    time.sleep(3.5)    # original 1.5 + 2
-    return element
+                  timeout: int = DEFAULT_TIMEOUT, retries: int = 3):
+    """Wait until visible, clear, type. Retries on stale-element/overlay races."""
+    last_error = None
+    for attempt in range(1, retries + 1):
+        try:
+            wait_for_overlay_gone(driver, timeout=timeout)
+            element = WebDriverWait(driver, timeout).until(
+                EC.visibility_of_element_located((By.XPATH, xpath))
+            )
+            element.clear()
+            time.sleep(2.3)    # original 0.3 + 2
+            element.send_keys(text)
+            time.sleep(3.5)    # original 1.5 + 2
+            return element
+        except (StaleElementReferenceException, ElementNotInteractableException,
+                 TimeoutException) as exc:
+            last_error = exc
+            logger.warning(
+                "wait_and_type failed for %s (attempt %d/%d): %s",
+                xpath, attempt, retries, exc,
+            )
+            if attempt < retries:
+                time.sleep(2 * attempt)
+
+    raise last_error
 
 
 def safe_get_text(driver: webdriver.Firefox, xpath: str,
                   timeout: int = SHORT_TIMEOUT) -> str:
     """Return element text or empty string if not found."""
     try:
+        wait_for_overlay_gone(driver, timeout=timeout)
         el = WebDriverWait(driver, timeout).until(
             EC.visibility_of_element_located((By.XPATH, xpath))
         )
@@ -124,6 +231,15 @@ def safe_get_text(driver: webdriver.Firefox, xpath: str,
     except (TimeoutException, NoSuchElementException):
         logger.warning("Could not read text from xpath: %s", xpath)
         return ""
+
+
+def _driver_is_alive(driver: webdriver.Firefox) -> bool:
+    """Return whether the Selenium/Firefox session is still responsive."""
+    try:
+        _ = driver.current_url
+        return True
+    except WebDriverException:
+        return False
 
 # ============================================================================
 # DRIVER SETUP
@@ -155,10 +271,12 @@ def setup_driver() -> webdriver.Firefox:
 
 def wait_for_new_xlsx(before_files: set, timeout: int = 90) -> Optional[str]:
     """
-    Poll DOWNLOAD_DIR until a new .xlsx file (not a partial download) appears.
+    Poll DOWNLOAD_DIR until a new, non-empty .xlsx file has a stable size.
     Returns the absolute path or None on timeout.
     """
     deadline = time.time() + timeout
+    previous_sizes = {}
+
     while time.time() < deadline:
         current = {
             f for f in Path(DOWNLOAD_DIR).iterdir()
@@ -166,9 +284,17 @@ def wait_for_new_xlsx(before_files: set, timeout: int = 90) -> Optional[str]:
         }
         new_files = current - before_files
         if new_files:
-            path = str(sorted(new_files, key=lambda f: f.stat().st_mtime)[-1])
-            logger.info("New download detected: %s", path)
-            return path
+            for candidate in sorted(new_files, key=lambda f: f.stat().st_mtime, reverse=True):
+                try:
+                    current_size = candidate.stat().st_size
+                except FileNotFoundError:
+                    continue
+
+                if current_size > 0 and previous_sizes.get(candidate) == current_size:
+                    path = str(candidate)
+                    logger.info("Completed download detected: %s", path)
+                    return path
+                previous_sizes[candidate] = current_size
         time.sleep(2)
     return None
 
@@ -226,24 +352,42 @@ _CODE_VERIFY_XPATH = (
     "/html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main"
     "/div[2]/div/div/app-dash-vaga/div/div[1]/div[1]/div[2]"
 )
+# /html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main/div[2]/div/div/app-dash-vaga/div/div[1]/div[1]/div[2]
+
 _LOCATION_XPATH = (
     "/html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main"
-    "/div[2]/div/div/app-dash-vaga/div/div[2]/div[4]/div"
+    "/div[2]/div/div/app-dash-vaga/div/div[2]/div[1]/div[2]/div[3]/div"
 )
+# /html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main/div[2]/div/div/app-dash-vaga/div/div[2]/div[1]/div[2]/div[3]/div
+# /html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main/div[2]/div/div/app-dash-vaga/div/div[2]/div[1]/div[2]/div[3]/div
+
 _DATE_XPATH = (
     "/html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main"
-    "/div[2]/div/div/app-dash-vaga/div/div[2]/div[7]/div"
+    "/div[2]/div/div/app-dash-vaga/div/div[2]/div[1]/div[2]/div[6]/div"
 )
+# /html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main/div[2]/div/div/app-dash-vaga/div/div[2]/div[1]/div[2]/div[6]/div
+
 _VAGA_TITLE_XPATH = (
     "/html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main"
-    "/div[2]/div/div/app-dash-vaga/div/div[1]/div[1]/div[1]/div/span"
+    "/div[2]/div/div/app-dash-vaga/div/div[1]/div[1]/div[1]/span"
 )
-_EXPORT_ICON_XPATH = (
-    "/html/body/app-root/app-common-layout/div/div/div/app-vaga/div/div[2]"
-    "/app-vaga-kanbam/div/div[2]/app-vaga-kanbam-coluna[11]/div[3]/i[6]"
-)
+# /html/body/app-root/app-common-layout/div/div/div/app-dashboard/div/div/main
+# /div[2]/div/div/app-dash-vaga/div/div[1]/div[1]/div[1]/span
 
-# /html/body/app-root/app-common-layout/div/div/div/app-vaga/div/div[2]/app-vaga-kanbam/div/div[2]/app-vaga-kanbam-coluna[11]/div[3]/i[6]
+_KANBAN_COLUMNS_XPATH = (
+    "/html/body/app-root/app-common-layout/div/div/div/app-vaga/div/div[2]"
+    "/app-vaga-kanbam/div/div[2]/app-vaga-kanbam-coluna"
+)
+_EXPORT_ICON_XPATH_TEMPLATE = _KANBAN_COLUMNS_XPATH + "[{column}]/div[3]/i[6]"
+_RESULTADO_FINAL_HEADER_XPATH = "./div[1]/span[1]"
+_RESULTADO_FINAL_TEXT = "RESULTADO FINAL"
+_RESULTADO_FINAL_LONG_TEXT = "RESULTADO FINAL DO PROCESSO SELETIVO"
+# Reachr boards use one of these two exact headers for the final-result
+# column — nothing else counts as a match (no partial/contains matching,
+# no other wording variants).
+_RESULTADO_FINAL_ACCEPTED_TEXTS = {_RESULTADO_FINAL_TEXT, _RESULTADO_FINAL_LONG_TEXT}
+_MAX_KANBAN_COLUMNS = 15
+_EXPORT_CLICK_ATTEMPTS = 3
 
 
 _SELECT_DROPDOWN_XPATH = (
@@ -278,13 +422,17 @@ def login(driver: webdriver.Firefox) -> None:
     wait_and_click(driver, _LOGIN_BTN_XPATH)
 
     logger.info("Waiting for dashboard to load…")
-    time.sleep(10)    # original 8 + 2
+    time.sleep(8)      # original 6 + 2
+    wait_for_overlay_gone(driver, timeout=DEFAULT_TIMEOUT)
+    time.sleep(2)
 
 
 def navigate_to_dashboard(driver: webdriver.Firefox) -> None:
     logger.info("Navigating back to dashboard…")
     driver.get(BASE_URL)
-    time.sleep(7)     # give Angular app time to bootstrap
+    time.sleep(5)      # give Angular time to start bootstrapping
+    wait_for_overlay_gone(driver, timeout=DEFAULT_TIMEOUT)
+    time.sleep(2)      # small settle buffer, same total budget as before
 
 
 def apply_filter(driver: webdriver.Firefox, vaga_code: str) -> None:
@@ -300,7 +448,8 @@ def apply_filter(driver: webdriver.Firefox, vaga_code: str) -> None:
     wait_and_click(driver, _SEARCH_BTN_XPATH)
 
     logger.info("Waiting for search results…")
-    time.sleep(6)     # original 4 + 2
+    wait_for_overlay_gone(driver, timeout=DEFAULT_TIMEOUT)
+    time.sleep(4)     # original 4 + 2, minus the time already spent waiting on the overlay
 
 
 def verify_code(driver: webdriver.Firefox, numero_edital: str) -> bool:
@@ -325,7 +474,8 @@ def get_card_info(driver: webdriver.Firefox) -> dict:
     Read vacancy card fields before opening the Kanban:
       - cargo        : title text (VAGA_TITLE_XPATH)
       - unidade_card : location text trimmed to the part before ' :' (LOCATION_XPATH)
-      - data_publicacao : publication date as 'YYYY-MM-DD' (DATE_XPATH, format 'Data: dd/mm/yyyy')
+      - data_publicacao : publication date as 'YYYY-MM-DD' (DATE_XPATH, format 'Data: dd/mm/yyyy'
+        or 'Data Pub.: dd/mm/yyyy')
     """
     cargo_raw    = safe_get_text(driver, _VAGA_TITLE_XPATH)
     location_raw = safe_get_text(driver, _LOCATION_XPATH)
@@ -334,8 +484,11 @@ def get_card_info(driver: webdriver.Firefox) -> dict:
     # "Goiânia - GO : Presencial" → "Goiânia - GO"
     unidade_card = location_raw.split(" :")[0].strip() if location_raw else None
 
-    # "Data: 07/05/2026" → "2026-05-07"
-    date_clean = re.sub(r"(?i)data\s*:\s*", "", date_raw).strip()
+    # "Data: 07/05/2026" → "07/05/2026"
+    # "Data Pub.: 12/08/2026" → "12/08/2026"
+    # The label isn't always exactly "Data:" (Reachr also shows "Data Pub.:"),
+    # so strip anything from "Data" up to the first colon, not just "Data:".
+    date_clean = re.sub(r"(?i)^data[^:]*:\s*", "", date_raw).strip()
     data_publicacao = _parse_date(date_clean) if date_clean else None
 
     logger.info("Card cargo        : %s", cargo_raw    or "(not found)")
@@ -358,27 +511,170 @@ def open_kanban(driver: webdriver.Firefox) -> None:
     time.sleep(7)      # original 5 + 2
 
 
+def _normalize_kanban_header(text: str) -> str:
+    """Normalize harmless whitespace/case differences before exact comparison."""
+    return " ".join((text or "").replace("\xa0", " ").split()).upper()
+
+
+def _read_kanban_column_headers(driver: webdriver.Firefox) -> list:
+    """Return the first 15 Kanban headers currently present in the DOM."""
+    headers = []
+    columns = driver.find_elements(By.XPATH, _KANBAN_COLUMNS_XPATH)
+
+    for column_index, column in enumerate(columns[:_MAX_KANBAN_COLUMNS], start=1):
+        try:
+            header = column.find_element(By.XPATH, _RESULTADO_FINAL_HEADER_XPATH)
+            # textContent also works for horizontally off-screen columns.
+            raw_text = header.get_attribute("textContent") or header.text or ""
+            headers.append((column_index, _normalize_kanban_header(raw_text)))
+        except (NoSuchElementException, StaleElementReferenceException):
+            headers.append((column_index, ""))
+
+    return headers
+
+
+def find_resultado_final_column(driver: webdriver.Firefox) -> int:
+    """
+    Find the Kanban column whose header is exactly ``RESULTADO FINAL`` or
+    exactly ``RESULTADO FINAL DO PROCESSO SELETIVO`` — these are the only
+    two accepted spellings, matched exactly with no partial/contains
+    matching and no other variants.
+
+    The board is rescanned while Angular is rendering it, so this works whether
+    the target is column 9, 10, 11, 12, or any other position from 1 through 15.
+    Only the index is returned; the element itself is deliberately not retained
+    because Angular may recreate it and make the reference stale.
+    """
+    wait_for_overlay_gone(driver, timeout=SHORT_TIMEOUT)
+
+    def locate(driver_instance):
+        for column_index, header_text in _read_kanban_column_headers(driver_instance):
+            logger.debug("Kanban column %d header: '%s'", column_index, header_text)
+            if header_text in _RESULTADO_FINAL_ACCEPTED_TEXTS:
+                return column_index
+        return False
+
+    try:
+        column_index = WebDriverWait(
+            driver,
+            DEFAULT_TIMEOUT,
+            poll_frequency=0.5,
+            ignored_exceptions=(StaleElementReferenceException,),
+        ).until(locate)
+    except TimeoutException as exc:
+        headers = _read_kanban_column_headers(driver)
+        readable_headers = ", ".join(
+            f"{index}='{text or '(vazio)'}'" for index, text in headers
+        ) or "nenhuma coluna encontrada"
+        accepted = " / ".join(f"'{t}'" for t in sorted(_RESULTADO_FINAL_ACCEPTED_TEXTS))
+        raise RuntimeError(
+            f"Nenhuma coluna com o cabeçalho exato {accepted} foi encontrada "
+            f"entre as colunas 1 e {_MAX_KANBAN_COLUMNS}. "
+            f"Cabeçalhos lidos: {readable_headers}"
+        ) from exc
+
+    logger.info("Resultado-final column found at position %d.", column_index)
+    return column_index
+
+
+def _export_modal_is_visible(driver: webdriver.Firefox) -> bool:
+    """Return whether the export modal is already open and ready."""
+    try:
+        return driver.find_element(By.XPATH, _SELECT_DROPDOWN_XPATH).is_displayed()
+    except (NoSuchElementException, StaleElementReferenceException):
+        return False
+
+
+def open_export_modal(driver: webdriver.Firefox, column_index: int) -> None:
+    """Click the export icon in the selected column and confirm the modal opened."""
+    export_icon_xpath = _EXPORT_ICON_XPATH_TEMPLATE.format(column=column_index)
+    last_error = None
+
+    for attempt in range(1, _EXPORT_CLICK_ATTEMPTS + 1):
+        try:
+            if _export_modal_is_visible(driver):
+                return
+
+            wait_for_overlay_gone(driver, timeout=SHORT_TIMEOUT)
+
+            # Re-locate on every attempt because Angular may recreate columns.
+            icon = WebDriverWait(driver, DEFAULT_TIMEOUT).until(
+                EC.presence_of_element_located((By.XPATH, export_icon_xpath))
+            )
+            driver.execute_script(
+                "arguments[0].scrollIntoView({block:'center', inline:'center'});",
+                icon,
+            )
+            time.sleep(1)
+
+            icon = WebDriverWait(driver, SHORT_TIMEOUT).until(
+                EC.element_to_be_clickable((By.XPATH, export_icon_xpath))
+            )
+            try:
+                icon.click()
+            except (ElementClickInterceptedException, ElementNotInteractableException):
+                logger.warning(
+                    "Native export click was blocked; using JavaScript click "
+                    "(attempt %d/%d).",
+                    attempt,
+                    _EXPORT_CLICK_ATTEMPTS,
+                )
+                driver.execute_script("arguments[0].click();", icon)
+
+            WebDriverWait(driver, DEFAULT_TIMEOUT).until(
+                EC.visibility_of_element_located((By.XPATH, _SELECT_DROPDOWN_XPATH))
+            )
+            logger.info(
+                "Export modal opened from Kanban column %d.", column_index
+            )
+            return
+        except (
+            ElementClickInterceptedException,
+            ElementNotInteractableException,
+            StaleElementReferenceException,
+            TimeoutException,
+        ) as exc:
+            last_error = exc
+            logger.warning(
+                "Could not open export modal from column %d "
+                "(attempt %d/%d): %s",
+                column_index,
+                attempt,
+                _EXPORT_CLICK_ATTEMPTS,
+                exc,
+            )
+            if attempt < _EXPORT_CLICK_ATTEMPTS:
+                time.sleep(2)
+
+    raise RuntimeError(
+        "Não foi possível abrir a exportação da coluna 'RESULTADO FINAL' "
+        f"(posição {column_index}) após {_EXPORT_CLICK_ATTEMPTS} tentativas."
+    ) from last_error
+
+
 def export_excel(driver: webdriver.Firefox) -> str:
     """
     Trigger the Excel export in Reachr and wait for the file to land in
     DOWNLOAD_DIR. Returns the local path to the downloaded file.
     Raises RuntimeError if the download times out.
     """
+    # Locate the correct dynamic column before triggering the download.
+    resultado_final_column = find_resultado_final_column(driver)
+
     # Snapshot existing files before triggering download
     before = {
         f for f in Path(DOWNLOAD_DIR).iterdir()
         if f.suffix.lower() == ".xlsx" and not f.name.endswith(".part")
     }
 
-    logger.info("Clicking 'Exportar Candidatos' icon…")
-    time.sleep(8.5)
-    wait_and_click(driver, _EXPORT_ICON_XPATH)
-
-    logger.info("Waiting for export modal…")
-    time.sleep(8.5)    # original 3.5 + 2
+    logger.info(
+        "Clicking 'Exportar Candidatos' in 'RESULTADO FINAL' column %d…",
+        resultado_final_column,
+    )
+    open_export_modal(driver, resultado_final_column)
 
     logger.info("Opening format dropdown…")
-    time.sleep(1) 
+    time.sleep(1)
     wait_and_click(driver, _SELECT_DROPDOWN_XPATH)
     time.sleep(4.0)    # original 2.0 + 2
 
@@ -560,7 +856,16 @@ def run() -> None:
     logger.info("═══════════════════════════════════════════════════════")
 
     # ── Guard: required env vars ──────────────────────────────────────────────
-    missing = [v for v in ("SUPABASE_URL", "SUPABASE_SERVICE_KEY") if not os.environ.get(v)]
+    missing = [
+        variable
+        for variable in (
+            "SUPABASE_URL",
+            "SUPABASE_SERVICE_KEY",
+            "REACHR_EMAIL",
+            "REACHR_PASSWORD",
+        )
+        if not os.environ.get(variable)
+    ]
     if missing:
         raise EnvironmentError(
             "Missing required environment variable(s): %s" % ", ".join(missing)
@@ -576,8 +881,22 @@ def run() -> None:
     codes = [e.get("arquivo", "(empty)") for e in editais]
     logger.info("Found %d pending edital(s): %s", len(editais), codes)
 
+    # A code queued twice in the same batch (same 'arquivo' on two different
+    # importacoes rows) previously got scraped and exported twice, inserting
+    # duplicate candidates into banco_candidatos. Scrape/export each distinct
+    # code only once and copy the result to any duplicate rows.
+    duplicate_codes = {code for code in codes if code and codes.count(code) > 1}
+    if duplicate_codes:
+        logger.warning(
+            "Duplicate 'arquivo' code(s) queued in this batch — each will be "
+            "scraped once and the result copied to the duplicate row(s): %s",
+            sorted(duplicate_codes),
+        )
+
     driver = setup_driver()
     logger.info("Browser started (headless).")
+
+    processed_results = {}   # arquivo -> status string already applied this run
 
     try:
         login(driver)
@@ -598,72 +917,119 @@ def run() -> None:
                 arquivo, numero_edital, importacao_id,
             )
 
-            try:
-                # ── 1. Go to dashboard & filter ──────────────────────────────
-                navigate_to_dashboard(driver)
-                apply_filter(driver, arquivo)
-
-                # ── 2. Verify the card shows the expected code ────────────────
-                if not verify_code(driver, arquivo):
-                    logger.warning("Código %s not found in Reachr.", arquivo)
-                    update_importacao_status(
-                        supabase, importacao_id, "Edital não encontrado na Reachr"
-                    )
-                    continue
-
-                # ── 3. Capture card info (cargo, unidade, date) BEFORE clicking title
-                card_info = get_card_info(driver)
-
-                # ── 4. Open Kanban ────────────────────────────────────────────
-                open_kanban(driver)
-
-                # ── 5. Export Excel & wait for download ───────────────────────
-                excel_path = export_excel(driver)
-
-                # ── 6. Parse Excel & insert into banco_candidatos ─────────────
-                n = process_excel(
-                    supabase, excel_path, arquivo, numero_edital, is_teia, card_info, importacao_id
+            # ── Duplicate short-circuit ────────────────────────────────────────
+            if arquivo in processed_results:
+                status_to_copy = processed_results[arquivo]
+                logger.info(
+                    "Proc. seletivo %s was already handled earlier in this run — "
+                    "copying result ('%s') instead of scraping/exporting again.",
+                    arquivo, status_to_copy,
                 )
+                update_importacao_status(supabase, importacao_id, status_to_copy)
+                continue
 
-                # ── 7. Delete temporary file ──────────────────────────────────
+            final_status = None
+            attempt = 0
+
+            while final_status is None:
+                attempt += 1
                 try:
-                    os.remove(excel_path)
-                    logger.info("Deleted temporary file: %s", excel_path)
-                except OSError as err:
-                    logger.warning("Could not delete %s: %s", excel_path, err)
+                    # ── 0. Make sure the browser session is actually alive ──────
+                    if not _driver_is_alive(driver):
+                        logger.warning(
+                            "Browser session appears dead — restarting the "
+                            "browser and logging in again."
+                        )
+                        try:
+                            driver.quit()
+                        except WebDriverException:
+                            pass
+                        driver = setup_driver()
+                        login(driver)
 
-                # ── 8. Mark as done ───────────────────────────────────────────
-                update_importacao_status(
-                    supabase,
-                    importacao_id,
-                    "Candidato(a)s importados para o banco de talentos",
-                )
-                logger.info("Proc. seletivo %s processed successfully (%d candidates).", arquivo, n)
+                    # ── 1. Go to dashboard & filter ──────────────────────────────
+                    navigate_to_dashboard(driver)
+                    apply_filter(driver, arquivo)
 
-            except TimeoutException as exc:
-                logger.error("Timeout on proc. seletivo %s: %s", arquivo, exc)
-                update_importacao_status(
-                    supabase, importacao_id, "Erro: timeout ao processar edital"
-                )
-            except WebDriverException as exc:
-                logger.error("WebDriver error on proc. seletivo %s: %s", arquivo, exc)
-                update_importacao_status(
-                    supabase, importacao_id, "Erro: falha no navegador"
-                )
-            except RuntimeError as exc:
-                logger.error("Runtime error on proc. seletivo %s: %s", arquivo, exc)
-                update_importacao_status(
-                    supabase, importacao_id, f"Erro: {str(exc)[:200]}"
-                )
-            except Exception as exc:
-                logger.error("Unexpected error on proc. seletivo %s: %s", arquivo, exc, exc_info=True)
-                update_importacao_status(
-                    supabase, importacao_id, f"Erro inesperado: {str(exc)[:200]}"
-                )
+                    # ── 2. Verify the card shows the expected code ─────────────────
+                    if not verify_code(driver, arquivo):
+                        logger.warning("Código %s not found in Reachr.", arquivo)
+                        final_status = "Edital não encontrado na Reachr"
+                        break
+
+                    # ── 3. Capture card info (cargo, unidade, date) BEFORE clicking title
+                    card_info = get_card_info(driver)
+
+                    # ── 4. Open Kanban ──────────────────────────────────────────────
+                    open_kanban(driver)
+
+                    # ── 5. Export Excel & wait for download ─────────────────────────
+                    excel_path = export_excel(driver)
+
+                    # ── 6. Parse Excel & insert into banco_candidatos ───────────────
+                    n = process_excel(
+                        supabase, excel_path, arquivo, numero_edital, is_teia, card_info, importacao_id
+                    )
+
+                    # ── 7. Delete temporary file ─────────────────────────────────────
+                    try:
+                        os.remove(excel_path)
+                        logger.info("Deleted temporary file: %s", excel_path)
+                    except OSError as err:
+                        logger.warning("Could not delete %s: %s", excel_path, err)
+
+                    final_status = "Candidato(a)s importados para o banco de talentos"
+                    logger.info(
+                        "Proc. seletivo %s processed successfully (%d candidates).",
+                        arquivo, n,
+                    )
+
+                except TimeoutException as exc:
+                    logger.error(
+                        "Timeout on proc. seletivo %s (attempt %d/%d): %s",
+                        arquivo, attempt, MAX_EDITAL_ATTEMPTS, exc,
+                    )
+                    if attempt < MAX_EDITAL_ATTEMPTS:
+                        time.sleep(5)
+                        continue
+                    final_status = "Erro: timeout ao processar edital"
+
+                except WebDriverException as exc:
+                    logger.error(
+                        "WebDriver error on proc. seletivo %s (attempt %d/%d): %s",
+                        arquivo, attempt, MAX_EDITAL_ATTEMPTS, exc,
+                    )
+                    if attempt < MAX_EDITAL_ATTEMPTS:
+                        time.sleep(5)
+                        continue
+                    final_status = "Erro: falha no navegador"
+
+                except RuntimeError as exc:
+                    logger.error(
+                        "Runtime error on proc. seletivo %s (attempt %d/%d): %s",
+                        arquivo, attempt, MAX_EDITAL_ATTEMPTS, exc,
+                    )
+                    if attempt < MAX_EDITAL_ATTEMPTS:
+                        time.sleep(5)
+                        continue
+                    final_status = f"Erro: {str(exc)[:200]}"
+
+                except Exception as exc:
+                    logger.error(
+                        "Unexpected error on proc. seletivo %s: %s",
+                        arquivo, exc, exc_info=True,
+                    )
+                    final_status = f"Erro inesperado: {str(exc)[:200]}"
+
+            update_importacao_status(supabase, importacao_id, final_status)
+            processed_results[arquivo] = final_status
 
     finally:
         logger.info("Closing browser.")
-        driver.quit()
+        try:
+            driver.quit()
+        except WebDriverException:
+            pass
 
     logger.info("═══════════════════════════════════════════════════════")
     logger.info("  Reachr Edital Import Automation — finished")
@@ -672,4 +1038,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-

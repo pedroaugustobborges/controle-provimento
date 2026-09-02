@@ -562,6 +562,59 @@ export default function DashboardPage() {
       })
       .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
 
+    // Documentação: getCategoriaStatus only reads status/status_processo fields,
+    // never etapa. Override the count by checking etapa across all fluxo slots.
+    acc.documentacao = vagas
+      .filter((v) => {
+        const allEtapas = [
+          v.etapa,
+          ...(Array.isArray(v.distribuicao_vagas)
+            ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
+            : []),
+        ].filter(Boolean);
+        return allEtapas.includes("Documentação");
+      })
+      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
+
+    // Aguardando Unidade: override by checking tratativa across all fluxo slots.
+    acc.aguardando_unidade = vagas
+      .filter((v) => {
+        const allTratativas = [
+          v.tratativa,
+          ...(Array.isArray(v.distribuicao_vagas)
+            ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
+            : []),
+        ].filter(Boolean);
+        return allTratativas.includes("Aguardando Unidade");
+      })
+      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
+
+    // Fila de Editais: override by checking tratativa across all fluxo slots.
+    acc.fila_edital = vagas
+      .filter((v) => {
+        const allTratativas = [
+          v.tratativa,
+          ...(Array.isArray(v.distribuicao_vagas)
+            ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
+            : []),
+        ].filter(Boolean);
+        return allTratativas.includes("Publicação de Edital");
+      })
+      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
+
+    // Em Admissão: override by checking etapa across all fluxo slots.
+    acc.em_admissao = vagas
+      .filter((v) => {
+        const allEtapas = [
+          v.etapa,
+          ...(Array.isArray(v.distribuicao_vagas)
+            ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
+            : []),
+        ].filter(Boolean);
+        return allEtapas.includes("Enviado para Formalização");
+      })
+      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
+
     return acc;
   }, [vagas]);
 

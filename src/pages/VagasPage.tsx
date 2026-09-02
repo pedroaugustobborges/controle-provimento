@@ -402,6 +402,17 @@ function MultiSelectFilter({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+const VAGAS_FILTERS_KEY = "gdp_vagas_filters";
+
+function getSavedFilters() {
+  try {
+    const raw = localStorage.getItem(VAGAS_FILTERS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function VagasPage() {
   const { isDark } = useTheme();
 
@@ -445,29 +456,71 @@ export default function VagasPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const permissions = usePermissions();
-  const [search, setSearch] = useState("");
-  const [filterUnidades, setFilterUnidades] = useState<string[]>([]);
-  const [filterMeses, setFilterMeses] = useState<string[]>([]);
+  const [search, setSearch] = useState(() => getSavedFilters()?.search ?? "");
+  const [filterUnidades, setFilterUnidades] = useState<string[]>(() => getSavedFilters()?.filterUnidades ?? []);
+  const [filterMeses, setFilterMeses] = useState<string[]>(() => getSavedFilters()?.filterMeses ?? []);
   const [filterStatusProcesso, setFilterStatusProcesso] = useState<string[]>(() => {
     const p = new URLSearchParams(window.location.search).get("status");
-    return p ? p.split(",") : [];
+    if (p) return p.split(",");
+    return getSavedFilters()?.filterStatusProcesso ?? [];
   });
 
   const [filterTratativas, setFilterTratativas] = useState<string[]>(() => {
     const p = new URLSearchParams(window.location.search).get("tratativa");
-    return p ? [p] : [];
+    if (p) return [p];
+    return getSavedFilters()?.filterTratativas ?? [];
   });
   const [filterEtapa, setFilterEtapa] = useState(() => {
-    return new URLSearchParams(window.location.search).get("etapa") ?? "all";
+    const p = new URLSearchParams(window.location.search).get("etapa");
+    if (p) return p;
+    return getSavedFilters()?.filterEtapa ?? "all";
   });
-  const [filterAnalista, setFilterAnalista] = useState("all");
-  const [filterAssistente, setFilterAssistente] = useState("all");
-  const [filterLideranca, setFilterLideranca] = useState("all");
-  const [filterVagasNovas, setFilterVagasNovas] = useState(false);
-  const [filterComBanco, setFilterComBanco] = useState(false);
-  const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(false);
-  const [filterTeia, setFilterTeia] = useState(false);
-  const [filterPcd, setFilterPcd] = useState(false);
+  const [filterAnalista, setFilterAnalista] = useState(() => getSavedFilters()?.filterAnalista ?? "all");
+  const [filterAssistente, setFilterAssistente] = useState(() => getSavedFilters()?.filterAssistente ?? "all");
+  const [filterLideranca, setFilterLideranca] = useState(() => getSavedFilters()?.filterLideranca ?? "all");
+  const [filterVagasNovas, setFilterVagasNovas] = useState(() => getSavedFilters()?.filterVagasNovas ?? false);
+  const [filterComBanco, setFilterComBanco] = useState(() => getSavedFilters()?.filterComBanco ?? false);
+  const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(() => getSavedFilters()?.filterSemMovimentacao ?? false);
+  const [filterTeia, setFilterTeia] = useState(() => getSavedFilters()?.filterTeia ?? false);
+  const [filterPcd, setFilterPcd] = useState(() => getSavedFilters()?.filterPcd ?? false);
+
+  // Persiste os filtros no localStorage para manter o estado ao navegar entre páginas
+  useEffect(() => {
+    localStorage.setItem(
+      VAGAS_FILTERS_KEY,
+      JSON.stringify({
+        search,
+        filterUnidades,
+        filterMeses,
+        filterStatusProcesso,
+        filterTratativas,
+        filterEtapa,
+        filterAnalista,
+        filterAssistente,
+        filterLideranca,
+        filterVagasNovas,
+        filterComBanco,
+        filterSemMovimentacao,
+        filterTeia,
+        filterPcd,
+      })
+    );
+  }, [
+    search,
+    filterUnidades,
+    filterMeses,
+    filterStatusProcesso,
+    filterTratativas,
+    filterEtapa,
+    filterAnalista,
+    filterAssistente,
+    filterLideranca,
+    filterVagasNovas,
+    filterComBanco,
+    filterSemMovimentacao,
+    filterTeia,
+    filterPcd,
+  ]);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedVagaForHistory, setSelectedVagaForHistory] =
@@ -1083,6 +1136,7 @@ export default function VagasPage() {
   }, [canonicalBase]);
 
   const clearFilters = () => {
+    localStorage.removeItem(VAGAS_FILTERS_KEY);
     setSearch("");
     setFilterUnidades([]);
     setFilterMeses([]);

@@ -1137,11 +1137,13 @@ export default function VagaDetalhePage() {
   };
 
   // Derives the top-level status_processo of a multi-vaga requisição from its slots.
-  // Rule 1: ALL slots Concluída/Cancelada  → Concluída
-  // Rule 2: ANY slot Concluída (but not all done) → Em Andamento
+  // Rule 1: ALL slots Suspensa              → Suspensa
+  // Rule 2: ALL slots Cancelada             → Cancelada
+  // Rule 3: ALL slots Concluída/Cancelada   → Concluída
+  // Rule 4: ANY slot Concluída (but not all done) → Em Andamento
   //         Ensures the mother stays "Em Andamento" when some vacancies are
   //         done but others are still pending (Solicitada, Suspensa, etc.).
-  // Rule 3: ANY slot Em Andamento          → Em Andamento
+  // Rule 5: ANY slot Em Andamento           → Em Andamento
   // Otherwise: preserve the current overall status.
   const deriveOverallStatus = (
     items: VagaFluxoItem[],
@@ -1150,6 +1152,8 @@ export default function VagaDetalhePage() {
     const statuses = items.map(
       (i) => (i.status_processo || "Solicitada") as StatusProcesso,
     );
+    if (statuses.every((s) => s === "Suspensa")) return "Suspensa";
+    if (statuses.every((s) => s === "Cancelada")) return "Cancelada";
     if (statuses.every((s) => s === "Concluída" || s === "Cancelada"))
       return "Concluída";
     if (statuses.some((s) => s === "Concluída")) return "Em Andamento";

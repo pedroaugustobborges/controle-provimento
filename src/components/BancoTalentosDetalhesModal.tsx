@@ -486,6 +486,14 @@ export function BancoTalentosDetalhesModal({
     localStorage.setItem("banco-detalhes-view", mode);
   };
 
+  const sortedCandidates = useMemo(
+    () =>
+      [...candidates].sort(
+        (a, b) => Number(a.classificacao) - Number(b.classificacao),
+      ),
+    [candidates],
+  );
+
   if (!banco) return null;
 
   const isAdmin = ["admin", "administrador"].some(r =>
@@ -530,14 +538,6 @@ export function BancoTalentosDetalhesModal({
   const isProrrogado = localProrrogado || !!(banco.is_prorrogado || banco.nova_data_validade);
   const novaValidadeStr = localNovaValidade ?? banco.nova_data_validade ?? null;
   const isTeia       = !!(banco as any).is_teia;
-
-  const sortedCandidates = useMemo(
-    () =>
-      [...candidates].sort(
-        (a, b) => Number(a.classificacao) - Number(b.classificacao),
-      ),
-    [candidates],
-  );
 
   const handleProrrogar = async () => {
     if (!val12m || !currentUser) return;

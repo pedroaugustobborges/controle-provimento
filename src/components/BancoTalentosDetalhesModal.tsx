@@ -316,7 +316,8 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
               edital_relacionado: banco.numero_edital || "",
               banco_id: c.id,
               requisicao: "",
-            })
+              ...({ telefone: (c as any).telefone || "", numero_processo_seletivo: banco.numero_processo_seletivo || "" } as any),
+            } as any)
           }
         >
           <UserCheck className="h-3.5 w-3.5" />
@@ -404,7 +405,8 @@ function CandidateRow({ candidate: c, banco, onConvocar }: CandidateCardProps) {
             edital_relacionado: banco.numero_edital || "",
             banco_id: c.id,
             requisicao: "",
-          })
+            ...({ telefone: (c as any).telefone || "", numero_processo_seletivo: banco.numero_processo_seletivo || "" } as any),
+          } as any)
         }
       >
         <UserCheck className="h-3.5 w-3.5" />

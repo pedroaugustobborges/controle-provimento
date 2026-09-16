@@ -260,8 +260,8 @@ function EmptyState({ label }: { label: string }) {
 export default function ConvocacoesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const {
-    vagas, convocacoes, bloqueios, isInitialLoad,
-    updateConvocacao,
+    vagas, convocacoes, bloqueios, isInitialLoad, isConvocacoesLoaded,
+    updateConvocacao, fetchConvocacoes,
   } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit, addAuditLog } = useAdminStore();
 
@@ -287,6 +287,11 @@ export default function ConvocacoesPage() {
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined, to: undefined,
   });
+
+  // Ensure convocações are loaded — they're not fetched by AppLayout
+  useEffect(() => {
+    if (!isConvocacoesLoaded) fetchConvocacoes();
+  }, []);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -327,10 +332,11 @@ export default function ConvocacoesPage() {
 
   // ── Accessible convocações (region/unit access) ────────────────────────────
   const accessibleConvocacoes = useMemo(() => {
+    if (!currentUser) return [];
     const base = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
     return base.filter(c =>
-      currentUser?.visualiza_todas_unidades ||
-      currentUser?.unidades_vinculadas.includes(c.unidade),
+      currentUser.visualiza_todas_unidades ||
+      (currentUser.unidades_vinculadas ?? []).includes(c.unidade),
     );
   }, [convocacoes, currentUser, selectedRegion, globalUnit]);
 
@@ -463,7 +469,7 @@ export default function ConvocacoesPage() {
       'Observações': c.observacoes || '',
     }));
 
-  if (isInitialLoad) return <PageSkeleton />;
+  if (isInitialLoad || !currentUser || !isConvocacoesLoaded) return <PageSkeleton />;
 
   const today = format(selectedDate, "dd 'de' MMMM", { locale: ptBR });
 

@@ -133,6 +133,7 @@ interface VagasState {
   isInitialLoad: boolean;
   isLoadingVagas: boolean;
   isLoadingBancos: boolean;
+  isConvocacoesLoaded: boolean;
   lastUpdated?: number;
 
   setVagas: (vagas: Vaga[]) => void;
@@ -214,6 +215,7 @@ export const useVagasStore = create<VagasState>()(
       isLoading: false,
       isInitialLoad: true,
       isLoadingVagas: false,
+      isConvocacoesLoaded: false,
       isLoadingBancos: false,
       lastUpdated: undefined,
 
@@ -751,10 +753,12 @@ export const useVagasStore = create<VagasState>()(
           const { data, error } = await supabase.from('convocacoes' as any).select('*').is('deleted_at', null).order('data_convocacao', { ascending: false }).limit(2000);
           if (error) { console.error('fetchConvocacoes error:', error); return; }
           if (data && Array.isArray(data)) {
-            set({ convocacoes: data as any });
+            set({ convocacoes: data as any, isConvocacoesLoaded: true });
           }
         } catch (e) {
           console.error('fetchConvocacoes exception:', e);
+        } finally {
+          set({ isConvocacoesLoaded: true });
         }
       },
       updateEdital: (id, data) => set((s) => ({ editais: s.editais.map((e) => e.id === id ? { ...e, ...data } : e) })),

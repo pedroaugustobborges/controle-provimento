@@ -777,13 +777,12 @@ export function ConvocacaoDialog({
                     id="edoc"
                     value={formData.edoc || ""}
                     onChange={handleEdocChange}
-                    placeholder="20240002.02972"
+                    placeholder="20260000.00000"
                     className="font-mono tracking-wider"
                     maxLength={14}
                   />
                   <p className="text-[10px] text-slate-400">
-                    Formato: 00000000.00000 — o ponto é inserido
-                    automaticamente.
+                    Formato: 00000000.00000
                   </p>
                 </div>
               </div>

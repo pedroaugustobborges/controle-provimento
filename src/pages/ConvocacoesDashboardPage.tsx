@@ -24,11 +24,10 @@ const historicoChartConfig: ChartConfig = {
   total: { label: 'Convocações', color: 'hsl(221, 50%, 62%)' },
 };
 
-export default function ConvocacoesDashboardPage() {
-  const { convocacoes, isInitialLoad } = useVagasStore();
+export function ConvocacoesDashboardContent() {
+  const { convocacoes } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit } = useAdminStore();
 
-  // Mesma fonte e mesmos filtros de permissão usados em ConvocacoesPage
   const visibleConvocacoes = useMemo(() => {
     const base = filterByRegionAndUnit(convocacoes, selectedRegion, globalUnit);
     return base.filter(c => {
@@ -101,13 +100,8 @@ export default function ConvocacoesDashboardPage() {
       });
   }, [visibleConvocacoes]);
 
-  if (isInitialLoad) {
-    return <PageSkeleton />;
-  }
-
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Dashboard de Convocações" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard icon={Users} label="Total de Convocações" value={metrics.total} color="text-primary" bg="bg-primary/10" />
@@ -187,6 +181,17 @@ export default function ConvocacoesDashboardPage() {
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+export default function ConvocacoesDashboardPage() {
+  const { isInitialLoad } = useVagasStore();
+  if (isInitialLoad) return <PageSkeleton />;
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Dashboard de Convocações" />
+      <ConvocacoesDashboardContent />
     </div>
   );
 }

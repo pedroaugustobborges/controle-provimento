@@ -19,7 +19,6 @@ const VagaDetalhePage = lazy(() => import("@/pages/VagaDetalhePage"));
 const EditaisPage = lazy(() => import("@/pages/EditaisPage"));
 
 const ConvocacoesPage = lazy(() => import("@/pages/ConvocacoesPage"));
-const ConvocacoesDashboardPage = lazy(() => import("@/pages/ConvocacoesDashboardPage"));
 const FilaEditaisPage = lazy(() => import("@/pages/FilaEditaisPage"));
 const BancoTalentosPage = lazy(() => import("@/pages/BancoTalentosPage"));
 const ValidacaoEditaisPage = lazy(() => import("@/pages/ValidacaoEditaisPage"));
@@ -164,7 +163,6 @@ const App = () => (
               <Route path="/fila-editais" element={<FilaEditaisPage />} />
               <Route path="/fila-analista-edital" element={<FilaAnalistaEditalPage />} />
               <Route path="/convocacoes" element={<ConvocacoesPage />} />
-              <Route path="/convocacoes/dashboard" element={<ConvocacoesDashboardPage />} />
               
               <Route path="/validacao-editais" element={<ValidacaoEditaisPage />} />
               <Route path="/gestor" element={<AdministracaoPage />} />

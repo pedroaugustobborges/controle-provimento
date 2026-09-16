@@ -556,7 +556,7 @@ export function ConvocacaoDialog({
         {step === "form" && (
           <div className="space-y-5 py-2">
             {/* ── Header: Vaga info (read-only) ─── */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 gap-4">
               <InfoField
                 label="Vaga"
                 value={formData.cargo}
@@ -813,7 +813,7 @@ export function ConvocacaoDialog({
         {step === "confirm" && (
           <div className="space-y-4 py-2">
             {/* Vaga header */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 gap-4">
               <InfoField
                 label="Vaga"
                 value={formData.cargo}

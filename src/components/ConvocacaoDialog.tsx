@@ -832,7 +832,7 @@ export function ConvocacaoDialog({
             <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 space-y-3">
               <h3 className="text-xs font-bold text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5" />
-                Candidato
+                Candidato(a)
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">

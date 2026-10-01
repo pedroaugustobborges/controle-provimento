@@ -341,6 +341,7 @@ export function ConvocacaoDialog({
     updateVagaAsync,
     updateBancoAsync,
     convocacoes,
+    bancos,
   } = useVagasStore();
   const { currentUser } = useAdminStore();
 
@@ -394,8 +395,12 @@ export function ConvocacaoDialog({
 
     if (convocacaoToEdit) {
       setFormData(convocacaoToEdit);
-      setTelefone((convocacaoToEdit as any).telefone || "");
-      setNumeroPS((convocacaoToEdit as any).numero_processo_seletivo || "");
+      // telefone and numero_processo_seletivo are not stored on Convocacao —
+      // look them up from the linked BancoTalento entry
+      const bancoId = convocacaoToEdit.banco_relacionado || (convocacaoToEdit as any).banco_id;
+      const linkedBanco = bancoId ? bancos.find(b => b.id === bancoId) : null;
+      setTelefone((linkedBanco as any)?.telefone || "");
+      setNumeroPS(linkedBanco?.numero_processo_seletivo || "");
     } else if (initialData) {
       setFormData({ ...base, ...initialData });
       setTelefone((initialData as any).telefone || "");
@@ -420,7 +425,7 @@ export function ConvocacaoDialog({
       setTelefone("");
       setNumeroPS("");
     }
-  }, [open, vaga, convocacaoToEdit, initialData, currentUser]);
+  }, [open, vaga, convocacaoToEdit, initialData, currentUser, bancos]);
 
   // ── Derived state ─────────────────────────────────────────────────────────
   const horariosDisponiveis = useMemo(() => {

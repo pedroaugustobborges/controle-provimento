@@ -110,6 +110,12 @@ export function AppSidebar() {
         visible: getPermissions("banco").canRead,
       },
       {
+        title: "Convocações",
+        url: "/convocacoes",
+        icon: Calendar,
+        visible: getPermissions("convocacoes").canRead,
+      },
+      {
         title: "Publicação de Edital",
         url: "/fila-editais",
         icon: FileText,
@@ -119,12 +125,6 @@ export function AppSidebar() {
           { title: "Redação do Edital", url: "/fila-analista-edital" },
           { title: "Validação de Edital", url: "/validacao-editais" },
         ],
-      },
-      {
-        title: "Convocações",
-        url: "/convocacoes",
-        icon: Calendar,
-        visible: getPermissions("convocacoes").canRead,
       },
       {
         title: "Alertas e Tarefas",

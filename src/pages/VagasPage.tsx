@@ -166,6 +166,7 @@ import {
   Check,
   Accessibility,
   Puzzle,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { VagaHistoryDialog } from "@/components/VagaHistoryDialog";
@@ -477,7 +478,7 @@ export default function VagasPage() {
   });
   const [filterAnalista, setFilterAnalista] = useState(() => getSavedFilters()?.filterAnalista ?? "all");
   const [filterAssistente, setFilterAssistente] = useState(() => getSavedFilters()?.filterAssistente ?? "all");
-  const [filterLideranca, setFilterLideranca] = useState(() => getSavedFilters()?.filterLideranca ?? "all");
+  const [filterLideranca, setFilterLideranca] = useState(() => getSavedFilters()?.filterLideranca ?? false);
   const [filterVagasNovas, setFilterVagasNovas] = useState(() => getSavedFilters()?.filterVagasNovas ?? false);
   const [filterComBanco, setFilterComBanco] = useState(() => getSavedFilters()?.filterComBanco ?? false);
   const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(() => getSavedFilters()?.filterSemMovimentacao ?? false);
@@ -980,10 +981,8 @@ export default function VagasPage() {
         filterAssistente === "all" ||
         (v.assistentes || []).includes(filterAssistente);
       const matchLideranca =
-        filterLideranca === "all" ||
-        (filterLideranca === "yes"
-          ? v.tipo_vaga === "lideranca"
-          : v.tipo_vaga !== "lideranca");
+        !filterLideranca ||
+        fluxoItems.some((item) => item.tratativa === "Vaga de Liderança");
 
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
@@ -1124,6 +1123,16 @@ export default function VagasPage() {
   const countVagasNovas = counts.vagas_novas;
   const countSemMovimentacao = counts.sem_movimentacao;
 
+  const countVagasLideranca = useMemo(
+    () =>
+      canonicalBase
+        .filter((v) =>
+          getVagaFluxoItems(v).some((item) => item.tratativa === "Vaga de Liderança")
+        )
+        .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
+    [canonicalBase],
+  );
+
   // Counts per status_processo for the scorecard row — sums numero_vagas per row
   const statusProcessoCounts = useMemo(() => {
     const acc: Record<string, number> = {};
@@ -1145,7 +1154,7 @@ export default function VagasPage() {
     setFilterEtapa("all");
     setFilterAnalista("all");
     setFilterAssistente("all");
-    setFilterLideranca("all");
+    setFilterLideranca(false);
     setFilterVagasNovas(false);
     setFilterComBanco(false);
     setFilterSemMovimentacao(false);
@@ -1162,7 +1171,7 @@ export default function VagasPage() {
     filterEtapa !== "all" ||
     filterAnalista !== "all" ||
     filterAssistente !== "all" ||
-    filterLideranca !== "all" ||
+    filterLideranca ||
     filterVagasNovas ||
     filterComBanco ||
     filterSemMovimentacao ||
@@ -1484,6 +1493,23 @@ export default function VagasPage() {
                   >
                     <Accessibility className={`h-3.5 w-3.5 ${filterPcd ? "text-white" : ""}`} />
                     PCD
+                  </Button>
+                  <Button
+                    variant={filterLideranca ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 text-[11px] font-bold gap-2 ${filterLideranca ? "bg-amber-500 hover:bg-amber-600" : "border-amber-300 text-amber-700 hover:bg-amber-50 bg-white"}`}
+                    onClick={() => setFilterLideranca(!filterLideranca)}
+                  >
+                    <Crown className={`h-3.5 w-3.5 ${filterLideranca ? "text-white" : ""}`} />
+                    Liderança
+                    {countVagasLideranca > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className={`ml-1 h-4 px-1 text-[9px] border-none ${filterLideranca ? "bg-amber-300 text-amber-900" : "bg-amber-100 text-amber-700"}`}
+                      >
+                        {countVagasLideranca}
+                      </Badge>
+                    )}
                   </Button>
                   <Button
                     variant={filterVagasNovas ? "default" : "outline"}

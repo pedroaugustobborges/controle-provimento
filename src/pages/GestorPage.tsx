@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useVagasStore } from '@/store/vagasStore';
+import { useAdminStore } from '@/store/adminStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -16,15 +17,27 @@ const PIE_COLORS = ['hsl(213,70%,45%)', 'hsl(38,92%,50%)', 'hsl(280,50%,55%)', '
 
 export default function GestorPage() {
   const { vagas, editais, importHistory } = useVagasStore();
+  const { currentUser } = useAdminStore();
   const [filterUnidade, setFilterUnidade] = useState('all');
   const [activeTab, setActiveTab] = useState<'stats' | 'history'>('stats');
-  
-  const allUnidades = [...new Set(vagas.map((v) => v.unidade))].filter(Boolean).sort();
+
+  const scopedVagas = useMemo(() => {
+    if (currentUser?.perfil !== "Analista de Edital") return vagas;
+    const isEdital = (t?: string) =>
+      t === "Publicação de Edital" || t === "Publicação de Edital Interno";
+    return vagas.filter(v =>
+      isEdital(v.tratativa) ||
+      (Array.isArray((v as any).distribuicao_vagas) &&
+        (v as any).distribuicao_vagas.some((s: any) => isEdital(s.tratativa)))
+    );
+  }, [vagas, currentUser?.perfil]);
+
+  const allUnidades = [...new Set(scopedVagas.map((v) => v.unidade))].filter(Boolean).sort();
   const unidades = allUnidades;
 
-  const filtered = filterUnidade === 'all' 
-    ? vagas 
-    : vagas.filter((v) => v.unidade === filterUnidade);
+  const filtered = filterUnidade === 'all'
+    ? scopedVagas
+    : scopedVagas.filter((v) => v.unidade === filterUnidade);
 
   const statusData = Object.entries(STATUS_LABELS).map(([k, v], i) => ({
     name: v,

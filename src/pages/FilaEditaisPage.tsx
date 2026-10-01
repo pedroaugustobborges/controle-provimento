@@ -153,6 +153,16 @@ export default function FilaEditaisPage() {
         if (!unitIsAllowed(v.unidade, allowedUnits)) return false;
       }
 
+      // Analista de Edital: only sees vagas with Publicação de Edital tratativas
+      if (currentUser?.perfil === "Analista de Edital") {
+        const isEdital = (t?: string) =>
+          t === "Publicação de Edital" || t === "Publicação de Edital Interno";
+        const slots = Array.isArray((v as any).distribuicao_vagas)
+          ? ((v as any).distribuicao_vagas as { tratativa?: string }[])
+          : [];
+        if (!isEdital(v.tratativa) && !slots.some(s => isEdital(s.tratativa))) return false;
+      }
+
       // Regra: Fila de Editais - Somente status PUBLICAR EDITAL
       const normalizedS = normStatus(v.status || v.status_geral || '');
       if (normalizedS !== 'publicar edital') return false;

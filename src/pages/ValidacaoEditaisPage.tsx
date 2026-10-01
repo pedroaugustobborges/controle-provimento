@@ -116,6 +116,16 @@ export default function ValidacaoEditaisPage() {
         if (!unitIsAllowed(v.unidade, currentUser?.unidades_vinculadas || [])) return false;
       }
 
+      // Analista de Edital: only sees vagas with Publicação de Edital tratativas
+      if (currentUser?.perfil === "Analista de Edital") {
+        const isEdital = (t?: string) =>
+          t === "Publicação de Edital" || t === "Publicação de Edital Interno";
+        const slots = Array.isArray((v as any).distribuicao_vagas)
+          ? ((v as any).distribuicao_vagas as { tratativa?: string }[])
+          : [];
+        if (!isEdital(v.tratativa) && !slots.some(s => isEdital(s.tratativa))) return false;
+      }
+
       if (search) {
         const s = search.toLowerCase();
         return v.cargo.toLowerCase().includes(s) || 

@@ -32,6 +32,15 @@ export default function EditaisPage() {
         if (!currentUser?.visualiza_todas_unidades && !currentUser?.unidades_vinculadas.includes(e.vaga.unidade)) {
           return false;
         }
+        // Analista de Edital: only sees vagas with Publicação de Edital tratativas
+        if (currentUser?.perfil === "Analista de Edital") {
+          const isEdital = (t?: string) =>
+            t === "Publicação de Edital" || t === "Publicação de Edital Interno";
+          const slots = Array.isArray((e.vaga as any).distribuicao_vagas)
+            ? ((e.vaga as any).distribuicao_vagas as { tratativa?: string }[])
+            : [];
+          if (!isEdital(e.vaga.tratativa) && !slots.some(s => isEdital(s.tratativa))) return false;
+        }
         return true;
       });
   }, [editais, vagas, currentUser, selectedRegion, selectedUnit]);

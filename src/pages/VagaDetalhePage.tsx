@@ -155,6 +155,7 @@ import {
 const TRATATIVAS = [
   "Aproveitamento de Banco de Talentos",
   "Publicação de Edital",
+  "Publicação de Edital Interno",
   "Movimentação Interna",
   "Vaga de Liderança",
   "Aguardando Unidade",
@@ -168,6 +169,20 @@ const ETAPAS_POR_TRATATIVA: Record<string, string[]> = {
     "Admissão Efetivada",
   ],
   "Publicação de Edital": [
+    "Publicar novo edital",
+    "Em edital",
+    "Triagem",
+    "Avaliação Específica",
+    "Recurso",
+    "Entrevista",
+    "Análise Curricular",
+    "Convocação",
+    "Documentação",
+    "Enviado para Formalização",
+    "Admissão Efetivada",
+    "Não logrou êxito",
+  ],
+  "Publicação de Edital Interno": [
     "Publicar novo edital",
     "Em edital",
     "Triagem",

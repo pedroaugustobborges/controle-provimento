@@ -3,6 +3,7 @@ export type TipoVaga = 'PCD' | 'Comum' | 'substituicao' | 'aumento' | 'lideranca
 export type TratativaVaga =
   | 'Aproveitamento de Banco de Talentos'
   | 'Publicação de Edital'
+  | 'Publicação de Edital Interno'
   | 'Movimentação Interna'
   | 'Vaga de Liderança';
 

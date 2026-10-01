@@ -84,6 +84,7 @@ import {
   Users,
   Search as SearchIcon,
   Zap,
+  Fingerprint,
   UserCheck,
   CheckCircle,
   Send,
@@ -99,6 +100,9 @@ import {
   ThumbsUp,
   AtSign,
   Trash2,
+  Crown,
+  Accessibility,
+  Puzzle,
 } from "lucide-react";
 import {
   Popover,
@@ -2073,6 +2077,49 @@ export default function VagaDetalhePage() {
                     {vaga.requisicao || vaga.numero_requisicao}
                   </p>
                 </div>
+
+                {/* ── Vacancy type badges ─────────────────────────── */}
+                {(() => {
+                  const isLideranca = getFluxoItems(vaga).some(
+                    (item) => item.tratativa === "Vaga de Liderança",
+                  );
+                  const isTeia =
+                    vaga.is_teia ||
+                    (vaga.unidade || "").toUpperCase().includes("TEIA");
+                  const isPcd =
+                    vaga.is_pcd ||
+                    (vaga.cargo || "").toUpperCase().includes("PCD");
+
+                  if (!isLideranca && !isTeia && !isPcd) return null;
+
+                  return (
+                    <div className="space-y-2">
+                      <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1.5">
+                        <Fingerprint className="h-3 w-3" /> Especificidade
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {isLideranca && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 ring-1 ring-amber-100">
+                            <Crown className="h-3 w-3 shrink-0" />
+                            Liderança
+                          </span>
+                        )}
+                        {isPcd && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 ring-1 ring-blue-100">
+                            <Accessibility className="h-3 w-3 shrink-0" />
+                            PCD
+                          </span>
+                        )}
+                        {isTeia && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 ring-1 ring-emerald-100">
+                            <Puzzle className="h-3 w-3 shrink-0" />
+                            TEIA
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {(vaga.is_teia ||

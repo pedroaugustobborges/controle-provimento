@@ -53,6 +53,7 @@ import {
   Upload,
   User as UserIcon,
   AlertTriangle,
+  ScrollText,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PageSkeleton } from "@/components/PageSkeleton";
@@ -1528,6 +1529,33 @@ export default function AdministracaoPage() {
               </div>
             </div>
 
+            {/* Analista de Edital — visibility restriction callout */}
+            {newUser.perfil === "Analista de Edital" && (
+              <div className="flex items-start gap-3.5 p-4 rounded-xl border border-amber-200 bg-amber-50">
+                <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-amber-100 border border-amber-200 mt-0.5">
+                  <ScrollText className="h-4.5 w-4.5 text-amber-600 h-[18px] w-[18px]" />
+                </div>
+                <div className="space-y-1.5 min-w-0">
+                  <p className="text-sm font-bold text-amber-800 flex items-center gap-1.5">
+                    Visibilidade restrita a Editais
+                  </p>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    Este perfil visualiza <span className="font-semibold">somente vagas</span> cuja tratativa seja uma das opções abaixo. Todas as demais tratativas ficam invisíveis para este usuário.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-amber-800 border border-amber-300 shadow-sm">
+                      <ScrollText className="h-3 w-3 shrink-0" />
+                      Publicação de Edital
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-amber-800 border border-amber-300 shadow-sm">
+                      <ScrollText className="h-3 w-3 shrink-0" />
+                      Publicação de Edital Interno
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Senha */}
             <div className="space-y-3 border-t pt-4">
               <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
@@ -2215,6 +2243,35 @@ export default function AdministracaoPage() {
                   </div>
                 )}
               </div>
+
+              {/* Analista de Edital — visibility restriction callout */}
+              {editingUser.perfil === "Analista de Edital" && (
+                <div className="border-t pt-4">
+                  <div className="flex items-start gap-3.5 p-4 rounded-xl border border-amber-200 bg-amber-50">
+                    <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-amber-100 border border-amber-200 mt-0.5">
+                      <ScrollText className="h-[18px] w-[18px] text-amber-600" />
+                    </div>
+                    <div className="space-y-1.5 min-w-0">
+                      <p className="text-sm font-bold text-amber-800">
+                        Visibilidade restrita a Editais
+                      </p>
+                      <p className="text-[11px] text-amber-700 leading-relaxed">
+                        Este perfil visualiza <span className="font-semibold">somente vagas</span> cuja tratativa seja uma das opções abaixo. Todas as demais tratativas ficam invisíveis para este usuário.
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-amber-800 border border-amber-300 shadow-sm">
+                          <ScrollText className="h-3 w-3 shrink-0" />
+                          Publicação de Edital
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white text-amber-800 border border-amber-300 shadow-sm">
+                          <ScrollText className="h-3 w-3 shrink-0" />
+                          Publicação de Edital Interno
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {editingUser.perfil === "Administrador" ? (
                 <div className="border-t pt-4">

@@ -914,7 +914,19 @@ export default function VagasPage() {
       }
     }
 
-    // 2. Filtro TEIAs / PCD
+    // 2. Analista de Edital: only sees vagas with Publicação de Edital tratativas
+    if (currentUser?.perfil === "Analista de Edital") {
+      baseRecords = baseRecords.filter((v) => {
+        const items = getVagaFluxoItems(v);
+        return items.some(
+          (item) =>
+            item.tratativa === "Publicação de Edital" ||
+            item.tratativa === "Publicação de Edital Interno",
+        );
+      });
+    }
+
+    // 3. Filtro TEIAs / PCD
     if (filterTeia) {
       baseRecords = baseRecords.filter(
         (v) => v.is_teia === true || (v.unidade || "").toUpperCase().includes("TEIA"),
@@ -955,6 +967,7 @@ export default function VagasPage() {
     filterPcd,
     currentUser?.visualiza_todas_unidades,
     currentUser?.unidades_vinculadas,
+    currentUser?.perfil,
   ]);
 
   // 2. Table filter for UI (Search, Status, etc. applied ON TOP of canonical base)

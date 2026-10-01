@@ -239,14 +239,35 @@ export default function DashboardPage() {
   // Apply user's unit restrictions before any UI filters.
   // Uses prefix matching so "HUGOL" matches "HUGOL - HOSPITAL ESTADUAL...".
   const userScopedVagas = useMemo(() => {
-    if (currentUser?.visualiza_todas_unidades) return allVagas;
-    const allowed = currentUser?.unidades_vinculadas || [];
-    if (allowed.length === 0) return allVagas;
-    return allVagas.filter((v) => unitIsAllowed(v.unidade, allowed));
+    let result = allVagas;
+
+    // Unit filter
+    if (!currentUser?.visualiza_todas_unidades) {
+      const allowed = currentUser?.unidades_vinculadas || [];
+      if (allowed.length > 0) {
+        result = result.filter((v) => unitIsAllowed(v.unidade, allowed));
+      }
+    }
+
+    // Analista de Edital: only sees vagas with Publicação de Edital tratativas
+    if (currentUser?.perfil === "Analista de Edital") {
+      result = result.filter((v) => {
+        const isEdital = (t: string | undefined) =>
+          t === "Publicação de Edital" || t === "Publicação de Edital Interno";
+        if (isEdital(v.tratativa)) return true;
+        const slots = Array.isArray((v as any).distribuicao_vagas)
+          ? ((v as any).distribuicao_vagas as { tratativa?: string }[])
+          : [];
+        return slots.some((s) => isEdital(s.tratativa));
+      });
+    }
+
+    return result;
   }, [
     allVagas,
     currentUser?.visualiza_todas_unidades,
     currentUser?.unidades_vinculadas,
+    currentUser?.perfil,
   ]);
 
   // Derive unique unidade names dynamically from the already-scoped vagas.

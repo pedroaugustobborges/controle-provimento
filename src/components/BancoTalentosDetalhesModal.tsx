@@ -32,7 +32,28 @@ import {
   ArrowRight,
   LayoutGrid,
   List,
+  GripVertical,
+  RotateCcw,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
@@ -153,46 +174,62 @@ function getRankStyle(_rank: number | string) {
 
 interface CandidateCardProps {
   candidate: any;
+  /** Visual position in the current list (1-based, updates dynamically as user reorders) */
+  position: number;
   banco: BancoTalentos;
   onConvocar: (data: Partial<Convocacao>) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+  isDragging?: boolean;
 }
 
-function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) {
+function CandidateCard({ candidate: c, position, banco, onConvocar, dragHandleProps, isDragging }: CandidateCardProps) {
   const notaAv     = parseFloat((c as any).nota_avaliacao)  || null;
   const notaEnt    = parseFloat((c as any).nota_entrevista) || null;
   const mediaFinal = parseFloat((c as any).media_final)    || null;
   const obs        = (c as any).observacao as string | undefined;
   const hasObs     = !!obs && obs !== "nan" && obs.trim() !== "";
-  const rank       = getRankStyle(c.classificacao);
-
+  const rank       = getRankStyle(position);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
-
+    <div
+      className={cn(
+        "rounded-2xl border bg-white overflow-hidden transition-shadow duration-200 group",
+        isDragging
+          ? "border-primary/40 shadow-2xl shadow-primary/25 ring-2 ring-primary/30"
+          : "border-slate-200 shadow-sm hover:shadow-md"
+      )}
+    >
       {/* ── Profile header ───────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 py-3.5 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-        {/* Rank badge */}
+        {/* Drag handle */}
+        <div
+          {...dragHandleProps}
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 cursor-grab active:cursor-grabbing touch-none shrink-0 -ml-1 p-1 rounded-lg hover:bg-slate-100 text-slate-300 hover:text-slate-500"
+          title="Arrastar para reordenar"
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
+
+        {/* Rank badge — shows current visual position */}
         <div
           className={cn(
-            "h-9 w-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-sm",
+            "h-9 w-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0 shadow-sm transition-all duration-200",
             rank.gradient
           )}
         >
-          <span className={cn("text-xs font-black", rank.text)}>
-            {c.classificacao}°
+          <span className={cn("text-xs font-black tabular-nums", rank.text)}>
+            {position}°
           </span>
         </div>
 
         {/* Name */}
         <div className="flex-1 min-w-0">
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-slate-800 leading-tight truncate">
-              {c.nome || "Não identificado"}
-            </p>
-            <p className="text-[10px] text-slate-400 font-medium tracking-wide">
-              {(c as any).cpf ? `CPF: ${(c as any).cpf}` : "CPF não informado"}
-            </p>
-          </div>
+          <p className="text-sm font-bold text-slate-800 leading-tight truncate">
+            {c.nome || "Não identificado"}
+          </p>
+          <p className="text-[10px] text-slate-400 font-medium tracking-wide">
+            {(c as any).cpf ? `CPF: ${(c as any).cpf}` : "CPF não informado"}
+          </p>
         </div>
 
         {/* Status chip */}
@@ -203,37 +240,22 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
 
       {/* ── Scores row ───────────────────────────────────── */}
       <div className="grid grid-cols-[1fr_1fr_auto] divide-x divide-slate-100 border-b border-slate-100">
-        {/* Nota Avaliação */}
         <div className="flex flex-col items-center justify-center py-3 px-3 gap-0.5">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">
             Nota Avaliação
           </p>
-          <p
-            className={cn(
-              "text-lg font-black tabular-nums",
-              notaAv === null ? "text-slate-300" : "text-slate-700"
-            )}
-          >
+          <p className={cn("text-lg font-black tabular-nums", notaAv === null ? "text-slate-300" : "text-slate-700")}>
             {notaAv !== null ? notaAv.toFixed(2) : "—"}
           </p>
         </div>
-
-        {/* Nota Entrevista */}
         <div className="flex flex-col items-center justify-center py-3 px-3 gap-0.5">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center">
             Nota Entrevista
           </p>
-          <p
-            className={cn(
-              "text-lg font-black tabular-nums",
-              notaEnt === null ? "text-slate-300" : "text-slate-700"
-            )}
-          >
+          <p className={cn("text-lg font-black tabular-nums", notaEnt === null ? "text-slate-300" : "text-slate-700")}>
             {notaEnt !== null ? notaEnt.toFixed(2) : "—"}
           </p>
         </div>
-
-        {/* Média Final — highlighted with ring */}
         <div className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-br from-primary/5 to-primary/[0.08]">
           <ScoreRing value={mediaFinal} />
           <div>
@@ -252,36 +274,24 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
         <div className="flex items-start gap-2">
           <Phone className="h-3.5 w-3.5 text-slate-300 mt-0.5 shrink-0" />
           <div className="space-y-0.5 min-w-0">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-              Telefone
-            </p>
-            <p className="text-[11px] font-semibold text-slate-700">
-              {(c as any).telefone || "—"}
-            </p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Telefone</p>
+            <p className="text-[11px] font-semibold text-slate-700">{(c as any).telefone || "—"}</p>
           </div>
         </div>
         <div className="flex items-start gap-2">
           <CalendarDays className="h-3.5 w-3.5 text-slate-300 mt-0.5 shrink-0" />
           <div className="space-y-0.5">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-              Nascimento
-            </p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nascimento</p>
             <p className="text-[11px] font-semibold text-slate-700">
-              {(c as any).data_nascimento
-                ? fmtDate(parseDate((c as any).data_nascimento))
-                : "—"}
+              {(c as any).data_nascimento ? fmtDate(parseDate((c as any).data_nascimento)) : "—"}
             </p>
           </div>
         </div>
         <div className="col-span-2 flex items-start gap-2">
           <Mail className="h-3.5 w-3.5 text-slate-300 mt-0.5 shrink-0" />
           <div className="space-y-0.5 min-w-0">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-              E-mail
-            </p>
-            <p className="text-[11px] font-semibold text-slate-700 truncate">
-              {(c as any).email || "—"}
-            </p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">E-mail</p>
+            <p className="text-[11px] font-semibold text-slate-700 truncate">{(c as any).email || "—"}</p>
           </div>
         </div>
       </div>
@@ -289,19 +299,15 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
       {/* ── Observação ───────────────────────────────────── */}
       {hasObs && (
         <div className="mx-4 mb-3 mt-1 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5">
-          <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mb-1">
-            Observação
-          </p>
-          <p className="text-[11px] font-medium text-amber-900 leading-relaxed italic">
-            {obs}
-          </p>
+          <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mb-1">Observação</p>
+          <p className="text-[11px] font-medium text-amber-900 leading-relaxed italic">{obs}</p>
         </div>
       )}
 
       {/* ── Convocar ─────────────────────────────────────── */}
       <div className="px-4 pb-4 pt-2 flex items-center justify-between">
         <p className="text-[10px] text-slate-400 font-medium">
-          {c.classificacao}° classificado
+          {position}° classificado
         </p>
         <Button
           size="sm"
@@ -309,7 +315,7 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
           onClick={() =>
             onConvocar({
               nome_candidato: c.nome || "",
-              classificacao: Number(c.classificacao) || 1,
+              classificacao: position,
               cargo: banco.cargo,
               unidade: banco.unidade,
               secao: banco.secao || "",
@@ -329,28 +335,89 @@ function CandidateCard({ candidate: c, banco, onConvocar }: CandidateCardProps) 
   );
 }
 
+// ── Sortable card wrapper ─────────────────────────────────────────────────────
+
+function SortableCard({ candidate, position, banco, onConvocar }: Omit<CandidateCardProps, "dragHandleProps" | "isDragging">) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: candidate.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    // No transition on the dragging item so it tracks the cursor instantly
+    transition: isDragging ? undefined : transition,
+    zIndex: isDragging ? 9999 : undefined,
+    position: "relative",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={isDragging ? "rotate-[1.5deg] scale-[1.03] filter drop-shadow-2xl" : ""}
+    >
+      <CandidateCard
+        candidate={candidate}
+        position={position}
+        banco={banco}
+        onConvocar={onConvocar}
+        dragHandleProps={listeners as React.HTMLAttributes<HTMLDivElement>}
+        isDragging={isDragging}
+      />
+    </div>
+  );
+}
+
 // ── Candidate row (list view) ─────────────────────────────────────────────────
 
-function CandidateRow({ candidate: c, banco, onConvocar }: CandidateCardProps) {
+interface CandidateRowProps {
+  candidate: any;
+  /** Visual position in the current list (1-based) */
+  position: number;
+  banco: BancoTalentos;
+  onConvocar: (data: Partial<Convocacao>) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+  isDragging?: boolean;
+}
+
+function CandidateRow({ candidate: c, position, banco, onConvocar, dragHandleProps, isDragging }: CandidateRowProps) {
   const notaAv     = parseFloat((c as any).nota_avaliacao)  || null;
   const notaEnt    = parseFloat((c as any).nota_entrevista) || null;
   const mediaFinal = parseFloat((c as any).media_final)    || null;
 
   const scoreColor =
-    mediaFinal === null
-      ? "text-slate-400"
-      : mediaFinal >= 70
-      ? "text-emerald-600"
-      : mediaFinal >= 50
-      ? "text-amber-600"
-      : "text-red-500";
+    mediaFinal === null ? "text-slate-400"
+    : mediaFinal >= 70  ? "text-emerald-600"
+    : mediaFinal >= 50  ? "text-amber-600"
+    : "text-red-500";
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-slate-200 hover:border-primary/30 hover:shadow-sm hover:shadow-primary/5 transition-all duration-150 group">
+    <div
+      className={cn(
+        "flex items-center gap-3 px-4 py-3 bg-white rounded-xl border transition-all duration-150 group",
+        isDragging
+          ? "border-primary/40 shadow-xl shadow-primary/15 ring-1 ring-primary/30"
+          : "border-slate-200 hover:border-primary/30 hover:shadow-sm hover:shadow-primary/5"
+      )}
+    >
+      {/* Drag handle */}
+      <div
+        {...dragHandleProps}
+        className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 cursor-grab active:cursor-grabbing touch-none shrink-0 -ml-1 p-1 rounded-lg hover:bg-slate-100 text-slate-300 hover:text-slate-500"
+        title="Arrastar para reordenar"
+      >
+        <GripVertical className="h-4 w-4" />
+      </div>
 
-      {/* Rank */}
+      {/* Rank badge — shows current visual position */}
       <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center shrink-0 shadow-sm">
-        <span className="text-[11px] font-black text-white">{c.classificacao}°</span>
+        <span className="text-[11px] font-black text-white tabular-nums">{position}°</span>
       </div>
 
       {/* Name + CPF */}
@@ -382,7 +449,6 @@ function CandidateRow({ candidate: c, banco, onConvocar }: CandidateCardProps) {
             {notaEnt !== null ? notaEnt.toFixed(2) : "—"}
           </p>
         </div>
-        {/* Média Final — always visible */}
         <div className="text-center">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Média</p>
           <p className={cn("text-base font-black tabular-nums", scoreColor)}>
@@ -398,7 +464,7 @@ function CandidateRow({ candidate: c, banco, onConvocar }: CandidateCardProps) {
         onClick={() =>
           onConvocar({
             nome_candidato: c.nome || "",
-            classificacao: Number(c.classificacao) || 1,
+            classificacao: position,
             cargo: banco.cargo,
             unidade: banco.unidade,
             secao: banco.secao || "",
@@ -412,6 +478,44 @@ function CandidateRow({ candidate: c, banco, onConvocar }: CandidateCardProps) {
         <UserCheck className="h-3.5 w-3.5" />
         Convocar
       </Button>
+    </div>
+  );
+}
+
+// ── Sortable row wrapper ──────────────────────────────────────────────────────
+
+function SortableRow({ candidate, position, banco, onConvocar }: Omit<CandidateRowProps, "dragHandleProps" | "isDragging">) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: candidate.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? undefined : transition,
+    zIndex: isDragging ? 9999 : undefined,
+    position: "relative",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={isDragging ? "scale-[1.02] filter drop-shadow-xl" : ""}
+    >
+      <CandidateRow
+        candidate={candidate}
+        position={position}
+        banco={banco}
+        onConvocar={onConvocar}
+        dragHandleProps={listeners as React.HTMLAttributes<HTMLDivElement>}
+        isDragging={isDragging}
+      />
     </div>
   );
 }
@@ -466,20 +570,18 @@ export function BancoTalentosDetalhesModal({
   const [prorrogando, setProrrogando] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Auto-open the prorrogar confirmation when navigated from a notification
   useEffect(() => {
     if (open && autoShowProrrogar && canProrrogate) {
       setShowConfirm(true);
     }
   }, [open, autoShowProrrogar, canProrrogate]);
-  // Local optimistic state so the label flips immediately on success
+
   const [localProrrogado, setLocalProrrogado] = useState(false);
   const [localNovaValidade, setLocalNovaValidade] = useState<string | null>(null);
-  // Inline editing for data_resultado (admin only)
   const [editingResultado, setEditingResultado] = useState(false);
   const [localResultado, setLocalResultado] = useState<string | null>(null);
   const [savingResultado, setSavingResultado] = useState(false);
-  // View mode persisted across sessions
+
   const [viewMode, setViewMode] = useState<"cards" | "list">(() => {
     return (localStorage.getItem("banco-detalhes-view") as "cards" | "list") || "cards";
   });
@@ -488,13 +590,42 @@ export function BancoTalentosDetalhesModal({
     localStorage.setItem("banco-detalhes-view", mode);
   };
 
-  const sortedCandidates = useMemo(
-    () =>
-      [...candidates].sort(
-        (a, b) => Number(a.classificacao) - Number(b.classificacao),
-      ),
+  // ── Drag-and-drop ordered candidates ─────────────────────────────────────
+  const defaultSorted = useMemo(
+    () => [...candidates].sort((a, b) => Number(a.classificacao) - Number(b.classificacao)),
     [candidates],
   );
+
+  const [orderedCandidates, setOrderedCandidates] = useState<any[]>(defaultSorted);
+
+  // Re-sync when modal opens with a different banco
+  useEffect(() => {
+    setOrderedCandidates(
+      [...candidates].sort((a, b) => Number(a.classificacao) - Number(b.classificacao))
+    );
+  }, [candidates]);
+
+  const isCustomOrder = useMemo(() => {
+    if (orderedCandidates.length !== defaultSorted.length) return false;
+    return orderedCandidates.some((c, i) => c.id !== defaultSorted[i]?.id);
+  }, [orderedCandidates, defaultSorted]);
+
+  // ── DnD sensors ──────────────────────────────────────────────────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    setOrderedCandidates((prev) => {
+      const oldIndex = prev.findIndex((c) => c.id === active.id);
+      const newIndex = prev.findIndex((c) => c.id === over.id);
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
+
+  const handleResetOrder = () => setOrderedCandidates(defaultSorted);
 
   if (!banco) return null;
 
@@ -504,7 +635,6 @@ export function BancoTalentosDetalhesModal({
 
   const handleSaveResultado = async (raw: string) => {
     const trimmed = raw.trim();
-    // Accept DD/MM/YYYY or YYYY-MM-DD; convert to ISO for storage
     let iso: string | null = null;
     const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -537,9 +667,9 @@ export function BancoTalentosDetalhesModal({
   const resultadoDate  = parseDate(localResultado ?? (banco as any).data_resultado);
   const val6m          = resultadoDate ? addMonths(resultadoDate, 6)  : null;
   const val12m         = resultadoDate ? addMonths(resultadoDate, 12) : null;
-  const isProrrogado = localProrrogado || !!(banco.is_prorrogado || banco.nova_data_validade);
+  const isProrrogado   = localProrrogado || !!(banco.is_prorrogado || banco.nova_data_validade);
   const novaValidadeStr = localNovaValidade ?? banco.nova_data_validade ?? null;
-  const isTeia       = !!(banco as any).is_teia;
+  const isTeia         = !!(banco as any).is_teia;
 
   const handleProrrogar = async () => {
     if (!val12m || !currentUser) return;
@@ -553,7 +683,6 @@ export function BancoTalentosDetalhesModal({
         .update({ is_prorrogado: true, nova_data_validade: novaValidade })
         .in("id", ids);
       if (error) throw error;
-      // Flip label immediately without waiting for re-fetch
       setLocalProrrogado(true);
       setLocalNovaValidade(novaValidade);
       setShowConfirm(false);
@@ -620,7 +749,6 @@ export function BancoTalentosDetalhesModal({
         <div className="px-6 py-3.5 border-b border-slate-800 bg-slate-900 shrink-0">
           <div className="flex items-start gap-0 divide-x divide-slate-700/60">
 
-            {/* Nº do Edital */}
             <InfoField
               className="pr-5"
               label="Nº do Edital"
@@ -634,22 +762,17 @@ export function BancoTalentosDetalhesModal({
                 )
               }
             />
-
-            {/* Proc. Seletivo */}
             <InfoField
               className="px-5"
               label="Proc. Seletivo"
               value={banco.numero_processo_seletivo || banco.numero_processo || "—"}
             />
-
-            {/* Publicação */}
             <InfoField
               className="px-5"
               label="Publicação"
               value={fmtDate(pubDate)}
             />
 
-            {/* Resultado — inline editable for admins */}
             <div className="px-5 space-y-1 flex-1">
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                 Resultado
@@ -679,7 +802,6 @@ export function BancoTalentosDetalhesModal({
               )}
             </div>
 
-            {/* Validade + Prorrogar */}
             <div className="pl-5 space-y-1 flex-1">
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
                 {isProrrogado ? "Validade Prorrogada" : "Validade Original"}
@@ -706,33 +828,18 @@ export function BancoTalentosDetalhesModal({
               )}
             </div>
 
-            {/* Data Convocação (conditional) */}
             {banco.data_convocacao && (
               <InfoField
                 className="pl-5"
                 label="Data Convocação"
-                value={
-                  <span className="text-green-400">
-                    {fmtDate(parseDate(banco.data_convocacao))}
-                  </span>
-                }
+                value={<span className="text-green-400">{fmtDate(parseDate(banco.data_convocacao))}</span>}
               />
             )}
-
-            {/* Convocação extra fields */}
             {banco.unidade_convocacao && (
-              <InfoField
-                className="pl-5"
-                label="Unidade Convocação"
-                value={banco.unidade_convocacao}
-              />
+              <InfoField className="pl-5" label="Unidade Convocação" value={banco.unidade_convocacao} />
             )}
             {banco.numero_chamada && (
-              <InfoField
-                className="pl-5"
-                label="Nº da Chamada"
-                value={banco.numero_chamada}
-              />
+              <InfoField className="pl-5" label="Nº da Chamada" value={banco.numero_chamada} />
             )}
           </div>
         </div>
@@ -740,19 +847,13 @@ export function BancoTalentosDetalhesModal({
         {/* ── Confirmation banner ───────────────────────────── */}
         {showConfirm && (
           <div className="px-6 py-3 bg-amber-50 border-b border-amber-200 shrink-0 flex items-center gap-4 flex-wrap">
-            {/* Label */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="h-7 w-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
               </div>
-              <p className="text-xs font-bold text-amber-800">
-                Confirmar Prorrogação
-              </p>
+              <p className="text-xs font-bold text-amber-800">Confirmar Prorrogação</p>
             </div>
-
             <div className="h-5 border-l border-amber-300 shrink-0" />
-
-            {/* Date arrow */}
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-[11px] font-bold text-amber-900 bg-amber-200/70 px-2.5 py-1 rounded-lg tabular-nums">
                 {fmtDate(val6m)}
@@ -762,14 +863,10 @@ export function BancoTalentosDetalhesModal({
                 {fmtDate(val12m)}
               </span>
             </div>
-
             <p className="text-[10px] text-amber-600 italic hidden sm:block">
               +6 meses · esta ação não pode ser desfeita
             </p>
-
             <div className="flex-1" />
-
-            {/* Actions */}
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setShowConfirm(false)}
@@ -784,32 +881,48 @@ export function BancoTalentosDetalhesModal({
                 className="text-[11px] font-bold text-white bg-amber-500 hover:bg-amber-600 px-3.5 py-1.5 rounded-lg transition-all disabled:opacity-60 flex items-center gap-1.5 shadow-sm shadow-amber-500/30"
               >
                 {prorrogando ? (
-                  <>
-                    <Clock className="h-3 w-3 animate-spin" />
-                    Salvando…
-                  </>
+                  <><Clock className="h-3 w-3 animate-spin" />Salvando…</>
                 ) : (
-                  <>
-                    <CheckCircle2 className="h-3 w-3" />
-                    Confirmar
-                  </>
+                  <><CheckCircle2 className="h-3 w-3" />Confirmar</>
                 )}
               </button>
             </div>
           </div>
         )}
 
-        {/* ── Candidates area (full-width) ─────────────────── */}
+        {/* ── Candidates area ──────────────────────────────── */}
         <div
           className="flex-1 overflow-y-auto p-5"
           style={isDark ? { background: "rgba(7,9,29,0.88)" } : { background: "rgba(248,250,252,0.8)" }}
         >
-
-          {/* Section header + view toggle */}
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Users className="h-3 w-3" /> Candidatos Classificados
-            </h3>
+          {/* Section header + view toggle + order controls */}
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                <Users className="h-3 w-3" /> Candidatos Classificados
+              </h3>
+              {isCustomOrder && (
+                <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border"
+                    style={isDark
+                      ? { background: "rgba(129,140,248,0.12)", color: "#a5b4fc", borderColor: "rgba(129,140,248,0.25)" }
+                      : { background: "rgba(99,102,241,0.08)", color: "#6366f1", borderColor: "rgba(99,102,241,0.2)" }}
+                  >
+                    <GripVertical className="h-2.5 w-2.5" />
+                    Ordem personalizada
+                  </span>
+                  <button
+                    onClick={handleResetOrder}
+                    className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-400 hover:text-slate-600 transition-colors px-1.5 py-0.5 rounded-md hover:bg-slate-100"
+                    title="Restaurar ordem original"
+                  >
+                    <RotateCcw className="h-2.5 w-2.5" />
+                    Restaurar
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Segmented toggle */}
             <div
@@ -858,27 +971,51 @@ export function BancoTalentosDetalhesModal({
               <p className="text-sm italic">Nenhum candidato listado.</p>
             </div>
           ) : viewMode === "cards" ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {sortedCandidates.map((c) => (
-                <CandidateCard
-                  key={c.id}
-                  candidate={c}
-                  banco={banco}
-                  onConvocar={onConvocar}
-                />
-              ))}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={orderedCandidates.map((c) => c.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {orderedCandidates.map((c, index) => (
+                    <SortableCard
+                      key={c.id}
+                      candidate={c}
+                      position={index + 1}
+                      banco={banco}
+                      onConvocar={onConvocar}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           ) : (
-            <div className="space-y-1.5">
-              {sortedCandidates.map((c) => (
-                <CandidateRow
-                  key={c.id}
-                  candidate={c}
-                  banco={banco}
-                  onConvocar={onConvocar}
-                />
-              ))}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={orderedCandidates.map((c) => c.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-1.5">
+                  {orderedCandidates.map((c, index) => (
+                    <SortableRow
+                      key={c.id}
+                      candidate={c}
+                      position={index + 1}
+                      banco={banco}
+                      onConvocar={onConvocar}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </DialogContent>

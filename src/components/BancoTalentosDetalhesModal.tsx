@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { BancoTalentos, Convocacao } from "@/types/vaga";
+import { ConvocacaoLoteModal } from "@/components/ConvocacaoLoteModal";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -590,6 +591,9 @@ export function BancoTalentosDetalhesModal({
     localStorage.setItem("banco-detalhes-view", mode);
   };
 
+  // ── Bulk convocation modal ────────────────────────────────────────────────
+  const [showLote, setShowLote] = useState(false);
+
   // ── Drag-and-drop ordered candidates ─────────────────────────────────────
   const defaultSorted = useMemo(
     () => [...candidates].sort((a, b) => Number(a.classificacao) - Number(b.classificacao)),
@@ -956,7 +960,7 @@ export function BancoTalentosDetalhesModal({
           style={isDark ? { background: "rgba(7,9,29,0.88)" } : { background: "rgba(248,250,252,0.8)" }}
         >
           {/* Section header + view toggle + order controls */}
-          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap" style={{ alignItems: "flex-start" }}>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                 <Users className="h-3 w-3" /> Candidatos Classificados
@@ -1012,9 +1016,24 @@ export function BancoTalentosDetalhesModal({
               )}
             </div>
 
-            {/* Segmented toggle */}
-            <div
-              className="flex items-center rounded-lg p-0.5 gap-0.5"
+            {/* Right side: Convocar em Lote + view toggle */}
+            <div className="flex items-center gap-2 shrink-0">
+              {orderedCandidates.length > 1 && (
+                <button
+                  onClick={() => setShowLote(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 border shadow-sm"
+                  style={isDark
+                    ? { background: "rgba(129,140,248,0.15)", color: "#a5b4fc", borderColor: "rgba(129,140,248,0.3)" }
+                    : { background: "hsl(215 45% 25% / 0.06)", color: "hsl(215 45% 25%)", borderColor: "hsl(215 45% 25% / 0.2)" }}
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Convocar em Lote
+                </button>
+              )}
+
+              {/* Segmented toggle */}
+              <div
+                className="flex items-center rounded-lg p-0.5 gap-0.5"
               style={isDark ? { background: "rgba(255,255,255,0.07)" } : { background: "rgba(148,163,184,0.3)" }}
             >
               <button
@@ -1046,7 +1065,8 @@ export function BancoTalentosDetalhesModal({
                 Lista
               </button>
             </div>
-          </div>
+            </div>{/* closes right side wrapper */}
+          </div>{/* closes section header */}
 
           {candidates.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-slate-400 gap-3">
@@ -1107,6 +1127,17 @@ export function BancoTalentosDetalhesModal({
           )}
         </div>
       </DialogContent>
+
+      {/* ── Bulk convocation modal ────────────────────────────────────────── */}
+      {showLote && (
+        <ConvocacaoLoteModal
+          open={showLote}
+          onOpenChange={setShowLote}
+          banco={banco}
+          candidates={orderedCandidates}
+          fetchBancos={fetchBancos}
+        />
+      )}
     </Dialog>
   );
 }

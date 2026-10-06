@@ -34,6 +34,7 @@ import {
   List,
   GripVertical,
   RotateCcw,
+  Loader2,
 } from "lucide-react";
 import {
   DndContext,
@@ -43,7 +44,6 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -597,18 +597,60 @@ export function BancoTalentosDetalhesModal({
   );
 
   const [orderedCandidates, setOrderedCandidates] = useState<any[]>(defaultSorted);
+  const [savingOrder, setSavingOrder] = useState(false);
 
-  // Re-sync when modal opens with a different banco
+  // Audit info from DB: who last reordered and when
+  const reorderAudit = useMemo(() => {
+    const c = candidates.find((c: any) => c.reordenado_por && c.reordenado_em);
+    if (!c) return null;
+    return { por: (c as any).reordenado_por as string, em: (c as any).reordenado_em as string };
+  }, [candidates]);
+
+  // Re-sync when modal opens with a different banco, respecting saved ordem_manual
   useEffect(() => {
-    setOrderedCandidates(
-      [...candidates].sort((a, b) => Number(a.classificacao) - Number(b.classificacao))
-    );
+    const hasCustomOrder = candidates.some((c: any) => c.ordem_manual != null);
+    if (hasCustomOrder) {
+      setOrderedCandidates(
+        [...candidates].sort((a: any, b: any) => {
+          const ao = a.ordem_manual ?? 9999;
+          const bo = b.ordem_manual ?? 9999;
+          return ao !== bo ? ao - bo : Number(a.classificacao) - Number(b.classificacao);
+        })
+      );
+    } else {
+      setOrderedCandidates(
+        [...candidates].sort((a, b) => Number(a.classificacao) - Number(b.classificacao))
+      );
+    }
   }, [candidates]);
 
   const isCustomOrder = useMemo(() => {
     if (orderedCandidates.length !== defaultSorted.length) return false;
     return orderedCandidates.some((c, i) => c.id !== defaultSorted[i]?.id);
   }, [orderedCandidates, defaultSorted]);
+
+  // ── Persist order to Supabase ─────────────────────────────────────────────
+  const persistOrder = async (newOrder: any[]) => {
+    setSavingOrder(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const author = currentUser?.nome || currentUser?.email || "Usuário";
+      const isoNow = new Date().toISOString();
+      await Promise.all(
+        newOrder.map((c, index) =>
+          supabase
+            .from("banco_candidatos")
+            .update({ ordem_manual: index + 1, reordenado_por: author, reordenado_em: isoNow })
+            .eq("id", c.id)
+        )
+      );
+      await fetchBancos();
+    } catch (e: any) {
+      toast.error("Erro ao salvar ordem: " + e.message);
+    } finally {
+      setSavingOrder(false);
+    }
+  };
 
   // ── DnD sensors ──────────────────────────────────────────────────────────
   const sensors = useSensors(
@@ -621,11 +663,29 @@ export function BancoTalentosDetalhesModal({
     setOrderedCandidates((prev) => {
       const oldIndex = prev.findIndex((c) => c.id === active.id);
       const newIndex = prev.findIndex((c) => c.id === over.id);
-      return arrayMove(prev, oldIndex, newIndex);
+      const newOrder = arrayMove(prev, oldIndex, newIndex);
+      persistOrder(newOrder);
+      return newOrder;
     });
   };
 
-  const handleResetOrder = () => setOrderedCandidates(defaultSorted);
+  const handleResetOrder = async () => {
+    setOrderedCandidates(defaultSorted);
+    setSavingOrder(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const ids = candidates.map((c: any) => c.id);
+      await supabase
+        .from("banco_candidatos")
+        .update({ ordem_manual: null, reordenado_por: null, reordenado_em: null })
+        .in("id", ids);
+      await fetchBancos();
+    } catch (e: any) {
+      toast.error("Erro ao restaurar ordem: " + e.message);
+    } finally {
+      setSavingOrder(false);
+    }
+  };
 
   if (!banco) return null;
 
@@ -897,11 +957,21 @@ export function BancoTalentosDetalhesModal({
         >
           {/* Section header + view toggle + order controls */}
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                 <Users className="h-3 w-3" /> Candidatos Classificados
               </h3>
-              {isCustomOrder && (
+
+              {/* Saving spinner */}
+              {savingOrder && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-slate-400">
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  Salvando…
+                </span>
+              )}
+
+              {/* Custom order badge + audit + reset */}
+              {!savingOrder && isCustomOrder && (
                 <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
                   <span
                     className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border"
@@ -912,15 +982,33 @@ export function BancoTalentosDetalhesModal({
                     <GripVertical className="h-2.5 w-2.5" />
                     Ordem personalizada
                   </span>
+                  {reorderAudit && (
+                    <span className="text-[9px] text-slate-400 hidden sm:inline">
+                      por <span className="font-semibold">{reorderAudit.por}</span>
+                      {" · "}
+                      {fmtDate(parseDate(reorderAudit.em.split("T")[0]))}
+                    </span>
+                  )}
                   <button
                     onClick={handleResetOrder}
-                    className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-400 hover:text-slate-600 transition-colors px-1.5 py-0.5 rounded-md hover:bg-slate-100"
+                    disabled={savingOrder}
+                    className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-400 hover:text-slate-600 transition-colors px-1.5 py-0.5 rounded-md hover:bg-slate-100 disabled:opacity-40"
                     title="Restaurar ordem original"
                   >
                     <RotateCcw className="h-2.5 w-2.5" />
                     Restaurar
                   </button>
                 </div>
+              )}
+
+              {/* Saved-order badge when order came from DB but matches default */}
+              {!savingOrder && !isCustomOrder && reorderAudit && (
+                <span className="text-[9px] text-slate-400 hidden sm:inline animate-in fade-in duration-200">
+                  Ordem original · reordenado por{" "}
+                  <span className="font-semibold">{reorderAudit.por}</span>
+                  {" em "}
+                  {fmtDate(parseDate(reorderAudit.em.split("T")[0]))}
+                </span>
               )}
             </div>
 

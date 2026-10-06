@@ -158,9 +158,12 @@ export type Database = {
           numero_edital: string | null
           numero_processo_seletivo: string | null
           observacao: string | null
+          ordem_manual: number | null
           origem: string | null
           prorrogacao: string | null
           quantidade_banco: number | null
+          reordenado_em: string | null
+          reordenado_por: string | null
           status: string | null
           status_calculado: string | null
           status_original: string | null
@@ -194,9 +197,12 @@ export type Database = {
           numero_edital?: string | null
           numero_processo_seletivo?: string | null
           observacao?: string | null
+          ordem_manual?: number | null
           origem?: string | null
           prorrogacao?: string | null
           quantidade_banco?: number | null
+          reordenado_em?: string | null
+          reordenado_por?: string | null
           status?: string | null
           status_calculado?: string | null
           status_original?: string | null
@@ -230,9 +236,12 @@ export type Database = {
           numero_edital?: string | null
           numero_processo_seletivo?: string | null
           observacao?: string | null
+          ordem_manual?: number | null
           origem?: string | null
           prorrogacao?: string | null
           quantidade_banco?: number | null
+          reordenado_em?: string | null
+          reordenado_por?: string | null
           status?: string | null
           status_calculado?: string | null
           status_original?: string | null

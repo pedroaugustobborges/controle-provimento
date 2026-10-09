@@ -515,8 +515,13 @@ export default function AdministracaoPage() {
     }
     setSaving(true);
     try {
+      const newUserHasAnyEditPermission = Object.values(
+        newUser.permissoes_modulo || {}
+      ).some((p) => p === "edit");
+
       await addUser({
         ...newUser,
+        pode_incluir_registros: newUser.pode_incluir_registros || newUserHasAnyEditPermission,
         perfil: newUser.perfil as any,
         sendWelcomeEmail: newUser.sendWelcomeEmail,
       });
@@ -692,13 +697,20 @@ export default function AdministracaoPage() {
     }
     setSaving(true);
     try {
+      // A user with "Edição Completa" (edit) on any module must also have
+      // pode_incluir_registros = true so the Supabase RLS UPDATE policy allows
+      // their PATCH requests (the policy checks this flag, not permissoes_modulo).
+      const hasAnyEditPermission = Object.values(
+        editingUser.permissoes_modulo || {}
+      ).some((p) => p === "edit");
+
       await updateUser(editingUser.id, {
         nome_completo: editingUser.nome_completo,
         perfil: editingUser.perfil,
         cargo: editingUser.cargo,
         visualiza_todas_unidades: editingUser.visualiza_todas_unidades,
         unidades_vinculadas: editingUser.unidades_vinculadas,
-        pode_incluir_registros: editingUser.pode_incluir_registros,
+        pode_incluir_registros: editingUser.pode_incluir_registros || hasAnyEditPermission,
         pode_excluir_requisicoes: editingUser.pode_excluir_requisicoes,
         pode_editar_configuracoes: editingUser.pode_editar_configuracoes,
         pode_gerenciar_usuarios: editingUser.pode_gerenciar_usuarios,

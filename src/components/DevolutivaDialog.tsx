@@ -193,28 +193,8 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
               Resultado da Convocação
             </Label>
 
-            {/* Row 1 — primary outcomes */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {OPCOES.slice(0, 2).map(({ value, label, icon: Icon, activeClass, inactiveClass }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setDevolutiva(value)}
-                  className={`
-                    flex flex-col items-center justify-center gap-2 h-[72px] rounded-xl border-2
-                    font-semibold text-sm transition-all duration-150 shadow-sm
-                    ${devolutiva === value ? `${activeClass} shadow-md` : inactiveClass}
-                  `}
-                >
-                  <Icon className="h-5 w-5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Row 2 — secondary outcomes */}
-            <div className="grid grid-cols-3 gap-2.5">
-              {OPCOES.slice(2).map(({ value, label, icon: Icon, activeClass, inactiveClass }) => (
+            <div className="grid grid-cols-5 gap-2">
+              {OPCOES.map(({ value, label, icon: Icon, activeClass, inactiveClass }) => (
                 <button
                   key={value}
                   type="button"

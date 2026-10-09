@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useLayoutEffect, useDeferredValue, Fragment } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useVagasStore } from "@/store/vagasStore";
 import { useAdminStore } from "@/store/adminStore";
@@ -418,6 +418,48 @@ function MultiSelectFilter({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Isolated search input — maintains its own local state so typing only re-renders
+// this tiny component. The parent's setSearch is called after a 300ms debounce,
+// so the expensive VagasPage re-render + filter computation is decoupled from input.
+function DebouncedSearchInput({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [localValue, setLocalValue] = useState(value);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Sync when parent clears / resets filters
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    setLocalValue(v);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onChange(v), 300);
+  };
+
+  // Clean up pending timer on unmount
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  return (
+    <Input
+      placeholder={placeholder}
+      value={localValue}
+      onChange={handleChange}
+      className={className}
+    />
+  );
+}
+
 const VAGAS_FILTERS_KEY = "gdp_vagas_filters";
 
 function getSavedFilters() {
@@ -473,6 +515,10 @@ export default function VagasPage() {
   const location = useLocation();
   const permissions = usePermissions();
   const [search, setSearch] = useState(() => getSavedFilters()?.search ?? "");
+  // deferredSearch decouples the input's visual update from the expensive filter
+  // computation: React prioritises rendering the typed character first, then
+  // re-runs the useMemo below with the new value in a lower-priority pass.
+  const deferredSearch = useDeferredValue(search);
   const [filterUnidades, setFilterUnidades] = useState<string[]>(() => getSavedFilters()?.filterUnidades ?? []);
   const [filterMeses, setFilterMeses] = useState<string[]>(() => getSavedFilters()?.filterMeses ?? []);
   const [filterStatusProcesso, setFilterStatusProcesso] = useState<string[]>(() => {
@@ -895,6 +941,14 @@ export default function VagasPage() {
     [vagasWithConfirmedPS],
   );
 
+  // Pre-compute fluxo items once per vaga so every useMemo and every table row
+  // can look them up in O(1) instead of rebuilding the array on every render.
+  const fluxoItemsMap = useMemo(() => {
+    const m = new Map<string, VagaFluxoItem[]>();
+    for (const v of vagas) m.set(v.id, getVagaFluxoItems(v));
+    return m;
+  }, [vagas]);
+
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
     // 1. Filtragem por Região e Unidade Global (Sidebar)
@@ -917,7 +971,7 @@ export default function VagasPage() {
     // 2. Analista de Edital: only sees vagas with Publicação de Edital tratativas
     if (currentUser?.perfil === "Analista de Edital") {
       baseRecords = baseRecords.filter((v) => {
-        const items = getVagaFluxoItems(v);
+        const items = fluxoItemsMap.get(v.id) ?? [];
         return items.some(
           (item) =>
             item.tratativa === "Publicação de Edital" ||
@@ -959,6 +1013,7 @@ export default function VagasPage() {
     return result;
   }, [
     vagas,
+    fluxoItemsMap,
     selectedRegion,
     globalUnit,
     filterUnidades,
@@ -976,9 +1031,9 @@ export default function VagasPage() {
     return canonicalBase.filter((v) => {
       const category = v.categoria_status || getCategoriaStatus(v);
 
-      const searchTerm = search.toLowerCase();
+      const searchTerm = deferredSearch.toLowerCase();
       const matchSearch =
-        !search ||
+        !deferredSearch ||
         (v.cargo || "").toLowerCase().includes(searchTerm) ||
         (v.requisicao || v.numero_requisicao || "")
           .toLowerCase()
@@ -988,7 +1043,7 @@ export default function VagasPage() {
         (v.nome_requisitante || "").toLowerCase().includes(searchTerm) ||
         (v.motivo || "").toLowerCase().includes(searchTerm);
 
-      const fluxoItems = getVagaFluxoItems(v);
+      const fluxoItems = fluxoItemsMap.get(v.id) ?? [];
       // Always use the top-level v.status_processo (the correctly derived overall
       // status) for filtering. For multi-vaga items individual slot statuses live
       // in distribuicao_vagas and may differ from the mother row status.
@@ -1043,7 +1098,8 @@ export default function VagasPage() {
     });
   }, [
     canonicalBase,
-    search,
+    fluxoItemsMap,
+    deferredSearch,
     filterStatusProcesso,
     filterTratativas,
     filterEtapa,
@@ -1155,10 +1211,10 @@ export default function VagasPage() {
     () =>
       canonicalBase
         .filter((v) =>
-          getVagaFluxoItems(v).some((item) => item.tratativa === "Vaga de Liderança")
+          (fluxoItemsMap.get(v.id) ?? []).some((item) => item.tratativa === "Vaga de Liderança")
         )
         .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
-    [canonicalBase],
+    [canonicalBase, fluxoItemsMap],
   );
 
   // Counts per status_processo for the scorecard row — sums numero_vagas per row
@@ -1411,10 +1467,10 @@ export default function VagasPage() {
                   <div className="flex-1 min-w-[240px]">
                     <div className="relative">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
+                      <DebouncedSearchInput
                         placeholder="Buscar cargo, requisição, unidade, requisitante ou motivo..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={setSearch}
                         className="pl-9 bg-white"
                       />
                     </div>
@@ -1702,9 +1758,8 @@ export default function VagasPage() {
                       ].includes(categoria);
 
                       return (
-                        <>
+                        <Fragment key={v.id}>
                           <TableRow
-                            key={v.id}
                             className="cursor-pointer hover:bg-slate-50/80 even:bg-slate-50/30 transition-colors border-b border-slate-100 group"
                             onClick={() => navigate(`/vagas/${v.id}`)}
                           >
@@ -1820,7 +1875,7 @@ export default function VagasPage() {
                             </TableCell>
                             <TableCell className="py-3 px-3 h-14">
                               {(() => {
-                                const slot0 = getVagaFluxoItems(v)[0];
+                                const slot0 = (fluxoItemsMap.get(v.id) ?? [])[0];
                                 return (
                                   <StatusProcessoBadge
                                     status={v.status_processo ?? slot0?.status_processo}
@@ -1985,7 +2040,7 @@ export default function VagasPage() {
 
                           {/* ── Sub-rows for multi-vaga requisições ── */}
                           {expandedRows.has(v.id) &&
-                            getVagaFluxoItems(v).map((item) => {
+                            (fluxoItemsMap.get(v.id) ?? []).map((item) => {
                               const iSP = item.status_processo || "Solicitada";
                               return (
                                 <TableRow
@@ -2041,7 +2096,7 @@ export default function VagasPage() {
                                 </TableRow>
                               );
                             })}
-                        </>
+                        </Fragment>
                       );
                     })}
                     {filtered.length === 0 && (

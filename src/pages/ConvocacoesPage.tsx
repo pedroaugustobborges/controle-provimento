@@ -522,12 +522,6 @@ export default function ConvocacoesPage() {
               </Button>
             )}
 
-            <Button
-              onClick={() => handleNewConvocacao()}
-              className="h-10 gap-2 text-xs font-bold shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white rounded-xl px-4"
-            >
-              <Plus className="h-4 w-4" /> Nova Convocação
-            </Button>
           </>
         }
       />

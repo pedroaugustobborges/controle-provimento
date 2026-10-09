@@ -3992,13 +3992,6 @@ function ConvocacoesTab({
         <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
           Histórico de Convocações
         </h3>
-        <Button
-          onClick={onNewConvocacao}
-          size="sm"
-          className="gap-2 bg-primary"
-        >
-          <Plus className="h-4 w-4" /> Nova Convocação
-        </Button>
       </div>
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">

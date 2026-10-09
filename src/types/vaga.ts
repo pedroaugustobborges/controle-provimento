@@ -80,13 +80,14 @@ export type StatusVaga =
   | 'encerrada';
 
 export type StatusGeral = StatusVaga;
-export type StatusConvocacao = 
-  | 'aceite' 
-  | 'recusa_plantao' 
-  | 'recusa_unidade' 
-  | 'recusa_horario' 
-  | 'desistiu' 
+export type StatusConvocacao =
+  | 'aceite'
+  | 'recusa_plantao'
+  | 'recusa_unidade'
+  | 'recusa_horario'
+  | 'desistiu'
   | 'faltou'
+  | 'desclassificado'
   | 'pendente';
 
 export type StatusEdital = 'Nova vaga' | 'Aguardando processo' | 'Aguardando edital' | 'Aguardando processo e edital' | 'Em andamento' | 'Encerrada';
@@ -362,7 +363,7 @@ export interface Convocacao {
   edital_relacionado?: string;
   banco_relacionado?: string;
   observacoes: string;
-  devolutiva?: 'aceitou' | 'recusou';
+  devolutiva?: 'aceitou' | 'recusou' | 'faltou' | 'desistiu' | 'desclassificado';
   motivo_recusa?: 'recusa_unidade' | 'recusa_horario' | 'recusa_plantao' | 'outros';
   observacao_devolutiva?: string;
   responsavel: string;
@@ -672,6 +673,7 @@ export const STATUS_CONVOCACAO_LABELS: Record<StatusConvocacao, string> = {
   recusa_horario: 'Recusa Horário',
   desistiu: 'Desistiu',
   faltou: 'Faltou',
+  desclassificado: 'Desclassificado',
   pendente: 'Pendente',
 };
 

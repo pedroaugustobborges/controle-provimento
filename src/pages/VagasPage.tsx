@@ -1757,6 +1757,9 @@ export default function VagasPage() {
                         <span className="block leading-tight">Cargo</span>
                         <span className="block leading-tight">Motivo</span>
                       </TableHead>
+                      <TableHead className="min-w-[80px] text-center">
+                        Especificidade
+                      </TableHead>
                       <TableHead className="min-w-[130px]">
                         <span className="block leading-tight">Unidade</span>
                         <span className="block leading-tight">Seção</span>
@@ -1869,6 +1872,54 @@ export default function VagasPage() {
                                   </span>
                                 )}
                               </div>
+                            </TableCell>
+                            <TableCell className="py-3 px-2 h-14 text-center">
+                              {(() => {
+                                const fluxoItems = fluxoItemsMap.get(v.id) ?? [];
+                                const isLideranca = fluxoItems.some((item) => item.tratativa === "Vaga de Liderança");
+                                const isTeia = v.is_teia || (v.unidade || "").toUpperCase().includes("TEIA");
+                                const isPcd = v.is_pcd || (v.cargo || "").toUpperCase().includes("PCD");
+                                const isComum = v.tipo_vaga === "Comum";
+                                if (!isLideranca && !isTeia && !isPcd && !isComum) return <span className="text-slate-200">—</span>;
+                                return (
+                                  <div className="inline-flex flex-col items-center gap-1">
+                                    {isLideranca && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <Crown className="h-2.5 w-2.5 shrink-0" />
+                                        Liderança
+                                      </span>
+                                    )}
+                                    {isPcd && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <Accessibility className="h-2.5 w-2.5 shrink-0" />
+                                        PCD
+                                      </span>
+                                    )}
+                                    {isComum && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                        <UserRound className="h-2.5 w-2.5 shrink-0" />
+                                        Comum
+                                      </span>
+                                    )}
+                                    {isTeia && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                                          <defs>
+                                            <linearGradient id={`spec-col-${v.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                                              <stop offset="0%" stopColor="#a855f7" />
+                                              <stop offset="25%" stopColor="#3b82f6" />
+                                              <stop offset="55%" stopColor="#10b981" />
+                                              <stop offset="100%" stopColor="#f59e0b" />
+                                            </linearGradient>
+                                          </defs>
+                                          <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" stroke={`url(#spec-col-${v.id})`} />
+                                        </svg>
+                                        TEIA
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell className="py-3 px-4 h-14 max-w-[150px]">
                               <div className="flex flex-col gap-0.5">

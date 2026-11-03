@@ -69,6 +69,8 @@ import {
   Accessibility,
   ClipboardList,
   BookUser,
+  Crown,
+  UserRound,
 } from "lucide-react";
 import {
   BarChart,
@@ -218,6 +220,8 @@ export default function DashboardPage() {
   const [dateTo, setDateTo] = useState("");
   const [filterPCD, setFilterPCD] = useState(false);
   const [filterTeia, setFilterTeia] = useState(false);
+  const [filterLideranca, setFilterLideranca] = useState(false);
+  const [filterComum, setFilterComum] = useState(false);
   const [chartRange, setChartRange] = useState<'7D' | '1M' | '3M' | '6M' | '1A' | '3A' | '5A'>('7D');
 
   useEffect(() => {
@@ -440,6 +444,18 @@ export default function DashboardPage() {
       base = base.filter((v) =>
         TEIA_UNIDADES.has(normalizeUnitName(v.unidade || "")),
       );
+    if (filterLideranca)
+      base = base.filter((v) => {
+        const allTratativas = [
+          (v as any).tratativa,
+          ...(Array.isArray((v as any).distribuicao_vagas)
+            ? ((v as any).distribuicao_vagas as any[]).map((s: any) => s.tratativa)
+            : []),
+        ].filter(Boolean);
+        return allTratativas.includes("Vaga de Liderança");
+      });
+    if (filterComum)
+      base = base.filter((v) => (v as any).tipo_vaga === "Comum");
     return getValidVacancyBase(base, "TODOS", "TODOS");
   }, [
     userScopedVagas,
@@ -448,6 +464,8 @@ export default function DashboardPage() {
     dateTo,
     filterPCD,
     filterTeia,
+    filterLideranca,
+    filterComum,
   ]);
 
   const userScopedBancos = useMemo(() => {
@@ -955,8 +973,10 @@ export default function DashboardPage() {
     if (dateFrom || dateTo) count++;
     if (filterPCD) count++;
     if (filterTeia) count++;
+    if (filterLideranca) count++;
+    if (filterComum) count++;
     return count;
-  }, [selectedUnits, dateFrom, dateTo, filterPCD, filterTeia]);
+  }, [selectedUnits, dateFrom, dateTo, filterPCD, filterTeia, filterLideranca, filterComum]);
 
   const evolutionData = useMemo(() => {
     const now = new Date();
@@ -1612,6 +1632,54 @@ export default function DashboardPage() {
           shadow: "none",
         },
     teiaInactive: isDark
+      ? {
+          bg: "rgba(255,255,255,0.07)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          color: "rgba(255,255,255,0.55)",
+        }
+      : {
+          bg: "#f8fafc",
+          border: "1px solid rgba(0,0,0,0.09)",
+          color: "#64748b",
+        },
+    liderancaActive: isDark
+      ? {
+          bg: "rgba(251,191,36,0.22)",
+          border: "1px solid rgba(251,191,36,0.45)",
+          color: "#fcd34d",
+          shadow: "0 0 16px rgba(251,191,36,0.18)",
+        }
+      : {
+          bg: "rgba(245,158,11,0.10)",
+          border: "1px solid rgba(245,158,11,0.35)",
+          color: "#b45309",
+          shadow: "none",
+        },
+    liderancaInactive: isDark
+      ? {
+          bg: "rgba(255,255,255,0.07)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          color: "rgba(255,255,255,0.55)",
+        }
+      : {
+          bg: "#f8fafc",
+          border: "1px solid rgba(0,0,0,0.09)",
+          color: "#64748b",
+        },
+    comumActive: isDark
+      ? {
+          bg: "rgba(148,163,184,0.22)",
+          border: "1px solid rgba(148,163,184,0.45)",
+          color: "#cbd5e1",
+          shadow: "0 0 16px rgba(148,163,184,0.18)",
+        }
+      : {
+          bg: "rgba(100,116,139,0.10)",
+          border: "1px solid rgba(100,116,139,0.35)",
+          color: "#334155",
+          shadow: "none",
+        },
+    comumInactive: isDark
       ? {
           bg: "rgba(255,255,255,0.07)",
           border: "1px solid rgba(255,255,255,0.12)",
@@ -2435,6 +2503,39 @@ export default function DashboardPage() {
             className="hidden sm:block"
           />
 
+          {/* Comum toggle */}
+          <button
+            onClick={() => setFilterComum(!filterComum)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              height: "38px",
+              padding: "0 16px",
+              borderRadius: "12px",
+              fontSize: "11px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              ...(filterComum
+                ? {
+                    background: t.comumActive.bg,
+                    border: t.comumActive.border,
+                    color: t.comumActive.color,
+                    boxShadow: t.comumActive.shadow,
+                  }
+                : {
+                    background: t.comumInactive.bg,
+                    border: t.comumInactive.border,
+                    color: t.comumInactive.color,
+                  }),
+            }}
+          >
+            <UserRound style={{ width: "14px", height: "14px" }} /> Comum
+          </button>
+
           {/* PCD toggle */}
           <button
             onClick={() => setFilterPCD(!filterPCD)}
@@ -2466,6 +2567,39 @@ export default function DashboardPage() {
             }}
           >
             <Accessibility style={{ width: "14px", height: "14px" }} /> PCD
+          </button>
+
+          {/* Liderança toggle */}
+          <button
+            onClick={() => setFilterLideranca(!filterLideranca)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              height: "38px",
+              padding: "0 16px",
+              borderRadius: "12px",
+              fontSize: "11px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              ...(filterLideranca
+                ? {
+                    background: t.liderancaActive.bg,
+                    border: t.liderancaActive.border,
+                    color: t.liderancaActive.color,
+                    boxShadow: t.liderancaActive.shadow,
+                  }
+                : {
+                    background: t.liderancaInactive.bg,
+                    border: t.liderancaInactive.border,
+                    color: t.liderancaInactive.color,
+                  }),
+            }}
+          >
+            <Crown style={{ width: "14px", height: "14px" }} /> Liderança
           </button>
 
           {/* Rede TEIA toggle */}

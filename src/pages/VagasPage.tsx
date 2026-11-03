@@ -180,7 +180,6 @@ import {
   ArrowRight,
   Check,
   Accessibility,
-  Puzzle,
   Crown,
   UserRound,
 } from "lucide-react";
@@ -1602,7 +1601,23 @@ export default function VagasPage() {
                     className={`h-9 text-[11px] font-bold gap-2 ${filterTeia ? "bg-emerald-600 hover:bg-emerald-700" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"}`}
                     onClick={() => setFilterTeia(!filterTeia)}
                   >
-                    <Puzzle className={`h-3.5 w-3.5 ${filterTeia ? "text-white" : ""}`} />
+                    {filterTeia ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="white">
+                        <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" />
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <defs>
+                          <linearGradient id="teia-infinity-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#a855f7" />
+                            <stop offset="25%" stopColor="#3b82f6" />
+                            <stop offset="55%" stopColor="#10b981" />
+                            <stop offset="100%" stopColor="#f59e0b" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" stroke="url(#teia-infinity-grad)" />
+                      </svg>
+                    )}
                     TEIAs
                   </Button>
                   <Button

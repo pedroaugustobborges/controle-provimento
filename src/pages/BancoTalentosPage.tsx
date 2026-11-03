@@ -2519,40 +2519,61 @@ export default function BancoTalentosPage() {
                       <TableCell className="text-center">
                         {(() => {
                           const s = (h.status || "").toLowerCase();
+                          let badge: React.ReactNode;
                           if (s === "aguardando_processamento")
-                            return (
+                            badge = (
                               <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[11px]">
                                 Aguardando
                               </Badge>
                             );
-                          if (s === "em_processamento")
-                            return (
+                          else if (s === "em_processamento")
+                            badge = (
                               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[11px]">
                                 Processando
                               </Badge>
                             );
-                          if (s.startsWith("candidato") || s === "concluído" || s === "concluido")
-                            return (
+                          else if (s.startsWith("candidato") || s === "concluído" || s === "concluido")
+                            badge = (
                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">
                                 Concluído
                               </Badge>
                             );
-                          if (s === "edital não encontrado na reachr")
-                            return (
+                          else if (s === "edital não encontrado na reachr")
+                            badge = (
                               <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[11px]">
                                 Não encontrado
                               </Badge>
                             );
-                          if (s.startsWith("erro"))
-                            return (
+                          else if (s.startsWith("erro"))
+                            badge = (
                               <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[11px]">
                                 Erro
                               </Badge>
                             );
+                          else
+                            badge = (
+                              <Badge variant="outline" className="bg-slate-100 text-slate-500 border-slate-200 text-[11px]">
+                                {h.status}
+                              </Badge>
+                            );
+
                           return (
-                            <Badge variant="outline" className="bg-slate-100 text-slate-500 border-slate-200 text-[11px]">
-                              {h.status}
-                            </Badge>
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex cursor-default">{badge}</span>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="left"
+                                  className="max-w-[280px] px-3 py-2 text-xs font-mono break-all"
+                                >
+                                  <p className="text-[10px] font-sans font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                                    Status interno
+                                  </p>
+                                  <p className="leading-relaxed">{h.status || "—"}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           );
                         })()}
                       </TableCell>

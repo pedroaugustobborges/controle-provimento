@@ -885,6 +885,12 @@ export default function BancoTalentosPage() {
   const [vencidosSearch, setVencidosSearch] = useState("");
   const [prorrogandoId, setProrrogandoId] = useState<string | null>(null);
 
+  // History tab filters & pagination
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState("todos");
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyPageSize = 50;
+
   const vencidosFiltered = useMemo(() => {
     return bancos.filter((b) => {
       if (b.status !== "VENCIDO") return false;
@@ -1036,6 +1042,46 @@ export default function BancoTalentosPage() {
       (h) => h.tipo_importacao === "banco" || (h as any).numero_edital,
     );
   }, [importHistory]);
+
+  const historyFiltered = useMemo(() => {
+    const q = historySearch.trim().toLowerCase();
+    return historyBT.filter((h) => {
+      const matchSearch =
+        !q ||
+        (h.numero_edital || "").toLowerCase().includes(q) ||
+        (h.arquivo || "").toLowerCase().includes(q) ||
+        (h.usuario || "").toLowerCase().includes(q);
+
+      const s = (h.status || "").toLowerCase();
+      let matchStatus = historyStatusFilter === "todos";
+      if (!matchStatus) {
+        if (historyStatusFilter === "concluido") {
+          matchStatus = s.startsWith("candidato") || s === "concluído" || s === "concluido";
+        } else if (historyStatusFilter === "aguardando") {
+          matchStatus = s === "aguardando_processamento";
+        } else if (historyStatusFilter === "processando") {
+          matchStatus = s === "em_processamento";
+        } else if (historyStatusFilter === "nao_encontrado") {
+          matchStatus = s === "edital não encontrado na reachr";
+        } else if (historyStatusFilter === "erro") {
+          matchStatus = s.startsWith("erro");
+        }
+      }
+
+      return matchSearch && matchStatus;
+    });
+  }, [historyBT, historySearch, historyStatusFilter]);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [historySearch, historyStatusFilter]);
+
+  const historyPaginated = useMemo(
+    () => historyFiltered.slice((historyPage - 1) * historyPageSize, historyPage * historyPageSize),
+    [historyFiltered, historyPage, historyPageSize],
+  );
+
+  const historyTotalPages = Math.ceil(historyFiltered.length / historyPageSize);
 
   // "IMPORTADO POR" helpers
   const batchUserMap = useMemo(() => {
@@ -2412,90 +2458,176 @@ export default function BancoTalentosPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="history">
+        <TabsContent value="history" className="space-y-4">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Edital</TableHead>
-                  <TableHead>Proc. Seletivo</TableHead>
-                  <TableHead>Cadastrado Por</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {historyBT.map((h) => (
-                  <TableRow key={h.id}>
-                    <TableCell className="text-xs whitespace-nowrap">
-                      {h.data_hora
-                        ? formatDate(h.data_hora.split("T")[0])
-                        : "-"}
-                    </TableCell>
-                    <TableCell className="text-xs font-semibold">
-                      {h.numero_edital || "-"}
-                    </TableCell>
-                    <TableCell className="text-xs font-semibold">
-                      {h.arquivo || "-"}
-                    </TableCell>
-                    <TableCell className="text-xs text-slate-500">
-                      {h.usuario}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {(() => {
-                        const s = (h.status || "").toLowerCase();
-                        if (s === "aguardando_processamento")
-                          return (
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[11px]">
-                              Aguardando
-                            </Badge>
-                          );
-                        if (s === "em_processamento")
-                          return (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[11px]">
-                              Processando
-                            </Badge>
-                          );
-                        if (s.startsWith("candidato") || s === "concluído")
-                          return (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">
-                              Concluído
-                            </Badge>
-                          );
-                        if (s === "edital não encontrado na reachr")
-                          return (
-                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[11px]">
-                              Não encontrado
-                            </Badge>
-                          );
-                        if (s.startsWith("erro"))
-                          return (
-                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[11px]">
-                              Erro
-                            </Badge>
-                          );
-                        return (
-                          <Badge variant="outline" className="bg-slate-100 text-slate-500 border-slate-200 text-[11px]">
-                            {h.status}
-                          </Badge>
-                        );
-                      })()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {historyBT.length === 0 && (
+            <CardHeader className="pb-3 border-b bg-slate-50/50">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Buscar por edital, proc. seletivo ou usuário..."
+                    className="pl-9 bg-white"
+                    value={historySearch}
+                    onChange={(e) => setHistorySearch(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Select value={historyStatusFilter} onValueChange={setHistoryStatusFilter}>
+                    <SelectTrigger className="w-[170px] h-9 bg-white text-xs">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos os Status</SelectItem>
+                      <SelectItem value="aguardando">Aguardando</SelectItem>
+                      <SelectItem value="processando">Processando</SelectItem>
+                      <SelectItem value="concluido">Concluído</SelectItem>
+                      <SelectItem value="nao_encontrado">Não encontrado</SelectItem>
+                      <SelectItem value="erro">Erro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="h-40 text-center text-slate-400 font-medium italic"
-                    >
-                      Nenhum edital cadastrado até o momento.
-                    </TableCell>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Edital</TableHead>
+                    <TableHead>Proc. Seletivo</TableHead>
+                    <TableHead>Cadastrado Por</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {historyPaginated.map((h) => (
+                    <TableRow key={h.id}>
+                      <TableCell className="text-xs whitespace-nowrap">
+                        {h.data_hora
+                          ? formatDate(h.data_hora.split("T")[0])
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="text-xs font-semibold">
+                        {h.numero_edital || "-"}
+                      </TableCell>
+                      <TableCell className="text-xs font-semibold">
+                        {h.arquivo || "-"}
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-500">
+                        {h.usuario}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {(() => {
+                          const s = (h.status || "").toLowerCase();
+                          if (s === "aguardando_processamento")
+                            return (
+                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[11px]">
+                                Aguardando
+                              </Badge>
+                            );
+                          if (s === "em_processamento")
+                            return (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[11px]">
+                                Processando
+                              </Badge>
+                            );
+                          if (s.startsWith("candidato") || s === "concluído" || s === "concluido")
+                            return (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[11px]">
+                                Concluído
+                              </Badge>
+                            );
+                          if (s === "edital não encontrado na reachr")
+                            return (
+                              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[11px]">
+                                Não encontrado
+                              </Badge>
+                            );
+                          if (s.startsWith("erro"))
+                            return (
+                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[11px]">
+                                Erro
+                              </Badge>
+                            );
+                          return (
+                            <Badge variant="outline" className="bg-slate-100 text-slate-500 border-slate-200 text-[11px]">
+                              {h.status}
+                            </Badge>
+                          );
+                        })()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {historyFiltered.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="h-40 text-center text-slate-400 font-medium italic"
+                      >
+                        {historySearch || historyStatusFilter !== "todos"
+                          ? "Nenhum resultado para os filtros aplicados."
+                          : "Nenhum edital cadastrado até o momento."}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
           </Card>
+
+          {historyTotalPages > 1 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                      className={
+                        historyPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+
+                  {[...Array(historyTotalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (
+                      page === 1 ||
+                      page === historyTotalPages ||
+                      (page >= historyPage - 1 && page <= historyPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            isActive={historyPage === page}
+                            onClick={() => setHistoryPage(page)}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (page === historyPage - 2 || page === historyPage + 2) {
+                      return <PaginationEllipsis key={page} />;
+                    }
+                    return null;
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setHistoryPage((p) => Math.min(historyTotalPages, p + 1))}
+                      className={
+                        historyPage === historyTotalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </TabsContent>
 
         {permissions.canViewAudit() && (

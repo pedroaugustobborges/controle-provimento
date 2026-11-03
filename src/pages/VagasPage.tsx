@@ -182,6 +182,7 @@ import {
   Accessibility,
   Puzzle,
   Crown,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { VagaHistoryDialog } from "@/components/VagaHistoryDialog";
@@ -545,6 +546,7 @@ export default function VagasPage() {
   const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(() => getSavedFilters()?.filterSemMovimentacao ?? false);
   const [filterTeia, setFilterTeia] = useState(() => getSavedFilters()?.filterTeia ?? false);
   const [filterPcd, setFilterPcd] = useState(() => getSavedFilters()?.filterPcd ?? false);
+  const [filterComum, setFilterComum] = useState(() => getSavedFilters()?.filterComum ?? false);
 
   // Persiste os filtros no localStorage para manter o estado ao navegar entre páginas
   useEffect(() => {
@@ -565,6 +567,7 @@ export default function VagasPage() {
         filterSemMovimentacao,
         filterTeia,
         filterPcd,
+        filterComum,
       })
     );
   }, [
@@ -582,6 +585,7 @@ export default function VagasPage() {
     filterSemMovimentacao,
     filterTeia,
     filterPcd,
+    filterComum,
   ]);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -991,6 +995,9 @@ export default function VagasPage() {
         (v) => v.is_pcd === true || (v.cargo || "").toUpperCase().includes("PCD"),
       );
     }
+    if (filterComum) {
+      baseRecords = baseRecords.filter((v) => v.tipo_vaga === "Comum");
+    }
 
     // 3. Filtragem interna da tela — aplica filtro de cargo (sem unit/month)
     let result = getValidVacancyBase(baseRecords, 'all', 'all');
@@ -1020,6 +1027,7 @@ export default function VagasPage() {
     filterMeses,
     filterTeia,
     filterPcd,
+    filterComum,
     currentUser?.visualiza_todas_unidades,
     currentUser?.unidades_vinculadas,
     currentUser?.perfil,
@@ -1127,6 +1135,7 @@ export default function VagasPage() {
     filterVagasNovas,
     filterComBanco,
     filterSemMovimentacao,
+    filterComum,
   ]);
 
   const paginatedData = useMemo(() => {
@@ -1217,6 +1226,14 @@ export default function VagasPage() {
     [canonicalBase, fluxoItemsMap],
   );
 
+  const countVagasComum = useMemo(
+    () =>
+      canonicalBase
+        .filter((v) => v.tipo_vaga === "Comum")
+        .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
+    [canonicalBase],
+  );
+
   // Counts per status_processo for the scorecard row — sums numero_vagas per row
   const statusProcessoCounts = useMemo(() => {
     const acc: Record<string, number> = {};
@@ -1244,6 +1261,7 @@ export default function VagasPage() {
     setFilterSemMovimentacao(false);
     setFilterTeia(false);
     setFilterPcd(false);
+    setFilterComum(false);
   };
 
   const hasFilters =
@@ -1260,7 +1278,8 @@ export default function VagasPage() {
     filterComBanco ||
     filterSemMovimentacao ||
     filterTeia ||
-    filterPcd;
+    filterPcd ||
+    filterComum;
 
   const prepareVagasForExport = (data: Vaga[]) => {
     return data.map((v) => ({
@@ -1560,6 +1579,23 @@ export default function VagasPage() {
 
                 {/* Row 2 — quick-access toggles, always on their own line */}
                 <div className="flex flex-wrap gap-2 items-center">
+                  <Button
+                    variant={filterComum ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 text-[11px] font-bold gap-2 ${filterComum ? "bg-slate-600 hover:bg-slate-700" : "border-slate-300 text-slate-600 hover:bg-slate-50 bg-white"}`}
+                    onClick={() => setFilterComum(!filterComum)}
+                  >
+                    <UserRound className={`h-3.5 w-3.5 ${filterComum ? "text-white" : ""}`} />
+                    Comum
+                    {countVagasComum > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className={`ml-1 h-4 px-1 text-[9px] border-none ${filterComum ? "bg-slate-400 text-white" : "bg-slate-100 text-slate-600"}`}
+                      >
+                        {countVagasComum}
+                      </Badge>
+                    )}
+                  </Button>
                   <Button
                     variant={filterTeia ? "default" : "outline"}
                     size="sm"

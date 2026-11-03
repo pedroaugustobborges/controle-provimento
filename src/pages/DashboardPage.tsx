@@ -71,6 +71,7 @@ import {
   BookUser,
   Crown,
   UserRound,
+  LayoutGrid,
 } from "lucide-react";
 import {
   BarChart,
@@ -222,6 +223,7 @@ export default function DashboardPage() {
   const [filterTeia, setFilterTeia] = useState(false);
   const [filterLideranca, setFilterLideranca] = useState(false);
   const [filterComum, setFilterComum] = useState(false);
+  const [statusProcessoView, setStatusProcessoView] = useState<"donut" | "unidade">("donut");
   const [chartRange, setChartRange] = useState<'7D' | '1M' | '3M' | '6M' | '1A' | '3A' | '5A'>('7D');
 
   useEffect(() => {
@@ -1540,6 +1542,27 @@ export default function DashboardPage() {
       name,
       value: map.get(name)!,
     }));
+  }, [filteredVagas]);
+
+  const statusProcessoByUnidadeData = useMemo(() => {
+    const STATUSES = ["Solicitada", "Em Andamento", "Concluída", "Suspensa", "Cancelada"];
+    const map = new Map<string, Record<string, number>>();
+    filteredVagas.forEach((v) => {
+      const raw = v.unidade || "Sem Unidade";
+      const unidade = raw.includes(" - ") ? raw.substring(0, raw.indexOf(" - ")) : raw;
+      const status = ((v as any).status_processo as string)?.trim() || "Solicitada";
+      const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
+      if (!map.has(unidade)) map.set(unidade, Object.fromEntries(STATUSES.map((s) => [s, 0])));
+      const entry = map.get(unidade)!;
+      entry[STATUSES.includes(status) ? status : "Solicitada"] += qty;
+    });
+    return Array.from(map.entries())
+      .map(([unidade, counts]) => ({
+        unidade,
+        total: Object.values(counts).reduce((a, b) => a + b, 0),
+        counts,
+      }))
+      .sort((a, b) => b.total - a.total);
   }, [filteredVagas]);
 
   // ─── Theme-sensitive style values ─────────────────────────────────────────
@@ -3257,15 +3280,21 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Status do Processo — donut */}
+          {/* Status do Processo — donut / por unidade */}
           <div className={`${t.panelClass} flex flex-col`}>
+            {/* gradient bar */}
             <div
               style={{
                 height: "3px",
-                background: "linear-gradient(90deg, #34d399, #60a5fa, #f87171)",
+                background: statusProcessoView === "donut"
+                  ? "linear-gradient(90deg, #34d399, #60a5fa, #f87171)"
+                  : "linear-gradient(90deg, #60a5fa, #34d399, #fbbf24)",
                 flexShrink: 0,
+                transition: "background 0.4s",
               }}
             />
+
+            {/* header */}
             <div
               style={{
                 padding: "16px 18px 12px",
@@ -3289,39 +3318,75 @@ export default function DashboardPage() {
                     background: isDark
                       ? "rgba(52,211,153,0.18)"
                       : "rgba(16,185,129,0.12)",
-                    boxShadow: isDark
-                      ? "0 0 12px rgba(52,211,153,0.25)"
-                      : "none",
+                    boxShadow: isDark ? "0 0 12px rgba(52,211,153,0.25)" : "none",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  <Activity
-                    style={{
-                      width: "15px",
-                      height: "15px",
-                      color: isDark ? "#34d399" : "#10b981",
-                    }}
-                  />
+                  <Activity style={{ width: "15px", height: "15px", color: isDark ? "#34d399" : "#10b981" }} />
                 </div>
-                <span
-                  style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}
-                >
+                <span style={{ fontSize: "13px", fontWeight: 800, color: t.tx1 }}>
                   Status do Processo
                 </span>
+
+                {/* ── View toggler (same pill pattern as "Visão por Unidade") ── */}
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    display: "flex",
+                    background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                    borderRadius: "999px",
+                    padding: "3px",
+                    border: `1px solid ${t.divider}`,
+                    gap: "2px",
+                  }}
+                >
+                  {(
+                    [
+                      { key: "donut",   label: "Geral",      Icon: LayoutGrid, accent: "#34d399", activeBg: isDark ? "rgba(52,211,153,0.22)"  : "rgba(16,185,129,0.10)" },
+                      { key: "unidade", label: "Unidades",   Icon: Building2,  accent: "#60a5fa", activeBg: isDark ? "rgba(96,165,250,0.22)"  : "rgba(59,130,246,0.10)" },
+                    ] as const
+                  ).map(({ key, label, Icon, accent, activeBg }) => {
+                    const active = statusProcessoView === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setStatusProcessoView(key)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          padding: "5px 11px",
+                          borderRadius: "999px",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          fontSize: "10px",
+                          fontWeight: 800,
+                          letterSpacing: "0.05em",
+                          textTransform: "uppercase",
+                          background: active ? activeBg : "transparent",
+                          color: active ? accent : t.tx3,
+                          boxShadow: active ? `0 0 10px ${accent}35` : "none",
+                        }}
+                      >
+                        <Icon style={{ width: "11px", height: "11px" }} />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 500,
-                  color: t.tx3,
-                  marginLeft: "36px",
-                }}
-              >
-                Distribuição por status no filtro ativo
+              <p style={{ fontSize: "10px", fontWeight: 500, color: t.tx3, marginLeft: "36px" }}>
+                {statusProcessoView === "donut"
+                  ? "Distribuição por status no filtro ativo"
+                  : "Progresso por status em cada unidade hospitalar"}
               </p>
             </div>
+
+            {/* content */}
             <div
               style={{
                 padding: "16px",
@@ -3329,39 +3394,18 @@ export default function DashboardPage() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: statusProcessoData.length === 0 ? "center" : "flex-start",
               }}
             >
               {statusProcessoData.length === 0 ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "240px",
-                    gap: "8px",
-                  }}
-                >
-                  <Activity
-                    style={{ width: "32px", height: "32px", color: t.tx4 }}
-                  />
-                  <p
-                    style={{ fontSize: "12px", color: t.tx3, fontWeight: 500 }}
-                  >
-                    Nenhum dado disponível
-                  </p>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "240px", gap: "8px" }}>
+                  <Activity style={{ width: "32px", height: "32px", color: t.tx4 }} />
+                  <p style={{ fontSize: "12px", color: t.tx3, fontWeight: 500 }}>Nenhum dado disponível</p>
                 </div>
-              ) : (
+              ) : statusProcessoView === "donut" ? (
                 <>
                   {/* Donut with centered total label */}
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      height: "200px",
-                    }}
-                  >
+                  <div style={{ position: "relative", width: "100%", height: "200px" }}>
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
                         <Pie
@@ -3375,30 +3419,19 @@ export default function DashboardPage() {
                           strokeWidth={0}
                         >
                           {statusProcessoData.map((item) => {
-                            const color =
-                              STATUS_PROCESSO_COLORS[item.name] ??
-                              t.donutColors[0];
+                            const color = STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
                             return (
                               <Cell
                                 key={item.name}
                                 fill={color}
-                                style={
-                                  isDark
-                                    ? {
-                                        filter: `drop-shadow(0 0 6px ${color}80)`,
-                                      }
-                                    : undefined
-                                }
+                                style={isDark ? { filter: `drop-shadow(0 0 6px ${color}80)` } : undefined}
                               />
                             );
                           })}
                         </Pie>
                         <Tooltip
                           contentStyle={t.tooltip}
-                          itemStyle={{
-                            padding: "2px 0",
-                            color: t.tooltip.color,
-                          }}
+                          itemStyle={{ padding: "2px 0", color: t.tooltip.color }}
                           formatter={(v, n) => [`${v} vagas`, n]}
                         />
                       </PieChart>
@@ -3414,125 +3447,112 @@ export default function DashboardPage() {
                         pointerEvents: "none",
                       }}
                     >
-                      <p
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: 900,
-                          color: t.tx1,
-                          lineHeight: 1,
-                        }}
-                      >
+                      <p style={{ fontSize: "20px", fontWeight: 900, color: t.tx1, lineHeight: 1 }}>
                         {statusProcessoData.reduce((s, d) => s + d.value, 0)}
                       </p>
-                      <p
-                        style={{
-                          fontSize: "9px",
-                          fontWeight: 700,
-                          color: t.tx3,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                          marginTop: "2px",
-                        }}
-                      >
+                      <p style={{ fontSize: "9px", fontWeight: 700, color: t.tx3, textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "2px" }}>
                         vagas
                       </p>
                     </div>
                   </div>
 
                   {/* Legend rows */}
-                  <div
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "7px",
-                      marginTop: "12px",
-                    }}
-                  >
+                  <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "7px", marginTop: "12px" }}>
                     {statusProcessoData.map((item) => {
-                      const total = statusProcessoData.reduce(
-                        (s, d) => s + d.value,
-                        0,
-                      );
-                      const pct =
-                        total > 0 ? Math.round((item.value / total) * 100) : 0;
-                      const color =
-                        STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
+                      const total = statusProcessoData.reduce((s, d) => s + d.value, 0);
+                      const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
+                      const color = STATUS_PROCESSO_COLORS[item.name] ?? t.donutColors[0];
                       return (
-                        <div
-                          key={item.name}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: "10px",
-                              height: "10px",
-                              borderRadius: "50%",
-                              flexShrink: 0,
-                              background: color,
-                              boxShadow: isDark ? `0 0 6px ${color}80` : "none",
-                            }}
-                          />
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              fontWeight: 600,
-                              color: t.tx2,
-                              flex: 1,
-                            }}
-                          >
-                            {item.name}
-                          </span>
-                          {/* mini progress bar */}
-                          <div
-                            style={{
-                              width: "60px",
-                              height: "4px",
-                              borderRadius: "99px",
-                              background: isDark
-                                ? "rgba(255,255,255,0.08)"
-                                : "#e2e8f0",
-                              overflow: "hidden",
-                            }}
-                          >
-                            <div
-                              style={{
-                                height: "100%",
-                                width: `${pct}%`,
-                                background: color,
-                                borderRadius: "99px",
-                              }}
-                            />
+                        <div key={item.name} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: color, boxShadow: isDark ? `0 0 6px ${color}80` : "none" }} />
+                          <span style={{ fontSize: "11px", fontWeight: 600, color: t.tx2, flex: 1 }}>{item.name}</span>
+                          <div style={{ width: "60px", height: "4px", borderRadius: "99px", background: isDark ? "rgba(255,255,255,0.08)" : "#e2e8f0", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: "99px" }} />
                           </div>
-                          <span
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 900,
-                              color: t.tx2,
-                              minWidth: "28px",
-                              textAlign: "right",
-                            }}
-                          >
-                            {pct}%
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 700,
-                              color: t.tx3,
-                            }}
-                          >
-                            ({item.value})
-                          </span>
+                          <span style={{ fontSize: "10px", fontWeight: 900, color: t.tx2, minWidth: "28px", textAlign: "right" }}>{pct}%</span>
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: t.tx3 }}>({item.value})</span>
                         </div>
                       );
                     })}
                   </div>
                 </>
+              ) : (
+                /* ── Por Unidade view ── */
+                <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "0px" }}>
+                  {/* Status color legend */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
+                    {["Solicitada", "Em Andamento", "Concluída", "Suspensa", "Cancelada"].map((s) => (
+                      <span key={s} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "9px", fontWeight: 700, color: t.tx3, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: STATUS_PROCESSO_COLORS[s], flexShrink: 0, boxShadow: isDark ? `0 0 5px ${STATUS_PROCESSO_COLORS[s]}80` : "none" }} />
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Scrollable rows */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", maxHeight: "340px", overflowY: "auto", paddingRight: "2px" }}>
+                    {statusProcessoByUnidadeData.map(({ unidade, total, counts }) => (
+                      <div
+                        key={unidade}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr auto",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "6px 8px",
+                          borderRadius: "8px",
+                          background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.045)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)")}
+                      >
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: 0 }}>
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: t.tx2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {unidade}
+                          </span>
+                          {/* stacked progress bar */}
+                          <div style={{ display: "flex", height: "6px", borderRadius: "99px", overflow: "hidden", background: isDark ? "rgba(255,255,255,0.06)" : "#e2e8f0", gap: "1px" }}>
+                            {["Solicitada", "Em Andamento", "Concluída", "Suspensa", "Cancelada"].map((s) => {
+                              const val = counts[s] || 0;
+                              const pct = total > 0 ? (val / total) * 100 : 0;
+                              if (pct === 0) return null;
+                              return (
+                                <div
+                                  key={s}
+                                  title={`${s}: ${val}`}
+                                  style={{
+                                    width: `${pct}%`,
+                                    height: "100%",
+                                    background: STATUS_PROCESSO_COLORS[s],
+                                    boxShadow: isDark ? `0 0 4px ${STATUS_PROCESSO_COLORS[s]}60` : "none",
+                                    transition: "width 0.4s ease",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                          {/* per-status counts row */}
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            {["Solicitada", "Em Andamento", "Concluída", "Suspensa", "Cancelada"].map((s) => {
+                              const val = counts[s] || 0;
+                              if (val === 0) return null;
+                              return (
+                                <span key={s} style={{ fontSize: "9px", fontWeight: 700, color: STATUS_PROCESSO_COLORS[s] }}>
+                                  {val}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: "12px", fontWeight: 900, color: t.tx1, flexShrink: 0 }}>
+                          {total}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>

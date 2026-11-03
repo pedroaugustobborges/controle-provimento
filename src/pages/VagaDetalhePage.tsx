@@ -102,7 +102,6 @@ import {
   Trash2,
   Crown,
   Accessibility,
-  Puzzle,
 } from "lucide-react";
 import {
   Popover,
@@ -2127,7 +2126,17 @@ export default function VagaDetalhePage() {
                         )}
                         {isTeia && (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 ring-1 ring-emerald-100">
-                            <Puzzle className="h-3 w-3 shrink-0" />
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                              <defs>
+                                <linearGradient id="detalhe-infinity-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                  <stop offset="0%" stopColor="#a855f7" />
+                                  <stop offset="25%" stopColor="#3b82f6" />
+                                  <stop offset="55%" stopColor="#10b981" />
+                                  <stop offset="100%" stopColor="#f59e0b" />
+                                </linearGradient>
+                              </defs>
+                              <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" stroke="url(#detalhe-infinity-grad)" />
+                            </svg>
                             TEIA
                           </span>
                         )}

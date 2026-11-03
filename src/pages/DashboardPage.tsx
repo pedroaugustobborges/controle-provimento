@@ -66,7 +66,6 @@ import {
   MessageSquare,
   Plus,
   GitBranch,
-  Puzzle,
   Accessibility,
   ClipboardList,
   BookUser,
@@ -2499,7 +2498,23 @@ export default function DashboardPage() {
                   }),
             }}
           >
-            <Puzzle style={{ width: "14px", height: "14px" }} /> Rede Teia
+            {filterTeia ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor" style={{ display: "inline", verticalAlign: "middle" }}>
+                <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}>
+                <defs>
+                  <linearGradient id="dash-infinity-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#a855f7" />
+                    <stop offset="25%" stopColor="#3b82f6" />
+                    <stop offset="55%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#f59e0b" />
+                  </linearGradient>
+                </defs>
+                <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" stroke="url(#dash-infinity-grad)" />
+              </svg>
+            )} Rede Teia
           </button>
 
           {/* Active filter badge */}

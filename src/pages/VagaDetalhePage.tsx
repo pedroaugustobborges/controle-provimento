@@ -102,6 +102,7 @@ import {
   Trash2,
   Crown,
   Accessibility,
+  UserRound,
 } from "lucide-react";
 import {
   Popover,
@@ -2103,8 +2104,9 @@ export default function VagaDetalhePage() {
                   const isPcd =
                     vaga.is_pcd ||
                     (vaga.cargo || "").toUpperCase().includes("PCD");
+                  const isComum = vaga.tipo_vaga === "Comum";
 
-                  if (!isLideranca && !isTeia && !isPcd) return null;
+                  if (!isLideranca && !isTeia && !isPcd && !isComum) return null;
 
                   return (
                     <div className="space-y-2">
@@ -2122,6 +2124,12 @@ export default function VagaDetalhePage() {
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 ring-1 ring-blue-100">
                             <Accessibility className="h-3 w-3 shrink-0" />
                             PCD
+                          </span>
+                        )}
+                        {isComum && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200 ring-1 ring-slate-100">
+                            <UserRound className="h-3 w-3 shrink-0" />
+                            Comum
                           </span>
                         )}
                         {isTeia && (

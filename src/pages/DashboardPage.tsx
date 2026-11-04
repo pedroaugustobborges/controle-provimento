@@ -556,11 +556,22 @@ export default function DashboardPage() {
       "canceladas",
       "suspensa",
     ];
+    // Single O(n) pass: computes all category counts including the 6 that previously
+    // required separate filter().reduce() calls (O(7n) → O(n)).
     vagas.forEach((v) => {
       const qty = Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1);
       const cat = getCategoriaStatus(v);
-      if (acc.hasOwnProperty(cat)) acc[cat as keyof typeof acc] += qty;
-      else acc.sem_classificacao += qty;
+
+      // Status-based categories (getCategoriaStatus reads top-level status fields)
+      // Skip the 6 overridden categories — they are computed from etapa/tratativa below.
+      const overriddenBySlots = cat === "convocacoes" || cat === "movimentacao_interna" ||
+        cat === "documentacao" || cat === "aguardando_unidade" ||
+        cat === "fila_edital" || cat === "em_admissao";
+      if (!overriddenBySlots) {
+        if (acc.hasOwnProperty(cat)) acc[cat as keyof typeof acc] += qty;
+        else acc.sem_classificacao += qty;
+      }
+
       const lastHist =
         v.historico && v.historico.length > 0
           ? v.historico[v.historico.length - 1]
@@ -572,88 +583,22 @@ export default function DashboardPage() {
       ) {
         acc.atrasadas += qty;
       }
+
+      // Compute slot arrays once per vaga (used for the 6 overridden categories)
+      const slots = Array.isArray(v.distribuicao_vagas)
+        ? (v.distribuicao_vagas as any[])
+        : [];
+      const allEtapas = [v.etapa, ...slots.map((s: any) => s.etapa)].filter(Boolean);
+      const allTratativas = [v.tratativa, ...slots.map((s: any) => s.tratativa)].filter(Boolean);
+
+      // 6 slot-aware counts that override getCategoriaStatus's status-only view
+      if (allEtapas.includes("Convocação"))                acc.convocacoes += qty;
+      if (allTratativas.includes("Movimentação Interna"))   acc.movimentacao_interna += qty;
+      if (allEtapas.includes("Documentação"))               acc.documentacao += qty;
+      if (allTratativas.includes("Aguardando Unidade"))     acc.aguardando_unidade += qty;
+      if (allTratativas.includes("Publicação de Edital"))   acc.fila_edital += qty;
+      if (allEtapas.includes("Enviado para Formalização"))  acc.em_admissao += qty;
     });
-
-    // Convocações: getCategoriaStatus only reads status/status_processo fields,
-    // never etapa. Override the count by checking etapa across all fluxo slots.
-    acc.convocacoes = vagas
-      .filter((v) => {
-        const allEtapas = [
-          v.etapa,
-          ...(Array.isArray(v.distribuicao_vagas)
-            ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
-            : []),
-        ].filter(Boolean);
-        return allEtapas.includes("Convocação");
-      })
-      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
-
-    // Movimentação Interna: same issue — override by checking tratativa field
-    // across all fluxo slots instead of relying on the status-based categorization.
-    acc.movimentacao_interna = vagas
-      .filter((v) => {
-        const allTratativas = [
-          v.tratativa,
-          ...(Array.isArray(v.distribuicao_vagas)
-            ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
-            : []),
-        ].filter(Boolean);
-        return allTratativas.includes("Movimentação Interna");
-      })
-      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
-
-    // Documentação: getCategoriaStatus only reads status/status_processo fields,
-    // never etapa. Override the count by checking etapa across all fluxo slots.
-    acc.documentacao = vagas
-      .filter((v) => {
-        const allEtapas = [
-          v.etapa,
-          ...(Array.isArray(v.distribuicao_vagas)
-            ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
-            : []),
-        ].filter(Boolean);
-        return allEtapas.includes("Documentação");
-      })
-      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
-
-    // Aguardando Unidade: override by checking tratativa across all fluxo slots.
-    acc.aguardando_unidade = vagas
-      .filter((v) => {
-        const allTratativas = [
-          v.tratativa,
-          ...(Array.isArray(v.distribuicao_vagas)
-            ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
-            : []),
-        ].filter(Boolean);
-        return allTratativas.includes("Aguardando Unidade");
-      })
-      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
-
-    // Fila de Editais: override by checking tratativa across all fluxo slots.
-    acc.fila_edital = vagas
-      .filter((v) => {
-        const allTratativas = [
-          v.tratativa,
-          ...(Array.isArray(v.distribuicao_vagas)
-            ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
-            : []),
-        ].filter(Boolean);
-        return allTratativas.includes("Publicação de Edital");
-      })
-      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
-
-    // Em Admissão: override by checking etapa across all fluxo slots.
-    acc.em_admissao = vagas
-      .filter((v) => {
-        const allEtapas = [
-          v.etapa,
-          ...(Array.isArray(v.distribuicao_vagas)
-            ? (v.distribuicao_vagas as any[]).map((s: any) => s.etapa)
-            : []),
-        ].filter(Boolean);
-        return allEtapas.includes("Enviado para Formalização");
-      })
-      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0);
 
     return acc;
   }, [vagas]);

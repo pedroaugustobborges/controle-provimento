@@ -13,5 +13,13 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
+  // Cap incoming realtime events at 10/sec. During bulk DB operations (imports,
+  // batch updates) hundreds of events can fire per second — without throttling,
+  // each one triggers a React state update and a re-render cycle.
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
 });

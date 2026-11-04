@@ -6,6 +6,40 @@ import { BancoTalentos, Convocacao } from '@/types/vaga';
 import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
 import { toast } from 'sonner';
 
+// ─── Debounced localStorage: batches Zustand persist writes so rapid state ────
+// changes (realtime events, typing) don't block the main thread on every update.
+let _persistDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+const debouncedLocalStorage = {
+  getItem: (name: string): string | null => localStorage.getItem(name),
+  setItem: (name: string, value: string): void => {
+    clearTimeout(_persistDebounceTimer);
+    _persistDebounceTimer = setTimeout(() => localStorage.setItem(name, value), 500);
+  },
+  removeItem: (name: string): void => localStorage.removeItem(name),
+};
+
+// ─── Profiles cache: populated once per session, eliminates N×1 SELECT queries ─
+// that fired for every incoming realtime "mensagem" notification.
+const _profilesCache = new Map<string, { nome_completo: string; email?: string }>();
+let _profilesCacheReady = false;
+
+const initProfilesCache = async () => {
+  if (_profilesCacheReady) return;
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data } = await supabase.from('profiles').select('id, nome_completo, email');
+    if (data) {
+      data.forEach((p: any) => {
+        if (p.id) _profilesCache.set(p.id, { nome_completo: p.nome_completo || '', email: p.email });
+      });
+      _profilesCacheReady = true;
+    }
+  } catch (err) {
+    console.error('[profilesCache] Failed to load:', err);
+  }
+};
+
 const PAGE_SIZE = 1000;
 
 const splitAssistentes = (value: unknown): string[] => {
@@ -270,7 +304,15 @@ export const useVagasStore = create<VagasState>()(
       fetchImportHistory: async () => {
         try {
           const { supabase } = await import('@/integrations/supabase/client');
-          const data = await fetchAllRows('importacoes');
+          // Limit to the 200 most recent imports — no user needs to scroll further,
+          // and fetching the entire table was causing slow initial loads.
+          const { data: rawImport, error: importErr } = await supabase
+            .from('importacoes')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(200);
+          if (importErr) throw importErr;
+          const data = rawImport || [];
           const userIds = [...new Set(data.map(item => item.usuario_id).filter(Boolean))];
           const profilesById = new Map<string, any>();
 
@@ -978,6 +1020,10 @@ export const useVagasStore = create<VagasState>()(
           get().unsubscribeRealtime();
         }
 
+        // Pre-warm profiles cache so the mensagem handler resolves names without
+        // issuing a per-message SELECT on the profiles table.
+        initProfilesCache();
+
         import('@/integrations/supabase/client').then(({ supabase }) => {
           const channelName = CHANNEL_NAME;
           console.log(`[Realtime] Initiating subscription on channel: ${channelName}`);
@@ -1080,13 +1126,10 @@ export const useVagasStore = create<VagasState>()(
               if (newRow.tipo === 'mensagem') {
                 const isFromMe = newRow.remetente_id === myId;
 
-                // Resolve destinatario_nome via profiles when missing (needed by chat filter)
-                let destinatarioNome: string | null = null;
-                if (newRow.usuario_id) {
-                  const { supabase: sb } = await import('@/integrations/supabase/client');
-                  const { data: prof } = await sb.from('profiles').select('nome_completo').eq('id', newRow.usuario_id).maybeSingle();
-                  destinatarioNome = prof?.nome_completo || null;
-                }
+                // Resolve destinatario_nome from the in-memory profiles cache —
+                // avoids one DB query per incoming message (was an N×1 pattern).
+                const destinatarioNome: string | null =
+                  newRow.usuario_id ? (_profilesCache.get(newRow.usuario_id)?.nome_completo ?? null) : null;
 
                 const mensagem: MensagemHistorico = {
                   id: newRow.id,
@@ -1141,11 +1184,54 @@ export const useVagasStore = create<VagasState>()(
                 set((s) => ({ tarefas: s.tarefas.filter((t: any) => t.id !== oldRow.id) }));
               }
             })
-            // Importações
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'importacoes' }, (payload) => {
-              const { eventType } = payload;
-              console.log('[Realtime] Importacoes Change detected, refetching history...');
-              get().fetchImportHistory();
+            // Importações — incremental: fetch only the changed row instead of
+            // refetching the entire importacoes table on every event.
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'importacoes' }, async (payload) => {
+              const { eventType, new: newRow, old: oldRow } = payload as any;
+              if (eventType === 'DELETE') {
+                set((s) => ({
+                  importHistory: s.importHistory.filter((h) => h.id !== oldRow.id),
+                  importedFiles: s.importedFiles.filter((f) => f.id !== oldRow.id),
+                }));
+                return;
+              }
+              try {
+                const { supabase: sb } = await import('@/integrations/supabase/client');
+                const { data: row } = await sb.from('importacoes').select('*').eq('id', newRow.id).maybeSingle();
+                if (!row) return;
+                const profile = _profilesCache.get(row.usuario_id);
+                const histItem: ImportHistory = {
+                  id: row.id,
+                  usuario: profile?.nome_completo || row.usuario_id || 'Sistema',
+                  email_usuario: profile?.email,
+                  total_lidos: row.quantidade_processada || 0,
+                  total_novos: row.quantidade_inserida || 0,
+                  total_atualizados: row.quantidade_atualizada || 0,
+                  total_ignorados: row.quantidade_ignorada || 0,
+                  total_erros: row.quantidade_erro || 0,
+                  status: row.status,
+                  tipo_importacao: row.tipo,
+                  arquivo: row.nome_arquivo || row.arquivo || `Importação ${row.id.slice(0, 8)}`,
+                  data_hora: row.created_at,
+                  referencia_arquivo: row.arquivo || row.nome_arquivo || row.id,
+                  numero_edital: row.numero_edital,
+                };
+                const fileItem = buildImportedFileFromHistory(histItem);
+                if (eventType === 'INSERT') {
+                  set((s) => s.importHistory.some((h) => h.id === histItem.id) ? s : {
+                    importHistory: [histItem, ...s.importHistory],
+                    importedFiles: [fileItem, ...s.importedFiles],
+                  });
+                } else {
+                  set((s) => ({
+                    importHistory: s.importHistory.map((h) => h.id === histItem.id ? histItem : h),
+                    importedFiles: s.importedFiles.map((f) => f.id === fileItem.id ? fileItem : f),
+                  }));
+                }
+              } catch (err) {
+                console.error('[Realtime] Importacoes incremental update failed, falling back:', err);
+                get().fetchImportHistory();
+              }
             })
             // Presence
             .on('presence', { event: 'sync' }, () => {
@@ -1213,8 +1299,12 @@ export const useVagasStore = create<VagasState>()(
     {
       name: 'hospital-recruitment-store',
       version: 5,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ editais: state.editais, validacoes: state.validacoes, bloqueios: state.bloqueios, tarefas: state.tarefas, alertas: state.alertas, historicoMensagens: state.historicoMensagens, temNovasMensagens: state.temNovasMensagens }),
+      // debouncedLocalStorage: batches writes at 500ms so rapid state changes
+      // (realtime events, etc.) don't serialize large arrays to disk on every tick.
+      storage: createJSONStorage(() => debouncedLocalStorage),
+      // historicoMensagens intentionally excluded: it can hold hundreds of objects
+      // and is always fetched fresh on mount via fetchNotificacoes().
+      partialize: (state) => ({ editais: state.editais, validacoes: state.validacoes, bloqueios: state.bloqueios, tarefas: state.tarefas, alertas: state.alertas, temNovasMensagens: state.temNovasMensagens }),
     }
   )
 );

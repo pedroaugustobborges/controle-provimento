@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect, useLayoutEffect, useDeferredValue, Fragment } from "react";
+import { useState, useRef, useMemo, useEffect, useLayoutEffect, useDeferredValue, useTransition, Fragment } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useVagasStore } from "@/store/vagasStore";
 import { useAdminStore } from "@/store/adminStore";
@@ -434,6 +434,9 @@ function DebouncedSearchInput({
 }) {
   const [localValue, setLocalValue] = useState(value);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  // useTransition marks the parent state update as low-priority so the input
+  // character renders immediately while the expensive filter memo runs async.
+  const [, startTransition] = useTransition();
 
   // Sync when parent clears / resets filters
   useEffect(() => {
@@ -444,7 +447,7 @@ function DebouncedSearchInput({
     const v = e.target.value;
     setLocalValue(v);
     clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => onChange(v), 300);
+    timerRef.current = setTimeout(() => startTransition(() => onChange(v)), 300);
   };
 
   // Clean up pending timer on unmount
@@ -1144,6 +1147,8 @@ export default function VagasPage() {
 
   const totalPages = Math.ceil(filtered.length / pageSize);
 
+  // Single O(n) pass over canonicalBase — previously countComBanco, countVagasLideranca,
+  // and countVagasComum were separate useMemos that each looped the full array again.
   const counts = useMemo(() => {
     const acc = {
       fila_edital: 0,
@@ -1159,6 +1164,7 @@ export default function VagasPage() {
       com_banco_valido: 0,
       vagas_novas: 0,
       sem_movimentacao: 0,
+      vagas_comuns: 0,
     };
 
     const nowTime = new Date().getTime();
@@ -1197,41 +1203,22 @@ export default function VagasPage() {
         acc.em_andamento += qty;
       }
 
-      // Verificação via set pré-computado
-      if (vagasComBancoSet.has(v.id)) {
-        acc.com_banco_valido += qty;
-      }
+      // Merged from separate useMemos — no additional array passes needed
+      if (vagasComBancoSet.has(v.id)) acc.com_banco_valido += qty;
+      if (v.tipo_vaga === "Comum") acc.vagas_comuns += qty;
+      const fluxoItems = fluxoItemsMap.get(v.id) ?? [];
+      if (fluxoItems.some((item) => item.tratativa === "Vaga de Liderança")) acc.vagas_lideranca += qty;
     });
 
     return acc;
-  }, [canonicalBase, vagasComBancoSet]);
+  }, [canonicalBase, vagasComBancoSet, fluxoItemsMap]);
 
-  const countComBanco = useMemo(
-    () => canonicalBase
-      .filter((vaga) => vagasComBancoSet.has(vaga.id))
-      .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
-    [canonicalBase, vagasComBancoSet],
-  );
+  // Derived from counts — no extra array traversal
+  const countComBanco = counts.com_banco_valido;
   const countVagasNovas = counts.vagas_novas;
   const countSemMovimentacao = counts.sem_movimentacao;
-
-  const countVagasLideranca = useMemo(
-    () =>
-      canonicalBase
-        .filter((v) =>
-          (fluxoItemsMap.get(v.id) ?? []).some((item) => item.tratativa === "Vaga de Liderança")
-        )
-        .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
-    [canonicalBase, fluxoItemsMap],
-  );
-
-  const countVagasComum = useMemo(
-    () =>
-      canonicalBase
-        .filter((v) => v.tipo_vaga === "Comum")
-        .reduce((sum, v) => sum + Math.max(Number((v as any).numero_vagas || (v as any).quantidade) || 1, 1), 0),
-    [canonicalBase],
-  );
+  const countVagasLideranca = counts.vagas_lideranca;
+  const countVagasComum = counts.vagas_comuns;
 
   // Counts per status_processo for the scorecard row — sums numero_vagas per row
   const statusProcessoCounts = useMemo(() => {

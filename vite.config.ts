@@ -50,4 +50,22 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
+  build: {
+    // Drop console/debugger calls in production via esbuild (no extra plugin needed)
+    minify: "esbuild",
+    rollupOptions: {
+      output: {
+        // Split Recharts (~400 KB) into its own chunk so vendor code doesn't
+        // invalidate the browser cache on every deploy when only app code changes.
+        manualChunks(id) {
+          if (id.includes("recharts") || id.includes("re-charts")) return "charts";
+          if (id.includes("node_modules")) return "vendor";
+        },
+      },
+    },
+  },
+  esbuild: {
+    // Remove console.* and debugger statements from production bundles.
+    drop: mode === "production" ? ["console", "debugger"] : [],
+  },
 }));

@@ -182,6 +182,7 @@ import {
   Accessibility,
   Crown,
   UserRound,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { VagaHistoryDialog } from "@/components/VagaHistoryDialog";
@@ -474,6 +475,23 @@ function getSavedFilters() {
   }
 }
 
+type TriState = "off" | "include" | "exclude";
+
+/** Migrate boolean values from old localStorage format to TriState */
+function readTriState(val: unknown): TriState {
+  if (val === true) return "include";
+  if (val === false || val == null) return "off";
+  if (val === "include" || val === "exclude") return val;
+  return "off";
+}
+
+/** Cycles a tri-state filter: off → include → exclude → off */
+function cycleFilter(current: TriState): TriState {
+  if (current === "off") return "include";
+  if (current === "include") return "exclude";
+  return "off";
+}
+
 export default function VagasPage() {
   const { isDark } = useTheme();
 
@@ -542,13 +560,13 @@ export default function VagasPage() {
   });
   const [filterAnalista, setFilterAnalista] = useState(() => getSavedFilters()?.filterAnalista ?? "all");
   const [filterAssistente, setFilterAssistente] = useState(() => getSavedFilters()?.filterAssistente ?? "all");
-  const [filterLideranca, setFilterLideranca] = useState(() => getSavedFilters()?.filterLideranca ?? false);
+  const [filterLideranca, setFilterLideranca] = useState<TriState>(() => readTriState(getSavedFilters()?.filterLideranca));
   const [filterVagasNovas, setFilterVagasNovas] = useState(() => getSavedFilters()?.filterVagasNovas ?? false);
   const [filterComBanco, setFilterComBanco] = useState(() => getSavedFilters()?.filterComBanco ?? false);
   const [filterSemMovimentacao, setFilterSemMovimentacao] = useState(() => getSavedFilters()?.filterSemMovimentacao ?? false);
-  const [filterTeia, setFilterTeia] = useState(() => getSavedFilters()?.filterTeia ?? false);
-  const [filterPcd, setFilterPcd] = useState(() => getSavedFilters()?.filterPcd ?? false);
-  const [filterComum, setFilterComum] = useState(() => getSavedFilters()?.filterComum ?? false);
+  const [filterTeia, setFilterTeia] = useState<TriState>(() => readTriState(getSavedFilters()?.filterTeia));
+  const [filterPcd, setFilterPcd] = useState<TriState>(() => readTriState(getSavedFilters()?.filterPcd));
+  const [filterComum, setFilterComum] = useState<TriState>(() => readTriState(getSavedFilters()?.filterComum));
 
   // Persiste os filtros no localStorage para manter o estado ao navegar entre páginas
   useEffect(() => {
@@ -986,20 +1004,19 @@ export default function VagasPage() {
       });
     }
 
-    // 3. Filtro TEIAs / PCD
-    if (filterTeia) {
-      baseRecords = baseRecords.filter(
-        (v) => v.is_teia === true || (v.unidade || "").toUpperCase().includes("TEIA"),
-      );
-    }
-    if (filterPcd) {
-      baseRecords = baseRecords.filter(
-        (v) => v.is_pcd === true || (v.cargo || "").toUpperCase().includes("PCD"),
-      );
-    }
-    if (filterComum) {
-      baseRecords = baseRecords.filter((v) => v.tipo_vaga === "Comum");
-    }
+    // 3. Filtro TEIAs / PCD / Comum — tri-state: "include" keeps only matches, "exclude" removes matches
+    const isTeia = (v: Vaga) => v.is_teia === true || (v.unidade || "").toUpperCase().includes("TEIA");
+    const isPcd  = (v: Vaga) => v.is_pcd  === true || (v.cargo  || "").toUpperCase().includes("PCD");
+    const isComum = (v: Vaga) => v.tipo_vaga === "Comum";
+
+    if (filterTeia === "include")  baseRecords = baseRecords.filter(isTeia);
+    else if (filterTeia === "exclude") baseRecords = baseRecords.filter((v) => !isTeia(v));
+
+    if (filterPcd === "include")  baseRecords = baseRecords.filter(isPcd);
+    else if (filterPcd === "exclude") baseRecords = baseRecords.filter((v) => !isPcd(v));
+
+    if (filterComum === "include")  baseRecords = baseRecords.filter(isComum);
+    else if (filterComum === "exclude") baseRecords = baseRecords.filter((v) => !isComum(v));
 
     // 3. Filtragem interna da tela — aplica filtro de cargo (sem unit/month)
     let result = getValidVacancyBase(baseRecords, 'all', 'all');
@@ -1073,9 +1090,11 @@ export default function VagasPage() {
       const matchAssistente =
         filterAssistente === "all" ||
         (v.assistentes || []).includes(filterAssistente);
+      const hasLideranca = fluxoItems.some((item) => item.tratativa === "Vaga de Liderança");
       const matchLideranca =
-        !filterLideranca ||
-        fluxoItems.some((item) => item.tratativa === "Vaga de Liderança");
+        filterLideranca === "off" ||
+        (filterLideranca === "include" && hasLideranca) ||
+        (filterLideranca === "exclude" && !hasLideranca);
 
       const creationDate = v.created_at || v.data_criacao;
       const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
@@ -1241,13 +1260,13 @@ export default function VagasPage() {
     setFilterEtapa("all");
     setFilterAnalista("all");
     setFilterAssistente("all");
-    setFilterLideranca(false);
+    setFilterLideranca("off");
     setFilterVagasNovas(false);
     setFilterComBanco(false);
     setFilterSemMovimentacao(false);
-    setFilterTeia(false);
-    setFilterPcd(false);
-    setFilterComum(false);
+    setFilterTeia("off");
+    setFilterPcd("off");
+    setFilterComum("off");
   };
 
   const hasFilters =
@@ -1259,13 +1278,13 @@ export default function VagasPage() {
     filterEtapa !== "all" ||
     filterAnalista !== "all" ||
     filterAssistente !== "all" ||
-    filterLideranca ||
+    filterLideranca !== "off" ||
     filterVagasNovas ||
     filterComBanco ||
     filterSemMovimentacao ||
-    filterTeia ||
-    filterPcd ||
-    filterComum;
+    filterTeia !== "off" ||
+    filterPcd !== "off" ||
+    filterComum !== "off";
 
   const prepareVagasForExport = (data: Vaga[]) => {
     return data.map((v) => ({
@@ -1565,30 +1584,52 @@ export default function VagasPage() {
 
                 {/* Row 2 — quick-access toggles, always on their own line */}
                 <div className="flex flex-wrap gap-2 items-center">
+                  {/* ── Comum ── */}
                   <Button
-                    variant={filterComum ? "default" : "outline"}
+                    variant={filterComum === "include" ? "default" : "outline"}
                     size="sm"
-                    className={`h-9 text-[11px] font-bold gap-2 ${filterComum ? "bg-slate-600 hover:bg-slate-700" : "border-slate-300 text-slate-600 hover:bg-slate-50 bg-white"}`}
-                    onClick={() => setFilterComum(!filterComum)}
+                    title={filterComum === "off" ? "Mostrar apenas Comum" : filterComum === "include" ? "Clique para excluir Comum" : "Clique para remover filtro"}
+                    className={`h-9 text-[11px] font-bold gap-2 transition-all ${
+                      filterComum === "include"
+                        ? "bg-slate-600 hover:bg-slate-700 text-white"
+                        : filterComum === "exclude"
+                          ? "border-rose-400 text-rose-600 hover:bg-rose-50 bg-white line-through decoration-rose-500"
+                          : "border-slate-300 text-slate-600 hover:bg-slate-50 bg-white"
+                    }`}
+                    onClick={() => setFilterComum(cycleFilter(filterComum))}
                   >
-                    <UserRound className={`h-3.5 w-3.5 ${filterComum ? "text-white" : ""}`} />
+                    {filterComum === "exclude"
+                      ? <EyeOff className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                      : <UserRound className={`h-3.5 w-3.5 ${filterComum === "include" ? "text-white" : ""}`} />
+                    }
                     Comum
-                    {countVagasComum > 0 && (
+                    {filterComum !== "exclude" && countVagasComum > 0 && (
                       <Badge
                         variant="secondary"
-                        className={`ml-1 h-4 px-1 text-[9px] border-none ${filterComum ? "bg-slate-400 text-white" : "bg-slate-100 text-slate-600"}`}
+                        className={`ml-1 h-4 px-1 text-[9px] border-none ${filterComum === "include" ? "bg-slate-400 text-white" : "bg-slate-100 text-slate-600"}`}
                       >
                         {countVagasComum}
                       </Badge>
                     )}
                   </Button>
+
+                  {/* ── TEIAs ── */}
                   <Button
-                    variant={filterTeia ? "default" : "outline"}
+                    variant={filterTeia === "include" ? "default" : "outline"}
                     size="sm"
-                    className={`h-9 text-[11px] font-bold gap-2 ${filterTeia ? "bg-emerald-600 hover:bg-emerald-700" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"}`}
-                    onClick={() => setFilterTeia(!filterTeia)}
+                    title={filterTeia === "off" ? "Mostrar apenas TEIAs" : filterTeia === "include" ? "Clique para excluir TEIAs" : "Clique para remover filtro"}
+                    className={`h-9 text-[11px] font-bold gap-2 transition-all ${
+                      filterTeia === "include"
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        : filterTeia === "exclude"
+                          ? "border-rose-400 text-rose-600 hover:bg-rose-50 bg-white line-through decoration-rose-500"
+                          : "border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
+                    }`}
+                    onClick={() => setFilterTeia(cycleFilter(filterTeia))}
                   >
-                    {filterTeia ? (
+                    {filterTeia === "exclude" ? (
+                      <EyeOff className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                    ) : filterTeia === "include" ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="white">
                         <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" />
                       </svg>
@@ -1607,27 +1648,51 @@ export default function VagasPage() {
                     )}
                     TEIAs
                   </Button>
+
+                  {/* ── PCD ── */}
                   <Button
-                    variant={filterPcd ? "default" : "outline"}
+                    variant={filterPcd === "include" ? "default" : "outline"}
                     size="sm"
-                    className={`h-9 text-[11px] font-bold gap-2 ${filterPcd ? "bg-blue-600 hover:bg-blue-700" : "border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"}`}
-                    onClick={() => setFilterPcd(!filterPcd)}
+                    title={filterPcd === "off" ? "Mostrar apenas PCD" : filterPcd === "include" ? "Clique para excluir PCD" : "Clique para remover filtro"}
+                    className={`h-9 text-[11px] font-bold gap-2 transition-all ${
+                      filterPcd === "include"
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : filterPcd === "exclude"
+                          ? "border-rose-400 text-rose-600 hover:bg-rose-50 bg-white line-through decoration-rose-500"
+                          : "border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
+                    }`}
+                    onClick={() => setFilterPcd(cycleFilter(filterPcd))}
                   >
-                    <Accessibility className={`h-3.5 w-3.5 ${filterPcd ? "text-white" : ""}`} />
+                    {filterPcd === "exclude"
+                      ? <EyeOff className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                      : <Accessibility className={`h-3.5 w-3.5 ${filterPcd === "include" ? "text-white" : ""}`} />
+                    }
                     PCD
                   </Button>
+
+                  {/* ── Liderança ── */}
                   <Button
-                    variant={filterLideranca ? "default" : "outline"}
+                    variant={filterLideranca === "include" ? "default" : "outline"}
                     size="sm"
-                    className={`h-9 text-[11px] font-bold gap-2 ${filterLideranca ? "bg-amber-500 hover:bg-amber-600" : "border-amber-300 text-amber-700 hover:bg-amber-50 bg-white"}`}
-                    onClick={() => setFilterLideranca(!filterLideranca)}
+                    title={filterLideranca === "off" ? "Mostrar apenas Liderança" : filterLideranca === "include" ? "Clique para excluir Liderança" : "Clique para remover filtro"}
+                    className={`h-9 text-[11px] font-bold gap-2 transition-all ${
+                      filterLideranca === "include"
+                        ? "bg-amber-500 hover:bg-amber-600 text-white"
+                        : filterLideranca === "exclude"
+                          ? "border-rose-400 text-rose-600 hover:bg-rose-50 bg-white line-through decoration-rose-500"
+                          : "border-amber-300 text-amber-700 hover:bg-amber-50 bg-white"
+                    }`}
+                    onClick={() => setFilterLideranca(cycleFilter(filterLideranca))}
                   >
-                    <Crown className={`h-3.5 w-3.5 ${filterLideranca ? "text-white" : ""}`} />
+                    {filterLideranca === "exclude"
+                      ? <EyeOff className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                      : <Crown className={`h-3.5 w-3.5 ${filterLideranca === "include" ? "text-white" : ""}`} />
+                    }
                     Liderança
-                    {countVagasLideranca > 0 && (
+                    {filterLideranca !== "exclude" && countVagasLideranca > 0 && (
                       <Badge
                         variant="secondary"
-                        className={`ml-1 h-4 px-1 text-[9px] border-none ${filterLideranca ? "bg-amber-300 text-amber-900" : "bg-amber-100 text-amber-700"}`}
+                        className={`ml-1 h-4 px-1 text-[9px] border-none ${filterLideranca === "include" ? "bg-amber-300 text-amber-900" : "bg-amber-100 text-amber-700"}`}
                       >
                         {countVagasLideranca}
                       </Badge>

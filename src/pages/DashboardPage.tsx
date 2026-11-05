@@ -72,6 +72,7 @@ import {
   Crown,
   UserRound,
   LayoutGrid,
+  EyeOff,
 } from "lucide-react";
 import {
   BarChart,
@@ -180,6 +181,16 @@ const formatRelativeTime = (dateStr: string) => {
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 };
 
+// ─── Tri-state filter helpers ─────────────────────────────────────────────────
+type TriState = "off" | "include" | "exclude";
+
+function cycleFilter(current: TriState): TriState {
+  if (current === "off") return "include";
+  if (current === "include") return "exclude";
+  return "off";
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -219,10 +230,10 @@ export default function DashboardPage() {
 
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [filterPCD, setFilterPCD] = useState(false);
-  const [filterTeia, setFilterTeia] = useState(false);
-  const [filterLideranca, setFilterLideranca] = useState(false);
-  const [filterComum, setFilterComum] = useState(false);
+  const [filterPCD, setFilterPCD] = useState<TriState>("off");
+  const [filterTeia, setFilterTeia] = useState<TriState>("off");
+  const [filterLideranca, setFilterLideranca] = useState<TriState>("off");
+  const [filterComum, setFilterComum] = useState<TriState>("off");
   const [statusProcessoView, setStatusProcessoView] = useState<"donut" | "unidade">("donut");
   const [chartRange, setChartRange] = useState<'7D' | '1M' | '3M' | '6M' | '1A' | '3A' | '5A'>('7D');
 
@@ -237,8 +248,10 @@ export default function DashboardPage() {
     setSelectedUnits(["all"]);
     setDateFrom("");
     setDateTo("");
-    setFilterPCD(false);
-    setFilterTeia(false);
+    setFilterPCD("off");
+    setFilterTeia("off");
+    setFilterLideranca("off");
+    setFilterComum("off");
   }, [setSelectedUnits]);
 
   // Apply user's unit restrictions before any UI filters.
@@ -438,26 +451,30 @@ export default function DashboardPage() {
     if (dateFrom)
       base = base.filter((v) => (v.data_abertura || "") >= dateFrom);
     if (dateTo) base = base.filter((v) => (v.data_abertura || "") <= dateTo);
-    if (filterPCD)
-      base = base.filter(
-        (v) => (v as any).tipo_vaga?.toUpperCase().trim() === "PCD",
-      );
-    if (filterTeia)
-      base = base.filter((v) =>
-        TEIA_UNIDADES.has(normalizeUnitName(v.unidade || "")),
-      );
-    if (filterLideranca)
-      base = base.filter((v) => {
-        const allTratativas = [
-          (v as any).tratativa,
-          ...(Array.isArray((v as any).distribuicao_vagas)
-            ? ((v as any).distribuicao_vagas as any[]).map((s: any) => s.tratativa)
-            : []),
-        ].filter(Boolean);
-        return allTratativas.includes("Vaga de Liderança");
-      });
-    if (filterComum)
-      base = base.filter((v) => (v as any).tipo_vaga === "Comum");
+    const isPCD    = (v: any) => v.tipo_vaga?.toUpperCase().trim() === "PCD";
+    const isTeia   = (v: any) => TEIA_UNIDADES.has(normalizeUnitName(v.unidade || ""));
+    const isLider  = (v: any) => {
+      const all = [
+        v.tratativa,
+        ...(Array.isArray(v.distribuicao_vagas)
+          ? (v.distribuicao_vagas as any[]).map((s: any) => s.tratativa)
+          : []),
+      ].filter(Boolean);
+      return all.includes("Vaga de Liderança");
+    };
+    const isComum  = (v: any) => v.tipo_vaga === "Comum";
+
+    if (filterPCD === "include")     base = base.filter(isPCD);
+    else if (filterPCD === "exclude") base = base.filter((v) => !isPCD(v));
+
+    if (filterTeia === "include")     base = base.filter(isTeia);
+    else if (filterTeia === "exclude") base = base.filter((v) => !isTeia(v));
+
+    if (filterLideranca === "include")     base = base.filter(isLider);
+    else if (filterLideranca === "exclude") base = base.filter((v) => !isLider(v));
+
+    if (filterComum === "include")     base = base.filter(isComum);
+    else if (filterComum === "exclude") base = base.filter((v) => !isComum(v));
     return getValidVacancyBase(base, "TODOS", "TODOS");
   }, [
     userScopedVagas,
@@ -918,10 +935,10 @@ export default function DashboardPage() {
     let count = 0;
     if (!selectedUnits.includes("all")) count++;
     if (dateFrom || dateTo) count++;
-    if (filterPCD) count++;
-    if (filterTeia) count++;
-    if (filterLideranca) count++;
-    if (filterComum) count++;
+    if (filterPCD !== "off") count++;
+    if (filterTeia !== "off") count++;
+    if (filterLideranca !== "off") count++;
+    if (filterComum !== "off") count++;
     return count;
   }, [selectedUnits, dateFrom, dateTo, filterPCD, filterTeia, filterLideranca, filterComum]);
 
@@ -1657,6 +1674,21 @@ export default function DashboardPage() {
           bg: "#f8fafc",
           border: "1px solid rgba(0,0,0,0.09)",
           color: "#64748b",
+        },
+
+    // exclude state — shared across all tri-state toggles
+    excludeStyle: isDark
+      ? {
+          bg: "rgba(244,63,94,0.12)",
+          border: "1px solid rgba(244,63,94,0.40)",
+          color: "#fda4af",
+          shadow: "0 0 12px rgba(244,63,94,0.15)",
+        }
+      : {
+          bg: "rgba(255,241,242,1)",
+          border: "1px solid rgba(244,63,94,0.30)",
+          color: "#e11d48",
+          shadow: "none",
         },
 
     // unit picker
@@ -2473,7 +2505,8 @@ export default function DashboardPage() {
 
           {/* Comum toggle */}
           <button
-            onClick={() => setFilterComum(!filterComum)}
+            onClick={() => setFilterComum(cycleFilter(filterComum))}
+            title={filterComum === "off" ? "Mostrar apenas Comum" : filterComum === "include" ? "Clique para excluir Comum" : "Clique para remover filtro"}
             style={{
               display: "flex",
               alignItems: "center",
@@ -2487,26 +2520,25 @@ export default function DashboardPage() {
               letterSpacing: "0.06em",
               cursor: "pointer",
               transition: "all 0.2s",
-              ...(filterComum
-                ? {
-                    background: t.comumActive.bg,
-                    border: t.comumActive.border,
-                    color: t.comumActive.color,
-                    boxShadow: t.comumActive.shadow,
-                  }
-                : {
-                    background: t.comumInactive.bg,
-                    border: t.comumInactive.border,
-                    color: t.comumInactive.color,
-                  }),
+              textDecoration: filterComum === "exclude" ? "line-through" : "none",
+              ...(filterComum === "include"
+                ? { background: t.comumActive.bg, border: t.comumActive.border, color: t.comumActive.color, boxShadow: t.comumActive.shadow }
+                : filterComum === "exclude"
+                  ? { background: t.excludeStyle.bg, border: t.excludeStyle.border, color: t.excludeStyle.color, boxShadow: t.excludeStyle.shadow }
+                  : { background: t.comumInactive.bg, border: t.comumInactive.border, color: t.comumInactive.color }),
             }}
           >
-            <UserRound style={{ width: "14px", height: "14px" }} /> Comum
+            {filterComum === "exclude"
+              ? <EyeOff style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+              : <UserRound style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+            }
+            Comum
           </button>
 
           {/* PCD toggle */}
           <button
-            onClick={() => setFilterPCD(!filterPCD)}
+            onClick={() => setFilterPCD(cycleFilter(filterPCD))}
+            title={filterPCD === "off" ? "Mostrar apenas PCD" : filterPCD === "include" ? "Clique para excluir PCD" : "Clique para remover filtro"}
             style={{
               display: "flex",
               alignItems: "center",
@@ -2520,26 +2552,25 @@ export default function DashboardPage() {
               letterSpacing: "0.06em",
               cursor: "pointer",
               transition: "all 0.2s",
-              ...(filterPCD
-                ? {
-                    background: t.pcdActive.bg,
-                    border: t.pcdActive.border,
-                    color: t.pcdActive.color,
-                    boxShadow: t.pcdActive.shadow,
-                  }
-                : {
-                    background: t.pcdInactive.bg,
-                    border: t.pcdInactive.border,
-                    color: t.pcdInactive.color,
-                  }),
+              textDecoration: filterPCD === "exclude" ? "line-through" : "none",
+              ...(filterPCD === "include"
+                ? { background: t.pcdActive.bg, border: t.pcdActive.border, color: t.pcdActive.color, boxShadow: t.pcdActive.shadow }
+                : filterPCD === "exclude"
+                  ? { background: t.excludeStyle.bg, border: t.excludeStyle.border, color: t.excludeStyle.color, boxShadow: t.excludeStyle.shadow }
+                  : { background: t.pcdInactive.bg, border: t.pcdInactive.border, color: t.pcdInactive.color }),
             }}
           >
-            <Accessibility style={{ width: "14px", height: "14px" }} /> PCD
+            {filterPCD === "exclude"
+              ? <EyeOff style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+              : <Accessibility style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+            }
+            PCD
           </button>
 
           {/* Liderança toggle */}
           <button
-            onClick={() => setFilterLideranca(!filterLideranca)}
+            onClick={() => setFilterLideranca(cycleFilter(filterLideranca))}
+            title={filterLideranca === "off" ? "Mostrar apenas Liderança" : filterLideranca === "include" ? "Clique para excluir Liderança" : "Clique para remover filtro"}
             style={{
               display: "flex",
               alignItems: "center",
@@ -2553,26 +2584,25 @@ export default function DashboardPage() {
               letterSpacing: "0.06em",
               cursor: "pointer",
               transition: "all 0.2s",
-              ...(filterLideranca
-                ? {
-                    background: t.liderancaActive.bg,
-                    border: t.liderancaActive.border,
-                    color: t.liderancaActive.color,
-                    boxShadow: t.liderancaActive.shadow,
-                  }
-                : {
-                    background: t.liderancaInactive.bg,
-                    border: t.liderancaInactive.border,
-                    color: t.liderancaInactive.color,
-                  }),
+              textDecoration: filterLideranca === "exclude" ? "line-through" : "none",
+              ...(filterLideranca === "include"
+                ? { background: t.liderancaActive.bg, border: t.liderancaActive.border, color: t.liderancaActive.color, boxShadow: t.liderancaActive.shadow }
+                : filterLideranca === "exclude"
+                  ? { background: t.excludeStyle.bg, border: t.excludeStyle.border, color: t.excludeStyle.color, boxShadow: t.excludeStyle.shadow }
+                  : { background: t.liderancaInactive.bg, border: t.liderancaInactive.border, color: t.liderancaInactive.color }),
             }}
           >
-            <Crown style={{ width: "14px", height: "14px" }} /> Liderança
+            {filterLideranca === "exclude"
+              ? <EyeOff style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+              : <Crown style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+            }
+            Liderança
           </button>
 
           {/* Rede TEIA toggle */}
           <button
-            onClick={() => setFilterTeia(!filterTeia)}
+            onClick={() => setFilterTeia(cycleFilter(filterTeia))}
+            title={filterTeia === "off" ? "Mostrar apenas Rede TEIA" : filterTeia === "include" ? "Clique para excluir Rede TEIA" : "Clique para remover filtro"}
             style={{
               display: "flex",
               alignItems: "center",
@@ -2586,21 +2616,17 @@ export default function DashboardPage() {
               letterSpacing: "0.06em",
               cursor: "pointer",
               transition: "all 0.2s",
-              ...(filterTeia
-                ? {
-                    background: t.teiaActive.bg,
-                    border: t.teiaActive.border,
-                    color: t.teiaActive.color,
-                    boxShadow: t.teiaActive.shadow,
-                  }
-                : {
-                    background: t.teiaInactive.bg,
-                    border: t.teiaInactive.border,
-                    color: t.teiaInactive.color,
-                  }),
+              textDecoration: filterTeia === "exclude" ? "line-through" : "none",
+              ...(filterTeia === "include"
+                ? { background: t.teiaActive.bg, border: t.teiaActive.border, color: t.teiaActive.color, boxShadow: t.teiaActive.shadow }
+                : filterTeia === "exclude"
+                  ? { background: t.excludeStyle.bg, border: t.excludeStyle.border, color: t.excludeStyle.color, boxShadow: t.excludeStyle.shadow }
+                  : { background: t.teiaInactive.bg, border: t.teiaInactive.border, color: t.teiaInactive.color }),
             }}
           >
-            {filterTeia ? (
+            {filterTeia === "exclude" ? (
+              <EyeOff width="14" height="14" style={{ flexShrink: 0 }} />
+            ) : filterTeia === "include" ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor" style={{ display: "inline", verticalAlign: "middle" }}>
                 <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" />
               </svg>

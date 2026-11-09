@@ -189,10 +189,10 @@ export function AppSidebar() {
           title: "Gestão Estratégica",
           url: "/portal-rh",
           icon: Target,
-          visible: isAdminAnalyst || isManagement || hasFullAccess,
+          visible: (isAdminAnalyst || isManagement || hasFullAccess) && !isGestorUnidade,
         },
       ].filter((item) => item.visible),
-    [getPermissions, isManagement, hasFullAccess, isAdminAnalyst],
+    [getPermissions, isManagement, hasFullAccess, isAdminAnalyst, isGestorUnidade],
   );
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);

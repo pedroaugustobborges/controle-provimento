@@ -12,6 +12,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import MaintenancePage from "@/pages/MaintenancePage";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminStore } from "@/store/adminStore";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const VagasPage = lazy(() => import("@/pages/VagasPage"));
@@ -48,6 +49,7 @@ function ProtectedRouteWrapper() {
   const { state: maintenance, loading: maintLoading } = useMaintenanceMode();
   const isAdmin = useIsAdmin();
   const [mustChangePassword, setMustChangePassword] = useState<boolean | null>(null);
+  const [currentPerfil, setCurrentPerfil] = useState<string | null>(null);
   const location = useLocation();
 
   // Auto-deslogar não-admin quando manutenção é ativada em tempo real
@@ -65,13 +67,19 @@ function ProtectedRouteWrapper() {
     }
     supabase
       .from('profiles')
-      .select('must_change_password')
+      .select('must_change_password, perfil')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data }) => {
         setMustChangePassword(data?.must_change_password ?? false);
+        setCurrentPerfil(data?.perfil ?? '');
       });
   }, [isAuthenticated, user, location.pathname]);
+
+  const GESTOR_ALLOWED_PATHS = ['/vagas'];
+  const isGestorUnidade = currentPerfil === 'Gestor de Unidade';
+  const isOnRestrictedPath = isGestorUnidade &&
+    !GESTOR_ALLOWED_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
 
   if (loading || maintLoading || isAdmin === null || (isAuthenticated && mustChangePassword === null)) {
     return (
@@ -96,6 +104,10 @@ function ProtectedRouteWrapper() {
     return <MaintenancePage message={maintenance.message} expectedReturnAt={maintenance.expected_return_at} />;
   }
 
+  if (isOnRestrictedPath) {
+    return <Navigate to="/vagas" replace />;
+  }
+
   return (
     <AppLayout>
       <Suspense fallback={<PageSkeleton />}>
@@ -109,6 +121,7 @@ function UnidadeRouteWrapper() {
   const { isAuthenticated, loading, signOut } = useAuth();
   const { state: maintenance, loading: maintLoading } = useMaintenanceMode();
   const isAdmin = useIsAdmin();
+  const currentUser = useAdminStore((s) => s.currentUser);
 
   useEffect(() => {
     if (maintenance?.is_active && isAdmin === false && isAuthenticated) {
@@ -130,6 +143,10 @@ function UnidadeRouteWrapper() {
 
   if (maintenance?.is_active && !isAdmin) {
     return <MaintenancePage message={maintenance.message} expectedReturnAt={maintenance.expected_return_at} />;
+  }
+
+  if (currentUser?.perfil === 'Gestor de Unidade') {
+    return <Navigate to="/vagas" replace />;
   }
 
   return (

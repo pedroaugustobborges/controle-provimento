@@ -283,7 +283,11 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1.5">
-              {mainItems
+              {!currentUser?.perfil
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-10 mx-1 rounded-xl bg-white/5 animate-pulse" />
+                  ))
+                : mainItems
                 .filter((item) => item.visible !== false)
                 .map((item) => {
                   const active = isParentActive(item);
@@ -446,8 +450,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <div className="mx-5 my-3 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        {!!currentUser?.perfil && secondaryItems.length > 0 && (
+          <div className="mx-5 my-3 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        )}
 
+        {!!currentUser?.perfil && secondaryItems.length > 0 && (
         <SidebarGroup className="px-3 mt-1">
           <SidebarGroupLabel className="px-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-5 flex items-center gap-3">
             <div className="h-[1px] w-6 bg-white/15" />
@@ -531,6 +538,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-white/10 py-6 px-4">

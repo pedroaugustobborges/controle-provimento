@@ -1,7 +1,7 @@
 import { useRBAC } from './useRBAC';
 
 export function usePermissions() {
-  const { userData, isAdmin, isManagement, isFullAccessProfile, getPermissions } = useRBAC();
+  const { userData, isAdmin, isManagement, isFullAccessProfile, isGestorUnidade, getPermissions } = useRBAC();
 
   const perfil = userData?.perfil?.toLowerCase() || '';
   const canAdmin = isAdmin || perfil === 'analista administrativo';
@@ -28,6 +28,7 @@ export function usePermissions() {
     isManagement: () => isManagement,
     currentUser: userData,
     hasFullAccess: isAdmin,
+    isGestorUnidade,
     getPermissions,
   };
 }

@@ -53,6 +53,7 @@ export function useRBAC() {
   const isSupervisao = perfil === 'supervisão';
   const isManagement = ['gestão', 'gerência', 'coordenação'].includes(perfil);
   const isFullAccessProfile = isAdmin || isManagement || perfil === 'analista administrativo';
+  const isGestorUnidade = perfil === 'gestor de unidade';
 
   const getPermissions = (module: string): Permissions => {
     if (isFullAccessProfile) {
@@ -114,6 +115,7 @@ export function useRBAC() {
     isSupervisao,
     isManagement,
     isFullAccessProfile,
+    isGestorUnidade,
     getPermissions,
   };
 }

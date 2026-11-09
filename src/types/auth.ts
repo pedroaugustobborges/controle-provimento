@@ -1,4 +1,4 @@
-export type UserProfile = 
+export type UserProfile =
   | 'Analista de RH'
   | 'Assistente de RH'
   | 'Analista Administrativo'
@@ -8,6 +8,7 @@ export type UserProfile =
   | 'Coordenação'
   | 'Administrador'
   | 'Visualizador'
+  | 'Gestor de Unidade'
   // Legacy compatibility
   | 'Analista da unidade' 
   | 'Analista do edital' 
@@ -30,6 +31,7 @@ export const PERFIS_ACESSO: { value: string; label: string }[] = [
   { value: 'Supervisão', label: 'Supervisão' },
   { value: 'Coordenação', label: 'Coordenação' },
   { value: 'Visualizador', label: 'Visualizador' },
+  { value: 'Gestor de Unidade', label: 'Gestor de Unidade' },
 ];
 
 export const CARGOS_HIERARQUICOS: string[] = [

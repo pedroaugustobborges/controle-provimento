@@ -746,6 +746,7 @@ export default function VagaDetalhePage() {
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
   const [showEtapaRequiredAlert, setShowEtapaRequiredAlert] = useState(false);
   const [showAprovacaoSaveDialog, setShowAprovacaoSaveDialog] = useState(false);
+  const [aprovacaoErrors, setAprovacaoErrors] = useState<Set<string>>(new Set());
   const [aprovacaoDraft, setAprovacaoDraft] = useState<{
     horario_entrada?: string;
     horario_saida?: string;
@@ -1662,9 +1663,49 @@ export default function VagaDetalhePage() {
       return next;
     });
     setAprovacaoDirty(true);
+    setAprovacaoErrors((prev) => {
+      if (!prev.has(field)) return prev;
+      const next = new Set(prev);
+      next.delete(field);
+      return next;
+    });
   };
 
   const handleAprovacaoSave = async (mode: "submit" | "draft" = "draft") => {
+    if (mode === "submit") {
+      const eEntrada = "horario_entrada" in aprovacaoDraft ? aprovacaoDraft.horario_entrada : vaga.horario_entrada;
+      const eSaida   = "horario_saida"   in aprovacaoDraft ? aprovacaoDraft.horario_saida   : vaga.horario_saida;
+      const eTurno   = "turno"           in aprovacaoDraft ? aprovacaoDraft.turno            : vaga.turno;
+      const ePlantao = "plantao"         in aprovacaoDraft ? aprovacaoDraft.plantao          : vaga.plantao;
+      const eCarga   = "carga_horaria"   in aprovacaoDraft ? aprovacaoDraft.carga_horaria    : vaga.carga_horaria;
+      const eFaixa   = "faixa_salarial"  in aprovacaoDraft ? aprovacaoDraft.faixa_salarial   : vaga.faixa_salarial;
+      const eBanco   = "tipo_provimento_banco"   in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_banco   : vaga.tipo_provimento_banco;
+      const eEdital  = "tipo_provimento_edital"  in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_edital  : vaga.tipo_provimento_edital;
+      const eInterno = "tipo_provimento_interno" in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_interno : vaga.tipo_provimento_interno;
+      const eOutra   = "tipo_provimento_outra"   in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_outra   : vaga.tipo_provimento_outra;
+
+      const errs = new Set<string>();
+      if (!eEntrada) errs.add("horario_entrada");
+      if (!eSaida)   errs.add("horario_saida");
+      if (!eTurno)   errs.add("turno");
+      if (!ePlantao) errs.add("plantao");
+      if (!eCarga)   errs.add("carga_horaria");
+      if (!eFaixa)   errs.add("faixa_salarial");
+      if (!eBanco)   errs.add("tipo_provimento_banco");
+      if (eBanco === "Não" && !eEdital)  errs.add("tipo_provimento_edital");
+      if (eBanco === "Não" && eEdital === "Não" && !eInterno) errs.add("tipo_provimento_interno");
+      if (eBanco === "Não" && eEdital === "Não" && eInterno === "Não" && !eOutra?.trim()) errs.add("tipo_provimento_outra");
+
+      if (errs.size > 0) {
+        setAprovacaoErrors(errs);
+        toast.error(
+          `Preencha ${errs.size} campo${errs.size > 1 ? "s" : ""} obrigatório${errs.size > 1 ? "s" : ""} antes de enviar.`,
+        );
+        return;
+      }
+      setAprovacaoErrors(new Set());
+    }
+
     const updates: any = {};
     const histParts: string[] = [];
 
@@ -2488,7 +2529,10 @@ export default function VagaDetalhePage() {
                     effEdital === "Não" &&
                     effInterno === "Não";
 
-                  const canEditAprovacao = canEdit || isAssistente;
+                  const canEditAprovacao =
+                    currentUser?.perfil === 'Administrador' ||
+                    currentUser?.perfil === 'Admin' ||
+                    currentUser?.perfil === 'Gestor de Unidade';
 
                   return (
                     <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -2530,10 +2574,10 @@ export default function VagaDetalhePage() {
                           {/* Horário de Entrada */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
-                                <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("horario_entrada") ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-100")}>
+                                <Clock className={cn("h-3.5 w-3.5", aprovacaoErrors.has("horario_entrada") ? "text-rose-400" : "text-emerald-500")} />
                               </div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("horario_entrada") ? "text-rose-500" : "text-slate-400")}>
                                 Horário de Entrada
                               </span>
                             </div>
@@ -2547,7 +2591,7 @@ export default function VagaDetalhePage() {
                                     e.target.value,
                                   )
                                 }
-                                className="h-9 bg-white border-slate-200 text-sm font-semibold"
+                                className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("horario_entrada") && "border-rose-400 bg-rose-50 focus-visible:ring-rose-300")}
                               />
                             ) : (
                               <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
@@ -2563,10 +2607,10 @@ export default function VagaDetalhePage() {
                           {/* Horário de Saída */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
-                                <Clock className="h-3.5 w-3.5 text-rose-400" />
+                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("horario_saida") ? "bg-rose-100 border-rose-300" : "bg-rose-50 border-rose-100")}>
+                                <Clock className={cn("h-3.5 w-3.5", aprovacaoErrors.has("horario_saida") ? "text-rose-500" : "text-rose-400")} />
                               </div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("horario_saida") ? "text-rose-500" : "text-slate-400")}>
                                 Horário de Saída
                               </span>
                             </div>
@@ -2580,7 +2624,7 @@ export default function VagaDetalhePage() {
                                     e.target.value,
                                   )
                                 }
-                                className="h-9 bg-white border-slate-200 text-sm font-semibold"
+                                className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("horario_saida") && "border-rose-400 bg-rose-50 focus-visible:ring-rose-300")}
                               />
                             ) : (
                               <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
@@ -2596,10 +2640,10 @@ export default function VagaDetalhePage() {
                           {/* Turno */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                                <SunMoon className="h-3.5 w-3.5 text-amber-500" />
+                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("turno") ? "bg-rose-50 border-rose-200" : "bg-amber-50 border-amber-100")}>
+                                <SunMoon className={cn("h-3.5 w-3.5", aprovacaoErrors.has("turno") ? "text-rose-400" : "text-amber-500")} />
                               </div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("turno") ? "text-rose-500" : "text-slate-400")}>
                                 Turno
                               </span>
                             </div>
@@ -2613,7 +2657,7 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("turno") && "border-rose-400 bg-rose-50")}>
                                   <SelectValue placeholder="Selecionar turno..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2649,10 +2693,10 @@ export default function VagaDetalhePage() {
                           {/* Plantão */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                                <Calendar className="h-3.5 w-3.5 text-blue-500" />
+                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("plantao") ? "bg-rose-50 border-rose-200" : "bg-blue-50 border-blue-100")}>
+                                <Calendar className={cn("h-3.5 w-3.5", aprovacaoErrors.has("plantao") ? "text-rose-400" : "text-blue-500")} />
                               </div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("plantao") ? "text-rose-500" : "text-slate-400")}>
                                 Plantão
                               </span>
                             </div>
@@ -2666,7 +2710,7 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("plantao") && "border-rose-400 bg-rose-50")}>
                                   <SelectValue placeholder="Selecionar plantão..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2699,10 +2743,10 @@ export default function VagaDetalhePage() {
                           {/* Carga Horária */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0">
-                                <Timer className="h-3.5 w-3.5 text-violet-500" />
+                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("carga_horaria") ? "bg-rose-50 border-rose-200" : "bg-violet-50 border-violet-100")}>
+                                <Timer className={cn("h-3.5 w-3.5", aprovacaoErrors.has("carga_horaria") ? "text-rose-400" : "text-violet-500")} />
                               </div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("carga_horaria") ? "text-rose-500" : "text-slate-400")}>
                                 Carga Horária
                               </span>
                             </div>
@@ -2716,7 +2760,7 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("carga_horaria") && "border-rose-400 bg-rose-50")}>
                                   <SelectValue placeholder="Selecionar carga horária..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2746,10 +2790,10 @@ export default function VagaDetalhePage() {
                           {/* Faixa Salarial */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0">
-                                <Banknote className="h-3.5 w-3.5 text-teal-500" />
+                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("faixa_salarial") ? "bg-rose-50 border-rose-200" : "bg-teal-50 border-teal-100")}>
+                                <Banknote className={cn("h-3.5 w-3.5", aprovacaoErrors.has("faixa_salarial") ? "text-rose-400" : "text-teal-500")} />
                               </div>
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("faixa_salarial") ? "text-rose-500" : "text-slate-400")}>
                                 Faixa Salarial
                               </span>
                             </div>
@@ -2763,7 +2807,7 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("faixa_salarial") && "border-rose-400 bg-rose-50")}>
                                   <SelectValue placeholder="Selecionar faixa salarial..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2804,9 +2848,9 @@ export default function VagaDetalhePage() {
 
                           <div className="space-y-2.5">
                             {/* Q1 */}
-                            <div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 border bg-white border-slate-200">
+                            <div className={cn("flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-colors", aprovacaoErrors.has("tipo_provimento_banco") ? "bg-rose-50/40 border-rose-400" : "bg-white border-slate-200")}>
                               <div className="flex items-center gap-3 min-w-0">
-                                <span className="shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[10px] font-black flex items-center justify-center">
+                                <span className={cn("shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center", aprovacaoErrors.has("tipo_provimento_banco") ? "bg-rose-100 text-rose-600" : "bg-indigo-100 text-indigo-600")}>
                                   1
                                 </span>
                                 <span className="text-xs font-semibold text-slate-700">
@@ -2860,7 +2904,9 @@ export default function VagaDetalhePage() {
                               className={cn(
                                 "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-all",
                                 q2Enabled
-                                  ? "bg-white border-slate-200"
+                                  ? aprovacaoErrors.has("tipo_provimento_edital")
+                                    ? "bg-rose-50/40 border-rose-400"
+                                    : "bg-white border-slate-200"
                                   : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
                               )}
                             >
@@ -2869,7 +2915,9 @@ export default function VagaDetalhePage() {
                                   className={cn(
                                     "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
                                     q2Enabled
-                                      ? "bg-indigo-100 text-indigo-600"
+                                      ? aprovacaoErrors.has("tipo_provimento_edital")
+                                        ? "bg-rose-100 text-rose-600"
+                                        : "bg-indigo-100 text-indigo-600"
                                       : "bg-slate-200 text-slate-400",
                                   )}
                                 >
@@ -2944,7 +2992,9 @@ export default function VagaDetalhePage() {
                               className={cn(
                                 "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-all",
                                 q3Enabled
-                                  ? "bg-white border-slate-200"
+                                  ? aprovacaoErrors.has("tipo_provimento_interno")
+                                    ? "bg-rose-50/40 border-rose-400"
+                                    : "bg-white border-slate-200"
                                   : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
                               )}
                             >
@@ -2953,7 +3003,9 @@ export default function VagaDetalhePage() {
                                   className={cn(
                                     "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
                                     q3Enabled
-                                      ? "bg-indigo-100 text-indigo-600"
+                                      ? aprovacaoErrors.has("tipo_provimento_interno")
+                                        ? "bg-rose-100 text-rose-600"
+                                        : "bg-indigo-100 text-indigo-600"
                                       : "bg-slate-200 text-slate-400",
                                   )}
                                 >
@@ -3028,7 +3080,9 @@ export default function VagaDetalhePage() {
                               className={cn(
                                 "rounded-lg border transition-all",
                                 q4Enabled
-                                  ? "bg-white border-slate-200"
+                                  ? aprovacaoErrors.has("tipo_provimento_outra")
+                                    ? "bg-rose-50/40 border-rose-400"
+                                    : "bg-white border-slate-200"
                                   : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
                               )}
                             >
@@ -3037,7 +3091,9 @@ export default function VagaDetalhePage() {
                                   className={cn(
                                     "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
                                     q4Enabled
-                                      ? "bg-indigo-100 text-indigo-600"
+                                      ? aprovacaoErrors.has("tipo_provimento_outra")
+                                        ? "bg-rose-100 text-rose-600"
+                                        : "bg-indigo-100 text-indigo-600"
                                       : "bg-slate-200 text-slate-400",
                                   )}
                                 >
@@ -3065,7 +3121,7 @@ export default function VagaDetalhePage() {
                                       )
                                     }
                                     placeholder="Descreva a tratativa..."
-                                    className="min-h-[72px] resize-none bg-white border-slate-200 text-sm"
+                                    className={cn("min-h-[72px] resize-none bg-white border-slate-200 text-sm", aprovacaoErrors.has("tipo_provimento_outra") && "border-rose-400 bg-rose-50 focus-visible:ring-rose-300")}
                                   />
                                 ) : (
                                   <p

@@ -68,6 +68,7 @@ export function AppSidebar() {
     isAdminAnalyst,
     isEditalAnalyst,
     hasFullAccess,
+    isGestorUnidade,
     getPermissions,
   } = usePermissions();
   const {
@@ -95,7 +96,7 @@ export function AppSidebar() {
         title: "Visão Geral",
         url: "/",
         icon: LayoutDashboard,
-        visible: getPermissions("vagas").canRead,
+        visible: getPermissions("vagas").canRead && !isGestorUnidade,
       },
       {
         title: "Controle de Vagas",

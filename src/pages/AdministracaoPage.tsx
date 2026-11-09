@@ -316,6 +316,10 @@ const DEFAULT_PERMISSIONS_BY_PROFILE: Record<
       validacao_convocacoes: "read",
     },
   },
+  "Gestor de Unidade": {
+    modulos: ["vagas"],
+    perms: { vagas: "read" },
+  },
   Administrador: {
     modulos: [
       "vagas",
@@ -1476,48 +1480,52 @@ export default function AdministracaoPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-muted-foreground">
-                  Cargo Hierárquico
-                </Label>
-                <Select
-                  value={newUser.cargo}
-                  onValueChange={(v) => setNewUser((p) => ({ ...p, cargo: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CARGOS_HIERARQUICOS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {newUser.cargo === "Analista Administrativo" && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">
-                    Região de Suporte
-                  </Label>
-                  <Select
-                    value={newUser.regiao_suporte || ""}
-                    onValueChange={(v) =>
-                      setNewUser((p) => ({ ...p, regiao_suporte: v || null }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a região..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="go_es">
-                        Goiás e Espírito Santo
-                      </SelectItem>
-                      <SelectItem value="demais">Demais Unidades</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {newUser.perfil !== "Gestor de Unidade" && (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
+                      Cargo Hierárquico
+                    </Label>
+                    <Select
+                      value={newUser.cargo}
+                      onValueChange={(v) => setNewUser((p) => ({ ...p, cargo: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CARGOS_HIERARQUICOS.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {newUser.cargo === "Analista Administrativo" && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase text-muted-foreground">
+                        Região de Suporte
+                      </Label>
+                      <Select
+                        value={newUser.regiao_suporte || ""}
+                        onValueChange={(v) =>
+                          setNewUser((p) => ({ ...p, regiao_suporte: v || null }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a região..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="go_es">
+                            Goiás e Espírito Santo
+                          </SelectItem>
+                          <SelectItem value="demais">Demais Unidades</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
               )}
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">
@@ -1564,6 +1572,23 @@ export default function AdministracaoPage() {
                       Publicação de Edital Interno
                     </span>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Gestor de Unidade — restricted profile callout */}
+            {newUser.perfil === "Gestor de Unidade" && (
+              <div className="flex items-start gap-3.5 p-4 rounded-xl border border-blue-200 bg-blue-50">
+                <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-blue-100 border border-blue-200 mt-0.5">
+                  <ShieldCheck className="h-[18px] w-[18px] text-blue-600" />
+                </div>
+                <div className="space-y-1.5 min-w-0">
+                  <p className="text-sm font-bold text-blue-800">
+                    Perfil Gestor de Unidade
+                  </p>
+                  <p className="text-xs text-blue-700 leading-relaxed">
+                    Este perfil tem acesso restrito ao preenchimento da <span className="font-semibold">Aprovação da Unidade</span> nas vagas vinculadas. Configure abaixo as unidades a que este gestor terá acesso.
+                  </p>
                 </div>
               </div>
             )}
@@ -1689,6 +1714,7 @@ export default function AdministracaoPage() {
             </div>
 
             {/* Acesso a Módulos */}
+            {newUser.perfil !== "Gestor de Unidade" && (
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
@@ -1758,6 +1784,7 @@ export default function AdministracaoPage() {
                 })}
               </div>
             </div>
+            )}
 
             {/* Unidades Vinculadas */}
             <div className="space-y-4 border-t pt-4">
@@ -1772,7 +1799,8 @@ export default function AdministracaoPage() {
                 )}
               </div>
 
-              {/* Toggle: acesso total */}
+              {/* Toggle: acesso total — hidden for Gestor de Unidade */}
+              {newUser.perfil !== "Gestor de Unidade" && (
               <div
                 className={`flex items-center justify-between gap-4 p-3 rounded-xl border transition-colors cursor-pointer ${newUser.visualiza_todas_unidades ? "bg-emerald-50/60 border-emerald-200" : "bg-slate-50 border-slate-200"}`}
                 onClick={() =>
@@ -1805,9 +1833,10 @@ export default function AdministracaoPage() {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
+              )}
 
-              {/* Unit picker — only when not full access */}
-              {!newUser.visualiza_todas_unidades && (
+              {/* Unit picker — only when not full access (or always for Gestor de Unidade) */}
+              {(newUser.perfil === "Gestor de Unidade" || !newUser.visualiza_todas_unidades) && (
                 <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
                   <UnidadesPicker
                     value={newUser.unidades_vinculadas}
@@ -1982,7 +2011,8 @@ export default function AdministracaoPage() {
               </div>
             )}
 
-            {/* Permissões específicas (Legacy Flags) */}
+            {/* Permissões específicas (Legacy Flags) — hidden for Gestor de Unidade */}
+            {newUser.perfil !== "Gestor de Unidade" && (
             <div className="space-y-3 border-t pt-4">
               <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
                 Outras Permissões
@@ -2054,6 +2084,7 @@ export default function AdministracaoPage() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* E-mail de boas-vindas */}
             <div className="flex items-center gap-3 border-t pt-4">
@@ -2206,53 +2237,57 @@ export default function AdministracaoPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">
-                    Cargo Hierárquico
-                  </Label>
-                  <Select
-                    value={editingUser.cargo || ""}
-                    onValueChange={(v) =>
-                      setEditingUser((p: any) => ({ ...p, cargo: v }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CARGOS_HIERARQUICOS.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {editingUser.cargo === "Analista Administrativo" && (
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase text-muted-foreground">
-                      Região de Suporte
-                    </Label>
-                    <Select
-                      value={editingUser.regiao_suporte || ""}
-                      onValueChange={(v) =>
-                        setEditingUser((p: any) => ({
-                          ...p,
-                          regiao_suporte: v || null,
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a região..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="go_es">
-                          Goiás e Espírito Santo
-                        </SelectItem>
-                        <SelectItem value="demais">Demais Unidades</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {editingUser.perfil !== "Gestor de Unidade" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase text-muted-foreground">
+                        Cargo Hierárquico
+                      </Label>
+                      <Select
+                        value={editingUser.cargo || ""}
+                        onValueChange={(v) =>
+                          setEditingUser((p: any) => ({ ...p, cargo: v }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CARGOS_HIERARQUICOS.map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {c}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {editingUser.cargo === "Analista Administrativo" && (
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase text-muted-foreground">
+                          Região de Suporte
+                        </Label>
+                        <Select
+                          value={editingUser.regiao_suporte || ""}
+                          onValueChange={(v) =>
+                            setEditingUser((p: any) => ({
+                              ...p,
+                              regiao_suporte: v || null,
+                            }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a região..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="go_es">
+                              Goiás e Espírito Santo
+                            </SelectItem>
+                            <SelectItem value="demais">Demais Unidades</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -2301,6 +2336,48 @@ export default function AdministracaoPage() {
                     </div>
                   </div>
                 </div>
+              ) : editingUser.perfil === "Gestor de Unidade" ? (
+                <>
+                  {/* Gestor de Unidade — restricted profile: only show Unidades Vinculadas */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-start gap-3.5 p-4 rounded-xl border border-blue-200 bg-blue-50">
+                      <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-blue-100 border border-blue-200 mt-0.5">
+                        <ShieldCheck className="h-[18px] w-[18px] text-blue-600" />
+                      </div>
+                      <div className="space-y-1.5 min-w-0">
+                        <p className="text-sm font-bold text-blue-800">
+                          Perfil Gestor de Unidade
+                        </p>
+                        <p className="text-xs text-blue-700 leading-relaxed">
+                          Este perfil tem acesso restrito ao preenchimento da <span className="font-semibold">Aprovação da Unidade</span> nas vagas vinculadas. Configure abaixo as unidades a que este gestor terá acesso.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Unidades Vinculadas only */}
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
+                      Unidades Vinculadas
+                    </h4>
+                    <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-4">
+                      <UnidadesPicker
+                        value={editingUser.unidades_vinculadas || []}
+                        onChange={(units) =>
+                          setEditingUser((p: any) => ({
+                            ...p,
+                            unidades_vinculadas: units,
+                          }))
+                        }
+                      />
+                      {(editingUser.unidades_vinculadas || []).length === 0 && (
+                        <p className="text-[11px] text-amber-600 font-medium mt-3 flex items-center gap-1.5">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Nenhuma unidade selecionada — o usuário não verá nenhum dado.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </>
               ) : (
                 <>
                   {/* Acesso a Módulos */}

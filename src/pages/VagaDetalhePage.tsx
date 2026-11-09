@@ -103,6 +103,8 @@ import {
   Crown,
   Accessibility,
   UserRound,
+  ClipboardCheck,
+  ListChecks,
 } from "lucide-react";
 import {
   Popover,
@@ -740,6 +742,17 @@ export default function VagaDetalhePage() {
   const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
   const [showEtapaRequiredAlert, setShowEtapaRequiredAlert] = useState(false);
+  const [aprovacaoDraft, setAprovacaoDraft] = useState<{
+    horario_entrada?: string;
+    horario_saida?: string;
+    turno?: string;
+    plantao?: string;
+    tipo_provimento_banco?: string;
+    tipo_provimento_edital?: string;
+    tipo_provimento_interno?: string;
+    tipo_provimento_outra?: string;
+  }>({});
+  const [aprovacaoDirty, setAprovacaoDirty] = useState(false);
 
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
@@ -967,8 +980,8 @@ export default function VagaDetalhePage() {
   // Covers both: unsaved fluxo changes AND unsubmitted obs text
   const fluxoDirtyRef = useRef(false);
   useEffect(() => {
-    fluxoDirtyRef.current = fluxoDirty || newObsText.trim() !== "";
-  }, [fluxoDirty, newObsText]);
+    fluxoDirtyRef.current = fluxoDirty || aprovacaoDirty || newObsText.trim() !== "";
+  }, [fluxoDirty, aprovacaoDirty, newObsText]);
 
   useEffect(() => {
     // 1. Browser close / hard refresh
@@ -1623,6 +1636,125 @@ export default function VagaDetalhePage() {
     } else {
       action();
     }
+  };
+
+  const handleAprovacaoDraftChange = (field: string, value: string) => {
+    setAprovacaoDraft((prev) => {
+      const next = { ...prev, [field]: value || undefined };
+      if (field === "tipo_provimento_banco" && value === "Sim") {
+        delete next.tipo_provimento_edital;
+        delete next.tipo_provimento_interno;
+        delete next.tipo_provimento_outra;
+      }
+      if (field === "tipo_provimento_edital" && value === "Sim") {
+        delete next.tipo_provimento_interno;
+        delete next.tipo_provimento_outra;
+      }
+      if (field === "tipo_provimento_interno" && value === "Sim") {
+        delete next.tipo_provimento_outra;
+      }
+      return next;
+    });
+    setAprovacaoDirty(true);
+  };
+
+  const handleAprovacaoSave = async () => {
+    const updates: any = {};
+    const histParts: string[] = [];
+
+    const effBancoFinal =
+      "tipo_provimento_banco" in aprovacaoDraft
+        ? aprovacaoDraft.tipo_provimento_banco
+        : vaga.tipo_provimento_banco;
+    const effEditalFinal =
+      "tipo_provimento_edital" in aprovacaoDraft
+        ? aprovacaoDraft.tipo_provimento_edital
+        : vaga.tipo_provimento_edital;
+    const effInternoFinal =
+      "tipo_provimento_interno" in aprovacaoDraft
+        ? aprovacaoDraft.tipo_provimento_interno
+        : vaga.tipo_provimento_interno;
+
+    if ("horario_entrada" in aprovacaoDraft) {
+      updates.horario_entrada = aprovacaoDraft.horario_entrada || null;
+      if (aprovacaoDraft.horario_entrada)
+        histParts.push(`Entrada: ${aprovacaoDraft.horario_entrada}`);
+    }
+    if ("horario_saida" in aprovacaoDraft) {
+      updates.horario_saida = aprovacaoDraft.horario_saida || null;
+      if (aprovacaoDraft.horario_saida)
+        histParts.push(`Saída: ${aprovacaoDraft.horario_saida}`);
+    }
+    if ("turno" in aprovacaoDraft) {
+      updates.turno = aprovacaoDraft.turno || null;
+      if (aprovacaoDraft.turno)
+        histParts.push(`Turno: ${aprovacaoDraft.turno}`);
+    }
+    if ("plantao" in aprovacaoDraft) {
+      updates.plantao = aprovacaoDraft.plantao || null;
+      if (aprovacaoDraft.plantao)
+        histParts.push(`Plantão: ${aprovacaoDraft.plantao}`);
+    }
+    if ("tipo_provimento_banco" in aprovacaoDraft) {
+      updates.tipo_provimento_banco =
+        aprovacaoDraft.tipo_provimento_banco || null;
+      if (aprovacaoDraft.tipo_provimento_banco === "Sim") {
+        updates.tipo_provimento_edital = null;
+        updates.tipo_provimento_interno = null;
+        updates.tipo_provimento_outra = null;
+      }
+    }
+    if (
+      "tipo_provimento_edital" in aprovacaoDraft &&
+      effBancoFinal !== "Sim"
+    ) {
+      updates.tipo_provimento_edital =
+        aprovacaoDraft.tipo_provimento_edital || null;
+      if (aprovacaoDraft.tipo_provimento_edital === "Sim") {
+        updates.tipo_provimento_interno = null;
+        updates.tipo_provimento_outra = null;
+      }
+    }
+    if (
+      "tipo_provimento_interno" in aprovacaoDraft &&
+      effBancoFinal !== "Sim" &&
+      effEditalFinal !== "Sim"
+    ) {
+      updates.tipo_provimento_interno =
+        aprovacaoDraft.tipo_provimento_interno || null;
+      if (aprovacaoDraft.tipo_provimento_interno === "Sim") {
+        updates.tipo_provimento_outra = null;
+      }
+    }
+    if (
+      "tipo_provimento_outra" in aprovacaoDraft &&
+      effBancoFinal !== "Sim" &&
+      effEditalFinal !== "Sim" &&
+      effInternoFinal !== "Sim"
+    ) {
+      updates.tipo_provimento_outra =
+        aprovacaoDraft.tipo_provimento_outra || null;
+    }
+
+    if (Object.keys(updates).length === 0) return;
+
+    const today = new Date().toISOString();
+    await updateVagaAsync(vaga.id, {
+      ...updates,
+      historico: [
+        ...(vaga.historico || []),
+        {
+          id: `h-${Date.now()}`,
+          data: today,
+          descricao: `Aprovação da unidade${histParts.length ? ": " + histParts.join(" | ") : " atualizada"}`,
+          usuario: currentUser?.nome_completo || "Sistema",
+        },
+      ],
+    });
+
+    setAprovacaoDraft({});
+    setAprovacaoDirty(false);
+    toast.success("Aprovação da unidade salva com sucesso!");
   };
 
   const handleFluxoDraftChange = (
@@ -2304,6 +2436,554 @@ export default function VagaDetalhePage() {
                     </p>
                   </div>
                 </div>
+
+                {/* ── Aprovação da Unidade ─────────────────────────────── */}
+                {(() => {
+                  const effEntrada =
+                    "horario_entrada" in aprovacaoDraft
+                      ? aprovacaoDraft.horario_entrada
+                      : vaga.horario_entrada;
+                  const effSaida =
+                    "horario_saida" in aprovacaoDraft
+                      ? aprovacaoDraft.horario_saida
+                      : vaga.horario_saida;
+                  const effTurno =
+                    "turno" in aprovacaoDraft
+                      ? aprovacaoDraft.turno
+                      : vaga.turno;
+                  const effPlantao =
+                    "plantao" in aprovacaoDraft
+                      ? aprovacaoDraft.plantao
+                      : vaga.plantao;
+                  const effBanco =
+                    "tipo_provimento_banco" in aprovacaoDraft
+                      ? aprovacaoDraft.tipo_provimento_banco
+                      : vaga.tipo_provimento_banco;
+                  const effEdital =
+                    "tipo_provimento_edital" in aprovacaoDraft
+                      ? aprovacaoDraft.tipo_provimento_edital
+                      : vaga.tipo_provimento_edital;
+                  const effInterno =
+                    "tipo_provimento_interno" in aprovacaoDraft
+                      ? aprovacaoDraft.tipo_provimento_interno
+                      : vaga.tipo_provimento_interno;
+                  const effOutra =
+                    "tipo_provimento_outra" in aprovacaoDraft
+                      ? aprovacaoDraft.tipo_provimento_outra
+                      : vaga.tipo_provimento_outra;
+
+                  const q2Enabled = effBanco === "Não";
+                  const q3Enabled =
+                    effBanco === "Não" && effEdital === "Não";
+                  const q4Enabled =
+                    effBanco === "Não" &&
+                    effEdital === "Não" &&
+                    effInterno === "Não";
+
+                  const canEditAprovacao = canEdit || isAssistente;
+
+                  return (
+                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                      {/* Header */}
+                      <div className="px-5 py-3 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <ClipboardCheck className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                            Aprovação da Unidade
+                          </span>
+                          {aprovacaoDirty && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                              Não salvo
+                            </span>
+                          )}
+                        </div>
+                        {canEditAprovacao && (
+                          <Button
+                            size="sm"
+                            onClick={handleAprovacaoSave}
+                            disabled={!aprovacaoDirty}
+                            className={cn(
+                              "h-7 px-3 text-xs gap-1.5 font-bold transition-all",
+                              aprovacaoDirty
+                                ? "bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20"
+                                : "bg-slate-100 text-slate-400 cursor-not-allowed hover:bg-slate-100",
+                            )}
+                          >
+                            <Save className="h-3.5 w-3.5" />
+                            Salvar
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="divide-y divide-slate-100">
+                        {/* Row 1: Horários, Turno e Plantão */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                          {/* Horário de Entrada */}
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+                                <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                Horário de Entrada
+                              </span>
+                            </div>
+                            {canEditAprovacao ? (
+                              <Input
+                                type="time"
+                                value={effEntrada || ""}
+                                onChange={(e) =>
+                                  handleAprovacaoDraftChange(
+                                    "horario_entrada",
+                                    e.target.value,
+                                  )
+                                }
+                                className="h-9 bg-white border-slate-200 text-sm font-semibold"
+                              />
+                            ) : (
+                              <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                                {effEntrada || (
+                                  <span className="text-slate-400 italic">
+                                    Não definido
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Horário de Saída */}
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
+                                <Clock className="h-3.5 w-3.5 text-rose-400" />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                Horário de Saída
+                              </span>
+                            </div>
+                            {canEditAprovacao ? (
+                              <Input
+                                type="time"
+                                value={effSaida || ""}
+                                onChange={(e) =>
+                                  handleAprovacaoDraftChange(
+                                    "horario_saida",
+                                    e.target.value,
+                                  )
+                                }
+                                className="h-9 bg-white border-slate-200 text-sm font-semibold"
+                              />
+                            ) : (
+                              <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                                {effSaida || (
+                                  <span className="text-slate-400 italic">
+                                    Não definido
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Turno */}
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                                <Zap className="h-3.5 w-3.5 text-amber-500" />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                Turno
+                              </span>
+                            </div>
+                            {canEditAprovacao ? (
+                              <Select
+                                value={effTurno || "__none__"}
+                                onValueChange={(v) =>
+                                  handleAprovacaoDraftChange(
+                                    "turno",
+                                    v === "__none__" ? "" : v,
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                  <SelectValue placeholder="Selecionar turno..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">
+                                    <span className="text-slate-400">
+                                      Selecionar turno...
+                                    </span>
+                                  </SelectItem>
+                                  {[
+                                    "diurno",
+                                    "noturno",
+                                    "matutino",
+                                    "vespertino",
+                                    "diarista",
+                                  ].map((t) => (
+                                    <SelectItem key={t} value={t}>
+                                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center capitalize">
+                                {effTurno || (
+                                  <span className="text-slate-400 italic">
+                                    Não definido
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Plantão */}
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                                <Calendar className="h-3.5 w-3.5 text-blue-500" />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                Plantão
+                              </span>
+                            </div>
+                            {canEditAprovacao ? (
+                              <Select
+                                value={effPlantao || "__none__"}
+                                onValueChange={(v) =>
+                                  handleAprovacaoDraftChange(
+                                    "plantao",
+                                    v === "__none__" ? "" : v,
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                  <SelectValue placeholder="Selecionar plantão..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">
+                                    <span className="text-slate-400">
+                                      Selecionar plantão...
+                                    </span>
+                                  </SelectItem>
+                                  {["ímpar", "par", "diarista"].map((p) => (
+                                    <SelectItem key={p} value={p}>
+                                      {p.charAt(0).toUpperCase() + p.slice(1)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center capitalize">
+                                {effPlantao || (
+                                  <span className="text-slate-400 italic">
+                                    Não definido
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Row 2: Tipo de Provimento */}
+                        <div className="p-5 space-y-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                              <ListChecks className="h-3.5 w-3.5 text-indigo-500" />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              Tipo de Provimento
+                            </span>
+                          </div>
+
+                          <div className="space-y-2.5">
+                            {/* Q1 */}
+                            <div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 border bg-white border-slate-200">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="shrink-0 w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[10px] font-black flex items-center justify-center">
+                                  1
+                                </span>
+                                <span className="text-xs font-semibold text-slate-700">
+                                  Caso exista candidato(a)s banco de talentos,
+                                  podemos convocar?
+                                </span>
+                              </div>
+                              <div className="flex shrink-0 rounded-lg overflow-hidden border border-slate-200">
+                                <button
+                                  disabled={!canEditAprovacao}
+                                  onClick={() =>
+                                    handleAprovacaoDraftChange(
+                                      "tipo_provimento_banco",
+                                      "Sim",
+                                    )
+                                  }
+                                  className={cn(
+                                    "px-4 py-1.5 text-xs font-bold transition-all",
+                                    effBanco === "Sim"
+                                      ? "bg-emerald-500 text-white"
+                                      : "bg-white text-slate-400 hover:bg-slate-50",
+                                    !canEditAprovacao && "cursor-default",
+                                  )}
+                                >
+                                  Sim
+                                </button>
+                                <div className="w-px bg-slate-200" />
+                                <button
+                                  disabled={!canEditAprovacao}
+                                  onClick={() =>
+                                    handleAprovacaoDraftChange(
+                                      "tipo_provimento_banco",
+                                      "Não",
+                                    )
+                                  }
+                                  className={cn(
+                                    "px-4 py-1.5 text-xs font-bold transition-all",
+                                    effBanco === "Não"
+                                      ? "bg-rose-500 text-white"
+                                      : "bg-white text-slate-400 hover:bg-slate-50",
+                                    !canEditAprovacao && "cursor-default",
+                                  )}
+                                >
+                                  Não
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Q2 */}
+                            <div
+                              className={cn(
+                                "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-all",
+                                q2Enabled
+                                  ? "bg-white border-slate-200"
+                                  : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
+                              )}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span
+                                  className={cn(
+                                    "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
+                                    q2Enabled
+                                      ? "bg-indigo-100 text-indigo-600"
+                                      : "bg-slate-200 text-slate-400",
+                                  )}
+                                >
+                                  2
+                                </span>
+                                <span
+                                  className={cn(
+                                    "text-xs font-semibold",
+                                    q2Enabled
+                                      ? "text-slate-700"
+                                      : "text-slate-400",
+                                  )}
+                                >
+                                  Podemos publicar um novo edital?
+                                </span>
+                              </div>
+                              <div
+                                className={cn(
+                                  "flex shrink-0 rounded-lg overflow-hidden border",
+                                  q2Enabled
+                                    ? "border-slate-200"
+                                    : "border-slate-100",
+                                )}
+                              >
+                                <button
+                                  disabled={!q2Enabled || !canEditAprovacao}
+                                  onClick={() =>
+                                    handleAprovacaoDraftChange(
+                                      "tipo_provimento_edital",
+                                      "Sim",
+                                    )
+                                  }
+                                  className={cn(
+                                    "px-4 py-1.5 text-xs font-bold transition-all",
+                                    effEdital === "Sim" && q2Enabled
+                                      ? "bg-emerald-500 text-white"
+                                      : "bg-white text-slate-400",
+                                  )}
+                                >
+                                  Sim
+                                </button>
+                                <div
+                                  className={cn(
+                                    "w-px",
+                                    q2Enabled
+                                      ? "bg-slate-200"
+                                      : "bg-slate-100",
+                                  )}
+                                />
+                                <button
+                                  disabled={!q2Enabled || !canEditAprovacao}
+                                  onClick={() =>
+                                    handleAprovacaoDraftChange(
+                                      "tipo_provimento_edital",
+                                      "Não",
+                                    )
+                                  }
+                                  className={cn(
+                                    "px-4 py-1.5 text-xs font-bold transition-all",
+                                    effEdital === "Não" && q2Enabled
+                                      ? "bg-rose-500 text-white"
+                                      : "bg-white text-slate-400",
+                                  )}
+                                >
+                                  Não
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Q3 */}
+                            <div
+                              className={cn(
+                                "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-all",
+                                q3Enabled
+                                  ? "bg-white border-slate-200"
+                                  : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
+                              )}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span
+                                  className={cn(
+                                    "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
+                                    q3Enabled
+                                      ? "bg-indigo-100 text-indigo-600"
+                                      : "bg-slate-200 text-slate-400",
+                                  )}
+                                >
+                                  3
+                                </span>
+                                <span
+                                  className={cn(
+                                    "text-xs font-semibold",
+                                    q3Enabled
+                                      ? "text-slate-700"
+                                      : "text-slate-400",
+                                  )}
+                                >
+                                  Deseja processo seletivo interno?
+                                </span>
+                              </div>
+                              <div
+                                className={cn(
+                                  "flex shrink-0 rounded-lg overflow-hidden border",
+                                  q3Enabled
+                                    ? "border-slate-200"
+                                    : "border-slate-100",
+                                )}
+                              >
+                                <button
+                                  disabled={!q3Enabled || !canEditAprovacao}
+                                  onClick={() =>
+                                    handleAprovacaoDraftChange(
+                                      "tipo_provimento_interno",
+                                      "Sim",
+                                    )
+                                  }
+                                  className={cn(
+                                    "px-4 py-1.5 text-xs font-bold transition-all",
+                                    effInterno === "Sim" && q3Enabled
+                                      ? "bg-emerald-500 text-white"
+                                      : "bg-white text-slate-400",
+                                  )}
+                                >
+                                  Sim
+                                </button>
+                                <div
+                                  className={cn(
+                                    "w-px",
+                                    q3Enabled
+                                      ? "bg-slate-200"
+                                      : "bg-slate-100",
+                                  )}
+                                />
+                                <button
+                                  disabled={!q3Enabled || !canEditAprovacao}
+                                  onClick={() =>
+                                    handleAprovacaoDraftChange(
+                                      "tipo_provimento_interno",
+                                      "Não",
+                                    )
+                                  }
+                                  className={cn(
+                                    "px-4 py-1.5 text-xs font-bold transition-all",
+                                    effInterno === "Não" && q3Enabled
+                                      ? "bg-rose-500 text-white"
+                                      : "bg-white text-slate-400",
+                                  )}
+                                >
+                                  Não
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Q4 — open text */}
+                            <div
+                              className={cn(
+                                "rounded-lg border transition-all",
+                                q4Enabled
+                                  ? "bg-white border-slate-200"
+                                  : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
+                              )}
+                            >
+                              <div className="flex items-center gap-3 px-4 pt-3 pb-2">
+                                <span
+                                  className={cn(
+                                    "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
+                                    q4Enabled
+                                      ? "bg-indigo-100 text-indigo-600"
+                                      : "bg-slate-200 text-slate-400",
+                                  )}
+                                >
+                                  4
+                                </span>
+                                <span
+                                  className={cn(
+                                    "text-xs font-semibold",
+                                    q4Enabled
+                                      ? "text-slate-700"
+                                      : "text-slate-400",
+                                  )}
+                                >
+                                  Outra tratativa?
+                                </span>
+                              </div>
+                              <div className="px-4 pb-3 pl-12">
+                                {canEditAprovacao && q4Enabled ? (
+                                  <Textarea
+                                    value={effOutra || ""}
+                                    onChange={(e) =>
+                                      handleAprovacaoDraftChange(
+                                        "tipo_provimento_outra",
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="Descreva a tratativa..."
+                                    className="min-h-[72px] resize-none bg-white border-slate-200 text-sm"
+                                  />
+                                ) : (
+                                  <p
+                                    className={cn(
+                                      "text-sm min-h-[36px] flex items-center",
+                                      effOutra && q4Enabled
+                                        ? "font-semibold text-slate-700"
+                                        : "text-slate-400 italic",
+                                    )}
+                                  >
+                                    {effOutra && q4Enabled
+                                      ? effOutra
+                                      : "Não definida"}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* ── Fluxo do Processo ──────────────────────────────────── */}
                 {(() => {

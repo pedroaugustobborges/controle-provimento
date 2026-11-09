@@ -272,6 +272,16 @@ export interface Vaga {
   tratativa?: TratativaVaga;
   etapa?: EtapaVaga;
   status_processo?: StatusProcesso;
+
+  // Aprovação da Unidade
+  horario_entrada?: string;
+  horario_saida?: string;
+  turno?: 'diurno' | 'noturno' | 'matutino' | 'vespertino' | 'diarista';
+  plantao?: 'ímpar' | 'par' | 'diarista';
+  tipo_provimento_banco?: 'Sim' | 'Não';
+  tipo_provimento_edital?: 'Sim' | 'Não';
+  tipo_provimento_interno?: 'Sim' | 'Não';
+  tipo_provimento_outra?: string;
 }
 
 export const UNIDADES_GOIANIA = [

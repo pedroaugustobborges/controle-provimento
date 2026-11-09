@@ -278,6 +278,8 @@ export interface Vaga {
   horario_saida?: string;
   turno?: 'diurno' | 'noturno' | 'matutino' | 'vespertino' | 'diarista';
   plantao?: 'ímpar' | 'par' | 'diarista';
+  carga_horaria?: string;
+  faixa_salarial?: string;
   tipo_provimento_banco?: 'Sim' | 'Não';
   tipo_provimento_edital?: 'Sim' | 'Não';
   tipo_provimento_interno?: 'Sim' | 'Não';

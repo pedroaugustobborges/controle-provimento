@@ -105,6 +105,8 @@ import {
   UserRound,
   ClipboardCheck,
   ListChecks,
+  Banknote,
+  Timer,
 } from "lucide-react";
 import {
   Popover,
@@ -747,6 +749,8 @@ export default function VagaDetalhePage() {
     horario_saida?: string;
     turno?: string;
     plantao?: string;
+    carga_horaria?: string;
+    faixa_salarial?: string;
     tipo_provimento_banco?: string;
     tipo_provimento_edital?: string;
     tipo_provimento_interno?: string;
@@ -1695,6 +1699,16 @@ export default function VagaDetalhePage() {
       if (aprovacaoDraft.plantao)
         histParts.push(`Plantão: ${aprovacaoDraft.plantao}`);
     }
+    if ("carga_horaria" in aprovacaoDraft) {
+      updates.carga_horaria = aprovacaoDraft.carga_horaria || null;
+      if (aprovacaoDraft.carga_horaria)
+        histParts.push(`Carga horária: ${aprovacaoDraft.carga_horaria}`);
+    }
+    if ("faixa_salarial" in aprovacaoDraft) {
+      updates.faixa_salarial = aprovacaoDraft.faixa_salarial || null;
+      if (aprovacaoDraft.faixa_salarial)
+        histParts.push(`Faixa salarial: ${aprovacaoDraft.faixa_salarial}`);
+    }
     if ("tipo_provimento_banco" in aprovacaoDraft) {
       updates.tipo_provimento_banco =
         aprovacaoDraft.tipo_provimento_banco || null;
@@ -2411,32 +2425,6 @@ export default function VagaDetalhePage() {
                   </h4>
                 </div>
 
-                {/* Import metadata */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
-                      Origem Importação
-                    </label>
-                    <p className="text-sm font-medium text-slate-600">
-                      {vaga.origem_importacao || "Lançamento Manual"}
-                    </p>
-                    {vaga.data_importacao && (
-                      <p className="text-[11px] text-slate-400">
-                        Importado em:{" "}
-                        {new Date(vaga.data_importacao).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
-                      Lote de Importação
-                    </label>
-                    <p className="text-sm font-mono text-slate-600">
-                      {vaga.lote_importacao || "—"}
-                    </p>
-                  </div>
-                </div>
-
                 {/* ── Aprovação da Unidade ─────────────────────────────── */}
                 {(() => {
                   const effEntrada =
@@ -2455,6 +2443,14 @@ export default function VagaDetalhePage() {
                     "plantao" in aprovacaoDraft
                       ? aprovacaoDraft.plantao
                       : vaga.plantao;
+                  const effCargaHoraria =
+                    "carga_horaria" in aprovacaoDraft
+                      ? aprovacaoDraft.carga_horaria
+                      : vaga.carga_horaria;
+                  const effFaixaSalarial =
+                    "faixa_salarial" in aprovacaoDraft
+                      ? aprovacaoDraft.faixa_salarial
+                      : vaga.faixa_salarial;
                   const effBanco =
                     "tipo_provimento_banco" in aprovacaoDraft
                       ? aprovacaoDraft.tipo_provimento_banco
@@ -2686,7 +2682,104 @@ export default function VagaDetalhePage() {
                           </div>
                         </div>
 
-                        {/* Row 2: Tipo de Provimento */}
+                        {/* Row 2: Carga Horária e Faixa Salarial */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                          {/* Carga Horária */}
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0">
+                                <Timer className="h-3.5 w-3.5 text-violet-500" />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                Carga Horária
+                              </span>
+                            </div>
+                            {canEditAprovacao ? (
+                              <Select
+                                value={effCargaHoraria || "__none__"}
+                                onValueChange={(v) =>
+                                  handleAprovacaoDraftChange(
+                                    "carga_horaria",
+                                    v === "__none__" ? "" : v,
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                  <SelectValue placeholder="Selecionar carga horária..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">
+                                    <span className="text-slate-400">
+                                      Selecionar carga horária...
+                                    </span>
+                                  </SelectItem>
+                                  {["100H", "120H", "150H", "180H", "200H", "220H", "240H"].map((h) => (
+                                    <SelectItem key={h} value={h}>
+                                      {h}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                                {effCargaHoraria || (
+                                  <span className="text-slate-400 italic">
+                                    Não definida
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Faixa Salarial */}
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0">
+                                <Banknote className="h-3.5 w-3.5 text-teal-500" />
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                Faixa Salarial
+                              </span>
+                            </div>
+                            {canEditAprovacao ? (
+                              <Select
+                                value={effFaixaSalarial || "__none__"}
+                                onValueChange={(v) =>
+                                  handleAprovacaoDraftChange(
+                                    "faixa_salarial",
+                                    v === "__none__" ? "" : v,
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="h-9 bg-white border-slate-200 text-sm font-semibold">
+                                  <SelectValue placeholder="Selecionar faixa salarial..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">
+                                    <span className="text-slate-400">
+                                      Selecionar faixa salarial...
+                                    </span>
+                                  </SelectItem>
+                                  {["Faixa A", "Faixa B", "Faixa C", "Faixa D", "Faixa E"].map((f) => (
+                                    <SelectItem key={f} value={f}>
+                                      {f}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
+                                {effFaixaSalarial || (
+                                  <span className="text-slate-400 italic">
+                                    Não definida
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Row 3: Tipo de Provimento */}
                         <div className="p-5 space-y-4">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">

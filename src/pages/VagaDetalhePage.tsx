@@ -745,6 +745,7 @@ export default function VagaDetalhePage() {
   const [showUnsavedAlert, setShowUnsavedAlert] = useState(false);
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
   const [showEtapaRequiredAlert, setShowEtapaRequiredAlert] = useState(false);
+  const [showAprovacaoSaveDialog, setShowAprovacaoSaveDialog] = useState(false);
   const [aprovacaoDraft, setAprovacaoDraft] = useState<{
     horario_entrada?: string;
     horario_saida?: string;
@@ -1663,7 +1664,7 @@ export default function VagaDetalhePage() {
     setAprovacaoDirty(true);
   };
 
-  const handleAprovacaoSave = async () => {
+  const handleAprovacaoSave = async (mode: "submit" | "draft" = "draft") => {
     const updates: any = {};
     const histParts: string[] = [];
 
@@ -1753,7 +1754,13 @@ export default function VagaDetalhePage() {
 
     if (Object.keys(updates).length === 0) return;
 
+    if (mode === "submit") updates.status_aprovacao_gestor = "pendente";
+
     const today = new Date().toISOString();
+    const modeLabel =
+      mode === "submit"
+        ? "enviada para Gestão de Provimento"
+        : "salva como rascunho";
     await updateVagaAsync(vaga.id, {
       ...updates,
       historico: [
@@ -1761,7 +1768,7 @@ export default function VagaDetalhePage() {
         {
           id: `h-${Date.now()}`,
           data: today,
-          descricao: `Aprovação da unidade${histParts.length ? ": " + histParts.join(" | ") : " atualizada"}`,
+          descricao: `Aprovação da unidade ${modeLabel}${histParts.length ? ": " + histParts.join(" | ") : ""}`,
           usuario: currentUser?.nome_completo || "Sistema",
         },
       ],
@@ -1769,7 +1776,11 @@ export default function VagaDetalhePage() {
 
     setAprovacaoDraft({});
     setAprovacaoDirty(false);
-    toast.success("Aprovação da unidade salva com sucesso!");
+    toast.success(
+      mode === "submit"
+        ? "Aprovação enviada para Gestão de Provimento!"
+        : "Aprovação salva como rascunho.",
+    );
   };
 
   const handleFluxoDraftChange = (
@@ -2498,7 +2509,7 @@ export default function VagaDetalhePage() {
                         {canEditAprovacao && (
                           <Button
                             size="sm"
-                            onClick={handleAprovacaoSave}
+                            onClick={() => setShowAprovacaoSaveDialog(true)}
                             disabled={!aprovacaoDirty}
                             className={cn(
                               "h-7 px-3 text-xs gap-1.5 font-bold transition-all",
@@ -4031,6 +4042,87 @@ export default function VagaDetalhePage() {
                 </>
               );
             })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Aprovação da Unidade — Save mode dialog ── */}
+      <Dialog
+        open={showAprovacaoSaveDialog}
+        onOpenChange={setShowAprovacaoSaveDialog}
+      >
+        <DialogContent className="sm:max-w-sm p-0 overflow-hidden gap-0">
+          {/* Top accent bar */}
+          <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/80 to-indigo-500" />
+
+          <div className="px-6 pt-6 pb-2">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <ClipboardCheck className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-black text-slate-800 leading-tight">
+                  Salvar Aprovação da Unidade
+                </DialogTitle>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Escolha como deseja prosseguir
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6 pb-4 space-y-3 mt-3">
+            {/* Primary — Send */}
+            <button
+              onClick={() => {
+                setShowAprovacaoSaveDialog(false);
+                handleAprovacaoSave("submit");
+              }}
+              className="w-full group flex items-center gap-4 p-4 rounded-xl border-2 border-primary bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 active:scale-[0.98]"
+            >
+              <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <Send className="h-4 w-4" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-black text-sm leading-tight">
+                  Salvar e enviar para Gestão de Provimento
+                </p>
+                <p className="text-[11px] text-white/70 mt-0.5 font-medium">
+                  Encaminha as informações para análise imediata
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-white/60 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+
+            {/* Secondary — Draft */}
+            <button
+              onClick={() => {
+                setShowAprovacaoSaveDialog(false);
+                handleAprovacaoSave("draft");
+              }}
+              className="w-full group flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all active:scale-[0.98]"
+            >
+              <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                <Save className="h-4 w-4 text-slate-500" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-bold text-sm text-slate-700 leading-tight">
+                  Salvar para continuar depois
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Mantém como rascunho para preenchimento posterior
+                </p>
+              </div>
+            </button>
+          </div>
+
+          <div className="px-6 pb-5">
+            <button
+              onClick={() => setShowAprovacaoSaveDialog(false)}
+              className="w-full text-xs text-slate-400 hover:text-slate-600 transition-colors py-1.5 font-semibold"
+            >
+              Cancelar
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -70,6 +70,11 @@ export class DatabaseService {
       'cargo_validado', 'carga_horaria_validada', 'salario_validado', 'historico',
       // Process workflow columns
       'tratativa', 'status_processo',
+      // Aprovação da Unidade
+      'horario_entrada', 'horario_saida', 'turno', 'plantao',
+      'carga_horaria', 'faixa_salarial',
+      'tipo_provimento_banco', 'tipo_provimento_edital',
+      'tipo_provimento_interno', 'tipo_provimento_outra',
     ],
     banco_candidatos: [
       'nome', 'cargo', 'cargo_normalizado', 'unidade', 'status', 'numero_edital',

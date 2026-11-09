@@ -1,6 +1,6 @@
-import { useState, useRef, useMemo, useEffect, useLayoutEffect, useDeferredValue, useTransition, Fragment } from "react";
+import { useState, useRef, useMemo, useEffect, useLayoutEffect, useDeferredValue, useTransition, useCallback, Fragment } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useVagasStore } from "@/store/vagasStore";
+import { useVagasStore, VagaQueryParams } from "@/store/vagasStore";
 import { useAdminStore } from "@/store/adminStore";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -511,6 +511,10 @@ export default function VagasPage() {
     fetchBancos,
     isLoadingVagas,
     isInitialLoad,
+    vagasPaginated,
+    vagasPaginatedTotal,
+    isLoadingVagasPaginated,
+    fetchVagasPaginated,
   } = useVagasStore();
 
   const {
@@ -522,10 +526,14 @@ export default function VagasPage() {
     fetchUsers,
   } = useAdminStore();
 
+  // Background fetch for counts, filter options, and banco matching.
+  // Does NOT block the table — table uses vagasPaginated from server-side queries.
   useEffect(() => {
-    fetchVagas();
     fetchBancos();
     fetchUsers();
+    // Load all vagas in the background for counts/filter-options.
+    // We call with force=false so it skips if already cached.
+    fetchVagas();
   }, [fetchVagas, fetchBancos, fetchUsers]);
 
   const { linksMap: vagaBancoLinksMap } = useVagaBancoLinks();
@@ -755,6 +763,65 @@ export default function VagasPage() {
     return allUnidades.filter((u) => visibleUnidades.includes(u)).sort();
   }, [allUnidades, visibleUnidades]);
 
+  // ── Server-side paginated fetch ──────────────────────────────────────────────
+  // Builds the params object for fetchVagasPaginated. Called whenever filters
+  // or currentPage change. Complex filters (comBanco, lideranca, semMovimentacao)
+  // are not pushed to the server — they post-filter the small paginated result.
+  const buildQueryParams = useCallback(
+    (page: number): VagaQueryParams => {
+      const allowedUnidades = currentUser?.visualiza_todas_unidades
+        ? null
+        : (currentUser?.unidades_vinculadas ?? null);
+
+      const regionUnidades =
+        selectedRegion && selectedRegion !== 'all'
+          ? (UNIDADES_POR_REGIAO[selectedRegion] || [])
+          : null;
+
+      return {
+        page,
+        pageSize,
+        search: deferredSearch || undefined,
+        filterUnidades: filterUnidades.length > 0 ? filterUnidades : undefined,
+        filterStatusProcesso: filterStatusProcesso.length > 0 ? filterStatusProcesso : undefined,
+        filterTratativas: filterTratativas.length > 0 ? filterTratativas : undefined,
+        filterEtapa: filterEtapa !== 'all' ? filterEtapa : undefined,
+        filterAnalista: filterAnalista !== 'all' ? filterAnalista : undefined,
+        filterAssistente: filterAssistente !== 'all' ? filterAssistente : undefined,
+        filterTeia: filterTeia !== 'off' ? filterTeia : undefined,
+        filterPcd: filterPcd !== 'off' ? filterPcd : undefined,
+        filterComum: filterComum !== 'off' ? filterComum : undefined,
+        filterVagasNovas: filterVagasNovas || undefined,
+        allowedUnidades,
+        regionUnidades,
+        globalUnit: globalUnit !== 'all' && globalUnit !== 'TODOS' ? globalUnit : null,
+      };
+    },
+    [
+      currentUser?.visualiza_todas_unidades,
+      currentUser?.unidades_vinculadas,
+      selectedRegion,
+      globalUnit,
+      pageSize,
+      deferredSearch,
+      filterUnidades,
+      filterStatusProcesso,
+      filterTratativas,
+      filterEtapa,
+      filterAnalista,
+      filterAssistente,
+      filterTeia,
+      filterPcd,
+      filterComum,
+      filterVagasNovas,
+    ]
+  );
+
+  // Trigger server fetch on filter / page changes (search is already deferred).
+  useEffect(() => {
+    fetchVagasPaginated(buildQueryParams(currentPage));
+  }, [buildQueryParams, currentPage, fetchVagasPaginated]);
+
   const analistas = useMemo(
     () =>
       [...new Set(vagas.map((v) => v.analista_responsavel))]
@@ -833,7 +900,8 @@ export default function VagasPage() {
 
     const matched = new Map<string, BancoTalentos>();
 
-    vagas.forEach((vaga) => {
+    // Only match against the current page (vagasPaginated) — O(50×m) instead of O(2000×m).
+    vagasPaginated.forEach((vaga) => {
       let bancoMatch: BancoTalentos | undefined;
 
       if (vaga.banco_id) {
@@ -879,11 +947,12 @@ export default function VagasPage() {
     });
 
     return matched;
-  }, [vagas, bancos]);
+  }, [vagasPaginated, bancos]);
 
-  // Candidate count per vaga using the unidade-scoped bank rules
+  // Candidate count per vaga using the unidade-scoped bank rules.
+  // Computed only for the current page (vagasPaginated) — O(50×m) instead of O(2000×m).
   const vagasPossibleCandidatesMap = useMemo(() => {
-    if (!bancos.length || !vagas.length) return new Map<string, number>();
+    if (!bancos.length || !vagasPaginated.length) return new Map<string, number>();
 
     const byCity = (city: string) => bancos.filter((b) => (b.unidade || "") === city);
     const pools = {
@@ -899,7 +968,7 @@ export default function VagasPage() {
 
     const result = new Map<string, number>();
 
-    vagas.forEach((vaga) => {
+    vagasPaginated.forEach((vaga) => {
       const u = (vaga.unidade || "").trim().toUpperCase();
       const isTeia = vaga.is_teia || u.includes("TEIA");
 
@@ -937,12 +1006,12 @@ export default function VagasPage() {
     });
 
     return result;
-  }, [vagas, bancos, vagaBancoLinksMap]);
+  }, [vagasPaginated, bancos, vagaBancoLinksMap]);
 
-  // Vagas with confirmed PS: maps vagaId → candidate count from confirmed PS groups only
+  // Vagas with confirmed PS — computed only for the current page.
   const vagasWithConfirmedPS = useMemo(() => {
     const map = new Map<string, number>();
-    vagas.forEach((v) => {
+    vagasPaginated.forEach((v) => {
       const entry = vagaBancoLinksMap.get(v.id);
       if (!entry || entry.confirmed.size === 0) return;
       const keySet = entry.confirmed;
@@ -958,20 +1027,20 @@ export default function VagasPage() {
       if (count > 0) map.set(v.id, count);
     });
     return map;
-  }, [vagas, bancos, vagaBancoLinksMap]);
+  }, [vagasPaginated, bancos, vagaBancoLinksMap]);
 
   const vagasComBancoSet = useMemo(
     () => new Set(vagasWithConfirmedPS.keys()),
     [vagasWithConfirmedPS],
   );
 
-  // Pre-compute fluxo items once per vaga so every useMemo and every table row
-  // can look them up in O(1) instead of rebuilding the array on every render.
+  // Pre-compute fluxo items only for the current page — O(50) instead of O(2000+).
+  // canonicalBase and counts compute fluxo items inline to stay independent of this map.
   const fluxoItemsMap = useMemo(() => {
     const m = new Map<string, VagaFluxoItem[]>();
-    for (const v of vagas) m.set(v.id, getVagaFluxoItems(v));
+    for (const v of vagasPaginated) m.set(v.id, getVagaFluxoItems(v));
     return m;
-  }, [vagas]);
+  }, [vagasPaginated]);
 
   // 1. Canonical base for all metrics - exactly matching Excel parity
   const canonicalBase = useMemo(() => {
@@ -992,10 +1061,11 @@ export default function VagasPage() {
       }
     }
 
-    // 2. Analista de Edital: only sees vagas with Publicação de Edital tratativas
+    // 2. Analista de Edital: only sees vagas with Publicação de Edital tratativas.
+    // Computed inline to avoid depending on fluxoItemsMap (which is page-scoped).
     if (currentUser?.perfil === "Analista de Edital") {
       baseRecords = baseRecords.filter((v) => {
-        const items = fluxoItemsMap.get(v.id) ?? [];
+        const items = getVagaFluxoItems(v);
         return items.some(
           (item) =>
             item.tratativa === "Publicação de Edital" ||
@@ -1039,7 +1109,6 @@ export default function VagasPage() {
     return result;
   }, [
     vagas,
-    fluxoItemsMap,
     selectedRegion,
     globalUnit,
     filterUnidades,
@@ -1070,7 +1139,9 @@ export default function VagasPage() {
         (v.nome_requisitante || "").toLowerCase().includes(searchTerm) ||
         (v.motivo || "").toLowerCase().includes(searchTerm);
 
-      const fluxoItems = fluxoItemsMap.get(v.id) ?? [];
+      // Compute inline — filtered is used for export, so must work for all vagas
+      // in canonicalBase, not just the current page (fluxoItemsMap is page-scoped).
+      const fluxoItems = getVagaFluxoItems(v);
       // Always use the top-level v.status_processo (the correctly derived overall
       // status) for filtering. For multi-vaga items individual slot statuses live
       // in distribuicao_vagas and may differ from the mother row status.
@@ -1101,7 +1172,9 @@ export default function VagasPage() {
       const isNew = creationTime > 0 && nowTime - creationTime <= 86400000;
       const matchVagasNovas = !filterVagasNovas || isNew;
 
-      const matchComBanco = !filterComBanco || vagasComBancoSet.has(v.id);
+      // Use DB-stored flag for the full-dataset export filter (page-scoped vagasComBancoSet
+      // only covers current page and would incorrectly filter export results).
+      const matchComBanco = !filterComBanco || v.tem_banco_valido;
 
       const isStuck =
         (!v.status ||
@@ -1127,7 +1200,6 @@ export default function VagasPage() {
     });
   }, [
     canonicalBase,
-    fluxoItemsMap,
     deferredSearch,
     filterStatusProcesso,
     filterTratativas,
@@ -1138,7 +1210,6 @@ export default function VagasPage() {
     filterVagasNovas,
     filterComBanco,
     filterSemMovimentacao,
-    vagasComBancoSet,
   ]);
 
   useEffect(() => {
@@ -1159,12 +1230,41 @@ export default function VagasPage() {
     filterComum,
   ]);
 
+  // Apply complex post-filters (banco, liderança, sem movimentação) on the small
+  // server-paginated result set instead of scanning thousands of records.
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filtered.slice(startIndex, startIndex + pageSize);
-  }, [filtered, currentPage, pageSize]);
+    let result = vagasPaginated;
 
-  const totalPages = Math.ceil(filtered.length / pageSize);
+    if (filterComBanco) {
+      result = result.filter((v) => vagasComBancoSet.has(v.id));
+    }
+
+    if (filterLideranca !== 'off') {
+      result = result.filter((v) => {
+        const items = fluxoItemsMap.get(v.id) ?? [];
+        const hasLideranca = items.some((item) => item.tratativa === 'Vaga de Liderança');
+        return filterLideranca === 'include' ? hasLideranca : !hasLideranca;
+      });
+    }
+
+    if (filterSemMovimentacao) {
+      const nowTime = new Date().getTime();
+      result = result.filter((v) => {
+        const creationDate = v.created_at || v.data_criacao;
+        const creationTime = creationDate ? new Date(creationDate).getTime() : 0;
+        return (
+          (!v.status || v.status === 'SEM STATUS' || !v.status_geral || v.status_geral === 'SEM STATUS') &&
+          (!v.historico || v.historico.length === 0) &&
+          creationTime > nowTime - 30 * 86400000
+        );
+      });
+    }
+
+    return result;
+  }, [vagasPaginated, filterComBanco, vagasComBancoSet, filterLideranca, fluxoItemsMap, filterSemMovimentacao]);
+
+  // Total from server; for complex post-filtered views it's approximate but that is acceptable.
+  const totalPages = Math.ceil(vagasPaginatedTotal / pageSize);
 
   // Single O(n) pass over canonicalBase — previously countComBanco, countVagasLideranca,
   // and countVagasComum were separate useMemos that each looped the full array again.
@@ -1222,15 +1322,16 @@ export default function VagasPage() {
         acc.em_andamento += qty;
       }
 
-      // Merged from separate useMemos — no additional array passes needed
-      if (vagasComBancoSet.has(v.id)) acc.com_banco_valido += qty;
+      // tem_banco_valido is a DB-stored flag — O(1) per vaga, avoids O(n×m) matching.
+      if (v.tem_banco_valido) acc.com_banco_valido += qty;
       if (v.tipo_vaga === "Comum") acc.vagas_comuns += qty;
-      const fluxoItems = fluxoItemsMap.get(v.id) ?? [];
+      // Compute fluxo items inline — avoids depending on page-scoped fluxoItemsMap.
+      const fluxoItems = getVagaFluxoItems(v);
       if (fluxoItems.some((item) => item.tratativa === "Vaga de Liderança")) acc.vagas_lideranca += qty;
     });
 
     return acc;
-  }, [canonicalBase, vagasComBancoSet, fluxoItemsMap]);
+  }, [canonicalBase]);
 
   // Derived from counts — no extra array traversal
   const countComBanco = counts.com_banco_valido;
@@ -1305,7 +1406,7 @@ export default function VagasPage() {
       className={`space-y-4${isDark ? " gdp-dark" : ""}`}
       style={isDark ? { background: "linear-gradient(150deg, #07091d 0%, #0d1630 50%, #080c1e 100%)", minHeight: "100%", padding: "1px 0" } : undefined}
     >
-      {isInitialLoad ? (
+      {isLoadingVagasPaginated && vagasPaginated.length === 0 ? (
         <PageSkeleton />
       ) : currentTab === "acompanhamento" ? (
         <AcompanhamentoEditalList />
@@ -1835,7 +1936,7 @@ export default function VagasPage() {
                       </TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody style={{ opacity: isLoadingVagasPaginated ? 0.5 : 1, transition: 'opacity 0.15s ease' }}>
                     {paginatedData.map((v) => {
                       const categoria =
                         v.categoria_status || getCategoriaStatus(v);
@@ -2253,7 +2354,7 @@ export default function VagasPage() {
                         </Fragment>
                       );
                     })}
-                    {filtered.length === 0 && (
+                    {paginatedData.length === 0 && !isLoadingVagasPaginated && (
                       <TableRow>
                         <TableCell
                           colSpan={10}
@@ -2284,11 +2385,11 @@ export default function VagasPage() {
               <div className="px-6 py-4 border-t text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex flex-col gap-1">
                   <span>
-                    Exibindo {paginatedData.length} de {filtered.length}{" "}
+                    Exibindo {paginatedData.length} de {vagasPaginatedTotal}{" "}
                     filtrados
                   </span>
                   <span className="text-[10px] opacity-70">
-                    (Total no sistema: {vagas.length})
+                    (Total no sistema: {vagas.length || vagasPaginatedTotal})
                   </span>
                 </div>
 

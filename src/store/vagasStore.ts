@@ -148,6 +148,26 @@ const fetchAllRows = async (tableName: 'vagas' | 'banco_candidatos' | 'importaco
   return allRows;
 };
 
+export interface VagaQueryParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  filterUnidades?: string[];
+  filterStatusProcesso?: string[];
+  filterTratativas?: string[];
+  filterEtapa?: string;
+  filterAnalista?: string;
+  filterAssistente?: string;
+  filterTeia?: 'off' | 'include' | 'exclude';
+  filterPcd?: 'off' | 'include' | 'exclude';
+  filterComum?: 'off' | 'include' | 'exclude';
+  filterVagasNovas?: boolean;
+  // User permission / region filters (pre-computed by caller)
+  allowedUnidades?: string[] | null; // null = all units visible
+  regionUnidades?: string[] | null;  // null = no region restriction
+  globalUnit?: string | null;        // specific unit selected in sidebar
+}
+
 interface VagasState {
   vagas: Vaga[];
   bancos: BancoTalentos[];
@@ -169,9 +189,14 @@ interface VagasState {
   isLoadingBancos: boolean;
   isConvocacoesLoaded: boolean;
   lastUpdated?: number;
+  // Server-side paginated state (used by VagasPage table only)
+  vagasPaginated: Vaga[];
+  vagasPaginatedTotal: number;
+  isLoadingVagasPaginated: boolean;
 
   setVagas: (vagas: Vaga[]) => void;
   fetchVagas: (incremental?: boolean | { force?: boolean }) => Promise<void>;
+  fetchVagasPaginated: (params: VagaQueryParams) => Promise<void>;
   fetchBancos: (incremental?: boolean | { force?: boolean }) => Promise<void>;
   fetchAll: () => Promise<void>;
   fetchImportHistory: () => Promise<void>;
@@ -252,6 +277,9 @@ export const useVagasStore = create<VagasState>()(
       isConvocacoesLoaded: false,
       isLoadingBancos: false,
       lastUpdated: undefined,
+      vagasPaginated: [],
+      vagasPaginatedTotal: 0,
+      isLoadingVagasPaginated: false,
 
       setVagas: (vagas) => set({ vagas }),
       fetchVagas: async (incremental: boolean | { force?: boolean } = false) => {
@@ -285,6 +313,122 @@ export const useVagasStore = create<VagasState>()(
           throw err;
         } finally {
           set({ isLoadingBancos: false });
+        }
+      },
+      fetchVagasPaginated: async (params) => {
+        const {
+          page, pageSize, search, filterUnidades, filterStatusProcesso,
+          filterTratativas, filterEtapa, filterAnalista, filterAssistente,
+          filterTeia, filterPcd, filterComum, filterVagasNovas,
+          allowedUnidades, regionUnidades, globalUnit,
+        } = params;
+
+        set({ isLoadingVagasPaginated: true });
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+
+          let query = supabase.from('vagas').select('*', { count: 'exact' });
+
+          // ── User permission filter (prefix ilike per unit) ───────────────────
+          if (allowedUnidades && allowedUnidades.length > 0) {
+            const unitFilters = allowedUnidades.map((u) => `unidade.ilike.${u}%`).join(',');
+            query = query.or(unitFilters);
+          }
+
+          // ── Region filter ────────────────────────────────────────────────────
+          if (regionUnidades && regionUnidades.length > 0) {
+            const regionFilters = regionUnidades.map((u) => `unidade.ilike.${u}%`).join(',');
+            query = query.or(regionFilters);
+          }
+
+          // ── Sidebar global unit ──────────────────────────────────────────────
+          if (globalUnit && globalUnit !== 'all' && globalUnit !== 'TODOS') {
+            query = query.ilike('unidade', `${globalUnit}%`);
+          }
+
+          // ── Text search ──────────────────────────────────────────────────────
+          if (search?.trim()) {
+            const term = search.trim().replace(/'/g, "''"); // escape single quotes
+            query = query.or(
+              `cargo.ilike.%${term}%,unidade.ilike.%${term}%,analista_responsavel.ilike.%${term}%,numero_processo_seletivo.ilike.%${term}%`
+            );
+          }
+
+          // ── Unit multi-select ────────────────────────────────────────────────
+          if (filterUnidades && filterUnidades.length > 0) {
+            const unitFilters = filterUnidades.map((u) => `unidade.ilike.${u}%`).join(',');
+            query = query.or(unitFilters);
+          }
+
+          // ── Status processo ──────────────────────────────────────────────────
+          if (filterStatusProcesso && filterStatusProcesso.length > 0) {
+            query = query.in('status_processo', filterStatusProcesso);
+          }
+
+          // ── Tratativas ───────────────────────────────────────────────────────
+          if (filterTratativas && filterTratativas.length > 0) {
+            query = query.in('tratativa', filterTratativas);
+          }
+
+          // ── Etapa ────────────────────────────────────────────────────────────
+          if (filterEtapa && filterEtapa !== 'all') {
+            query = query.eq('etapa', filterEtapa);
+          }
+
+          // ── Analista ─────────────────────────────────────────────────────────
+          if (filterAnalista && filterAnalista !== 'all') {
+            query = query.eq('analista_responsavel', filterAnalista);
+          }
+
+          // ── Assistente ───────────────────────────────────────────────────────
+          if (filterAssistente && filterAssistente !== 'all') {
+            query = query.ilike('assistentes', `%${filterAssistente}%`);
+          }
+
+          // ── TEIA ─────────────────────────────────────────────────────────────
+          if (filterTeia === 'include') {
+            query = query.eq('is_teia', true);
+          } else if (filterTeia === 'exclude') {
+            query = query.or('is_teia.is.null,is_teia.eq.false');
+          }
+
+          // ── PCD ──────────────────────────────────────────────────────────────
+          if (filterPcd === 'include') {
+            query = query.eq('is_pcd', true);
+          } else if (filterPcd === 'exclude') {
+            query = query.or('is_pcd.is.null,is_pcd.eq.false');
+          }
+
+          // ── Tipo vaga (Comum) ────────────────────────────────────────────────
+          if (filterComum === 'include') {
+            query = query.eq('tipo_vaga', 'Comum');
+          } else if (filterComum === 'exclude') {
+            query = query.neq('tipo_vaga', 'Comum');
+          }
+
+          // ── Vagas novas (last 24h) ───────────────────────────────────────────
+          if (filterVagasNovas) {
+            const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
+            query = query.gte('created_at', oneDayAgo);
+          }
+
+          // ── Pagination ───────────────────────────────────────────────────────
+          const from = (page - 1) * pageSize;
+          const to = from + pageSize - 1;
+          query = query.order('created_at', { ascending: false }).range(from, to);
+
+          const { data, error, count } = await query;
+          if (error) throw error;
+
+          set({
+            vagasPaginated: (data || []).map(mapDbVaga),
+            vagasPaginatedTotal: count ?? 0,
+            isInitialLoad: false,
+          });
+        } catch (err) {
+          console.error('[vagasStore] fetchVagasPaginated error:', err);
+        } finally {
+          set({ isLoadingVagasPaginated: false });
         }
       },
       fetchAll: async () => {

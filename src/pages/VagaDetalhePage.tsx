@@ -107,6 +107,7 @@ import {
   ListChecks,
   Banknote,
   Timer,
+  SunMoon,
 } from "lucide-react";
 import {
   Popover,
@@ -2585,7 +2586,7 @@ export default function VagaDetalhePage() {
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
                               <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                                <Zap className="h-3.5 w-3.5 text-amber-500" />
+                                <SunMoon className="h-3.5 w-3.5 text-amber-500" />
                               </div>
                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
                                 Turno

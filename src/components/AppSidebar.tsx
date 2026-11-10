@@ -96,7 +96,7 @@ export function AppSidebar() {
         title: "Visão Geral",
         url: "/",
         icon: LayoutDashboard,
-        visible: getPermissions("vagas").canRead && !isGestorUnidade,
+        visible: getPermissions("vagas").canRead,
       },
       {
         title: "Controle de Vagas",

@@ -76,7 +76,7 @@ function ProtectedRouteWrapper() {
       });
   }, [isAuthenticated, user, location.pathname]);
 
-  const GESTOR_ALLOWED_PATHS = ['/vagas'];
+  const GESTOR_ALLOWED_PATHS = ['/', '/vagas'];
   const isGestorUnidade = currentPerfil === 'Gestor de Unidade';
   const isOnRestrictedPath = isGestorUnidade &&
     !GESTOR_ALLOWED_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'));

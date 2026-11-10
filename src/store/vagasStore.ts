@@ -356,7 +356,19 @@ export const useVagasStore = create<VagasState>()(
 
           // ── Unit multi-select ────────────────────────────────────────────────
           if (filterUnidades && filterUnidades.length > 0) {
-            const unitFilters = filterUnidades.map((u) => `unidade.ilike.${u}%`).join(',');
+            // Use only the short prefix (part before " - ") in the ilike pattern.
+            // Using the full unit name causes two failures:
+            // 1. Commas inside the name (e.g. "AGIR - ASSOCIACAO DE GESTAO, INOVACAO...")
+            //    break PostgREST's OR syntax since commas are the condition separator.
+            // 2. Accents in the full name cause ilike mismatches against raw DB values.
+            // Prefixes ("AGIR", "HDS", "HUGOL", "TEIA GOIÂNIA", …) are always a safe
+            // prefix of the DB value and contain no commas.
+            const unitFilters = filterUnidades
+              .map((u) => {
+                const prefix = u.split(/\s*-\s*/)[0].trim();
+                return `unidade.ilike.${prefix}%`;
+              })
+              .join(',');
             query = query.or(unitFilters);
           }
 

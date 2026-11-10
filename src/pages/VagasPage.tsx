@@ -725,13 +725,23 @@ export default function VagasPage() {
     }
   };
 
-  const allUnidades = useMemo(
-    () =>
-      [...new Set(vagas.map((v) => normalizeUnitName(v.unidade)))]
-        .filter(Boolean)
-        .sort(),
-    [vagas],
-  );
+  // Keep raw (accented) unit names so the server-side ilike filter matches the
+  // exact DB value. Deduplication is done by normalized key to avoid duplicate
+  // entries when the same unit has minor spelling variations across rows.
+  const allUnidades = useMemo(() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const v of vagas) {
+      const raw = v.unidade?.trim();
+      if (!raw) continue;
+      const key = normalizeUnitName(raw);
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(raw);
+      }
+    }
+    return result.sort();
+  }, [vagas]);
 
   // Restriction by unit — build the list of short unit names the user may see
   const visibleUnidades = useMemo(() => {

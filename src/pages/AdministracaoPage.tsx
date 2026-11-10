@@ -54,6 +54,10 @@ import {
   User as UserIcon,
   AlertTriangle,
   ScrollText,
+  Fingerprint,
+  Crown,
+  Accessibility,
+  UserRound,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PageSkeleton } from "@/components/PageSkeleton";
@@ -165,6 +169,57 @@ const BANCO_TALENTOS_UNIDADES = [
   "Manaus - AM",
   "Dourados - MS",
   "Rede TEIA",
+];
+
+const ALL_ESPECIFICIDADES = [
+  {
+    id: "Liderança",
+    label: "Liderança",
+    description: "Vagas de cargos de liderança e gestão",
+    selectedBg: "bg-amber-50 border-amber-300",
+    hoverBg: "hover:border-amber-200 hover:bg-amber-50/40",
+    chipClass: "bg-amber-50 text-amber-700 border-amber-200 ring-1 ring-amber-100",
+    icon: <Crown className="h-3 w-3 shrink-0" />,
+  },
+  {
+    id: "PCD",
+    label: "PCD",
+    description: "Vagas para Pessoas com Deficiência",
+    selectedBg: "bg-blue-50 border-blue-300",
+    hoverBg: "hover:border-blue-200 hover:bg-blue-50/40",
+    chipClass: "bg-blue-50 text-blue-700 border-blue-200 ring-1 ring-blue-100",
+    icon: <Accessibility className="h-3 w-3 shrink-0" />,
+  },
+  {
+    id: "Comum",
+    label: "Comum",
+    description: "Vagas padrão sem especificidade especial",
+    selectedBg: "bg-slate-100 border-slate-300",
+    hoverBg: "hover:border-slate-300 hover:bg-slate-50",
+    chipClass: "bg-slate-100 text-slate-600 border-slate-200 ring-1 ring-slate-100",
+    icon: <UserRound className="h-3 w-3 shrink-0" />,
+  },
+  {
+    id: "TEIA",
+    label: "TEIA",
+    description: "Vagas da Rede TEIA",
+    selectedBg: "bg-emerald-50 border-emerald-300",
+    hoverBg: "hover:border-emerald-200 hover:bg-emerald-50/40",
+    chipClass: "bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100",
+    icon: (
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+        <defs>
+          <linearGradient id="admin-infinity-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="25%" stopColor="#3b82f6" />
+            <stop offset="55%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#f59e0b" />
+          </linearGradient>
+        </defs>
+        <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" stroke="url(#admin-infinity-grad)" />
+      </svg>
+    ),
+  },
 ];
 
 const MODULOS_SISTEMA = [
@@ -448,6 +503,7 @@ export default function AdministracaoPage() {
     regiao_suporte: null as string | null,
     unidades_responsavel: [] as string[],
     unidades_banco_talentos: [] as string[],
+    especificidades_acesso: ["Liderança", "PCD", "Comum", "TEIA"] as string[],
   });
 
   useEffect(() => {
@@ -490,6 +546,7 @@ export default function AdministracaoPage() {
       regiao_suporte: null as string | null,
       unidades_responsavel: [] as string[],
       unidades_banco_talentos: [] as string[],
+      especificidades_acesso: ["Liderança", "PCD", "Comum", "TEIA"] as string[],
     });
   };
 
@@ -501,6 +558,10 @@ export default function AdministracaoPage() {
     const passwordError = validateAdminPassword(newUser.password);
     if (passwordError) {
       toast.error(passwordError);
+      return;
+    }
+    if (newUser.perfil === "Analista de RH" && newUser.especificidades_acesso.length === 0) {
+      toast.error("Selecione ao menos uma especificidade para o Analista de RH.");
       return;
     }
     const isAnalista =
@@ -676,12 +737,22 @@ export default function AdministracaoPage() {
       unidades_banco_talentos: Array.isArray(user.unidades_banco_talentos)
         ? user.unidades_banco_talentos
         : [],
+      especificidades_acesso: Array.isArray(user.especificidades_acesso)
+        ? user.especificidades_acesso
+        : ["Liderança", "PCD", "Comum", "TEIA"],
     });
     setIsEditUserOpen(true);
   };
 
   const handleSaveEditUser = async () => {
     if (!editingUser) return;
+    if (
+      editingUser.perfil === "Analista de RH" &&
+      (editingUser.especificidades_acesso || []).length === 0
+    ) {
+      toast.error("Selecione ao menos uma especificidade para o Analista de RH.");
+      return;
+    }
     const isAnalista =
       editingUser.perfil === "Analista de RH" ||
       editingUser.perfil === "Analista Administrativo";
@@ -728,6 +799,7 @@ export default function AdministracaoPage() {
             : null,
         unidades_responsavel: newUnidadesResponsavel,
         unidades_banco_talentos: editingUser.unidades_banco_talentos || [],
+        especificidades_acesso: editingUser.especificidades_acesso || [],
       } as any);
 
       // Handle analista_responsavel bulk update for Analista profiles (prefix match for full unit names)
@@ -898,12 +970,17 @@ export default function AdministracaoPage() {
       modulos: [],
       perms: {},
     };
+    const defaultEspecificidades =
+      perfil === "Analista de RH"
+        ? ["Liderança", "PCD", "Comum", "TEIA"]
+        : [];
     if (isEdit) {
       setEditingUser((prev: any) => ({
         ...prev,
         perfil,
         modulos_acesso: defaults.modulos,
         permissoes_modulo: defaults.perms,
+        especificidades_acesso: defaultEspecificidades,
       }));
     } else {
       setNewUser((prev) => ({
@@ -911,6 +988,7 @@ export default function AdministracaoPage() {
         perfil,
         modulos_acesso: defaults.modulos,
         permissoes_modulo: defaults.perms,
+        especificidades_acesso: defaultEspecificidades,
       }));
     }
   };
@@ -1855,6 +1933,65 @@ export default function AdministracaoPage() {
               )}
             </div>
 
+            {/* Especificidade — only for Analista de RH */}
+            {newUser.perfil === "Analista de RH" && (
+              <div className="space-y-3 border-t pt-4">
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-violet-500" />
+                    Especificidade
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    Quais tipos de vaga este analista poderá visualizar? Pelo menos uma deve ser selecionada.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {ALL_ESPECIFICIDADES.map((esp) => {
+                    const isSelected = newUser.especificidades_acesso.includes(esp.id);
+                    const toggle = () =>
+                      setNewUser((p) => ({
+                        ...p,
+                        especificidades_acesso: isSelected
+                          ? p.especificidades_acesso.filter((e) => e !== esp.id)
+                          : [...p.especificidades_acesso, esp.id],
+                      }));
+                    return (
+                      <div
+                        key={esp.id}
+                        onClick={toggle}
+                        className={`relative flex flex-col gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${
+                          isSelected
+                            ? `${esp.selectedBg} shadow-sm`
+                            : `bg-white border-slate-200 ${esp.hoverBg}`
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${esp.chipClass}`}>
+                            {esp.icon}
+                            {esp.label}
+                          </span>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                            isSelected ? "border-slate-600 bg-slate-700" : "border-slate-300 bg-white"
+                          }`}>
+                            {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-500 leading-relaxed pl-0.5">
+                          {esp.description}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                {newUser.especificidades_acesso.length === 0 && (
+                  <p className="text-[11px] text-red-500 font-medium flex items-center gap-1.5">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500" />
+                    Obrigatório selecionar ao menos uma especificidade.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Responsabilidade pelo Provimento — only for Analista profiles */}
             {(newUser.perfil === "Analista de RH" ||
               newUser.perfil === "Analista Administrativo") && (
@@ -2523,6 +2660,67 @@ export default function AdministracaoPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Especificidade — only for Analista de RH */}
+                  {editingUser.perfil === "Analista de RH" && (
+                    <div className="space-y-3 border-t pt-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-violet-500" />
+                          Especificidade
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                          Quais tipos de vaga este analista poderá visualizar? Pelo menos uma deve ser selecionada.
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {ALL_ESPECIFICIDADES.map((esp) => {
+                          const isSelected = (editingUser.especificidades_acesso || []).includes(esp.id);
+                          const toggle = () =>
+                            setEditingUser((p: any) => ({
+                              ...p,
+                              especificidades_acesso: isSelected
+                                ? (p.especificidades_acesso || []).filter((e: string) => e !== esp.id)
+                                : [...(p.especificidades_acesso || []), esp.id],
+                            }));
+                          return (
+                            <div
+                              key={esp.id}
+                              onClick={toggle}
+                              className={`relative flex flex-col gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${
+                                isSelected
+                                  ? `${esp.selectedBg} shadow-sm`
+                                  : `bg-white border-slate-200 ${esp.hoverBg}`
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${esp.chipClass}`}>
+                                  {esp.icon}
+                                  {esp.label}
+                                </span>
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                                  isSelected ? "border-current bg-current" : "border-slate-300 bg-white"
+                                }`}
+                                  style={isSelected ? { borderColor: "currentColor" } : undefined}
+                                >
+                                  {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                </div>
+                              </div>
+                              <p className="text-[10px] text-slate-500 leading-relaxed pl-0.5">
+                                {esp.description}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {(editingUser.especificidades_acesso || []).length === 0 && (
+                        <p className="text-[11px] text-red-500 font-medium flex items-center gap-1.5">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500" />
+                          Obrigatório selecionar ao menos uma especificidade.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Responsabilidade pelo Provimento — only for Analista profiles */}
                   {(editingUser.perfil === "Analista de RH" ||

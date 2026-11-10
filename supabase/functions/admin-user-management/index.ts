@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case "create_user": {
-        const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, modulos_acesso, permissoes_modulo, avatar_url, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios, acesso_portal_unidade, regiao_suporte, unidades_responsavel, unidades_banco_talentos } = body;
+        const { email, password, nome_completo, perfil, cargo, status, visualiza_todas_unidades, unidades_vinculadas, modulos_acesso, permissoes_modulo, avatar_url, pode_incluir_registros, pode_excluir_requisicoes, pode_editar_configuracoes, pode_gerenciar_usuarios, acesso_portal_unidade, regiao_suporte, unidades_responsavel, unidades_banco_talentos, especificidades_acesso } = body;
 
         const passwordValidationError = validatePasswordStrength(password);
         if (passwordValidationError) {
@@ -146,6 +146,7 @@ Deno.serve(async (req) => {
             regiao_suporte: regiao_suporte || null,
             unidades_responsavel: unidades_responsavel || [],
             unidades_banco_talentos: unidades_banco_talentos || [],
+            especificidades_acesso: especificidades_acesso || [],
             must_change_password: true, // Force password change on first login
           });
 
@@ -290,7 +291,7 @@ Deno.serve(async (req) => {
           "pode_incluir_registros", "pode_excluir_requisicoes", "pode_editar_configuracoes",
           "pode_gerenciar_usuarios", "acesso_portal_unidade", "avatar_url",
           "modulos_acesso", "permissoes_modulo", "regiao_suporte", "unidades_responsavel",
-          "unidades_banco_talentos",
+          "unidades_banco_talentos", "especificidades_acesso",
         ];
 
         const updateData: Record<string, unknown> = {};

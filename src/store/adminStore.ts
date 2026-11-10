@@ -227,6 +227,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         regiao_suporte: profileData.regiao_suporte || null,
         unidades_responsavel: (profileData as any).unidades_responsavel || [],
         unidades_banco_talentos: (profileData as any).unidades_banco_talentos || [],
+        especificidades_acesso: (profileData as any).especificidades_acesso || [],
       },
     });
 

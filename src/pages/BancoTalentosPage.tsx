@@ -40,7 +40,12 @@ import {
   Link2,
   Link2Off,
   ChevronLeft,
+  ChevronRight,
   Stethoscope,
+  Upload,
+  X,
+  FileUp,
+  Table2,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestUpdateDialog } from "@/components/RequestUpdateDialog";
@@ -167,6 +172,149 @@ function getPSStorageKey(grupo: BancoGroup): string {
   return `${rep?.numero_edital || grupo.edital || "sem-edital"}-${grupo.unidade}-${grupo.cargoNormalizado}`;
 }
 
+// ── Excel import helpers ─────────────────────────────────────────────────────
+
+function normKey(s: string): string {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function parseNote(val: unknown): number | null {
+  if (val === null || val === undefined || val === "") return null;
+  const n = Number(String(val).replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+function padCpf(raw: unknown): string {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  return digits.padStart(11, "0");
+}
+
+function excelSerialToDate(serial: number): string {
+  // Excel serial date: days since 1899-12-30
+  const utc = (serial - 25569) * 86400000;
+  const d = new Date(utc);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+function parseCellDate(val: unknown): string | null {
+  if (!val) return null;
+  if (typeof val === "number") return excelSerialToDate(val);
+  const s = String(val).trim();
+  // yyyy-mm-dd
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // dd/mm/yyyy
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+  return null;
+}
+
+interface ParsedCandidate {
+  nome: string;
+  cpf: string;
+  data_nascimento: string | null;
+  email: string | null;
+  telefone: string | null;
+  nota_avaliacao: number | null;
+  nota_entrevista: number | null;
+  nota_avaliacao_externa: number | null;
+  observacao: string | null;
+  unidade_excel: string | null;
+  media_final: number;
+}
+
+async function parseExcelCandidates(file: File): Promise<ParsedCandidate[]> {
+  const { read, utils } = await import("xlsx");
+  const buffer = await file.arrayBuffer();
+  const wb = read(buffer, { type: "array" });
+
+  // Prefer sheet named "candidaturas", otherwise first sheet
+  const sheetName =
+    wb.SheetNames.find((n) => normKey(n) === "candidaturas") ||
+    wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const rows: Record<string, unknown>[] = utils.sheet_to_json(ws, {
+    defval: null,
+    raw: true,
+  });
+
+  const KEY_MAP: Record<string, keyof ParsedCandidate> = {
+    nome: "nome",
+    cpf: "cpf",
+    nascimento: "data_nascimento",
+    email: "email",
+    celular: "telefone",
+    telefone: "telefone",
+    notadaavaliacao: "nota_avaliacao",
+    notadaentrevista: "nota_entrevista",
+    notadaavaliaoexterna: "nota_avaliacao_externa",
+    notadaavaliaaexterna: "nota_avaliacao_externa",
+    statusatual: "observacao",
+    unidade: "unidade_excel",
+  };
+
+  return rows
+    .filter((row) => {
+      // Skip rows without a name
+      const nomeRaw = Object.entries(row).find(([k]) =>
+        normKey(k).startsWith("nom"),
+      )?.[1];
+      return nomeRaw && String(nomeRaw).trim().length > 0;
+    })
+    .map((row) => {
+      const mapped: Partial<ParsedCandidate> = {};
+      for (const [rawKey, rawVal] of Object.entries(row)) {
+        const nk = normKey(rawKey);
+        const field = KEY_MAP[nk];
+        if (!field) continue;
+        if (
+          field === "nota_avaliacao" ||
+          field === "nota_entrevista" ||
+          field === "nota_avaliacao_externa"
+        ) {
+          (mapped as any)[field] = parseNote(rawVal);
+        } else if (field === "data_nascimento") {
+          (mapped as any)[field] = parseCellDate(rawVal);
+        } else {
+          (mapped as any)[field] = rawVal ? String(rawVal).trim() : null;
+        }
+      }
+
+      const notas = [
+        mapped.nota_avaliacao,
+        mapped.nota_entrevista,
+        mapped.nota_avaliacao_externa,
+      ].filter((n): n is number => n !== null && n !== undefined);
+      const media =
+        notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : 0;
+
+      return {
+        nome: mapped.nome || "",
+        cpf: padCpf(mapped.cpf),
+        data_nascimento: mapped.data_nascimento ?? null,
+        email: mapped.email ?? null,
+        telefone: mapped.telefone ?? null,
+        nota_avaliacao: mapped.nota_avaliacao ?? null,
+        nota_entrevista: mapped.nota_entrevista ?? null,
+        nota_avaliacao_externa: mapped.nota_avaliacao_externa ?? null,
+        observacao: mapped.observacao ?? null,
+        unidade_excel: mapped.unidade_excel ?? null,
+        media_final: media,
+      };
+    })
+    .sort((a, b) => {
+      // Primary: media_final DESC
+      if (b.media_final !== a.media_final) return b.media_final - a.media_final;
+      // Secondary: oldest birth ASC (earlier date = older)
+      const da = a.data_nascimento ?? "9999";
+      const db = b.data_nascimento ?? "9999";
+      return da < db ? -1 : da > db ? 1 : 0;
+    });
+}
+
 export default function BancoTalentosPage() {
   const { isDark } = useTheme();
   const navigate = useNavigate();
@@ -217,6 +365,18 @@ export default function BancoTalentosPage() {
   const [novoNumeroEdital, setNovoNumeroEdital] = useState("");
   const [isTeia, setIsTeia] = useState(false);
   const [savingEdital, setSavingEdital] = useState(false);
+  // Multi-step import wizard state
+  const [importStep, setImportStep] = useState<1 | 2 | 3>(1);
+  const [novoCargo, setNovoCargo] = useState("");
+  const [novaUnidade, setNovaUnidade] = useState("");
+  const [novaDataPublicacao, setNovaDataPublicacao] = useState("");
+  const [novaDataResultado, setNovaDataResultado] = useState("");
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [parsedCandidates, setParsedCandidates] = useState<ParsedCandidate[]>([]);
+  const [excelParseError, setExcelParseError] = useState<string | null>(null);
+  const [parsingExcel, setParsingExcel] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const excelInputRef = useRef<HTMLInputElement>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bancoParaExcluir, setBancoParaExcluir] = useState<string | null>(null);
   const [selectedBanco, setSelectedBanco] = useState<BancoTalentos | null>(
@@ -486,50 +646,176 @@ export default function BancoTalentosPage() {
     console.log(`Request update for ${recordId}: ${description}`);
   };
 
-  const handleCadastrarEdital = async () => {
+  const resetImportModal = () => {
+    setImportStep(1);
+    setNovoEditalNumero("");
+    setNovoNumeroEdital("");
+    setIsTeia(false);
+    setNovoCargo("");
+    setNovaUnidade("");
+    setNovaDataPublicacao("");
+    setNovaDataResultado("");
+    setExcelFile(null);
+    setParsedCandidates([]);
+    setExcelParseError(null);
+    setParsingExcel(false);
+    setIsDragging(false);
+  };
+
+  const handleImportStep1Next = () => {
     if (!novoEditalNumero.trim()) {
       toast.error("Informe o número do processo seletivo.");
       return;
     }
     const editalPattern = /^\d{3}\/\d{4}$/;
     if (!isTeia && !editalPattern.test(novoNumeroEdital.trim())) {
-      toast.error(
-        "Informe o número do edital no formato ###/#### (ex: 055/2026).",
-      );
+      toast.error("Informe o número do edital no formato ###/#### (ex: 055/2026).");
+      return;
+    }
+    setImportStep(2);
+  };
+
+  const handleImportStep2Next = () => {
+    if (!novoCargo.trim()) {
+      toast.error("Informe o cargo.");
+      return;
+    }
+    if (!novaUnidade.trim()) {
+      toast.error("Informe a unidade.");
+      return;
+    }
+    if (!novaDataPublicacao) {
+      toast.error("Informe a data de publicação.");
+      return;
+    }
+    setImportStep(3);
+  };
+
+  const handleExcelDrop = async (file: File) => {
+    if (!file.name.match(/\.(xlsx|xls|csv)$/i)) {
+      setExcelParseError("Formato inválido. Use .xlsx, .xls ou .csv.");
+      return;
+    }
+    setExcelFile(file);
+    setExcelParseError(null);
+    setParsingExcel(true);
+    try {
+      const candidates = await parseExcelCandidates(file);
+      if (candidates.length === 0) {
+        setExcelParseError("Nenhum candidato encontrado na planilha. Verifique o arquivo.");
+        setExcelFile(null);
+      } else {
+        setParsedCandidates(candidates);
+      }
+    } catch (err: any) {
+      setExcelParseError(`Erro ao processar planilha: ${err.message}`);
+      setExcelFile(null);
+    } finally {
+      setParsingExcel(false);
+    }
+  };
+
+  const handleCadastrarEdital = async () => {
+    if (parsedCandidates.length === 0) {
+      toast.error("Carregue o arquivo Excel com os candidatos.");
       return;
     }
     setSavingEdital(true);
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-      const { error } = await supabase.from("importacoes").insert({
-        tipo: "banco",
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+
+      // 1. Create importacoes record
+      const { data: importRow, error: importErr } = await supabase
+        .from("importacoes")
+        .insert({
+          tipo: "banco",
+          numero_edital: isTeia ? null : novoNumeroEdital.trim(),
+          arquivo: excelFile?.name || novoEditalNumero.trim(),
+          is_teia: isTeia,
+          status: "processando",
+          usuario_id: authUser?.id || "",
+          quantidade_processada: 0,
+          quantidade_inserida: 0,
+          quantidade_atualizada: 0,
+          quantidade_ignorada: 0,
+          quantidade_erro: 0,
+        })
+        .select("id")
+        .single();
+      if (importErr) throw importErr;
+
+      const batchId = importRow.id;
+      const today = new Date().toISOString().split("T")[0];
+      const unidadeForm = novaUnidade.trim();
+      const cargoForm = novoCargo.trim();
+
+      // 2. Build payloads with ranking (already sorted by parseExcelCandidates)
+      const payloads = parsedCandidates.map((c, idx) => ({
+        unidade: unidadeForm,
+        cargo: cargoForm,
+        cargo_normalizado: normKey(cargoForm),
         numero_edital: isTeia ? null : novoNumeroEdital.trim(),
-        arquivo: novoEditalNumero.trim(),
+        numero_processo_seletivo: novoEditalNumero.trim(),
         is_teia: isTeia,
-        status: "aguardando_processamento",
-        usuario_id: authUser?.id || "",
-        quantidade_processada: 0,
-        quantidade_inserida: 0,
-        quantidade_atualizada: 0,
-        quantidade_ignorada: 0,
-        quantidade_erro: 0,
-      });
-      if (error) throw error;
-      toast.success(
-        "Processo seletivo cadastrado! Os candidatos estarão disponíveis amanhã.",
-      );
-      setNovoEditalNumero("");
-      setNovoNumeroEdital("");
-      setIsTeia(false);
+        nome: c.nome || null,
+        cpf: c.cpf || null,
+        data_nascimento: c.data_nascimento || null,
+        email: c.email || null,
+        telefone: c.telefone || null,
+        nota_avaliacao: c.nota_avaliacao != null ? String(c.nota_avaliacao) : null,
+        nota_entrevista: c.nota_entrevista != null ? String(c.nota_entrevista) : null,
+        nota_avaliacao_externa: c.nota_avaliacao_externa,
+        media_final: c.media_final > 0 ? c.media_final : null,
+        observacao: c.observacao || null,
+        classificacao: idx + 1,
+        status: "CADASTRO RESERVA",
+        status_original: "CADASTRO RESERVA",
+        data_publicacao: novaDataPublicacao || null,
+        data_resultado: novaDataResultado || null,
+        data_importacao: today,
+        import_batch_id: batchId,
+        origem: "manual",
+        created_by: authUser?.id || null,
+        updated_by: authUser?.id || null,
+      }));
+
+      // 3. Batch insert in chunks of 100
+      let inserted = 0;
+      let errors = 0;
+      const CHUNK = 100;
+      for (let i = 0; i < payloads.length; i += CHUNK) {
+        const chunk = payloads.slice(i, i + CHUNK);
+        const { error: insErr } = await supabase.from("banco_candidatos").insert(chunk);
+        if (insErr) {
+          console.error("batch insert error:", insErr);
+          errors += chunk.length;
+        } else {
+          inserted += chunk.length;
+        }
+      }
+
+      // 4. Update importacoes record to concluido
+      await supabase.from("importacoes").update({
+        status: errors === 0 ? "concluido" : "concluido_com_erros",
+        quantidade_processada: parsedCandidates.length,
+        quantidade_inserida: inserted,
+        quantidade_erro: errors,
+      }).eq("id", batchId);
+
+      if (errors > 0) {
+        toast.warning(`Importação concluída com ${errors} erro(s). ${inserted} candidatos inseridos.`);
+      } else {
+        toast.success(`${inserted} candidato(s) importado(s) com sucesso!`);
+      }
+
+      resetImportModal();
       setIsCadastrarEditalOpen(false);
-      const { fetchImportHistory } = useVagasStore.getState();
-      await fetchImportHistory();
-      handleTabChange("history");
+      const { fetchImportHistory, fetchBancos } = useVagasStore.getState();
+      await Promise.all([fetchImportHistory(), fetchBancos()]);
+      handleTabChange("list");
     } catch (err: any) {
-      toast.error(`Erro ao cadastrar: ${err.message}`);
+      toast.error(`Erro ao importar: ${err.message}`);
     } finally {
       setSavingEdital(false);
     }
@@ -1221,195 +1507,368 @@ export default function BancoTalentosPage() {
         </div>
       )}
 
-      {/* Cadastrar Edital modal */}
+      {/* Importar Banco de Talentos — multi-step modal */}
       <Dialog
         open={isCadastrarEditalOpen}
         onOpenChange={(open) => {
           setIsCadastrarEditalOpen(open);
-          if (!open) {
-            setNovoEditalNumero("");
-            setNovoNumeroEdital("");
-            setIsTeia(false);
-          }
+          if (!open) resetImportModal();
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-xl">
           <DialogHeader className="pb-1">
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" /> Importar Banco de
-              Talentos
+              <FileUp className="h-4 w-4 text-primary" /> Importar Banco de Talentos
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-5 pt-1">
-            {/* Description */}
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Informe o{" "}
-              <span className="font-semibold text-slate-700">
-                Nº do Processo Seletivo
-              </span>{" "}
-              gerado na Reachr. Se o processo pertence à{" "}
-              <span className="font-semibold text-slate-700">Rede Teia</span>,
-              ative o botão abaixo e o campo Nº do Edital não será obrigatório.
-            </p>
+          {/* Step indicators */}
+          <div className="flex items-center gap-1 pb-2">
+            {([1, 2, 3] as const).map((s) => (
+              <React.Fragment key={s}>
+                <div className={cn(
+                  "flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-all",
+                  importStep === s
+                    ? "bg-primary text-white shadow"
+                    : importStep > s
+                    ? "bg-emerald-100 text-emerald-600"
+                    : "bg-slate-100 text-slate-400"
+                )}>
+                  {importStep > s ? "✓" : s}
+                </div>
+                {s < 3 && (
+                  <div className={cn(
+                    "flex-1 h-0.5 rounded transition-all",
+                    importStep > s ? "bg-emerald-300" : "bg-slate-200"
+                  )} />
+                )}
+              </React.Fragment>
+            ))}
+            <span className="ml-2 text-xs text-slate-400">
+              {importStep === 1 && "Processo Seletivo"}
+              {importStep === 2 && "Cargo e Unidade"}
+              {importStep === 3 && "Planilha de Candidatos"}
+            </span>
+          </div>
 
-            {/* TEIA toggle card */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsTeia((v) => !v);
-                if (!isTeia) setNovoNumeroEdital("");
-              }}
-              className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all duration-200 text-left select-none"
-              style={
-                isTeia
-                  ? {
-                      background: "rgba(16,185,129,0.07)",
-                      border: "1.5px solid rgba(16,185,129,0.40)",
-                    }
-                  : {
-                      background: "#f8fafc",
-                      border: "1px solid #e2e8f0",
-                    }
-              }
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 shrink-0"
-                  style={
-                    isTeia
-                      ? {
-                          background: "rgba(16,185,129,0.15)",
-                          color: "#059669",
-                        }
-                      : { background: "#f1f5f9", color: "#94a3b8" }
-                  }
-                >
-                  <Puzzle className="h-4 w-4" />
-                </div>
-                <div>
-                  <p
-                    className="text-sm font-semibold leading-none"
-                    style={{ color: isTeia ? "#059669" : "#475569" }}
-                  >
-                    Rede Teia
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {isTeia
-                      ? "Edital não necessário para este processo"
-                      : "Clique para marcar como Rede Teia"}
-                  </p>
-                </div>
-              </div>
-              {/* Toggle pill */}
-              <div
-                className="relative w-10 h-5 rounded-full transition-all duration-200 shrink-0"
-                style={{
-                  background: isTeia ? "#10b981" : "#cbd5e1",
+          <Separator />
+
+          {/* ── STEP 1: PS / Edital / TEIA ── */}
+          {importStep === 1 && (
+            <div className="space-y-5 pt-2">
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Informe o{" "}
+                <span className="font-semibold text-slate-700">Nº do Processo Seletivo</span>{" "}
+                gerado na Reachr. Se o processo pertence à{" "}
+                <span className="font-semibold text-slate-700">Rede Teia</span>,
+                ative o botão abaixo e o campo Nº do Edital não será obrigatório.
+              </p>
+
+              {/* TEIA toggle card */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTeia((v) => !v);
+                  if (!isTeia) setNovoNumeroEdital("");
                 }}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all duration-200 text-left select-none"
+                style={
+                  isTeia
+                    ? { background: "rgba(16,185,129,0.07)", border: "1.5px solid rgba(16,185,129,0.40)" }
+                    : { background: "#f8fafc", border: "1px solid #e2e8f0" }
+                }
               >
-                <div
-                  className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
-                  style={{ left: isTeia ? "calc(100% - 18px)" : "2px" }}
-                />
-              </div>
-            </button>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 shrink-0"
+                    style={isTeia ? { background: "rgba(16,185,129,0.15)", color: "#059669" } : { background: "#f1f5f9", color: "#94a3b8" }}
+                  >
+                    <Puzzle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold leading-none" style={{ color: isTeia ? "#059669" : "#475569" }}>
+                      Rede Teia
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {isTeia ? "Edital não necessário para este processo" : "Clique para marcar como Rede Teia"}
+                    </p>
+                  </div>
+                </div>
+                <div className="relative w-10 h-5 rounded-full transition-all duration-200 shrink-0" style={{ background: isTeia ? "#10b981" : "#cbd5e1" }}>
+                  <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200" style={{ left: isTeia ? "calc(100% - 18px)" : "2px" }} />
+                </div>
+              </button>
 
-            {/* Fields */}
-            <div
-              className={cn(
-                "grid gap-4",
-                !isTeia ? "grid-cols-2" : "grid-cols-1",
-              )}
-            >
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Nº do Processo Seletivo{" "}
-                  <span className="text-red-400">*</span>
-                </label>
-                <Input
-                  placeholder="ex:30102"
-                  value={novoEditalNumero}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 5);
-                    setNovoEditalNumero(val);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleCadastrarEdital();
-                  }}
-                  className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30 font-mono text-center tracking-widest text-sm"
-                  inputMode="numeric"
-                  maxLength={5}
-                  autoFocus
-                />
-                {novoEditalNumero.length > 0 && novoEditalNumero.length < 5 && (
-                  <p className="text-xs text-amber-500">
-                    {novoEditalNumero.length}/5 dígitos
-                  </p>
+              <div className={cn("grid gap-4", !isTeia ? "grid-cols-2" : "grid-cols-1")}>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Nº do Processo Seletivo <span className="text-red-400">*</span>
+                  </label>
+                  <Input
+                    placeholder="ex: 30102"
+                    value={novoEditalNumero}
+                    onChange={(e) => setNovoEditalNumero(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleImportStep1Next(); }}
+                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30 font-mono text-center tracking-widest text-sm"
+                    inputMode="numeric"
+                    maxLength={5}
+                    autoFocus
+                  />
+                  {novoEditalNumero.length > 0 && novoEditalNumero.length < 5 && (
+                    <p className="text-xs text-amber-500">{novoEditalNumero.length}/5 dígitos</p>
+                  )}
+                </div>
+                {!isTeia && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Nº do Edital <span className="text-red-400">*</span>
+                    </label>
+                    <Input
+                      placeholder="ex: 055/2026"
+                      value={novoNumeroEdital}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 7);
+                        setNovoNumeroEdital(digits.length <= 3 ? digits : digits.slice(0, 3) + "/" + digits.slice(3));
+                      }}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleImportStep1Next(); }}
+                      className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30 font-mono text-center tracking-widest text-sm"
+                      maxLength={8}
+                    />
+                    {novoNumeroEdital.length > 0 && !/^\d{3}\/\d{4}$/.test(novoNumeroEdital) && (
+                      <p className="text-xs text-amber-500">Formato: 055/2026</p>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {!isTeia && (
-                <div className="space-y-1.5">
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" className="rounded-xl" onClick={() => { setIsCadastrarEditalOpen(false); resetImportModal(); }}>
+                  Cancelar
+                </Button>
+                <Button
+                  className="rounded-xl gap-2"
+                  onClick={handleImportStep1Next}
+                  disabled={novoEditalNumero.length !== 5 || (!isTeia && !/^\d{3}\/\d{4}$/.test(novoNumeroEdital))}
+                >
+                  Próximo <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 2: Cargo, Unidade, Datas ── */}
+          {importStep === 2 && (
+            <div className="space-y-5 pt-2">
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Preencha as informações do processo seletivo. Esses dados serão aplicados a todos os candidatos importados.
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-1.5">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Nº do Edital <span className="text-red-400">*</span>
+                    Cargo <span className="text-red-400">*</span>
                   </label>
                   <Input
-                    placeholder="ex:055/2026"
-                    value={novoNumeroEdital}
-                    onChange={(e) => {
-                      const digits = e.target.value
-                        .replace(/[^\d]/g, "")
-                        .slice(0, 7);
-                      const formatted =
-                        digits.length <= 3
-                          ? digits
-                          : digits.slice(0, 3) + "/" + digits.slice(3);
-                      setNovoNumeroEdital(formatted);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleCadastrarEdital();
-                    }}
-                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30 font-mono text-center tracking-widest text-sm"
-                    maxLength={8}
+                    placeholder="ex: Técnico de Enfermagem"
+                    value={novoCargo}
+                    onChange={(e) => setNovoCargo(e.target.value)}
+                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                    autoFocus
                   />
-                  {novoNumeroEdital.length > 0 &&
-                    !/^\d{3}\/\d{4}$/.test(novoNumeroEdital) && (
-                      <p className="text-xs text-amber-500">
-                        Formato: 055/2026
-                      </p>
-                    )}
                 </div>
-              )}
-            </div>
+                <div className="col-span-2 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Unidade <span className="text-red-400">*</span>
+                  </label>
+                  <Input
+                    placeholder="ex: HDS - Hospital Estadual de Dermatologia"
+                    value={novaUnidade}
+                    onChange={(e) => setNovaUnidade(e.target.value)}
+                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Data de Publicação <span className="text-red-400">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    value={novaDataPublicacao}
+                    onChange={(e) => setNovaDataPublicacao(e.target.value)}
+                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Data do Resultado
+                    <span className="ml-1 text-slate-300 font-normal normal-case">(opcional)</span>
+                  </label>
+                  <Input
+                    type="date"
+                    value={novaDataResultado}
+                    onChange={(e) => setNovaDataResultado(e.target.value)}
+                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30"
+                  />
+                </div>
+              </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-1">
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                onClick={() => {
-                  setIsCadastrarEditalOpen(false);
-                  setNovoEditalNumero("");
-                  setNovoNumeroEdital("");
-                  setIsTeia(false);
+              <div className="flex justify-between gap-2 pt-1">
+                <Button variant="outline" className="rounded-xl gap-2" onClick={() => setImportStep(1)}>
+                  <ChevronLeft className="h-4 w-4" /> Voltar
+                </Button>
+                <Button
+                  className="rounded-xl gap-2"
+                  onClick={handleImportStep2Next}
+                  disabled={!novoCargo.trim() || !novaUnidade.trim() || !novaDataPublicacao}
+                >
+                  Próximo <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 3: Excel upload + preview ── */}
+          {importStep === 3 && (
+            <div className="space-y-4 pt-2">
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Faça upload da planilha exportada da Reachr (aba <span className="font-semibold text-slate-700">candidaturas</span>). Os candidatos serão classificados automaticamente por média de notas.
+              </p>
+
+              {/* Drop zone */}
+              <div
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-8 px-4 cursor-pointer transition-all",
+                  isDragging ? "border-primary bg-primary/5" : "border-slate-200 hover:border-primary/50 hover:bg-slate-50",
+                  excelFile && !excelParseError ? "border-emerald-300 bg-emerald-50/50" : ""
+                )}
+                onClick={() => excelInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const f = e.dataTransfer.files[0];
+                  if (f) handleExcelDrop(f);
                 }}
               >
-                Cancelar
-              </Button>
-              <Button
-                className="rounded-xl gap-2 bg-primary hover:bg-primary/90 text-white"
-                onClick={handleCadastrarEdital}
-                disabled={
-                  savingEdital ||
-                  novoEditalNumero.length !== 5 ||
-                  (!isTeia && !/^\d{3}\/\d{4}$/.test(novoNumeroEdital))
-                }
-              >
-                {savingEdital ? "Cadastrando..." : "Cadastrar"}
-              </Button>
+                <input
+                  ref={excelInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleExcelDrop(f);
+                    e.target.value = "";
+                  }}
+                />
+                {parsingExcel ? (
+                  <div className="flex flex-col items-center gap-2 text-slate-500">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <span className="text-sm">Processando planilha…</span>
+                  </div>
+                ) : excelFile && !excelParseError ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <FileSpreadsheet className="h-10 w-10 text-emerald-500" />
+                    <p className="text-sm font-semibold text-emerald-700">{excelFile.name}</p>
+                    <p className="text-xs text-emerald-600">{parsedCandidates.length} candidato(s) encontrado(s)</p>
+                    <button
+                      type="button"
+                      className="mt-1 flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); setExcelFile(null); setParsedCandidates([]); setExcelParseError(null); }}
+                    >
+                      <X className="h-3 w-3" /> Remover arquivo
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-slate-400">
+                    <Upload className="h-10 w-10" />
+                    <p className="text-sm font-medium text-slate-600">Arraste ou clique para selecionar</p>
+                    <p className="text-xs">.xlsx, .xls ou .csv</p>
+                  </div>
+                )}
+              </div>
+
+              {excelParseError && (
+                <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  {excelParseError}
+                </div>
+              )}
+
+              {/* Preview table */}
+              {parsedCandidates.length > 0 && (
+                <div className="rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200">
+                    <Table2 className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Prévia — {parsedCandidates.length} candidato(s)
+                    </span>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-3 py-2 text-left font-semibold text-slate-500">#</th>
+                          <th className="px-3 py-2 text-left font-semibold text-slate-500">Nome</th>
+                          <th className="px-3 py-2 text-center font-semibold text-slate-500">Média</th>
+                          <th className="px-3 py-2 text-center font-semibold text-slate-500">Avaliação</th>
+                          <th className="px-3 py-2 text-center font-semibold text-slate-500">Entrevista</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parsedCandidates.slice(0, 20).map((c, i) => (
+                          <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60">
+                            <td className="px-3 py-1.5 text-slate-400 font-mono">{i + 1}</td>
+                            <td className="px-3 py-1.5 font-medium text-slate-700 truncate max-w-[180px]">{c.nome}</td>
+                            <td className="px-3 py-1.5 text-center font-mono text-slate-700">
+                              {c.media_final > 0 ? c.media_final.toFixed(2) : "—"}
+                            </td>
+                            <td className="px-3 py-1.5 text-center text-slate-500">
+                              {c.nota_avaliacao != null ? c.nota_avaliacao.toFixed(2) : "—"}
+                            </td>
+                            <td className="px-3 py-1.5 text-center text-slate-500">
+                              {c.nota_entrevista != null ? c.nota_entrevista.toFixed(2) : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                        {parsedCandidates.length > 20 && (
+                          <tr>
+                            <td colSpan={5} className="px-3 py-2 text-center text-xs text-slate-400">
+                              + {parsedCandidates.length - 20} candidatos não exibidos
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between gap-2 pt-1">
+                <Button variant="outline" className="rounded-xl gap-2" onClick={() => setImportStep(2)} disabled={savingEdital}>
+                  <ChevronLeft className="h-4 w-4" /> Voltar
+                </Button>
+                <Button
+                  className="rounded-xl gap-2 bg-primary hover:bg-primary/90 text-white"
+                  onClick={handleCadastrarEdital}
+                  disabled={savingEdital || parsedCandidates.length === 0}
+                >
+                  {savingEdital ? (
+                    <>
+                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Importando…
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Importar {parsedCandidates.length > 0 ? `${parsedCandidates.length} candidatos` : ""}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 

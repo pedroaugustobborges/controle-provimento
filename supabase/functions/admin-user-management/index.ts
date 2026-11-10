@@ -163,6 +163,7 @@ Deno.serve(async (req) => {
           "Assistente de RH": "assistente",
           "Supervisão": "gestor",
           "Coordenação": "gestor",
+          "Gestor de Unidade": "gestor",
           "Visualizador": "visualizador",
         };
         const appRole = roleMap[perfil] || "analista";

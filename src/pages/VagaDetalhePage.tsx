@@ -1802,7 +1802,7 @@ export default function VagaDetalhePage() {
       mode === "submit"
         ? "enviada para Gestão de Provimento"
         : "salva como rascunho";
-    await updateVagaAsync(vaga.id, {
+    const saved = await updateVagaAsync(vaga.id, {
       ...updates,
       historico: [
         ...(vaga.historico || []),
@@ -1814,6 +1814,8 @@ export default function VagaDetalhePage() {
         },
       ],
     });
+
+    if (!saved) return; // updateVagaAsync already fired the error toast
 
     setAprovacaoDraft({});
     setAprovacaoDirty(false);

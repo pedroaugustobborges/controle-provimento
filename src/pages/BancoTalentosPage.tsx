@@ -1680,12 +1680,20 @@ export default function BancoTalentosPage() {
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Unidade <span className="text-red-400">*</span>
                   </label>
-                  <Input
-                    placeholder="ex: HDS - Hospital Estadual de Dermatologia"
-                    value={novaUnidade}
-                    onChange={(e) => setNovaUnidade(e.target.value)}
-                    className="h-10 rounded-xl border-slate-200 focus-visible:ring-primary/30"
-                  />
+                  <Select value={novaUnidade} onValueChange={setNovaUnidade}>
+                    <SelectTrigger className="h-10 rounded-xl border-slate-200 focus:ring-primary/30">
+                      <SelectValue placeholder="Selecione a unidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Manaus - AM">Manaus - AM</SelectItem>
+                      <SelectItem value="Dourados - MS">Dourados - MS</SelectItem>
+                      <SelectItem value="Cáceres - MT">Cáceres - MT</SelectItem>
+                      <SelectItem value="Goiânia - GO">Goiânia - GO</SelectItem>
+                      <SelectItem value="Vitória - ES">Vitória - ES</SelectItem>
+                      <SelectItem value="Jataí - GO">Jataí - GO</SelectItem>
+                      <SelectItem value="Cidade de Goiás - GO">Cidade de Goiás - GO</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">

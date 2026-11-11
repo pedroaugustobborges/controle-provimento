@@ -729,7 +729,9 @@ export default function VagaDetalhePage() {
   const [mentionIndex, setMentionIndex] = useState(0);
   const obsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const justificativaTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [justificativaMentionQuery, setJustificativaMentionQuery] = useState<string | null>(null);
+  const [justificativaMentionQuery, setJustificativaMentionQuery] = useState<
+    string | null
+  >(null);
   const [justificativaMentionIndex, setJustificativaMentionIndex] = useState(0);
   const [activeFluxoSlot, setActiveFluxoSlot] = useState(() => {
     const slot = parseInt(searchParams.get("slot") || "1", 10);
@@ -746,7 +748,9 @@ export default function VagaDetalhePage() {
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
   const [showEtapaRequiredAlert, setShowEtapaRequiredAlert] = useState(false);
   const [showAprovacaoSaveDialog, setShowAprovacaoSaveDialog] = useState(false);
-  const [aprovacaoErrors, setAprovacaoErrors] = useState<Set<string>>(new Set());
+  const [aprovacaoErrors, setAprovacaoErrors] = useState<Set<string>>(
+    new Set(),
+  );
   const [aprovacaoDraft, setAprovacaoDraft] = useState<{
     horario_entrada?: string;
     horario_saida?: string;
@@ -770,7 +774,9 @@ export default function VagaDetalhePage() {
   } | null>(null);
   const [justificativaText, setJustificativaText] = useState("");
   const [isSavingJustificativa, setIsSavingJustificativa] = useState(false);
-  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "dados");
+  const [activeTab, setActiveTab] = useState(
+    () => searchParams.get("tab") || "dados",
+  );
 
   const [indicators, setIndicators] = useState({
     total_inscritos: 0,
@@ -987,7 +993,8 @@ export default function VagaDetalhePage() {
   // Covers both: unsaved fluxo changes AND unsubmitted obs text
   const fluxoDirtyRef = useRef(false);
   useEffect(() => {
-    fluxoDirtyRef.current = fluxoDirty || aprovacaoDirty || newObsText.trim() !== "";
+    fluxoDirtyRef.current =
+      fluxoDirty || aprovacaoDirty || newObsText.trim() !== "";
   }, [fluxoDirty, aprovacaoDirty, newObsText]);
 
   useEffect(() => {
@@ -1668,26 +1675,50 @@ export default function VagaDetalhePage() {
 
   const handleAprovacaoSave = async (mode: "submit" | "draft" = "draft") => {
     if (mode === "submit") {
-      const eEntrada = "horario_entrada" in aprovacaoDraft ? aprovacaoDraft.horario_entrada : vaga.horario_entrada;
-      const eSaida   = "horario_saida"   in aprovacaoDraft ? aprovacaoDraft.horario_saida   : vaga.horario_saida;
-      const eTurno   = "turno"           in aprovacaoDraft ? aprovacaoDraft.turno            : vaga.turno;
-      const ePlantao = "plantao"         in aprovacaoDraft ? aprovacaoDraft.plantao          : vaga.plantao;
-      const eCarga   = "carga_horaria"   in aprovacaoDraft ? aprovacaoDraft.carga_horaria    : vaga.carga_horaria;
-      const eFaixa   = "faixa_salarial"  in aprovacaoDraft ? aprovacaoDraft.faixa_salarial   : vaga.faixa_salarial;
-      const eBanco   = "tipo_provimento_banco"   in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_banco   : vaga.tipo_provimento_banco;
-      const eInterno = "tipo_provimento_interno" in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_interno : vaga.tipo_provimento_interno;
-      const eOutra   = "tipo_provimento_outra"   in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_outra   : vaga.tipo_provimento_outra;
+      const eEntrada =
+        "horario_entrada" in aprovacaoDraft
+          ? aprovacaoDraft.horario_entrada
+          : vaga.horario_entrada;
+      const eSaida =
+        "horario_saida" in aprovacaoDraft
+          ? aprovacaoDraft.horario_saida
+          : vaga.horario_saida;
+      const eTurno =
+        "turno" in aprovacaoDraft ? aprovacaoDraft.turno : vaga.turno;
+      const ePlantao =
+        "plantao" in aprovacaoDraft ? aprovacaoDraft.plantao : vaga.plantao;
+      const eCarga =
+        "carga_horaria" in aprovacaoDraft
+          ? aprovacaoDraft.carga_horaria
+          : vaga.carga_horaria;
+      const eFaixa =
+        "faixa_salarial" in aprovacaoDraft
+          ? aprovacaoDraft.faixa_salarial
+          : vaga.faixa_salarial;
+      const eBanco =
+        "tipo_provimento_banco" in aprovacaoDraft
+          ? aprovacaoDraft.tipo_provimento_banco
+          : vaga.tipo_provimento_banco;
+      const eInterno =
+        "tipo_provimento_interno" in aprovacaoDraft
+          ? aprovacaoDraft.tipo_provimento_interno
+          : vaga.tipo_provimento_interno;
+      const eOutra =
+        "tipo_provimento_outra" in aprovacaoDraft
+          ? aprovacaoDraft.tipo_provimento_outra
+          : vaga.tipo_provimento_outra;
 
       const errs = new Set<string>();
       if (!eEntrada) errs.add("horario_entrada");
-      if (!eSaida)   errs.add("horario_saida");
-      if (!eTurno)   errs.add("turno");
+      if (!eSaida) errs.add("horario_saida");
+      if (!eTurno) errs.add("turno");
       if (!ePlantao) errs.add("plantao");
-      if (!eCarga)   errs.add("carga_horaria");
-      if (!eFaixa)   errs.add("faixa_salarial");
-      if (!eBanco)   errs.add("tipo_provimento_banco");
+      if (!eCarga) errs.add("carga_horaria");
+      if (!eFaixa) errs.add("faixa_salarial");
+      if (!eBanco) errs.add("tipo_provimento_banco");
       if (eBanco === "Não" && !eInterno) errs.add("tipo_provimento_interno");
-      if (eBanco === "Não" && eInterno === "Não" && !eOutra?.trim()) errs.add("tipo_provimento_outra");
+      if (eBanco === "Não" && eInterno === "Não" && !eOutra?.trim())
+        errs.add("tipo_provimento_outra");
 
       if (errs.size > 0) {
         setAprovacaoErrors(errs);
@@ -1742,7 +1773,8 @@ export default function VagaDetalhePage() {
         histParts.push(`Faixa salarial: ${aprovacaoDraft.faixa_salarial}`);
     }
     if ("tipo_provimento_banco" in aprovacaoDraft) {
-      updates.tipo_provimento_banco = aprovacaoDraft.tipo_provimento_banco || null;
+      updates.tipo_provimento_banco =
+        aprovacaoDraft.tipo_provimento_banco || null;
       // tipo_provimento_edital is no longer a separate question — always clear it
       updates.tipo_provimento_edital = null;
       if (aprovacaoDraft.tipo_provimento_banco === "Sim") {
@@ -1959,13 +1991,27 @@ export default function VagaDetalhePage() {
   return (
     <div
       className={`space-y-6${isDark ? " gdp-dark" : ""}`}
-      style={isDark ? { background: "linear-gradient(150deg, #07091d 0%, #0d1630 50%, #080c1e 100%)", minHeight: "100%", padding: "1px 0" } : undefined}
+      style={
+        isDark
+          ? {
+              background:
+                "linear-gradient(150deg, #07091d 0%, #0d1630 50%, #080c1e 100%)",
+              minHeight: "100%",
+              padding: "1px 0",
+            }
+          : undefined
+      }
     >
       <div
         className="flex flex-col md:flex-row md:items-center gap-4 justify-between p-4 rounded-xl border shadow-sm"
-        style={isDark
-          ? { background: "rgba(11,16,34,0.85)", borderColor: "rgba(255,255,255,0.09)" }
-          : { background: "#ffffff", borderColor: "#e2e8f0" }}
+        style={
+          isDark
+            ? {
+                background: "rgba(11,16,34,0.85)",
+                borderColor: "rgba(255,255,255,0.09)",
+              }
+            : { background: "#ffffff", borderColor: "#e2e8f0" }
+        }
       >
         <div className="flex items-center gap-3">
           <Button
@@ -2283,7 +2329,8 @@ export default function VagaDetalhePage() {
                     (vaga.cargo || "").toUpperCase().includes("PCD");
                   const isComum = vaga.tipo_vaga === "Comum";
 
-                  if (!isLideranca && !isTeia && !isPcd && !isComum) return null;
+                  if (!isLideranca && !isTeia && !isPcd && !isComum)
+                    return null;
 
                   return (
                     <div className="space-y-2">
@@ -2311,16 +2358,34 @@ export default function VagaDetalhePage() {
                         )}
                         {isTeia && (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 ring-1 ring-emerald-100">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="shrink-0"
+                            >
                               <defs>
-                                <linearGradient id="detalhe-infinity-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <linearGradient
+                                  id="detalhe-infinity-grad"
+                                  x1="0%"
+                                  y1="0%"
+                                  x2="100%"
+                                  y2="0%"
+                                >
                                   <stop offset="0%" stopColor="#a855f7" />
                                   <stop offset="25%" stopColor="#3b82f6" />
                                   <stop offset="55%" stopColor="#10b981" />
                                   <stop offset="100%" stopColor="#f59e0b" />
                                 </linearGradient>
                               </defs>
-                              <path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" stroke="url(#detalhe-infinity-grad)" />
+                              <path
+                                d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8"
+                                stroke="url(#detalhe-infinity-grad)"
+                              />
                             </svg>
                             TEIA
                           </span>
@@ -2501,9 +2566,9 @@ export default function VagaDetalhePage() {
                   const q3Enabled = effBanco === "Não" && effInterno === "Não";
 
                   const canEditAprovacao =
-                    currentUser?.perfil === 'Administrador' ||
-                    currentUser?.perfil === 'Admin' ||
-                    currentUser?.perfil === 'Gestor de Unidade';
+                    currentUser?.perfil === "Administrador" ||
+                    currentUser?.perfil === "Admin" ||
+                    currentUser?.perfil === "Gestor de Unidade";
 
                   return (
                     <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -2545,10 +2610,31 @@ export default function VagaDetalhePage() {
                           {/* Horário de Entrada */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("horario_entrada") ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-100")}>
-                                <Clock className={cn("h-3.5 w-3.5", aprovacaoErrors.has("horario_entrada") ? "text-rose-400" : "text-emerald-500")} />
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-full border flex items-center justify-center shrink-0",
+                                  aprovacaoErrors.has("horario_entrada")
+                                    ? "bg-rose-50 border-rose-200"
+                                    : "bg-emerald-50 border-emerald-100",
+                                )}
+                              >
+                                <Clock
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    aprovacaoErrors.has("horario_entrada")
+                                      ? "text-rose-400"
+                                      : "text-emerald-500",
+                                  )}
+                                />
                               </div>
-                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("horario_entrada") ? "text-rose-500" : "text-slate-400")}>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-wider",
+                                  aprovacaoErrors.has("horario_entrada")
+                                    ? "text-rose-500"
+                                    : "text-slate-400",
+                                )}
+                              >
                                 Horário de Entrada
                               </span>
                             </div>
@@ -2562,7 +2648,11 @@ export default function VagaDetalhePage() {
                                     e.target.value,
                                   )
                                 }
-                                className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("horario_entrada") && "border-rose-400 bg-rose-50 focus-visible:ring-rose-300")}
+                                className={cn(
+                                  "h-9 bg-white border-slate-200 text-sm font-semibold",
+                                  aprovacaoErrors.has("horario_entrada") &&
+                                    "border-rose-400 bg-rose-50 focus-visible:ring-rose-300",
+                                )}
                               />
                             ) : (
                               <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
@@ -2578,10 +2668,31 @@ export default function VagaDetalhePage() {
                           {/* Horário de Saída */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("horario_saida") ? "bg-rose-100 border-rose-300" : "bg-rose-50 border-rose-100")}>
-                                <Clock className={cn("h-3.5 w-3.5", aprovacaoErrors.has("horario_saida") ? "text-rose-500" : "text-rose-400")} />
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-full border flex items-center justify-center shrink-0",
+                                  aprovacaoErrors.has("horario_saida")
+                                    ? "bg-rose-100 border-rose-300"
+                                    : "bg-rose-50 border-rose-100",
+                                )}
+                              >
+                                <Clock
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    aprovacaoErrors.has("horario_saida")
+                                      ? "text-rose-500"
+                                      : "text-rose-400",
+                                  )}
+                                />
                               </div>
-                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("horario_saida") ? "text-rose-500" : "text-slate-400")}>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-wider",
+                                  aprovacaoErrors.has("horario_saida")
+                                    ? "text-rose-500"
+                                    : "text-slate-400",
+                                )}
+                              >
                                 Horário de Saída
                               </span>
                             </div>
@@ -2595,7 +2706,11 @@ export default function VagaDetalhePage() {
                                     e.target.value,
                                   )
                                 }
-                                className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("horario_saida") && "border-rose-400 bg-rose-50 focus-visible:ring-rose-300")}
+                                className={cn(
+                                  "h-9 bg-white border-slate-200 text-sm font-semibold",
+                                  aprovacaoErrors.has("horario_saida") &&
+                                    "border-rose-400 bg-rose-50 focus-visible:ring-rose-300",
+                                )}
                               />
                             ) : (
                               <p className="text-sm font-semibold text-slate-700 min-h-[36px] flex items-center">
@@ -2611,10 +2726,31 @@ export default function VagaDetalhePage() {
                           {/* Turno */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("turno") ? "bg-rose-50 border-rose-200" : "bg-amber-50 border-amber-100")}>
-                                <SunMoon className={cn("h-3.5 w-3.5", aprovacaoErrors.has("turno") ? "text-rose-400" : "text-amber-500")} />
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-full border flex items-center justify-center shrink-0",
+                                  aprovacaoErrors.has("turno")
+                                    ? "bg-rose-50 border-rose-200"
+                                    : "bg-amber-50 border-amber-100",
+                                )}
+                              >
+                                <SunMoon
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    aprovacaoErrors.has("turno")
+                                      ? "text-rose-400"
+                                      : "text-amber-500",
+                                  )}
+                                />
                               </div>
-                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("turno") ? "text-rose-500" : "text-slate-400")}>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-wider",
+                                  aprovacaoErrors.has("turno")
+                                    ? "text-rose-500"
+                                    : "text-slate-400",
+                                )}
+                              >
                                 Turno
                               </span>
                             </div>
@@ -2628,7 +2764,13 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("turno") && "border-rose-400 bg-rose-50")}>
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-9 bg-white border-slate-200 text-sm font-semibold",
+                                    aprovacaoErrors.has("turno") &&
+                                      "border-rose-400 bg-rose-50",
+                                  )}
+                                >
                                   <SelectValue placeholder="Selecionar turno..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2664,10 +2806,31 @@ export default function VagaDetalhePage() {
                           {/* Plantão */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("plantao") ? "bg-rose-50 border-rose-200" : "bg-blue-50 border-blue-100")}>
-                                <Calendar className={cn("h-3.5 w-3.5", aprovacaoErrors.has("plantao") ? "text-rose-400" : "text-blue-500")} />
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-full border flex items-center justify-center shrink-0",
+                                  aprovacaoErrors.has("plantao")
+                                    ? "bg-rose-50 border-rose-200"
+                                    : "bg-blue-50 border-blue-100",
+                                )}
+                              >
+                                <Calendar
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    aprovacaoErrors.has("plantao")
+                                      ? "text-rose-400"
+                                      : "text-blue-500",
+                                  )}
+                                />
                               </div>
-                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("plantao") ? "text-rose-500" : "text-slate-400")}>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-wider",
+                                  aprovacaoErrors.has("plantao")
+                                    ? "text-rose-500"
+                                    : "text-slate-400",
+                                )}
+                              >
                                 Plantão
                               </span>
                             </div>
@@ -2681,7 +2844,13 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("plantao") && "border-rose-400 bg-rose-50")}>
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-9 bg-white border-slate-200 text-sm font-semibold",
+                                    aprovacaoErrors.has("plantao") &&
+                                      "border-rose-400 bg-rose-50",
+                                  )}
+                                >
                                   <SelectValue placeholder="Selecionar plantão..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2714,10 +2883,31 @@ export default function VagaDetalhePage() {
                           {/* Carga Horária */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("carga_horaria") ? "bg-rose-50 border-rose-200" : "bg-violet-50 border-violet-100")}>
-                                <Timer className={cn("h-3.5 w-3.5", aprovacaoErrors.has("carga_horaria") ? "text-rose-400" : "text-violet-500")} />
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-full border flex items-center justify-center shrink-0",
+                                  aprovacaoErrors.has("carga_horaria")
+                                    ? "bg-rose-50 border-rose-200"
+                                    : "bg-violet-50 border-violet-100",
+                                )}
+                              >
+                                <Timer
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    aprovacaoErrors.has("carga_horaria")
+                                      ? "text-rose-400"
+                                      : "text-violet-500",
+                                  )}
+                                />
                               </div>
-                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("carga_horaria") ? "text-rose-500" : "text-slate-400")}>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-wider",
+                                  aprovacaoErrors.has("carga_horaria")
+                                    ? "text-rose-500"
+                                    : "text-slate-400",
+                                )}
+                              >
                                 Carga Horária
                               </span>
                             </div>
@@ -2731,7 +2921,13 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("carga_horaria") && "border-rose-400 bg-rose-50")}>
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-9 bg-white border-slate-200 text-sm font-semibold",
+                                    aprovacaoErrors.has("carga_horaria") &&
+                                      "border-rose-400 bg-rose-50",
+                                  )}
+                                >
                                   <SelectValue placeholder="Selecionar carga horária..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2740,7 +2936,15 @@ export default function VagaDetalhePage() {
                                       Selecionar carga horária...
                                     </span>
                                   </SelectItem>
-                                  {["100H", "120H", "150H", "180H", "200H", "220H", "240H"].map((h) => (
+                                  {[
+                                    "100H",
+                                    "120H",
+                                    "150H",
+                                    "180H",
+                                    "200H",
+                                    "220H",
+                                    "240H",
+                                  ].map((h) => (
                                     <SelectItem key={h} value={h}>
                                       {h}
                                     </SelectItem>
@@ -2761,10 +2965,31 @@ export default function VagaDetalhePage() {
                           {/* Faixa Salarial */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-7 h-7 rounded-full border flex items-center justify-center shrink-0", aprovacaoErrors.has("faixa_salarial") ? "bg-rose-50 border-rose-200" : "bg-teal-50 border-teal-100")}>
-                                <Banknote className={cn("h-3.5 w-3.5", aprovacaoErrors.has("faixa_salarial") ? "text-rose-400" : "text-teal-500")} />
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-full border flex items-center justify-center shrink-0",
+                                  aprovacaoErrors.has("faixa_salarial")
+                                    ? "bg-rose-50 border-rose-200"
+                                    : "bg-teal-50 border-teal-100",
+                                )}
+                              >
+                                <Banknote
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    aprovacaoErrors.has("faixa_salarial")
+                                      ? "text-rose-400"
+                                      : "text-teal-500",
+                                  )}
+                                />
                               </div>
-                              <span className={cn("text-[10px] font-black uppercase tracking-wider", aprovacaoErrors.has("faixa_salarial") ? "text-rose-500" : "text-slate-400")}>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-wider",
+                                  aprovacaoErrors.has("faixa_salarial")
+                                    ? "text-rose-500"
+                                    : "text-slate-400",
+                                )}
+                              >
                                 Faixa Salarial
                               </span>
                             </div>
@@ -2778,7 +3003,13 @@ export default function VagaDetalhePage() {
                                   )
                                 }
                               >
-                                <SelectTrigger className={cn("h-9 bg-white border-slate-200 text-sm font-semibold", aprovacaoErrors.has("faixa_salarial") && "border-rose-400 bg-rose-50")}>
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-9 bg-white border-slate-200 text-sm font-semibold",
+                                    aprovacaoErrors.has("faixa_salarial") &&
+                                      "border-rose-400 bg-rose-50",
+                                  )}
+                                >
                                   <SelectValue placeholder="Selecionar faixa salarial..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2787,7 +3018,13 @@ export default function VagaDetalhePage() {
                                       Selecionar faixa salarial...
                                     </span>
                                   </SelectItem>
-                                  {["Faixa A", "Faixa B", "Faixa C", "Faixa D", "Faixa E"].map((f) => (
+                                  {[
+                                    "Faixa A",
+                                    "Faixa B",
+                                    "Faixa C",
+                                    "Faixa D",
+                                    "Faixa E",
+                                  ].map((f) => (
                                     <SelectItem key={f} value={f}>
                                       {f}
                                     </SelectItem>
@@ -2819,13 +3056,29 @@ export default function VagaDetalhePage() {
 
                           <div className="space-y-2.5">
                             {/* Q1 */}
-                            <div className={cn("flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-colors", aprovacaoErrors.has("tipo_provimento_banco") ? "bg-rose-50/40 border-rose-400" : "bg-white border-slate-200")}>
+                            <div
+                              className={cn(
+                                "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-colors",
+                                aprovacaoErrors.has("tipo_provimento_banco")
+                                  ? "bg-rose-50/40 border-rose-400"
+                                  : "bg-white border-slate-200",
+                              )}
+                            >
                               <div className="flex items-center gap-3 min-w-0">
-                                <span className={cn("shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center", aprovacaoErrors.has("tipo_provimento_banco") ? "bg-rose-100 text-rose-600" : "bg-indigo-100 text-indigo-600")}>
+                                <span
+                                  className={cn(
+                                    "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
+                                    aprovacaoErrors.has("tipo_provimento_banco")
+                                      ? "bg-rose-100 text-rose-600"
+                                      : "bg-indigo-100 text-indigo-600",
+                                  )}
+                                >
                                   1
                                 </span>
                                 <span className="text-xs font-semibold text-slate-700">
-                                  Gostaria que fizéssemos o aproveitamento de candidato(a)s do banco de talentos ou uma publicação de novo edital?
+                                  Gostaria que fizéssemos o aproveitamento de
+                                  candidato(a)s do banco de talentos ou uma
+                                  publicação de novo edital?
                                 </span>
                               </div>
                               <div className="flex shrink-0 rounded-lg overflow-hidden border border-slate-200">
@@ -2874,7 +3127,9 @@ export default function VagaDetalhePage() {
                               className={cn(
                                 "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-all",
                                 q2Enabled
-                                  ? aprovacaoErrors.has("tipo_provimento_interno")
+                                  ? aprovacaoErrors.has(
+                                      "tipo_provimento_interno",
+                                    )
                                     ? "bg-rose-50/40 border-rose-400"
                                     : "bg-white border-slate-200"
                                   : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
@@ -2885,7 +3140,9 @@ export default function VagaDetalhePage() {
                                   className={cn(
                                     "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
                                     q2Enabled
-                                      ? aprovacaoErrors.has("tipo_provimento_interno")
+                                      ? aprovacaoErrors.has(
+                                          "tipo_provimento_interno",
+                                        )
                                         ? "bg-rose-100 text-rose-600"
                                         : "bg-indigo-100 text-indigo-600"
                                       : "bg-slate-200 text-slate-400",
@@ -2901,7 +3158,8 @@ export default function VagaDetalhePage() {
                                       : "text-slate-400",
                                   )}
                                 >
-                                  Deseja processo seletivo interno?
+                                  Gostaria que fizéssemos um processo seletivo
+                                  interno?
                                 </span>
                               </div>
                               <div
@@ -2932,9 +3190,7 @@ export default function VagaDetalhePage() {
                                 <div
                                   className={cn(
                                     "w-px",
-                                    q2Enabled
-                                      ? "bg-slate-200"
-                                      : "bg-slate-100",
+                                    q2Enabled ? "bg-slate-200" : "bg-slate-100",
                                   )}
                                 />
                                 <button
@@ -2973,7 +3229,9 @@ export default function VagaDetalhePage() {
                                   className={cn(
                                     "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
                                     q3Enabled
-                                      ? aprovacaoErrors.has("tipo_provimento_outra")
+                                      ? aprovacaoErrors.has(
+                                          "tipo_provimento_outra",
+                                        )
                                         ? "bg-rose-100 text-rose-600"
                                         : "bg-indigo-100 text-indigo-600"
                                       : "bg-slate-200 text-slate-400",
@@ -2989,7 +3247,7 @@ export default function VagaDetalhePage() {
                                       : "text-slate-400",
                                   )}
                                 >
-                                  Outra tratativa?
+                                  Gostaria que fizéssemos outra tratativa? Qual?
                                 </span>
                               </div>
                               <div className="px-4 pb-3 pl-12">
@@ -3003,7 +3261,13 @@ export default function VagaDetalhePage() {
                                       )
                                     }
                                     placeholder="Descreva a tratativa..."
-                                    className={cn("min-h-[72px] resize-none bg-white border-slate-200 text-sm", aprovacaoErrors.has("tipo_provimento_outra") && "border-rose-400 bg-rose-50 focus-visible:ring-rose-300")}
+                                    className={cn(
+                                      "min-h-[72px] resize-none bg-white border-slate-200 text-sm",
+                                      aprovacaoErrors.has(
+                                        "tipo_provimento_outra",
+                                      ) &&
+                                        "border-rose-400 bg-rose-50 focus-visible:ring-rose-300",
+                                    )}
                                   />
                                 ) : (
                                   <p
@@ -3869,20 +4133,34 @@ export default function VagaDetalhePage() {
                           value={justificativaText}
                           onChange={handleJustificativaTextChange}
                           onKeyDown={(e) => {
-                            if (justificativaMentionQuery !== null && justificativaMentionUsers.length > 0) {
+                            if (
+                              justificativaMentionQuery !== null &&
+                              justificativaMentionUsers.length > 0
+                            ) {
                               if (e.key === "ArrowDown") {
                                 e.preventDefault();
-                                setJustificativaMentionIndex((i) => Math.min(i + 1, justificativaMentionUsers.length - 1));
+                                setJustificativaMentionIndex((i) =>
+                                  Math.min(
+                                    i + 1,
+                                    justificativaMentionUsers.length - 1,
+                                  ),
+                                );
                                 return;
                               }
                               if (e.key === "ArrowUp") {
                                 e.preventDefault();
-                                setJustificativaMentionIndex((i) => Math.max(i - 1, 0));
+                                setJustificativaMentionIndex((i) =>
+                                  Math.max(i - 1, 0),
+                                );
                                 return;
                               }
                               if (e.key === "Enter" || e.key === "Tab") {
                                 e.preventDefault();
-                                handleJustificativaSelectMention(justificativaMentionUsers[justificativaMentionIndex]);
+                                handleJustificativaSelectMention(
+                                  justificativaMentionUsers[
+                                    justificativaMentionIndex
+                                  ],
+                                );
                                 return;
                               }
                               if (e.key === "Escape") {
@@ -4392,7 +4670,6 @@ function ValidacaoTab({ vagaId }: { vagaId: string; validacao?: any }) {
   );
 }
 
-
 type PSGroup = {
   key: string;
   psNumero: string;
@@ -4424,17 +4701,28 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
   const [convocacaoInitial, setConvocacaoInitial] = useState<any>(null);
 
   // Action dialog state
-  const [actionDialog, setActionDialog] = useState<BancoActionDialog | null>(null);
+  const [actionDialog, setActionDialog] = useState<BancoActionDialog | null>(
+    null,
+  );
 
   // Persistent link/unlink states — backed by Supabase vaga_banco_links table
   const { linksMap, upsertLink } = useVagaBancoLinks();
-  const vagaLinks = linksMap.get(vaga.id) ?? { confirmed: new Set<string>(), desvinculado: new Set<string>() };
+  const vagaLinks = linksMap.get(vaga.id) ?? {
+    confirmed: new Set<string>(),
+    desvinculado: new Set<string>(),
+  };
   const confirmedPS: Set<string> = vagaLinks.confirmed;
   const desvinculadoPS: Set<string> = vagaLinks.desvinculado;
 
   // Unidade filter
-  const bancoFilter = useMemo(() => getBancoFilterForVaga(vaga), [vaga.unidade, vaga.is_teia]);
-  const filteredBancos = useMemo(() => bancos.filter(bancoFilter), [bancos, bancoFilter]);
+  const bancoFilter = useMemo(
+    () => getBancoFilterForVaga(vaga),
+    [vaga.unidade, vaga.is_teia],
+  );
+  const filteredBancos = useMemo(
+    () => bancos.filter(bancoFilter),
+    [bancos, bancoFilter],
+  );
 
   // Group by processo seletivo
   const groups = useMemo<PSGroup[]>(() => {
@@ -4450,7 +4738,11 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
       if (!map.has(psKey)) {
         map.set(psKey, {
           key: psKey,
-          psNumero: bAny.numero_processo_seletivo || bAny.numero_processo || bAny.numero_edital || "—",
+          psNumero:
+            bAny.numero_processo_seletivo ||
+            bAny.numero_processo ||
+            bAny.numero_edital ||
+            "—",
           cargo: bAny.cargo || "—",
           bancoRep: b,
           candidates: [],
@@ -4479,7 +4771,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
         (g) =>
           !s ||
           g.psNumero.toLowerCase().includes(s) ||
-          g.cargo.toLowerCase().includes(s)
+          g.cargo.toLowerCase().includes(s),
       )
       .sort((a, b) => {
         const aConf = confirmedPS.has(a.key) ? 1 : 0;
@@ -4487,7 +4779,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
         if (bConf !== aConf) return bConf - aConf;
         return b.score - a.score;
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groups, linksMap, search]);
 
   const openModal = (g: PSGroup) => {
@@ -4498,9 +4790,11 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
 
   const handleConfirmar = async (psKey: string) => {
     try {
-      await upsertLink(vaga.id, psKey, 'confirmed');
+      await upsertLink(vaga.id, psKey, "confirmed");
       setActionDialog(null);
-      toast.success("Processo seletivo confirmado como compatível com esta vaga.");
+      toast.success(
+        "Processo seletivo confirmado como compatível com esta vaga.",
+      );
     } catch {
       toast.error("Erro ao salvar vínculo. Tente novamente.");
     }
@@ -4508,7 +4802,7 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
 
   const handleDesvincular = async (psKey: string) => {
     try {
-      await upsertLink(vaga.id, psKey, 'desvinculado');
+      await upsertLink(vaga.id, psKey, "desvinculado");
       setActionDialog(null);
       toast.success("Processo seletivo removido da lista.");
     } catch {
@@ -4558,7 +4852,8 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
                 <span className="font-bold">"{vaga.cargo}"</span>.
               </p>
               <p className="text-xs text-amber-600 mt-1">
-                Não foi encontrada correspondência automática com os cargos do banco de talentos.
+                Não foi encontrada correspondência automática com os cargos do
+                banco de talentos.
               </p>
             </div>
           </CardContent>
@@ -4569,7 +4864,9 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
             <p className="text-slate-500 font-medium">
               Nenhum resultado{search.trim() ? ` para "${search}"` : ""}.
             </p>
-            <p className="text-xs text-slate-400 mt-1">Tente outros termos de busca.</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Tente outros termos de busca.
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -4593,14 +4890,14 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
                   "group relative flex items-center gap-3 px-4 py-3.5 rounded-xl border bg-white shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer select-none",
                   isConfirmed
                     ? "border-l-[3px] border-l-emerald-500 border-slate-200 bg-emerald-50/40"
-                    : "border-slate-200 hover:border-primary/30 hover:bg-slate-50/60"
+                    : "border-slate-200 hover:border-primary/30 hover:bg-slate-50/60",
                 )}
               >
                 {/* Similarity badge */}
                 <span
                   className={cn(
                     "shrink-0 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-black border tabular-nums w-12",
-                    scoreStyle
+                    scoreStyle,
                   )}
                 >
                   {scoreLabel}
@@ -4641,7 +4938,9 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
                 {/* View hint */}
                 <div className="shrink-0 flex items-center gap-1 text-slate-300 group-hover:text-primary/60 transition-colors">
                   <ExternalLink className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline text-xs font-medium">Ver</span>
+                  <span className="hidden lg:inline text-xs font-medium">
+                    Ver
+                  </span>
                 </div>
 
                 {/* Action column — stop propagation so clicks don't open modal */}
@@ -4652,7 +4951,9 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
                   {isConfirmed ? (
                     <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      <span className="text-xs font-bold hidden sm:inline">Compatível</span>
+                      <span className="text-xs font-bold hidden sm:inline">
+                        Compatível
+                      </span>
                     </div>
                   ) : (
                     <>
@@ -4699,7 +5000,9 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
       {/* ── Action confirmation dialog ───────────────────────── */}
       <AlertDialog
         open={!!actionDialog}
-        onOpenChange={(open) => { if (!open) setActionDialog(null); }}
+        onOpenChange={(open) => {
+          if (!open) setActionDialog(null);
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -4722,7 +5025,9 @@ function AproveitamentoBancoTab({ vaga }: { vaga: any }) {
                 ) : (
                   <p>
                     Você confirma que os candidatos do processo seletivo{" "}
-                    <strong className="text-slate-800">{actionDialog?.psNumero}</strong>{" "}
+                    <strong className="text-slate-800">
+                      {actionDialog?.psNumero}
+                    </strong>{" "}
                     não são compatíveis com a vaga{" "}
                     <strong className="text-slate-800">{vaga.cargo}</strong>?
                   </p>

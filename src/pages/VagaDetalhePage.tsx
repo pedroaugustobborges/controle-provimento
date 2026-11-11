@@ -1649,11 +1649,6 @@ export default function VagaDetalhePage() {
     setAprovacaoDraft((prev) => {
       const next = { ...prev, [field]: value || undefined };
       if (field === "tipo_provimento_banco" && value === "Sim") {
-        delete next.tipo_provimento_edital;
-        delete next.tipo_provimento_interno;
-        delete next.tipo_provimento_outra;
-      }
-      if (field === "tipo_provimento_edital" && value === "Sim") {
         delete next.tipo_provimento_interno;
         delete next.tipo_provimento_outra;
       }
@@ -1680,7 +1675,6 @@ export default function VagaDetalhePage() {
       const eCarga   = "carga_horaria"   in aprovacaoDraft ? aprovacaoDraft.carga_horaria    : vaga.carga_horaria;
       const eFaixa   = "faixa_salarial"  in aprovacaoDraft ? aprovacaoDraft.faixa_salarial   : vaga.faixa_salarial;
       const eBanco   = "tipo_provimento_banco"   in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_banco   : vaga.tipo_provimento_banco;
-      const eEdital  = "tipo_provimento_edital"  in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_edital  : vaga.tipo_provimento_edital;
       const eInterno = "tipo_provimento_interno" in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_interno : vaga.tipo_provimento_interno;
       const eOutra   = "tipo_provimento_outra"   in aprovacaoDraft ? aprovacaoDraft.tipo_provimento_outra   : vaga.tipo_provimento_outra;
 
@@ -1692,9 +1686,8 @@ export default function VagaDetalhePage() {
       if (!eCarga)   errs.add("carga_horaria");
       if (!eFaixa)   errs.add("faixa_salarial");
       if (!eBanco)   errs.add("tipo_provimento_banco");
-      if (eBanco === "Não" && !eEdital)  errs.add("tipo_provimento_edital");
-      if (eBanco === "Não" && eEdital === "Não" && !eInterno) errs.add("tipo_provimento_interno");
-      if (eBanco === "Não" && eEdital === "Não" && eInterno === "Não" && !eOutra?.trim()) errs.add("tipo_provimento_outra");
+      if (eBanco === "Não" && !eInterno) errs.add("tipo_provimento_interno");
+      if (eBanco === "Não" && eInterno === "Não" && !eOutra?.trim()) errs.add("tipo_provimento_outra");
 
       if (errs.size > 0) {
         setAprovacaoErrors(errs);
@@ -1713,10 +1706,6 @@ export default function VagaDetalhePage() {
       "tipo_provimento_banco" in aprovacaoDraft
         ? aprovacaoDraft.tipo_provimento_banco
         : vaga.tipo_provimento_banco;
-    const effEditalFinal =
-      "tipo_provimento_edital" in aprovacaoDraft
-        ? aprovacaoDraft.tipo_provimento_edital
-        : vaga.tipo_provimento_edital;
     const effInternoFinal =
       "tipo_provimento_interno" in aprovacaoDraft
         ? aprovacaoDraft.tipo_provimento_interno
@@ -1753,29 +1742,17 @@ export default function VagaDetalhePage() {
         histParts.push(`Faixa salarial: ${aprovacaoDraft.faixa_salarial}`);
     }
     if ("tipo_provimento_banco" in aprovacaoDraft) {
-      updates.tipo_provimento_banco =
-        aprovacaoDraft.tipo_provimento_banco || null;
+      updates.tipo_provimento_banco = aprovacaoDraft.tipo_provimento_banco || null;
+      // tipo_provimento_edital is no longer a separate question — always clear it
+      updates.tipo_provimento_edital = null;
       if (aprovacaoDraft.tipo_provimento_banco === "Sim") {
-        updates.tipo_provimento_edital = null;
-        updates.tipo_provimento_interno = null;
-        updates.tipo_provimento_outra = null;
-      }
-    }
-    if (
-      "tipo_provimento_edital" in aprovacaoDraft &&
-      effBancoFinal !== "Sim"
-    ) {
-      updates.tipo_provimento_edital =
-        aprovacaoDraft.tipo_provimento_edital || null;
-      if (aprovacaoDraft.tipo_provimento_edital === "Sim") {
         updates.tipo_provimento_interno = null;
         updates.tipo_provimento_outra = null;
       }
     }
     if (
       "tipo_provimento_interno" in aprovacaoDraft &&
-      effBancoFinal !== "Sim" &&
-      effEditalFinal !== "Sim"
+      effBancoFinal !== "Sim"
     ) {
       updates.tipo_provimento_interno =
         aprovacaoDraft.tipo_provimento_interno || null;
@@ -1786,7 +1763,6 @@ export default function VagaDetalhePage() {
     if (
       "tipo_provimento_outra" in aprovacaoDraft &&
       effBancoFinal !== "Sim" &&
-      effEditalFinal !== "Sim" &&
       effInternoFinal !== "Sim"
     ) {
       updates.tipo_provimento_outra =
@@ -2510,10 +2486,6 @@ export default function VagaDetalhePage() {
                     "tipo_provimento_banco" in aprovacaoDraft
                       ? aprovacaoDraft.tipo_provimento_banco
                       : vaga.tipo_provimento_banco;
-                  const effEdital =
-                    "tipo_provimento_edital" in aprovacaoDraft
-                      ? aprovacaoDraft.tipo_provimento_edital
-                      : vaga.tipo_provimento_edital;
                   const effInterno =
                     "tipo_provimento_interno" in aprovacaoDraft
                       ? aprovacaoDraft.tipo_provimento_interno
@@ -2523,13 +2495,10 @@ export default function VagaDetalhePage() {
                       ? aprovacaoDraft.tipo_provimento_outra
                       : vaga.tipo_provimento_outra;
 
+                  // Q2 = Remanejamento Interno (enabled when merged Q1 = "Não")
                   const q2Enabled = effBanco === "Não";
-                  const q3Enabled =
-                    effBanco === "Não" && effEdital === "Não";
-                  const q4Enabled =
-                    effBanco === "Não" &&
-                    effEdital === "Não" &&
-                    effInterno === "Não";
+                  // Q3 = Outra (enabled when Q1 = "Não" AND Q2 = "Não")
+                  const q3Enabled = effBanco === "Não" && effInterno === "Não";
 
                   const canEditAprovacao =
                     currentUser?.perfil === 'Administrador' ||
@@ -2856,8 +2825,7 @@ export default function VagaDetalhePage() {
                                   1
                                 </span>
                                 <span className="text-xs font-semibold text-slate-700">
-                                  Caso exista candidato(a)s banco de talentos,
-                                  podemos convocar?
+                                  Gostaria que fizéssemos o aproveitamento de candidato(a)s do banco de talentos ou uma publicação de novo edital?
                                 </span>
                               </div>
                               <div className="flex shrink-0 rounded-lg overflow-hidden border border-slate-200">
@@ -2901,12 +2869,12 @@ export default function VagaDetalhePage() {
                               </div>
                             </div>
 
-                            {/* Q2 */}
+                            {/* Q2 — Remanejamento Interno */}
                             <div
                               className={cn(
                                 "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-all",
                                 q2Enabled
-                                  ? aprovacaoErrors.has("tipo_provimento_edital")
+                                  ? aprovacaoErrors.has("tipo_provimento_interno")
                                     ? "bg-rose-50/40 border-rose-400"
                                     : "bg-white border-slate-200"
                                   : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
@@ -2917,7 +2885,7 @@ export default function VagaDetalhePage() {
                                   className={cn(
                                     "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
                                     q2Enabled
-                                      ? aprovacaoErrors.has("tipo_provimento_edital")
+                                      ? aprovacaoErrors.has("tipo_provimento_interno")
                                         ? "bg-rose-100 text-rose-600"
                                         : "bg-indigo-100 text-indigo-600"
                                       : "bg-slate-200 text-slate-400",
@@ -2933,7 +2901,7 @@ export default function VagaDetalhePage() {
                                       : "text-slate-400",
                                   )}
                                 >
-                                  Podemos publicar um novo edital?
+                                  Deseja processo seletivo interno?
                                 </span>
                               </div>
                               <div
@@ -2948,13 +2916,13 @@ export default function VagaDetalhePage() {
                                   disabled={!q2Enabled || !canEditAprovacao}
                                   onClick={() =>
                                     handleAprovacaoDraftChange(
-                                      "tipo_provimento_edital",
+                                      "tipo_provimento_interno",
                                       "Sim",
                                     )
                                   }
                                   className={cn(
                                     "px-4 py-1.5 text-xs font-bold transition-all",
-                                    effEdital === "Sim" && q2Enabled
+                                    effInterno === "Sim" && q2Enabled
                                       ? "bg-emerald-500 text-white"
                                       : "bg-white text-slate-400",
                                   )}
@@ -2973,13 +2941,13 @@ export default function VagaDetalhePage() {
                                   disabled={!q2Enabled || !canEditAprovacao}
                                   onClick={() =>
                                     handleAprovacaoDraftChange(
-                                      "tipo_provimento_edital",
+                                      "tipo_provimento_interno",
                                       "Não",
                                     )
                                   }
                                   className={cn(
                                     "px-4 py-1.5 text-xs font-bold transition-all",
-                                    effEdital === "Não" && q2Enabled
+                                    effInterno === "Não" && q2Enabled
                                       ? "bg-rose-500 text-white"
                                       : "bg-white text-slate-400",
                                   )}
@@ -2989,23 +2957,23 @@ export default function VagaDetalhePage() {
                               </div>
                             </div>
 
-                            {/* Q3 */}
+                            {/* Q3 — open text */}
                             <div
                               className={cn(
-                                "flex items-center justify-between gap-4 rounded-lg px-4 py-3 border transition-all",
+                                "rounded-lg border transition-all",
                                 q3Enabled
-                                  ? aprovacaoErrors.has("tipo_provimento_interno")
+                                  ? aprovacaoErrors.has("tipo_provimento_outra")
                                     ? "bg-rose-50/40 border-rose-400"
                                     : "bg-white border-slate-200"
                                   : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
                               )}
                             >
-                              <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex items-center gap-3 px-4 pt-3 pb-2">
                                 <span
                                   className={cn(
                                     "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
                                     q3Enabled
-                                      ? aprovacaoErrors.has("tipo_provimento_interno")
+                                      ? aprovacaoErrors.has("tipo_provimento_outra")
                                         ? "bg-rose-100 text-rose-600"
                                         : "bg-indigo-100 text-indigo-600"
                                       : "bg-slate-200 text-slate-400",
@@ -3021,99 +2989,11 @@ export default function VagaDetalhePage() {
                                       : "text-slate-400",
                                   )}
                                 >
-                                  Deseja processo seletivo interno?
-                                </span>
-                              </div>
-                              <div
-                                className={cn(
-                                  "flex shrink-0 rounded-lg overflow-hidden border",
-                                  q3Enabled
-                                    ? "border-slate-200"
-                                    : "border-slate-100",
-                                )}
-                              >
-                                <button
-                                  disabled={!q3Enabled || !canEditAprovacao}
-                                  onClick={() =>
-                                    handleAprovacaoDraftChange(
-                                      "tipo_provimento_interno",
-                                      "Sim",
-                                    )
-                                  }
-                                  className={cn(
-                                    "px-4 py-1.5 text-xs font-bold transition-all",
-                                    effInterno === "Sim" && q3Enabled
-                                      ? "bg-emerald-500 text-white"
-                                      : "bg-white text-slate-400",
-                                  )}
-                                >
-                                  Sim
-                                </button>
-                                <div
-                                  className={cn(
-                                    "w-px",
-                                    q3Enabled
-                                      ? "bg-slate-200"
-                                      : "bg-slate-100",
-                                  )}
-                                />
-                                <button
-                                  disabled={!q3Enabled || !canEditAprovacao}
-                                  onClick={() =>
-                                    handleAprovacaoDraftChange(
-                                      "tipo_provimento_interno",
-                                      "Não",
-                                    )
-                                  }
-                                  className={cn(
-                                    "px-4 py-1.5 text-xs font-bold transition-all",
-                                    effInterno === "Não" && q3Enabled
-                                      ? "bg-rose-500 text-white"
-                                      : "bg-white text-slate-400",
-                                  )}
-                                >
-                                  Não
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Q4 — open text */}
-                            <div
-                              className={cn(
-                                "rounded-lg border transition-all",
-                                q4Enabled
-                                  ? aprovacaoErrors.has("tipo_provimento_outra")
-                                    ? "bg-rose-50/40 border-rose-400"
-                                    : "bg-white border-slate-200"
-                                  : "bg-slate-50 border-slate-100 opacity-50 pointer-events-none",
-                              )}
-                            >
-                              <div className="flex items-center gap-3 px-4 pt-3 pb-2">
-                                <span
-                                  className={cn(
-                                    "shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
-                                    q4Enabled
-                                      ? aprovacaoErrors.has("tipo_provimento_outra")
-                                        ? "bg-rose-100 text-rose-600"
-                                        : "bg-indigo-100 text-indigo-600"
-                                      : "bg-slate-200 text-slate-400",
-                                  )}
-                                >
-                                  4
-                                </span>
-                                <span
-                                  className={cn(
-                                    "text-xs font-semibold",
-                                    q4Enabled
-                                      ? "text-slate-700"
-                                      : "text-slate-400",
-                                  )}
-                                >
                                   Outra tratativa?
                                 </span>
                               </div>
                               <div className="px-4 pb-3 pl-12">
-                                {canEditAprovacao && q4Enabled ? (
+                                {canEditAprovacao && q3Enabled ? (
                                   <Textarea
                                     value={effOutra || ""}
                                     onChange={(e) =>
@@ -3129,12 +3009,12 @@ export default function VagaDetalhePage() {
                                   <p
                                     className={cn(
                                       "text-sm min-h-[36px] flex items-center",
-                                      effOutra && q4Enabled
+                                      effOutra && q3Enabled
                                         ? "font-semibold text-slate-700"
                                         : "text-slate-400 italic",
                                     )}
                                   >
-                                    {effOutra && q4Enabled
+                                    {effOutra && q3Enabled
                                       ? effOutra
                                       : "Não definida"}
                                   </p>

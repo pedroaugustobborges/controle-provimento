@@ -801,6 +801,7 @@ export default function VagasPage() {
         filterTeia: filterTeia !== 'off' ? filterTeia : undefined,
         filterPcd: filterPcd !== 'off' ? filterPcd : undefined,
         filterComum: filterComum !== 'off' ? filterComum : undefined,
+        filterLideranca: filterLideranca !== 'off' ? filterLideranca : undefined,
         filterVagasNovas: filterVagasNovas || undefined,
         allowedUnidades,
         regionUnidades,
@@ -823,6 +824,7 @@ export default function VagasPage() {
       filterTeia,
       filterPcd,
       filterComum,
+      filterLideranca,
       filterVagasNovas,
     ]
   );
@@ -1098,6 +1100,10 @@ export default function VagasPage() {
     if (filterComum === "include")  baseRecords = baseRecords.filter(isComum);
     else if (filterComum === "exclude") baseRecords = baseRecords.filter((v) => !isComum(v));
 
+    const isLideranca = (v: Vaga) => getVagaFluxoItems(v).some((item) => item.tratativa === "Vaga de Liderança");
+    if (filterLideranca === "include") baseRecords = baseRecords.filter(isLideranca);
+    else if (filterLideranca === "exclude") baseRecords = baseRecords.filter((v) => !isLideranca(v));
+
     // 3. Filtragem interna da tela — aplica filtro de cargo (sem unit/month)
     let result = getValidVacancyBase(baseRecords, 'all', 'all');
 
@@ -1126,6 +1132,7 @@ export default function VagasPage() {
     filterTeia,
     filterPcd,
     filterComum,
+    filterLideranca,
     currentUser?.visualiza_todas_unidades,
     currentUser?.unidades_vinculadas,
     currentUser?.perfil,

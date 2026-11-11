@@ -161,6 +161,7 @@ export interface VagaQueryParams {
   filterTeia?: 'off' | 'include' | 'exclude';
   filterPcd?: 'off' | 'include' | 'exclude';
   filterComum?: 'off' | 'include' | 'exclude';
+  filterLideranca?: 'off' | 'include' | 'exclude';
   filterVagasNovas?: boolean;
   // User permission / region filters (pre-computed by caller)
   allowedUnidades?: string[] | null; // null = all units visible
@@ -319,7 +320,7 @@ export const useVagasStore = create<VagasState>()(
         const {
           page, pageSize, search, filterUnidades, filterStatusProcesso,
           filterTratativas, filterEtapa, filterAnalista, filterAssistente,
-          filterTeia, filterPcd, filterComum, filterVagasNovas,
+          filterTeia, filterPcd, filterComum, filterLideranca, filterVagasNovas,
           allowedUnidades, regionUnidades, globalUnit,
         } = params;
 
@@ -416,6 +417,13 @@ export const useVagasStore = create<VagasState>()(
             query = query.eq('tipo_vaga', 'Comum');
           } else if (filterComum === 'exclude') {
             query = query.neq('tipo_vaga', 'Comum');
+          }
+
+          // ── Liderança ────────────────────────────────────────────────────────
+          if (filterLideranca === 'include') {
+            query = query.eq('tratativa', 'Vaga de Liderança');
+          } else if (filterLideranca === 'exclude') {
+            query = query.or('tratativa.is.null,tratativa.neq.Vaga de Liderança');
           }
 
           // ── Vagas novas (last 24h) ───────────────────────────────────────────

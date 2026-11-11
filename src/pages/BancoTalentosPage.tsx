@@ -283,13 +283,10 @@ async function parseExcelCandidates(file: File): Promise<ParsedCandidate[]> {
         }
       }
 
-      const notas = [
-        mapped.nota_avaliacao,
-        mapped.nota_entrevista,
-        mapped.nota_avaliacao_externa,
-      ].filter((n): n is number => n !== null && n !== undefined);
+      // Match Python exactly: avg = (nota_av OR 0 + nota_ent OR 0) / 2
+      // nota_avaliacao_externa is stored but never used in the average.
       const media =
-        notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : 0;
+        ((mapped.nota_avaliacao ?? 0) + (mapped.nota_entrevista ?? 0)) / 2;
 
       return {
         nome: mapped.nome || "",
@@ -731,8 +728,8 @@ export default function BancoTalentosPage() {
         .insert({
           tipo: "banco",
           numero_edital: isTeia ? null : novoNumeroEdital.trim(),
-          arquivo: excelFile?.name || novoEditalNumero.trim(),
-          is_teia: isTeia,
+          arquivo: novoEditalNumero.trim(),       // PS number — used in history "PROC. SELETIVO" column
+          nome_arquivo: excelFile?.name || null,  // actual Excel filename
           status: "processando",
           usuario_id: authUser?.id || "",
           quantidade_processada: 0,
@@ -2978,7 +2975,7 @@ export default function BancoTalentosPage() {
                         {h.numero_edital || "-"}
                       </TableCell>
                       <TableCell className="text-xs font-semibold">
-                        {h.arquivo || "-"}
+                        {h.referencia_arquivo || h.arquivo || "-"}
                       </TableCell>
                       <TableCell className="text-xs text-slate-500">
                         {h.usuario}

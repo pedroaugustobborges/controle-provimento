@@ -452,20 +452,26 @@ export default function AdministracaoPage() {
 
   // Search + pagination for the Usuários tab
   const [userSearch, setUserSearch] = useState("");
+  const [userUnidadeFilter, setUserUnidadeFilter] = useState("all");
   const [userPage, setUserPage] = useState(1);
   const USER_PAGE_SIZE = 20;
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter(
-      (u) =>
+    return users.filter((u) => {
+      const matchSearch =
+        !q ||
         u.nome_completo?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q) ||
         u.perfil?.toLowerCase().includes(q) ||
-        u.cargo?.toLowerCase().includes(q),
-    );
-  }, [users, userSearch]);
+        u.cargo?.toLowerCase().includes(q);
+      const matchUnidade =
+        userUnidadeFilter === "all" ||
+        (Array.isArray(u.unidades_vinculadas) &&
+          u.unidades_vinculadas.includes(userUnidadeFilter));
+      return matchSearch && matchUnidade;
+    });
+  }, [users, userSearch, userUnidadeFilter]);
 
   const userPageCount = Math.max(
     1,
@@ -509,10 +515,10 @@ export default function AdministracaoPage() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-  // Reset to page 1 whenever search term changes
+  // Reset to page 1 whenever search term or unit filter changes
   useEffect(() => {
     setUserPage(1);
-  }, [userSearch]);
+  }, [userSearch, userUnidadeFilter]);
 
   // Auto-generate temp password when mode changes
   useEffect(() => {
@@ -1054,21 +1060,43 @@ export default function AdministracaoPage() {
                   </Button>
                 </div>
               </div>
-              <div className="relative max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                <Input
-                  placeholder="Buscar por nome, e-mail, perfil ou cargo..."
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                  className="pl-9 h-9 text-sm"
-                />
-                {userSearch && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <Input
+                    placeholder="Buscar por nome, e-mail, perfil ou cargo..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="pl-9 h-9 text-sm w-72"
+                  />
+                  {userSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setUserSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+                <Select value={userUnidadeFilter} onValueChange={setUserUnidadeFilter}>
+                  <SelectTrigger className="h-9 text-sm w-48 border-slate-200">
+                    <SelectValue placeholder="Todas as unidades" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as unidades</SelectItem>
+                    {[...ALL_UNIDADES].sort((a, b) => a.localeCompare(b, "pt-BR")).map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {userUnidadeFilter !== "all" && (
                   <button
                     type="button"
-                    onClick={() => setUserSearch("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    onClick={() => setUserUnidadeFilter("all")}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" /> Limpar filtro
                   </button>
                 )}
               </div>

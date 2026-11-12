@@ -23,6 +23,7 @@ export type EtapaVaga =
 
 export type StatusProcesso =
   | 'Solicitada'
+  | 'Aguardando Unidade'
   | 'Em Andamento'
   | 'Cancelada'
   | 'Suspensa'

@@ -1,4 +1,4 @@
-import { Play, Hourglass, XCircle, PauseCircle, BadgeCheck, Route, Milestone } from 'lucide-react';
+import { Play, Hourglass, XCircle, PauseCircle, BadgeCheck, Route, Milestone, Hospital } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { StatusProcesso } from '@/types/vaga';
 import {
@@ -44,6 +44,15 @@ export const STATUS_CONFIG: Record<StatusProcesso, StatusConfig> = {
     shadowColor: 'rgba(134, 239, 172, 0.5)',
     Icon: Hourglass,
     label: 'Solicitada',
+  },
+  'Aguardando Unidade': {
+    bg: '#FEFCE8',
+    text: '#854D0E',
+    border: '#FDE047',
+    dotHex: '#CA8A04',
+    shadowColor: 'rgba(253, 224, 71, 0.5)',
+    Icon: Hospital,
+    label: 'Aguardando Unidade',
   },
   'Cancelada': {
     bg: '#FEE2E2',

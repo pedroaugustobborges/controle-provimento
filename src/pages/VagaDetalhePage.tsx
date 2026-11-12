@@ -1803,7 +1803,12 @@ export default function VagaDetalhePage() {
 
     if (Object.keys(updates).length === 0) return;
 
-    if (mode === "submit") updates.status_aprovacao_gestor = "pendente";
+    if (mode === "submit") {
+      updates.status_aprovacao_gestor = "pendente";
+      if (currentUser?.perfil === "Gestor de Unidade") {
+        updates.status_processo = "Solicitada";
+      }
+    }
 
     const today = new Date().toISOString();
     const modeLabel =

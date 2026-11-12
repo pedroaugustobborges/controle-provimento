@@ -2911,7 +2911,7 @@ export default function VagaDetalhePage() {
                                 Carga Horária
                               </span>
                             </div>
-                            {canEditAprovacao ? (
+                            {isAdmin ? (
                               <Select
                                 value={effCargaHoraria || "__none__"}
                                 onValueChange={(v) =>
@@ -2993,7 +2993,7 @@ export default function VagaDetalhePage() {
                                 Faixa Salarial
                               </span>
                             </div>
-                            {canEditAprovacao ? (
+                            {isAdmin ? (
                               <Select
                                 value={effFaixaSalarial || "__none__"}
                                 onValueChange={(v) =>

@@ -269,6 +269,7 @@ const BANCO_UNIT_GROUPS = [
 // Order in which the status_processo scorecards appear
 const STATUS_PROCESSO_ORDER = [
   "Solicitada",
+  "Aguardando Unidade",
   "Em Andamento",
   "Concluída",
   "Suspensa",
@@ -1627,11 +1628,12 @@ export default function VagasPage() {
                   <MultiSelectFilter
                     placeholder="Todos os Status"
                     options={[
-                      "Solicitada",
-                      "Em Andamento",
+                      "Aguardando Unidade",
                       "Cancelada",
-                      "Suspensa",
                       "Concluída",
+                      "Em Andamento",
+                      "Solicitada",
+                      "Suspensa",
                     ].map((s) => ({ value: s }))}
                     selected={filterStatusProcesso}
                     onChange={setFilterStatusProcesso}

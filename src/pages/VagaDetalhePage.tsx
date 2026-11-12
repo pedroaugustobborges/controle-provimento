@@ -3076,9 +3076,9 @@ export default function VagaDetalhePage() {
                                   1
                                 </span>
                                 <span className="text-xs font-semibold text-slate-700">
-                                  Gostaria que fizéssemos o aproveitamento de
-                                  candidato(a)s do banco de talentos ou uma
-                                  publicação de novo edital?
+                                  Podemos aproveitar candidatos do banco de
+                                  talentos ou, se não houver banco, publicar um
+                                  novo edital?
                                 </span>
                               </div>
                               <div className="flex shrink-0 rounded-lg overflow-hidden border border-slate-200">
@@ -3158,8 +3158,8 @@ export default function VagaDetalhePage() {
                                       : "text-slate-400",
                                   )}
                                 >
-                                  Gostaria que fizéssemos um processo seletivo
-                                  interno?
+                                  Deseja que a vaga seja preenchida por processo
+                                  seletivo interno?
                                 </span>
                               </div>
                               <div
@@ -3247,7 +3247,8 @@ export default function VagaDetalhePage() {
                                       : "text-slate-400",
                                   )}
                                 >
-                                  Gostaria que fizéssemos outra tratativa? Qual?
+                                  Caso queira outro caminho para esta vaga, qual
+                                  seria?
                                 </span>
                               </div>
                               <div className="px-4 pb-3 pl-12">

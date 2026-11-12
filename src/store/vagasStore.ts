@@ -3,8 +3,15 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { Vaga, Edital, ValidacaoEdital, ImportHistory, ImportedFile, Tarefa, Alerta, MensagemHistorico, BloqueioHorario } from '@/types/vaga';
 import { mockConvocacoes, mockEditais, mockValidacoes, mockTarefas, mockAlertas } from '@/data/mockData';
 import { BancoTalentos, Convocacao } from '@/types/vaga';
-import { normalizeCargo, getCategoriaStatus } from '@/lib/vagaUtils';
+import { normalizeCargo, getCategoriaStatus, UNIT_ALIAS_MAP, removeAccents } from '@/lib/vagaUtils';
 import { toast } from 'sonner';
+
+/** Translate an admin short unit name to the DB prefixes used in vagas.unidade.
+ *  E.g. "TEIA GOIÂNIA" → ["CLINICA TEIA"], "HUGOL" → ["HUGOL"] */
+function resolveUnitPrefixes(adminName: string): string[] {
+  const key = removeAccents(adminName.toUpperCase().trim().replace(/\s+/g, ' '));
+  return UNIT_ALIAS_MAP[key] ?? [adminName];
+}
 
 // ─── Debounced localStorage: batches Zustand persist writes so rapid state ────
 // changes (realtime events, typing) don't block the main thread on every update.
@@ -332,19 +339,30 @@ export const useVagasStore = create<VagasState>()(
 
           // ── User permission filter (prefix ilike per unit) ───────────────────
           if (allowedUnidades && allowedUnidades.length > 0) {
-            const unitFilters = allowedUnidades.map((u) => `unidade.ilike.${u}%`).join(',');
+            const unitFilters = allowedUnidades
+              .flatMap(resolveUnitPrefixes)
+              .map((p) => `unidade.ilike.${p}%`)
+              .join(',');
             query = query.or(unitFilters);
           }
 
           // ── Region filter ────────────────────────────────────────────────────
           if (regionUnidades && regionUnidades.length > 0) {
-            const regionFilters = regionUnidades.map((u) => `unidade.ilike.${u}%`).join(',');
+            const regionFilters = regionUnidades
+              .flatMap(resolveUnitPrefixes)
+              .map((p) => `unidade.ilike.${p}%`)
+              .join(',');
             query = query.or(regionFilters);
           }
 
           // ── Sidebar global unit ──────────────────────────────────────────────
           if (globalUnit && globalUnit !== 'all' && globalUnit !== 'TODOS') {
-            query = query.ilike('unidade', `${globalUnit}%`);
+            const globalPrefixes = resolveUnitPrefixes(globalUnit);
+            if (globalPrefixes.length === 1) {
+              query = query.ilike('unidade', `${globalPrefixes[0]}%`);
+            } else {
+              query = query.or(globalPrefixes.map((p) => `unidade.ilike.${p}%`).join(','));
+            }
           }
 
           // ── Text search ──────────────────────────────────────────────────────
@@ -365,9 +383,9 @@ export const useVagasStore = create<VagasState>()(
             // Prefixes ("AGIR", "HDS", "HUGOL", "TEIA GOIÂNIA", …) are always a safe
             // prefix of the DB value and contain no commas.
             const unitFilters = filterUnidades
-              .map((u) => {
+              .flatMap((u) => {
                 const prefix = u.split(/\s*-\s*/)[0].trim();
-                return `unidade.ilike.${prefix}%`;
+                return resolveUnitPrefixes(prefix).map((p) => `unidade.ilike.${p}%`);
               })
               .join(',');
             query = query.or(unitFilters);

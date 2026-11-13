@@ -3081,9 +3081,8 @@ export default function VagaDetalhePage() {
                                   1
                                 </span>
                                 <span className="text-xs font-semibold text-slate-700">
-                                  Podemos aproveitar candidatos do banco de
-                                  talentos ou, se não houver banco, publicar um
-                                  novo edital?
+                                  Se não houver candidato(a)s no banco de
+                                  talentos, podemos publicar um novo edital?
                                 </span>
                               </div>
                               <div className="flex shrink-0 rounded-lg overflow-hidden border border-slate-200">

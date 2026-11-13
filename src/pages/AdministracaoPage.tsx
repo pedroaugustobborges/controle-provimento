@@ -566,6 +566,10 @@ export default function AdministracaoPage() {
       toast.error(passwordError);
       return;
     }
+    if (newUser.perfil === "Gestor de Unidade" && !newUser.cargo) {
+      toast.error("Selecione o Cargo Hierárquico para o Gestor de Unidade.");
+      return;
+    }
     if (newUser.perfil === "Analista de RH" && newUser.especificidades_acesso.length === 0) {
       toast.error("Selecione ao menos uma especificidade para o Analista de RH.");
       return;
@@ -752,6 +756,10 @@ export default function AdministracaoPage() {
 
   const handleSaveEditUser = async () => {
     if (!editingUser) return;
+    if (editingUser.perfil === "Gestor de Unidade" && !editingUser.cargo) {
+      toast.error("Selecione o Cargo Hierárquico para o Gestor de Unidade.");
+      return;
+    }
     if (
       editingUser.perfil === "Analista de RH" &&
       (editingUser.especificidades_acesso || []).length === 0
@@ -1586,11 +1594,10 @@ export default function AdministracaoPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {newUser.perfil !== "Gestor de Unidade" && (
-                <>
+              <>
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase text-muted-foreground">
-                      Cargo Hierárquico
+                      Cargo Hierárquico{newUser.perfil === "Gestor de Unidade" && <span className="text-rose-500 ml-0.5">*</span>}
                     </Label>
                     <Select
                       value={newUser.cargo}
@@ -1632,7 +1639,6 @@ export default function AdministracaoPage() {
                     </div>
                   )}
                 </>
-              )}
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase text-muted-foreground">
                   Status
@@ -2402,11 +2408,10 @@ export default function AdministracaoPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                {editingUser.perfil !== "Gestor de Unidade" && (
-                  <>
+                <>
                     <div className="space-y-2">
                       <Label className="text-xs font-bold uppercase text-muted-foreground">
-                        Cargo Hierárquico
+                        Cargo Hierárquico{editingUser.perfil === "Gestor de Unidade" && <span className="text-rose-500 ml-0.5">*</span>}
                       </Label>
                       <Select
                         value={editingUser.cargo || ""}
@@ -2453,7 +2458,6 @@ export default function AdministracaoPage() {
                       </div>
                     )}
                   </>
-                )}
               </div>
 
               {/* Analista de Edital — visibility restriction callout */}

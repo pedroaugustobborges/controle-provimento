@@ -550,7 +550,7 @@ export function AppSidebar() {
                   {currentUser?.nome_completo || "Usuário"}
                 </span>
                 <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider truncate leading-tight text-center">
-                  {currentUser?.perfil || "Acesso Restrito"}
+                  {currentUser?.cargo ? currentUser.cargo.split(" ")[0] : (currentUser?.perfil || "Acesso Restrito")}
                 </span>
               </div>
               <div className="flex gap-2">

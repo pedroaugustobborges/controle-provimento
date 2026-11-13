@@ -3253,7 +3253,8 @@ export default function VagaDetalhePage() {
                                   )}
                                 >
                                   Caso queira outro caminho para esta vaga, qual
-                                  seria?
+                                  seria? Esta possibilidade será avaliada pela
+                                  gestão de provimento.
                                 </span>
                               </div>
                               <div className="px-4 pb-3 pl-12">

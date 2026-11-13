@@ -1074,6 +1074,7 @@ export default function VagaDetalhePage() {
     "Coordenação",
     "Supervisão",
   ].includes(currentUser?.perfil || "");
+  const canEditObs = canEdit || currentUser?.perfil === "Gestor de Unidade";
   const isAssistente =
     currentUser?.perfil === "Assistente" ||
     currentUser?.perfil === "Assistente de RH";
@@ -3780,7 +3781,7 @@ export default function VagaDetalhePage() {
                 </div>
 
                 {/* New observation input */}
-                {canEdit && (
+                {canEditObs && (
                   <div className="flex gap-3">
                     <ObsAvatar
                       name={currentUser?.nome_completo || ""}

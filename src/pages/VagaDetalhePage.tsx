@@ -61,6 +61,7 @@ import {
   StatusProcesso,
   VagaFluxoItem,
   BancoTalentos,
+  AprovacaoSlotItem,
 } from "@/types/vaga";
 import { BancoTalentosDetalhesModal } from "@/components/BancoTalentosDetalhesModal";
 import {
@@ -286,6 +287,33 @@ function getFluxoItems(vaga: Vaga): VagaFluxoItem[] {
           }
         : { status_processo: "Solicitada" };
     return { ...root, ...found, slot } as VagaFluxoItem;
+  });
+}
+
+function getAprovacaoItems(vaga: Vaga): AprovacaoSlotItem[] {
+  const count = Math.max(Number(vaga.numero_vagas || vaga.quantidade) || 1, 1);
+  const stored = Array.isArray(vaga.distribuicao_aprovacao)
+    ? (vaga.distribuicao_aprovacao as AprovacaoSlotItem[])
+    : [];
+  return Array.from({ length: count }, (_, i) => {
+    const slot = i + 1;
+    const found = stored.find((e) => e.slot === slot);
+    // slot 1 falls back to root vaga fields for backward compatibility
+    const root: Partial<AprovacaoSlotItem> =
+      slot === 1
+        ? {
+            horario_entrada: vaga.horario_entrada,
+            horario_saida: vaga.horario_saida,
+            turno: vaga.turno,
+            plantao: vaga.plantao,
+            carga_horaria: vaga.carga_horaria,
+            faixa_salarial: vaga.faixa_salarial,
+            tipo_provimento_banco: vaga.tipo_provimento_banco,
+            tipo_provimento_interno: vaga.tipo_provimento_interno,
+            tipo_provimento_outra: vaga.tipo_provimento_outra,
+          }
+        : {};
+    return { ...root, ...found, slot } as AprovacaoSlotItem;
   });
 }
 
@@ -751,7 +779,7 @@ export default function VagaDetalhePage() {
   const [aprovacaoErrors, setAprovacaoErrors] = useState<Set<string>>(
     new Set(),
   );
-  const [aprovacaoDraft, setAprovacaoDraft] = useState<{
+  type AprovacaoDraftFields = {
     horario_entrada?: string;
     horario_saida?: string;
     turno?: string;
@@ -762,8 +790,10 @@ export default function VagaDetalhePage() {
     tipo_provimento_edital?: string;
     tipo_provimento_interno?: string;
     tipo_provimento_outra?: string;
-  }>({});
+  };
+  const [aprovacaoDraft, setAprovacaoDraft] = useState<Record<number, AprovacaoDraftFields>>({});
   const [aprovacaoDirty, setAprovacaoDirty] = useState(false);
+  const [activeAprovacaoSlot, setActiveAprovacaoSlot] = useState(1);
 
   const [isQuickConvocacaoOpen, setIsQuickConvocacaoOpen] = useState(false);
   const [matchedBanco, setMatchedBanco] = useState<any>(null);
@@ -1653,9 +1683,10 @@ export default function VagaDetalhePage() {
     }
   };
 
-  const handleAprovacaoDraftChange = (field: string, value: string) => {
+  const handleAprovacaoDraftChange = (slot: number, field: string, value: string) => {
     setAprovacaoDraft((prev) => {
-      const next = { ...prev, [field]: value || undefined };
+      const curr = prev[slot] || {};
+      const next = { ...curr, [field]: value || undefined };
       if (field === "tipo_provimento_banco" && value === "Sim") {
         delete next.tipo_provimento_interno;
         delete next.tipo_provimento_outra;
@@ -1663,7 +1694,7 @@ export default function VagaDetalhePage() {
       if (field === "tipo_provimento_interno" && value === "Sim") {
         delete next.tipo_provimento_outra;
       }
-      return next;
+      return { ...prev, [slot]: next };
     });
     setAprovacaoDirty(true);
     setAprovacaoErrors((prev) => {
@@ -1675,139 +1706,75 @@ export default function VagaDetalhePage() {
   };
 
   const handleAprovacaoSave = async (mode: "submit" | "draft" = "draft") => {
+    const vagaCount = Math.max(Number(vaga.numero_vagas || vaga.quantidade) || 1, 1);
+    const isMultiVaga = vagaCount > 1;
+
+    // ── Validation (submit mode only) ─────────────────────────────────────────
     if (mode === "submit") {
-      const eEntrada =
-        "horario_entrada" in aprovacaoDraft
-          ? aprovacaoDraft.horario_entrada
-          : vaga.horario_entrada;
-      const eSaida =
-        "horario_saida" in aprovacaoDraft
-          ? aprovacaoDraft.horario_saida
-          : vaga.horario_saida;
-      const eTurno =
-        "turno" in aprovacaoDraft ? aprovacaoDraft.turno : vaga.turno;
-      const ePlantao =
-        "plantao" in aprovacaoDraft ? aprovacaoDraft.plantao : vaga.plantao;
-      const eCarga =
-        "carga_horaria" in aprovacaoDraft
-          ? aprovacaoDraft.carga_horaria
-          : vaga.carga_horaria;
-      const eFaixa =
-        "faixa_salarial" in aprovacaoDraft
-          ? aprovacaoDraft.faixa_salarial
-          : vaga.faixa_salarial;
-      const eBanco =
-        "tipo_provimento_banco" in aprovacaoDraft
-          ? aprovacaoDraft.tipo_provimento_banco
-          : vaga.tipo_provimento_banco;
-      const eInterno =
-        "tipo_provimento_interno" in aprovacaoDraft
-          ? aprovacaoDraft.tipo_provimento_interno
-          : vaga.tipo_provimento_interno;
-      const eOutra =
-        "tipo_provimento_outra" in aprovacaoDraft
-          ? aprovacaoDraft.tipo_provimento_outra
-          : vaga.tipo_provimento_outra;
-
-      const errs = new Set<string>();
-      if (!eEntrada) errs.add("horario_entrada");
-      if (!eSaida) errs.add("horario_saida");
-      if (!eTurno) errs.add("turno");
-      if (!ePlantao) errs.add("plantao");
-      if (!eCarga) errs.add("carga_horaria");
-      if (!eFaixa) errs.add("faixa_salarial");
-      if (!eBanco) errs.add("tipo_provimento_banco");
-      if (eBanco === "Não" && !eInterno) errs.add("tipo_provimento_interno");
-      if (eBanco === "Não" && eInterno === "Não" && !eOutra?.trim())
-        errs.add("tipo_provimento_outra");
-
-      if (errs.size > 0) {
-        setAprovacaoErrors(errs);
-        toast.error(
-          `Preencha ${errs.size} campo${errs.size > 1 ? "s" : ""} obrigatório${errs.size > 1 ? "s" : ""} antes de enviar.`,
-        );
-        return;
-      }
-      setAprovacaoErrors(new Set());
-    }
-
-    const updates: any = {};
-    const histParts: string[] = [];
-
-    const effBancoFinal =
-      "tipo_provimento_banco" in aprovacaoDraft
-        ? aprovacaoDraft.tipo_provimento_banco
-        : vaga.tipo_provimento_banco;
-    const effInternoFinal =
-      "tipo_provimento_interno" in aprovacaoDraft
-        ? aprovacaoDraft.tipo_provimento_interno
-        : vaga.tipo_provimento_interno;
-
-    if ("horario_entrada" in aprovacaoDraft) {
-      updates.horario_entrada = aprovacaoDraft.horario_entrada || null;
-      if (aprovacaoDraft.horario_entrada)
-        histParts.push(`Entrada: ${aprovacaoDraft.horario_entrada}`);
-    }
-    if ("horario_saida" in aprovacaoDraft) {
-      updates.horario_saida = aprovacaoDraft.horario_saida || null;
-      if (aprovacaoDraft.horario_saida)
-        histParts.push(`Saída: ${aprovacaoDraft.horario_saida}`);
-    }
-    if ("turno" in aprovacaoDraft) {
-      updates.turno = aprovacaoDraft.turno || null;
-      if (aprovacaoDraft.turno)
-        histParts.push(`Turno: ${aprovacaoDraft.turno}`);
-    }
-    if ("plantao" in aprovacaoDraft) {
-      updates.plantao = aprovacaoDraft.plantao || null;
-      if (aprovacaoDraft.plantao)
-        histParts.push(`Plantão: ${aprovacaoDraft.plantao}`);
-    }
-    if ("carga_horaria" in aprovacaoDraft) {
-      updates.carga_horaria = aprovacaoDraft.carga_horaria || null;
-      if (aprovacaoDraft.carga_horaria)
-        histParts.push(`Carga horária: ${aprovacaoDraft.carga_horaria}`);
-    }
-    if ("faixa_salarial" in aprovacaoDraft) {
-      updates.faixa_salarial = aprovacaoDraft.faixa_salarial || null;
-      if (aprovacaoDraft.faixa_salarial)
-        histParts.push(`Faixa salarial: ${aprovacaoDraft.faixa_salarial}`);
-    }
-    if ("tipo_provimento_banco" in aprovacaoDraft) {
-      updates.tipo_provimento_banco =
-        aprovacaoDraft.tipo_provimento_banco || null;
-      // tipo_provimento_edital is no longer a separate question — always clear it
-      updates.tipo_provimento_edital = null;
-      if (aprovacaoDraft.tipo_provimento_banco === "Sim") {
-        updates.tipo_provimento_interno = null;
-        updates.tipo_provimento_outra = null;
-      }
-    }
-    if (
-      "tipo_provimento_interno" in aprovacaoDraft &&
-      effBancoFinal !== "Sim"
-    ) {
-      updates.tipo_provimento_interno =
-        aprovacaoDraft.tipo_provimento_interno || null;
-      if (aprovacaoDraft.tipo_provimento_interno === "Sim") {
-        updates.tipo_provimento_outra = null;
-      }
-    }
-    if (
-      "tipo_provimento_outra" in aprovacaoDraft &&
-      effBancoFinal !== "Sim" &&
-      effInternoFinal !== "Sim"
-    ) {
-      updates.tipo_provimento_outra =
-        aprovacaoDraft.tipo_provimento_outra || null;
-    }
-
-    if (Object.keys(updates).length === 0) return;
-
-    if (mode === "submit") {
-      updates.status_aprovacao_gestor = "pendente";
-      if (currentUser?.perfil === "Gestor de Unidade") {
-        updates.status_processo = "Solicitada";
+      if (isMultiVaga) {
+        // Validate all slots; show errors on the active slot only but count all
+        const aprovItems = getAprovacaoItems(vaga);
+        let totalErrCount = 0;
+        let firstIncompleteSlot: number | null = null;
+        for (const item of aprovItems) {
+          const draft = aprovacaoDraft[item.slot] || {};
+          const eff = (f: keyof AprovacaoSlotItem) =>
+            f in draft ? (draft as any)[f] : (item as any)[f];
+          const eBanco = eff("tipo_provimento_banco");
+          const eInterno = eff("tipo_provimento_interno");
+          const eOutra = eff("tipo_provimento_outra");
+          const slotErrs = new Set<string>();
+          if (!eff("horario_entrada")) slotErrs.add("horario_entrada");
+          if (!eff("horario_saida")) slotErrs.add("horario_saida");
+          if (!eff("turno")) slotErrs.add("turno");
+          if (!eff("plantao")) slotErrs.add("plantao");
+          if (!eff("carga_horaria")) slotErrs.add("carga_horaria");
+          if (!eff("faixa_salarial")) slotErrs.add("faixa_salarial");
+          if (!eBanco) slotErrs.add("tipo_provimento_banco");
+          if (eBanco === "Não" && !eInterno) slotErrs.add("tipo_provimento_interno");
+          if (eBanco === "Não" && eInterno === "Não" && !eOutra?.trim())
+            slotErrs.add("tipo_provimento_outra");
+          if (slotErrs.size > 0) {
+            totalErrCount += slotErrs.size;
+            if (firstIncompleteSlot === null) {
+              firstIncompleteSlot = item.slot;
+              setAprovacaoErrors(slotErrs);
+            }
+          }
+        }
+        if (totalErrCount > 0) {
+          if (firstIncompleteSlot !== null) setActiveAprovacaoSlot(firstIncompleteSlot);
+          toast.error(
+            `Preencha os campos obrigatórios em todas as vagas antes de enviar. (${totalErrCount} campo${totalErrCount > 1 ? "s" : ""} incompleto${totalErrCount > 1 ? "s" : ""})`,
+          );
+          return;
+        }
+        setAprovacaoErrors(new Set());
+      } else {
+        const draft = aprovacaoDraft[1] || {};
+        const eff = (f: string) => f in draft ? (draft as any)[f] : (vaga as any)[f];
+        const eBanco = eff("tipo_provimento_banco");
+        const eInterno = eff("tipo_provimento_interno");
+        const eOutra = eff("tipo_provimento_outra");
+        const errs = new Set<string>();
+        if (!eff("horario_entrada")) errs.add("horario_entrada");
+        if (!eff("horario_saida")) errs.add("horario_saida");
+        if (!eff("turno")) errs.add("turno");
+        if (!eff("plantao")) errs.add("plantao");
+        if (!eff("carga_horaria")) errs.add("carga_horaria");
+        if (!eff("faixa_salarial")) errs.add("faixa_salarial");
+        if (!eBanco) errs.add("tipo_provimento_banco");
+        if (eBanco === "Não" && !eInterno) errs.add("tipo_provimento_interno");
+        if (eBanco === "Não" && eInterno === "Não" && !eOutra?.trim())
+          errs.add("tipo_provimento_outra");
+        if (errs.size > 0) {
+          setAprovacaoErrors(errs);
+          toast.error(
+            `Preencha ${errs.size} campo${errs.size > 1 ? "s" : ""} obrigatório${errs.size > 1 ? "s" : ""} antes de enviar.`,
+          );
+          return;
+        }
+        setAprovacaoErrors(new Set());
       }
     }
 
@@ -1816,20 +1783,124 @@ export default function VagaDetalhePage() {
       mode === "submit"
         ? "enviada para Gestão de Provimento"
         : "salva como rascunho";
-    const saved = await updateVagaAsync(vaga.id, {
-      ...updates,
-      historico: [
-        ...(vaga.historico || []),
-        {
-          id: `h-${Date.now()}`,
-          data: today,
-          descricao: `Aprovação da unidade ${modeLabel}${histParts.length ? ": " + histParts.join(" | ") : ""}`,
-          usuario: currentUser?.nome_completo || "Sistema",
-        },
-      ],
-    });
 
-    if (!saved) return; // updateVagaAsync already fired the error toast
+    // ── Multi-vaga: save into distribuicao_aprovacao ───────────────────────────
+    if (isMultiVaga) {
+      const aprovItems = getAprovacaoItems(vaga);
+      const histParts: string[] = [];
+      const updated = aprovItems.map((item) => {
+        const draft = aprovacaoDraft[item.slot];
+        if (!draft || Object.keys(draft).length === 0) return item;
+        const merged: any = { ...item, ...draft };
+        // Apply cascade rules
+        if (merged.tipo_provimento_banco === "Sim") {
+          delete merged.tipo_provimento_interno;
+          delete merged.tipo_provimento_outra;
+        }
+        if (merged.tipo_provimento_interno === "Sim") {
+          delete merged.tipo_provimento_outra;
+        }
+        histParts.push(`Vaga ${item.slot}`);
+        return merged as AprovacaoSlotItem;
+      });
+      const updates: any = { distribuicao_aprovacao: updated };
+      if (mode === "submit") {
+        updates.status_aprovacao_gestor = "pendente";
+        if (currentUser?.perfil === "Gestor de Unidade") {
+          updates.status_processo = "Solicitada";
+        }
+      }
+      const saved = await updateVagaAsync(vaga.id, {
+        ...updates,
+        historico: [
+          ...(vaga.historico || []),
+          {
+            id: `h-${Date.now()}`,
+            data: today,
+            descricao: `Aprovação da unidade ${modeLabel}${histParts.length ? " — " + histParts.join(", ") : ""}`,
+            usuario: currentUser?.nome_completo || "Sistema",
+          },
+        ],
+      });
+      if (!saved) return;
+    } else {
+      // ── Single-vaga: save to flat vaga fields (slot 1 draft) ─────────────────
+      const draft = aprovacaoDraft[1] || {};
+      const updates: any = {};
+      const histParts: string[] = [];
+
+      const effBancoFinal = "tipo_provimento_banco" in draft
+        ? draft.tipo_provimento_banco
+        : vaga.tipo_provimento_banco;
+      const effInternoFinal = "tipo_provimento_interno" in draft
+        ? draft.tipo_provimento_interno
+        : vaga.tipo_provimento_interno;
+
+      if ("horario_entrada" in draft) {
+        updates.horario_entrada = draft.horario_entrada || null;
+        if (draft.horario_entrada) histParts.push(`Entrada: ${draft.horario_entrada}`);
+      }
+      if ("horario_saida" in draft) {
+        updates.horario_saida = draft.horario_saida || null;
+        if (draft.horario_saida) histParts.push(`Saída: ${draft.horario_saida}`);
+      }
+      if ("turno" in draft) {
+        updates.turno = draft.turno || null;
+        if (draft.turno) histParts.push(`Turno: ${draft.turno}`);
+      }
+      if ("plantao" in draft) {
+        updates.plantao = draft.plantao || null;
+        if (draft.plantao) histParts.push(`Plantão: ${draft.plantao}`);
+      }
+      if ("carga_horaria" in draft) {
+        updates.carga_horaria = draft.carga_horaria || null;
+        if (draft.carga_horaria) histParts.push(`Carga horária: ${draft.carga_horaria}`);
+      }
+      if ("faixa_salarial" in draft) {
+        updates.faixa_salarial = draft.faixa_salarial || null;
+        if (draft.faixa_salarial) histParts.push(`Faixa salarial: ${draft.faixa_salarial}`);
+      }
+      if ("tipo_provimento_banco" in draft) {
+        updates.tipo_provimento_banco = draft.tipo_provimento_banco || null;
+        updates.tipo_provimento_edital = null;
+        if (draft.tipo_provimento_banco === "Sim") {
+          updates.tipo_provimento_interno = null;
+          updates.tipo_provimento_outra = null;
+        }
+      }
+      if ("tipo_provimento_interno" in draft && effBancoFinal !== "Sim") {
+        updates.tipo_provimento_interno = draft.tipo_provimento_interno || null;
+        if (draft.tipo_provimento_interno === "Sim") {
+          updates.tipo_provimento_outra = null;
+        }
+      }
+      if ("tipo_provimento_outra" in draft && effBancoFinal !== "Sim" && effInternoFinal !== "Sim") {
+        updates.tipo_provimento_outra = draft.tipo_provimento_outra || null;
+      }
+
+      if (Object.keys(updates).length === 0) return;
+
+      if (mode === "submit") {
+        updates.status_aprovacao_gestor = "pendente";
+        if (currentUser?.perfil === "Gestor de Unidade") {
+          updates.status_processo = "Solicitada";
+        }
+      }
+
+      const saved = await updateVagaAsync(vaga.id, {
+        ...updates,
+        historico: [
+          ...(vaga.historico || []),
+          {
+            id: `h-${Date.now()}`,
+            data: today,
+            descricao: `Aprovação da unidade ${modeLabel}${histParts.length ? ": " + histParts.join(" | ") : ""}`,
+            usuario: currentUser?.nome_completo || "Sistema",
+          },
+        ],
+      });
+      if (!saved) return;
+    }
 
     setAprovacaoDraft({});
     setAprovacaoDirty(false);
@@ -2536,42 +2607,54 @@ export default function VagaDetalhePage() {
 
                 {/* ── Aprovação da Unidade ─────────────────────────────── */}
                 {(() => {
+                  const vagaCount = Math.max(
+                    Number(vaga.numero_vagas || vaga.quantidade) || 1,
+                    1,
+                  );
+                  const isMulti = vagaCount > 1;
+                  const aprovacaoItems = getAprovacaoItems(vaga);
+                  const safeAprovSlot = Math.min(activeAprovacaoSlot, vagaCount);
+                  const activeAprovItem =
+                    aprovacaoItems[safeAprovSlot - 1] ?? aprovacaoItems[0];
+                  const slotDraft = aprovacaoDraft[safeAprovSlot] || {};
+
+                  // Effective values: draft overrides stored item data
                   const effEntrada =
-                    "horario_entrada" in aprovacaoDraft
-                      ? aprovacaoDraft.horario_entrada
-                      : vaga.horario_entrada;
+                    "horario_entrada" in slotDraft
+                      ? slotDraft.horario_entrada
+                      : activeAprovItem.horario_entrada;
                   const effSaida =
-                    "horario_saida" in aprovacaoDraft
-                      ? aprovacaoDraft.horario_saida
-                      : vaga.horario_saida;
+                    "horario_saida" in slotDraft
+                      ? slotDraft.horario_saida
+                      : activeAprovItem.horario_saida;
                   const effTurno =
-                    "turno" in aprovacaoDraft
-                      ? aprovacaoDraft.turno
-                      : vaga.turno;
+                    "turno" in slotDraft
+                      ? slotDraft.turno
+                      : activeAprovItem.turno;
                   const effPlantao =
-                    "plantao" in aprovacaoDraft
-                      ? aprovacaoDraft.plantao
-                      : vaga.plantao;
+                    "plantao" in slotDraft
+                      ? slotDraft.plantao
+                      : activeAprovItem.plantao;
                   const effCargaHoraria =
-                    "carga_horaria" in aprovacaoDraft
-                      ? aprovacaoDraft.carga_horaria
-                      : vaga.carga_horaria;
+                    "carga_horaria" in slotDraft
+                      ? slotDraft.carga_horaria
+                      : activeAprovItem.carga_horaria;
                   const effFaixaSalarial =
-                    "faixa_salarial" in aprovacaoDraft
-                      ? aprovacaoDraft.faixa_salarial
-                      : vaga.faixa_salarial;
+                    "faixa_salarial" in slotDraft
+                      ? slotDraft.faixa_salarial
+                      : activeAprovItem.faixa_salarial;
                   const effBanco =
-                    "tipo_provimento_banco" in aprovacaoDraft
-                      ? aprovacaoDraft.tipo_provimento_banco
-                      : vaga.tipo_provimento_banco;
+                    "tipo_provimento_banco" in slotDraft
+                      ? slotDraft.tipo_provimento_banco
+                      : activeAprovItem.tipo_provimento_banco;
                   const effInterno =
-                    "tipo_provimento_interno" in aprovacaoDraft
-                      ? aprovacaoDraft.tipo_provimento_interno
-                      : vaga.tipo_provimento_interno;
+                    "tipo_provimento_interno" in slotDraft
+                      ? slotDraft.tipo_provimento_interno
+                      : activeAprovItem.tipo_provimento_interno;
                   const effOutra =
-                    "tipo_provimento_outra" in aprovacaoDraft
-                      ? aprovacaoDraft.tipo_provimento_outra
-                      : vaga.tipo_provimento_outra;
+                    "tipo_provimento_outra" in slotDraft
+                      ? slotDraft.tipo_provimento_outra
+                      : activeAprovItem.tipo_provimento_outra;
 
                   // Q2 = Remanejamento Interno (enabled when merged Q1 = "Não")
                   const q2Enabled = effBanco === "Não";
@@ -2583,6 +2666,29 @@ export default function VagaDetalhePage() {
                     currentUser?.perfil === "Admin" ||
                     currentUser?.perfil === "Gestor de Unidade";
 
+                  // Slot-bound change helper
+                  const change = (field: string, value: string) =>
+                    handleAprovacaoDraftChange(safeAprovSlot, field, value);
+
+                  // Dot color for tab: green = all required filled, amber = some, gray = none
+                  const getSlotDotColor = (item: AprovacaoSlotItem) => {
+                    const d = aprovacaoDraft[item.slot] || {};
+                    const eff = (f: keyof AprovacaoSlotItem) =>
+                      f in d ? (d as any)[f] : (item as any)[f];
+                    const filled = [
+                      eff("horario_entrada"),
+                      eff("horario_saida"),
+                      eff("turno"),
+                      eff("plantao"),
+                      eff("carga_horaria"),
+                      eff("faixa_salarial"),
+                      eff("tipo_provimento_banco"),
+                    ].filter(Boolean).length;
+                    if (filled === 0) return "#94a3b8";   // gray
+                    if (filled >= 7) return "#10b981";    // green
+                    return "#f59e0b";                     // amber
+                  };
+
                   return (
                     <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                       {/* Header */}
@@ -2592,6 +2698,11 @@ export default function VagaDetalhePage() {
                           <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
                             Aprovação da Unidade
                           </span>
+                          {isMulti && (
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                              {vagaCount} vagas
+                            </span>
+                          )}
                           {aprovacaoDirty && (
                             <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full animate-pulse">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -2616,6 +2727,43 @@ export default function VagaDetalhePage() {
                           </Button>
                         )}
                       </div>
+
+                      {/* Slot tabs — only for multi-vaga */}
+                      {isMulti && (
+                        <div className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-slate-100 bg-white overflow-x-auto">
+                          {aprovacaoItems.map((item) => {
+                            const isActive = item.slot === safeAprovSlot;
+                            const dotColor = getSlotDotColor(item);
+                            return (
+                              <button
+                                key={item.slot}
+                                onClick={() => {
+                                  setActiveAprovacaoSlot(item.slot);
+                                  setAprovacaoErrors(new Set());
+                                }}
+                                className={cn(
+                                  "flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-t-lg border-b-2 transition-all whitespace-nowrap",
+                                  isActive
+                                    ? "border-primary text-primary bg-primary/5"
+                                    : "border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50",
+                                )}
+                              >
+                                <span
+                                  style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: "50%",
+                                    backgroundColor: dotColor,
+                                    display: "inline-block",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                Vaga {item.slot}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       <div className="divide-y divide-slate-100">
                         {/* Row 1: Horários, Turno e Plantão */}
@@ -2656,10 +2804,7 @@ export default function VagaDetalhePage() {
                                 type="time"
                                 value={effEntrada || ""}
                                 onChange={(e) =>
-                                  handleAprovacaoDraftChange(
-                                    "horario_entrada",
-                                    e.target.value,
-                                  )
+                                  change("horario_entrada", e.target.value)
                                 }
                                 className={cn(
                                   "h-9 bg-white border-slate-200 text-sm font-semibold",
@@ -2714,10 +2859,7 @@ export default function VagaDetalhePage() {
                                 type="time"
                                 value={effSaida || ""}
                                 onChange={(e) =>
-                                  handleAprovacaoDraftChange(
-                                    "horario_saida",
-                                    e.target.value,
-                                  )
+                                  change("horario_saida", e.target.value)
                                 }
                                 className={cn(
                                   "h-9 bg-white border-slate-200 text-sm font-semibold",
@@ -2771,10 +2913,7 @@ export default function VagaDetalhePage() {
                               <Select
                                 value={effTurno || "__none__"}
                                 onValueChange={(v) =>
-                                  handleAprovacaoDraftChange(
-                                    "turno",
-                                    v === "__none__" ? "" : v,
-                                  )
+                                  change("turno", v === "__none__" ? "" : v)
                                 }
                               >
                                 <SelectTrigger
@@ -2851,10 +2990,7 @@ export default function VagaDetalhePage() {
                               <Select
                                 value={effPlantao || "__none__"}
                                 onValueChange={(v) =>
-                                  handleAprovacaoDraftChange(
-                                    "plantao",
-                                    v === "__none__" ? "" : v,
-                                  )
+                                  change("plantao", v === "__none__" ? "" : v)
                                 }
                               >
                                 <SelectTrigger
@@ -2928,7 +3064,7 @@ export default function VagaDetalhePage() {
                               <Select
                                 value={effCargaHoraria || "__none__"}
                                 onValueChange={(v) =>
-                                  handleAprovacaoDraftChange(
+                                  change(
                                     "carga_horaria",
                                     v === "__none__" ? "" : v,
                                   )
@@ -3010,7 +3146,7 @@ export default function VagaDetalhePage() {
                               <Select
                                 value={effFaixaSalarial || "__none__"}
                                 onValueChange={(v) =>
-                                  handleAprovacaoDraftChange(
+                                  change(
                                     "faixa_salarial",
                                     v === "__none__" ? "" : v,
                                   )
@@ -3097,10 +3233,7 @@ export default function VagaDetalhePage() {
                                 <button
                                   disabled={!canEditAprovacao}
                                   onClick={() =>
-                                    handleAprovacaoDraftChange(
-                                      "tipo_provimento_banco",
-                                      "Sim",
-                                    )
+                                    change("tipo_provimento_banco", "Sim")
                                   }
                                   className={cn(
                                     "px-4 py-1.5 text-xs font-bold transition-all",
@@ -3116,10 +3249,7 @@ export default function VagaDetalhePage() {
                                 <button
                                   disabled={!canEditAprovacao}
                                   onClick={() =>
-                                    handleAprovacaoDraftChange(
-                                      "tipo_provimento_banco",
-                                      "Não",
-                                    )
+                                    change("tipo_provimento_banco", "Não")
                                   }
                                   className={cn(
                                     "px-4 py-1.5 text-xs font-bold transition-all",
@@ -3185,10 +3315,7 @@ export default function VagaDetalhePage() {
                                 <button
                                   disabled={!q2Enabled || !canEditAprovacao}
                                   onClick={() =>
-                                    handleAprovacaoDraftChange(
-                                      "tipo_provimento_interno",
-                                      "Sim",
-                                    )
+                                    change("tipo_provimento_interno", "Sim")
                                   }
                                   className={cn(
                                     "px-4 py-1.5 text-xs font-bold transition-all",
@@ -3208,10 +3335,7 @@ export default function VagaDetalhePage() {
                                 <button
                                   disabled={!q2Enabled || !canEditAprovacao}
                                   onClick={() =>
-                                    handleAprovacaoDraftChange(
-                                      "tipo_provimento_interno",
-                                      "Não",
-                                    )
+                                    change("tipo_provimento_interno", "Não")
                                   }
                                   className={cn(
                                     "px-4 py-1.5 text-xs font-bold transition-all",
@@ -3269,7 +3393,7 @@ export default function VagaDetalhePage() {
                                   <Textarea
                                     value={effOutra || ""}
                                     onChange={(e) =>
-                                      handleAprovacaoDraftChange(
+                                      change(
                                         "tipo_provimento_outra",
                                         e.target.value,
                                       )

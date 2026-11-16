@@ -285,6 +285,22 @@ export interface Vaga {
   tipo_provimento_edital?: 'Sim' | 'Não';
   tipo_provimento_interno?: 'Sim' | 'Não';
   tipo_provimento_outra?: string;
+
+  // Aprovação da Unidade — multi-vaga (per-slot data, mirrors distribuicao_vagas)
+  distribuicao_aprovacao?: AprovacaoSlotItem[];
+}
+
+export interface AprovacaoSlotItem {
+  slot: number;
+  horario_entrada?: string;
+  horario_saida?: string;
+  turno?: string;
+  plantao?: string;
+  carga_horaria?: string;
+  faixa_salarial?: string;
+  tipo_provimento_banco?: 'Sim' | 'Não';
+  tipo_provimento_interno?: 'Sim' | 'Não';
+  tipo_provimento_outra?: string;
 }
 
 export const UNIDADES_GOIANIA = [

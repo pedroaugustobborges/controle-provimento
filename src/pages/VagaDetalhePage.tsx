@@ -1850,15 +1850,22 @@ export default function VagaDetalhePage() {
       const next: typeof curr = { ...curr, [field]: value || undefined };
       if (field === "tratativa") {
         delete next.etapa; // reset etapa when tratativa changes
-        // Auto-advance to "Em Andamento" when a tratativa is selected.
-        // Skip if: user has already manually set a status in this session,
-        // or the vaga is locked at Concluída / Cancelada.
-        const userPickedStatus = "status_processo" in curr;
-        const lockedSP =
-          vaga.status_processo === "Concluída" ||
-          vaga.status_processo === "Cancelada";
-        if (value && !userPickedStatus && !lockedSP) {
-          next.status_processo = "Em Andamento";
+        if (value === "Aguardando Unidade") {
+          // "Aguardando Unidade" has only one etapa and its own status —
+          // auto-fill both so the user doesn't need extra clicks.
+          next.etapa = "Aguardando Unidade";
+          next.status_processo = "Aguardando Unidade";
+        } else {
+          // Auto-advance to "Em Andamento" when a tratativa is selected.
+          // Skip if: user has already manually set a status in this session,
+          // or the vaga is locked at Concluída / Cancelada.
+          const userPickedStatus = "status_processo" in curr;
+          const lockedSP =
+            vaga.status_processo === "Concluída" ||
+            vaga.status_processo === "Cancelada";
+          if (value && !userPickedStatus && !lockedSP) {
+            next.status_processo = "Em Andamento";
+          }
         }
       }
       return { ...prev, [slot]: next };

@@ -295,7 +295,7 @@ function getAprovacaoItems(vaga: Vaga): AprovacaoSlotItem[] {
   const stored = Array.isArray(vaga.distribuicao_aprovacao)
     ? (vaga.distribuicao_aprovacao as AprovacaoSlotItem[])
     : [];
-  return Array.from({ length: count }, (_, i) => {
+  const items = Array.from({ length: count }, (_, i) => {
     const slot = i + 1;
     const found = stored.find((e) => e.slot === slot);
     // slot 1 falls back to root vaga fields for backward compatibility
@@ -315,6 +315,16 @@ function getAprovacaoItems(vaga: Vaga): AprovacaoSlotItem[] {
         : {};
     return { ...root, ...found, slot } as AprovacaoSlotItem;
   });
+  // Pre-fill carga_horaria and faixa_salarial from slot 1 to any slot
+  // that doesn't have its own stored value yet.
+  const slot1 = items[0];
+  for (let i = 1; i < items.length; i++) {
+    if (!items[i].carga_horaria && slot1.carga_horaria)
+      items[i] = { ...items[i], carga_horaria: slot1.carga_horaria };
+    if (!items[i].faixa_salarial && slot1.faixa_salarial)
+      items[i] = { ...items[i], faixa_salarial: slot1.faixa_salarial };
+  }
+  return items;
 }
 
 // ─── Observations ────────────────────────────────────────────────────────────

@@ -1160,14 +1160,12 @@ export default function VagasPage() {
       // Compute inline — filtered is used for export, so must work for all vagas
       // in canonicalBase, not just the current page (fluxoItemsMap is page-scoped).
       const fluxoItems = getVagaFluxoItems(v);
-      // Always use the top-level v.status_processo (the correctly derived overall
-      // status) for filtering. For multi-vaga items individual slot statuses live
-      // in distribuicao_vagas and may differ from the mother row status.
-      const displayedStatus =
-        v.status_processo ?? fluxoItems[0]?.status_processo ?? "Solicitada";
+      // Match if ANY slot in the requisition has the selected status
       const matchStatus =
         filterStatusProcesso.length === 0 ||
-        filterStatusProcesso.includes(displayedStatus);
+        fluxoItems.some((item) =>
+          filterStatusProcesso.includes(item.status_processo || "Solicitada")
+        );
       const matchTratativa =
         filterTratativas.length === 0 ||
         fluxoItems.some((item) => filterTratativas.includes(item.tratativa as string));

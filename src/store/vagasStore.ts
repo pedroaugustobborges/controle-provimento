@@ -392,18 +392,35 @@ export const useVagasStore = create<VagasState>()(
           }
 
           // ── Status processo ──────────────────────────────────────────────────
+          // Match root field OR any slot inside distribuicao_vagas JSONB array
           if (filterStatusProcesso && filterStatusProcesso.length > 0) {
-            query = query.in('status_processo', filterStatusProcesso);
+            const spParts = [
+              `status_processo.in.(${filterStatusProcesso.join(',')})`,
+              ...filterStatusProcesso.map(
+                (s) => `distribuicao_vagas.cs.[{"status_processo":"${s}"}]`
+              ),
+            ];
+            query = query.or(spParts.join(','));
           }
 
           // ── Tratativas ───────────────────────────────────────────────────────
+          // Match root field OR any slot inside distribuicao_vagas JSONB array
           if (filterTratativas && filterTratativas.length > 0) {
-            query = query.in('tratativa', filterTratativas);
+            const trParts = [
+              `tratativa.in.(${filterTratativas.join(',')})`,
+              ...filterTratativas.map(
+                (t) => `distribuicao_vagas.cs.[{"tratativa":"${t}"}]`
+              ),
+            ];
+            query = query.or(trParts.join(','));
           }
 
           // ── Etapa ────────────────────────────────────────────────────────────
+          // Match root field OR any slot inside distribuicao_vagas JSONB array
           if (filterEtapa && filterEtapa !== 'all') {
-            query = query.eq('etapa', filterEtapa);
+            query = query.or(
+              `etapa.eq.${filterEtapa},distribuicao_vagas.cs.[{"etapa":"${filterEtapa}"}]`
+            );
           }
 
           // ── Analista ─────────────────────────────────────────────────────────

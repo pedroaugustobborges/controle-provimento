@@ -901,6 +901,13 @@ export default function VagaDetalhePage() {
     return match?.nome_completo ?? null;
   }, [vaga?.analista_responsavel, vaga?.unidade, users]);
 
+  // Resolves the analyst's user ID for sending notifications
+  const resolvedAnalistaUserId = useMemo(() => {
+    if (!resolvedAnalista) return null;
+    const user = (users || []).find((u: any) => u.nome_completo === resolvedAnalista);
+    return (user as any)?.id ?? null;
+  }, [resolvedAnalista, users]);
+
   // @mention autocomplete: only users who have access to this vaga
   // (same rule as VagasPage: visualiza_todas_unidades OR unit is in unidades_vinculadas)
   const mentionUsers = useMemo(() => {
@@ -1912,6 +1919,20 @@ export default function VagaDetalhePage() {
         ],
       });
       if (!saved) return;
+    }
+
+    // ── Notify responsible analyst when approval is submitted ─────────────────
+    if (mode === "submit" && resolvedAnalistaUserId && resolvedAnalistaUserId !== currentUser?.id) {
+      const vagaCount = Math.max(Number(vaga.numero_vagas || vaga.quantidade) || 1, 1);
+      const vagaLabel = vagaCount > 1 ? `${vagaCount} vagas` : "1 vaga";
+      createNotificacao({
+        usuario_id: resolvedAnalistaUserId,
+        titulo: `${currentUser?.nome_completo || "Gestor de Unidade"} enviou aprovação de unidade`,
+        mensagem: `${vaga.cargo || "Vaga"} · ${vaga.unidade || ""} · ${vagaLabel}`.replace(/·\s*$/, "").trim(),
+        tipo: "aprovacao_unidade",
+        registro_id: vaga.id,
+        unidade: vaga.unidade,
+      });
     }
 
     setAprovacaoDraft({});

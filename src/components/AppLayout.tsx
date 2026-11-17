@@ -48,6 +48,7 @@ import {
   ThumbsUp,
   AtSign,
   Clock,
+  Send,
 } from "lucide-react";
 import { AgieChat } from "./chat/AgieChat";
 // InactivityLogout removido — logout por inatividade desabilitado a pedido do time
@@ -178,10 +179,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     marcarTodasLidas,
     bancos,
   } = useVagasStore();
-  // personal notifications: curtidas + mencoes targeted to the current user
+  // personal notifications: curtidas + mencoes + aprovacao_unidade targeted to the current user
   const notifPessoais = (notificacoes as any[]).filter(
     (n) =>
-      (n.tipo === "curtida" || n.tipo === "mencao") &&
+      (n.tipo === "curtida" || n.tipo === "mencao" || n.tipo === "aprovacao_unidade") &&
       n.usuario_id === currentUser?.id,
   );
   const unreadNotifPessoaisCount = notifPessoais.filter((n) => !n.lida).length;
@@ -770,12 +771,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                             .map((notif: any) => {
                               const isMencao = notif.tipo === "mencao";
+                              const isAprovacao = notif.tipo === "aprovacao_unidade";
                               const isUnread = !notif.lida;
                               const senderInitial = (notif.remetente_nome || "?")[0].toUpperCase();
-                              const accentColor = isMencao ? "#8b5cf6" : "#3b82f6";
+                              const accentColor = isMencao ? "#8b5cf6" : isAprovacao ? "#10b981" : "#3b82f6";
                               const bgUnread = isDark
-                                ? isMencao ? "rgba(139,92,246,0.08)" : "rgba(59,130,246,0.08)"
-                                : isMencao ? "rgba(139,92,246,0.04)" : "rgba(59,130,246,0.04)";
+                                ? isMencao ? "rgba(139,92,246,0.08)" : isAprovacao ? "rgba(16,185,129,0.08)" : "rgba(59,130,246,0.08)"
+                                : isMencao ? "rgba(139,92,246,0.04)" : isAprovacao ? "rgba(16,185,129,0.04)" : "rgba(59,130,246,0.04)";
+                              const avatarBg = isDark
+                                ? isMencao ? "rgba(139,92,246,0.20)" : isAprovacao ? "rgba(16,185,129,0.20)" : "rgba(59,130,246,0.20)"
+                                : isMencao ? "#ede9fe" : isAprovacao ? "#d1fae5" : "#dbeafe";
+                              const avatarColor = isMencao ? "#7c3aed" : isAprovacao ? "#059669" : "#2563eb";
                               return (
                                 <Link
                                   key={notif.id}
@@ -801,10 +807,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                       width: 36, height: 36, borderRadius: "50%",
                                       display: "flex", alignItems: "center", justifyContent: "center",
                                       fontSize: 13, fontWeight: 700,
-                                      background: isDark
-                                        ? isMencao ? "rgba(139,92,246,0.20)" : "rgba(59,130,246,0.20)"
-                                        : isMencao ? "#ede9fe" : "#dbeafe",
-                                      color: isMencao ? "#7c3aed" : "#2563eb",
+                                      background: avatarBg,
+                                      color: avatarColor,
                                     }}>
                                       {senderInitial}
                                     </div>
@@ -817,7 +821,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                     }}>
                                       {isMencao
                                         ? <AtSign style={{ width: 8, height: 8, color: "#fff" }} />
-                                        : <ThumbsUp style={{ width: 8, height: 8, color: "#fff" }} />}
+                                        : isAprovacao
+                                          ? <Send style={{ width: 8, height: 8, color: "#fff" }} />
+                                          : <ThumbsUp style={{ width: 8, height: 8, color: "#fff" }} />}
                                     </span>
                                   </div>
                                   {/* Text */}

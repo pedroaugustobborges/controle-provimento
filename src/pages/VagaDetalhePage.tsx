@@ -207,6 +207,7 @@ const ETAPAS_POR_TRATATIVA: Record<string, string[]> = {
     "Processo Seletivo Interno",
     "Documentação",
     "Edoc",
+    "Admissão Efetivada",
   ],
   "Vaga de Liderança": [
     "Divulgação",
@@ -244,6 +245,7 @@ const ETAPAS_POR_TRATATIVA_TEIA: Record<string, string[]> = {
     "Processo Seletivo Interno",
     "Documentação",
     "Edoc",
+    "Admissão Efetivada",
   ],
   "Vaga de Liderança": ETAPAS_TEIA,
 };

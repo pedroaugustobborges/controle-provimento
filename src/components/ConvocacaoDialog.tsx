@@ -400,8 +400,10 @@ export function ConvocacaoDialog({
       setFormData(convocacaoToEdit);
       // telefone and numero_processo_seletivo are not stored on Convocacao —
       // look them up from the linked BancoTalento entry
-      const bancoId = convocacaoToEdit.banco_relacionado || (convocacaoToEdit as any).banco_id;
-      const linkedBanco = bancoId ? bancos.find(b => b.id === bancoId) : null;
+      const bancoId =
+        convocacaoToEdit.banco_relacionado ||
+        (convocacaoToEdit as any).banco_id;
+      const linkedBanco = bancoId ? bancos.find((b) => b.id === bancoId) : null;
       setTelefone((linkedBanco as any)?.telefone || "");
       setNumeroPS(linkedBanco?.numero_processo_seletivo || "");
     } else if (initialData) {
@@ -455,17 +457,22 @@ export function ConvocacaoDialog({
   // ── Block detection ───────────────────────────────────────────────────────
   const bloqueioAtivo = useMemo(() => {
     if (!formData.data_convocacao) return null;
-    return bloqueios.find(b => {
-      if (b.data !== formData.data_convocacao) return false;
-      // Check unit scope (undefined = all units)
-      if (b.unidades && b.unidades.length > 0 && formData.unidade) {
-        if (!b.unidades.includes(formData.unidade)) return false;
-      }
-      if (b.dia_inteiro) return true;
-      if (!formData.horario || !b.horario) return false;
-      if (b.horario_fim) return formData.horario >= b.horario && formData.horario <= b.horario_fim;
-      return formData.horario === b.horario;
-    }) ?? null;
+    return (
+      bloqueios.find((b) => {
+        if (b.data !== formData.data_convocacao) return false;
+        // Check unit scope (undefined = all units)
+        if (b.unidades && b.unidades.length > 0 && formData.unidade) {
+          if (!b.unidades.includes(formData.unidade)) return false;
+        }
+        if (b.dia_inteiro) return true;
+        if (!formData.horario || !b.horario) return false;
+        if (b.horario_fim)
+          return (
+            formData.horario >= b.horario && formData.horario <= b.horario_fim
+          );
+        return formData.horario === b.horario;
+      }) ?? null
+    );
   }, [bloqueios, formData.data_convocacao, formData.horario, formData.unidade]);
 
   // ── EDOC handler ──────────────────────────────────────────────────────────
@@ -820,16 +827,24 @@ export function ConvocacaoDialog({
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-red-700 uppercase tracking-wide flex items-center gap-1.5">
                       <AlertTriangle className="h-3 w-3" />
-                      {bloqueioAtivo.dia_inteiro ? 'Dia inteiro bloqueado' : 'Horário bloqueado'}
+                      {bloqueioAtivo.dia_inteiro
+                        ? "Dia inteiro bloqueado"
+                        : "Horário bloqueado"}
                     </p>
-                    <p className="text-sm text-red-700 font-medium mt-0.5">{bloqueioAtivo.motivo}</p>
+                    <p className="text-sm text-red-700 font-medium mt-0.5">
+                      {bloqueioAtivo.motivo}
+                    </p>
                     {!bloqueioAtivo.dia_inteiro && (
                       <p className="text-[11px] text-red-500 mt-0.5 font-mono">
-                        {bloqueioAtivo.horario}{bloqueioAtivo.horario_fim ? ` – ${bloqueioAtivo.horario_fim}` : ''}
+                        {bloqueioAtivo.horario}
+                        {bloqueioAtivo.horario_fim
+                          ? ` – ${bloqueioAtivo.horario_fim}`
+                          : ""}
                       </p>
                     )}
                     <p className="text-[11px] text-red-400 mt-0.5">
-                      Bloqueado por {bloqueioAtivo.criado_por} · Altere a data ou o horário para continuar.
+                      Bloqueado por {bloqueioAtivo.criado_por} · Altere a data
+                      ou o horário para continuar.
                     </p>
                   </div>
                 </div>

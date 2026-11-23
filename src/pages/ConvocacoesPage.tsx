@@ -96,18 +96,24 @@ function StatCard({
   );
 }
 
+// ── Ordinal suffix (1ª, 2ª, 3ª…) ─────────────────────────────────────────────
+function ordinal(n: number) {
+  return `${n}ª`;
+}
+
 // ── Convocação card (list view) ───────────────────────────────────────────────
 function ConvocacaoCard({
-  c, onEdit, onDevolutiva, onDetalhes, onDesistencia, onDelete, onReenviar,
+  c, reenvios = [], onEdit, onDevolutiva, onDetalhes, onDelete, onReenviar,
 }: {
   c: Convocacao;
+  reenvios?: Convocacao[];
   onEdit: () => void;
   onDevolutiva: () => void;
   onDetalhes: () => void;
-  onDesistencia: () => void;
   onDelete: () => void;
   onReenviar: () => void;
 }) {
+  const [historyOpen, setHistoryOpen] = useState(false);
   const cfg = getStatusCfg(c.status);
 
   const fmtDate = (iso: string) => {
@@ -116,6 +122,13 @@ function ConvocacaoCard({
   };
 
   const isToday = c.data_convocacao === format(new Date(), 'yyyy-MM-dd');
+
+  // Full call chain: original + reenvios sorted by date/horário
+  const chain: Convocacao[] = [c, ...reenvios].sort((a, b) => {
+    const d = a.data_convocacao.localeCompare(b.data_convocacao);
+    return d !== 0 ? d : (a.horario || '').localeCompare(b.horario || '');
+  });
+  const hasHistory = reenvios.length > 0;
 
   return (
     <div className="group relative flex overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:border-slate-300">
@@ -177,6 +190,17 @@ function ConvocacaoCard({
                 </>
               )}
             </div>
+            {/* Re-send counter badge */}
+            {hasHistory && (
+              <button
+                type="button"
+                onClick={() => setHistoryOpen(v => !v)}
+                className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600 hover:bg-indigo-100 transition-colors"
+              >
+                <Send className="h-2.5 w-2.5" />
+                {chain.length} chamadas {historyOpen ? '▲' : '▼'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -222,6 +246,51 @@ function ConvocacaoCard({
             "{c.observacoes}"
           </p>
         )}
+
+        {/* Call history timeline */}
+        {hasHistory && historyOpen && (
+          <div className="mt-1 rounded-lg border border-indigo-100 bg-indigo-50/50 px-3 py-2.5 space-y-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-indigo-500 mb-1.5">
+              Histórico de chamadas
+            </p>
+            {chain.map((call, i) => {
+              const dv = call.devolutiva ? DEVOLUTIVA_CFG[call.devolutiva] : null;
+              const motivo = (call as any).motivo_recusa as string | undefined;
+              const motivoLabel = motivo ? MOTIVO_DESISTENCIA_LABELS[motivo] : null;
+              const isLast = i === chain.length - 1;
+              return (
+                <div key={call.id} className="flex items-center gap-2.5">
+                  {/* Ordinal dot */}
+                  <div className={cn(
+                    'h-5 w-5 shrink-0 rounded-full flex items-center justify-center text-[9px] font-black',
+                    isLast ? 'bg-indigo-500 text-white' : 'bg-white border border-indigo-200 text-indigo-500',
+                  )}>
+                    {i + 1}
+                  </div>
+                  {/* Date + time */}
+                  <span className="text-[11px] font-semibold text-slate-600 tabular-nums">
+                    {ordinal(i + 1)} chamada · {fmtDate(call.data_convocacao)}
+                    {call.horario ? ` às ${call.horario}` : ''}
+                  </span>
+                  {/* Devolutiva */}
+                  {dv ? (
+                    <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold', dv.cls)}>
+                      <dv.icon className="h-2 w-2" />
+                      {dv.label}{motivoLabel ? ` · ${motivoLabel}` : ''}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-600">
+                      <Clock className="h-2 w-2" /> Pendente
+                    </span>
+                  )}
+                  {isLast && (
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wide">atual</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Actions */}
@@ -257,9 +326,6 @@ function ConvocacaoCard({
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2" onClick={onReenviar}>
               <Send className="h-4 w-4 text-primary" /> Reenviar Comunicação
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2" onClick={onDesistencia}>
-              <UserX className="h-4 w-4 text-amber-500" /> Registrar Desistência
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 text-destructive" onClick={onDelete}>
@@ -564,7 +630,7 @@ function BloqueiosView({
 export default function ConvocacoesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const {
-    vagas, convocacoes, bloqueios, isInitialLoad, isConvocacoesLoaded,
+    vagas, convocacoes, bancos, bloqueios, isInitialLoad, isConvocacoesLoaded,
     updateConvocacao, fetchConvocacoes, removeBloqueio,
   } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit, addAuditLog } = useAdminStore();
@@ -583,6 +649,7 @@ export default function ConvocacoesPage() {
   const [convocacaoParaAcao, setConvocacaoParaAcao] = useState<Convocacao | null>(null);
   const [registroParaExcluir, setRegistroParaExcluir] = useState<string | null>(null);
   const [desistenciaMotivo, setDesistenciaMotivo] = useState('');
+  const [reenvioInitialData, setReenvioInitialData] = useState<(Partial<Convocacao> & { telefone?: string; numero_processo_seletivo?: string }) | null>(null);
 
   const [search, setSearch] = useState('');
   const [selectedUnidade, setSelectedUnidade] = useState('all');
@@ -658,6 +725,24 @@ export default function ConvocacoesPage() {
     };
   }, [accessibleConvocacoes, selectedUnidade]);
 
+  // ── Reenvios map: parentId → sorted reenvio convocações (from all accessible) ─
+  const reenviosByParent = useMemo(() => {
+    const map: Record<string, Convocacao[]> = {};
+    accessibleConvocacoes.forEach(c => {
+      if (c.reenvio_de) {
+        if (!map[c.reenvio_de]) map[c.reenvio_de] = [];
+        map[c.reenvio_de].push(c);
+      }
+    });
+    Object.values(map).forEach(list =>
+      list.sort((a, b) => {
+        const d = a.data_convocacao.localeCompare(b.data_convocacao);
+        return d !== 0 ? d : (a.horario || '').localeCompare(b.horario || '');
+      }),
+    );
+    return map;
+  }, [accessibleConvocacoes]);
+
   // ── Filtered convocações (for views) ──────────────────────────────────────
   const filteredConvocacoes = useMemo(() => {
     return accessibleConvocacoes
@@ -725,16 +810,30 @@ export default function ConvocacoesPage() {
     }
   };
 
-  const handleReenviar = async (c: Convocacao) => {
-    toast.success(`Notificação de reenvio registrada para ${c.nome_candidato}.`);
-    addAuditLog({
-      usuario_nome: currentUser?.nome_completo || 'Sistema',
-      usuario_email: currentUser?.email || '',
-      perfil: currentUser?.perfil || '',
-      acao: 'Reenviar Convocação',
-      modulo: 'Convocações',
-      registro_afetado: c.id,
+  const handleReenviar = (c: Convocacao) => {
+    const bancoId = c.banco_relacionado || (c as any).banco_id;
+    const linkedBanco = bancoId ? bancos.find(b => b.id === bancoId) : null;
+    // Always link to the root (original) of the chain
+    const rootId = c.reenvio_de ?? c.id;
+    setReenvioInitialData({
+      nome_candidato: c.nome_candidato,
+      cargo: c.cargo,
+      unidade: c.unidade,
+      requisicao: c.requisicao,
+      edital_relacionado: c.edital_relacionado,
+      banco_relacionado: c.banco_relacionado,
+      secao: c.secao,
+      classificacao: c.classificacao,
+      tipo_atendimento: c.tipo_atendimento,
+      tipo_convocacao: c.tipo_convocacao,
+      status: 'pendente',
+      reenvio_de: rootId,
+      telefone: (linkedBanco as any)?.telefone || '',
+      numero_processo_seletivo: linkedBanco?.numero_processo_seletivo || '',
     });
+    setConvocacaoToEdit(null);
+    setSelectedVaga(null);
+    setIsDialogOpen(true);
   };
 
   const handleRegistrarDesistencia = async () => {
@@ -1001,44 +1100,48 @@ export default function ConvocacoesPage() {
           <KanbanBoard convocacoes={filteredConvocacoes} />
         )}
 
-        {view === 'list' && (
-          <div className="space-y-2.5">
-            {/* Header row */}
-            <div className="flex items-center justify-between px-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                {filteredConvocacoes.length} convocaç{filteredConvocacoes.length === 1 ? 'ão' : 'ões'} encontrada{filteredConvocacoes.length !== 1 ? 's' : ''}
-              </p>
-              {(search || statusFilter || dateRange.from) && (
-                <button
-                  type="button"
-                  className="text-[11px] font-semibold text-slate-400 hover:text-slate-700 transition-colors"
-                  onClick={() => { setSearch(''); setStatusFilter(null); setDateRange({ from: undefined, to: undefined }); }}
-                >
-                  Limpar filtros
-                </button>
+        {view === 'list' && (() => {
+          // In list view, only show root convocações (not reenvios — they appear inside their parent's history)
+          const rootConvocacoes = filteredConvocacoes.filter(c => !c.reenvio_de);
+          return (
+            <div className="space-y-2.5">
+              {/* Header row */}
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  {rootConvocacoes.length} convocaç{rootConvocacoes.length === 1 ? 'ão' : 'ões'} encontrada{rootConvocacoes.length !== 1 ? 's' : ''}
+                </p>
+                {(search || statusFilter || dateRange.from) && (
+                  <button
+                    type="button"
+                    className="text-[11px] font-semibold text-slate-400 hover:text-slate-700 transition-colors"
+                    onClick={() => { setSearch(''); setStatusFilter(null); setDateRange({ from: undefined, to: undefined }); }}
+                  >
+                    Limpar filtros
+                  </button>
+                )}
+              </div>
+
+              {rootConvocacoes.length === 0 ? (
+                <EmptyState label="Nenhuma convocação encontrada para os filtros aplicados." />
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {rootConvocacoes.map(c => (
+                    <ConvocacaoCard
+                      key={c.id}
+                      c={c}
+                      reenvios={reenviosByParent[c.id] ?? []}
+                      onEdit={() => handleEditConvocacao(c)}
+                      onDevolutiva={() => { setSelectedConvocacao(c); setIsDevolutivaOpen(true); }}
+                      onDetalhes={() => { setConvocacaoParaAcao(c); setIsDetalhesOpen(true); }}
+                      onDelete={() => { setRegistroParaExcluir(c.id); setIsDeleteDialogOpen(true); }}
+                      onReenviar={() => handleReenviar(c)}
+                    />
+                  ))}
+                </div>
               )}
             </div>
-
-            {filteredConvocacoes.length === 0 ? (
-              <EmptyState label="Nenhuma convocação encontrada para os filtros aplicados." />
-            ) : (
-              <div className="flex flex-col gap-2">
-                {filteredConvocacoes.map(c => (
-                  <ConvocacaoCard
-                    key={c.id}
-                    c={c}
-                    onEdit={() => handleEditConvocacao(c)}
-                    onDevolutiva={() => { setSelectedConvocacao(c); setIsDevolutivaOpen(true); }}
-                    onDetalhes={() => { setConvocacaoParaAcao(c); setIsDetalhesOpen(true); }}
-                    onDesistencia={() => { setConvocacaoParaAcao(c); setIsDesistenciaOpen(true); }}
-                    onDelete={() => { setRegistroParaExcluir(c.id); setIsDeleteDialogOpen(true); }}
-                    onReenviar={() => handleReenviar(c)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          );
+        })()}
 
         {view === 'dashboard' && <ConvocacoesDashboardContent />}
 
@@ -1054,9 +1157,10 @@ export default function ConvocacoesPage() {
       {/* ── Dialogs ─────────────────────────────────────────────────────────── */}
       <ConvocacaoDialog
         open={isDialogOpen}
-        onOpenChange={v => { setIsDialogOpen(v); if (!v) { setConvocacaoToEdit(null); setSelectedVaga(null); } }}
+        onOpenChange={v => { setIsDialogOpen(v); if (!v) { setConvocacaoToEdit(null); setSelectedVaga(null); setReenvioInitialData(null); } }}
         vaga={selectedVaga}
         convocacaoToEdit={convocacaoToEdit ?? undefined}
+        initialData={reenvioInitialData ?? undefined}
       />
 
       {selectedConvocacao && (

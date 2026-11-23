@@ -403,6 +403,7 @@ export interface Convocacao {
   data_validacao?: string;
   tipo_atendimento?: TipoAtendimento;
   link_teams?: string;
+  reenvio_de?: string; // ID of the original convocação this is a re-send of
 }
 
 export interface Tarefa {

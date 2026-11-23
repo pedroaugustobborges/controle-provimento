@@ -1409,7 +1409,7 @@ export default function VagasPage() {
       Unidade: v.unidade || "",
       Cargo: v.cargo || "",
       Analista: v.analista_responsavel || "",
-      Status: v.status || "",
+      "Status do Processo": v.status_processo || "",
       Tipo: TIPO_VAGA_LABELS[v.tipo_vaga as TipoVaga] || v.tipo_vaga,
       Recebimento: v.data_recebimento ? formatDate(v.data_recebimento) : "",
       "Dias em Aberto": calcDiasAberto(v.data_recebimento),

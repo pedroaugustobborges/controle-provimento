@@ -90,7 +90,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
 
     updateConvocacao(convocacao.id, {
       devolutiva,
-      motivo_recusa: devolutiva === 'desistiu' ? motivoDesistencia : undefined,
+      motivo_recusa: devolutiva === 'desistiu' ? motivoDesistencia : null,
       observacao_devolutiva: observacao,
       status,
     });

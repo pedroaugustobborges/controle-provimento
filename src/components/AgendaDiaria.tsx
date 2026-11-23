@@ -56,6 +56,9 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, onEditConvo
     );
   }
 
+  // Time-range (non-full-day) bloqueios for this day
+  const timeRangeBloqueios = dayBloqueios.filter(b => !b.dia_inteiro && b.horario);
+
   // Group convocações by horário, sorted chronologically (empty horário goes last)
   const byHorario: Record<string, Convocacao[]> = {};
   const sortedConvs = [...convocacoes].sort((a, b) => {
@@ -77,6 +80,40 @@ export function AgendaDiaria({ convocacoes, bloqueios, selectedDate, onEditConvo
   return (
     <div className="space-y-4">
       <DayHeader date={selectedDate} total={totalAgendados} blocked={totalBloqueados} />
+
+      {/* ── Time-range blocked slots ── */}
+      {timeRangeBloqueios.length > 0 && (
+        <div className="space-y-2">
+          {timeRangeBloqueios.map(b => (
+            <div
+              key={b.id}
+              className="flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl"
+            >
+              <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                <Lock className="h-4 w-4 text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-black text-red-700 font-mono">
+                    {b.horario}{b.horario_fim ? ` – ${b.horario_fim}` : ''}
+                  </span>
+                  <span className="text-[10px] font-bold text-red-500 uppercase tracking-wide">
+                    Bloqueado
+                  </span>
+                  {b.unidades && b.unidades.length > 0 && (
+                    <span className="text-[10px] text-red-400">
+                      · {b.unidades.length === 1 ? b.unidades[0] : `${b.unidades.length} unidades`}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-red-600 mt-0.5">{b.motivo}</p>
+              </div>
+              <span className="text-[10px] text-red-400 shrink-0">por {b.criado_por}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {convocacoes.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground text-sm italic">
           Nenhuma convocação agendada para este dia.

@@ -44,6 +44,8 @@ import {
   CheckCircle2,
   MessageSquare,
   Loader2,
+  Lock,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -342,6 +344,7 @@ export function ConvocacaoDialog({
     updateBancoAsync,
     convocacoes,
     bancos,
+    bloqueios,
   } = useVagasStore();
   const { currentUser } = useAdminStore();
 
@@ -448,6 +451,22 @@ export function ConvocacaoDialog({
   );
 
   const isGoiania = baseName === "Goiânia";
+
+  // ── Block detection ───────────────────────────────────────────────────────
+  const bloqueioAtivo = useMemo(() => {
+    if (!formData.data_convocacao) return null;
+    return bloqueios.find(b => {
+      if (b.data !== formData.data_convocacao) return false;
+      // Check unit scope (undefined = all units)
+      if (b.unidades && b.unidades.length > 0 && formData.unidade) {
+        if (!b.unidades.includes(formData.unidade)) return false;
+      }
+      if (b.dia_inteiro) return true;
+      if (!formData.horario || !b.horario) return false;
+      if (b.horario_fim) return formData.horario >= b.horario && formData.horario <= b.horario_fim;
+      return formData.horario === b.horario;
+    }) ?? null;
+  }, [bloqueios, formData.data_convocacao, formData.horario, formData.unidade]);
 
   // ── EDOC handler ──────────────────────────────────────────────────────────
   const handleEdocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -792,6 +811,30 @@ export function ConvocacaoDialog({
                 </div>
               </div>
 
+              {/* Block warning */}
+              {bloqueioAtivo && (
+                <div className="col-span-2 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200 animate-in fade-in duration-200">
+                  <div className="h-7 w-7 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <Lock className="h-3.5 w-3.5 text-red-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-red-700 uppercase tracking-wide flex items-center gap-1.5">
+                      <AlertTriangle className="h-3 w-3" />
+                      {bloqueioAtivo.dia_inteiro ? 'Dia inteiro bloqueado' : 'Horário bloqueado'}
+                    </p>
+                    <p className="text-sm text-red-700 font-medium mt-0.5">{bloqueioAtivo.motivo}</p>
+                    {!bloqueioAtivo.dia_inteiro && (
+                      <p className="text-[11px] text-red-500 mt-0.5 font-mono">
+                        {bloqueioAtivo.horario}{bloqueioAtivo.horario_fim ? ` – ${bloqueioAtivo.horario_fim}` : ''}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-red-400 mt-0.5">
+                      Bloqueado por {bloqueioAtivo.criado_por} · Altere a data ou o horário para continuar.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Observações */}
               <div className="space-y-2">
                 <Label htmlFor="observacoes">
@@ -959,6 +1002,7 @@ export function ConvocacaoDialog({
               <Button
                 type="button"
                 className="px-8 font-bold"
+                disabled={!!bloqueioAtivo}
                 onClick={
                   convocacaoToEdit
                     ? () => {

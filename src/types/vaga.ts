@@ -362,7 +362,8 @@ export type TipoAtendimento = 'presencial' | 'online';
 export interface BloqueioHorario {
   id: string;
   data: string;
-  horario?: string; // undefined = dia inteiro
+  horario?: string;     // start time (undefined = dia inteiro)
+  horario_fim?: string; // end time for range blocks
   dia_inteiro: boolean;
   motivo: string;
   vagas_bloqueadas?: number; // 1-5, se undefined e horário setado = bloqueia todos os slots

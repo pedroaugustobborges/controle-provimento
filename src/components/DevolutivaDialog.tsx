@@ -78,7 +78,7 @@ const STATUS_MAP: Record<Devolutiva, string> = {
 export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaDialogProps) {
   const { updateConvocacao, updateVaga, updateBanco, addAlerta } = useVagasStore();
   const [devolutiva, setDevolutiva] = useState<Devolutiva>(convocacao.devolutiva || 'aceitou');
-  const [motivoRecusa, setMotivoRecusa] = useState(convocacao.motivo_recusa || 'recusa_unidade');
+  const [motivoDesistencia, setMotivoDesistencia] = useState(convocacao.motivo_recusa || 'desistencia_horario');
   const [observacao, setObservacao] = useState(convocacao.observacao_devolutiva || '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -86,11 +86,11 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
 
     const today = new Date().toISOString().split('T')[0];
 
-    const status = devolutiva === 'recusou' ? (motivoRecusa as any) : STATUS_MAP[devolutiva];
+    const status = STATUS_MAP[devolutiva];
 
     updateConvocacao(convocacao.id, {
       devolutiva,
-      motivo_recusa: devolutiva === 'recusou' ? motivoRecusa : undefined,
+      motivo_recusa: devolutiva === 'desistiu' ? motivoDesistencia : undefined,
       observacao_devolutiva: observacao,
       status,
     });
@@ -124,7 +124,7 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
       addAlerta({
         id: `a-rec-${Date.now()}`,
         titulo: 'Convocação RECUSADA',
-        mensagem: `O candidato ${convocacao.nome_candidato} recusou a convocação. Motivo: ${motivoRecusa}.`,
+        mensagem: `O candidato ${convocacao.nome_candidato} recusou a convocação para ${convocacao.cargo} (${convocacao.requisicao}).`,
         tipo: 'critico',
         status: 'nao_lido',
         data_criacao: today,
@@ -212,21 +212,21 @@ export function DevolutivaDialog({ open, onOpenChange, convocacao }: DevolutivaD
             </div>
           </div>
 
-          {/* Motivo — only for "Recusou" */}
-          {devolutiva === 'recusou' && (
+          {/* Motivo — only for "Desistiu" */}
+          {devolutiva === 'desistiu' && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-              <Label htmlFor="motivo_recusa" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Motivo da Recusa
+              <Label htmlFor="motivo_desistencia" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Motivo da Desistência
               </Label>
-              <Select value={motivoRecusa} onValueChange={(v: any) => setMotivoRecusa(v)}>
+              <Select value={motivoDesistencia} onValueChange={(v: any) => setMotivoDesistencia(v)}>
                 <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recusa_unidade">Recusa Unidade</SelectItem>
-                  <SelectItem value="recusa_horario">Recusa Horário</SelectItem>
-                  <SelectItem value="recusa_plantao">Recusa Plantão</SelectItem>
-                  <SelectItem value="outros">Outro Motivo</SelectItem>
+                  <SelectItem value="desistencia_horario">Desistência pelo horário</SelectItem>
+                  <SelectItem value="desistencia_unidade">Desistência pela Unidade</SelectItem>
+                  <SelectItem value="desistencia_cargo">Desistência pelo cargo</SelectItem>
+                  <SelectItem value="outros">Outro</SelectItem>
                 </SelectContent>
               </Select>
             </div>

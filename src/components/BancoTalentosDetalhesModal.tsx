@@ -310,27 +310,34 @@ function CandidateCard({ candidate: c, position, banco, onConvocar, dragHandlePr
         <p className="text-[10px] text-slate-400 font-medium">
           {position}° classificado
         </p>
-        <Button
-          size="sm"
-          className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-px active:translate-y-0"
-          onClick={() =>
-            onConvocar({
-              nome_candidato: c.nome || "",
-              classificacao: position,
-              cargo: banco.cargo,
-              unidade: banco.unidade,
-              secao: banco.secao || "",
-              edital_relacionado: banco.numero_edital || "",
-              banco_id: c.id,
-              requisicao: "",
-              ...({ telefone: (c as any).telefone || "", numero_processo_seletivo: banco.numero_processo_seletivo || "" } as any),
-            } as any)
-          }
-        >
-          <UserCheck className="h-3.5 w-3.5" />
-          Convocar
-          <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-        </Button>
+        {(c.status || "").toUpperCase().startsWith("CONVOCADO") ? (
+          <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-violet-50 border border-violet-200/80">
+            <CheckCircle2 className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+            <span className="text-xs font-semibold text-violet-600">Convocado(a)</span>
+          </div>
+        ) : (
+          <Button
+            size="sm"
+            className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold rounded-xl shadow-md shadow-primary/20 transition-all duration-200 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-px active:translate-y-0"
+            onClick={() =>
+              onConvocar({
+                nome_candidato: c.nome || "",
+                classificacao: position,
+                cargo: banco.cargo,
+                unidade: banco.unidade,
+                secao: banco.secao || "",
+                edital_relacionado: banco.numero_edital || "",
+                banco_id: c.id,
+                requisicao: "",
+                ...({ telefone: (c as any).telefone || "", numero_processo_seletivo: banco.numero_processo_seletivo || "" } as any),
+              } as any)
+            }
+          >
+            <UserCheck className="h-3.5 w-3.5" />
+            Convocar
+            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -459,26 +466,42 @@ function CandidateRow({ candidate: c, position, banco, onConvocar, dragHandlePro
       </div>
 
       {/* Convocar */}
-      <Button
-        size="sm"
-        className="shrink-0 gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold rounded-lg shadow-sm shadow-primary/20 transition-all duration-200 opacity-0 group-hover:opacity-100 hover:shadow-md hover:shadow-primary/25"
-        onClick={() =>
-          onConvocar({
-            nome_candidato: c.nome || "",
-            classificacao: position,
-            cargo: banco.cargo,
-            unidade: banco.unidade,
-            secao: banco.secao || "",
-            edital_relacionado: banco.numero_edital || "",
-            banco_id: c.id,
-            requisicao: "",
-            ...({ telefone: (c as any).telefone || "", numero_processo_seletivo: banco.numero_processo_seletivo || "" } as any),
-          } as any)
-        }
-      >
-        <UserCheck className="h-3.5 w-3.5" />
-        Convocar
-      </Button>
+      {(c.status || "").toUpperCase().startsWith("CONVOCADO") ? (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-200 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-default">
+                <CheckCircle2 className="h-3.5 w-3.5 text-violet-500" />
+                <span className="text-[11px] font-bold text-violet-600">Convocado(a)</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="text-xs font-medium">
+              Convocação já registrada para este candidato
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <Button
+          size="sm"
+          className="shrink-0 gap-1.5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold rounded-lg shadow-sm shadow-primary/20 transition-all duration-200 opacity-0 group-hover:opacity-100 hover:shadow-md hover:shadow-primary/25"
+          onClick={() =>
+            onConvocar({
+              nome_candidato: c.nome || "",
+              classificacao: position,
+              cargo: banco.cargo,
+              unidade: banco.unidade,
+              secao: banco.secao || "",
+              edital_relacionado: banco.numero_edital || "",
+              banco_id: c.id,
+              requisicao: "",
+              ...({ telefone: (c as any).telefone || "", numero_processo_seletivo: banco.numero_processo_seletivo || "" } as any),
+            } as any)
+          }
+        >
+          <UserCheck className="h-3.5 w-3.5" />
+          Convocar
+        </Button>
+      )}
     </div>
   );
 }

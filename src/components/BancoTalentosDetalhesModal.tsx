@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { BancoTalentos, Convocacao } from "@/types/vaga";
 import { ConvocacaoLoteModal } from "@/components/ConvocacaoLoteModal";
+import { useVagasStore } from "@/store/vagasStore";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,9 @@ import {
   GripVertical,
   RotateCcw,
   Loader2,
+  UserX,
+  UserMinus,
+  ShieldOff,
 } from "lucide-react";
 import {
   DndContext,
@@ -78,6 +82,17 @@ function addMonths(d: Date, m: number): Date {
   r.setMonth(r.getMonth() + m);
   return r;
 }
+
+// ── Devolutiva badge config ───────────────────────────────────────────────────
+
+const DEVOLUTIVA_BADGE: Record<string, { label: string; icon: React.ElementType; cls: string }> = {
+  pendente:        { label: 'Pendente',         icon: Clock,        cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  aceitou:         { label: 'Aceitou',          icon: CheckCircle2, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  recusou:         { label: 'Recusou',          icon: XCircle,      cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  faltou:          { label: 'Faltou',           icon: UserX,        cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  desistiu:        { label: 'Desistiu',         icon: UserMinus,    cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+  desclassificado: { label: 'Desclassificado',  icon: ShieldOff,    cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+};
 
 // ── Status chip ───────────────────────────────────────────────────────────────
 
@@ -190,6 +205,13 @@ function CandidateCard({ candidate: c, position, banco, onConvocar, dragHandlePr
   const obs        = (c as any).observacao as string | undefined;
   const hasObs     = !!obs && obs !== "nan" && obs.trim() !== "";
   const rank       = getRankStyle(position);
+
+  const { convocacoes } = useVagasStore();
+  const linkedConv = convocacoes.find(
+    cv => (cv as any).banco_id === c.id || (cv as any).banco_relacionado === c.id,
+  );
+  const dvKey = linkedConv?.devolutiva || 'pendente';
+  const dv = DEVOLUTIVA_BADGE[dvKey] ?? DEVOLUTIVA_BADGE.pendente;
 
   return (
     <div
@@ -311,9 +333,9 @@ function CandidateCard({ candidate: c, position, banco, onConvocar, dragHandlePr
           {position}° classificado
         </p>
         {(c.status || "").toUpperCase().startsWith("CONVOCADO") ? (
-          <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-violet-50 border border-violet-200/80">
-            <CheckCircle2 className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-            <span className="text-xs font-semibold text-violet-600">Convocado(a)</span>
+          <div className={cn("inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border", dv.cls)}>
+            <dv.icon className="h-3.5 w-3.5 shrink-0" />
+            <span className="text-xs font-semibold">{dv.label}</span>
           </div>
         ) : (
           <Button
@@ -399,6 +421,13 @@ function CandidateRow({ candidate: c, position, banco, onConvocar, dragHandlePro
   const notaEnt    = parseFloat((c as any).nota_entrevista) || null;
   const mediaFinal = parseFloat((c as any).media_final)    || null;
 
+  const { convocacoes } = useVagasStore();
+  const linkedConv = convocacoes.find(
+    cv => (cv as any).banco_id === c.id || (cv as any).banco_relacionado === c.id,
+  );
+  const dvKey = linkedConv?.devolutiva || 'pendente';
+  const dv = DEVOLUTIVA_BADGE[dvKey] ?? DEVOLUTIVA_BADGE.pendente;
+
   const scoreColor =
     mediaFinal === null ? "text-slate-400"
     : mediaFinal >= 70  ? "text-emerald-600"
@@ -470,9 +499,12 @@ function CandidateRow({ candidate: c, position, banco, onConvocar, dragHandlePro
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-200 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-default">
-                <CheckCircle2 className="h-3.5 w-3.5 text-violet-500" />
-                <span className="text-[11px] font-bold text-violet-600">Convocado(a)</span>
+              <div className={cn(
+                "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-default",
+                dv.cls,
+              )}>
+                <dv.icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px] font-bold">{dv.label}</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="left" className="text-xs font-medium">

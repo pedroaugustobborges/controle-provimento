@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Clock, Lock, User, Video, Edit, Calendar, Users, MapPin, Briefcase, MessageSquare, Trash2 } from 'lucide-react';
+import { Clock, Lock, User, Video, Edit, Calendar, Users, MapPin, Briefcase, MessageSquare, Trash2, CheckCircle2, XCircle, UserMinus, ShieldOff } from 'lucide-react';
 import { Convocacao, BloqueioHorario } from '@/types/vaga';
 import { formatDate } from '@/lib/vagaUtils';
 import { useVagasStore } from '@/store/vagasStore';
@@ -132,8 +132,27 @@ function DayHeader({ date, total, blocked }: { date: string; total: number; bloc
   );
 }
 
+const DEVOLUTIVA_CFG: Record<string, { label: string; icon: React.ElementType; cls: string }> = {
+  aceitou:         { label: 'Aceitou',         icon: CheckCircle2, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  recusou:         { label: 'Recusou',         icon: XCircle,      cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  faltou:          { label: 'Faltou',          icon: UserMinus,    cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  desistiu:        { label: 'Desistiu',        icon: UserMinus,    cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+  desclassificado: { label: 'Desclassificado', icon: ShieldOff,    cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+};
+
+const MOTIVO_DESISTENCIA_LABELS: Record<string, string> = {
+  desistencia_horario: 'Horário',
+  desistencia_unidade: 'Unidade',
+  desistencia_cargo:   'Cargo',
+  outros:              'Outro',
+};
+
 /* ── Single convocação row ── */
 function ConvocacaoRow({ conv, onEdit, onDevolutiva }: { conv: Convocacao; onEdit: (c: Convocacao) => void; onDevolutiva: (c: Convocacao) => void }) {
+  const dv = conv.devolutiva ? DEVOLUTIVA_CFG[conv.devolutiva] : null;
+  const motivo = (conv as any).motivo_recusa as string | undefined;
+  const motivoLabel = motivo ? MOTIVO_DESISTENCIA_LABELS[motivo] : null;
+
   return (
     <div className="px-5 py-3 flex items-center gap-4 hover:bg-accent/30 transition-colors">
       <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
@@ -149,6 +168,12 @@ function ConvocacaoRow({ conv, onEdit, onDevolutiva }: { conv: Convocacao; onEdi
           <Badge variant="outline" className="text-[9px] h-5 gap-0.5 bg-primary/10 text-primary border-primary/20">
             <Video className="h-2.5 w-2.5" /> Online
           </Badge>
+        )}
+        {dv && (
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${dv.cls}`}>
+            <dv.icon className="h-2.5 w-2.5" />
+            {dv.label}{motivoLabel ? ` · ${motivoLabel}` : ''}
+          </span>
         )}
         {conv.observacoes && conv.observacoes.trim() !== '' && (
           <Popover>
@@ -173,8 +198,13 @@ function ConvocacaoRow({ conv, onEdit, onDevolutiva }: { conv: Convocacao; onEdi
         )}
       </div>
       <div className="flex gap-1 shrink-0">
-        <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => onDevolutiva(conv)}>
-          Devolutiva
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-7 px-2 text-[10px] ${dv ? 'text-muted-foreground' : ''}`}
+          onClick={() => onDevolutiva(conv)}
+        >
+          {dv ? 'Alterar' : 'Devolutiva'}
         </Button>
         <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => onEdit(conv)}>
           <Edit className="h-3.5 w-3.5" />

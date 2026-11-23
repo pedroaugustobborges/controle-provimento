@@ -8,7 +8,7 @@ import {
   LayoutGrid, List, AlertCircle, ArrowRight,
   MoreVertical, Eye, Edit, Trash2, X, Clock, Lock,
   Send, UserX, TrendingUp, CheckCircle2,
-  XCircle, Users,
+  XCircle, Users, UserMinus, ShieldOff,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -50,6 +50,21 @@ const STATUS_CONFIG: Record<string, { label: string; bar: string; badge: string;
 
 const getStatusCfg = (status: string) =>
   STATUS_CONFIG[status] ?? { label: status, bar: 'bg-slate-300', badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
+
+const DEVOLUTIVA_CFG: Record<string, { label: string; icon: React.ElementType; cls: string }> = {
+  aceitou:         { label: 'Aceitou',         icon: CheckCircle2, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  recusou:         { label: 'Recusou',         icon: XCircle,      cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  faltou:          { label: 'Faltou',          icon: UserX,        cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  desistiu:        { label: 'Desistiu',        icon: UserMinus,    cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+  desclassificado: { label: 'Desclassificado', icon: ShieldOff,    cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+};
+
+const MOTIVO_DESISTENCIA_LABELS: Record<string, string> = {
+  desistencia_horario: 'Horário',
+  desistencia_unidade: 'Unidade',
+  desistencia_cargo:   'Cargo',
+  outros:              'Outro',
+};
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({
@@ -135,6 +150,18 @@ function ConvocacaoCard({
               <span className={cn('h-1.5 w-1.5 rounded-full', cfg.dot)} />
               {cfg.label}
             </span>
+            {/* Devolutiva badge */}
+            {c.devolutiva && DEVOLUTIVA_CFG[c.devolutiva] && (() => {
+              const dv = DEVOLUTIVA_CFG[c.devolutiva!];
+              const motivo = (c as any).motivo_recusa as string | undefined;
+              const motivoLabel = motivo ? MOTIVO_DESISTENCIA_LABELS[motivo] : null;
+              return (
+                <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold', dv.cls)}>
+                  <dv.icon className="h-2.5 w-2.5" />
+                  {dv.label}{motivoLabel ? ` · ${motivoLabel}` : ''}
+                </span>
+              );
+            })()}
             {/* Date + time */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
               <CalendarIcon className="h-3 w-3" />

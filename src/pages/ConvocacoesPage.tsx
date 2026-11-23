@@ -8,13 +8,14 @@ import {
   LayoutGrid, List, AlertCircle, ArrowRight,
   MoreVertical, Eye, Edit, Trash2, X, Clock, Lock,
   Send, UserX, TrendingUp, CheckCircle2,
-  XCircle, Users, UserMinus, ShieldOff,
+  XCircle, Users, UserMinus, ShieldOff, Video,
+  CalendarDays, Ban,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useVagasStore } from '@/store/vagasStore';
 import { useAdminStore } from '@/store/adminStore';
-import { Convocacao } from '@/types/vaga';
+import { Convocacao, BloqueioHorario } from '@/types/vaga';
 import { ConvocacaoDialog } from '@/components/ConvocacaoDialog';
 import { DevolutivaDialog } from '@/components/DevolutivaDialog';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -26,7 +27,7 @@ import {
   getBaseForUnidade, BASES_CONVOCACAO, UNIDADES_VITORIA,
 } from '@/lib/convocacaoUtils';
 import { ConvocacoesDashboardContent } from '@/pages/ConvocacoesDashboardPage';
-import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { format, isWithinInterval, parseISO, startOfDay, endOfDay, differenceInDays, parseISO as parseISODate } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -283,16 +284,292 @@ function EmptyState({ label }: { label: string }) {
   );
 }
 
+// ── Bloqueios view ────────────────────────────────────────────────────────────
+function BloqueiosView({
+  bloqueios,
+  onAdd,
+  onRemove,
+}: {
+  bloqueios: BloqueioHorario[];
+  onAdd: () => void;
+  onRemove: (id: string) => void;
+}) {
+  const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  const filtered = useMemo(() => {
+    return bloqueios.filter(b => {
+      if (filter === 'upcoming') return b.data >= todayStr;
+      if (filter === 'past') return b.data < todayStr;
+      return true;
+    });
+  }, [bloqueios, filter, todayStr]);
+
+  // Group by date then sort within each group
+  const grouped = useMemo(() => {
+    const map: Record<string, BloqueioHorario[]> = {};
+    filtered.forEach(b => {
+      if (!map[b.data]) map[b.data] = [];
+      map[b.data].push(b);
+    });
+    Object.values(map).forEach(list =>
+      list.sort((a, b) => {
+        if (a.dia_inteiro && !b.dia_inteiro) return -1;
+        if (!a.dia_inteiro && b.dia_inteiro) return 1;
+        return (a.horario || '').localeCompare(b.horario || '');
+      }),
+    );
+    return map;
+  }, [filtered]);
+
+  const sortedDates = useMemo(() =>
+    Object.keys(grouped).sort((a, b) =>
+      filter === 'past' ? b.localeCompare(a) : a.localeCompare(b),
+    ),
+  [grouped, filter]);
+
+  const stats = useMemo(() => ({
+    ativos:     bloqueios.filter(b => b.data >= todayStr).length,
+    diaInteiro: bloqueios.filter(b => b.dia_inteiro).length,
+    periodos:   bloqueios.filter(b => !b.dia_inteiro).length,
+    total:      bloqueios.length,
+  }), [bloqueios, todayStr]);
+
+  const fmtDateLabel = (iso: string) => {
+    const d = parseISODate(iso);
+    const diff = differenceInDays(d, new Date());
+    const weekday = format(d, "EEEE", { locale: ptBR });
+    const dateStr = format(d, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    let badge: { label: string; cls: string } | null = null;
+    if (diff === 0)       badge = { label: 'Hoje',    cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+    else if (diff === 1)  badge = { label: 'Amanhã',  cls: 'bg-blue-100 text-blue-700 border-blue-200' };
+    else if (diff > 1)    badge = { label: `em ${diff} dias`, cls: 'bg-slate-100 text-slate-600 border-slate-200' };
+    else                  badge = { label: 'Passado', cls: 'bg-slate-100 text-slate-400 border-slate-200' };
+    return { weekday, dateStr, badge, isPast: diff < 0 };
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* ── Stats row ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: 'Bloqueios Ativos',  value: stats.ativos,     color: 'bg-red-50',    icon: <Ban className="h-4 w-4 text-red-500" />,       dot: 'bg-red-400' },
+          { label: 'Dias Inteiros',     value: stats.diaInteiro, color: 'bg-rose-50',   icon: <CalendarDays className="h-4 w-4 text-rose-500" />, dot: 'bg-rose-400' },
+          { label: 'Períodos',          value: stats.periodos,   color: 'bg-orange-50', icon: <Clock className="h-4 w-4 text-orange-500" />,  dot: 'bg-orange-400' },
+          { label: 'Total Histórico',   value: stats.total,      color: 'bg-slate-50',  icon: <Lock className="h-4 w-4 text-slate-400" />,    dot: 'bg-slate-300' },
+        ].map(s => (
+          <div key={s.label} className={cn('flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3', s.color)}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm border border-slate-100">
+              {s.icon}
+            </div>
+            <div>
+              <p className="text-2xl font-black tabular-nums leading-none text-slate-800">{s.value}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">{s.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Filter + action row ── */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+          {([
+            { id: 'upcoming', label: 'Próximos' },
+            { id: 'past',     label: 'Passados' },
+            { id: 'all',      label: 'Todos'    },
+          ] as const).map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all',
+                filter === f.id
+                  ? 'bg-white shadow-sm text-primary'
+                  : 'text-slate-500 hover:text-slate-700',
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={onAdd}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm shadow-red-200 transition-all hover:shadow-md hover:shadow-red-200 hover:-translate-y-px active:translate-y-0"
+        >
+          <Lock className="h-3.5 w-3.5" /> Bloquear Horário
+        </button>
+      </div>
+
+      {/* ── Empty state ── */}
+      {sortedDates.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-4 py-20 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+            <Lock className="h-8 w-8 text-slate-300" />
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-bold text-slate-500">Nenhum bloqueio {filter === 'upcoming' ? 'ativo' : filter === 'past' ? 'passado' : ''}</p>
+            <p className="text-xs text-slate-400">
+              {filter === 'upcoming' ? 'Clique em "Bloquear Horário" para adicionar um novo bloqueio.' : 'Nenhum registro encontrado.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Date groups ── */}
+      <div className="space-y-4">
+        {sortedDates.map(dateStr => {
+          const { weekday, dateStr: dateLabel, badge, isPast } = fmtDateLabel(dateStr);
+          const list = grouped[dateStr];
+          return (
+            <div
+              key={dateStr}
+              className={cn('rounded-2xl border overflow-hidden shadow-sm', isPast ? 'border-slate-200 opacity-70' : 'border-slate-200')}
+            >
+              {/* Date header */}
+              <div className={cn(
+                'px-5 py-3 flex items-center justify-between border-b',
+                isPast ? 'bg-slate-50 border-slate-100' : 'bg-white border-slate-100',
+              )}>
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'h-9 w-9 rounded-xl flex items-center justify-center shrink-0',
+                    isPast ? 'bg-slate-100' : 'bg-primary/10',
+                  )}>
+                    <CalendarDays className={cn('h-4.5 w-4.5', isPast ? 'text-slate-400' : 'text-primary')} />
+                  </div>
+                  <div>
+                    <p className={cn('text-sm font-black capitalize', isPast ? 'text-slate-500' : 'text-slate-800')}>
+                      {weekday}
+                    </p>
+                    <p className="text-xs text-slate-400 font-medium capitalize">{dateLabel}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {badge && (
+                    <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', badge.cls)}>
+                      {badge.label}
+                    </span>
+                  )}
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    {list.length} bloqueio{list.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+
+              {/* Block entries */}
+              <div className="divide-y divide-slate-100 bg-white">
+                {list.map(b => (
+                  <div
+                    key={b.id}
+                    className={cn(
+                      'flex items-start gap-4 px-5 py-4 group transition-colors',
+                      b.dia_inteiro
+                        ? 'bg-red-50/60 hover:bg-red-50'
+                        : 'hover:bg-slate-50/80',
+                    )}
+                  >
+                    {/* Icon */}
+                    <div className={cn(
+                      'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
+                      b.dia_inteiro ? 'bg-red-100' : 'bg-orange-50 border border-orange-100',
+                    )}>
+                      {b.dia_inteiro
+                        ? <Ban className="h-5 w-5 text-red-500" />
+                        : <Clock className="h-5 w-5 text-orange-500" />
+                      }
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      {/* Time label */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {b.dia_inteiro ? (
+                          <span className="text-sm font-black text-red-700 uppercase tracking-wide">Dia Inteiro</span>
+                        ) : (
+                          <span className="text-sm font-black text-slate-800 font-mono tabular-nums">
+                            {b.horario}{b.horario_fim ? ` – ${b.horario_fim}` : ''}
+                          </span>
+                        )}
+                        {b.dia_inteiro && (
+                          <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">
+                            Bloqueio Total
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Motivo */}
+                      <p className="text-sm text-slate-700 font-medium leading-snug">{b.motivo}</p>
+
+                      {/* Meta row */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {b.unidades
+                            ? b.unidades.length === 1
+                              ? b.unidades[0]
+                              : `${b.unidades.length} unidades`
+                            : 'Todas as unidades'}
+                        </span>
+                        <span className="text-slate-200 select-none">·</span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          Bloqueado por <span className="font-semibold text-slate-600">{b.criado_por}</span>
+                        </span>
+                        {b.link_teams && (
+                          <>
+                            <span className="text-slate-200 select-none">·</span>
+                            <a
+                              href={b.link_teams}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] font-bold text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                            >
+                              <Video className="h-3 w-3" /> Teams
+                            </a>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Unit chips when multiple */}
+                      {b.unidades && b.unidades.length > 1 && (
+                        <div className="flex flex-wrap gap-1 pt-0.5">
+                          {b.unidades.map(u => (
+                            <span key={u} className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200">
+                              {u}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Delete */}
+                    <button
+                      onClick={() => onRemove(b.id)}
+                      className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                      title="Remover bloqueio"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function ConvocacoesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const {
     vagas, convocacoes, bloqueios, isInitialLoad, isConvocacoesLoaded,
-    updateConvocacao, fetchConvocacoes,
+    updateConvocacao, fetchConvocacoes, removeBloqueio,
   } = useVagasStore();
   const { currentUser, selectedRegion, selectedUnit: globalUnit, addAuditLog } = useAdminStore();
 
-  const [view, setView] = useState<'diaria' | 'kanban' | 'list' | 'dashboard'>('diaria');
+  const [view, setView] = useState<'diaria' | 'kanban' | 'list' | 'dashboard' | 'bloqueios'>('diaria');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDevolutivaOpen, setIsDevolutivaOpen] = useState(false);
   const [isDetalhesOpen, setIsDetalhesOpen] = useState(false);
@@ -510,10 +787,11 @@ export default function ConvocacoesPage() {
             {/* View switcher */}
             <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner">
               {([
-                { id: 'diaria',    label: 'Diária',     icon: <CalendarIcon className="h-3.5 w-3.5" /> },
-                { id: 'kanban',    label: 'Quadro',     icon: <LayoutGrid className="h-3.5 w-3.5" /> },
-                { id: 'list',      label: 'Histórico',  icon: <List className="h-3.5 w-3.5" /> },
-                { id: 'dashboard', label: 'Dashboard',  icon: <TrendingUp className="h-3.5 w-3.5" /> },
+                { id: 'diaria',    label: 'Diária',    icon: <CalendarIcon className="h-3.5 w-3.5" /> },
+                { id: 'kanban',    label: 'Quadro',    icon: <LayoutGrid className="h-3.5 w-3.5" /> },
+                { id: 'list',      label: 'Histórico', icon: <List className="h-3.5 w-3.5" /> },
+                { id: 'dashboard', label: 'Dashboard', icon: <TrendingUp className="h-3.5 w-3.5" /> },
+                { id: 'bloqueios', label: 'Bloqueios', icon: <Lock className="h-3.5 w-3.5" /> },
               ] as const).map(tab => (
                 <Button
                   key={tab.id}
@@ -539,22 +817,12 @@ export default function ConvocacoesPage() {
               className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
             />
 
-            {view === 'diaria' && (
-              <Button
-                variant="outline"
-                onClick={() => setIsBloqueioOpen(true)}
-                className="h-10 gap-2 text-xs font-bold rounded-xl border-slate-200"
-              >
-                <Lock className="h-4 w-4" /> Bloquear Horário
-              </Button>
-            )}
-
           </>
         }
       />
 
       {/* ── Stats strip ────────────────────────────────────────────────────── */}
-      {view !== 'dashboard' && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {view !== 'dashboard' && view !== 'bloqueios' && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           label="Hoje"
           value={stats.hoje}
@@ -599,7 +867,7 @@ export default function ConvocacoesPage() {
       </div>}
 
       {/* ── Filter bar ─────────────────────────────────────────────────────── */}
-      {view !== 'dashboard' && <div className="flex flex-col md:flex-row items-center gap-2.5 rounded-xl border border-slate-200/60 bg-white/60 p-3 backdrop-blur-sm shadow-sm">
+      {view !== 'dashboard' && view !== 'bloqueios' && <div className="flex flex-col md:flex-row items-center gap-2.5 rounded-xl border border-slate-200/60 bg-white/60 p-3 backdrop-blur-sm shadow-sm">
         {/* Search */}
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -773,6 +1041,14 @@ export default function ConvocacoesPage() {
         )}
 
         {view === 'dashboard' && <ConvocacoesDashboardContent />}
+
+        {view === 'bloqueios' && (
+          <BloqueiosView
+            bloqueios={bloqueios}
+            onAdd={() => setIsBloqueioOpen(true)}
+            onRemove={id => { removeBloqueio(id); }}
+          />
+        )}
       </div>
 
       {/* ── Dialogs ─────────────────────────────────────────────────────────── */}

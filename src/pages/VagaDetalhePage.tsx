@@ -3060,8 +3060,8 @@ export default function VagaDetalhePage() {
                           </div>
                         </div>
 
-                        {/* Row 2: Carga Horária e Faixa Salarial */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+                        {/* Row 2: Carga Horária, Faixa Salarial e Requisitante */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
                           {/* Carga Horária */}
                           <div className="p-5 space-y-3">
                             <div className="flex items-center gap-2">
@@ -3222,6 +3222,29 @@ export default function VagaDetalhePage() {
                                 )}
                               </p>
                             )}
+                          </div>
+
+
+                          {/* Requisitante */}
+                          <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                                <UserRound className="h-3.5 w-3.5 text-amber-500" />
+                              </div>
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                Requisitante
+                              </span>
+                            </div>
+                            <div className="min-h-[36px] flex flex-col justify-center">
+                              <p className="text-sm font-semibold text-slate-700">
+                                {vaga.nome_requisitante || (
+                                  <span className="text-slate-400 italic">Não informado</span>
+                                )}
+                              </p>
+                              {vaga.cargo_requisitante && (
+                                <p className="text-xs text-slate-400 mt-0.5">{vaga.cargo_requisitante}</p>
+                              )}
+                            </div>
                           </div>
                         </div>
 

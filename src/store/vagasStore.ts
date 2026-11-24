@@ -345,11 +345,9 @@ export const useVagasStore = create<VagasState>()(
               .from('vaga_banco_links')
               .select('vaga_id')
               .eq('status', 'confirmed');
-            console.log('[filterComBanco] linkRows:', linkRows, 'error:', linksError);
             const confirmedIds: string[] = [
               ...new Set((linkRows ?? []).map((r: any) => r.vaga_id).filter(Boolean)),
             ];
-            console.log('[filterComBanco] confirmedIds:', confirmedIds);
             if (confirmedIds.length > 0) {
               query = query.in('id', confirmedIds);
             } else {

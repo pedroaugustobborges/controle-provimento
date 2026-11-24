@@ -170,6 +170,7 @@ export interface VagaQueryParams {
   filterComum?: 'off' | 'include' | 'exclude';
   filterLideranca?: 'off' | 'include' | 'exclude';
   filterVagasNovas?: boolean;
+  filterComBanco?: boolean;
   // User permission / region filters (pre-computed by caller)
   allowedUnidades?: string[] | null; // null = all units visible
   regionUnidades?: string[] | null;  // null = no region restriction
@@ -328,6 +329,7 @@ export const useVagasStore = create<VagasState>()(
           page, pageSize, search, filterUnidades, filterStatusProcesso,
           filterTratativas, filterEtapa, filterAnalista, filterAssistente,
           filterTeia, filterPcd, filterComum, filterLideranca, filterVagasNovas,
+          filterComBanco,
           allowedUnidades, regionUnidades, globalUnit,
         } = params;
 
@@ -336,6 +338,25 @@ export const useVagasStore = create<VagasState>()(
           const { supabase } = await import('@/integrations/supabase/client');
 
           let query = supabase.from('vagas').select('*', { count: 'exact' });
+
+          // ── Com Banco filter — server-side via vaga_banco_links ──────────────
+          if (filterComBanco) {
+            const { data: linkRows, error: linksError } = await (supabase as any)
+              .from('vaga_banco_links')
+              .select('vaga_id')
+              .eq('status', 'confirmed');
+            console.log('[filterComBanco] linkRows:', linkRows, 'error:', linksError);
+            const confirmedIds: string[] = [
+              ...new Set((linkRows ?? []).map((r: any) => r.vaga_id).filter(Boolean)),
+            ];
+            console.log('[filterComBanco] confirmedIds:', confirmedIds);
+            if (confirmedIds.length > 0) {
+              query = query.in('id', confirmedIds);
+            } else {
+              // Nothing confirmed in DB yet — use tem_banco_valido as fallback
+              query = query.eq('tem_banco_valido', true);
+            }
+          }
 
           // ── User permission filter (prefix ilike per unit) ───────────────────
           if (allowedUnidades && allowedUnidades.length > 0) {

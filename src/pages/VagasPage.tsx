@@ -804,6 +804,7 @@ export default function VagasPage() {
         filterComum: filterComum !== 'off' ? filterComum : undefined,
         filterLideranca: filterLideranca !== 'off' ? filterLideranca : undefined,
         filterVagasNovas: filterVagasNovas || undefined,
+        filterComBanco: filterComBanco || undefined,
         allowedUnidades,
         regionUnidades,
         globalUnit: globalUnit !== 'all' && globalUnit !== 'TODOS' ? globalUnit : null,
@@ -827,6 +828,7 @@ export default function VagasPage() {
       filterComum,
       filterLideranca,
       filterVagasNovas,
+      filterComBanco,
     ]
   );
 
@@ -924,6 +926,7 @@ export default function VagasPage() {
       if (!bancoMatch) {
         const processCandidates = [
           ...getLookupKeys(vaga.numero_processo),
+          ...getLookupKeys(vaga.numero_processo_seletivo),
           ...getLookupKeys(vaga.requisicao),
           ...getLookupKeys(vaga.numero_requisicao),
         ].flatMap(
@@ -1251,9 +1254,7 @@ export default function VagasPage() {
   const paginatedData = useMemo(() => {
     let result = vagasPaginated;
 
-    if (filterComBanco) {
-      result = result.filter((v) => vagasComBancoSet.has(v.id));
-    }
+    // filterComBanco is now handled server-side in fetchVagasPaginated
 
     if (filterLideranca !== 'off') {
       result = result.filter((v) => {
@@ -1277,7 +1278,7 @@ export default function VagasPage() {
     }
 
     return result;
-  }, [vagasPaginated, filterComBanco, vagasComBancoSet, filterLideranca, fluxoItemsMap, filterSemMovimentacao]);
+  }, [vagasPaginated, vagasComBancoMap, filterLideranca, fluxoItemsMap, filterSemMovimentacao]);
 
   // Total from server; for complex post-filtered views it's approximate but that is acceptable.
   const totalPages = Math.ceil(vagasPaginatedTotal / pageSize);

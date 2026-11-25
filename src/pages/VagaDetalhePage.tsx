@@ -1828,6 +1828,23 @@ export default function VagaDetalhePage() {
         if (currentUser?.perfil === "Gestor de Unidade") {
           updates.status_processo = "Solicitada";
         }
+        // Reset tratativa/etapa in every slot that held "Aguardando Unidade"
+        const currentFluxoItems = getFluxoItems(vaga);
+        const hasAwaitingSlots = currentFluxoItems.some(
+          (i) => i.tratativa === "Aguardando Unidade",
+        );
+        if (hasAwaitingSlots) {
+          updates.distribuicao_vagas = currentFluxoItems.map((i) =>
+            i.tratativa === "Aguardando Unidade"
+              ? { ...i, tratativa: undefined, etapa: undefined }
+              : i,
+          );
+          // Also clear root fields (slot 1 backward-compat)
+          if (currentFluxoItems.find((i) => i.slot === 1)?.tratativa === "Aguardando Unidade") {
+            updates.tratativa = null;
+            updates.etapa = null;
+          }
+        }
       }
       const saved = await updateVagaAsync(vaga.id, {
         ...updates,
@@ -1903,6 +1920,11 @@ export default function VagaDetalhePage() {
         updates.status_aprovacao_gestor = "pendente";
         if (currentUser?.perfil === "Gestor de Unidade") {
           updates.status_processo = "Solicitada";
+        }
+        // Reset tratativa/etapa when they were holding the "Aguardando Unidade" placeholder
+        if (vaga.tratativa === "Aguardando Unidade") {
+          updates.tratativa = null;
+          updates.etapa = null;
         }
       }
 

@@ -96,7 +96,29 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      set({ users: (data || []) as User[] });
+
+      // Fetch most recent session activity per user to populate ultimo_acesso accurately
+      const { data: sessions } = await supabase
+        .from('user_sessions')
+        .select('user_id, last_activity_at, login_at')
+        .order('last_activity_at', { ascending: false });
+
+      // Build a map: user_id → most recent last_activity_at (or login_at as fallback)
+      const latestActivityMap: Record<string, string> = {};
+      for (const s of sessions || []) {
+        const ts = s.last_activity_at || s.login_at;
+        if (!ts) continue;
+        if (!latestActivityMap[s.user_id] || ts > latestActivityMap[s.user_id]) {
+          latestActivityMap[s.user_id] = ts;
+        }
+      }
+
+      const enriched = (data || []).map((u: any) => ({
+        ...u,
+        ultimo_acesso: latestActivityMap[u.id] || u.ultimo_acesso || '',
+      }));
+
+      set({ users: enriched as User[] });
     } catch (err) {
       console.error('Erro ao buscar usuários:', err);
     } finally {

@@ -66,6 +66,14 @@ export function useAuth() {
   const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    // Update last-access timestamp on the profile (best-effort, never blocks login)
+    if (data.user?.id) {
+      supabase
+        .from('profiles')
+        .update({ ultimo_acesso: new Date().toISOString() })
+        .eq('id', data.user.id)
+        .then(() => {});
+    }
     return data;
   }, []);
 

@@ -1198,8 +1198,9 @@ export default function AdministracaoPage() {
                         </TableCell>
                         <TableCell className="text-left text-xs text-slate-500 font-medium">
                           {user.ultimo_acesso
-                            ? new Date(user.ultimo_acesso).toLocaleDateString(
+                            ? new Date(user.ultimo_acesso).toLocaleString(
                                 "pt-BR",
+                                { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" },
                               )
                             : "Nunca"}
                         </TableCell>

@@ -283,10 +283,16 @@ async function parseExcelCandidates(file: File): Promise<ParsedCandidate[]> {
         }
       }
 
-      // Match Python exactly: avg = (nota_av OR 0 + nota_ent OR 0) / 2
+      // Average only the notes that are actually present (non-null).
+      // If both are missing → 0. If only one is present → use it as-is (no /2).
       // nota_avaliacao_externa is stored but never used in the average.
+      const presentNotes = [mapped.nota_avaliacao, mapped.nota_entrevista].filter(
+        (n): n is number => n !== null && n !== undefined,
+      );
       const media =
-        ((mapped.nota_avaliacao ?? 0) + (mapped.nota_entrevista ?? 0)) / 2;
+        presentNotes.length > 0
+          ? presentNotes.reduce((sum, n) => sum + n, 0) / presentNotes.length
+          : 0;
 
       return {
         nome: mapped.nome || "",

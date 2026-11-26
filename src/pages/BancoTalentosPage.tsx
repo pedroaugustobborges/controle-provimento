@@ -703,7 +703,7 @@ export default function BancoTalentosPage() {
     setIsDragging(false);
   };
 
-  const handleImportStep1Next = () => {
+  const handleImportStep1Next = async () => {
     if (!novoEditalNumero.trim()) {
       toast.error("Informe o número do processo seletivo.");
       return;
@@ -713,6 +713,29 @@ export default function BancoTalentosPage() {
       toast.error("Informe o número do edital no formato ###/#### (ex: 055/2026).");
       return;
     }
+
+    // Try to pre-fill step 2 from existing records in banco_candidatos
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      let query = supabase
+        .from("banco_candidatos")
+        .select("cargo, unidade, data_publicacao, data_resultado")
+        .eq("numero_processo_seletivo", novoEditalNumero.trim())
+        .limit(1);
+      if (!isTeia) {
+        query = query.eq("numero_edital", novoNumeroEdital.trim());
+      }
+      const { data: existing } = await query.maybeSingle();
+      if (existing) {
+        if (existing.cargo) setNovoCargo(existing.cargo);
+        if (existing.unidade) setNovaUnidade(existing.unidade);
+        if (existing.data_publicacao) setNovaDataPublicacao(existing.data_publicacao);
+        if (existing.data_resultado) setNovaDataResultado(existing.data_resultado);
+      }
+    } catch {
+      // Best-effort — never block navigation
+    }
+
     setImportStep(2);
   };
 

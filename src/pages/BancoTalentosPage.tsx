@@ -627,10 +627,48 @@ export default function BancoTalentosPage() {
       .slice(0, 60);
   }, [vagas, vagaSearch, vincularGroup]);
 
-  const handleDelete = () => {
-    if (bancoParaExcluir) {
-      deleteBanco(bancoParaExcluir);
+  const handleDelete = async () => {
+    if (!bancoParaExcluir) return;
+
+    const group = groupedBancos.find((g) => g.id === bancoParaExcluir);
+    if (!group) return;
+
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+
+      const candidatoIds = group.candidatos.map((c) => c.id);
+      const batchIds = [
+        ...new Set(
+          group.candidatos
+            .map((c) => c.import_batch_id)
+            .filter(Boolean) as string[],
+        ),
+      ];
+
+      // Delete all banco_candidatos rows for this group
+      const { error: delCandErr } = await supabase
+        .from("banco_candidatos")
+        .delete()
+        .in("id", candidatoIds);
+      if (delCandErr) throw delCandErr;
+
+      // Delete associated importacoes records
+      if (batchIds.length > 0) {
+        const { error: delImportErr } = await supabase
+          .from("importacoes")
+          .delete()
+          .in("id", batchIds);
+        if (delImportErr) throw delImportErr;
+      }
+
+      // Remove all candidatos from local store
+      candidatoIds.forEach((id) => deleteBanco(id));
+
       toast.success("Banco de talentos excluído com sucesso.");
+    } catch (err: any) {
+      console.error("[handleDelete] error:", err);
+      toast.error(`Erro ao excluir banco de talentos: ${err?.message || "desconhecido"}`);
+    } finally {
       setIsDeleteDialogOpen(false);
       setBancoParaExcluir(null);
     }
